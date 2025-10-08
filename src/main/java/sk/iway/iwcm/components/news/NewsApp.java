@@ -41,7 +41,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     descKey = "components.news.desc",
     itemKey = "cmp_news",
     imagePath = "ti ti-news",
-    galleryImages = "/components/news/screenshot-1.jpg,/components/news/screenshot-2.png,/components/news/screenshot-3.jpg",
+    galleryImages = "/components/news/screenshot-1.jpg,/components/news/screenshot-2.jpg,/components/news/screenshot-3.jpg,/components/news/screenshot-4.jpg",
     componentPath = "/components/news/news-velocity.jsp",
     customHtml = "/apps/news/admin/editor-component.html"
 )
