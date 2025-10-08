@@ -111,9 +111,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	private boolean returnDocsWithAtributes = false;
 
 	@PageParamOnly
-	private String[] contextClasses;
-
-	@PageParamOnly
 	private int perexCrop = 0;
 
 	@PageParamOnly
@@ -730,7 +727,8 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				vc.put("pageParams", new PageParams(getRequest()));
 				vc.put("dateTool", new DateTool());
 
-				if (contextClasses!=null && contextClasses.length>0)
+				String[] contextClassesArray = getContextClassesArr();
+				if (contextClassesArray != null && contextClassesArray.length > 0)
 				{
 					for (String clazzName : Tools.getTokens(String.join("+", contextClasses), ",;+|"))
 					{
@@ -1643,16 +1641,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void setCacheMinutes(int cacheMinutes)
 	{
 		this.cacheMinutes = cacheMinutes;
-	}
-
-	public String[] getContextClasses()
-	{
-		return contextClasses;
-	}
-
-	public void setContextClasses(String[] contextClasses)
-	{
-		this.contextClasses = contextClasses;
 	}
 
 	public void setOffset(int offset)

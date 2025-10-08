@@ -142,6 +142,9 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.remove_default_docs")
     protected Boolean removeDefaultDocs;
 
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses")
+	protected String contextClasses;
+
     @DataTableColumn(
         inputType = DataTableColumnType.IMAGE_RADIO,
         title = "&nbsp;",
@@ -210,5 +213,10 @@ public class NewsApp extends WebjetComponentAbstract  {
 
 	public int getDocMode() {
 		return docMode == null ? 0 : docMode;
+	}
+
+    public String[] getContextClassesArr()
+	{
+		return contextClasses == null ? new String[0] : contextClasses.split("\\+");
 	}
 }

@@ -7,7 +7,7 @@ Before(({ login }) => {
 Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     Apps.insertApp('Novinky', '#components-news-title', null, false);
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('#cke_123_iframe');
     I.switchTo('#editorComponent');
 
     I.say('Check tabs');
@@ -301,10 +301,15 @@ Scenario("logout", ({ I }) => {
 
 function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
 
-    Apps.openAppEditor(null, "componentsWindowTableMainDiv");
-    I.clickCss('#tabLink1');
-    I.selectOption('docMode', ""+docMode) //Zobraziť všetky stránky vrátane hlavných stránok priečinkov
-    I.fillField('subGroupsDepth', ""+subGroupsDepth);
+    let option = "";
+    if(docMode === 0) { option = "Zobraziť všetky stránky vrátane hlavných stránok priečinkov"; }
+    else if(docMode === 1) { option = "Zobraziť iba hlavné stránky priečinkov"; }
+    else if(docMode === 2) { option = "Vylúčiť hlavné stránky priečinkov"; }
+
+    Apps.openAppEditor(null, "pills-dt-component-datatable-basic");
+    I.clickCss('#pills-dt-component-datatable-basic');
+    I.selectOption('#DTE_Field_docMode', option);
+    I.fillField('#DTE_Field_subGroupsDepth', subGroupsDepth);
     Apps.confirm();
 
     I.switchTo(".cke_wysiwyg_frame.cke_reset");
@@ -357,7 +362,7 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
     I.switchTo();
 }
 
-Scenario("docMode and subGroupsDepth", ({ I, DT, DTE, Apps }) => {
+Scenario("docMode and subGroupsDepth", ({ I, Apps }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=146543");
 
