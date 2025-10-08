@@ -202,6 +202,7 @@ public class Modules
 		modVersions.put("cmp_wiki", "EI;1c4"); //Wiki
 		modVersions.put("cmp_xml", "PEI;bf0");
 		modVersions.put("cmp_captcha", "PECI;a3c"); //zoznam slov pre captchu
+		modVersions.put("cmp_ai_tools", "PEI;109"); //zoznam slov pre AI tools
 
 		//modVersions.put("menuUsers", "PECDIO;f20"); //WebJET Multi-User Access - 2990 Sk, WebJET Protected Section-4990
 		modVersions.put("menuSync", "PEI;f36"); //WebJET Synchronization - 12900
@@ -294,13 +295,14 @@ public class Modules
 						m.setItemKey("cmp_"+file.getName());
 						m.setPath(baseDir+file.getName());
 						m.setUserItem(false);
+
+						//warning: this code is repated later after itemKey in prop file is read
 						wjPerms = modVersions.get(m.getItemKey());
 						if (wjPerms == null) wjPerms = "BPECIDMO";
 						m.setWjVersions(wjPerms);
 
 						String fileName = "modinfo.properties";
 						if (j>0) fileName = "modinfo"+j+".properties";
-
 						propFile = new IwcmFile(Tools.getRealPath(baseDir+file.getName()+"/"+fileName));
 						if (propFile.exists())
 						{
@@ -338,6 +340,13 @@ public class Modules
 							if (Tools.isNotEmpty(sTmp))
 							{
 								m.setItemKey(sTmp.trim());
+
+								//check perms for this new itemKey, if exists use it
+								String wjPermsNew = modVersions.get(m.getItemKey());
+								if (Tools.isNotEmpty(wjPermsNew)) {
+									wjPerms = wjPermsNew;
+									m.setWjVersions(wjPerms);
+								}
 							}
 							sTmp = prop.getProperty("menuOrder");
 							if (Tools.isNotEmpty(sTmp))
