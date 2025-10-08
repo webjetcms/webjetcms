@@ -198,7 +198,7 @@ public class ProductListService {
 
     public static List<LabelValueInteger> getListOfProductsGroups(DocDetailsRepository docDetailsRepository) {
         String constantIds = Constants.getString(BASKET_ADMIN_GROUP_IDS);
-        if(Tools.isEmpty(constantIds) == true) {
+        if(Tools.isEmpty(constantIds)) {
             return getListOfProductGroupsViaInclude(docDetailsRepository);
         } else {
             return getListOfProductGroupsViaIds(constantIds);
@@ -231,9 +231,9 @@ public class ProductListService {
         Set<Integer> loadedIds = new HashSet<>();
         List<GroupDetails> expandedGroups = new ArrayList<>();
         for(GroupDetails group : groups) {
-            if(loadedIds.contains(group.getGroupId())) continue;
-
             for(GroupDetails treeGroup : groupsDB.getGroupsTree(group.getGroupId(), true, true)) {
+                if(loadedIds.contains(treeGroup.getGroupId())) continue;
+
                 expandedGroups.add(treeGroup);
                 loadedIds.add(treeGroup.getGroupId());
             }
@@ -277,7 +277,7 @@ public class ProductListService {
             if(group != null) {
                 //Group do exist ...
                 groups.add(group);
-                if(withSubfolders == true) loadWithSubfolders.add(groupId);
+                if(withSubfolders) loadWithSubfolders.add(groupId);
             }
         }
 

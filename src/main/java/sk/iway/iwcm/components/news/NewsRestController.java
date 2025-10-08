@@ -174,7 +174,7 @@ public class NewsRestController extends WebpagesDatatable {
                     if (group != null) {
                         if (Constants.getBoolean("multiDomainEnabled") && currentDomain.equals(group.getDomainName())==false) continue;
 
-                        if(withSubfolders == true) list.add(new LabelValue(group.getFullPath(), groupId + "*"));
+                        if(withSubfolders) list.add(new LabelValue(group.getFullPath(), groupId + "*"));
                         else list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));
                     }
                 }
