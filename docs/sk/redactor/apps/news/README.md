@@ -29,17 +29,17 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 
 ![](editor-dialog.png)
 
-- Adresár - ID adresárov (priečinkov web stránok), z ktorých sa budú vyberať novinky (stránky). Tlačítkom Pridať, môžete vybrať viac ID adresárov.
-- Zahrnúť podadresáre - zvolením tejto možnosti sa načítajú novinky aj z podadresárov zvolených adresárov z poľa Adresár.
-- Hĺbka podpriečinkov - pri zobrazení noviniek z pod priečinkov je možné nastaviť maximálnu hĺbku hľadania pod priečinkov. Hodnota menej ako 1 nastaví hľadanie bez obmedzení.
-- Typy stránok - výber stránok podľa dátumovej platnosti
+- **Adresár** - Výber adresárov (priečinkov web stránok), z ktorých sa budú vyberať novinky (stránky).
+- **Zahrnúť podadresáre** - zvolením tejto možnosti sa načítajú novinky aj z podadresárov zvolených adresárov z poľa Adresár.
+- **Hĺbka podpriečinkov** - pri zobrazení noviniek z pod priečinkov je možné nastaviť maximálnu hĺbku hľadania pod priečinkov. Hodnota menej ako 1 nastaví hľadanie bez obmedzení.
+- **Typy stránok** - výber stránok podľa dátumovej platnosti
   - Aktuálne – je platný dátum začiatku a konca - zobrazia sa len novinky, ktorých dátum platnosti (začiatok a koniec pulikovania) je v rozmedzí aktuálneho dátumu.
   - Staré – zobrazia sa novinky, ktoré majú dátum konca v minulosti (archív).
   - Všetky – zobrazia sa novinky bez ohľadu na dátum začiatku a konca ich publikovania.
   - Nasledujúce – zobrazia sa len novinky, ktoré majú dátum začiatku publikovania v budúcnosti.
   - Aktuálne platné - zobrazia sa len novinky s vyplneným dátumom začiatku (koniec nemusí byť vyplnený) a konca ktorých rozsah je platný v aktuálny dátum a čas.
-- Režim zobrazenia hlavných stránok - nastavuje zobrazenie hlavných stránok pod priečinkov. Často máte štruktúru Novinky a v ňom roky 2025, 2026 a podobne. V zozname noviniek nechcete zobrazovať hlavné stránky týchto priečinkov, keďže je to typicky stránka so zoznamom. Alebo naopak, potrebujete zobraziť len hlavné stránky pod priečinkov.
-- Usporiadať podľa - určuje spôsob usporiadania zoznamu noviniek
+- **Režim zobrazenia hlavných stránok** - nastavuje zobrazenie hlavných stránok pod priečinkov. Často máte štruktúru Novinky a v ňom roky 2025, 2026 a podobne. V zozname noviniek nechcete zobrazovať hlavné stránky týchto priečinkov, keďže je to typicky stránka so zoznamom. Alebo naopak, potrebujete zobraziť len hlavné stránky pod priečinkov.
+- **Usporiadať podľa** - určuje spôsob usporiadania zoznamu noviniek
   - Priority
   - Dátumu začiatku publikovania
   - Dátumu konania
@@ -48,16 +48,15 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
   - Miesta
   - ID stránky
   - Ratingu - hodnotenia stránky (napr. pri použití eshopu) - hodnotenie sa nastavuje pomocou aplikácie hodnotenie stránky.
-- Vzostupne - štandardne sa usporiada zoznam zostupne (napr. od najnovšej novinky po najstaršiu), zaškrtnutím tohto poľa bude usporiadanie naopak - od najstaršej po najnovšiu
-- Stránkovanie - ak zaškrtnete zobrazí sa aj stránkovanie zoznamu noviniek (ak je počet noviniek väčší ako hodnota v poli Počet položiek na stránke)
-- Počet položiek na stránke - počet zobrazených noviniek na jednej stránke, ak je stránkovanie nezaškrtnuté podľa tejto hodnoty sa načíta z databázy počet noviniek, vhodné napr. na úvodnú stránku kde chcete mať zobrazené napr. 3 novinky a odkaz na zoznam všetkých noviniek, ale stránkovanie nechcete zobraziť.
-- Preskočiť prvých - počet záznamov, ktoré chcete preskočiť pri načítaní zoznamu (napr. ak máte v stránke dve aplikácie pod sebou s iným dizajnom a v druhej chcete preskočiť počet záznamov z prvej aplikácie)
-- Nemusí byť vyplnený perex (anotácia) - štandardne sa zobrazia len novinky, ktoré majú vyplnenú anotáciu (perex), ak zaškrtnete toto pole, načítajú sa aj tie, ktoré anotáciu (perex) vyplnenú nemajú
-- Načítanie s textom stránky (menej optimálne) - štandardne sa z databázy nenačítava text stránky, ak ho pre zobrazenie potrebujete, zaškrtnite toto pole. Načítanie ale bude pomalšie a náročnejšie na výkon databázy a servera.
-- Kontrolovať duplicitu - ak stránka obsahuje viacero aplikácii novinky v jednej stránke, eviduje sa zoznam už zobrazených noviniek. Už existujúce sa vyradia so zoznamu. Nemusí ale následne sedieť počet zobrazených záznamov, zároveň sa ale nestane, že bude na jednej stránke zobrazená rovnaká novinka viac krát.
-- Vylúčiť hlavné stránky priečinkov - ak je zvolené vylúčia sa hlavné stránky priečinkov (pri možnosti Zahrnúť podadresáre). Predpokladá sa, že podadresáre obsahujú hlavnú stránku so zoznamom noviniek v tomto priečinku. Takéto stránky sa vylúčia a nepoužijú sa v zozname noviniek.
-- Vložiť triedy do `Velocity` šablóny - špeciálne pole pre programátora, ktorým je možné zadefinovať Java triedu (program), ktorú je možné následne použiť v šablóne. Ak nemáte presné inštrukcie čo do tohto poľa vložiť ponechajte ho prázdne.
-- Čas vyrovnávacej pamäte (minúty) - počet minút pamätania zoznamu noviniek. Načítanie zoznamu noviniek môže byť náročné na výkon databázy, odporúčame nastaviť vyrovnávaciu pamäť na minimálne 10 minút. Urýchli to zobrazenie stránky (hlavne ak je zoznam noviniek napr. na úvodnej stránke).
+- **Vzostupne** - štandardne sa usporiada zoznam zostupne (napr. od najnovšej novinky po najstaršiu), zaškrtnutím tohto poľa bude usporiadanie naopak - od najstaršej po najnovšiu
+- **Stránkovanie** - ak zaškrtnete zobrazí sa aj stránkovanie zoznamu noviniek (ak je počet noviniek väčší ako hodnota v poli Počet položiek na stránke)
+- **Počet položiek na stránke** - počet zobrazených noviniek na jednej stránke, ak je stránkovanie nezaškrtnuté podľa tejto hodnoty sa načíta z databázy počet noviniek, vhodné napr. na úvodnú stránku kde chcete mať zobrazené napr. 3 novinky a odkaz na zoznam všetkých noviniek, ale stránkovanie nechcete zobraziť.
+- **Preskočiť prvých** - počet záznamov, ktoré chcete preskočiť pri načítaní zoznamu (napr. ak máte v stránke dve aplikácie pod sebou s iným dizajnom a v druhej chcete preskočiť počet záznamov z prvej aplikácie)
+- **Nemusí byť vyplnený perex (anotácia)** - štandardne sa zobrazia len novinky, ktoré majú vyplnenú anotáciu (perex), ak zaškrtnete toto pole, načítajú sa aj tie, ktoré anotáciu (perex) vyplnenú nemajú
+- **Načítanie s textom stránky (menej optimálne)** - štandardne sa z databázy nenačítava text stránky, ak ho pre zobrazenie potrebujete, zaškrtnite toto pole. Načítanie ale bude pomalšie a náročnejšie na výkon databázy a servera.
+- **Kontrolovať duplicitu** - ak stránka obsahuje viacero aplikácii novinky v jednej stránke, eviduje sa zoznam už zobrazených noviniek. Už existujúce sa vyradia so zoznamu. Nemusí ale následne sedieť počet zobrazených záznamov, zároveň sa ale nestane, že bude na jednej stránke zobrazená rovnaká novinka viac krát.
+- **Vylúčiť hlavné stránky priečinkov** - ak je zvolené vylúčia sa hlavné stránky priečinkov (pri možnosti Zahrnúť podadresáre). Predpokladá sa, že podadresáre obsahujú hlavnú stránku so zoznamom noviniek v tomto priečinku. Takéto stránky sa vylúčia a nepoužijú sa v zozname noviniek.
+- **Vložiť triedy do `Velocity` šablóny** - špeciálne pole pre programátora, ktorým je možné zadefinovať Java triedu (program), ktorú je možné následne použiť v šablóne. Ak nemáte presné inštrukcie čo do tohto poľa vložiť ponechajte ho prázdne.
 
 ### Šablóna
 
