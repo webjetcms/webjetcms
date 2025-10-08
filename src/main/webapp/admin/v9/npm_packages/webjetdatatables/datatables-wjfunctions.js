@@ -380,7 +380,11 @@ function calculateAutoHeight(DATA) {
     var dtFooterRow = $('#' + DATA.id + '_wrapper .dt-footer-row').outerHeight();
     if (dtFooterRow < 30) dtFooterRow = dtFooterRow + 31; //footer not initialized/empty, add text height
 
-    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow;
+    var dtFooterSummary = 0;
+    var dtFooterSummaryEl = $('#' + DATA.id + '_wrapper .dt-scroll-foot')
+    if (dtFooterSummaryEl.is(":visible")) dtFooterSummary = dtFooterSummaryEl.outerHeight();
+
+    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow - dtFooterSummary;
 
     //console.log(DATA.id+" vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "dtFilterRow=", dtFilterRow, "dtFooterRow=", dtFooterRow, "height=", height);
 

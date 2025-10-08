@@ -50,7 +50,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -659,6 +658,63 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public void getOptions(DatatablePageImpl<T> page) {
 		//page.addOptions(field, options, labelProperty, valueProperty, includeOriginalObject);
+	}
+
+	/**
+	 * Return summary for given columns, called as /sumAll.
+	 * You can override this method to provide custom sums.
+	 * @param entity
+	 * @param columns
+	 * @return
+	 */
+	public JSONObject sumItems(T entity, String[] columns) {
+		JSONObject output = new JSONObject();
+
+		//Get class
+		try {
+			Class<?> clazz = entity.getClass();
+			String tableName;
+
+			if (clazz.isAnnotationPresent(Table.class)) {
+				tableName = clazz.getAnnotation(Table.class).name();
+			} else {
+				//Cant call SimpleQuery without table name
+				return null;
+			}
+
+			String whereClause = "";
+			boolean hasDomainIdField = Arrays.stream(clazz.getDeclaredFields())
+				.anyMatch(field -> field.getName().equals("domainId"));
+			if (hasDomainIdField) {
+				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+			}
+
+			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
+			Set<String> validColumns = new HashSet<>();
+			for (Field field : clazz.getDeclaredFields()) {
+				Class<?> type = field.getType();
+				if (Number.class.isAssignableFrom(type)
+						|| (type.isPrimitive() && (type == int.class || type == long.class || type == double.class || type == float.class || type == short.class || type == byte.class))) {
+					validColumns.add(field.getName());
+				}
+			}
+
+			//iterate over parameters and get sum for each column
+			for(String column : columns) {
+				if (validColumns.contains(column)) {
+					//Ok, its numerical type
+					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + DB.removeSlashes(column) + ") FROM " + DB.removeSlashes(tableName) + whereClause));
+				} else {
+					//Field is not numerical type, set empty string
+					output.put(column, "");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output;
 	}
 
 	/*************************** BEZPECNOST A VALIDACIA ****************************/
@@ -1577,52 +1633,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public String getSum(T entity, @RequestParam(value = "columns[]") String[] columns) {
 
 		clearThreadData();
-
-		JSONObject output = new JSONObject();
-
-		//Get class
-		try {
-			Class<?> clazz = entity.getClass();
-			String tableName;
-
-			if (clazz.isAnnotationPresent(Table.class)) {
-				tableName = clazz.getAnnotation(Table.class).name();
-			} else {
-				//Cant call SimpleQuery without table name
-				return output.toString();
-			}
-
-			String whereClause = "";
-			boolean hasDomainIdField = Arrays.stream(clazz.getDeclaredFields())
-				.anyMatch(field -> field.getName().equals("domainId"));
-			if (hasDomainIdField) {
-				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
-			}
-
-			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
-			Set<String> validColumns = new HashSet<>();
-			for (Field field : clazz.getDeclaredFields()) {
-				if (Number.class.isAssignableFrom(field.getType())) {
-					validColumns.add(field.getName());
-				}
-			}
-
-			//iterate over parameters and get sum for each column
-			for(String column : columns) {
-				if (validColumns.contains(column)) {
-					//Ok, its numerical type
-					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + DB.removeSlashes(column) + ") FROM " + DB.removeSlashes(tableName) + whereClause));
-				} else {
-					//Field is not numerical type, set empty string
-					output.put(column, "");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+		JSONObject sumItems = sumItems(entity, columns);
+		if (sumItems != null) {
+			return sumItems.toString();
+		} else {
+			return "";
 		}
-
-		return output.toString();
 	}
 
 	public JpaRepository<T, Long> getRepo() {
@@ -2072,7 +2088,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							}
 						}
 					}
-					if (isDisabled) {
+					//we allow updateDate, for others you can set alwaysCopyProperties=true in annotation
+					if (isDisabled && field.getName().equals("lastUpdate")==false) {
 						ignoreProperties.add(field.getName());
 						continue;
 					}

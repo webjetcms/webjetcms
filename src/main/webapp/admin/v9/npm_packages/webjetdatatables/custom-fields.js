@@ -603,6 +603,9 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
+
+            //return original docId value to field instead of JSON string
+            if (typeof v.originalValue != "undefined" && v.originalValue != null) textFieldInput.val(v.originalValue);
         }
 
         //JICH - add
@@ -657,6 +660,18 @@ export function update(EDITOR, action) {
         }
         //JICH - add end
     });
+
+    //Init tooltip on AI buttons
+    setTimeout(function() {
+        $("#"+datatable.DATA.id+"_modal button.btn-ai[data-toggle*='tooltip']").each(function(){
+            let buttons = $(this);
+            for (let i=0; i<buttons.length; i++) {
+                //console.log("Init tooltip for button: ", $(buttons[i]));
+                let button = $(buttons[i]);
+                WJ.initTooltip(button, 'tooltip-ai');
+            }
+        });
+    }, 1300);
 
     //Find label of booleanText field and set empty string
     if(booleanTextFields.length > 0) {

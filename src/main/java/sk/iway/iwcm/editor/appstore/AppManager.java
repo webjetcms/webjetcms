@@ -210,27 +210,30 @@ public class AppManager
 		return variant1.equals(variant2);
 	}
 
-    private static void scanAnnotations(List<AppBean> apps, String lng) {
-
-        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-        provider.addIncludeFilter(new AnnotationTypeFilter(WebjetAppStore.class));
-
+	public static List<String> getPackageNames() {
 		List<String> packageNames = new ArrayList<>();
 		packageNames.add("sk.iway.iwcm");
 		packageNames.add("sk.iway."+Constants.getInstallName());
 		if (Tools.isNotEmpty(Constants.getLogInstallName())) packageNames.add("sk.iway."+Constants.getLogInstallName());
 		if (Tools.isNotEmpty(Constants.getString("springAddPackages"))) packageNames.addAll(Arrays.asList(Tools.getTokens(Constants.getString("springAddPackages"), ",", true)));
+		return packageNames;
+	}
+
+    private static void scanAnnotations(List<AppBean> apps, String lng) {
+
+        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+        provider.addIncludeFilter(new AnnotationTypeFilter(WebjetAppStore.class));
 
 		Set<String> duplicityCheck = new HashSet<>();
 
-		for (String packageName : packageNames) {
+		for (String packageName : getPackageNames()) {
 			for (BeanDefinition beanDef : provider.findCandidateComponents(packageName)) {
 				try {
 					String fqdn = beanDef.getBeanClassName();
-					Class<?> cl = Class.forName(fqdn);
-
 					if (fqdn == null || duplicityCheck.contains(fqdn)) continue;
 					duplicityCheck.add(fqdn);
+
+					Class<?> cl = Class.forName(fqdn);
 
 					WebjetAppStore appStore = cl.getAnnotation(WebjetAppStore.class);
 

@@ -173,7 +173,17 @@ module.exports = {
     },
 
     /**
-     * Save editor without closing it
+     * Click on the OK button in the Editor App dialog to confirm app settings changes
+     */
+    confirm() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_ok");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
+     * Save DT editor without closing it
      */
     save() {
         I.pressKey(['CommandOrControl', 's']);

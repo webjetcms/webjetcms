@@ -157,7 +157,7 @@ public class DBPool
 							//riesene kvoli ING kde public node ma iny pripojovaci retazec
 							if (Tools.isNotEmpty(systemIwcmDBName) && systemIwcmDBName.equals(dbname))
 							{
-								Logger.println(DBPool.class, "Changing dbname from "+dbname+" to iwcm");
+								Logger.println(DBPool.class, "Changing dbname from "+dbname+" to iwcm, systemIwcmDBName="+systemIwcmDBName);
 								dbname = "iwcm";
 							}
 

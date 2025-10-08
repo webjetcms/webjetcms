@@ -131,6 +131,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if (entity.getRegDate() == null) entity.setRegDate(new Date(Tools.getNow()));
 
+        //check NULL
+        if (entity.getSexMale() == null) entity.setSexMale(true);
+
         //Save into session last saved user group's
         userDetailsService.setBeforeSaveUserGroups(entity);
     }
@@ -378,7 +381,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         //Force random password generation -> null value can cause problems
         if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {
             entity.setPassword("random");
-            super.beforeDuplicate(entity);
         }
+        entity.setRegDate(new Date(Tools.getNow()));
+        entity.setLastLogonAsDate(null);
+        super.beforeDuplicate(entity);
     }
 }

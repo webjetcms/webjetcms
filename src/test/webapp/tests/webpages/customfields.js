@@ -221,6 +221,16 @@ Scenario('custom-fields advanced set default values', ({ I, DT, DTE }) => {
     setJsTree(I, "D", ["Jet portal 4", "Zo sveta financií"], "Trhy sú naďalej vydesené");
 
     DTE.save();
+
+    //BUG: if you open and then save page without changes, the values are changed to JSON string, not ID
+    openFieldsTabForPage(I, DT, DTE, "134906");
+    DTE.save();
+
+    I.amOnPage("/showdoc.do?docid=134906");
+    I.waitForText("Field A:1:", 5, "p.field-a");
+    I.waitForText("Field B:23:", 5, "p.field-b");
+    I.waitForText("Field C:141:", 5, "p.field-c");
+    I.waitForText("Field D:14:", 5, "p.field-d");
 });
 
 function openFieldsTabForPage(I, DT, DTE, id) {
