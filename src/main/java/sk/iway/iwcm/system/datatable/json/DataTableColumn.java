@@ -331,7 +331,7 @@ public class DataTableColumn {
 
     @SuppressWarnings("rawtypes")
     private void setAiPropertiesFromField(Class controller, Field field, Prop prop, Identity user) {
-        if (user.isEnabledItem("cmp_ai_button")) {
+        if (user != null && user.isEnabledItem("cmp_ai_button")) {
             ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
         }
     }

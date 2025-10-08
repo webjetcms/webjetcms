@@ -184,11 +184,8 @@ public class AssistantController {
         column.setName(fieldName);
         column.setRenderFormat(renderFormat);
 
-        Identity user = UsersDB.getCurrentUser(request);
-        if (user != null && user.isEnabledItem("cmp_ai_button")) {
-            List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
-            column.setAi(ai); //set also to column for future use
-        }
+        List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
+        column.setAi(ai); //set also to column for future use
 
         return column;
     }
