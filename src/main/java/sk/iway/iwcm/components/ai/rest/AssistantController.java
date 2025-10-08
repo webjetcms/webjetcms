@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumn;
  */
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
 public class AssistantController {
 
     private final AiService aiService;

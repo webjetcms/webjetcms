@@ -57,6 +57,11 @@ export class EditorAi {
      * Binds AI-related buttons to the provided EDITOR instance.
      */
     bindEditorButtons() {
+        if (WJ.hasPermission("cmp_ai_button") === false) {
+            //user does not have permission to see AI button
+            return;
+        }
+
         //console.log("Binding editor buttons, editor=", this.EDITOR);
 
         //iterate over EDITOR.TABLE.DATA.columns[].ai fields and generate AI button
@@ -117,16 +122,20 @@ export class EditorAi {
         let inputFields = $(".ai-field");
         inputFields.each((index, element) => {
             let inputField = $(element);
+            if (WJ.hasPermission("cmp_ai_button") === false) {
+                //user does not have permission to see AI button
+                inputField.removeClass("ai-field");
+            } else {
+                //if it doesnt have input-group, wrap it
+                if (inputField.parents(".input-group").length === 0) {
+                    inputField.wrap('<div class="input-group"></div>');
+                }
 
-            //if it doesnt have input-group, wrap it
-            if (inputField.parents(".input-group").length === 0) {
-                inputField.wrap('<div class="input-group"></div>');
-            }
-
-            //if it doesnt have ti-sparkles button add it
-            if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
-                const button = this._getOtherButton(inputField);
-                inputField.parents(".input-group").append(button);
+                //if it doesnt have ti-sparkles button add it
+                if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
+                    const button = this._getOtherButton(inputField);
+                    inputField.parents(".input-group").append(button);
+                }
             }
         });
     }
