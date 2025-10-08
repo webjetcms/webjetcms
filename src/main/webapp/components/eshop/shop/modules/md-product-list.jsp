@@ -63,7 +63,7 @@
                     <iwcm:write>!INCLUDE(/components/eshop/shop/modules/md-perex-select.jsp, htmlName=&quot;sort&quot;, htmlId=&quot;display&quot;, htmlClass=&quot;form-control&quot;, htmlOnchange=&quot;setParam('display')&quot;,)!</iwcm:write>
                 </div>
             </div>
-            
+
         </div>
     </div>
     <div class="clearfix"></div>
@@ -96,17 +96,16 @@
         }
     %>
 
-    <iwcm:write>!INCLUDE(/components/news/news-velocity.jsp, groupIds=${ninja.doc.group.groupId}, alsoSubGroups=&quot;true&quot;, docMode=&quot;2&quot;, publishType=&quot;new&quot;, order=<%=orderValue%>, ascending=<%=ascendingValue%>, paging=&quot;true&quot;, pageSize=&quot;20&quot;, offset=&quot;0&quot;, perexNotRequired=&quot;false&quot;, loadData=&quot;false&quot;, checkDuplicity=&quot;false&quot;, contextClasses=&quot;sk.iway.tags.CurrencyTag&quot;, cacheMinutes=&quot;10&quot;, template=&quot;news.template.Product list&quot;, perexGroup=<%=perexValue%>, perexGroupNot=&quot;&quot;)!
-    </iwcm:write>
+    <iwcm:write>!INCLUDE(/components/news/news-velocity.jsp, groupIds=${ninja.doc.group.groupId}, alsoSubGroups=&quot;true&quot;, docMode=&quot;2&quot;, publishType=&quot;new&quot;, order=<%=orderValue%>, ascending=<%=ascendingValue%>, paging=&quot;true&quot;, pageSize=&quot;20&quot;, offset=&quot;0&quot;, perexNotRequired=&quot;false&quot;, loadData=&quot;false&quot;, checkDuplicity=&quot;false&quot;, contextClasses=&quot;sk.iway.tags.CurrencyTag&quot;, cacheMinutes=&quot;10&quot;, template=&quot;news.template.Product list&quot;, perexGroup=<%=perexValue%>, perexGroupNot=&quot;&quot;)!</iwcm:write>
 </section>
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     var sortValue = urlParams.get('sort');
     if(sort !== null) {
         if(sortValue !== null) {
-            $("#sort").val(sortValue).change(); 
+            $("#sort").val(sortValue).change();
         } else {
             //Default value
             $("#sort").val("date_asc").change();
@@ -114,7 +113,7 @@
     }
 
     var displayValue = urlParams.get('display');
-    if(display !== null) { 
+    if(display !== null) {
         if(displayValue !== null) {
             $("#display").val(displayValue.split(",")).change();
         } else {

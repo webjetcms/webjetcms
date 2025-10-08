@@ -123,7 +123,8 @@ public class NewsRestController extends WebpagesDatatable {
                 String trashDirName = propSystem.getText("config.trash_dir");
 
                 //we dont have any ids, try to search for NEWS include in all groups
-                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%'");
+                // -------------------------- set by GroupsDB if parent folder doesnt exists
+                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
                 Set<String> duplicityCheck = new HashSet<>();
 
                 for (String data : dataList) {
@@ -159,13 +160,23 @@ public class NewsRestController extends WebpagesDatatable {
                 list.sort((o1, o2) -> o1.getLabel().compareTo(o2.getLabel()));
             } else {
                 //add all groups from ids
-                int[] groupIds = Tools.getTokensInt(ids, ",+");
+                ids = ids.trim();
+                String[] strIds = ids.split("[,+]");
 
-                for (int groupId : groupIds) {
+                for(String strId : strIds) {
+                    boolean withSubfolders = false;
+                    if(strId.endsWith("*")) {
+                        withSubfolders = true;
+                        strId = strId.substring(0, strId.length() - 1);
+                    }
+
+                    int groupId = Tools.getIntValue(strId, -1);
                     GroupDetails group = groupsDB.getGroup(groupId);
                     if (group != null) {
                         if (Constants.getBoolean("multiDomainEnabled") && currentDomain.equals(group.getDomainName())==false) continue;
-                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));
+
+                        if(withSubfolders) list.add(new LabelValue(group.getFullPath(), groupId + "*"));
+                        else list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));
                     }
                 }
             }
