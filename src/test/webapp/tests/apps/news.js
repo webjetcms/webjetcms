@@ -4,6 +4,165 @@ Before(({ login }) => {
     login('admin');
 });
 
+Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Novinky', '#components-news-title', null, false);
+
+    I.switchTo('#cke_121_iframe');
+    I.switchTo('#editorComponent');
+
+    I.say('Check tabs');
+        I.seeElement("#pills-dt-component-datatable-basic-tab");
+        I.seeElement("#pills-dt-component-datatable-templates-tab");
+        I.seeElement("#pills-dt-component-datatable-perex-tab");
+        I.seeElement("#pills-dt-component-datatable-filter-tab");
+        I.seeElement("#pills-dt-component-datatable-news-tab");
+        I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
+
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+        I.clickCss("button.btn-vue-jstree-add");
+        I.waitForVisible("div#jsTree");
+        I.click(locate('a.jstree-anchor').withText("Jet portal 4"));
+        I.waitForInvisible("div#jsTree");
+
+        I.clickCss("button.btn-vue-jstree-add");
+        I.waitForVisible("div#jsTree");
+        I.click(locate('a.jstree-anchor').withText("Newsletter"));
+        I.waitForInvisible("div#jsTree");
+
+        I.checkOption("#DTE_Field_alsoSubGroups_0");
+        DTE.selectOption("publishType", "Nasledujúce (začiatok je v budúcnosti)");
+        DTE.selectOption("order", "Ratingu");
+        I.fillField("#DTE_Field_pageSize", 25);
+        I.fillField("#DTE_Field_offset", 8);
+        I.checkOption("#DTE_Field_checkDuplicity_0");
+
+    I.clickCss("#pills-dt-component-datatable-templates-tab");
+        I.click( locate("label.custom-template").withChild(locate("span").withText("news01")) );
+
+    I.clickCss("#pills-dt-component-datatable-perex-tab");
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
+
+    I.clickCss("#pills-dt-component-datatable-filter-tab");
+        addFilter(I, "AUTHOR_ID", "<=", "666");
+        addFilter(I, "DATE_CREATED", "=", "01.10.2025");
+        addFilter(I, "DATA", "Končí na", "Kokos je king");
+        addFilter(I, "AVAILABLE", "false", null);
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const checkParams1 = {
+        groupIds: '1+27',
+        alsoSubGroups: 'true',
+        publishType: 'next',
+        order: 'rating',
+        ascending: 'true',
+        paging: 'false',
+        pageSize: '25',
+        offset: '8',
+        perexNotRequired: 'false',
+        loadData: 'false',
+        checkDuplicity: 'true',
+        removeDefaultDocs: 'false',
+        template: 'news01',
+        perexGroup: '3+794',
+        perexGroupNot: '1879+2'
+    };
+
+    await Apps.assertParams(checkParams1);
+
+    //Check filter values .. because of format I cant use assertParams
+    Apps.switchEditor('html');
+    I.see("filter[DATA_ew]=Kokos je king");
+    I.see("filter[AUTHORID_le]=666,");
+    I.see("filter[DATECREATED_eq]=2025-10-01,");
+    I.see("filter[AVAILABLE_eq]=false");
+
+    Apps.switchEditor('standard');
+    Apps.openAppEditor();
+
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Jet portal 4']") );
+        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Newsletter']") );
+
+        //Remove first folder
+        I.click( locate(".DTE_Field_Name_groupIds").find("button.btn-vue-jstree-item-remove") );
+
+    I.clickCss("#pills-dt-component-datatable-perex-tab");
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
+
+        //Uncheck
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+
+        //Check new one
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("PerexWithGroup_A") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("PerexWithGroup_B") ));
+
+    I.clickCss("#pills-dt-component-datatable-filter-tab");
+        checkFilter(I, 1, "AUTHOR_ID", "<=", "666");
+        checkFilter(I, 2, "DATE_CREATED", "=", "2025-10-01");
+        checkFilter(I, 3, "DATA", "Končí na", "Kokos je king");
+        checkFilter(I, 4, "AVAILABLE", "false", null);
+
+        I.say("Remove some filters");
+            I.click( locate("#filtersTable > tbody > tr:nth-child(1)").find("input.filter-row-select"));
+            I.click( locate("#filtersTable > tbody > tr:nth-child(2)").find("input.filter-row-select"));
+            I.click( locate("#filtersDiv").find("button.btn-danger") );
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const checkParams2 = {
+        groupIds: '27',
+        alsoSubGroups: 'true',
+        publishType: 'next',
+        order: 'rating',
+        ascending: 'true',
+        paging: 'false',
+        pageSize: '25',
+        offset: '8',
+        perexNotRequired: 'false',
+        loadData: 'false',
+        checkDuplicity: 'true',
+        removeDefaultDocs: 'false',
+        template: 'news01',
+        perexGroup: '3+625',
+        perexGroupNot: '626+2'
+    };
+
+    await Apps.assertParams(checkParams2);
+
+    //Check filter values .. because of format I cant use assertParams
+    Apps.switchEditor('html');
+    I.see("filter[DATA_ew]=Kokos je king");
+    I.dontSee("filter[AUTHORID_le]=666,");
+    I.dontSee("filter[DATECREATED_eq]=2025-10-01,");
+    I.see("filter[AVAILABLE_eq]=false");
+});
+
+function addFilter(I, docField, operator, value) {
+    I.say("Adding filter");
+    I.clickCss("button.btn-success");
+    I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , docField);
+    I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , operator);
+    if(value != null) { I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value); }
+}
+
+function checkFilter(I, position, docField, operator, value) {
+    I.say("Checking filter");
+    I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("select.fieldSelect"),  docField);
+    I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.operatorTd > select"),  operator);
+    if(value != null) { I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.valueTd > input"),  value); }
+}
+
 Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
 
     I.amOnPage("/apps/news/admin/");
@@ -97,44 +256,6 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
     I.see("Produktová stránka - B verzia")
-
-    I.switchTo();
-});
-
-Scenario('show perex groups by selected groupIds pageParams @current', async ({ I, DT, DTE, Document }) => {
-    //perex groups may be show only on selected folders
-    //when you setup news component it will show it by current folder
-    //they should be dependent also on selected groupIds by pageParams
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=10");
-    DTE.waitForEditor();
-
-    Document.editorComponentOpen();
-
-    I.waitForElement("#pills-dt-component-datatable-perex-tab")
-    I.clickCss("#pills-dt-component-datatable-perex-tab"); //znacky
-
-    pause();
-
-    I.seeElement( locate(".DTE_Field_Name_perexGroup").find("label") )
-
-    let options = await I.grabHTMLFrom('#disabledItemsLeft1');
-
-    I.assertContain(options, "podnikanie (id:2)");
-    I.assertNotContain(options, "Newsletter perex skupina (id:10)");
-
-    I.clickCss("#tabLink1"); //parametre aplikacie
-    I.fillField("#groupIds", "24,27");
-
-    I.say("Updating news component pageParams");
-    Document.editorComponentOk();
-
-    Document.editorComponentOpen();
-
-    I.waitForElement("#tabLink3");
-    I.clickCss("#tabLink3"); //znacky
-    options = await I.grabHTMLFrom('#disabledItemsLeft1');
-    I.assertContain(options, "podnikanie (id:2)");
-    I.assertContain(options, "Newsletter perex skupina (id:10)");
 
     I.switchTo();
 });
