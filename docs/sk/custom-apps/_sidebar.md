@@ -14,6 +14,7 @@
   - [Zoznam web stránok/noviniek](/custom-apps/news/)
   - [Používatelia](/custom-apps/apps/user/README.md)
   - [Konfigurácia](/custom-apps/config/README.md)
+  - [AI - pridanie nového poskytovateľa](/custom-apps/apps/ai/assistants/README.md)
   - Elektronický obchod
     - [Spôsoby platby](/custom-apps/apps/eshop/payment-methods/README.md)
 - Spring MVC

@@ -40,7 +40,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
     I.clickCss('#cke_11');
-    Document.screenshotElement('#cke_117','/redactor/webpages/working-in-editor/roletka.png');
+    Document.screenshotElement('#cke_119','/redactor/webpages/working-in-editor/roletka.png');
     I.clickCss('#cke_11');
 
     const selectorsAndPaths = [
@@ -120,7 +120,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
             I.switchTo();
             Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
             I.switchTo("#wjImagePixabayIframeElement");
-            I.clickCss('img[src="https://cdn.pixabay.com/photo/2012/04/12/23/47/car-30984_150.png"]');
+            I.clickCss('img[src*="https://cdn.pixabay.com/photo/"]');
             I.waitForVisible("#imageModal > div.modal-dialog");
             I.switchTo();
             Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-add.png');
@@ -171,7 +171,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         Document.screenshotElement(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_preview.png');
         I.switchTo(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last());
         I.switchTo();
-        I.switchTo("#cke_624_frame");
+        I.switchTo("#cke_590_frame");
         I.waitForElement('.cke_colormore', 10);
         I.clickCss('.cke_colormore');
         I.switchTo();

@@ -75,6 +75,9 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.export.expandGroupIds")
     protected Boolean alsoSubGroups = false;
 
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.subGroupsDepth")
+    protected Integer subGroupsDepth = -1;
+
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.publishtype",
         editor = @DataTableColumnEditor(
             options = {
@@ -87,6 +90,17 @@ public class NewsApp extends WebjetComponentAbstract  {
         )
     )
     protected String publishType = PublishType.NEW.name();
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.doc_mode.title",
+        editor = @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = "components.news.doc_mode.all", value = "0"),
+                @DataTableColumnEditorAttr(key = "components.news.doc_mode.only", value = "1"),
+                @DataTableColumnEditorAttr(key = "components.news.doc_mode.exclude", value = "2")
+            }
+        )
+    )
+    protected Integer docMode = 0;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.ordertype",
         editor = @DataTableColumnEditor(
@@ -188,5 +202,13 @@ public class NewsApp extends WebjetComponentAbstract  {
     public int getOffset()
 	{
 		return offset == null ? 0 : offset.intValue();
+	}
+
+    public int getSubGroupsDepth() {
+		return subGroupsDepth == null ? -1 : subGroupsDepth;
+	}
+
+	public int getDocMode() {
+		return docMode == null ? 0 : docMode;
 	}
 }

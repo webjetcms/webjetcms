@@ -108,12 +108,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	private boolean includeActualDoc = false;
 
 	@PageParamOnly
-	private int subGroupsDepth = -1;
-
-	@PageParamOnly
-	private int docMode = 0;
-
-	@PageParamOnly
 	private boolean returnDocsWithAtributes = false;
 
 	@PageParamOnly
@@ -1496,14 +1490,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public boolean isAlsoSubGroups()
 	{
 		return Tools.isTrue(alsoSubGroups);
-	}
-
-	public int getSubGroupsDepth() {
-		return subGroupsDepth;
-	}
-
-	public int getDocMode() {
-		return docMode;
 	}
 
 	public int getPerexCrop()

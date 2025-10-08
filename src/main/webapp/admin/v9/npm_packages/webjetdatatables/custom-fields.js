@@ -661,6 +661,18 @@ export function update(EDITOR, action) {
         //JICH - add end
     });
 
+    //Init tooltip on AI buttons
+    setTimeout(function() {
+        $("#"+datatable.DATA.id+"_modal button.btn-ai[data-toggle*='tooltip']").each(function(){
+            let buttons = $(this);
+            for (let i=0; i<buttons.length; i++) {
+                //console.log("Init tooltip for button: ", $(buttons[i]));
+                let button = $(buttons[i]);
+                WJ.initTooltip(button, 'tooltip-ai');
+            }
+        });
+    }, 1300);
+
     //Find label of booleanText field and set empty string
     if(booleanTextFields.length > 0) {
         booleanTextFields.forEach(function(item) {

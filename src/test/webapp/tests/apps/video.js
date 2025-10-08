@@ -38,7 +38,7 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
         "badge": "1"
     }
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
 
     I.say("Check images");

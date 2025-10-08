@@ -1,22 +1,8 @@
 package sk.iway.iwcm.system.spring;
 
-import org.eclipse.persistence.jpa.JpaEntityManager;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaContext;
-import org.springframework.stereotype.Component;
-
-@Component
+//safe to delete, just for update purposes
+//if you put some Spring code here setup process will fail, put it on subpackage
 public class SpringTools {
 
-    @Autowired
-    private JpaContext jpaContext;
 
-    /**
-     * Return JpaEntityManager for given class.
-     * @param clazz
-     * @return
-     */
-    public JpaEntityManager getSpringEntityManager(Class<?> clazz) {
-        return (JpaEntityManager) jpaContext.getEntityManagerByManagedType(clazz);
-    }
 }
