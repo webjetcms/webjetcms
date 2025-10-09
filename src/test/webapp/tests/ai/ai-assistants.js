@@ -410,11 +410,15 @@ function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = fa
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span").withText(assistantName) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span.provider").withText("(" + provider + ")") );
 
+    if ("Vytvoriť zoznam kľúčových slov" === assistantName) {
+        return; //response is too fast, do not check AI working status
+    }
+
     if(hasContainer === false) {
-        I.seeElement( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
+        I.waitForElement( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 10 );
         I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-exclamation-circle") );
     } else {
-        I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje...") );
+        I.waitForElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 10 );
         I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span > i.ti.ti-exclamation-circle") );
     }
 }

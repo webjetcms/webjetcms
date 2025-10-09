@@ -53,9 +53,7 @@ public class SearchRestController extends WebpagesDatatable {
 
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
-        SpecSearch<DocDetails> specSearch = new SpecSearch<>();
-        WebpagesService.addBaseSpecSearch(specSearch, params, predicates, root, builder);
-        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
         super.addSpecSearch(params, predicates, root, builder);
+        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
     }
 }

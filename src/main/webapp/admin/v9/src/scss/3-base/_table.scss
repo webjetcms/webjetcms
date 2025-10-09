@@ -596,6 +596,9 @@ table.datatableInit {
                 padding-left: 6px;
                 padding-right: 6px;
             }
+            &.buttons-select:active {
+                background-color: transparent;
+            }
         }
 
         > .btn {

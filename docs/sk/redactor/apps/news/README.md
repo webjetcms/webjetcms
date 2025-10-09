@@ -10,10 +10,10 @@ Zoznam noviniek v administrácii je podobný zoznamu web stránok, ale neobsahuj
 
 ![](admin-dt.png)
 
-Hodnoty vo výberovom poli priečinku v hlavičke sa generujú:
+Hodnoty vo výberovom poli sekcie v hlavičke sa generujú:
 
 - automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`.
-- podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiadkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
+- podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
 
 Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor.md).
 
