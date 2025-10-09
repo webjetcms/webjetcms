@@ -553,12 +553,16 @@ public class PathFilter implements Filter
 			//kontrola jsessionid v URL, vynimka pre .jsessionid. je pre grpd cookie modul kde sa edituje takyto kluc
 			if (path.toLowerCase().contains("jsessionid") || (req.getQueryString()!=null && req.getQueryString().toLowerCase().contains("jsessionid") && req.getQueryString().toLowerCase().contains(".jsessionid.")==false) || req.isRequestedSessionIdFromURL())
 			{
-				String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
-				Logger.error(PathFilter.class, description);
+				//jsessionid is added to URL by PD4ML, so allow /thumb and /images paths
+				if (path.startsWith("/images/")==false && path.startsWith("/thumb/images/")==false)
+				{
+					String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
+					Logger.error(PathFilter.class, description);
 
-				//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
-				req.getSession().invalidate();
-				req.getSession(true);
+					//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
+					req.getSession().invalidate();
+					req.getSession(true);
+				}
 
 				String pathFixed = path;
 				int i = pathFixed.toLowerCase().indexOf(";jsessionid");
@@ -2621,7 +2625,7 @@ public class PathFilter implements Filter
 		}
 
 		//ak path obsahuje vyraz html tak token nie je potrebny
-		if (path.contains("/html") || path.contains("html/")) return true;
+		if (path.contains("/html") || path.contains("html/") || path.contains("/binary") || path.contains("binary/")) return true;
 
 		//pouziva sa pri prihlaseni tokenom, vtedy CSRF nie je posielane
 		if (request.getAttribute("csrfDisabled")!=null) return true;

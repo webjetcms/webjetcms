@@ -457,13 +457,17 @@ public class StatTableDB {
 	 *
 	 * @return				Vrati sa zoznam stranok, ktore zodpovedaju filtrovacim parametrom, ak citanie z databazy prebehne v poriadku. Inak sa vrati prazdny zoznam.
 	 */
-	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url) {
-		return getErrorPages(max_size, from, to, url, null, null);
+	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, boolean withoutBots) {
+		return getErrorPages(max_size, from, to, url, null, null, withoutBots);
 	}
 
-	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, String errorText, String countRange)
+	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, String errorText, String countRange, boolean withoutBots)
 	{
 		List<Column> ret = new ArrayList<>();
+
+		String whitelistedQuery = "";
+		if(withoutBots)
+			whitelistedQuery = StatNewDB.getWhiteListedUAQuery();
 
 		String[] suffixes = StatNewDB.getTableSuffix("stat_error", from.getTime(), to.getTime());
 		for (int s=(suffixes.length-1); s>=0; s--)
@@ -486,6 +490,9 @@ public class StatTableDB {
 				sql += " AND (domain_id=0 OR domain_id="+CloudToolsForCore.getDomainId()+") ";
 			}
 
+			//remove bots
+			sql += whitelistedQuery;
+
 			sql += " GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC";
 
 			Logger.debug(StatTableDB.class, "getErrorPages sql:"+sql);
@@ -503,6 +510,7 @@ public class StatTableDB {
 				Column col;
 				int count = 0;
 
+				//there can be multiple rows with different browser_ua_id, we need to group them into one column object
 				while (rs.next() && count < max_size)
 				{
 					col = new Column();

@@ -636,6 +636,14 @@
 
             this.mark_sections(this.$wrapper);
             // <%--// this.mark_editable_elements(this.$wrapper);--%>
+
+            //check for empty-placeholder and remove it if neccessary
+            var sections = $(this.$wrapper).children(this.grid.section);
+            if(sections.length==0){
+                this.create_empty_placeholder(this.$wrapper);
+            } else {
+                this.remove_empty_placeholder();
+            }
         },
 
         /*==================================================================
@@ -1067,6 +1075,10 @@
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
                 }
             }
+        },
+
+        remove_empty_placeholder: function(){
+            this.$wrapper.find(this.tagc.empty_placeholder).remove();
         },
 
         create_dimmer: function(el){

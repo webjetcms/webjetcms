@@ -622,7 +622,7 @@ private static String combineCss(String cssStyle)
         }
         catch (Exception ex)
         {
-            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message")+" 1");
+            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message")+" 1", request);
             request.setAttribute("err_msg", prop.getText("admin.showdoc_default_error_message"));
             request.getRequestDispatcher("error").forward(request,response);
             return;
@@ -1127,7 +1127,7 @@ private static String combineCss(String cssStyle)
 
         if (temp == null)
         {
-            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message.template_error"));
+            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message.template_error"), request);
             request.setAttribute("err_msg", prop.getText("admin.showdoc_default_error_message"));
             //request.setAttribute("err_msg", "Požadovaný dokument neexistuje - template error");
             Adminlog.add(Adminlog.TYPE_RUNTIME_ERROR, "Missing template for page: "+doc.getDocId()+", required template id: "+doc.getTempId(), doc.getDocId(), doc.getTempId());
@@ -1460,7 +1460,7 @@ private static String combineCss(String cssStyle)
 
             f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath("/templates/")), forward, bd);
             if (!f.exists()) {
-                StatDB.addError(request.getRequestURI() + "?" + request.getQueryString(), prop.getText("admin.showdoc_error_message.template") + " " + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
+                StatDB.addError(request.getRequestURI() + "?" + request.getQueryString(), prop.getText("admin.showdoc_error_message.template") + " " + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!", request);
                 Logger.error(this, prop.getText("admin.showdoc_error_message.template") + " /templates/" + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
                 //sablona neexistuje, asi som na testovacom serveri u jeeffa...
 

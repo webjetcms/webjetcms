@@ -850,17 +850,35 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
    	return(encoding);
    }
 
-   public static RequestBean getCurrentRequestBean()
+   	public static RequestBean getCurrentRequestBean()
 	{
-   	try
+   		try
 		{
-   		return requests.get(Thread.currentThread().getId());
+   			return requests.get(Thread.currentThread().getId());
 		}
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.error(e);
 		}
 		return null;
+	}
+
+	/**
+	 * Set RequestBean for current thread, USE WITH CAUTION!
+	 * Only if you know what you are doing - usualy in async processing/future tasks.
+	 * @param requestBean
+	 */
+	public static void setCurrentRequestBean(RequestBean requestBean)
+	{
+		try
+		{
+			Logger.debug("Setting request bean to thread: "+Thread.currentThread().getId());
+			requests.put(Thread.currentThread().getId(), requestBean);
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+		}
 	}
 
    private boolean isLoggedAsSomeoneElse(HttpServletRequest request, Identity user)
