@@ -290,7 +290,7 @@ public class FormMailAction extends HttpServlet
 						{
 							if (restriction!=null)
 							{
-								String filePath = XhrFileUploadServlet.getTempFilePath(fileKey);
+								String filePath = XhrFileUploadServlet.getService().getTempFilePath(fileKey);
 								Logger.debug(FormMailAction.class, "Multiupload, fileKey=" + fileKey + " path=" + filePath);
 								if (filePath != null)
 								{
@@ -304,7 +304,7 @@ public class FormMailAction extends HttpServlet
 									}
 								}
 							}
-							String fileName = XhrFileUploadServlet.getTempFileName(fileKey);
+							String fileName = XhrFileUploadServlet.getService().getTempFileName(fileKey);
 							if (Tools.isNotEmpty(fileName)) {
 								if (fileNames.length()>0) fileNames.append(", ");
 								fileNames.append(fileName);
@@ -1346,7 +1346,7 @@ public class FormMailAction extends HttpServlet
 									{
 										for (String param : Tools.getTokens(keys, ";"))
 										{
-											String fileName = XhrFileUploadServlet.moveFile(param, baseDirName + File.separator);
+											String fileName = XhrFileUploadServlet.getService().moveFile(param, baseDirName + File.separator);
 											IwcmFile file = new IwcmFile(dir, fileName);
 											if (file.exists())
 											{

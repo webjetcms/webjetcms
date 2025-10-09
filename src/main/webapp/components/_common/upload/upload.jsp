@@ -97,23 +97,23 @@ PageParams pp = new PageParams(request);
 
                         this.on("success", function(file)
                         {
-                            /*
-                            console.log("Upload success");
-                            console.log(file);
-                            */
+                            //console.log("Upload success, file: ", file);
 
-                            //console.log("response: " + file.xhr.response);
                             var response = JSON.parse(file.xhr.response);
                             var key = response.key;
 
-                            //console.log(key);
-
-                            //console.log(element);
+                            //console.log("response: ", response, "key: ", key, "element: ", element);
 
                             var input = element.find("input");
                             var uploadedObjectsInfo = element.find('input.uploadedObjectsInfo');
 
-                            if (input.length>0)
+                            if (response.success === false) {
+                                this.removeFile(file);
+                                if (response.error) window.alert(response.error);
+                                return;
+                            }
+
+                            if (input.length>0 && response.success === true)
                             {
                                 if (input[0].value == "" || dzmaxfiles==1) input[0].value = key;
                                 else input[0].value = input[0].value + ";" + key;
