@@ -300,7 +300,7 @@ public class PdfTools {
          String pdfBaseUrl = Constants.getString("pdfBaseUrl");
          if ("NULL".equalsIgnoreCase(pdfBaseUrl))
          {
-             //v tomto pripade si PD4ML sam nacita obrazky z file systemu, potrebuje astaveny Context a Request
+             //v tomto pripade si PD4ML sam nacita obrazky z file systemu, potrebuje nastaveny Context a Request
              pd4ml.useServletContext(Constants.getServletContext());
              if (request != null) pd4ml.useHttpRequest(request, null);
 
