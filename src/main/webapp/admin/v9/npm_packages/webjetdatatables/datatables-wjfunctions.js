@@ -279,7 +279,12 @@ export function getTitle(EDITOR, row = null) {
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
             if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
-                title = row[col.data];
+                if (col.data.indexOf(".")!=-1) {
+                    //hlbsi objekt
+                    title = WJ.getJsonProperty(row, col.data);
+                } else {
+                    title = row[col.data];
+                }
                 try {
                     if ("[object Object]"==title && "group"==col.data) {
                         title = row[col.data].fullPath;
