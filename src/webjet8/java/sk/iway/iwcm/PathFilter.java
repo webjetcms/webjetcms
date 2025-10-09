@@ -2621,7 +2621,7 @@ public class PathFilter implements Filter
 		}
 
 		//ak path obsahuje vyraz html tak token nie je potrebny
-		if (path.contains("/html") || path.contains("html/")) return true;
+		if (path.contains("/html") || path.contains("html/") || path.contains("/binary") || path.contains("binary/")) return true;
 
 		//pouziva sa pri prihlaseni tokenom, vtedy CSRF nie je posielane
 		if (request.getAttribute("csrfDisabled")!=null) return true;

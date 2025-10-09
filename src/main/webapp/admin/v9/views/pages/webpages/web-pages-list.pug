@@ -779,8 +779,14 @@ block content
                             groupsDatatable.setAjaxUrl(groupsInitialUrl);
                             groupsDatatable.ajax.reload();
                         }
+
+                        //show pages DT if last one is folders
+                        if ($("#groups-datatable_wrapper").is(":visible")) {
+                            $("#datatableInit_wrapper").show();
+                            $("#groups-datatable_wrapper").hide();
+                        }
                     } else {
-                        //console.log("PILLS pages CLICK");
+                        //console.log("PILLS pages CLICK, id=", id);
 
                         showHidePageRecoverButtons();
 

@@ -1,5 +1,9 @@
 package sk.iway.iwcm.common;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
@@ -12,6 +16,8 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.gallery.GalleryDB;
+import sk.iway.iwcm.io.IwcmFile;
 
 public class UploadFileTools {
 
@@ -276,4 +282,37 @@ public class UploadFileTools {
     {
         return getPageUploadSubDir(docId, groupId, null, null);
     }
+
+    /**
+     * Handle all processing required for gallery - create resized images, store upload date etc.
+     * @param newFileIwcm
+     * @param dateCreated
+     * @return list of added files (resized images) - relative to virtual parent, e.g. s_image.jpg, o_image.jpg
+     */
+    public static List<String> handleGallery(IwcmFile newFileIwcm, Date dateCreated) {
+		List<String> added = new ArrayList<>();
+		String dir = newFileIwcm.getVirtualParent();
+		if (FileTools.isImage(newFileIwcm.getName())) {
+			if (GalleryDB.isGalleryFolder(dir)) {
+				//we must replace o_ file because it will be used in resize process instead of new file
+				IwcmFile orig = new IwcmFile(Tools.getRealPath(dir+"/o_"+newFileIwcm.getName()));
+				if (orig.exists()) {
+					FileTools.copyFile(newFileIwcm, orig);
+				}
+
+				GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir);
+				added.add("s_"+newFileIwcm.getName());
+				added.add("o_"+newFileIwcm.getName());
+			} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
+				GalleryDB.setImage(dir, newFileIwcm.getName());
+			}
+
+			//zapise datum vytvorenia fotografie (ak vieme ziskat)
+			if (dateCreated != null) {
+				GalleryDB.setUploadDateImage(dir, newFileIwcm.getName(), dateCreated.getTime());
+			}
+            GalleryDB.clearInterestPoint(dir, newFileIwcm.getName());
+		}
+		return added;
+	}
 }

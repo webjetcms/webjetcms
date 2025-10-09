@@ -71,11 +71,25 @@ global.WjPasswordStrength = WjPasswordStrength;
 
 import '../js/datatables-upload.js';
 
+//set backCompact for elfinder, when you update elfinder check, if it is still needed
+import './ui-config.js';
+
 import 'jquery-ui/ui/widgets/draggable';
+import 'jquery-ui/ui/widgets/droppable';
 import 'jquery-ui/ui/widgets/autocomplete';
+//this is required for elfinder
+import 'jquery-ui/ui/widgets/selectable';
+import 'jquery-ui/ui/widgets/resizable';
+import 'jquery-ui/ui/widgets/controlgroup';
+import 'jquery-ui/ui/widgets/button';
+import 'jquery-ui/ui/widgets/slider';
+//import 'jquery-ui/ui/widgets/tooltip'; - set as bsTooltip later
 
 import 'jquery-ui/themes/base/theme.css';
 import 'jquery-ui/themes/base/draggable.css';
+import 'jquery-ui/themes/base/resizable.css';
+import 'jquery-ui/themes/base/slider.css';
+//import 'jquery-ui/themes/base/tooltip.css';
 
 import 'bootstrap';
 import '../scss/ninja.scss';
@@ -87,6 +101,9 @@ const createInlineCss = () => {
 window.createInlineCss = createInlineCss;
 
 const bootstrap = (window.bootstrap = require('bootstrap'));
+$.fn.bsTooltip = bootstrap.Tooltip.jQueryInterface;
+//override UI tooltip with bootstrap tooltip
+$.fn.tooltip = bootstrap.Tooltip.jQueryInterface;
 
 //na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
 //tiez musi ist cez require, inak to padalo ze nepozna bootstrap objekt

@@ -245,6 +245,7 @@ public class MultiDomainFilter implements Filter
 	 */
 	public static String getDomainAlias(String domain)
 	{
+		if (domain == null) return "";
 		if (domainMapping == null)
 		{
 			domainMapping = new Hashtable<>();

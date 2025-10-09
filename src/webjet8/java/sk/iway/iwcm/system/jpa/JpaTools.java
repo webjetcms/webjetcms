@@ -19,9 +19,12 @@ import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.ReportQuery;
 import org.eclipse.persistence.queries.ReportQueryResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.jpa.repository.JpaContext;
+import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
@@ -31,7 +34,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
-import sk.iway.iwcm.system.spring.SpringTools;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -45,8 +47,12 @@ import sk.iway.iwcm.utils.Pair;
  *@created      Date: 14.4.2010 15:33:13
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
+@Component
 public class JpaTools
 {
+	@Autowired
+    private JpaContext jpaContext;
+
 	/**
 	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
 	 *
@@ -591,8 +597,22 @@ public class JpaTools
 		}
 	}
 
+	/**
+     * Return JpaEntityManager for given class.
+     * @param clazz
+     * @return
+     */
+    private JpaEntityManager getSpringEntityManagerImpl(Class<?> clazz) {
+        return (JpaEntityManager) jpaContext.getEntityManagerByManagedType(clazz);
+    }
+
+	/**
+     * Return JpaEntityManager for given class.
+     * @param clazz
+     * @return
+     */
 	public static JpaEntityManager getSpringEntityManager(Class<?> clazz) {
-		SpringTools springTools = Tools.getSpringBean("springTools", SpringTools.class);
-		return springTools.getSpringEntityManager(clazz);
+		JpaTools jpaTools = Tools.getSpringBean("jpaTools", JpaTools.class);
+		return jpaTools.getSpringEntityManagerImpl(clazz);
 	}
 }

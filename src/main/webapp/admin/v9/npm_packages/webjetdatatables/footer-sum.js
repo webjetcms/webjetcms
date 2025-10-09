@@ -26,19 +26,28 @@ export function footerCallback(TABLE) {
         const title = DATA.summary.title;
 
         //create tr element
-        let tr;
+        let tr = null;
         if("all" === mode && DATA.serverSide === true) {
             //This one is tricky situation, BECAUSE we need all data but we are using server side processing
             //We need to call the server to get sum of needed columns
             tr = getTableFooterRowServerSide(TABLE, title, columnsToSum);
+        } else if ("datatable" === mode) {
+            //summary is returned directly in DatatablePageImpl.summary with /all or /findByColumns calls
+            if (typeof DATA.json !== "undefined" && DATA.json != null && typeof DATA.json.summary === "object" && DATA.json.summary != null) {
+                tr = $("<tr></tr>");
+                _setFooterFromJson(DATA.json.summary, TABLE, tr, DATA.summary.title);
+            }
         } else {
             //Current DATA are sufficient, we can use them
             tr = getTableFooterRow(TABLE, title, columnsToSum, mode);
         }
 
-        let tfoot = $("#" + DATA.id + "_wrapper").find(".dt-scroll-footInner > table > tfoot");
-        if(tfoot != undefined && tfoot.length > 0) {
-            tfoot.html(tr);
+        if (tr != null) {
+            let tfoot = $("#" + DATA.id + "_wrapper").find(".dt-scroll-footInner > table > tfoot");
+            if(tfoot != undefined && tfoot.length > 0) {
+                tfoot.html(tr);
+                tfoot.parents(".dt-scroll-foot").show();
+            }
         }
     }
 }
@@ -97,9 +106,16 @@ function getTableFooterRow(api, title, columnsToSum, mode) {
         var columnId = column.dataSrc();
         let td = $("<td></td>");
 
+        try {
+            let width = $(column.header()).outerWidth();
+            td.css("width", width + "px");
+        } catch(e) {
+            console.log("Error getting column width, e=", e);
+        }
+
         if(counter === 0 && title !== undefined && title !== null && title !== "") {
-            let b = $("<b></b>");
-            b.text(title);
+            let b = $('<div class="datatable-column-width"><b></b></div>');
+            b.find("b").text(title);
             td.append(b);
         } else {
             //Check - we can SUM only number columns
@@ -108,7 +124,7 @@ function getTableFooterRow(api, title, columnsToSum, mode) {
                 if(columnsToSum != null && columnsToSum.length > 0 && columnsToSum.includes(columnId) == true) {
                     //OKK column is number, and belongs to DATA.summary.columns - return SUM of column
                     let b = $("<b></b>");
-                    b.text(getSum(api, column.index(), mode));
+                    b.html('<div class="datatable-column-width">' + getSum(api, column.index(), mode) + '</div>');
                     td.append(b);
                     tr.append(td);
                     return;
@@ -169,36 +185,7 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
         success: function (json) {
             json = JSON.parse(json);
 
-            api.columns(':visible').every(function() {
-                var column = this;
-                var columnId = column.dataSrc();
-                let td = $("<td></td>");
-
-                if("id" === columnId) {
-                    //Special column, if TITLE is set, we add it
-                    if(title !== undefined && title !== null) {
-                        let b = $("<b></b>");
-                        b.text(title);
-                        td.append(b);
-                        tr.append(td);
-                    } else {
-                        //If TITLE is not set, we add an empty cell
-                        tr.append(td);
-                    }
-                    return;
-                }
-
-                if(columnId in json) {
-                    let b = $("<b></b>");
-                    b.text(json[columnId]);
-                    td.append(b);
-                    tr.append(td);
-                    return;
-                } else {
-                    tr.append(td);
-                }
-            });
-
+            _setFooterFromJson(json, api, tr, title);
         },
         error: function (xhr, ajaxOptions, thrownError) {
             console.log("Error, xhr=", xhr, " ajaxOptions=", ajaxOptions, " thrownError=", thrownError);
@@ -206,6 +193,47 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
     });
 
     return tr;
+}
+
+function _setFooterFromJson(json, api, tr, title) {
+    let counter = 0;
+    api.columns(':visible').every(function() {
+        var column = this;
+        var columnId = column.dataSrc();
+        let td = $("<td></td>");
+
+        try {
+            let width = $(column.header()).outerWidth();
+            td.css("width", width + "px");
+        } catch(e) {
+            console.log("Error getting column width, e=", e);
+        }
+
+        //console.log("setFooterFromJson, columnId=", columnId, " json=", json, " title=", title);
+
+        if(counter++ == 0) {
+            //Special column, if TITLE is set, we add it
+            if(title !== undefined && title !== null) {
+                let b = $('<div class="datatable-column-width"><b></b></div>');
+                b.find("b").text(title);
+                td.append(b);
+                tr.append(td);
+            } else {
+                //If TITLE is not set, we add an empty cell
+                tr.append(td);
+            }
+            return;
+        }
+
+        if(columnId in json) {
+            let b = $("<b></b>");
+            b.html('<div class="datatable-column-width">' + json[columnId] + '</div>');
+            td.append(b);
+            tr.append(td);
+        } else {
+            tr.append(td);
+        }
+    });
 }
 
 function isCallbackSet(TABLE) {
