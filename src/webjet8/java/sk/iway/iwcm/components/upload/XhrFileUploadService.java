@@ -31,7 +31,7 @@ import java.util.Optional;
 
 /**
  * Service for handling file uploads via XHR.
- * It stores uploaded file chunks temporarily and assembles them once all chunks are received.
+ * It stores uploaded file chunks temporarily in random folder, and assembles them once all chunks are received.
  * It also provides methods to move, replace, and delete uploaded files by their unique keys.
  */
 @Service
