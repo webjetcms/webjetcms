@@ -11,7 +11,6 @@ application/chemtool cht
 application/dicom dcm
 application/docbook+xml docbook
 application/ecmascript ecma
-application/flash-video flv
 application/illustrator ai
 application/javascript js
 application/mac-binhex40
@@ -202,7 +201,6 @@ application/x-macbinary
 application/x-machine-config
 application/x-magicpoint mgp
 application/x-master-page master
-application/x-matroska mkv
 application/x-mdp mdp
 application/x-mds mds
 application/x-mdsx mdsx
@@ -495,6 +493,13 @@ video/x-msvideo avi
 video/x-nsv nsv NSV
 video/x-real-video
 video/x-sgi-movie movie
+video/mp4 mp4
+video/webm webm
+video/ogg ogv
+video/x-matroska mkv mk3d mks
+video/x-flv flv
+video/mp2t ts m2t m2ts mts
+video/x-m4v m4v
 application/x-java-jnlp-file      jnlp
 application/vnd.openxmlformats-officedocument.wordprocessingml.document docx
 application/vnd.openxmlformats-officedocument.wordprocessingml.template dotx
@@ -514,4 +519,3 @@ text/jsp jsp
 text/plain properties
 text/json json
 text/markdown md
-video/mp4 mp4

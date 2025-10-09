@@ -171,7 +171,7 @@ public class FsItemEx
 	public List<FsItemEx> listChildren()
 	{
 		if(_s instanceof sk.iway.iwcm.system.elfinder.FsService customService) {
-			// USe custom logic
+			// use custom logic
 			return listChildren(customService.getSelectedType());
 		}
 
