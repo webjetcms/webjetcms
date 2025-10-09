@@ -20,7 +20,7 @@ public class OpenRouterStreamHandler {
     IncludesHandler includeHandler;
 
     public OpenRouterStreamHandler(Map<Integer, String> replacedIncludes) {
-        this.includeHandler = new IncludesHandler(replacedIncludes, null);
+        this.includeHandler = new IncludesHandler(replacedIncludes);
     }
 
     public final JsonNode getUsageChunk() {
@@ -32,6 +32,11 @@ public class OpenRouterStreamHandler {
         root.set("usage", usage);
         return root;
     }
+
+    public final String getWholeResponse() {
+        return includeHandler.getWholeResponse();
+    }
+
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
         String line;

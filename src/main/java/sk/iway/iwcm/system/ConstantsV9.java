@@ -160,6 +160,7 @@ public class ConstantsV9 {
 		Constants.setString("ai_openAi_generateFileNameModel", "gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_gemini_generateFileNameModel", "gemini-pro-latest", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_openRouter_generateFileNameModel", "openai/gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
+		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "");
 	}
 
 	/**

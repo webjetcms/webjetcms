@@ -33,6 +33,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for Google Gemini AI model integration. We do not use any official SDK, but
@@ -132,10 +133,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return httpPost;
     }
 
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+    public Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
         GeminiStreamHandler streamHandler = new GeminiStreamHandler(replacedIncludes);
         streamHandler.handleBufferedReader(reader, writer);
-        return streamHandler.getUsageChunk();
+        return new Pair<>(streamHandler.getWholeResponse(), streamHandler.getUsageChunk());
     }
 
     @Override
@@ -181,6 +182,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     public String getFinishError(JsonNode jsonNodeRes) {
         // Extract finishReason from Jackson JsonNode response
         String finishReason = null;
+        String finishText = null;
         try {
             JsonNode candidates = jsonNodeRes.path("candidates");
             if (candidates.isArray()) {
@@ -190,6 +192,12 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
                         // Last non-null value wins (in case of multiple candidates)
                         finishReason = frNode.asText();
                     }
+
+                    JsonNode frNode2 = candidate.get("finishMessage");
+                    if (frNode2 != null && frNode2.isTextual()) {
+                        // Last non-null value wins (in case of multiple candidates)§
+                        finishText = frNode2.asText();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -198,7 +206,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
         //Gemini do not give better explanation that just this (unlike OpenAI with detail object)
         if(Tools.isEmpty(finishReason) || "STOP".equalsIgnoreCase(finishReason)) return null; //its ok
-        else return finishReason; // NOT ok
+        else {
+            if(Tools.isNotEmpty(finishText)) return "(" + finishReason + ") " + finishText;
+            return finishReason;
+        }
     }
 
     public ArrayNode getImages(JsonNode jsonNodeRes) {
