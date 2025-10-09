@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Holder for partial upload information.
+ * It keeps track of the number of chunks, file name, unique key, and paths of the uploaded parts.
+ */
 public class PartialUploadHolder implements Serializable {
     private static final long serialVersionUID = 1L;
     private int chunks;
