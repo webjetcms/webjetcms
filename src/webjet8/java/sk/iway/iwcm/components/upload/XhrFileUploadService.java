@@ -41,7 +41,7 @@ public class XhrFileUploadService {
         Prop prop = Prop.getInstance();
         try {
             String name = request.getParameter("name");
-            Logger.debug(XhrFileUploadServlet.class, "doPost, name from parameter: "+name);
+            Logger.debug(XhrFileUploadService.class, "doPost, name from parameter: "+name);
 
             //dropzone.js kompatibilita
             Part filePart = request.getPart("file");
@@ -58,14 +58,14 @@ public class XhrFileUploadService {
                 name = filePart.getSubmittedFileName();
             }
 
-            Logger.debug(XhrFileUploadServlet.class, "doPost, name from filePart: "+name);
+            Logger.debug(XhrFileUploadService.class, "doPost, name from filePart: "+name);
 
             String extension = FileTools.getFileExtension(name);
 
-            Logger.debug(XhrFileUploadServlet.class, "doPost, name="+name+", extension="+extension);
+            Logger.debug(XhrFileUploadService.class, "doPost, name="+name+", extension="+extension);
             List<String> allowedExtensions = Tools.getStringListValue(Tools.getTokens(Constants.getString("xhrFileUploadAllowedExtensions", ALLOWED_EXTENSIONS), " "));
             if (!allowedExtensions.contains("*") && !allowedExtensions.contains(extension)) {
-                Logger.debug(XhrFileUploadServlet.class, "doPost, extension not allowed: "+extension);
+                Logger.debug(XhrFileUploadService.class, "doPost, extension not allowed: "+extension);
                 XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
                 xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
                 xhrFileUploadResponse.setFile(name);
@@ -80,7 +80,7 @@ public class XhrFileUploadService {
             if (request.getParameter("dzchunkindex") != null) chunk = Tools.getIntValue(request.getParameter("dzchunkindex"), 0);
             if (request.getParameter("dztotalchunkcount") != null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
 
-            Logger.debug(XhrFileUploadServlet.class, "doPost, chunk="+chunk+", chunks="+chunks);
+            Logger.debug(XhrFileUploadService.class, "doPost, chunk="+chunk+", chunks="+chunks);
 
             HttpSession session = request.getSession();
 
@@ -107,7 +107,7 @@ public class XhrFileUploadService {
             File targetDir = new File(Tools.getRealPath(BASE_DIR + fileKey));
             if (!targetDir.exists()) {
                 boolean mkdirSuccess = targetDir.mkdirs();
-                Logger.debug(XhrFileUploadServlet.class, "mkdir result =" + mkdirSuccess);
+                Logger.debug(XhrFileUploadService.class, "mkdir result =" + mkdirSuccess);
             }
 
             //zapisem data do docasneho suboru
@@ -163,7 +163,7 @@ public class XhrFileUploadService {
                     fileWebjetEvent.publishEvent();
 
                     if (request.getAttribute("xhrError") != null) {
-                        Logger.debug(XhrFileUploadServlet.class, "doPost, xhrError, name="+name);
+                        Logger.debug(XhrFileUploadService.class, "doPost, xhrError, name="+name);
                         xhrFileUploadResponse = new XhrFileUploadResponse();
                         xhrFileUploadResponse.setFile(name);
                         xhrFileUploadResponse.setSuccess(false);
@@ -171,7 +171,7 @@ public class XhrFileUploadService {
                         return xhrFileUploadResponse;
                     }
 
-                    Logger.debug(XhrFileUploadServlet.class, "doPost, success, name="+name+", key="+fileKey);
+                    Logger.debug(XhrFileUploadService.class, "doPost, success, name="+name+", key="+fileKey);
 
                     xhrFileUploadResponse.putName(name);
                     xhrFileUploadResponse.putKey(fileKey);
@@ -186,7 +186,7 @@ public class XhrFileUploadService {
             return xhrFileUploadResponse;
         }
         catch (Exception ex) {
-            Logger.warn(XhrFileUploadServlet.class, ex.getMessage());
+            Logger.warn(XhrFileUploadService.class, ex.getMessage());
             sk.iway.iwcm.Logger.error(ex);
 
             XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();

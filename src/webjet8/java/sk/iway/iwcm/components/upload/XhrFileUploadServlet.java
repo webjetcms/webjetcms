@@ -93,7 +93,7 @@ public class XhrFileUploadServlet extends HttpServlet
 	 * Vrati service
 	 * @return - XhrFileUploadService
 	 */
-	private static XhrFileUploadService getService() {
+	public static XhrFileUploadService getService() {
 		return SpringContext.getApplicationContext().getBean("xhrFileUploadService", XhrFileUploadService.class);
 	}
 }
