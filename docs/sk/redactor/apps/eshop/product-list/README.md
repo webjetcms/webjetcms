@@ -66,13 +66,8 @@ V karte **Perex** je dôležité nastavenie:
 
 ### Karta Atribúty
 
-V karte atribúty využijeme výber skupiny telefónu na špecifikácií tovaru. Ako je to viditeľné na obrázku nižšie, pre skupinu `iPhone X` je možné nastavenie farby a pamäťovej varianty zariadenia. Tieto výberové polia sa zobrazujú v elektronickom obchode, pri detaile produktu.
+V karte atribúty využijeme výber skupiny telefónu na špecifikácií tovaru. Ako je to viditeľné na obrázku nižšie, pre skupinu `Monitor` je možné nastavenie výrobcu, uhlopriečky atď. Tieto výberové polia sa zobrazujú v elektronickom obchode, pri detaile produktu.
 
 ![](new-product-attr.png)
 
 Viac o atribútoch sa dočítate v časti [Atribúty stránky](../../../webpages/doc-attributes/README.md).
-
-
-
-
-
