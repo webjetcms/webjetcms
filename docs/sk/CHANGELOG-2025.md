@@ -23,6 +23,7 @@
 - Dátové tabuľky - opravené vyhľadávanie ak v jednom poli zvolíte možnosť "Začína na" a v inom poli napr. "Končí na" (#54273-70).
 - Dátové tabuľky / vyhľadávanie v administrácii - povolené špeciálne znaky (napr. úvodzovky) pre vyhľadávanie v dátových tabuľkách (#54273-70).
 - Formuláre - schované zbytočné tlačidlo na vytvorenie nového záznamu v zozname vyplnených formulárov (#54273-70).
+- Formulár ľahko - opravené nastavenie povinných polí v položkách formuláru (#57657-12).
 - Webové stránky - doplnená možnosť vkladať HTML kód do názvov priečinkov ako napríklad `WebJET<sup>TM</sup>` - v zozname webových stránok sa z dôvodu bezpečnosti HTML kód nevykoná, ale v aplikáciach ako Menu a navigačná lišta sa HTML kód zobrazí korektne a vykoná sa. Dôležitá podmienka je, aby kód obsahoval uzatváraciu značku `</...>`. HTML kód je odstránený aj z automaticky generovanej URL adresy. Povolený je len bezpečný HTML kód povolený v triede `AllowSafeHtmlAttributeConverter` (#54273-70).
 - Webové stránky - opravené zobrazenie karty média pri starých používateľoch, ktorý nemali právo na správu médií (#57657-10).
 - Dátové tabuľky - pre polia typu malý HTML editor (`quill`) **upravené správanie pre odrážkový zoznam** (HTML značka `ul`). Pôvodný editor nastavoval pre tento prípad na `li` elemente atribút `data-list="bullet"` a nedokázal použiť priamo `ul` element namiesto `ol` elementu. Nové správanie používa korektnú HTML značku `ul` a odstraňuje nepotrebný atribút `data-list="bullet"` (#54273-72).
@@ -32,6 +33,8 @@
 - Galéria - opravené zobrazenie zoznamu priečinkov pri použití doménových aliasov (zobrazenie iba priečinkov z aktuálne zvolenej domény) (#57657-11).
 - Galéria - opravené získanie vodoznaku pre galérie používajúce doménový alias (#57657-11).
 - Nahrávanie súborov - upravené spracovanie súborov nahrávaných cez `/XhrFileUpload`. Upravená verzia umožní reštartovať server a následne po obnovení `session` súbor korektne spracovať. Doplnené zobrazenie varovania ak súbor je nepovoleného typu (#PR75).
+- Galéria - zrušené nastavenie URL adresy pri zobrazení fotografií v galérii typu `PrettyPhoto` pre jednoduchšie použitie tlačidla späť v prehliadači (#57657-12).
+- Novinky - opravené nastavenie zobrazenia hlavných stránok z priečinkov (#57657-12).
 
 ## 2025.0.23
 
