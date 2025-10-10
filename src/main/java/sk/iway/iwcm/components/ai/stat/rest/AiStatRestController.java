@@ -101,4 +101,9 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
     ) {
         return AiStatService.getLineChartData(created, provider, action, groupName, asr, adr);
     }
+
+    @GetMapping("barChartTop10Users")
+    public List<LabelValueInteger> getBarChartDataTop10Users() {
+        return AiStatService.getBarChartDataTop10Users(asr, getProp());
+    }
 }

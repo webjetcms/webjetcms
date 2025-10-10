@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
-import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -44,25 +44,35 @@ import sk.iway.iwcm.utils.Pair;
  */
 public abstract class SupportLogic implements SupportLogicInterface {
 
-    public static final String AUDIT_AI_RESPONSE_KEY = "AI response";
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final CloseableHttpClient client = HttpClients.createDefault();
+
+    private static final String METHOD_TEXT_RESPONSE = "getAiResponse";
+    private static final String METHOD_TEXT_STREAM_RESPONSE = "getAiStreamResponse";
+    private static final String METHOD_IMAGE_RESPONSE = "getAiImageResponse";
+
+    private static final String IMAGE_AUDIT_RESPONSE = "Provider response for image contains large Base64 value, for this reason we do not audit them.";
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
-        CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute( getModelsRequest(request) )) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getSupportedModels");
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
+                Pair<String, String> errorPair = handleErrorMessage(response, prop);
+                StringBuilder sb = new StringBuilder("");
+                sb.append(getServiceName()).append(" getSupportedModels -> FAILED");
+                sb.append("\n\nError message: ").append("\n").append(errorPair.getFirst());
+                sb.append("\n\nFull response: ").append("\n").append( Tools.isEmpty(errorPair.getSecond()) == true ? " - " : errorPair.getSecond() );
+                Adminlog.add(Adminlog.TYPE_AI, sb.toString(), -1, -1);
+                return supportedValues;
+            }
 
             String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             if (Tools.isEmpty(value)) return supportedValues;
 
-            ObjectMapper mapper = new ObjectMapper();
+
             JsonNode root = mapper.readTree(value);
-
-            supportedValues = extractModels(root);
-
-            return supportedValues;
+            return extractModels(root);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -70,206 +80,177 @@ public abstract class SupportLogic implements SupportLogicInterface {
         return supportedValues;
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws ProviderCallException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
+        Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
+        String fullResponse = "";
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+        try {
+            //Handle replace of INCLUDE tags
+            Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+            String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-        CloseableHttpClient client = HttpClients.createDefault();
-        try (CloseableHttpResponse response = client.execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
-                handleErrorMessage(response, prop, "", "getAiResponse");
+            try (CloseableHttpResponse response = client.execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
+                if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                    errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, response, prop);
+
+                fullResponse = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+                JsonNode jsonNodeRes = mapper.readTree(fullResponse);
+
+                String finishError = getFinishError(jsonNodeRes);
+                if(Tools.isNotEmpty(finishError)) throw new IllegalStateException(finishError);
+
+                String responseText = extractResponseText(jsonNodeRes);
+                responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
+
+                //Usage
+                succesAdminLog(responseDto, inputPair, assistant, METHOD_TEXT_RESPONSE, responseDto.getResponse(), jsonNodeRes, 0, statRepo, request);
             }
-
-            ObjectMapper mapper = new ObjectMapper();
-
-            String responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            Logger.debug(this, "AI response: " + responseText);
-
-            JsonNode jsonNodeRes = mapper.readTree(responseText);
-
-            String finishError = getFinishError(jsonNodeRes);
-            if(Tools.isNotEmpty(finishError)) {
-                responseDto.setError(finishError);
-                return responseDto;
-            }
-
-            responseText = extractResponseText(jsonNodeRes);
-            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
-
-            //Usage
-            handleUsage(responseDto, assistant, jsonNodeRes, 0, statRepo, request);
+        } catch(ProviderCallException pce) {
+            // Error from response, audited already. Only re-throw
+            throw pce;
+        } catch (Exception e) {
+            // Other type of error - audit and throw
+            errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, new Pair<>(e.getLocalizedMessage(), fullResponse));
         }
 
         return responseDto;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws ProviderCallException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
+        Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+        try {
+            //Handle replace of INCLUDE tags
+            Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+            String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-        CloseableHttpClient client = HttpClients.createDefault();
-        try (CloseableHttpResponse response = client.execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
-                handleErrorMessage(response, prop, getServiceName(), "getAiStreamResponse");
+            try (CloseableHttpResponse response = client.execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
+                if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                    errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, response, prop);
+
+
+                HttpEntity entity = response.getEntity();
+                String encoding = getStreamEncoding(entity);
+
+                try (InputStream inputStream = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, encoding))) {
+                        Pair<String, JsonNode> results = handleBufferedReader(reader, writer, replacedIncludes);
+                        succesAdminLog(responseDto, inputPair, assistant, METHOD_TEXT_STREAM_RESPONSE, results.getFirst(), results.getSecond(), 0, statRepo, request);
+                }
             }
-
-            HttpEntity entity = response.getEntity();
-            String encoding = getStreamEncoding(entity);
-
-            try (InputStream inputStream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, encoding))) {
-                    JsonNode usage = handleBufferedReader(reader, writer, replacedIncludes);
-                    handleUsage(responseDto, assistant, usage, 0, statRepo, request);
-            }
+        } catch(ProviderCallException pce) {
+            // Error from response, audited already. Only re-throw
+            throw pce;
+        } catch (Exception e) {
+            // Other type of error - audit and throw
+            errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, new Pair<>(e.getLocalizedMessage(), null));
         }
 
         return responseDto;
     }
 
-    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
+    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws ProviderCallException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        Path tempFileFolder = AiTempFileStorage.getFileFolder();
-
-        //Pair<String, Integer> generatedFileName = generateImageName(assistant, inputData);
-        Pair<String, Integer> generatedFileName = getGeneratedImageName(assistant, inputData, prop, statRepo, request);
-        responseDto.setGeneratedFileName(generatedFileName.getFirst());
-
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
-
-        CloseableHttpClient client = HttpClients.createDefault();
+        Pair<String, String> inputPair = new Pair<>(inputData.getInputValue(), inputData.getUserPrompt());
         String responseText = null;
-        try (CloseableHttpResponse response = client.execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getAiImageResponse");
 
-            ObjectMapper mapper = new ObjectMapper();
-            responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            Logger.debug(this, "AI image response: " + DB.prepareString(responseText, 5000));
-            if (responseText != null) RequestBean.addAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY, DB.prepareString(responseText, 5000).trim());
-            JsonNode jsonNodeRes = mapper.readTree(responseText);
+        try {
+            Path tempFileFolder = AiTempFileStorage.getFileFolder();
+            Pair<String, Integer> generatedFileName = getGeneratedImageName(assistant, inputData, prop, statRepo, request);
+            responseDto.setGeneratedFileName(generatedFileName.getFirst());
 
-            String finishError = getFinishError(jsonNodeRes);
-            if(Tools.isNotEmpty(finishError)) {
-                responseDto.setError(finishError);
-                return responseDto;
-            }
+            String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
 
-            ArrayNode imagesArr = getImages(jsonNodeRes);
-            try {
+            try (CloseableHttpResponse response = client.execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
+                if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                    errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, response, prop);
+
+                responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+                JsonNode jsonNodeRes = mapper.readTree(responseText);
+
+                String finishError = getFinishError(jsonNodeRes);
+                if(Tools.isNotEmpty(finishError)) throw new IllegalStateException(finishError);
+
+                ArrayNode imagesArr = getImages(jsonNodeRes);
                 long datePart = Tools.getNow();
                 for(JsonNode jsonImage : imagesArr) {
 
-                    //temporal fix for google gemini retarded bug, where first (maybe not allways first) child in array is "text": "`" and not an actual image
-                    try {
+                    try { //temporal fix for google gemini retarded bug, where first (maybe not allways first) child in array is "text": "`" and not an actual image
                         if(jsonImage.has("text") == true) continue;
-                    } catch(Exception e) {
-                        // All good, do nothing
-                    }
+                    } catch(Exception e) { }
 
-                    String format = getImageFormat(jsonNodeRes, jsonImage);
-                    String base64Image = getImageBase64(jsonNodeRes, jsonImage);
+                    try { // In try catch, if one image fails, other's can be processed
+                        String format = getImageFormat(jsonNodeRes, jsonImage);
+                        if(format.startsWith(".") == false) format = "." + format;
+                        if(FileTools.isImage(format) == false) throw new IllegalStateException("Image format is not valid: " + format);
 
-                    if(Tools.isEmpty(base64Image)) throw new IllegalStateException("Image acquire unsuccesfull");
+                        String base64Image = getImageBase64(jsonNodeRes, jsonImage);
+                        if(Tools.isEmpty(base64Image)) throw new IllegalStateException("Image acquire unsuccesfull");
 
-                    //Date pars is added so we can delet all images from same request (same request == same date time part)
-                    String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
+                        //Date pars is added so we can delet all images from same request (same request == same date time part)
+                        String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
 
-                    try {
                         tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
 
                         //If no error, add file
                         responseDto.addTempFile(tmpFileName);
                     } catch (IOException ioe) {
+                        // Log and continue with next image
                         ioe.printStackTrace();
                     }
                 }
 
-                handleUsage(responseDto, assistant, jsonNodeRes, generatedFileName.getSecond(), statRepo, request);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                // Last check, at least one VALID image must be generated
+                if(responseDto.getTempFiles() == null || responseDto.getTempFiles().isEmpty())
+                    throw new IllegalStateException(prop.getText("components.ai_assistants.no_image.err"));
 
-            if (imagesArr.size() == 0) {
-                //force log response for debug
-                if (responseText != null) RequestBean.addAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY+"_success", DB.prepareString(responseText, 5000).trim());
+                //handleUsage(responseDto, assistant, jsonNodeRes, generatedFileName.getSecond(), statRepo, request);
+                succesAdminLog(responseDto, inputPair, assistant, METHOD_IMAGE_RESPONSE, IMAGE_AUDIT_RESPONSE, jsonNodeRes, generatedFileName.getSecond(), statRepo, request);
             }
+        } catch(ProviderCallException pce) {
+            // Error from response, audited already. Only re-throw
+            throw pce;
+        } catch (Exception e) {
+            // Other type of error - audit and throw
+            errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, new Pair<>(e.getLocalizedMessage(), responseText));
         }
 
         return responseDto;
     }
 
-
-    private void handleUsage(AssistantResponseDTO responseDto, AssistantDefinitionEntity assistant, JsonNode jsonNodeRes, int addTokens, AiStatRepository statRepo, HttpServletRequest request) {
-
-        //remove response if successful
-        RequestBean.removeAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY);
-
-        StringBuilder sb = new StringBuilder("");
-        sb.append(getServiceName()).append(" -> run was succesfull");
-        sb.append("\n\n");
-        sb.append("Assistant ID: ").append(assistant.getId()).append("\n");
-        if (Tools.isNotEmpty(assistant.getName())) sb.append("Assistant name: ").append(assistant.getName()).append("\n");
-        if (Tools.isNotEmpty(assistant.getProvider())) sb.append("Provider: ").append(assistant.getProvider()).append("\n");
-        if (Tools.isNotEmpty(assistant.getModel())) sb.append("Model: ").append(assistant.getModel()).append("\n");
-        if (Tools.isNotEmpty(assistant.getFieldFrom())) sb.append("Field from: ").append(assistant.getFieldFrom()).append("\n");
-        if (Tools.isNotEmpty(assistant.getFieldTo())) sb.append("Field to: ").append(assistant.getFieldTo()).append("\n");
-        sb.append("\n");
-        sb.append("Action cost: \n");
-        int totalTokens = addUsageAndReturnTotal(sb, addTokens, jsonNodeRes);
-
-        try {
-            Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
-            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        responseDto.setTotalTokens(totalTokens);
-    }
-
-    public String handleErrorMessage(CloseableHttpResponse response, Prop prop) {
+    public Pair<String, String> handleErrorMessage(CloseableHttpResponse response, Prop prop) {
         int code = response.getStatusLine().getStatusCode();
         String defaultErrMsg = " (" + code + ") " + prop.getText("html_area.insert_image.error_occured");
-        try {
-            String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+        String responseBody = "";
 
-            ObjectMapper mapper = new ObjectMapper();
+        try {
+            responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             JsonNode root = mapper.readTree(responseBody);
 
             // Gemini sends an array with one object; OpenAI sends a single object
             JsonNode objNode = root.isArray() && root.size() > 0 ? root.get(0) : root;
-            if (objNode == null || objNode.isMissingNode()) return defaultErrMsg;
+            if (objNode == null || objNode.isMissingNode()) return new Pair<>(defaultErrMsg, responseBody);
 
             JsonNode errorNode = objNode.get("error");
-            if (errorNode == null || errorNode.isMissingNode()) return defaultErrMsg;
+            if (errorNode == null || errorNode.isMissingNode()) return new Pair<>(defaultErrMsg, responseBody);
 
             // Handle OpenRouter error detail message metadata.raw
             JsonNode metadataNode = errorNode.get("metadata");
             if (metadataNode != null && metadataNode.has("raw")) {
                 String raw = metadataNode.get("raw").asText(null);
-                if (Tools.isNotEmpty(raw)) return " (" + code + ") " + raw;
+                if (Tools.isNotEmpty(raw)) return new Pair<>(" (" + code + ") " + raw, responseBody);
             }
 
             JsonNode messageNode = errorNode.get("message");
             if (messageNode != null && Tools.isNotEmpty(messageNode.asText())) {
-                return " (" + code + ") " + messageNode.asText();
+                return new Pair<>(" (" + code + ") " + messageNode.asText(), responseBody);
             }
-            return defaultErrMsg;
+            return new Pair<>(defaultErrMsg, responseBody);
         } catch (IOException ex) {
-            return defaultErrMsg;
+            return new Pair<>(defaultErrMsg, responseBody);
         }
-    }
-
-    public String handleErrorMessage(CloseableHttpResponse response, Prop prop, String serviceName, String methodName) {
-        String errMsg = handleErrorMessage(response, prop);
-        Adminlog.add(Adminlog.TYPE_AI, serviceName + "." + methodName + " FAILED : " + errMsg, -1, -1);
-        throw new IllegalStateException(errMsg);
     }
 
     private Pair<String, Integer> getGeneratedImageName(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) {
@@ -294,14 +275,77 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
         try {
             AssistantResponseDTO response = getAiResponse(fakeAssistant, fakeData, prop, statRepo, request);
-
             if(Tools.isNotEmpty(response.getError())) return new Pair<>(defaultFileName, 0);
-
             return new Pair<>(response.getResponse(), response.getTotalTokens());
-
         } catch(Exception e) {
             e.printStackTrace();
             return new Pair<>(defaultFileName, 0);
         }
+    }
+
+    private int getAuditMaxLength() { return Constants.getInt("ai_auditMaxLength"); }
+
+    private void setAssistantInfo(AssistantDefinitionEntity assistant, StringBuilder sb) {
+        sb.append("\n\nAssistant ID: ").append(assistant.getId()).append("\n");
+        if (Tools.isNotEmpty(assistant.getName())) sb.append("Assistant name: ").append(assistant.getName()).append("\n");
+        if (Tools.isNotEmpty(assistant.getProvider())) sb.append("Provider: ").append(assistant.getProvider()).append("\n");
+        if (Tools.isNotEmpty(assistant.getModel())) sb.append("Model: ").append(assistant.getModel()).append("\n");
+        if (Tools.isNotEmpty(assistant.getFieldFrom())) sb.append("Field from: ").append(assistant.getFieldFrom()).append("\n");
+        if (Tools.isNotEmpty(assistant.getFieldTo())) sb.append("Field to: ").append(assistant.getFieldTo());
+    }
+
+    private void succesAdminLog(AssistantResponseDTO responseDto, Pair<String, String> inputPair, AssistantDefinitionEntity assistant, String methodName, String textResponse, JsonNode usageJsonNodeRes, int addTokens, AiStatRepository statRepo, HttpServletRequest request) {
+        StringBuilder sb = new StringBuilder("");
+        sb.append(getServiceName()).append(" ").append(methodName).append(" -> SUCCESSFUL");
+
+        // Assistant Info
+        setAssistantInfo(assistant, sb);
+
+        //Usage info - Only for successful requests
+        sb.append("\n");
+        sb.append("Action cost: \n");
+        int totalTokens = addUsageAndReturnTotal(sb, addTokens, usageJsonNodeRes);
+
+        int auditMaxLength = getAuditMaxLength();
+        if(auditMaxLength > 0) {
+            StringBuilder bonusInfo = new StringBuilder();
+            bonusInfo.append("\n\nAI Input value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
+            bonusInfo.append("\n\nAI user prompt: ").append("\n").append( Tools.isEmpty(inputPair.getSecond()) == true ? " - " : inputPair.getSecond() );
+            bonusInfo.append("\n\nAI response: ").append("\n").append( textResponse );
+
+            sb.append( DB.prepareString(bonusInfo.toString(), auditMaxLength) );
+        }
+
+        try {
+            Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
+            AiStatService.addRecord(assistant.getId(), totalTokens, statRepo, request);
+        } catch (Exception e) { e.printStackTrace(); }
+
+        responseDto.setTotalTokens(totalTokens);
+    }
+
+    private void errorAdminLog(AssistantDefinitionEntity assistant, Pair<String, String> inputPair, String methodName, CloseableHttpResponse response, Prop prop) throws ProviderCallException{
+        Pair<String, String> errPair = handleErrorMessage(response, prop);
+        errorAdminLog(assistant, inputPair, methodName, errPair);
+    }
+
+    private void errorAdminLog(AssistantDefinitionEntity assistant, Pair<String, String> inputPair, String methodName, Pair<String, String> errPair) throws ProviderCallException{
+        StringBuilder sb = new StringBuilder("");
+        sb.append(getServiceName()).append(" ").append(methodName).append(" -> FAILED");
+
+        // Assistant Info
+        setAssistantInfo(assistant, sb);
+
+        // Add error
+        sb.append("\n\nError message: ").append("\n").append(errPair.getFirst());
+
+        // Bonus info
+        sb.append("\n\nAI Input value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
+        sb.append("\n\nAI user prompt: ").append("\n").append( Tools.isEmpty(inputPair.getSecond()) == true ? " - " : inputPair.getSecond() );
+        sb.append("\n\nFull response: ").append("\n").append( Tools.isEmpty(errPair.getSecond()) == true ? " - " : errPair.getSecond() );
+
+        Adminlog.add(Adminlog.TYPE_AI, sb.toString(), -1, -1);
+
+        throw new ProviderCallException(errPair.getFirst());
     }
 }

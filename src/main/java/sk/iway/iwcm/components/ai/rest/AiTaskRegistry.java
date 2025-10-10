@@ -18,6 +18,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component
@@ -51,7 +52,7 @@ public class AiTaskRegistry {
         futuresMap.remove( getTaskId(assistantId, timestamp, request) );
     }
 
-    public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) {
+    public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) throws ProviderCallException {
         // Capture current RequestBean (thread-local) from caller thread
         RequestBean captured = SetCharacterEncodingFilter.getCurrentRequestBean();
 
@@ -94,7 +95,7 @@ public class AiTaskRegistry {
             if (cause instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             } else {
-                throw new RuntimeException(cause);
+                throw new ProviderCallException(cause);
             }
         } catch (InterruptedException e) {
             //Remove it from map
