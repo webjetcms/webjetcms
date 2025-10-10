@@ -597,7 +597,7 @@ public class FileTools
 	}
 
 	/**
-	 * Returns file extenstion from file.jpg - return jpg
+	 * Returns file extension from file.jpg - return jpg
 	 * @param fileName - file name or path
 	 * @return - file extension without dot, like jpg
 	 */

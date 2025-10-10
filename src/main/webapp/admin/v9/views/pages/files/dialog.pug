@@ -131,9 +131,8 @@ block content
                                     var row = inputs.find('.row.template');
                                     var input = row.find('input');
                                     var val = files[0].virtualPath;
-                                    val = val.replace("////", "/");
-                                    val = val.replace("///", "/");
-                                    val = val.replace("//", "/");
+                                    //remove multiple slashes
+                                    val = val.replace(/\/+/g, '/')
                                     input.val(val);
                                     htmlCompleted();
                                 }
