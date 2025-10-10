@@ -176,11 +176,11 @@ public class AssistantController {
     }
 
     @PostMapping("/other-button-column/")
-    public DataTableColumn getOtherButtonData(@RequestParam String fieldName, @RequestParam String javaClassName, @RequestParam String renderFormat, HttpServletRequest request) {
+    public DataTableColumn getOtherButtonData(@RequestParam String fieldName, @RequestParam String javaClassName, @RequestParam(required = false) String renderFormat, HttpServletRequest request) {
         //create fake DatatableColumn for passing to service
         DataTableColumn column = new DataTableColumn();
         column.setName(fieldName);
-        column.setRenderFormat(renderFormat);
+        if (Tools.isNotEmpty(renderFormat)) column.setRenderFormat(renderFormat);
 
         List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
         column.setAi(ai); //set also to column for future use

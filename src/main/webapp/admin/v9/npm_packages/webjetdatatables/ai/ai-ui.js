@@ -164,11 +164,18 @@ export class AiUserInterface {
      */
     async generateOtherAssistentOptions(button) {
         let datatableColumn = null;
+        let fieldName = button.parent().find(".form-control").attr("name");
+        if (typeof fieldName === "undefined" || fieldName == null || fieldName === "") {
+            fieldName = button.parent().find(".form-control").attr("id");
+        }
+        if (typeof fieldName === "undefined" || fieldName == null || fieldName === "") {
+            console.warn("No field name found for button:", button);
+        }
         await $.ajax({
             type: "POST",
             url: "/admin/rest/ai/assistant/other-button-column/",
             data: {
-                "fieldName": "txtUrl", //button.parent().find(".form-control").attr("name"),
+                "fieldName": fieldName,
                 "javaClassName": button.data("ai-java-class"),
                 "renderFormat": button.data("ai-render-format")
             },
@@ -177,6 +184,7 @@ export class AiUserInterface {
                 //console.log("Other button AI assistants:", res);
                 if (res == null || res.ai == null || res.ai.length === 0) {
                     console.warn("No AI assistants found for button:", button);
+                    WJ.notifyWarning(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), WJ.translate("components.ai_assistants.button.noAssistantsAvailable.js"), 3000);
                     return;
                 }
                 datatableColumn = res;
@@ -508,14 +516,14 @@ export class AiUserInterface {
             if (groupDetails != null) groupId = groupDetails.groupId;
 
             if (typeof docId === "undefined" || docId == null) {
-                docId = window.parent.getCkEditorInstance().element.$.form.docId.value
+                docId = this._getCkEditorInstance().element.$.form.docId.value
             }
             if (typeof title === "undefined" || title == null) {
                 if (typeof getPageNavbar === "function") title = getPageNavbar();
                 else title = "";
             }
             if (typeof groupId === "undefined" || groupId == null) {
-                groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value
+                groupId = this._getCkEditorInstance().element.$.form.groupId.value
             }
 
             //console.log("docId=", docId, "groupDetails=", groupDetails, "title=", title);
@@ -541,6 +549,28 @@ export class AiUserInterface {
             console.log(err);
         }
         return "/images/";
+    }
+
+    _getCkEditorInstance() {
+        //search for getCkEditorInstance() function in parents window
+        let currentWindow = window;
+        let failsafeCounter = 0;
+        while (currentWindow && failsafeCounter++ < 10) {
+            //console.log("Searching for getCkEditorInstance in window:", currentWindow.location.href, "instance=", currentWindow.getCkEditorInstance);
+            if (currentWindow.getCkEditorInstance) {
+                //console.log("Found getCkEditorInstance in window:", currentWindow.location.href, "instance=", currentWindow.getCkEditorInstance());
+                return currentWindow.getCkEditorInstance();
+            }
+            //we need to handle parent or opener
+            if (currentWindow.opener && currentWindow.opener !== currentWindow) {
+                currentWindow = currentWindow.opener;
+            } else if (currentWindow.parent && currentWindow.parent !== currentWindow) {
+                currentWindow = currentWindow.parent;
+            } else {
+                break;
+            }
+        }
+        return null;
     }
 
     async renderImageSelection(button, aiCol, images, generatedImageName, toField, textKey, ...params) {

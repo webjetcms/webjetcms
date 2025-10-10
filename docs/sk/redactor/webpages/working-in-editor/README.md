@@ -97,14 +97,14 @@ Ak chcete vytvoriť odkaz na dokument/súbor označte si text, ktorý má byť o
 ![](link_dialog.png)
 
 - v prípade ak je dokument **určený len pre aktuálnu web stránku**, je potrebné zvoliť položku “Média tejto stránky” a v nej položku “Súbory”.
-   - Vyhľadáte dokument, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL.
-   - V prípade ak sa v zozname požadovaný dokument nenachádza, funkciou ```drag&drop``` je možné nahrať dokument z vášho počítača
-   - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
+  - Vyhľadáte dokument, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL.
+  - V prípade ak sa v zozname požadovaný dokument nenachádza, funkciou ```drag&drop``` je možné nahrať dokument z vášho počítača
+  - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
 
 - v prípade ak dokument **nie je určený len pre danú stránku** (dokument sa môže nachádzať aj na inej stránke), je potrebné zvoliť položku **Média všetkých stránok** a v nej položku **Súbory**.
-   - Zobrazí sa vám adresárová štruktúra adresárov a súborov na serveri, na ktoré máte povolený prístup.
-   - Vyhľadáte v adresároch požadovaný súbor, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL
-   - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
+  - Zobrazí sa vám adresárová štruktúra adresárov a súborov na serveri, na ktoré máte povolený prístup.
+  - Vyhľadáte v adresároch požadovaný súbor, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL
+  - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
 
 Podľa smernice na prístupnosť web sídla by všetky textové súbory na stiahnutie nachádzajúce sa na web stránkach mali byť uverejňované hlavne vo formáte ```PDF```. Formáty používané aplikáciou ```Word``` a ```Excel``` (```DOC``` a ```XLS```) nie sú vyhovujúce.
 
@@ -138,6 +138,8 @@ Ak chcete zmeniť existujúci obrázok je potrebné najprv raz kliknúť na obr�
 Po kliknutí na ikonku sa vám zobrazí dialógové okno na vloženie obrázka:
 
 ![](image_dialog.png)
+
+Pri prechádzaní cez stromovú štruktúru sú zobrazené len súbory typu obrázok alebo video, ostatné súbory sú filtrované.
 
 ### Karta Obsah
 

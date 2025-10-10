@@ -23,7 +23,6 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.SpecSearch;
 
 /**
  * SearchRestController is responsible for handling search requests related to
