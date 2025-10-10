@@ -9,6 +9,7 @@ block content
         let pieChartMostTokens;
         let lineChartDaysUsage;
         let lineChartDaysTokens;
+        let barChartTop10Users;
 
         WJ.breadcrumb({
             id: 'ai-stats',
@@ -53,25 +54,40 @@ block content
                 getDataAndUpdateAmcharts();
             });
 
+            function simplifyLabel(value) {
+                if(value == undefined || value == null) return "-";
+                let valueArr = value.split(" ");
+                if(valueArr.length == 0) return "";
+                else if(valueArr.length == 1) return valueArr[0];
+                return valueArr[0] + " " + valueArr[ valueArr.length - 1 ];
+            }
+
             async function createAmcharts() {
                 window.initAmcharts().then(module => {
 
+                    console.log(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]));
+
                     $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
-                        lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days, simplifyLabel);
                         ChartTools.createAmchart(lineChartDaysUsage);
 
-                        lineChartDaysTokens = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["tokens"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysTokens}]]', "ai-lineChartDaysTokens", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        lineChartDaysTokens = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["tokens"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysTokens}]]', "ai-lineChartDaysTokens", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days, simplifyLabel);
                         ChartTools.createAmchart(lineChartDaysTokens);
                     }});
 
                     $.ajax({url: getGraphUrl("pieChartMostUsed"), success: function(result) {
-                        pieChartMostUsed = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostUsed}]]', "ai-pieChartMostUsed", result);
+                        pieChartMostUsed = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostUsed}]]', "ai-pieChartMostUsed", result, null, simplifyLabel);
                         ChartTools.createAmchart(pieChartMostUsed);
                     }});
 
                     $.ajax({url: getGraphUrl("pieChartMostTokens"), success: function(result) {
-                        pieChartMostTokens = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostTokens}]]', "ai-pieChartMostTokens", result);
+                        pieChartMostTokens = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostTokens}]]', "ai-pieChartMostTokens", result, null, simplifyLabel);
                         ChartTools.createAmchart(pieChartMostTokens);
+                    }});
+
+                    $.ajax({url: url + "barChartTop10Users", success: function(result) {
+                        barChartTop10Users = new ChartTools.BarChartForm("label", "value", '[[\#{stat.graph.searchQueriesBars}]]', "ai-barChartTop10Users", result);
+                        ChartTools.createAmchart(barChartTop10Users);
 
                         //After last load data
                         WJ.hideLoader();
@@ -180,3 +196,11 @@ block content
     <div id="tableDiv">
         <table id="aiStatDataTable" class="datatableInit table"></table>
     </div>
+
+    <div id="graphsDiv_2" class="hide-while-loading">
+        <div class="row">
+            <div class="col-md">
+                <div id="ai-barChartTop10Users" class="amcharts"></div>
+            </div>
+        </div>
+    <div>

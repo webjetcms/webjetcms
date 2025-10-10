@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.ai.stat.rest;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
@@ -27,6 +30,9 @@ import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.blog.jpa.BloggerBean;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.SpecSearch;
@@ -128,6 +134,37 @@ public class AiStatService {
         }
 
         return data;
+    }
+
+
+    public static final List<LabelValueInteger> getBarChartDataTop10Users(AiStatRepository statRepo, Prop prop) {
+        List<LabelValueInteger> values = new ArrayList<>();
+        //StringBuilder query = "SELECT user_id, COUNT(used_tokens) FROM ai_stats WHERE " + CloudToolsForCore.getDomainIdSqlWhere(false) + " GROUP BY user_id ";
+        StringBuilder query = new StringBuilder("SELECT ");
+
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) query.append("TOP 10 ");
+
+        query.append("user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE ");
+
+        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append("WHERE ROWNUM <= 10 AND");
+
+        query.append(CloudToolsForCore.getDomainIdSqlWhere(false));
+        query.append(" GROUP BY user_id ORDER BY used_tokens DESC");
+
+        if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) query.append(" LIMIT 10");
+
+        query.append(";");
+
+        new ComplexQuery().setSql(query.toString()).list(new Mapper<BloggerBean>() {
+			@Override
+			public BloggerBean map(ResultSet rs) throws SQLException {
+                UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
+				values.add(new LabelValueInteger((user == null) ? "UNKNOWN" : user.getFullName(), rs.getInt("used_tokens")));
+                return null;
+			}
+		});
+
+        return values;
     }
 
     private static final List<LabelValueInteger> doShit(Map<Long, Integer> mappedValues, AssistantDefinitionRepository assistantsRepo, Prop prop) {
