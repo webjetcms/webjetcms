@@ -9,6 +9,7 @@ import java.util.List;
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.service.FsVolume;
+import sk.iway.iwcm.FileTools;
 
 public class FsItemEx
 {
@@ -238,7 +239,8 @@ public class FsItemEx
 			//Accept ONLY image AND the directory
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
-				if("directory".equals(mimeType) || mimeType.startsWith("image/")) {
+				//in ckeditor user is able to insert image OR video directly into page, so for images type we will show also video files
+				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || isImage(_v.getName(child)) || isVideo(_v.getName(child))) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}
@@ -246,7 +248,7 @@ public class FsItemEx
 			//Accept ONLY video AND the directory
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
-				if("directory".equals(mimeType) || mimeType.startsWith("video/")) {
+				if("directory".equals(mimeType) || mimeType.startsWith("video/") || isVideo(_v.getName(child))) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}
@@ -258,5 +260,25 @@ public class FsItemEx
 		}
 
 		return list;
+	}
+
+	/**
+	 * Just failsafe if mime.types will not work
+	 * @param name
+	 * @return
+	 */
+	private boolean isImage(String name) {
+		String ext = FileTools.getFileExtension(name).toLowerCase();
+		return "jpg".equals(ext) || "jpeg".equals(ext) || "png".equals(ext) || "gif".equals(ext) || "bmp".equals(ext) || "svg".equals(ext);
+	}
+
+	/**
+	 * Just failsafe if mime.types will not work
+	 * @param name
+	 * @return
+	 */
+	private boolean isVideo(String name) {
+		String ext = FileTools.getFileExtension(name).toLowerCase();
+		return "mp4".equals(ext) || "avi".equals(ext) || "mov".equals(ext) || "wmv".equals(ext) || "flv".equals(ext) || "mkv".equals(ext);
 	}
 }

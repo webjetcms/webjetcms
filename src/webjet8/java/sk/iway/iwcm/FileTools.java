@@ -596,6 +596,11 @@ public class FileTools
 		return false;
 	}
 
+	/**
+	 * Returns file extenstion from file.jpg - return jpg
+	 * @param fileName - file name or path
+	 * @return - file extension without dot, like jpg
+	 */
 	public static String getFileExtension(String fileName)
 	{
 		if (!fileName.contains("."))
