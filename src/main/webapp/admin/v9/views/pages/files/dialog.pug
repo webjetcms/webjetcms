@@ -128,16 +128,13 @@ block content
                                 //v nazve musi byt znak bodka - prevencia pred vybratim adresara klikanim v strome
                                 if (files.length == 1 && (files[0].hash.indexOf("_doc_group")!=-1 || files[0].virtualPath.indexOf(".")!=-1))
                                 {
-                                    var row = inputs.find('.row.template').hide().clone();
-                                    row.removeClass('template').show();
-                                    var label = row.find('label');
+                                    var row = inputs.find('.row.template');
                                     var input = row.find('input');
                                     var val = files[0].virtualPath;
                                     val = val.replace("////", "/");
                                     val = val.replace("///", "/");
                                     val = val.replace("//", "/");
                                     input.val(val);
-                                    rows.push(row);
                                     htmlCompleted();
                                 }
                             }
@@ -146,15 +143,13 @@ block content
                                     getData(v, function(data){
                                         completed++;
                                         if (isDataOk(data)) {
-                                            var row = inputs.find('.row.template').hide().clone();
-                                            row.removeClass('template').show();
+                                            var row = inputs.find('.row.template');
                                             var input = row.find('input');
                                             var val = data.cwd.virtualPath;
                                             val = val.replace("////", "/");
                                             val = val.replace("///", "/");
                                             val = val.replace("//", "/");
                                             input.val(val);
-                                            rows.push(row);
                                         }
                                         if (completed == selected.length) {
                                             htmlCompleted();
@@ -168,7 +163,6 @@ block content
 
                             function htmlCompleted() {
                                 if (rows.length > 0) {
-                                    inputs.find('div.row:not(.template)').remove();
                                     $.each(rows, function(i, v){
                                         var label = v.find('label');
                                         var input = v.find('input');
@@ -176,7 +170,6 @@ block content
                                             label.attr('for', 'file' + i).text(label.text() + ' ' + (i + 1));
                                             input.attr('id', 'file' + i);
                                         }
-                                        inputs.append(v);
                                     })
                                 }
                             }
@@ -469,7 +462,10 @@ block content
                 ul.nav( role='tablist')
                     li.nav-item(role='presentation')
                         a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
-                            | [[\#{fbrowse.file}]]
+                            span(data-th-switch="${param.volumes != null ? param.volumes[0] : ''}" data-th-remove="tag")
+                                span(data-th-case="'videos'" data-th-text="#{elfinder.images.video}" data-th-remove="tag")
+                                span(data-th-case="'images'" data-th-text="#{elfinder.images}" data-th-remove="tag")
+                                span(data-th-case="*" data-th-text="${param.volumes}" data-th-remove="tag")
             #finder [[\#{divpopup-blank.wait_please}]]
             #pixabay(style='display: none;')
                 iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')
@@ -477,7 +473,7 @@ block content
             .row.template
                 .form-group.col-sm-12
                     label.control-label.block(for='file') [[\#{editor.media.link}]]
-                    input#file.form-control.elfinder-url-input(name='file')
+                    input#file.form-control.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
 
     script.
         let tabs = $(".tabbable > .md-tabs > ul.nav");
