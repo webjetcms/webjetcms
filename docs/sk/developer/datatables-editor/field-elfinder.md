@@ -39,7 +39,7 @@ Pomocou atribútu `className` je možné nastaviť doplnkové filtrovanie zobraz
 
 - `image` - zobrazia sa len súbory, ktorých `mime-type` začína na `image/`.
 - `video` - zobrazia sa len súbory, ktorých `mime-type` začína na `video/`.
-- - `multimedia` - zobrazia sa len súbory, ktorých `mime-type` začína na `image/` alebo `video/`.
+- `multimedia` - zobrazia sa len súbory, ktorých `mime-type` začína na `image/` alebo `video/`.
 
 Nastavenie `mime-type` je čítané zo súboru [mime.types](../../../../src/main/webapp/WEB-INF/mime.types).
 
