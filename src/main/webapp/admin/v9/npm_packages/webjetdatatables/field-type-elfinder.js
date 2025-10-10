@@ -33,6 +33,11 @@ export function typeElfinder() {
                 prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
                 volumes = "images";
                 //console.log("is image class=", conf.className);
+            } else if (conf.className != null && conf.className.indexOf("multimedia")!=-1) {
+                isImage = true;
+                prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
+                volumes = "multimedia";
+                //console.log("is image class=", conf.className);
             } else if (conf.className != null && conf.className.indexOf("video") != -1) {
                 isVideo = true;
                 prependHtmlCode = '<span class="input-group-text"><i class="ti ti-video"></i></span>';

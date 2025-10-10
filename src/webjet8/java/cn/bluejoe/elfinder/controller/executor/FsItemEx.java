@@ -239,8 +239,7 @@ public class FsItemEx
 			//Accept ONLY image AND the directory
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
-				//in ckeditor user is able to insert image OR video directly into page, so for images type we will show also video files
-				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || isImage(_v.getName(child)) || isVideo(_v.getName(child))) {
+				if("directory".equals(mimeType) || mimeType.startsWith("image/") || isImage(_v.getName(child))) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}
@@ -249,6 +248,15 @@ public class FsItemEx
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
 				if("directory".equals(mimeType) || mimeType.startsWith("video/") || isVideo(_v.getName(child))) {
+					list.add(new FsItemEx(child, _s));
+				}
+			}
+		} else if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_MULTIMEDIA) {
+			//Accept ONLY multimedia AND the directory
+			for (FsItem child : childrens) {
+				String mimeType = _v.getMimeType(child);
+				//in ckeditor user is able to insert image OR video directly into page, so for images type we will show also video files
+				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || isImage(_v.getName(child)) || isVideo(_v.getName(child))) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}

@@ -39,6 +39,8 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	public static final int TYPE_FILES = 4;
 	public static final int TYPE_PAGES = 5;
 	public static final int TYPE_VIDEOS = 6;
+	//images and videos
+	public static final int TYPE_MULTIMEDIA = 7;
 
 	private int selectedType = 1;
 
@@ -136,7 +138,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 
 		int counter = 0;
 
-		if (type == TYPE_IMAGES || type == TYPE_VIDEOS)
+		if (type == TYPE_IMAGES || type == TYPE_MULTIMEDIA || type == TYPE_VIDEOS)
 		{
 			_volumes = new FsVolume[2];
 
