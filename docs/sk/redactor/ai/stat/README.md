@@ -32,8 +32,20 @@ Tento graf zobrazuje, koľko tokenov (zdrojov) jednotliví AI asistenti spotrebo
 
 ![](graph-3.png)
 
-## Tabuľka
+## Tabuľka 1
 
-Sekcia štatistika na záver ponúka ja tabuľku, kde je prehľad všetkých volaní asistentov za zvolené obdobie. Obsahuje aj stĺpec používateľ, takže si viete pozrieť aj to, kto najčastejšie a na čo používa AI asistentov.
+Sekcia štatistika ďalej ponúka aj tabuľku, kde je prehľad všetkých volaní asistentov za zvolené obdobie. Obsahuje aj stĺpec používateľ, takže si viete pozrieť aj to, kto najčastejšie a na čo používa AI asistentov.
 
 ![](datatable.png)
+
+## TOP 10 používateľov najvyšou spotrebou tokenov
+
+Tento graf zobrazuje desiatich používateľov s najvyššou spotrebou tokenov v rámci zvoleného obdobia. Umožňuje identifikovať používateľov, ktorí najviac prispievajú k nákladom na využívanie AI asistentov, a zvážiť možnosti optimalizácie ich používania.
+
+![](graph-4.png)
+
+## Tabuľka 2
+
+Na záver je k dispozícii tabuľka s prehľadom všetkých používateľov, ktorí v zvolenom období využili AI asistentov, spolu s celkovou spotrebou tokenov. Táto tabuľka vám poskytuje detailný pohľad na to, ako jednotliví používatelia prispievajú k celkovému využívaniu AI asistentov v systéme.
+
+![](datatable_2.png)
