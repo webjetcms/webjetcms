@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.ai.stat.rest;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,9 +29,9 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
+import sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.components.blog.jpa.BloggerBean;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
@@ -48,6 +49,7 @@ import sk.iway.iwcm.utils.Pair;
 public class AiStatService {
 
     private static final int PIE_CHART_TOP_N = 5;
+    private static final String UNKNOWN_USER = "UNKNOWN";
 
     public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
         if(statRepo == null) throw new IllegalStateException("AiStatRepository is not provided");
@@ -136,33 +138,52 @@ public class AiStatService {
         return data;
     }
 
+    public static final List<LabelValueInteger> getBarChartDataTop10Users(AiStatRepository statRepo, String created, Prop prop) {
+        Date[] dateRangeArr = StatService.processDateRangeString(created);
 
-    public static final List<LabelValueInteger> getBarChartDataTop10Users(AiStatRepository statRepo, Prop prop) {
-        List<LabelValueInteger> values = new ArrayList<>();
-        //StringBuilder query = "SELECT user_id, COUNT(used_tokens) FROM ai_stats WHERE " + CloudToolsForCore.getDomainIdSqlWhere(false) + " GROUP BY user_id ";
         StringBuilder query = new StringBuilder("SELECT ");
-
         if (Constants.DB_TYPE == Constants.DB_MSSQL) query.append("TOP 10 ");
-
-        query.append("user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE ");
-
-        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append("WHERE ROWNUM <= 10 AND");
-
-        query.append(CloudToolsForCore.getDomainIdSqlWhere(false));
+        query.append("user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ?");
+        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append(" AND ROWNUM <= 10 AND");
+        query.append(CloudToolsForCore.getDomainIdSqlWhere(true));
         query.append(" GROUP BY user_id ORDER BY used_tokens DESC");
-
         if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) query.append(" LIMIT 10");
-
         query.append(";");
 
-        new ComplexQuery().setSql(query.toString()).list(new Mapper<BloggerBean>() {
+        List<LabelValueInteger> values = new ArrayList<>();
+        new ComplexQuery().setSql(query.toString()).setParams( new Timestamp(dateRangeArr[0].getTime()), new Timestamp(dateRangeArr[1].getTime()) ).list(new Mapper<LabelValueInteger>() {
 			@Override
-			public BloggerBean map(ResultSet rs) throws SQLException {
+			public LabelValueInteger map(ResultSet rs) throws SQLException {
                 UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
-				values.add(new LabelValueInteger((user == null) ? "UNKNOWN" : user.getFullName(), rs.getInt("used_tokens")));
+				values.add(new LabelValueInteger((user == null) ? UNKNOWN_USER : user.getFullName(), rs.getInt("used_tokens")));
                 return null;
 			}
 		});
+
+        return values;
+    }
+
+    public static final List<TokenUsersDTO> getTokenUsersTableList(String created) {
+        Date[] dateRangeArr = StatService.processDateRangeString(created);
+
+        StringBuilder query = new StringBuilder("SELECT user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ? ");
+        query.append(CloudToolsForCore.getDomainIdSqlWhere(true)).append("GROUP BY user_id ORDER BY used_tokens DESC");
+
+        List<TokenUsersDTO> values = new ArrayList<>();
+        new ComplexQuery().setSql(query.toString()).setParams( new Timestamp(dateRangeArr[0].getTime()), new Timestamp(dateRangeArr[1].getTime()) ).list(new Mapper<TokenUsersDTO>() {
+            @Override
+			public TokenUsersDTO map(ResultSet rs) throws SQLException {
+                UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
+                values.add(
+                    new TokenUsersDTO(
+                        (user == null) ? UNKNOWN_USER : user.getFullName(),
+                        rs.getInt("used_tokens")
+                    )
+                );
+
+                return null;
+            }
+        });
 
         return values;
     }
@@ -311,7 +332,7 @@ public class AiStatService {
                 String userName = cachedUsersNames.get(userId);
                 if(userName == null) {
                     UserDetails user = UsersDB.getUserCached(userId);
-                    userName = (user == null) ? "UNKNOWN" : user.getFullName();
+                    userName = (user == null) ? UNKNOWN_USER : user.getFullName();
                     cachedUsersNames.put(userId, userName);
                 }
 

@@ -4,6 +4,7 @@ block content
 
     script.
         var aiStatDataTable;
+        var tokenUsersDataTable;
 
         let pieChartMostUsed;
         let pieChartMostTokens;
@@ -46,11 +47,35 @@ block content
             aiStatDataTable.hideButton("celledit");
             aiStatDataTable.hideButton("import");
 
+            let columns2 = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO')})]
+            tokenUsersDataTable = WJ.DataTable({
+                url:  WJ.urlAddParam(url + "tokenUsers", "created", ChartTools.getDateRangeWithName("created", 30)),
+                columns: columns2,
+                serverSide: false,
+                id: "tokenUsersDataTable",
+                autoHeight: false
+            });
+
+            tokenUsersDataTable.hideButton("create");
+            tokenUsersDataTable.hideButton("remove");
+            tokenUsersDataTable.hideButton("edit");
+            tokenUsersDataTable.hideButton("duplicate");
+            tokenUsersDataTable.hideButton("celledit");
+            tokenUsersDataTable.hideButton("import");
+
             //Create and set amcharts
             createAmcharts();
 
             //Onchange events - update amcharts
             $("#aiStatDataTable_extfilter").on("click", "button.filtrujem", function() {
+
+                if($(this).hasClass("dt-filtrujem-created")) {
+                    // When date created changed, update also tokenUsersDataTable
+                    tokenUsersDataTable.setAjaxUrl(WJ.urlUpdateParam(tokenUsersDataTable.getAjaxUrl(), "created", ChartTools.getDateRangeWithName("created", 30)));
+                    //reload table values
+                    tokenUsersDataTable.ajax.reload();
+                }
+
                 getDataAndUpdateAmcharts();
             });
 
@@ -64,8 +89,6 @@ block content
 
             async function createAmcharts() {
                 window.initAmcharts().then(module => {
-
-                    console.log(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]));
 
                     $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
                         lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days, simplifyLabel);
@@ -85,8 +108,8 @@ block content
                         ChartTools.createAmchart(pieChartMostTokens);
                     }});
 
-                    $.ajax({url: url + "barChartTop10Users", success: function(result) {
-                        barChartTop10Users = new ChartTools.BarChartForm("label", "value", '[[\#{stat.graph.searchQueriesBars}]]', "ai-barChartTop10Users", result);
+                    $.ajax({url: url + "barChartTop10Users?created=" + ChartTools.getDateRangeWithName("created", 30), success: function(result) {
+                        barChartTop10Users = new ChartTools.BarChartForm("label", "value", '[[\#{components.ai_assistants.stats.top_token_users}]]', "ai-barChartTop10Users", result);
                         ChartTools.createAmchart(barChartTop10Users);
 
                         //After last load data
@@ -133,6 +156,11 @@ block content
                 await $.ajax({url: getGraphUrl("pieChartMostTokens"), success: function(result) {
                     pieChartMostTokens.chartData = result;
                     ChartTools.updateChart(pieChartMostTokens);
+                }});
+
+                await $.ajax({url: url + "barChartTop10Users?created=" + ChartTools.getDateRangeWithName("created", 30), success: function(result) {
+                    barChartTop10Users.chartData = result;
+                    ChartTools.updateChart(barChartTop10Users);
                 }});
 
                 await $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
@@ -203,4 +231,8 @@ block content
                 <div id="ai-barChartTop10Users" class="amcharts"></div>
             </div>
         </div>
-    <div>
+    </div>
+
+    <div id="tableDiv_2">
+        <table id="tokenUsersDataTable" class="datatableInit table"></table>
+    </div>

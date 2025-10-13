@@ -16,6 +16,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
+import sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -46,7 +47,7 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
 
     @Override
     public Page<AiStatEntity> getAllItems(Pageable pageable) {
-       DatatablePageImpl<AiStatEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new AiStatEntity(), pageable));
+        DatatablePageImpl<AiStatEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new AiStatEntity(), pageable));
 
         page.addOptions("assistantProvider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("assistantAction", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
@@ -103,7 +104,12 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
     }
 
     @GetMapping("barChartTop10Users")
-    public List<LabelValueInteger> getBarChartDataTop10Users() {
-        return AiStatService.getBarChartDataTop10Users(asr, getProp());
+    public List<LabelValueInteger> getBarChartDataTop10Users(@RequestParam("created") String created) {
+        return AiStatService.getBarChartDataTop10Users(asr, created, getProp());
+    }
+
+    @GetMapping("tokenUsers/all")
+    public Page<TokenUsersDTO> getTokenUsers(@RequestParam("created") String created) {
+       return new DatatablePageImpl<>( AiStatService.getTokenUsersTableList(created) );
     }
 }
