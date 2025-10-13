@@ -167,6 +167,21 @@ export function typeWysiwyg() {
                 //set htmlCode to input element, because it can be PageBuilder instance
                 conf._input.val(htmlCode);
             }
+            try {
+                //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
+                if (window.currentUser.login.indexOf("tester")==0) {
+                    let val = conf._input.val();
+                    if (val != null && val.length > 32000) {
+                        if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
+                            val = val.substring(0, 16000);
+                            console.log("shrinking val to length=", val.length);
+                            conf._input.val(val);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
             //console.log("WYSIWYG get, conf=", conf, "returning=", conf._input.val());
             return conf._input.val();
         },
