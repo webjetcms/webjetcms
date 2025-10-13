@@ -349,10 +349,10 @@ task npminstall {
     }
 }
 
-//dependency check - http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html
+//dependency check - https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html
 dependencyCheck {
     scanConfigurations=["runtimeClasspath"]
-    //format vid https://gist.github.com/milo-minderbinder/1e1ed911c5b2264dc659578f1baaef16
+    //format see https://gist.github.com/milo-minderbinder/1e1ed911c5b2264dc659578f1baaef16
     suppressionFiles=[
         file(new File(project.rootDir, 'dependency-check-suppressions.xml')),
         file(new File(project.rootDir, 'dependency-check-suppressions-project.xml'))
@@ -366,8 +366,7 @@ dependencyCheck {
             pnpmEnabled=false
         }
         ossIndex {
-            //Disabling OSS Index analyzer due to missing user/password credentials. Authentication is now required: https://ossindex.sonatype.org/doc/auth-required
-            //api key for OSS Index database for dependency check
+            //OSS Index authentication is now required: https://ossindex.sonatype.org/doc/auth-required
             username=System.getenv('OSSINDEX_USERNAME') ?: ''
             password=System.getenv('OSSINDEX_TOKEN') ?: ''
         }

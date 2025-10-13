@@ -388,6 +388,12 @@ public class Modules
 							{
 								m.setCustom(true);
 							}
+							sTmp = prop.getProperty("app");
+							if ("false".equals(sTmp))
+							{
+								//default is true
+								m.setApp(false);
+							}
 
 							sTmp = prop.getProperty("group");
 							if (Tools.isEmpty(sTmp)) sTmp = "components";
