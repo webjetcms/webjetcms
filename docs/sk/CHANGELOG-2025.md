@@ -123,6 +123,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Klonovanie štruktúry - opravená validácia zadaných id priečinkov a pridaný výpis chybovej správy (#57941).
 - Galéria - pridaná podpora pre výber priečinka galérie, v aplikácii Galéria vo web stránke, pri použití doménových aliasov a editácia záznamu v galérii s doménovým aliasom (#57657-11).
 - Webové stránky - opravené zobrazenie zoznamu stránok pri zobrazení priečinkov ako tabuľky (#57657-12).
+- Grafy - opravene zobrazenie veľkého množstva legend v grafoch, automaticky sa využije skrolovanie v legendách (#58093).
 
 ### Dokumentácia
 
@@ -139,6 +140,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - `ActionMessages` nahradený za `List<String>`
   - `BasicLdapLogon.logon` vráti `List<String>` namiesto `ActionMessages`
   - `org.apache.struts.util.ResponseUtils.filter` nahradený `sk.iway.iwcm.tags.support.ResponseUtils.filter`
+- Amcharts - pridaná podpora pre zadanie funkcie na transformáciu textu v štítokoch kategórií u garfu typu `PIE` (#58093).
+- Amcharts - pridaná podpora pre zadanie funkcie na transformáciu textu v legende grafu typu `LINE` (#58093).
+- Amcharts - pridaná možnosť skryť tooltipy keď hodnota je `null` alebo `0` v grafe typu `LINE` (#58093).
 
 Na konverziu JSP aj Java súborov môžete použiť skript `/admin/update/update-2023-18.jsp`. Ak zadáte ako cestu hodnotu `java` vykoná sa nahradenie aj v `../java/*.java` súboroch. Problémom je spustenie projektu, ak obsahuje chyby. Môžete ale priečinok `src/main/java` premenovať na `src/main/java-update` aby išiel spustiť čistý WebJET. Následne môžete použiť aktualizačný skript. Ten prehľadáva a aktualizuje priečinok `../java/*.java` aj `../java-update/*.java`.
 
