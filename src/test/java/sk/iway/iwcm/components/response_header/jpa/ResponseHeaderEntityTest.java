@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.response_header.jpa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,7 @@ public class ResponseHeaderEntityTest {
         String longValue = longCspValue.toString();
         
         // Verify the test value is longer than the old 255 character limit
-        assert longValue.length() > 255 : "Test value should be longer than 255 characters";
+        assertTrue(longValue.length() > 255, "Test value should be longer than 255 characters");
         
         // Create entity and set the long header value
         ResponseHeaderEntity entity = new ResponseHeaderEntity();
@@ -39,7 +40,7 @@ public class ResponseHeaderEntityTest {
         assertEquals(longValue.length(), entity.getHeaderValue().length());
         
         // Verify the value is longer than the old 255 character limit
-        assert entity.getHeaderValue().length() > 255 : "Header value should be longer than 255 characters";
+        assertTrue(entity.getHeaderValue().length() > 255, "Header value should be longer than 255 characters");
     }
     
     @Test
