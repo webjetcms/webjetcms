@@ -160,7 +160,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			requestBean.setParameters(request.getParameterMap());
 			requestBean.setHeaderOrigin(request.getHeader("origin"));
 			requestBean.setReferrer(request.getHeader("referer"));
-			requestBean.setCryptoPrivateKey((String)session.getAttribute("JPACryptoConverter.privateKey"));
+			requestBean.setCryptoPrivateKey((String)Tools.sessionGetAttribute(session, "JPACryptoConverter.privateKey"));
 
 			if (Constants.getServletContext().getAttribute("springContext") != null) {
 				requestBean.setSpringContext((ApplicationContext) Constants.getServletContext().getAttribute("springContext"));
@@ -651,7 +651,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		           String attrName = names.nextElement();
 		           if ("sessionCssParsed".equals(attrName) || "editorForm".equals(attrName) || "ShowdocAction.showDocData".equals(attrName)) continue;
 		           boolean attributeSerializable = serialize(
-		                   attrName, session.getAttribute(attrName)
+		                   attrName, Tools.sessionGetAttribute(session, attrName)
 		           );
 		           if (!attributeSerializable) {
 		               if (items.length() > 0) {

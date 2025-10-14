@@ -1124,10 +1124,10 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 	 */
 	public int getMenuType(HttpSession session) {
 
-		if (session != null && session.getAttribute("menuDisabledGroup"+getGroupId())!=null) return GroupDetails.MENU_TYPE_HIDDEN;
+		if (session != null && Tools.sessionGetAttribute(session, "menuDisabledGroup"+getGroupId())!=null) return GroupDetails.MENU_TYPE_HIDDEN;
 
 		if (loggedMenuType < 0 || session == null) return(menuType);
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(session);
 		if (user == null) return(menuType);
 
 		//skontroluj, ci je user v niektorej z tychto skupin

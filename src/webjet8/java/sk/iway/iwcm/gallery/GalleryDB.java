@@ -570,8 +570,8 @@ public class GalleryDB
 		dt.diff("After filter perex group");
 
 		//filtrovanie na zaklade datumu
-		String filterDateFrom = session != null && session.getAttribute(DATE_FROM_SESSION_FILTER) != null ? (String)session.getAttribute(DATE_FROM_SESSION_FILTER) : null;
-		String filterDateTo = session != null && session.getAttribute(DATE_TO_SESSION_FILTER) != null ? (String)session.getAttribute(DATE_TO_SESSION_FILTER) : null;
+		String filterDateFrom = session != null && Tools.sessionGetAttribute(session, DATE_FROM_SESSION_FILTER) != null ? (String)Tools.sessionGetAttribute(session, DATE_FROM_SESSION_FILTER) : null;
+		String filterDateTo = session != null && Tools.sessionGetAttribute(session, DATE_TO_SESSION_FILTER) != null ? (String)Tools.sessionGetAttribute(session, DATE_TO_SESSION_FILTER) : null;
 
 		if(Tools.isNotEmpty(filterDateFrom) || Tools.isNotEmpty(filterDateTo))
 		{
