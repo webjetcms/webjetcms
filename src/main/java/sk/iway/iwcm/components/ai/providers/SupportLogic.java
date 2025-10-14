@@ -187,7 +187,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
                         if(FileTools.isImage(format) == false) throw new IllegalStateException("Image format is not valid: " + format);
 
                         String base64Image = getImageBase64(jsonNodeRes, jsonImage);
-                        if(Tools.isEmpty(base64Image)) throw new IllegalStateException("Image acquire unsuccesfull");
+                        if(Tools.isEmpty(base64Image)) throw new IllegalStateException("Image acquire unsuccessful");
 
                         //Date pars is added so we can delet all images from same request (same request == same date time part)
                         String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";

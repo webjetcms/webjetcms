@@ -195,7 +195,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
                     JsonNode frNode2 = candidate.get("finishMessage");
                     if (frNode2 != null && frNode2.isTextual()) {
-                        // Last non-null value wins (in case of multiple candidates)§
+                        // Last non-null value wins (in case of multiple candidates)
                         finishText = frNode2.asText();
                     }
                 }
