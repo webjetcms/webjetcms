@@ -59,7 +59,7 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
     @Override
     public Page<AiStatEntity> searchItem(Map<String, String> params, Pageable pageable, AiStatEntity search) {
         Page<AiStatEntity> page = asr.findAll( AiStatService.getSpecification(params, pageable), pageable);
-        return new DatatablePageImpl<>( AiStatService.fillStatEntities(page.getContent(), adr), pageable, page.getTotalElements() );
+        return new DatatablePageImpl<>( AiStatService.fillStatEntities(page.getContent(), adr, getProp()), pageable, page.getTotalElements() );
     }
 
     @Override
@@ -110,6 +110,6 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
 
     @GetMapping("tokenUsers/all")
     public Page<TokenUsersDTO> getTokenUsers(@RequestParam("created") String created) {
-       return new DatatablePageImpl<>( AiStatService.getTokenUsersTableList(created) );
+       return new DatatablePageImpl<>( AiStatService.getTokenUsersTableList(created, getProp()) );
     }
 }

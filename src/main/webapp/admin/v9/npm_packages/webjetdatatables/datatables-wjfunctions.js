@@ -295,7 +295,15 @@ export function getTitle(EDITOR, row = null) {
         });
     } catch (ex) {console.log(ex);}
     title = WJ.htmlToText(title);
-    if (title != null && typeof title == "string") title = title.replaceAll("&#47;", "/");
+    if (title != null && typeof title == "string") {
+        title = title.trim();
+        //get only first line (eg. in audit we have often multiline text)
+        let newLine = title.indexOf("\n");
+        if (newLine > 0) title = title.substring(0, newLine);
+
+        title = title.replaceAll("&#47;", "/");
+        title = title.replaceAll("-&gt;", "->");
+    }
     if ("[object Object]"==title) title = "";
     //console.log("Returning title=", title);
     return title;

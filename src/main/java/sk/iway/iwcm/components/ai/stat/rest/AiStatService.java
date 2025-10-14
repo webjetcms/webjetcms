@@ -49,7 +49,6 @@ import sk.iway.iwcm.utils.Pair;
 public class AiStatService {
 
     private static final int PIE_CHART_TOP_N = 5;
-    private static final String UNKNOWN_USER = "UNKNOWN";
 
     public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
         if(statRepo == null) throw new IllegalStateException("AiStatRepository is not provided");
@@ -155,7 +154,7 @@ public class AiStatService {
 			@Override
 			public LabelValueInteger map(ResultSet rs) throws SQLException {
                 UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
-				values.add(new LabelValueInteger((user == null) ? UNKNOWN_USER : user.getFullName(), rs.getInt("used_tokens")));
+				values.add(new LabelValueInteger((user == null) ? prop.getText("calendar.neznamy") : user.getFullName(), rs.getInt("used_tokens")));
                 return null;
 			}
 		});
@@ -163,7 +162,7 @@ public class AiStatService {
         return values;
     }
 
-    public static final List<TokenUsersDTO> getTokenUsersTableList(String created) {
+    public static final List<TokenUsersDTO> getTokenUsersTableList(String created, Prop prop) {
         Date[] dateRangeArr = StatService.processDateRangeString(created);
 
         StringBuilder query = new StringBuilder("SELECT user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ? ");
@@ -176,7 +175,7 @@ public class AiStatService {
                 UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
                 values.add(
                     new TokenUsersDTO(
-                        (user == null) ? UNKNOWN_USER : user.getFullName(),
+                        (user == null) ? prop.getText("calendar.neznamy") : user.getFullName(),
                         rs.getInt("used_tokens")
                     )
                 );
@@ -303,7 +302,7 @@ public class AiStatService {
         };
     }
 
-    public static List<AiStatEntity> fillStatEntities(List<AiStatEntity> entities, AssistantDefinitionRepository repo) {
+    public static List<AiStatEntity> fillStatEntities(List<AiStatEntity> entities, AssistantDefinitionRepository repo, Prop prop) {
         if(repo == null) throw new IllegalStateException("AssistantDefinitionRepository is not provided");
 
         //Get assistants from cache/db and put into map
@@ -332,7 +331,7 @@ public class AiStatService {
                 String userName = cachedUsersNames.get(userId);
                 if(userName == null) {
                     UserDetails user = UsersDB.getUserCached(userId);
-                    userName = (user == null) ? UNKNOWN_USER : user.getFullName();
+                    userName = (user == null) ? prop.getText("calendar.neznamy") : user.getFullName();
                     cachedUsersNames.put(userId, userName);
                 }
 

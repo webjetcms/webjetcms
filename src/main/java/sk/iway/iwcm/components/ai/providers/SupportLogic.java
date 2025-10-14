@@ -281,7 +281,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
     private int getAuditMaxLength() { return Constants.getInt("ai_auditMaxLength"); }
 
     private void setAssistantInfo(AssistantDefinitionEntity assistant, StringBuilder sb) {
-        sb.append("\n\nAssistant ID: ").append(assistant.getId()).append("\n");
+        sb.append("\nAssistant ID: ").append(assistant.getId()).append("\n");
         if (Tools.isNotEmpty(assistant.getName())) sb.append("Assistant name: ").append(assistant.getName()).append("\n");
         if (Tools.isNotEmpty(assistant.getProvider())) sb.append("Provider: ").append(assistant.getProvider()).append("\n");
         if (Tools.isNotEmpty(assistant.getModel())) sb.append("Model: ").append(assistant.getModel()).append("\n");
@@ -291,7 +291,11 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
     private void succesAdminLog(AssistantResponseDTO responseDto, Pair<String, String> inputPair, AssistantDefinitionEntity assistant, String methodName, String textResponse, JsonNode usageJsonNodeRes, int addTokens, AiStatRepository statRepo, HttpServletRequest request) {
         StringBuilder sb = new StringBuilder("");
-        sb.append(getServiceName()).append(" ").append(methodName).append(" -> SUCCESSFUL");
+
+        sb.append("SUCCESS: ");
+        sb.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
+        sb.append(methodName);
+        sb.append("\n");
 
         // Assistant Info
         setAssistantInfo(assistant, sb);
@@ -304,9 +308,9 @@ public abstract class SupportLogic implements SupportLogicInterface {
         int auditMaxLength = getAuditMaxLength();
         if(auditMaxLength > 0) {
             StringBuilder bonusInfo = new StringBuilder();
-            bonusInfo.append("\n\nAI Input value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
-            bonusInfo.append("\n\nAI user prompt: ").append("\n").append( Tools.isEmpty(inputPair.getSecond()) == true ? " - " : inputPair.getSecond() );
-            bonusInfo.append("\n\nAI response: ").append("\n").append( textResponse );
+            bonusInfo.append("\nInput value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
+            if (Tools.isNotEmpty(inputPair.getSecond())) bonusInfo.append("\nUser prompt: ").append("\n").append( inputPair.getSecond() );
+            bonusInfo.append("\nAI response: ").append("\n").append( textResponse );
 
             sb.append( DB.prepareString(bonusInfo.toString(), auditMaxLength) );
         }
@@ -326,18 +330,22 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
     private void errorAdminLog(AssistantDefinitionEntity assistant, Pair<String, String> inputPair, String methodName, Pair<String, String> errPair) throws ProviderCallException{
         StringBuilder sb = new StringBuilder("");
-        sb.append(getServiceName()).append(" ").append(methodName).append(" -> FAILED");
+
+        sb.append("ERROR: ");
+        sb.append(assistant.getName()).append(" (").append(assistant.getProvider()).append(") ");
+        sb.append(methodName);
+        sb.append("\n");
 
         // Assistant Info
         setAssistantInfo(assistant, sb);
 
         // Add error
-        sb.append("\n\nError message: ").append("\n").append(errPair.getFirst());
+        sb.append("\nError message: ").append("\n").append(errPair.getFirst());
 
         // Bonus info
-        sb.append("\n\nAI Input value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
-        sb.append("\n\nAI user prompt: ").append("\n").append( Tools.isEmpty(inputPair.getSecond()) == true ? " - " : inputPair.getSecond() );
-        sb.append("\n\nFull response: ").append("\n").append( Tools.isEmpty(errPair.getSecond()) == true ? " - " : errPair.getSecond() );
+        sb.append("\nInput value: ").append("\n").append( Tools.isEmpty(inputPair.getFirst()) == true ? " - " : inputPair.getFirst() );
+        if (Tools.isNotEmpty(inputPair.getSecond())) sb.append("\nUser prompt: ").append("\n").append( inputPair.getSecond() );
+        sb.append("\nFull response: ").append("\n").append( Tools.isEmpty(errPair.getSecond()) == true ? " - " : errPair.getSecond() );
 
         Adminlog.add(Adminlog.TYPE_AI, sb.toString(), -1, -1);
 

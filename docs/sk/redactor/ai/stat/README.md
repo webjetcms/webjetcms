@@ -38,7 +38,7 @@ Sekcia štatistika ďalej ponúka aj tabuľku, kde je prehľad všetkých volan�
 
 ![](datatable.png)
 
-## TOP 10 používateľov najvyšou spotrebou tokenov
+## TOP 10 používateľov najvyššou spotrebou tokenov
 
 Tento graf zobrazuje desiatich používateľov s najvyššou spotrebou tokenov v rámci zvoleného obdobia. Umožňuje identifikovať používateľov, ktorí najviac prispievajú k nákladom na využívanie AI asistentov, a zvážiť možnosti optimalizácie ich používania.
 

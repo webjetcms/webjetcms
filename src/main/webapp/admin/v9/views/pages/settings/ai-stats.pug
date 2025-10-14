@@ -4,7 +4,7 @@ block content
 
     script.
         var aiStatDataTable;
-        var tokenUsersDataTable;
+        var topUsersDataTable;
 
         let pieChartMostUsed;
         let pieChartMostTokens;
@@ -47,21 +47,25 @@ block content
             aiStatDataTable.hideButton("celledit");
             aiStatDataTable.hideButton("import");
 
-            let columns2 = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO')})]
-            tokenUsersDataTable = WJ.DataTable({
+
+            let topUsersColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO')})]
+            let order = [];
+            order.push([1, 'desc']);
+            topUsersDataTable = WJ.DataTable({
                 url:  WJ.urlAddParam(url + "tokenUsers", "created", ChartTools.getDateRangeWithName("created", 30)),
-                columns: columns2,
+                columns: topUsersColumns,
                 serverSide: false,
-                id: "tokenUsersDataTable",
+                id: "topUsersDataTable",
+                order: order,
                 autoHeight: false
             });
 
-            tokenUsersDataTable.hideButton("create");
-            tokenUsersDataTable.hideButton("remove");
-            tokenUsersDataTable.hideButton("edit");
-            tokenUsersDataTable.hideButton("duplicate");
-            tokenUsersDataTable.hideButton("celledit");
-            tokenUsersDataTable.hideButton("import");
+            topUsersDataTable.hideButton("create");
+            topUsersDataTable.hideButton("remove");
+            topUsersDataTable.hideButton("edit");
+            topUsersDataTable.hideButton("duplicate");
+            topUsersDataTable.hideButton("celledit");
+            topUsersDataTable.hideButton("import");
 
             //Create and set amcharts
             createAmcharts();
@@ -70,10 +74,10 @@ block content
             $("#aiStatDataTable_extfilter").on("click", "button.filtrujem", function() {
 
                 if($(this).hasClass("dt-filtrujem-created")) {
-                    // When date created changed, update also tokenUsersDataTable
-                    tokenUsersDataTable.setAjaxUrl(WJ.urlUpdateParam(tokenUsersDataTable.getAjaxUrl(), "created", ChartTools.getDateRangeWithName("created", 30)));
+                    // When date created changed, update also topUsersDataTable
+                    topUsersDataTable.setAjaxUrl(WJ.urlUpdateParam(topUsersDataTable.getAjaxUrl(), "created", ChartTools.getDateRangeWithName("created", 30)));
                     //reload table values
-                    tokenUsersDataTable.ajax.reload();
+                    topUsersDataTable.ajax.reload();
                 }
 
                 getDataAndUpdateAmcharts();
@@ -234,5 +238,5 @@ block content
     </div>
 
     <div id="tableDiv_2">
-        <table id="tokenUsersDataTable" class="datatableInit table"></table>
+        <table id="topUsersDataTable" class="datatableInit table"></table>
     </div>
