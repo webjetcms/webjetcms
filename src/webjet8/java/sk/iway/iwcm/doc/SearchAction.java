@@ -21,7 +21,6 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -39,6 +38,7 @@ import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * full text search, ((z databazy selektuje vzdy len (perpage+1) zaznamov
@@ -74,8 +74,7 @@ public class SearchAction
 			return LuceneSearchAction.search(request);
 		}
 
-		HttpSession session = request.getSession();
-		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 
 		String forward = "success";
 		String error = "error";

@@ -1419,7 +1419,7 @@ public class PathFilter implements Filter
 
 		//kontrola pristupu podla povolenych IP adries
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_WEB_ACCESS_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking to access web from session: " + val.booleanValue());
@@ -1427,7 +1427,7 @@ public class PathFilter implements Filter
 		}
 
 		boolean ret = Tools.checkIpAccess(request, "webEnableIPs");
-		session.setAttribute(CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1445,7 +1445,7 @@ public class PathFilter implements Filter
 	private boolean checkDomain(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_DOMAIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_DOMAIN_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking DOMAIN to access web from session: " + val.booleanValue());
@@ -1470,7 +1470,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1656,7 +1656,7 @@ public class PathFilter implements Filter
 	public static boolean checkAdmin(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_ADMIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_ADMIN_SESSION_KEY);
 		if (val != null)
 		{
 			return (val.booleanValue());
@@ -1683,7 +1683,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 

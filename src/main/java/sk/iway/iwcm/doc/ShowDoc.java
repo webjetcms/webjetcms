@@ -394,7 +394,7 @@ private static String combineCss(String cssStyle)
         }
 
         //over licenciu
-        if (session.getAttribute("license_checked") == null)
+        if (Tools.sessionGetAttribute(session, "license_checked") == null)
         {
             if (!InitServlet.verify(request))
             {
@@ -402,9 +402,9 @@ private static String combineCss(String cssStyle)
                 return;
             }
         }
-        session.setAttribute("license_checked", "true");
+        Tools.sessionSetAttribute(session, "license_checked", "true");
 
-        Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+        Identity user = UsersDB.getCurrentUser(session);
         if (user == null)
         {
             user = new Identity();
@@ -412,9 +412,9 @@ private static String combineCss(String cssStyle)
 
         try
         {
-            if (session.getAttribute("setCookie") != null)
+            if (Tools.sessionGetAttribute(session, "setCookie") != null)
             {
-                Cookie myCookie = (Cookie) session.getAttribute("setCookie");
+                Cookie myCookie = (Cookie) Tools.sessionGetAttribute(session, "setCookie");
                 Logger.println(this,"setting cookie: " + myCookie.getName());
                 Tools.addCookie(myCookie, response,request);
 
@@ -640,9 +640,9 @@ private static String combineCss(String cssStyle)
         int group_id = -1;
         try
         {
-            if (session.getAttribute(Constants.SESSION_GROUP_ID) != null)
+            if (Tools.sessionGetAttribute(session, Constants.SESSION_GROUP_ID) != null)
             {
-                group_id = Integer.parseInt((String) session.getAttribute(Constants.SESSION_GROUP_ID));
+                group_id = Integer.parseInt((String) Tools.sessionGetAttribute(session, Constants.SESSION_GROUP_ID));
             }
         }
         catch (Exception ex)
@@ -987,7 +987,7 @@ private static String combineCss(String cssStyle)
         //pozri PathFilter.java
         if (request.getParameter("dontUpdateLastDocId")==null)
         {
-            session.setAttribute("last_doc_id", doc_id);
+            Tools.sessionSetAttribute(session, "last_doc_id", doc_id);
         }
 
         //NOVA STATISTIKA
@@ -1167,7 +1167,7 @@ private static String combineCss(String cssStyle)
         {
             try
             {
-                Integer iTempId = (Integer)session.getAttribute("last_temp_id");
+                Integer iTempId = (Integer)Tools.sessionGetAttribute(session, "last_temp_id");
                 if (iTempId!=null)
                 {
                     TemplateDetails temp2 = tempDB.getTemplate(iTempId);
@@ -1195,7 +1195,7 @@ private static String combineCss(String cssStyle)
             //popup okno si nepamatame...
             if (!temp.getTempName().startsWith("popup"))
             {
-                session.setAttribute("last_temp_id", temp.getTempId());
+                Tools.sessionSetAttribute(session, "last_temp_id", temp.getTempId());
             }
         }
 
@@ -1563,19 +1563,7 @@ private static String combineCss(String cssStyle)
         try
         {
             HttpSession session = request.getSession();
-            Identity user = null;
-            try
-            {
-                //ziskaj meno lognuteho usera
-                if (session.getAttribute(Constants.USER_KEY) != null)
-                {
-                    user = (Identity) session.getAttribute(Constants.USER_KEY);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.error(ShowDoc.class, ex);
-            }
+            Identity user = UsersDB.getCurrentUser(session);
 
             // ------------ HEADER
             String text = (String) request.getAttribute("doc_header");
