@@ -22,8 +22,8 @@ ant update-version
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
 
-#GITHUB: just run ant deployStaging
-#then close repo and deploy it
+#MavenCentral: just run ant deployMavenCentral
+#then deploy it manually on https://central.sonatype.com/publishing/deployments
 
 cd ..
 
