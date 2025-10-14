@@ -49,6 +49,8 @@ Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) =
             "string1": string1
         },
         createSteps: function(I, options) {
+            I.wait(3);
+            I.fillField("#DTE_Field_string1", string1);
             I.fillField("#DTE_Field_string1", string1);
         },
         afterCreateSteps: function(I, options, requiredFields) {
