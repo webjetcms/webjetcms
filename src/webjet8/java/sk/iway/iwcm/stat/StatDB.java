@@ -42,6 +42,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  Description of the Class
@@ -572,15 +573,15 @@ public class StatDB extends DB
 		}
 
 		int lastDocId = -1;
-		if (session.getAttribute("stat_last_time") == null)
+		if (Tools.sessionGetAttribute(session, "stat_last_time") == null)
 		{
-			session.setAttribute("serverName", DBPool.getDBName(request));
+			Tools.sessionSetAttribute(session, "serverName", DBPool.getDBName(request));
 		}
 		else
 		{
 			try
 			{
-				lastDocId = ((Integer) session.getAttribute("stat_last_doc_id")).intValue();
+				lastDocId = ((Integer) Tools.sessionGetAttribute(session, "stat_last_doc_id")).intValue();
 			}
 			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
 		}
@@ -616,8 +617,8 @@ public class StatDB extends DB
 		//ok
 		try
 		{
-			session.setAttribute("stat_last_time", Double.valueOf(cal.getTime().getTime()));
-			session.setAttribute("stat_last_doc_id", Integer.valueOf(docId));
+			Tools.sessionSetAttribute(session, "stat_last_time", Double.valueOf(cal.getTime().getTime()));
+			Tools.sessionSetAttribute(session, "stat_last_doc_id", Integer.valueOf(docId));
 
 			// setni data pre SessionListener - toto nefunguje vo WebSphere
 			SessionHolder holder = SessionHolder.getInstance();
@@ -738,7 +739,7 @@ public class StatDB extends DB
 
 		HttpSession session = request.getSession();
 
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 		//nezalogujeme usera pri odoslani emailu
 		if (user==null || user.isAuthorized()==false || request.getHeader("dmail") != null)
 		{
@@ -750,7 +751,7 @@ public class StatDB extends DB
 		//zaokruhlenie kvoli DB modelu a UPDATE WHERE logon_time=?
 		cal.set(Calendar.MILLISECOND, 0);
 
-		Long logonTime = (Long) session.getAttribute(LOGON_TIME);
+		Long logonTime = (Long) Tools.sessionGetAttribute(session, LOGON_TIME);
 		if (logonTime != null)
 		{
 			if ("none".equals(Constants.getString("statMode")) || cookiesEnabled==false)
@@ -769,7 +770,7 @@ public class StatDB extends DB
 
 			String sql = "UPDATE users SET last_logon=? WHERE user_id=?";
 			StatWriteBuffer.add(sql, "users", new Timestamp(logonTime.longValue()), user.getUserId());
-			session.setAttribute(LOGON_TIME, logonTime);
+			Tools.sessionSetAttribute(session, LOGON_TIME, logonTime);
 
 			if ("none".equals(Constants.getString("statMode")))
 			{
@@ -1045,7 +1046,7 @@ public class StatDB extends DB
 		if (!browser.isStatUserAgentAllowed())
 		{
 			browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + " " + browser.getBrowserVersion());
-			if (session != null) session.setAttribute("statFromBrowserId", Long.valueOf(browserId));
+			if (session != null) Tools.sessionSetAttribute(session, "statFromBrowserId", Long.valueOf(browserId));
 		}
 
 		if (Tools.canSetCookie("statisticke", request.getCookies())==false)
@@ -1076,7 +1077,7 @@ public class StatDB extends DB
 
 		if (session != null)
 		{
-			Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+			Identity user = UsersDB.getCurrentUser(session);
 
 			/**
 			 * ak je to prihlaseny pouzivatel, tak sa mu priradi browserId ako konstanta + jeho userId
@@ -1084,7 +1085,7 @@ public class StatDB extends DB
 			if (user != null && Constants.getBoolean("useUserIdAsBrowserId"))
 			{
 				browserId = Constants.getInt("loggedUserBrowserId") + user.getUserId() + 0L;
-				session.setAttribute("statFromBrowserId", Long.valueOf(browserId));
+				Tools.sessionSetAttribute(session, "statFromBrowserId", Long.valueOf(browserId));
 
 				return(browserId);
 			}
@@ -1092,11 +1093,11 @@ public class StatDB extends DB
 			/**
 			 * Teraz sa pokusime vydolovat browserId z session
 			 */
-			if (session.getAttribute("statFromBrowserId") != null)
+			if (Tools.sessionGetAttribute(session, "statFromBrowserId") != null)
 			{
 				try
 				{
-					browserId = ( (Long)session.getAttribute("statFromBrowserId")).longValue();
+					browserId = ( (Long)Tools.sessionGetAttribute(session, "statFromBrowserId")).longValue();
 
 					if (Tools.getCookieValue(request.getCookies(), "statBrowserIdNew", null)!=null)
 					{
@@ -1156,7 +1157,7 @@ public class StatDB extends DB
 			Tools.addCookie(statBrowserIdNew, response,request);
 		}
 
-		if (session != null) session.setAttribute("statFromBrowserId", Long.valueOf(browserId));
+		if (session != null) Tools.sessionSetAttribute(session, "statFromBrowserId", Long.valueOf(browserId));
 
 		return(browserId);
 	}
@@ -1166,11 +1167,11 @@ public class StatDB extends DB
 		long sessionId = 0;
 
 		HttpSession session = request.getSession();
-		if (session != null && session.getAttribute("statFromSessionId") != null)
+		if (session != null && Tools.sessionGetAttribute(session, "statFromSessionId") != null)
 		{
 			try
 			{
-				sessionId = ( (Long)session.getAttribute("statFromSessionId")).longValue();
+				sessionId = ( (Long)Tools.sessionGetAttribute(session, "statFromSessionId")).longValue();
 			}
 			catch (RuntimeException ex)
 			{
@@ -1184,7 +1185,7 @@ public class StatDB extends DB
 			sessionId = PkeyGenerator.getNextValueAsLong("stat_session_id");
 		}
 
-		if (session != null) session.setAttribute("statFromSessionId", Long.valueOf(sessionId));
+		if (session != null) Tools.sessionSetAttribute(session, "statFromSessionId", Long.valueOf(sessionId));
 
 		return(sessionId);
 	}

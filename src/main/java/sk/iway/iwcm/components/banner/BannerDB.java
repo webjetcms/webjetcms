@@ -591,13 +591,13 @@ public class BannerDB
 		//System.out.println("bannersOK.size() : "+bannersOK.size());
 
 		//ak v session nie je bannerIndex, t.j. prvy krat volam fukciu a zoznam bannerList je prazdny
-		if (session.getAttribute("bannerIndex"+bannerIndex) == null)
+		if (Tools.sessionGetAttribute(session, "bannerIndex"+bannerIndex) == null)
 		{
 			if (bannersOK.size() > 0)
 			{
 				banner = bannersOK.get(0);
 				bannerList.add(String.valueOf(banner.getBannerId()));
-				session.setAttribute("bannerList"+bannerIndex, bannerList);
+				Tools.sessionSetAttribute(session, "bannerList"+bannerIndex, bannerList);
 
 				return(banner);
 			}
@@ -623,7 +623,7 @@ public class BannerDB
 					if ( !found )
 					{
 						bannerList.add(String.valueOf(banner.getBannerId()));
-						session.setAttribute("bannerList"+bannerIndex, bannerList);
+						Tools.sessionSetAttribute(session, "bannerList"+bannerIndex, bannerList);
 
 					/*	Logger.println(BannerDB.class,"-----------------\nBannerList: ");
 						for (int j=0; j<bannerList.size(); j++)

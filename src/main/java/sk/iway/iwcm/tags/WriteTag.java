@@ -28,7 +28,6 @@ import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
@@ -391,20 +390,7 @@ public class WriteTag extends BodyTagSupport
       Logger.println(this,"redirected 5");
       if (1==1) return;*/
 
-		HttpSession session = request.getSession();
-		Identity user = null;
-		try
-		{
-			//ziskaj meno lognuteho usera
-			if (session.getAttribute(Constants.USER_KEY) != null)
-			{
-				user = (Identity) session.getAttribute(Constants.USER_KEY);
-			}
-		}
-		catch (Exception ex)
-		{
-			Logger.error(WriteTag.class, ex);
-		}
+		Identity user = UsersDB.getCurrentUser(request);
 
 		StringBuilder content = new StringBuilder();
 		Prop prop = Prop.getInstance(request);
@@ -800,6 +786,11 @@ public class WriteTag extends BodyTagSupport
 						Logger.error(WriteTag.class, "WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
 						content.append(getErrorMessage(prop, "writetag.error", includeFileName));
 					}
+					catch (IllegalStateException ex1) {
+						//toto nas nezaujima, pravdepodobne invalidated session
+						Logger.error(WriteTag.class, "WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
+						content.append(getErrorMessage(prop, "writetag.error", includeFileName));
+					}
 					catch (Exception ex1)
 					{
 						Logger.error(WriteTag.class,"WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
@@ -809,7 +800,7 @@ public class WriteTag extends BodyTagSupport
 
 						String stack = sw.toString();
 
-						if (stack != null && stack.contains("Unabled to prepare ActionBean for JSP Usage")==false && stack.contains("_404_jsp")==false)
+						if (stack != null && stack.contains("Unabled to prepare ActionBean for JSP Usage")==false && stack.contains("has already been invalidated") && stack.contains("_404_jsp")==false)
 						{
 							Logger.error(WriteTag.class, ex1);
 							content.append(getErrorMessage(prop, "writetag.error", includeFileName));

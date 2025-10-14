@@ -11,7 +11,7 @@ sk.iway.iwcm.SetCharacterEncodingFilter.setCommonHeaders(response, request);
 <iwcm:text key="stat.error.404"/>
 
 <%
-Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+Identity user = sk.iway.iwcm.users.UsersDB.getCurrentUser(request);
 if ((user != null && user.isAdmin()) || "iwcm.interway.sk".equals(request.getServerName()))
 {
 	response.setContentType("text/plain");

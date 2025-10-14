@@ -8,7 +8,6 @@ import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.eclipse.persistence.expressions.Expression;
@@ -30,6 +29,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  BasketDB.java - Praca s nakupnym kosikom, funkcie na pracu s databazou s tabulkou basket_item
@@ -121,8 +121,7 @@ public class BasketDB
 	public static int getUserId(HttpServletRequest request)
 	{
 		int userId = -1;
-		HttpSession session = request.getSession();
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 		if (user != null)
 			userId = user.getUserId();
 

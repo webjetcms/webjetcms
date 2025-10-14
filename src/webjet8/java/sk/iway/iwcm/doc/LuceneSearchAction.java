@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Transformer;
@@ -65,6 +64,7 @@ import sk.iway.iwcm.system.fulltext.lucene.AnalyzerFactory;
 import sk.iway.iwcm.system.fulltext.lucene.Lemmas;
 import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * LuceneSearchAction.java
@@ -97,8 +97,7 @@ public class LuceneSearchAction
 		request.removeAttribute("totalResults");
 
 		String language =  PageLng.getUserLng(request);
-		HttpSession session = request.getSession();
-		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 		DocDB docDB = DocDB.getInstance();
 
 		String forward = "success";
