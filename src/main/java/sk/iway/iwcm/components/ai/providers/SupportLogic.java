@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
@@ -44,9 +43,6 @@ import sk.iway.iwcm.utils.Pair;
  */
 public abstract class SupportLogic implements SupportLogicInterface {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-    private static final CloseableHttpClient client = HttpClients.createDefault();
-
     private static final String METHOD_TEXT_RESPONSE = "getAiResponse";
     private static final String METHOD_TEXT_STREAM_RESPONSE = "getAiStreamResponse";
     private static final String METHOD_IMAGE_RESPONSE = "getAiImageResponse";
@@ -56,7 +52,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
-        try (CloseableHttpResponse response = client.execute( getModelsRequest(request) )) {
+        try (CloseableHttpResponse response = HttpClients.createDefault().execute( getModelsRequest(request) )) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
                 Pair<String, String> errorPair = handleErrorMessage(response, prop);
                 StringBuilder sb = new StringBuilder("");
@@ -70,8 +66,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
             String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             if (Tools.isEmpty(value)) return supportedValues;
 
-
-            JsonNode root = mapper.readTree(value);
+            JsonNode root = new ObjectMapper().readTree(value);
             return extractModels(root);
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,12 +85,12 @@ public abstract class SupportLogic implements SupportLogicInterface {
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-            try (CloseableHttpResponse response = client.execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
+            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, response, prop);
 
                 fullResponse = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-                JsonNode jsonNodeRes = mapper.readTree(fullResponse);
+                JsonNode jsonNodeRes = new ObjectMapper().readTree(fullResponse);
 
                 String finishError = getFinishError(jsonNodeRes);
                 if(Tools.isNotEmpty(finishError)) throw new IllegalStateException(finishError);
@@ -126,7 +121,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-            try (CloseableHttpResponse response = client.execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
+            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, response, prop);
 
@@ -163,12 +158,12 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
 
-            try (CloseableHttpResponse response = client.execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
+            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, response, prop);
 
                 responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-                JsonNode jsonNodeRes = mapper.readTree(responseText);
+                JsonNode jsonNodeRes = new ObjectMapper().readTree(responseText);
 
                 String finishError = getFinishError(jsonNodeRes);
                 if(Tools.isNotEmpty(finishError)) throw new IllegalStateException(finishError);
@@ -227,7 +222,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
         try {
             responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            JsonNode root = mapper.readTree(responseBody);
+            JsonNode root = new ObjectMapper().readTree(responseBody);
 
             // Gemini sends an array with one object; OpenAI sends a single object
             JsonNode objNode = root.isArray() && root.size() > 0 ? root.get(0) : root;
