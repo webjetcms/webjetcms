@@ -35,6 +35,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for OpenAI assistants - handles calls to OpenAI API
@@ -143,10 +144,10 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return post;
     }
 
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+    public Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
         OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
         streamHandler.handleBufferedReader(reader, writer);
-        return streamHandler.getUsageChunk();
+        return new Pair<>(streamHandler.getWholeResponse(), streamHandler.getUsageChunk());
     }
 
 

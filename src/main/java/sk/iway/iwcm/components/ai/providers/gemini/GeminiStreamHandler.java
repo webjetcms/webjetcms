@@ -31,7 +31,7 @@ public class GeminiStreamHandler {
     IncludesHandler includeHandler;
 
     public GeminiStreamHandler(Map<Integer, String> replacedIncludes) {
-        this.includeHandler = new IncludesHandler(replacedIncludes, 1);
+        this.includeHandler = new IncludesHandler(replacedIncludes);
     }
 
     public final JsonNode getUsageChunk() {
@@ -46,6 +46,10 @@ public class GeminiStreamHandler {
 
         root.set("usage", usage);
         return root;
+    }
+
+    public final String getWholeResponse() {
+        return includeHandler.getWholeResponse();
     }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {

@@ -1,5 +1,8 @@
 package sk.iway.iwcm.components.ai.stat.rest;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
@@ -25,8 +29,11 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
+import sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.SpecSearch;
@@ -128,6 +135,56 @@ public class AiStatService {
         }
 
         return data;
+    }
+
+    public static final List<LabelValueInteger> getBarChartDataTop10Users(AiStatRepository statRepo, String created, Prop prop) {
+        Date[] dateRangeArr = StatService.processDateRangeString(created);
+
+        StringBuilder query = new StringBuilder("SELECT ");
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) query.append("TOP 10 ");
+        query.append("user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ?");
+        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append(" AND ROWNUM <= 10 AND");
+        query.append(CloudToolsForCore.getDomainIdSqlWhere(true));
+        query.append(" GROUP BY user_id ORDER BY used_tokens DESC");
+        if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) query.append(" LIMIT 10");
+        query.append(";");
+
+        List<LabelValueInteger> values = new ArrayList<>();
+        new ComplexQuery().setSql(query.toString()).setParams( new Timestamp(dateRangeArr[0].getTime()), new Timestamp(dateRangeArr[1].getTime()) ).list(new Mapper<LabelValueInteger>() {
+			@Override
+			public LabelValueInteger map(ResultSet rs) throws SQLException {
+                UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
+				values.add(new LabelValueInteger((user == null) ? prop.getText("calendar.neznamy") : user.getFullName(), rs.getInt("used_tokens")));
+                return null;
+			}
+		});
+
+        return values;
+    }
+
+    public static final List<TokenUsersDTO> getTokenUsersTableList(String created, Prop prop) {
+        Date[] dateRangeArr = StatService.processDateRangeString(created);
+
+        StringBuilder query = new StringBuilder("SELECT user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ? ");
+        query.append(CloudToolsForCore.getDomainIdSqlWhere(true)).append("GROUP BY user_id ORDER BY used_tokens DESC");
+
+        List<TokenUsersDTO> values = new ArrayList<>();
+        new ComplexQuery().setSql(query.toString()).setParams( new Timestamp(dateRangeArr[0].getTime()), new Timestamp(dateRangeArr[1].getTime()) ).list(new Mapper<TokenUsersDTO>() {
+            @Override
+			public TokenUsersDTO map(ResultSet rs) throws SQLException {
+                UserDetails user = UsersDB.getUserCached(rs.getInt("user_id"));
+                values.add(
+                    new TokenUsersDTO(
+                        (user == null) ? prop.getText("calendar.neznamy") : user.getFullName(),
+                        rs.getInt("used_tokens")
+                    )
+                );
+
+                return null;
+            }
+        });
+
+        return values;
     }
 
     private static final List<LabelValueInteger> doShit(Map<Long, Integer> mappedValues, AssistantDefinitionRepository assistantsRepo, Prop prop) {
@@ -245,7 +302,7 @@ public class AiStatService {
         };
     }
 
-    public static List<AiStatEntity> fillStatEntities(List<AiStatEntity> entities, AssistantDefinitionRepository repo) {
+    public static List<AiStatEntity> fillStatEntities(List<AiStatEntity> entities, AssistantDefinitionRepository repo, Prop prop) {
         if(repo == null) throw new IllegalStateException("AssistantDefinitionRepository is not provided");
 
         //Get assistants from cache/db and put into map
@@ -274,7 +331,7 @@ public class AiStatService {
                 String userName = cachedUsersNames.get(userId);
                 if(userName == null) {
                     UserDetails user = UsersDB.getUserCached(userId);
-                    userName = (user == null) ? "UNKNOWN" : user.getFullName();
+                    userName = (user == null) ? prop.getText("calendar.neznamy") : user.getFullName();
                     cachedUsersNames.put(userId, userName);
                 }
 
