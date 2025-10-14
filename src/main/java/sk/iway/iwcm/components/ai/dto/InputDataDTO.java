@@ -1,8 +1,13 @@
 package sk.iway.iwcm.components.ai.dto;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -48,6 +53,7 @@ public class InputDataDTO {
 
     String inputValue = null;
     InputValueType inputValueType;
+    InputValueType outputValueType;
 
     File inputFile = null;
 
@@ -78,6 +84,7 @@ public class InputDataDTO {
         this.assistantId = Tools.getLongValue(data.get("assistantId"), -1L);
         this.inputValue = data.get("inputValue");
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
+        this.inputValueType = InputValueType.from( data.get("outputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
         this.userPrompt = data.get("userPrompt");
     }
@@ -99,6 +106,15 @@ public class InputDataDTO {
 
             if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
 
+            BufferedImage image;
+            try {
+                image = ImageIO.read( fileImage );
+            } catch (IOException ioe) {
+                throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
+            }
+
+            if (image == null) throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
+
             inputFile = fileImage;
         }
     }
@@ -118,5 +134,12 @@ public class InputDataDTO {
 
     public ContentType getContentType() {
         return ContentType.create( getMimeType() );
+    }
+
+    public String getFileAsBase64() throws IOException {
+        // Read the file bytes
+        byte[] fileContent = Files.readAllBytes(inputFile.toPath());
+        // Encode to Base64
+        return Base64.getEncoder().encodeToString(fileContent);
     }
 }

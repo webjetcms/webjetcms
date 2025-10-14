@@ -28,10 +28,10 @@ public interface SupportLogicInterface {
     HttpRequestBase getModelsRequest(HttpServletRequest request);
     List<LabelValue> extractModels(JsonNode root);
 
-    HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request);
+    HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException;
     String extractResponseText(JsonNode jsonNodeRes);
 
-    HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request);
+    HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException;
     JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException;
 
     default String getStreamEncoding(HttpEntity entity) {
