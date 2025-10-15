@@ -183,7 +183,7 @@ V inštrukciách sú pred použitím nahradené špeciálne značky, tie môžet
 ```
 
 - `{inputText}` - vstupný text, hodnota poľa, ktorého meno je zadané v Zdrojové pole v nastaveniach asistenta.
-- `{language}` - jazyk naposledny zobrazenej web stránky, môže byť odlišný od jazyka práve prihláseného používateľa. Napríklad ste prihlásený v slovenskom rozhraní, ale upravujete anglickú verziu web stránky.
+- `{language}` - jazyk naposledy zobrazenej web stránky, môže byť odlišný od jazyka práve prihláseného používateľa. Napríklad ste prihlásený v slovenskom rozhraní, ale upravujete anglickú verziu web stránky.
 - `{userLanguage}` - jazyk v ktorom je prihlásený používateľ.
 
 ```json
