@@ -48,6 +48,10 @@ public class OpenAiStreamHandler {
         return this.usageChunk;
     }
 
+    public final String getWholeResponse() {
+        return includeHandler.getWholeResponse();
+    }
+
     private void handleEvent(String line) {
         String event = line.substring(6).trim();
 
