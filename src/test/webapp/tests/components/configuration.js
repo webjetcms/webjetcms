@@ -188,6 +188,63 @@ Scenario("overenie prav editacie vsetkych premennych", ({ I, DT, DTE }) => {
     DTE.cancel();
 });
 
+const testConfiguration = "smsSendMaxlength";
+Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
+    const oldValue = 140;
+    const newValue = 299792;
+
+    I.amOnPage("/admin/v9/settings/configuration/");
+
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("configurationDatatable");
+
+    I.fillField("#DTE_Field_name", testConfiguration);
+    I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+    I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+
+    I.seeInField("#DTE_Field_value", oldValue);
+    I.seeInField("#DTE_Field_oldValue", oldValue);
+
+    I.fillField("#DTE_Field_value", newValue);
+    DTE.save();
+
+    DT.filterEquals("name", testConfiguration);
+    I.click(testConfiguration);
+    DTE.waitForEditor("configurationDatatable");
+
+    I.seeInField("#DTE_Field_value", newValue);
+    I.seeInField("#DTE_Field_oldValue", oldValue);
+    DTE.cancel();
+
+    I.clickCss("td.dt-select-td");
+    I.clickCss("button.buttons-remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.dontSee(testConfiguration);
+
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("configurationDatatable");
+
+    I.fillField("#DTE_Field_name", testConfiguration);
+    I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+    I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+
+    I.seeInField("#DTE_Field_value", oldValue);
+    I.seeInField("#DTE_Field_oldValue", oldValue);
+});
+
+Scenario("Post delete", async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/settings/configuration/");
+    DT.filterEquals("name", testConfiguration);
+    const rowCount = await I.grabNumberOfVisibleElements('#configurationDatatable > tbody > tr > td.dt-row-edit');
+    if(rowCount > 0) {
+        I.clickCss("td.dt-select-td");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        DT.waiForLoader();
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
+});
+
 Scenario("odhlasenie", ({ I }) => {
     I.logout();
 });
