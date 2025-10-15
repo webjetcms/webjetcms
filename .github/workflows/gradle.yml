@@ -15,6 +15,8 @@ on:
 
 jobs:
   build:
+    # Skip workflow for WIP pull requests (draft PRs or titles containing WIP)
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false && !contains(github.event.pull_request.title, 'WIP') && !contains(github.event.pull_request.title, '[WIP]') && !startsWith(github.event.pull_request.title, 'wip:') && !startsWith(github.event.pull_request.title, 'wip ') && !contains(github.event.pull_request.title, 'work in progress') && !contains(github.event.pull_request.title, 'Work in Progress'))
 
     runs-on: ubuntu-latest
     permissions:
@@ -69,6 +71,8 @@ jobs:
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
+    # Skip workflow for WIP pull requests (draft PRs or titles containing WIP)
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false && !contains(github.event.pull_request.title, 'WIP') && !contains(github.event.pull_request.title, '[WIP]') && !startsWith(github.event.pull_request.title, 'wip:') && !startsWith(github.event.pull_request.title, 'wip ') && !contains(github.event.pull_request.title, 'work in progress') && !contains(github.event.pull_request.title, 'Work in Progress'))
 
     runs-on: ubuntu-latest
     permissions:
