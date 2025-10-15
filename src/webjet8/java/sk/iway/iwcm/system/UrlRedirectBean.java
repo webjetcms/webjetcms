@@ -67,7 +67,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title ="components.redirect.admin_list.datum_vlozenia",
-		sortAfter = "publishDate",
+		sortAfter = "validTo",
         editor = {
             @DataTableColumnEditor(
                 attr = {
@@ -122,7 +122,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title = "components.redirect.admin_list.publish_date",
+        title = "components.banner.dateFrom",
 		sortAfter = "domainName",
         editor = {
             @DataTableColumnEditor(
@@ -132,6 +132,14 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
     )
 	Date publishDate;
 
+	@Column(name="valid_to")
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = "components.banner.dateTo"
+    )
+	Date validTo;
+
 	@Lob
 	@Column(name="description")
     @DataTableColumn(
@@ -139,14 +147,6 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
         title = "groupedit.comment"
     )
 	String description;
-
-	@Column(name="valid_to")
-	@Temporal(TemporalType.TIMESTAMP)
-    @DataTableColumn(
-        inputType = DataTableColumnType.DATETIME,
-        title = "inquiry.valid_till"
-    )
-	Date validTo;
 
 	public Long getUrlRedirectId() {
 		return urlRedirectId;
