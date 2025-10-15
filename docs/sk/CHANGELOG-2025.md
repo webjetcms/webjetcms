@@ -43,6 +43,7 @@ Tieto funkcie vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky,
 ![](redactor/webpages/mirroring/groups_datatable.png)
 
 - Pri výbere obrázka, alebo video súboru, v editore stránok sú v prieskumníkovi zobrazené len vhodné typy súborov, ostatné sú filtrované (#57921).
+- Presmerovania - pridané nové polia **Poznámka** a **Platnosť do** (#58105).
 
 ### Šablóny
 
