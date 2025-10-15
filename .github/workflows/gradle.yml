@@ -16,15 +16,15 @@ on:
 jobs:
   build:
     # Skip workflow for WIP pull requests (draft PRs or titles containing WIP indicators)
-    # This condition checks for: draft PRs, or titles with WIP, [WIP], wip:, wip , or "work in progress" (case insensitive)
+    # This condition checks for: draft PRs, or titles with WIP patterns (all case insensitive)
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' && 
         github.event.pull_request.draft == false && 
         !contains(github.event.pull_request.title, 'WIP') && 
         !contains(github.event.pull_request.title, '[WIP]') && 
-        !startsWith(github.event.pull_request.title, 'wip:') && 
-        !startsWith(github.event.pull_request.title, 'wip ') && 
+        !startsWith(toLower(github.event.pull_request.title), 'wip:') && 
+        !startsWith(toLower(github.event.pull_request.title), 'wip ') && 
         !contains(toLower(github.event.pull_request.title), 'work in progress')
       )
 
@@ -82,15 +82,15 @@ jobs:
 
   dependency-submission:
     # Skip workflow for WIP pull requests (draft PRs or titles containing WIP indicators)
-    # This condition checks for: draft PRs, or titles with WIP, [WIP], wip:, wip , or "work in progress" (case insensitive)
+    # This condition checks for: draft PRs, or titles with WIP patterns (all case insensitive)
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' && 
         github.event.pull_request.draft == false && 
         !contains(github.event.pull_request.title, 'WIP') && 
         !contains(github.event.pull_request.title, '[WIP]') && 
-        !startsWith(github.event.pull_request.title, 'wip:') && 
-        !startsWith(github.event.pull_request.title, 'wip ') && 
+        !startsWith(toLower(github.event.pull_request.title), 'wip:') && 
+        !startsWith(toLower(github.event.pull_request.title), 'wip ') && 
         !contains(toLower(github.event.pull_request.title), 'work in progress')
       )
 
