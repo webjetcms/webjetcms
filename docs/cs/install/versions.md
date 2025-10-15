@@ -15,6 +15,9 @@ ext {
 Přičemž aktuálně existují následující verze WebJET:
 - `2025.0-jakarta-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2025.40` - stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
+- `2025.0.40` - stabilizovaná verze 2025.0.49 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
 - `2025.0.23` - stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
