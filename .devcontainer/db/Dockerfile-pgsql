@@ -1,13 +1,7 @@
 FROM postgres:16
 
-# Install additional packages if needed
-USER root
-
 # Set locale and encoding
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
-
-# Copy initialization script
-COPY ../../src/main/webapp/WEB-INF/sql/blank_web_pgsql.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 5432
