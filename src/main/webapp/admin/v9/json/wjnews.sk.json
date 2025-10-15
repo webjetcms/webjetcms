@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2025.40",
+            "perex": "**WebJET CMS 2025.40** prináša integrovaného **AI Asistenta**, ktorý zásadne zjednodušuje prácu s obsahom. Umožňuje automaticky **opravovať gramatiku**, **prekladať** texty, navrhovať titulky, sumarizovať články a generovať **ilustračné obrázky** priamo v editore. Vďaka tomu je tvorba obsahu **rýchlejšia, presnejšia a kreatívnejšia** než kedykoľvek predtým.\\n\\nVýznamné zmeny sa týkajú aj **značiek** a **šablón noviniek**, ktoré boli prepracované do **samostatných databázových tabuliek** s podporou oddelenia podľa domén. To prináša vyššiu **prehľadnosť, jednoduchšiu správu** a možnosť efektívneho prispôsobenia obsahu pre viacero webov. Používateľské prostredie bolo **optimalizované pre menšie obrazovky** – systém automaticky prispôsobí zobrazenie okien a maximalizuje využiteľný priestor.\\n\\nNa technickej úrovni bol odstránený zastaraný Struts Framework. Vďaka tomu je WebJET CMS výkonnejší, stabilnejší, **bezpečnejší** a pripravený na ďalší rozvoj moderných webových riešení.",
+            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2025?id=_202540"
+        },
+        {
             "title": "Verzia 2025.18",
             "perex": "Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.\n\nVylepšený bol aj systém **Hromadného e-mailu** s novými možnosťami pre odosielateľa a pohodlnejším výberom príjemcov. **Rezervácie** získali nové možnosti ako **nadmerné rezervácie**, vytváranie rezervácií spätne do minulosti a zasielanie notifikácií na špecifické emaily pre každý rezervačný objekt.\n\nOptimalizovali sme počet súborov v **Prieskumníku**, čo vedie k **rýchlejšiemu načítaniu** a pridali nové informácie do **Monitorovania servera**.",
             "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2025?id=_202518"
@@ -19,11 +24,6 @@
             "title": "Verzia 2024.40",
             "perex": "Vo verzii 2024.40 Prieskumník prináša **potvrdenie pri presune súborov drag&drop**, čím sa znižuje riziko chýb. Editor obrázkov umožňuje nastavenie **veľkosti a orezanie podľa šablón**, čo uľahčuje úpravy. Nastavenia viacerých **aplikácií** boli prepracované do **nového dizajnu**. Autor stránky dostáva **notifikácie pri časovom publikovaní a pridaní príspevku** do fóra. Nová aplikácia pre rezervácie umožňuje **jednoduché rezervovanie objektov** a ponúka štatistiky pre lepšiu správu. Vylepšili sme PageBuilder a opravili chyby v Archíve súborov pre lepšiu stabilitu.",
             "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202440"
-        },
-        {
-            "title": "Verzia 2024.18",
-            "perex": "WebJET 2024.18 obsahuje **novú sadu ikon**, Formulár ľahko doplnený o **pokročilé nastavenia** (príjemcovia, presmerovania...), do nového dizajnu sú prerobené aplikácie AB Testovanie, Audit (čaká na publikovanie, zmenené stránky), Blog, Dotazníky, Kalendár udalostí (schvaľovanie). Pridáva **podporu inštalácie typu MultiWeb** (oddelenie údajov domén) v Šablónach, Hromadnom e-maile a ďalších aplikáciách. Nová knižnica na **detekciu prehliadačov**, v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.",
-            "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202418"
         }
     ]
 }

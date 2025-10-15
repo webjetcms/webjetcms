@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Version 2025.40",
+            "perex": "**WebJET CMS 2025.40** brings an integrated **AI Assistant**, which greatly simplifies work with content. It allows you to automatically **correct grammar**, **translate** texts, suggest headlines, summarize articles and generate **illustration images** directly in the editor. Thanks to this, content creation is **faster, more accurate and more creative** than ever before.\\n\\nSignificant changes also apply to **tags** and **news templates**, which have been reworked into **separate database tables** with support for separation by domain. This brings greater **transparency, easier management** and the ability to effectively adapt content for multiple websites. The user interface has been **optimized for smaller screens** - the system automatically adjusts the display of windows and maximizes usable space.\\n\\nOn a technical level, the outdated Struts Framework has been removed. Thanks to this, WebJET CMS is more powerful, more stable, **more secure** and ready for the further development of modern web solutions.",
+            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202540"
+        },
+        {
             "title": "Version 2025.18",
             "perex": "Version **2025.18** brings a completely redesigned **Electronic store** module with support for **GoPay payment gateway** and an improved order list. The **News Calendar** application has been separated as a **standalone application** and we have also redesigned the settings of several applications in the page editor to a new design. The **Document Manager** (originally File Archive) has undergone a **visual and functional reboot**, including new tools for managing, exporting and importing documents.\n\nThe **Bulk Email** system has also been improved with new options for the sender and more convenient selection of recipients. **Reservations** have gained new options such as **overbooking**, creating reservations retroactively and sending notifications to specific emails for each reservation object.\n\nWe have optimized the number of files in **Explorer**, which leads to **faster loading** and added new information to **Server Monitoring**.",
             "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202518"
@@ -19,11 +24,6 @@
             "title": "Version 2024.40",
             "perex": "In version 2024.40 Explorer brings **confirmation when moving files drag&drop**, which reduces the risk of errors. The image editor allows **sizing and cropping according to templates**, making editing easy. The settings of several **applications** have been reworked into a **new design**. The author of the page receives **notifications at the time of publishing and adding a post** to the forum. The new booking application allows **easy booking of objects** and offers statistics for better management. We improved PageBuilder and fixed bugs in File Archive for better stability.",
             "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202440"
-        },
-        {
-            "title": "Version 2024.18",
-            "perex": "WebJET 2024.18 contains a **new set of icons**, Form easily supplemented with **advanced settings** (recipients, redirects...), applications AB Testing, Audit (awaiting publication, changed pages), Blog, Questionnaires, Calendar of events (approval). Adds **MultiWeb installation support** (separation of domain data) in Templates, Bulk Email and other applications. New library for **browser detection**, there will be minor differences in Statistics-Browsers, but we record browser data anonymously even without Cookies consent.",
-            "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202418"
         }
     ]
 }
