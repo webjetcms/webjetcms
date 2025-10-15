@@ -75,6 +75,29 @@ module.exports = function () {
       //return "15.10.2020 17:40:30";
     },
 
+    /**
+     * Parses a date/time string using moment and returns a Date object.
+     * @param {string} dateTimeStr - The date/time string to parse.
+     * @returns {Date|null} - The parsed Date object, or null if invalid.
+     */
+    parseDateTime(dateTimeStr) {
+      var userLng = "sk";
+      moment.updateLocale(userLng, { invalidDate: "" });
+      moment.locale(userLng);
+      // Try to parse using the same format as formatDateTime
+      var m = moment(dateTimeStr, "L HH:mm:ss", true);
+      if (m.isValid()) {
+        return m.toDate();
+      }
+      // Try parsing without seconds if needed
+      m = moment(dateTimeStr, "L HH:mm", true);
+      if (m.isValid()) {
+        return m.toDate();
+      }
+      // Return null if parsing failed
+      return null;
+    },
+
     wjSetDefaultWindowSize() {
       this.resizeWindow(1280, 760);
     },
@@ -474,6 +497,7 @@ module.exports = function () {
       // vytvorenie webstranky
       this.say('Pridanie novej web stranky ' + auto_webPage);
       this.waitForElement(buttons.btn.add_button, 10);
+      this.wait(1);
       this.click(buttons.btn.add_button);
       this.dtWaitForEditor();
       this.clickCss('#pills-dt-datatableInit-basic-tab');
@@ -490,7 +514,12 @@ module.exports = function () {
       // Pridanie textu do obsahu
       this.clickCss('#pills-dt-datatableInit-content-tab');
       this.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+      this.waitForElement("span.cke_toolbox");
+      this.wait(2);
+      this.waitForElement('#trEditor', 10);
       this.clickCss('#trEditor');
+      //this.pressKey('ArrowLeft');
+      //this.pressKey('ArrowRight');
       this.type('<!-- This is an autotest -->');
       // Nastav datumy v perex tabe
       this.clickCss('#pills-dt-datatableInit-perex-tab');

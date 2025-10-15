@@ -41,7 +41,6 @@ request.setAttribute("dialogDescKey", "components.sync.export-import.desc");
 
 <%@ include file="/admin/layout_top_dialog.jsp" %>
 
-<link rel="stylesheet" type="text/css" href="/css/style.css"/>
 <link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
 
 <style type="text/css" media="screen">

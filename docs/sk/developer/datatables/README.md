@@ -787,6 +787,7 @@ Jednotlivé parametre:
 - `mode`, povinný parameter, určuje akým spôsobom sa budú dáta stĺpca spočítavať. Možné hodnoty:
   - `all`, spočítajú sa všetky hodnoty stĺpca (zo všetkých strán), čiže zmena strany v tabuľke hodnotu nezmení
   - `visible`, spočítajú sa IBA hodnoty aktuálnej (zobrazenej) strany
+  - `datatable`, hodnoty sú vrátené priamo cez `DatatablePageImpl.summary` pri volaniach typu `/all` alebo `/findByColumns`, viď. [ErrorRestController](../../../../src/main/java/sk/iway/iwcm/stat/rest/ErrorRestController.java)
 - `columns`, povinný parameter, pole obsahujúce identifikátory stĺpcov, ktorých hodnoty chceme spočítať
 - `title`, nepovinný parameter, hodnota sa nastaví pod stĺpec `ID` ak je zobrazený a slúži na účely informačného textu.
 

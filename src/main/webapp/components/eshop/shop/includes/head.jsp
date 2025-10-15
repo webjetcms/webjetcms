@@ -35,11 +35,10 @@
     </c:when>
     <c:otherwise>
         <iwcm:combine type="css" set="">
-            ${ninja.temp.basePathCss}ninja.min.css
-            ${ninja.temp.basePathCss}shame.css
+            <iwcm:write name="base_css_link"/>,
+            <iwcm:write name="css_link"/>,
             ${ninja.temp.basePathCss}bootstrap-select-custom.min.css
-            <iwcm:write name="base_css_link"/>
-            <iwcm:write name="css_link"/>
+            ${ninja.temp.basePathCss}shame.css
         </iwcm:combine>
     </c:otherwise>
 </c:choose>

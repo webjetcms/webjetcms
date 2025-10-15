@@ -9,6 +9,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  Kontrola ci je prihlaseny pouzivatel (admin)
@@ -112,7 +113,7 @@ public final class CheckLogonTag extends TagSupport
       // Is there a valid user logged on?
       boolean valid = false;
       HttpSession session = pageContext.getSession();
-      Identity user = (Identity) session.getAttribute(name);
+      Identity user = UsersDB.getCurrentUser(session);
       if ((session != null) && (user != null))
       {
          //Logger.error(this,"Session nie je null");

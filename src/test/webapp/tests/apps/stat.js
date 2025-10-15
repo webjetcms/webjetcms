@@ -131,7 +131,7 @@ Scenario("error", ({ I, DT }) => {
     I.say("BUG: Verify that we will load more than 1000 rows");
     DT.setDates("01.10.2023", "31.10.2023", "#errorDataTable_extfilter");
     I.amOnPage("/apps/stat/admin/error/");
-    I.waitForText("Záznamy 1 až 10 z 1,217", 10, ".dt-footer-row");
+    I.waitForText("Záznamy 1 až 9 z 1,217", 10, ".dt-footer-row");
 
     DT.checkTableRow("errorDataTable", 1, ["1", "2 023", "44", "/", "", "9"]);
 
@@ -139,11 +139,33 @@ Scenario("error", ({ I, DT }) => {
     I.say("goto page 2");
     I.click(locate("li.page-item .page-link").withText("2"));
     DT.waitForLoader();
-    DT.checkTableRow("errorDataTable", 3, ["13", "2 023", "44", "/css/page.css", "referer: http://"+I.getDefaultDomainName()+"/ntlm/logon.do", "2"]);
+    DT.checkTableRow("errorDataTable", 4, ["13", "2 023", "44", "/css/page.css", "referer: http://"+I.getDefaultDomainName()+"/ntlm/logon.do", "2"]);
+});
+
+Scenario("error-filter-bots", ({ I, DT }) => {
+    I.amOnPage("/apps/stat/admin/error/");
+
+    navigateAndSetDates(I, DT, "01.10.2025", "19.10.2025");
+
+    I.amOnPage("/apps/stat/admin/error/");
+    DT.resetTable("errorDataTable");
+
+    DT.filterContains("url", "castle");
+
+    I.waitForText("Záznamy 1 až 2 z 2", 10, ".dt-footer-row");
+    I.waitForText("7", 10, ".dt-scroll-footInner .datatableInit td b div.datatable-column-width");
+
+    I.checkOption("#botFilterOut");
+    DT.waitForLoader();
+
+    I.waitForText("Záznamy 1 až 1 z 1", 10, ".dt-footer-row");
+    I.waitForText("4", 10, ".dt-scroll-footInner .datatableInit td b div.datatable-column-width");
+    I.uncheckOption("#botFilterOut");
 });
 
 Scenario("logon-user", ({ I, DT }) => {
     navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
+    I.uncheckOption("#botFilterOut");
 
     I.amOnPage("/apps/stat/admin/logon-user/");
 
@@ -174,7 +196,7 @@ Scenario("logon-current", ({ I, DT }) => {
 Scenario("ext-filter behavior", ({ I, DT }) => {
     navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
-    I.click(locate('.ext-filter-out > .custom-control.form-switch'));
+    I.checkOption("#botFilterOut");
     DT.waitForLoader();
 
     DT.checkTableRow("statsDataTable", 1, ["31", "31.05.2022", "0", "0", "0"]);

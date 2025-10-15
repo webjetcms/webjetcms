@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -46,6 +48,8 @@ import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.tags.CurrencyTag;
 
 public class ProductListService {
+
+    private static final String BASKET_ADMIN_GROUP_IDS = "basketAdminGroupIds";
 
     private ProductListService() { /*private constructor to hide the implicit public one*/ }
 
@@ -113,9 +117,11 @@ public class ProductListService {
         if(rootGroupId < 1) {
             //Get default option
             List<LabelValueInteger> allOptions = getListOfProductsGroups(repo);
-            if(allOptions.isEmpty()) return new ArrayList<>();
-
-            rootGroupId = allOptions.get(0).getValue();
+            List<Integer> groupTreeIds = new ArrayList<>();
+            for(LabelValueInteger option : allOptions) {
+                groupTreeIds.add(option.getValue());
+            }
+            return groupTreeIds;
         }
 
         List<Integer> groupIds = new ArrayList<>();
@@ -191,11 +197,120 @@ public class ProductListService {
     }
 
     public static List<LabelValueInteger> getListOfProductsGroups(DocDetailsRepository docDetailsRepository) {
-        List<LabelValueInteger> groupsList = new ArrayList<>();
-        List<GroupDetails> correctGroups = new ArrayList<>();
+        String constantIds = Constants.getString(BASKET_ADMIN_GROUP_IDS);
+        if(Tools.isEmpty(constantIds)) {
+            return getListOfProductGroupsViaInclude(docDetailsRepository);
+        } else {
+            return getListOfProductGroupsViaIds(constantIds);
+        }
+    }
+
+    /**
+     * Find all groups, taht have doc containing certain INCLUDE or jsp file, that holds eshop products.
+     * Expand ids for whole tree.
+     * Sort it properly.
+     *
+     * @param docDetailsRepository
+     * @return
+     */
+    public static List<LabelValueInteger> getListOfProductGroupsViaInclude(DocDetailsRepository docDetailsRepository) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
 
         List<Integer> groupIds = docDetailsRepository.getDistGroupIdsByDataLike("%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%");
-        if(groupIds == null || groupIds.isEmpty()) return groupsList;
+
+        if(groupIds == null || groupIds.isEmpty()) return new ArrayList<>();
+
+        //Get groups by ids
+        List<GroupDetails> groups = new ArrayList<>();
+        for(Integer groupId : groupIds) groups.add(groupsDB.getGroup(groupId));
+
+        //Filter groups out
+        groups = filterProductGroups(groups);
+
+        //
+        Set<Integer> loadedIds = new HashSet<>();
+        List<GroupDetails> expandedGroups = new ArrayList<>();
+        for(GroupDetails group : groups) {
+            for(GroupDetails treeGroup : groupsDB.getGroupsTree(group.getGroupId(), true, true)) {
+                if(loadedIds.contains(treeGroup.getGroupId())) continue;
+
+                expandedGroups.add(treeGroup);
+                loadedIds.add(treeGroup.getGroupId());
+            }
+        }
+
+        //Sort it, then push it into map
+        List<LabelValueInteger> groupsList = new ArrayList<>();
+        for(GroupDetails group : GroupsService.sortItIntoTree(expandedGroups)) groupsList.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );
+        return groupsList;
+    }
+
+    /**
+     * Parse given string to group ids. Check that ids of groups are valid.
+     * If group id have "*" at end, load whole tree for this group.
+     * Sort it properly.
+     *
+     * @param idsString
+     * @return
+     */
+    public static List<LabelValueInteger> getListOfProductGroupsViaIds(String idsString) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        Set<Integer> loadWithSubfolders = new HashSet<>();
+        Set<Integer> loadedIds = new HashSet<>();
+
+        //Get parsed ids
+        idsString = idsString.trim();
+        String[] strIds = idsString.split("[,+]");
+
+        List<GroupDetails> groups = new ArrayList<>();
+        for(String strId : strIds) {
+            //Remove "*" from end if needed
+            boolean withSubfolders = false;
+            if(strId.endsWith("*")) {
+                withSubfolders = true;
+                strId = strId.substring(0, strId.length() - 1);
+            }
+
+            //Parse string to int and check if group do exist
+            int groupId = Tools.getIntValue(strId, -1);
+            GroupDetails group = groupsDB.getGroup(groupId);
+            if(group != null) {
+                //Group do exist ...
+                groups.add(group);
+                if(withSubfolders) loadWithSubfolders.add(groupId);
+            }
+        }
+
+        //Filter groups out
+        groups = filterProductGroups(groups);
+
+        //
+        List<GroupDetails> expandedGroups = new ArrayList<>();
+        for(GroupDetails group : groups) {
+            int groupId = group.getGroupId();
+
+            if(loadedIds.contains(groupId)) continue;
+
+            if(loadWithSubfolders.contains(groupId) == false) {
+                // Add without child tree
+                expandedGroups.add(group);
+                loadedIds.add(groupId);
+            } else {
+                for(GroupDetails treeGroup : groupsDB.getGroupsTree(groupId, true, true)) {
+                    expandedGroups.add(treeGroup);
+                    loadedIds.add(treeGroup.getGroupId());
+                }
+            }
+        }
+
+        //Sort it, then push it into map
+        List<LabelValueInteger> groupsList = new ArrayList<>();
+        for(GroupDetails group : GroupsService.sortItIntoTree(expandedGroups)) groupsList.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );
+        return groupsList;
+    }
+
+    private static List<GroupDetails> filterProductGroups(List<GroupDetails> groups) {
+        List<GroupDetails> correctGroups = new ArrayList<>();
 
         GroupsDB groupsDB = GroupsDB.getInstance();
         String domainName = CloudToolsForCore.getDomainName();
@@ -206,23 +321,17 @@ public class ProductListService {
             trashGroupPath = trashGroup.getFullPath();
         }
 
-        for(Integer groupId : groupIds) {
-            GroupDetails group = groupsDB.getGroup(groupId);
+        for(GroupDetails group : groups) {
             if (group == null) continue;
             //remove groups in trash
             if (trashGroupPath != null && group.getFullPath().startsWith(trashGroupPath)) continue;
             //Only current domain and not deleted groups
             if(Tools.isNotEmpty(group.getDomainName()) && domainName.equals(group.getDomainName())==false) continue;
-
+            //
             correctGroups.add(group);
         }
 
-        if(correctGroups.isEmpty()) return groupsList;
-
-        //Sort it, then push it into map
-        for(GroupDetails group : GroupsService.sortItIntoTree(correctGroups)) groupsList.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );
-
-        return groupsList;
+        return correctGroups;
     }
 
     public static boolean isCurrencySupported(String currency) {

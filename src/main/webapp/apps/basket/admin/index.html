@@ -159,7 +159,12 @@
 
         window.addEventListener("WJ.DTE.opened", function(e) {
             if ("basketInvoiceDataTable" === e.detail.id) {
-                actualCurrent = e.detail.dte.currentJson['currency'];
+                try {
+                    //this is not available on delete
+                    actualCurrent = e.detail.dte.currentJson['currency'];
+                } catch (e) {
+
+                }
 
                 $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
 

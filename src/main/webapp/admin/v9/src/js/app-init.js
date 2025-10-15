@@ -1,6 +1,7 @@
 import Scrollbar from 'smooth-scrollbar';
 import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
+import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
 window.domReady.add(initClosure, 1, true);
 
@@ -777,6 +778,8 @@ function initClosure() {
             }
         });
     }
+
+    initAiOtherButtons();
 }
 
 window.WJ.DataTable.mergeColumns = function (columns, obj) {
@@ -799,3 +802,52 @@ window.WJ.DataTable.mergeColumns = function (columns, obj) {
         console.error("Objekt s name: " + obj.name + ", nenajdeny");
     }
 };
+
+function initAiOtherButtons() {
+    try {
+        //fake editor object for EditorAI
+        let EDITOR = {
+            get: function(fieldName) {
+                let inputField = $(".form-control[name='"+fieldName+"']");
+                if (inputField.length===0) inputField = $("#"+fieldName);
+                let value = inputField.first().val();
+                //console.log("Getting field '"+fieldName+"', inputField=", inputField, "value=", value);
+                return value;
+            },
+            set: function(fieldName, value) {
+                let inputField = $(".form-control[name='"+fieldName+"']");
+                if (inputField.length===0) inputField = $("#"+fieldName);
+                //console.log("Setting field '"+fieldName+"' to value:", value, "inputField=", inputField);
+                inputField.first().val(value);
+                inputField.first().trigger("change");
+
+                //console.log("selectLink:", inputField.data("ai-select-link"), "typeof window.selectLink", typeof window.selectLink);
+
+                if (typeof window.elFinderInstance != "undefined") {
+                    //console.log("Reloading elFinderInstance after setting field");
+                    //reload elfinder items
+                    setTimeout(() => {
+                        let filename = value.substring(value.lastIndexOf("/")+1);
+
+                        window.elFinderInstance.exec('reload').then(() => {
+                            setTimeout(() => {
+                                //find new item and click it to select it
+                                window.elFinderInstance.getUI().find("div.elfinder-cwd-filename[title='"+filename+"']").first().trigger("click");
+                            }, 500);
+
+                            setTimeout(() => {
+                                //mousedown will reload preview of image, it must be at least 5000ms otherwise for some reason it does not work
+                                $("div.elfinder-cwd-filename[title='"+filename+"']").first().trigger("mousedown");
+                            }, 5000);
+                        });
+
+                    }, 500); //wait for success file save notification to disappear and file system to be ready
+                }
+            }
+        }
+        let editorAI = new EditorAi(EDITOR, false);
+        editorAI.bindOtherButtons();
+    } catch (e) {
+        console.error("Error initializing AI other buttons:", e);
+    }
+}

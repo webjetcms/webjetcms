@@ -2,11 +2,11 @@
 
 Ide o špeciálnu tabuľku, ktorá pre svoje fungovanie primárne využíva voliteľné polia. Týmto sme dosiahli modulárnosť editora, kde každý spôsob platby má na mieru pripravené polia v editore.
 
-Základným prvkom je trieda [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentMethodEntity.java), ktorá má voliteľné polia A-L (v prípade potreby sa dajú jednoducho pridať).
+Základným prvkom je trieda [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentMethodEntity.java), ktorá má voliteľné polia A-L (v prípade potreby sa dajú jednoducho pridať).
 
 ## Pridanie nového spôsobu platby
 
-Pre pridanie nového spôsobu platby musíme vytvoriť Servis napr. ako [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/GoPayService.java). Každý spôsob platby vyžaduje vlastný súbor.
+Pre pridanie nového spôsobu platby musíme vytvoriť Servis napr. ako [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/GoPayService.java). Každý spôsob platby vyžaduje vlastný súbor.
 
 ```java
 @Service
@@ -33,7 +33,7 @@ public class GoPayService extends BasePaymentMethod {
 - Povinná ```PaymentMethod``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob platby.
 - Povinné dedenie triedy ```BasePaymentMethod```, ktorá definuje povinné metódy k implementácií ako aj poskytuje podpornú logiku.
 
-Každý takto vytvorený Servis je následne získaný v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže ak bol nový spôsob platby vytvorený korektne, automatický sa zobrazí v tabuľke a má všetku potrebnú logiku.
+Každý takto vytvorený Servis je následne získaný v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže ak bol nový spôsob platby vytvorený korektne, automatický sa zobrazí v tabuľke a má všetku potrebnú logiku.
 
 ## Anotácia ```PaymentMethod```
 
@@ -44,7 +44,7 @@ Anotácia poskytuje parametre pre nastavenie:
 
 ### ```PaymentFieldMapAttr```
 
-Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentFieldMapAttr.java) umožňuje zadefinovanie voliteľného poľa pre spôsob platby.
+Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java) umožňuje zadefinovanie voliteľného poľa pre spôsob platby.
 
 Dostupné parametre k nastaveniu sú:
 
@@ -56,7 +56,7 @@ Dostupné parametre k nastaveniu sú:
 
 ## Trieda ```BasePaymentMethod```
 
-Trieda [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/BasePaymentMethod.java) obsahuje všetku potrebnú logiku pre pridávaný nový spôsob platby, aby zabránilo duplicite. Trieda je primárne určená dediace platby, takže verejne dostupné sú iba metódy pre logovanie chýb.
+Trieda [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/BasePaymentMethod.java) obsahuje všetku potrebnú logiku pre pridávaný nový spôsob platby, aby zabránilo duplicite. Trieda je primárne určená dediace platby, takže verejne dostupné sú iba metódy pre logovanie chýb.
 
 Automatický:
 
@@ -73,7 +73,7 @@ Trieda ```BasePaymentMethod``` poskytuje taktiež ```beforeSave``` metódu, ktor
 
 ## Trieda ```PaymentMethodsService```
 
-Trieda [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java) poskytuje všetky verejné metódy pre prácu s platobnými spôsobmi, ktoré budete potrebovať.
+Trieda [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java) poskytuje všetky verejné metódy pre prácu s platobnými spôsobmi, ktoré budete potrebovať.
 
 Poskytuje metódy pre:
 

@@ -94,8 +94,16 @@ $sidebar-select-bg: #4D5262;
 $sidebar-active: #DDDFE6;
 $sidebar-active-bg: #23262E;
 
-//new dark colors
+//new colors
 $dark-60: #686F83;
+$yellow-60: #8E6A00;
+$green-60: #007E69;
+$red-60: #E00028;
+
+//AI
+$ai-color: #8A3EFF;
+$ai-color-dark: #4D009F;
+$ai-color-hover: #E3DBFF;
 
 @import "~bootstrap/scss/bootstrap";
 
@@ -188,6 +196,7 @@ $dark-60: #686F83;
 @import "5-modules/md-page-builder";
 
 @import "5-modules/md-elfinder";
+@import "5-modules/md-ai";
 
 //PAGES
 @import "6-pages/pg-homepage";
