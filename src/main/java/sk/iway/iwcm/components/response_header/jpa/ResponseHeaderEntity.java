@@ -54,11 +54,10 @@ public class ResponseHeaderEntity {
 
     @Column(name = "header_value")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXT,
+        inputType = DataTableColumnType.TEXTAREA,
         title="apps.response-header.header_value"
     )
     @NotEmpty
-    @Size(max = 255)
     private String headerValue;
 
     @Column(name = "change_date")
