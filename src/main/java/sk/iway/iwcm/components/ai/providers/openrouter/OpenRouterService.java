@@ -29,6 +29,7 @@ import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.providers.gemini.GeminiService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for OpenRouter API - https://openrouter.ai/
@@ -124,10 +125,10 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
         return post;
     }
 
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+    public Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
         OpenRouterStreamHandler openRouterStreamHandler = new OpenRouterStreamHandler(replacedIncludes);
         openRouterStreamHandler.handleBufferedReader(reader, writer);
-        return openRouterStreamHandler.getUsageChunk();
+        return new Pair<>(openRouterStreamHandler.getWholeResponse(), openRouterStreamHandler.getUsageChunk());
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {

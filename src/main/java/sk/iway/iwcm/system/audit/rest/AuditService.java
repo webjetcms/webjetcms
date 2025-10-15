@@ -25,6 +25,9 @@ public class AuditService {
 			types.add(lvd);
 		}
 
+		//sort items by value
+		types.sort((a, b) -> a.getLabel().compareTo(b.getLabel()));
+
 		return types;
 	}
 

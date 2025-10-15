@@ -140,21 +140,28 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     });
 });
 
-
 /* !!! LOCAL AI sa sa nedá otestovať, nakoľko server beží na Linuxe !!! */
 
+
+let testUsersArray = ["tester", "tester4", "tester3", "webjet"];
+function loginAsRandomTestUser(I) {
+    I.relogin( testUsersArray[Math.floor(Math.random() * testUsersArray.length)] );
+}
 
 /* AI assistant with TEXT response */
 
 Scenario('test OpenAI AI text answers', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
     await textAnswerTest(I, DTE, openAiId);
 });
 
 Scenario('test Gemini AI text answers', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
     await textAnswerTest(I, DTE, geminiId);
 });
 
 Scenario('test OpenRouter AI text answers', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
     await textAnswerTest(I, DTE, openRouterId);
 });
 
@@ -202,6 +209,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
 
 //For OpenAI is tets more extended, so we can cover more things. Rest of providers do just baisc test they works.
 Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openAiId, "ti.ti-photo-x");
@@ -231,6 +240,8 @@ Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
 });
 
 Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
@@ -240,6 +251,8 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
 });
 
 Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openRouterId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openRouterId, "ti.ti-photo-x");
@@ -251,6 +264,8 @@ Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) =>
 /* AI assistant with IMAGE response - WITH user promp (user input) AND maybe miage settings like quality, if provider supports it */
 
 Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openAiId);
 
@@ -275,6 +290,8 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
 });
 
 Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
 
@@ -293,6 +310,8 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 });
 
 Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openRouterId);
 
@@ -313,6 +332,8 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
 /* STOP assistant logic tests */
 
 Scenario('STOP text answer without stream', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
 
     I.clickCss("#pills-dt-datatableInit-fields-tab");
@@ -328,6 +349,8 @@ Scenario('STOP text answer without stream', async ({I, DTE}) => {
 });
 
 Scenario('STOP text answer WITH stream', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     I.fillField("#DTE_Field_htmlData", defaultValue);
     startAssistant(I, "htmlData", "Vytvoriť zhrnutie", openAiId);
@@ -341,6 +364,8 @@ Scenario('STOP text answer WITH stream', async ({I, DTE}) => {
 });
 
 Scenario('STOP IMAGE answer without user prompts', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
 
@@ -350,6 +375,8 @@ Scenario('STOP IMAGE answer without user prompts', async ({I, DTE}) => {
 });
 
 Scenario('STOP IMAGE answer WITH user prompts', async ({I, DTE}) => {
+    loginAsRandomTestUser(I);
+
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openAiId);
 
@@ -424,6 +451,10 @@ async function testGeneratingImageAlt(I, DTE, providerId) {
     const altValueReopen = await I.grabValueFrom("input#txtAlt");
     I.assertEqual(altValue, altValueReopen);
 }
+
+Scenario('logout', ({ I }) => {
+    I.logout();
+});
 
 /* Support functions */
 
