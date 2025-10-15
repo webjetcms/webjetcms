@@ -5,12 +5,14 @@ services:
     environment:
       ORACLE_PWD: "${WEBJET_DB_PASS}"
       ORACLE_CHARACTERSET: "AL32UTF8"
+      APP_USER: "webjetcms"
+      APP_USER_PASSWORD: "${WEBJET_DB_PASS}"
     ports:
       - "1521:1521"
       - "5500:5500"
     volumes:
       - oracledata:/opt/oracle/oradata
-      - ../../src/main/webapp/WEB-INF/sql/blank_web_oracle.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../../src/main/webapp/WEB-INF/sql/blank_web_oracle.sql:/opt/oracle/scripts/setup/webjet_init.sql
     shm_size: 1g
 
 volumes:
