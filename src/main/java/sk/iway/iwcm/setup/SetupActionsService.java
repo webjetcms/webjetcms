@@ -262,6 +262,16 @@ public class SetupActionsService {
 			String password = setupForm.getDbPassword();
 			if (Tools.isEmpty(userName)) userName = null;
 			if (Tools.isEmpty(password)) password = null;
+
+			//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+			if (password != null && password.startsWith("${") && password.endsWith("}")) {
+				String envName = password.substring(2, password.length()-1);
+				String envValue = getSystemProperty(envName);
+				if (Tools.isNotEmpty(envValue)) {
+					password = envValue;
+				}
+			}
+
 			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
 			con.close();
 			dbConnectOK = true;
@@ -545,5 +555,13 @@ public class SetupActionsService {
 		model.addAttribute("dbErrMsg", conErrMsg);
 		//Separe crate rr message, will be shown if != null
 		model.addAttribute("dbCreateErrMsg", createErrMsg);
+	}
+
+	private static String getSystemProperty(String name) {
+		String value = System.getProperty(name);
+		if (Tools.isNotEmpty(value)) return value;
+		value = System.getenv(name);
+		if (Tools.isNotEmpty(value)) return value;
+		return "";
 	}
 }

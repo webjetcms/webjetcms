@@ -64,6 +64,37 @@
             }
         },
         {
+            "label": "appStartDockerMariaDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-mariadb.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-mariadb.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB MariaDB Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartDemoDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",
@@ -361,7 +392,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "docker compose -f docker-compose-mariadb.yml up -d",
+            "command": "if ! docker ps | grep -q mariadb; then docker compose -f docker-compose-mariadb.yml up -d && echo 'Started MariaDB container'; else echo 'MariaDB container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
