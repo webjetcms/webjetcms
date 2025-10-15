@@ -354,6 +354,84 @@
                 "clear": true,
                 "showReuseMessage": false
             }
+        },
+        {
+            "label": "Docker DB MariaDB Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-mariadb.yml up -d",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB MariaDB Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-mariadb.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB PostgreSQL Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-pgsql.yml up -d",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB PostgreSQL Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-pgsql.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB Oracle Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-oracle.yml up -d",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB Oracle Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-oracle.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
         }
     ]
 }

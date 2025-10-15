@@ -1,0 +1,15 @@
+FROM mariadb:11.5
+
+# Install additional packages if needed
+USER root
+
+# Set proper character set and collation
+RUN echo '[mysqld]' > /etc/mysql/conf.d/charset.cnf && \
+    echo 'character-set-server = utf8mb4' >> /etc/mysql/conf.d/charset.cnf && \
+    echo 'collation-server = utf8mb4_unicode_ci' >> /etc/mysql/conf.d/charset.cnf && \
+    echo 'default-authentication-plugin = mysql_native_password' >> /etc/mysql/conf.d/charset.cnf
+
+# Copy initialization script
+COPY ../../src/main/webapp/WEB-INF/sql/blank_web.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306
