@@ -130,7 +130,7 @@ public class ConfigurationService {
         return null;
     }
 
-    private String getOldValue(String name) {
+    public final String getOldValue(String name) {
         List<ConfDetails> constantsData = Constants.getAllValues();
         for (ConfDetails c : constantsData) {
             if (c.getName().equals(name)) return c.getValue();
