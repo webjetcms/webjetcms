@@ -195,41 +195,45 @@ Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/settings/configuration/");
 
-    I.clickCss("button.buttons-create");
-    DTE.waitForEditor("configurationDatatable");
+    I.say("Check actual and default value");
+        I.clickCss("button.buttons-create");
+        DTE.waitForEditor("configurationDatatable");
 
-    I.fillField("#DTE_Field_name", testConfiguration);
-    I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-    I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.fillField("#DTE_Field_name", testConfiguration);
+        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
 
-    I.seeInField("#DTE_Field_value", oldValue);
-    I.seeInField("#DTE_Field_oldValue", oldValue);
+        I.seeInField("#DTE_Field_value", oldValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
 
-    I.fillField("#DTE_Field_value", newValue);
-    DTE.save();
+    I.say("Change value and check stat value stay changed. But original value of not changed.");
+        I.fillField("#DTE_Field_value", newValue);
+        DTE.save();
 
-    DT.filterEquals("name", testConfiguration);
-    I.click(testConfiguration);
-    DTE.waitForEditor("configurationDatatable");
+        DT.filterEquals("name", testConfiguration);
+        I.click(testConfiguration);
+        DTE.waitForEditor("configurationDatatable");
 
-    I.seeInField("#DTE_Field_value", newValue);
-    I.seeInField("#DTE_Field_oldValue", oldValue);
-    DTE.cancel();
+        I.seeInField("#DTE_Field_value", newValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
+        DTE.cancel();
 
-    I.clickCss("td.dt-select-td");
-    I.clickCss("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.dontSee(testConfiguration);
+    I.say("Delete value from DB.");
+        I.clickCss("td.dt-select-td");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.dontSee(testConfiguration);
 
-    I.clickCss("button.buttons-create");
-    DTE.waitForEditor("configurationDatatable");
+    I.say("Check, that after delete values are back.");
+        I.clickCss("button.buttons-create");
+        DTE.waitForEditor("configurationDatatable");
 
-    I.fillField("#DTE_Field_name", testConfiguration);
-    I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
-    I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.fillField("#DTE_Field_name", testConfiguration);
+        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
 
-    I.seeInField("#DTE_Field_value", oldValue);
-    I.seeInField("#DTE_Field_oldValue", oldValue);
+        I.seeInField("#DTE_Field_value", oldValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
 });
 
 Scenario("Post delete", async ({ I, DT }) => {
