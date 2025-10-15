@@ -15,8 +15,8 @@ on:
 
 jobs:
   build:
-    # Skip workflow for WIP pull requests (draft PRs or titles containing WIP indicators)
-    # This condition checks for: draft PRs, or titles with specific WIP patterns (case insensitive)
+    # Skip workflow for WIP pull requests (draft PRs or titles with WIP indicators)
+    # Patterns: draft PRs, "wip:", "[wip]", "wip ", " wip ", " wip", "work in progress" (case insensitive)
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' && 
@@ -82,8 +82,7 @@ jobs:
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
-    # Skip workflow for WIP pull requests (draft PRs or titles containing WIP indicators)
-    # This condition checks for: draft PRs, or titles with specific WIP patterns (case insensitive)
+    # Skip workflow for WIP pull requests (same logic as build job)
     if: |
       github.event_name == 'push' || (
         github.event_name == 'pull_request' && 
