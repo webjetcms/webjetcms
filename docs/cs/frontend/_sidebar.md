@@ -1,6 +1,7 @@
  <div class="sidebar-section">Web designér</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Nastavení
   - [Šablony](/frontend/setup/README.md)
   - [Všeobecná nastavení](/frontend/setup/config.md)

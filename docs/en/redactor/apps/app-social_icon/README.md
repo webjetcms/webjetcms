@@ -4,12 +4,23 @@ Insert icons into the page with links to social networks Facebook, Twitter, Inst
 
 ## Application settings
 
-In this section it is possible to set:
-- Visual style
-- Icon alignment (left, centre, right)
-- Entering page addresses for individual social networks. If the field is not filled in the social network icon will not appear.
+The setup includes tabs:
+- **Basic**
+- **Style**
 
-![](editor.png)
+### Tab - Basic
+
+In the tab, you can enter the address of your page for each social network. For empty fields, the social network icon will not appear.
+
+![](editor-base.png)
+
+### Card - Style
+
+In the tab you can set:
+- **Visual style** - icon displays
+- **Alignment of icons** - left, centre, right
+
+![](editor-style.png)
 
 ## View application
 

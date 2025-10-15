@@ -1,6 +1,7 @@
  <div class="sidebar-section">Installation</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Installation
   - [Assumptions and versions](/install/versions.md)
   - [Setting up a new installation](/install/setup/README.md)

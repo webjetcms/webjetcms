@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manual for the editor</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Using the administration
   - [Logging in and out](/redactor/admin/logon.md)
   - [Forgotten password](/redactor/admin/password-recovery/README.md)
@@ -30,6 +31,16 @@
   - [Media](/redactor/webpages/media.md)
   - [Tags](/redactor/webpages/perexgroups.md)
   - [Export to HTML](/redactor/webpages/export-to-html/README.md)
+  - [Mirroring](/redactor/webpages/mirroring/README.md)
+    - [Folders](/redactor/webpages/mirroring/groups.md)
+    - [Website](/redactor/webpages/mirroring/docs.md)
+    - [Configuration](/redactor/webpages/mirroring/settings.md)
+- AI assistant
+  - [AI assistant](/redactor/ai/README.md)
+  - [Using AI assistants](/redactor/ai/datatables/README.md)
+  - [Settings](/redactor/ai/settings/README.md)
+  - [Writing instructions](/redactor/ai/instructions/README.md)
+  - [Statistics](/redactor/ai/stat/README.md)
 - Applications
   - AB testing
     - [Home](/redactor/apps/abtesting/README.md)
@@ -120,7 +131,6 @@
     - [Booking app](/redactor/apps/reservation/reservation-app/README.md)
     - [Time Reservation app](/redactor/apps/reservation/time-book-app/README.md)
     - [Booking days app](/redactor/apps/reservation/day-book-app/README.md)
-  - [SEO](/redactor/apps/seo/README.md)
   - [Scripts](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
@@ -129,6 +139,7 @@
   - [Video](/redactor/apps/video/README.md)
   - [Inserting a document](/redactor/apps/app-docsembed/README.md)
   - [Insert HTML code](/redactor/apps/app-htmlembed/README.md)
+  - [Search Engines (SEO)](/redactor/apps/seo/README.md)
   - [Search](/redactor/apps/search/README.md)
   - [View files](/redactor/apps/site-browser/README.md)
   - [Mirroring the structure](/redactor/apps/docmirroring/README.md)

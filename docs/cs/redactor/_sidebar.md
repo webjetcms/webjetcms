@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manuál pro redaktora</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Používání administrace
   - [Přihlášení a odhlášení](/redactor/admin/logon.md)
   - [Zapomenuté heslo](/redactor/admin/password-recovery/README.md)
