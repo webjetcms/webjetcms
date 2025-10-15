@@ -143,11 +143,10 @@ public class AiStatService {
         StringBuilder query = new StringBuilder("SELECT ");
         if (Constants.DB_TYPE == Constants.DB_MSSQL) query.append("TOP 10 ");
         query.append("user_id, SUM(used_tokens) AS used_tokens FROM ai_stats WHERE created >= ? AND created <= ?");
-        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append(" AND ROWNUM <= 10 AND");
+        if(Constants.DB_TYPE == Constants.DB_ORACLE) query.append(" AND ROWNUM <= 10");
         query.append(CloudToolsForCore.getDomainIdSqlWhere(true));
         query.append(" GROUP BY user_id ORDER BY used_tokens DESC");
         if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) query.append(" LIMIT 10");
-        query.append(";");
 
         List<LabelValueInteger> values = new ArrayList<>();
         new ComplexQuery().setSql(query.toString()).setParams( new Timestamp(dateRangeArr[0].getTime()), new Timestamp(dateRangeArr[1].getTime()) ).list(new Mapper<LabelValueInteger>() {

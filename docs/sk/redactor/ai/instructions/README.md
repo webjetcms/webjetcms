@@ -174,7 +174,7 @@ V inštrukciách sú pred použitím nahradené špeciálne značky, tie môžet
 
 - `{userPrompt}` - vloží zadaný text používateľom zo vstupného dialógu (ak je zvolená možnosť Požadovať vstup od používateľa).
 
-```JavaScript
+```json
 {
    "task": "generate image",
    "imageDescription": "{userPrompt}",
@@ -183,6 +183,22 @@ V inštrukciách sú pred použitím nahradené špeciálne značky, tie môžet
 ```
 
 - `{inputText}` - vstupný text, hodnota poľa, ktorého meno je zadané v Zdrojové pole v nastaveniach asistenta.
+- `{language}` - jazyk naposledny zobrazenej web stránky, môže byť odlišný od jazyka práve prihláseného používateľa. Napríklad ste prihlásený v slovenskom rozhraní, ale upravujete anglickú verziu web stránky.
+- `{userLanguage}` - jazyk v ktorom je prihlásený používateľ.
+
+```json
+{
+  "role": "Web accessibility specialist",
+  "task": "Analyze the provided Base64-encoded image and generate a concise, descriptive ALT tag that accurately describes the image content for accessibility purposes. The ALT tag should align with WCAG 2.1 guidelines and be suitable for web use. Output only the ALT text as plain text.",
+  "constraints": {
+    "language": "{language}",
+    "length": "Maximum 100 characters",
+    "focus": "Descriptive, relevant, and compliant with WCAG 2.1",
+    "avoid": "Generic phrases or irrelevant details",
+    "output": "Only the ALT text as plain text, no additional explanations"
+  }
+}
+```
 
 ## Generovanie PageBuilder blokov
 
