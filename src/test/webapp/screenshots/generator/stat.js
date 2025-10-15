@@ -25,7 +25,7 @@ Scenario('visits', ({ I, DT, Document }) => {
     DT.waitForLoader("statsDataTable");
 
     //Days page
-    Document.screenshot("/redactor/apps/stat/stats-page.png");
+    Document.screenshot("/redactor/apps/stat/stats-page.png", 1280, 1232);
 
     //Ext filter
     Document.screenshotElement("#pills-dateRange-tab", "/redactor/apps/stat/stats-extFilter.png");

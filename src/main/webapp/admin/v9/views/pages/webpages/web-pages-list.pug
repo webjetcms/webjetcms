@@ -190,7 +190,7 @@ block content
                     var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
 
                     var groupsTabs = [
-                        { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                        { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
                         { id: 'template', title: '[[\#{editor.tab.template}]]' },
                         { id: 'menu', title: '[[\#{editor.tab.navigation}]]' },
                         { id: 'access', title: '[[\#{editor.tab.permissions}]]' },
@@ -779,8 +779,14 @@ block content
                             groupsDatatable.setAjaxUrl(groupsInitialUrl);
                             groupsDatatable.ajax.reload();
                         }
+
+                        //show pages DT if last one is folders
+                        if ($("#groups-datatable_wrapper").is(":visible")) {
+                            $("#datatableInit_wrapper").show();
+                            $("#groups-datatable_wrapper").hide();
+                        }
                     } else {
-                        //console.log("PILLS pages CLICK");
+                        //console.log("PILLS pages CLICK, id=", id);
 
                         showHidePageRecoverButtons();
 

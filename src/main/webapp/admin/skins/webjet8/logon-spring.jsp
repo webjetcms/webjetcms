@@ -1,10 +1,11 @@
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
-%><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
 %><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"
 %><%
+
+    String lng = Prop.getLng(request, false);
     Prop prop = Prop.getInstance(request);
     String brandSuffix = InitServlet.getBrandSuffix();
     //brandSuffix = "net";
@@ -30,6 +31,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     }
     pageContext.setAttribute("title", title);
     pageContext.setAttribute("subtitle", subtitle);
+
+    pageContext.setAttribute("lng", lng);
 %><!DOCTYPE html>
 <html>
 <head>
@@ -103,7 +106,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 </div>
                 <div id="logon-form-wrapper">
 
-                    <logic:present name="errors">
+                    <iwcm:present name="errors">
                         <div class="alert-wrapper">
                             <div class="alert alert-danger">
                                 <span>
@@ -118,21 +121,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                 </ul>
                             </div>
                         </div>
-                    </logic:present>
-                    <logic:present name="cancelChangePasswordAction">
+                    </iwcm:present>
+                    <iwcm:present name="cancelChangePasswordAction">
                         <div class="alert alert-success">
                             <span>
                                 <iwcm:text key="logon.change_password.action_canceled"/>
                             </span>
                         </div>
-                    </logic:present>
-                    <logic:present name="changePasswordActionFailed">
+                    </iwcm:present>
+                    <iwcm:present name="changePasswordActionFailed">
                         <div class="alert alert-danger">
                             <span>
                                 <iwcm:text key="logon.password.invalid_parameters"/>
                             </span>
                         </div>
-                    </logic:present>
+                    </iwcm:present>
                     <c:if test="${param.act eq 'changePasswordActionSuccess'}">
                         <div class="alert alert-success">
                             <span>
@@ -140,11 +143,12 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                             </span>
                         </div>
                     </c:if>
-                    <logic:present name="passResultEmail">
+
+                    <iwcm:present name="passResultEmail">
                         <div class="alert alert-success">
                             <span><iwcm:text key="logon.lost_password_send_success"/></span>
                         </div>
-                    </logic:present>
+                    </iwcm:present>
 
                     <div class="form-group">
                         <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
@@ -184,6 +188,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <div class="input-icon">
                             <i class="ti ti-user"></i>
                             <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
+                            <input type="text" name="language" value="${lng}" class="form-control" hidden/>
                         </div>
                         <div class="password-strength-info"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
                     </div>

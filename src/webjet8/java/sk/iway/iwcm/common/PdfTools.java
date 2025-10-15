@@ -300,7 +300,7 @@ public class PdfTools {
          String pdfBaseUrl = Constants.getString("pdfBaseUrl");
          if ("NULL".equalsIgnoreCase(pdfBaseUrl))
          {
-             //v tomto pripade si PD4ML sam nacita obrazky z file systemu, potrebuje astaveny Context a Request
+             //v tomto pripade si PD4ML sam nacita obrazky z file systemu, potrebuje nastaveny Context a Request
              pd4ml.useServletContext(Constants.getServletContext());
              if (request != null) pd4ml.useHttpRequest(request, null);
 
@@ -344,9 +344,9 @@ public class PdfTools {
          }
          try
          {
-             String pdfFontDirectory = Constants.getString("pdfFontDirectory");
+             String pdfFontDirectory = Constants.getStringExecuteMacro("pdfFontDirectory");
              if (base != null) pdfFontDirectory = Tools.getRealPath(Tools.replace(pdfFontDirectory, "file://", "/"));
-             IwcmFile pdfFontDirIwcmFile = new IwcmFile(base != null ? pdfFontDirectory : Tools.getRealPath(Tools.replace(pdfFontDirectory, "file://", "/")));
+             IwcmFile pdfFontDirIwcmFile = new IwcmFile(base != null ? pdfFontDirectory : Tools.replace(pdfFontDirectory, "file://", "/"));
              Logger.debug(PdfTools.class, "FONT PATH: "+pdfFontDirectory);
              if(pdfFontDirIwcmFile.exists() == false)
                  Logger.error(PdfTools.class, "FONT PATH "+pdfFontDirIwcmFile.getAbsolutePath()+" neexistuje!!");

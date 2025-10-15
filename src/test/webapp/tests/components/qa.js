@@ -44,7 +44,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
         },
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
-        }, 
+        },
         duplicateSteps: function(I, options) {
             I.clickCss("#pills-dt-qaDataTable-answer-tab");
             I.wait(1);
@@ -79,10 +79,12 @@ Scenario('from struts to Spring', async ({I, DT, DTE}) => {
     //Go check save question
     I.amOnPage("/apps/qa/admin/");
 
-    DTE.waitForLoader();
+    DT.waitForLoader();
 
     I.fillField("input.dt-filter-question", question);
     I.pressKey('Enter', "input.dt-filter-question");
+
+    DT.waitForLoader();
 
     I.see(question);
     I.see(name);
@@ -105,6 +107,7 @@ Scenario('from struts to Spring', async ({I, DT, DTE}) => {
 
     //Delete question
     I.clickCss("td.dt-select-td.sorting_1");
+    I.wait(1);
     I.click(DT.btn.qa_delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see(question, "div.DTE_Action_Remove");
@@ -148,4 +151,79 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, DTE, Apps, Document }) => {
+    Apps.insertApp('Otázky a odpovede', '#components-qa-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    DTE.fillField("groupName", "skupina1");
+    DTE.fillField("pageSize", "2");
+    DTE.selectOption("sortBy","Podľa priority");
+    DTE.selectOption("sortOrder","Zostupne");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const defaultParams = {
+        "field": "qa",
+        "groupName": "skupina1",
+        "pageSize": "2",
+        "sortBy": "2",
+        "sortOrder": "desc",
+        "show": "name+company+phone+email",
+        "required": "name+email",
+        "displayType": "01",
+        "style": "01"
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.waitForText("Koľko nôh ma pavúk ?", 10);
+    I.see("Nájdených 2 záznamov.");
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    DTE.selectOption("field", "Formulár na zadanie otázky");
+    DTE.fillField("groupName", "skupina2");
+    await DTE.selectOptionMulti("show", ["Meno", "Firma", "Telefón", "E-mail"]);
+    await DTE.selectOptionMulti("required", ["Firma"]);
+
+    const changedParams = {
+        field: "qa-ask",
+        groupName: "skupina2",
+        pageSize: "2",
+        sortBy: "2",
+        sortOrder: "desc",
+        show: "name+company+phone+email",
+        required: "company",
+        displayType: "01",
+        style: "01"
+    };
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.waitForText("Vaše meno", 10);
+    I.see("Kontaktný telefón");
+    I.see("Otázka");
+    I.see("Súhlasím so zverejnením otázky na webstránke");
+    I.see("Kontaktný telefón");
+    I.seeElement("#qaForm input.btn.btn-primary");
 });

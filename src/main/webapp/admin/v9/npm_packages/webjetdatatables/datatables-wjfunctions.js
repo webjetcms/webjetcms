@@ -279,7 +279,12 @@ export function getTitle(EDITOR, row = null) {
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
             if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
-                title = row[col.data];
+                if (col.data.indexOf(".")!=-1) {
+                    //hlbsi objekt
+                    title = WJ.getJsonProperty(row, col.data);
+                } else {
+                    title = row[col.data];
+                }
                 try {
                     if ("[object Object]"==title && "group"==col.data) {
                         title = row[col.data].fullPath;
@@ -290,7 +295,15 @@ export function getTitle(EDITOR, row = null) {
         });
     } catch (ex) {console.log(ex);}
     title = WJ.htmlToText(title);
-    if (title != null && typeof title == "string") title = title.replaceAll("&#47;", "/");
+    if (title != null && typeof title == "string") {
+        title = title.trim();
+        //get only first line (eg. in audit we have often multiline text)
+        let newLine = title.indexOf("\n");
+        if (newLine > 0) title = title.substring(0, newLine);
+
+        title = title.replaceAll("&#47;", "/");
+        title = title.replaceAll("-&gt;", "->");
+    }
     if ("[object Object]"==title) title = "";
     //console.log("Returning title=", title);
     return title;
@@ -380,7 +393,11 @@ function calculateAutoHeight(DATA) {
     var dtFooterRow = $('#' + DATA.id + '_wrapper .dt-footer-row').outerHeight();
     if (dtFooterRow < 30) dtFooterRow = dtFooterRow + 31; //footer not initialized/empty, add text height
 
-    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow;
+    var dtFooterSummary = 0;
+    var dtFooterSummaryEl = $('#' + DATA.id + '_wrapper .dt-scroll-foot')
+    if (dtFooterSummaryEl.is(":visible")) dtFooterSummary = dtFooterSummaryEl.outerHeight();
+
+    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow - dtFooterSummary;
 
     //console.log(DATA.id+" vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "dtFilterRow=", dtFilterRow, "dtFooterRow=", dtFooterRow, "height=", height);
 
@@ -607,7 +624,6 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
 
     var input = $(button).parents(".input-group").find("input.filter-input,select.filter-input");
     var index = parseInt($(button).parents("th,div.dt-extfilter").attr("data-dt-column"));
-    var regExval = $(button).parents(".input-group").find("option:selected").val();
 
     if (isNaN(index)) return;
 
@@ -675,7 +691,9 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
 
                 val = $(input).val();
 
-                //console.log("input=", input);
+                var regExval = $(input).parents(".input-group").find("option:selected").val();
+
+                //console.log("input=", input, " val=", val, " regExval=", regExval);
 
                 //pre lokalne vyhladavanie je potrebne do hladania vlozit TEXT optionu, nie hodnotu
                 if (DATA.serverSide === false && typeof input !== "undefined" && typeof input.prop("tagName") !== "undefined" && "SELECT" === input.prop("tagName").toUpperCase()) {
@@ -774,7 +792,7 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
         TABLE.draw();
     }
 
-    if (typeof input !== "undefined" && typeof input.prop("tagName") !== "undefined" && "SELECT" === input.prop("tagName").toUpperCase() && input.val() === "") {
+    if (typeof input !== "undefined" && typeof input.prop("tagName") !== "undefined" && "SELECT" === input.prop("tagName").toUpperCase() && input.val() === "" && typeof input.data("selectpicker") !== "undefined") {
         //musime reatachnut selectpicker, lebo DT ho posaha detachnutim ked uz nie je selectnuta ziadna hodnota
         //zaujimave je, ze to nerobi ked len hodnotu prepinam
         //3 hodiny debugovania...
@@ -839,7 +857,7 @@ export function fixDatatableHeaderInputs(tableInstance) {
 
     //console.log("fixDatatableHeaderInputs, dataId=", dataId, " tableInstance=", tableInstance);
 
-    $('#' + dataId + '_wrapper select.filter-input').each(function(index, element) {
+    $('#' + dataId + '_wrapper select.filter-input, #' + dataId + '_extfilter select.filter-input').each(function(index, element) {
         //console.log("testing select, this=", this);
         let $this = $(this);
 
@@ -992,52 +1010,62 @@ export function fixDatatableHeaderInputs(tableInstance) {
 * @returns
 */
 export function updateFilterSelect(DATA, fieldName) {
-   var fieldNameSelector = fieldName;
-   if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
-   var select = $("#" + DATA.id + "_wrapper select.dt-filter-" + fieldNameSelector)[0];
-   var currentValue = $(select).val();
-   //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
+    var fieldNameSelector = fieldName;
+    if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
 
-   if (typeof select != "undefined") {
-       //zrus vsetky options
-       select.options.length = 0;
-       select.add(new Option("", ""));
-       //pridaj options podla DATA objektu
-       for (var index in DATA.columns) {
-           //console.log("index: ", index);
-           if (DATA.columns[index].data === fieldName) {
-               for (var optionIndex in DATA.columns[index].editor.options) {
-                   var dataOption = DATA.columns[index].editor.options[optionIndex];
-                   //prazdnu hodnotu sme pridali uz hore, preskoc
-                   if (optionIndex==0 && dataOption.label=="" && dataOption.value=="") continue;
-                   //console.log("option 2: ", dataOption);
-                   var option = new Option(dataOption.label, dataOption.value);
-                   if ("editorFields.statusIcons"===fieldName) {
-                       option.setAttribute("data-content", dataOption.label);
-                       //console.log("Set data attribute, option=", option);
-                   }
-                   select.add(option);
-               }
-               break;
-           }
-       }
+    var selects = [];
+    var select = $("#" + DATA.id + "_wrapper select.dt-filter-" + fieldNameSelector)[0];
+    if (typeof select !== "undefined") selects.push(select);
 
-       if (currentValue != null) $(select).val(currentValue);
+    var extfilter = $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName + " select.dt-filter-" + fieldNameSelector);
+    if (extfilter.length>0) selects.push(extfilter[0]);
 
-       if (typeof $(select).data("selectpicker") !== "undefined") {
-           //console.log("Updating selectpicker 2");
-           $(select).selectpicker('refresh');
-       }
-   }
+    for (var i = 0; i < selects.length; i++) {
+        select = selects[i];
+        var currentValue = $(select).val();
+        //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
 
-   let dteSelect = $("#DTE_Field_"+fieldNameSelector);
-   //console.log("dteSelect=", dteSelect);
-   if (typeof dteSelect.data("selectpicker") !== "undefined") {
-       setTimeout(()=>{
-           //console.log("Updating selectpicker DTE timeout ", dteSelect);
-           dteSelect.selectpicker('refresh');
-       }, 100);
-   }
+        if (typeof select != "undefined") {
+            //zrus vsetky options
+            select.options.length = 0;
+            select.add(new Option("", ""));
+            //pridaj options podla DATA objektu
+            for (var index in DATA.columns) {
+                //console.log("index: ", index);
+                if (DATA.columns[index].data === fieldName) {
+                    for (var optionIndex in DATA.columns[index].editor.options) {
+                        var dataOption = DATA.columns[index].editor.options[optionIndex];
+                        //prazdnu hodnotu sme pridali uz hore, preskoc
+                        if (optionIndex==0 && dataOption.label=="" && dataOption.value=="") continue;
+                        //console.log("option 2: ", dataOption);
+                        var option = new Option(dataOption.label, dataOption.value);
+                        if ("editorFields.statusIcons"===fieldName) {
+                            option.setAttribute("data-content", dataOption.label);
+                            //console.log("Set data attribute, option=", option);
+                        }
+                        select.add(option);
+                    }
+                    break;
+                }
+            }
+
+            if (currentValue != null) $(select).val(currentValue);
+
+            if (typeof $(select).data("selectpicker") !== "undefined") {
+                //console.log("Updating selectpicker 2");
+                $(select).selectpicker('refresh');
+            }
+        }
+    }
+
+    let dteSelect = $("#DTE_Field_"+fieldNameSelector);
+    //console.log("dteSelect=", dteSelect);
+    if (typeof dteSelect.data("selectpicker") !== "undefined") {
+        setTimeout(()=>{
+            //console.log("Updating selectpicker DTE timeout ", dteSelect);
+            dteSelect.selectpicker('refresh');
+        }, 100);
+    }
 }
 
 /**

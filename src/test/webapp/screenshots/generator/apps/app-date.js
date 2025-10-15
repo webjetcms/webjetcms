@@ -9,10 +9,7 @@ Scenario('datum', ({ I, DT, DTE, Document }) => {
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/app-date/app-date.png");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
-    I.jstreeClick("Aplikácie");
-    I.jstreeClick("Dátum");
-    I.click('//a[contains(.,"Dátum") and @href="javascript:;"]');
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77767");
     DTE.waitForEditor();
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
@@ -27,5 +24,4 @@ Scenario('datum', ({ I, DT, DTE, Document }) => {
     I.wait(2);
     I.switchTo(".cke_dialog_ui_iframe");
     Document.screenshot("/redactor/apps/app-date/editor.png");
-    
 });

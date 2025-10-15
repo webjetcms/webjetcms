@@ -1,7 +1,6 @@
 package sk.iway.iwcm.i18n;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.struts.util.ResponseUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -184,17 +183,22 @@ public class Prop
 
 	public static Prop getInstance()
 	{
-		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		String lng = Constants.getString("defaultLanguage");
-		if (rb != null) lng = rb.getLng();
+		String lng = getLng(null);
 		return getInstance(Constants.getServletContext(), lng, false);
 	}
 
 	public static String getLng(HttpSession session)
 	{
-		String lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);
+		if (session == null) {
+			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+			String lng = Constants.getString("defaultLanguage");
+			if (rb != null) lng = rb.getLng();
+			return lng;
+		}
+
+		String lng = (String)Tools.sessionGetAttribute(session, SESSION_I18N_PROP_LNG);
 		if (lng==null)
-			lng = (String)session.getAttribute("lng");
+			lng = (String)Tools.sessionGetAttribute(session, "lng");
 		if (lng == null)
 			lng = Constants.getString("defaultLanguage");
 		return lng;
@@ -205,14 +209,14 @@ public class Prop
 		if (request == null) return Constants.getString("defaultLanguage");
 		HttpSession session = request.getSession();
 		String lng = null;
-		if (noParameter == false) lng = ResponseUtils.filter(request.getParameter("language"));
+		if (noParameter == false) lng = Tools.getParameter(request, "language");
 		else if (request.getParameter("__lng")!=null)
 		{
-			lng = request.getParameter("__lng");
+			lng = Tools.getParameter(request, "__lng");
 		}
 		else if (request.getParameter("lng")!=null)
 		{
-			lng = request.getParameter("lng");
+			lng = Tools.getParameter(request, "lng");
 		}
 		if (lng == null)
 		{
@@ -223,13 +227,13 @@ public class Prop
 		if (lng==null)
 		{
 			//najskor musi ist test pre admina, aby sa nemenil jazyk admin casti
-			lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);
+			lng = (String)Tools.sessionGetAttribute(session, SESSION_I18N_PROP_LNG);
 			//Logger.debug(Prop.class, "getInstance3 lng="+lng);
 		}
 		if (lng==null)
 		{
 			//PageLng
-			lng = (String)session.getAttribute("lng");
+			lng = (String)Tools.sessionGetAttribute(session, "lng");
 			//Logger.debug(Prop.class, "getInstance2 lng="+lng);
 		}
 		if (lng == null)
@@ -239,7 +243,7 @@ public class Prop
 		}
 		if (request.getAttribute("PageLng")==null)
 		{
-			if (session.getAttribute(SESSION_I18N_PROP_LNG)==null) session.setAttribute(SESSION_I18N_PROP_LNG, lng);
+			if (Tools.sessionGetAttribute(session, SESSION_I18N_PROP_LNG)==null) Tools.sessionSetAttribute(session, SESSION_I18N_PROP_LNG, lng);
 		}
 		return lng;
 	}
@@ -262,17 +266,17 @@ public class Prop
 
 	public static Prop getInstance(ServletContext servletContext, HttpSession session)
 	{
-		String lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);
+		String lng = (String)Tools.sessionGetAttribute(session, SESSION_I18N_PROP_LNG);
 		if (lng==null)
 		{
 			//PageLng
-			lng = (String)session.getAttribute("lng");
+			lng = (String)Tools.sessionGetAttribute(session, "lng");
 		}
 		if (lng == null)
 		{
 			lng = Constants.getString("defaultLanguage");
 		}
-		if (session.getAttribute(SESSION_I18N_PROP_LNG)==null) session.setAttribute(SESSION_I18N_PROP_LNG, lng);
+		if (Tools.sessionGetAttribute(session, SESSION_I18N_PROP_LNG)==null) Tools.sessionSetAttribute(session, SESSION_I18N_PROP_LNG, lng);
 
 		boolean refresh = false;
 

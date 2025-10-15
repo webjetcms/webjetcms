@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.validation.constraints.NotBlank;
@@ -63,6 +64,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
 	private String domain;
 	/********************/
 
+	@Lob
     @Column(name="value")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="[[#{components.htmlbox.basic}]]")
 	private String value;

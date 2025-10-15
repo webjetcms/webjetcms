@@ -172,7 +172,7 @@ public class BannerStatRestController extends DatatableRestControllerV2<BannerBe
         return chartData;
     }
 
-    @RequestMapping(value="/banner-title", params={"bannerId"}, produces = "text/plain;charset=UTF-8")
+    @RequestMapping(value="/banner-title/", params={"bannerId"}, produces = "text/plain;charset=UTF-8")
     @ResponseBody
     public String getDocTitle(@RequestParam("bannerId") long bannerId) {
 

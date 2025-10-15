@@ -71,7 +71,7 @@ window.domReady.fire();
 #### add()
 Pridá do zoznamu novú funkciu.
 
-**Druhý vstupný argument** určuje poradie pridávanej funkcie. Čísluje sa od 1. Ak nie je zadané, funkcia sa pridá na koniec zoznamu.
+**Druhý vstupný argument** určuje poradie pridávanej funkcie. Čísluje sa od 1. Ak nie je zadané, funkcia sa pridá na koniec zoznamu. Hodnoty poradia >= 900 sa neberú do úvahy, predpokladá sa, že tie musia byť na vždy konci.
 
 **Tretí vstupný argument** nastavený na TRUE zabezpečí, že sa pri existencii funkcie na danej pozícii (`orderId`), na silu prepíše funkcia a predošlá sa pridá na najbližšie voľné miesto.
 ```javascript

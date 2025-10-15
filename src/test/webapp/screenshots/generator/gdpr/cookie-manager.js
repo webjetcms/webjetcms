@@ -14,6 +14,6 @@ Scenario('gdpr-cookie-manager', ({ I, Document }) => {
     Document.screenshotElement("#cookiesDataTable_wrapper  div.breadcrumb-language-select", "/redactor/apps/gdpr/cookiemanager-jazykovy-selector.png");
 
     //Domenovy selektor
-    Document.screenshotElement("div.header-link-group", "/redactor/apps/gdpr/cookiemanager-domenovy-selector.png");
+    Document.screenshotElement(".js-domain-toggler", "/redactor/apps/gdpr/cookiemanager-domenovy-selector.png");
 
 });

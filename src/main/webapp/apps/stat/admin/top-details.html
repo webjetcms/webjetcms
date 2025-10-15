@@ -2,10 +2,10 @@
     let docNewUrl = "/admin/rest/stat/doc-new/";
     let docNewColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.DocNewDTO")})]*/ '';
 
-    let incomingUrl = "/admin/rest/stat/doc-new/incoming/";
+    let incomingUrl = "/admin/rest/stat/doc-new-in-out?type=incoming";
     let incomingColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.InOutDTO")})]*/ '';
 
-    let outgoingUrl = "/admin/rest/stat/doc-new/outgoing/";
+    let outgoingUrl = "/admin/rest/stat/doc-new-in-out?type=outgoing";
     let outgoingColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.InOutDTO")})]*/ '';
 </script>
 <script>
@@ -68,6 +68,7 @@
             columns: docNewColumns,
             id: "docNewDataTable",
             idAutoOpener: false,
+            autoHeight: false,
             defaultSearch: ChartTools.getSearchCriteria(),
             onPreXhr: function(TABLE, e, settings, data) {
                 //console.log('onPreXhr, docId=', docId);
@@ -91,12 +92,12 @@
             id: "incomingDataTable",
             idAutoOpener: false,
             noAll: true,
+            autoHeight: false,
             defaultSearch: ChartTools.getSearchCriteria(),
             onPreXhr: function(TABLE, e, settings, data) {
                 //console.log('onPreXhr incomming, docId=', docId);
                 data.fixed_dayDate = dateRange;
                 data.fixed_docId = docId;
-                data.fixed_chartType = ChartTools.ChartType.Not_Chart;
             }
         });
 
@@ -113,12 +114,13 @@
             columns: outgoingColumns,
             id: "outgoingDataTable",
             noAll: true,
+            idAutoOpener: false,
+            autoHeight: false,
             defaultSearch: ChartTools.getSearchCriteria(),
             onPreXhr: function(TABLE, e, settings, data) {
                 //console.log('onPreXhr outgoing, docId=', docId);
                 data.fixed_dayDate = dateRange;
                 data.fixed_docId = docId;
-                data.fixed_chartType = ChartTools.ChartType.Not_Chart;
             }
         });
 

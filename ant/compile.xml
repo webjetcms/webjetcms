@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="webjet8" default="compile" >
+<project name="webjetcms" default="compile" >
 
     <!-- pred spustenim compile je potrebne spustit:
         ant updatezip

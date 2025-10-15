@@ -17,6 +17,7 @@ Before(({ I, login, DT }) => {
 Scenario('Delete reservations', async ({ I, DT }) => {
     I.amOnPage('/apps/reservation/admin/');
     DT.waitForLoader();
+    I.closeOtherTabs();
 
     await deleteFilteredReservations(DT, I, 'name', 'autotest-');
     I.refreshPage();
@@ -127,7 +128,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
 
 Scenario('Verify all objects are displayed when no object is selected', async ({ I, Apps }) => {
     Apps.insertApp('Rezervácia dní', '#components-reservation-day_book-title', null, false);
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
     I.clickCss('.DTE_Field_InputControl');
     const options = await I.grabTextFromAll('.dropdown-menu.inner.show .dropdown-item .text');
@@ -146,7 +147,7 @@ Scenario('Verify all objects are displayed when no object is selected', async ({
 
 Scenario('Selecting two random objects and verify only these objects are displayed', async ({ I, Apps, DTE }) => {
     Apps.insertApp('Rezervácia dní', '#components-reservation-day_book-title', null, false);
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
     let chosenOptions = [];
 

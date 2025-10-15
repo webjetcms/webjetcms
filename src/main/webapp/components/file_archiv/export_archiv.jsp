@@ -9,9 +9,6 @@
 <%@ page import="java.util.Date" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
 <iwcm:checkLogon admin="true" perms="menuFileArchivExportFiles"/>
@@ -177,8 +174,9 @@
         }
 
         String zipId = "file_archiv_export_" + Constants.getInstallName() + "_" + getTodayDateString();
-        String zipArchivName = Tools.getRealPath(FileArchivatorKit.getArchivPath() + zipId + ".zip");
+        String zipArchivName = Tools.getRealPath("/files/protected/archiv/" + zipId + ".zip");
         IwcmFile zipArchiv = new IwcmFile(zipArchivName);
+        zipArchiv.getParentFile().mkdirs();
         //zazipujeme
         try
         {
@@ -198,7 +196,7 @@
         Logger.println(null, "export_archiv.jsp deleting " + tmpDir.getVirtualPath());
         FileTools.deleteDirTree(tmpDir);
         out.println("<p>&nbsp;</p><p><span style=\"color: green;\"><strong>"+prop2.getText("components.file_archiv.export_main_files_download")+
-                    "</strong></span>&nbsp;<a href=\""+zipArchiv.getVirtualPath()+"\">"+zipArchiv.getVirtualPath()+"</a>");
+                    "</strong></span>&nbsp;<a class=\"download-archive-link\" href=\""+zipArchiv.getVirtualPath()+"\">"+zipArchiv.getVirtualPath()+"</a>");
         out.println("<br/><br/><input class=\"button100\" type=\"button\" value=\""+prop2.getText("components.file_archiv.export_main_files_delete_btn")+"\" onclick=\"Delete();\" /> </p>");
         %>
         <form id="deleteZipArchive" action="<%=PathFilter.getOrigPath(request) %>" method="POST">

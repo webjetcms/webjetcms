@@ -21,13 +21,25 @@ Before(({ I, login }) => {
 });
 
 Scenario("Structure clone screenshots", async ({ I, Document })  => {
+    I.say("Without key, no set translators");
+    Document.setConfigValue("deepl_auth_key", "");
+
     I.amOnPage("/components/clone_structure/clone_structure.jsp");
-    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png", 750, 500);
-    //I.clickCss("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
-    //Document.screenshot("/redactor/apps/clone-structure/clone_structure_2.png");
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure_no_set_translator.png", 750, 600);
+
+    I.say("Set key, now with set translator");
+    Document.setConfigValue("deepl_auth_key", process.env.DEEPL_AUTH_KEY);
+
+    I.amOnPage("/components/clone_structure/clone_structure.jsp");
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure_set_translator.png", 750, 600);
+
+    I.fillField("#undoSyncGroupId", 21423);
+    I.clickCss("#btnUndoSync");
+    I.waitForVisible("#undo_succ", 10);
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure_undo_sync.png", 750, 600);
 });
 
-//COPYED from test, only added screen shot
+//COPIED from test, only added screen shot
 
 function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
     I.waitForElement(DT.btn.tree_add_button, 10);

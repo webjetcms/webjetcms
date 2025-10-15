@@ -2,8 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.users.*,java.util.*"%>
 <%@ page import="sk.iway.iwcm.tags.WriteTag" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%
@@ -28,7 +26,7 @@ pageContext.setAttribute("lng", lng);
 if(request.getParameter("loginName") != null)
 {
 	//posli heslo emailom
-	String loginName = org.apache.struts.util.ResponseUtils.filter(request.getParameter("loginName"));
+	String loginName = sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("loginName"));
 	//nastavime URL na zaslanie hesla na aktualnu login stranku, kde potom includneme podla parametrov form na zmenu hesla
 	if (pageParams.getBooleanValue("sendPasswordUrlSameAsLogin", true))
 	{
@@ -47,7 +45,6 @@ if(request.getParameter("login") != null && request.getParameter("auth")!=null)
 DocDetails docDetailsOriginal = (DocDetails)request.getAttribute("docDetailsOriginal");
 if (docDetailsOriginal==null) docDetailsOriginal = (DocDetails)request.getAttribute("docDetails");
 String submitURL = null;
-String userGroupsIds = null;
 int docId = -1;
 if (docDetailsOriginal != null)
 {
@@ -56,9 +53,6 @@ if (docDetailsOriginal != null)
 	{
 		submitURL = docDetailsOriginal.getVirtualPath();
 	}
-	userGroupsIds = pageParams.getValue("regToUserGroups", docDetailsOriginal.getPasswordProtected());	//nastavim skupiny z premennej, ak regToUserGroups neexistuje
-																																		//nastavim skupiny podla stranky
-	session.setAttribute("groupsIds", userGroupsIds);
 	docId = docDetailsOriginal.getDocId();
 }
 else if (request.getAttribute("logonFormSubmitURL")!=null)
@@ -85,45 +79,45 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 
 	<div class="panel-body">
 
-		<logic:present name="error.logon.user.unknown">
+		<iwcm:present name="error.logon.user.unknown">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.err.userUnknown"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.user.blocked">
+		<iwcm:present name="error.logon.user.blocked">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.error.blocked"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.wrong.pass">
+		<iwcm:present name="error.logon.wrong.pass">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.err.wrongPass"/></span></p>
 			<form name="passwdSendForm" method="get" action="<%=PathFilter.getOrigPathDocId(request) %>">
 				<iwcm:text key="components.user.forgot_password"/>.
 				<a href="javascript:document.passwdSendForm.submit();"><iwcm:text key="components.user.send_login_info"/></a>.
-				<input class="input" type="hidden" name="loginName" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("username"))%>" />
+				<input class="input" type="hidden" name="loginName" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("username"))%>" />
 				<input type="hidden" name="docid" value="<%
-				if (request.getParameter("origDocId")!=null) out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("origDocId")));
-				else out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("docId")));
+				if (request.getParameter("origDocId")!=null) out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("origDocId")));
+				else out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docId")));
 				%>" />
 			</form>
 			<br /><br />
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.wrong.dateLoginDissabled">
+		<iwcm:present name="error.logon.wrong.dateLoginDissabled">
 			<p><span class='error'><iwcm:text key="logon.err.dateLoginDissabled" param1='<%=(String)request.getAttribute("error.logon.wrong.dateLoginDissabled-start")%>' param2='<%=(String)request.getAttribute("error.logon.wrong.dateLoginDissabled-end")%>'/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="passResultEmail">
+		<iwcm:present name="passResultEmail">
 		   <p class="alert alert-success"><iwcm:text key="logon.lost_password_send_success"/></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="unauthorized">
+		<iwcm:present name="unauthorized">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="components.user.logon.unauthorized"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="captchaNotValid">
+		<iwcm:present name="captchaNotValid">
 			<p class='alert alert-danger'><iwcm:text key="captcha.nie.je.spravna"/></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name='<%=Constants.USER_KEY+"_changepassword"%>'>
+		<iwcm:present name='<%=Constants.USER_KEY+"_changepassword"%>'>
 			<%
 			Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
 			String constStr = "";
@@ -141,9 +135,9 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				   - <iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=String.valueOf(Constants.getInt("password"+constStr+"MinCountOfSpecialSigns"))%>'/>.<br/>
 				<%}%>
 			</p>
-			<logic:present name="passwordsNotMatch">
+			<iwcm:present name="passwordsNotMatch">
 				<p><span class='error'><iwcm:text key="logon.change_password.password_not_match"/></span></p>
-			</logic:present>
+			</iwcm:present>
 			<form action="/usrlogon.do" method="post" name="logonForm">
 				<fieldset>
 				<p>
@@ -177,8 +171,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 						   String values[] = request.getParameterValues(name);
 						   for (int i=0; i<values.length; i++)
 						   {
-							   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
-							   out.println("<input type='hidden' name='"+org.apache.struts.util.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+							   String value = sk.iway.iwcm.tags.support.ResponseUtils.filter(values[i]);
+							   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 						   }
 						}
 						%>
@@ -186,8 +180,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</p>
 				</fieldset>
 			</form>
-		</logic:present>
-		<logic:notPresent name='<%=Constants.USER_KEY+"_changepassword"%>'>
+		</iwcm:present>
+		<iwcm:notPresent name='<%=Constants.USER_KEY+"_changepassword"%>'>
 
 			<%
 				//user je prihlaseny, ale zobrazil sa mu logon form - nema spravne prava (skupinu)
@@ -210,7 +204,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				  <div class="form-group">
 					<label id="loginLabelName" for="name" class="col-md-2 control-label"><iwcm:text key="logon.name"/>:</label>
 					<div class="col-md-10">
-					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("username"))); %>" />
+					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("username"))); %>" />
 					</div>
 				  </div>
 				  <div class="form-group">
@@ -256,8 +250,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 							   String values[] = request.getParameterValues(name);
 							   for (int i=0; i<values.length; i++)
 							   {
-								   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
-								   out.println("<input type='hidden' name='"+org.apache.struts.util.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+								   String value = sk.iway.iwcm.tags.support.ResponseUtils.filter(values[i]);
+								   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 							   }
 							}
 							%>
@@ -291,12 +285,13 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 								</button>
 							</div>
 						</div>
+						<input type="hidden" name="language" value="<%=lng%>" />
 					</form>
 				</fieldset>
 			</div>
 
 
-		</logic:notPresent>
+		</iwcm:notPresent>
 
 	</div>
 

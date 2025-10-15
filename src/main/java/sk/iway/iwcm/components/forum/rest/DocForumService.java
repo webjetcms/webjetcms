@@ -111,7 +111,7 @@ public class DocForumService {
     public static String saveDocForum(HttpServletRequest request, HttpServletResponse response, DocForumEntity forumForm) {
 		DocForumRepository docForumRepository = getDocForumRepository();
 		HttpSession session = request.getSession();
-		Identity sender = (Identity) session.getAttribute(Constants.USER_KEY);
+		Identity sender = UsersDB.getCurrentUser(request);
 
 		Integer domainId = Tools.getIntValue(DocDB.getDomain(request), 1);
 		int userId = -1;
@@ -125,13 +125,13 @@ public class DocForumService {
 			synchronized (DocForumRepository.class) {
 				//kontrola pred duplicitnym odoslanim prispevku (nejaka ajax haluz) - http://helpdesk.interway.sk/?bugID=4676
 				//v access logu servera sa zaznamy skutocne nasli viac krat, preco nikto netusi
-				String lastSessionText = (String)session.getAttribute("DocForumRepository.lastText");
+				String lastSessionText = (String)Tools.sessionGetAttribute(session, "DocForumRepository.lastText");
 				if (lastSessionText!=null && lastSessionText.equals(forumForm.getQuestion())) {
 					setPermissionDenied(request, "sameText");
 					return SAVE_FORUM_SUCCESS;
 				}
 
-				session.setAttribute("DocForumRepository.lastText", forumForm.getQuestion());
+				Tools.sessionSetAttribute(session, "DocForumRepository.lastText", forumForm.getQuestion());
 			}
 		}
 

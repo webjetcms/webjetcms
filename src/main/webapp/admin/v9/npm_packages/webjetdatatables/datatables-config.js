@@ -418,16 +418,18 @@ export function renderLink(td, type, rowData, row) {
     }
 }
 
-export function renderImage(td, type, rowData, row) {
-
+export function renderImage(td, type, rowData, row, text=true) {
     if (td === "") { return "" }
 
     if (type == "sort" || type == "filter" ) {
         return prepareForSearch(td);
     } else {
 
-        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".svg"))) {
-            return  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> " + renderTd(row, td, rowData) + "</a>";
+        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg"))) {
+            let link =  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> ";
+            if (true === text) link += renderTd(row, td, rowData);
+            link += "</a>";
+            return link;
         }
 
         return renderLink(td, type, rowData, row);
@@ -441,6 +443,40 @@ export function renderMail(td, type, rowData, row) {
         return prepareForSearch(td);
     } else {
         return  "<a href=\"mailto:" + td + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
+    }
+}
+
+export function renderColor(td, type, rowData, row) {
+    if (td === "" || td === null || typeof td == "undefined") {
+        return "";
+    }
+    if (type == "sort" || type == "filter" ) {
+        return prepareForSearch(td);
+    } else {
+        //console.log("renderColor, td=", td, " rowData=", rowData, " row=", row);
+        var color = WJ.escapeHtml(td);
+        if (color.startsWith("#")) {
+            return '<span class="dt-color-box" style="background-color: ' + color + '">&nbsp;</span>' + renderTd(row, color, rowData);
+        } else {
+            return renderTd(row, color, rowData);
+        }
+    }
+}
+
+export function renderIcon(td, type, rowData, row) {
+    if (td === "" || td === null || typeof td == "undefined") {
+        return "";
+    }
+    if (type == "sort" || type == "filter" ) {
+        return prepareForSearch(td);
+    } else {
+        //console.log("renderColor, td=", td, " rowData=", rowData, " row=", row);
+        var icon = WJ.escapeHtml(td);
+        if (icon != "") {
+            return '<span class="dt-icon-box"><i class="ti ti-' + icon + '"></i></span>' + renderTd(row, icon, rowData);
+        } else {
+            return renderTd(row, icon, rowData);
+        }
     }
 }
 
@@ -488,5 +524,5 @@ export function renderJson(td, type, rowData, row) {
 
 export function renderAttrs(td, type, rowData, row) {
     //render attrs to datatable view, normally it's hidden
-    return renderTd(row, fullPath, rowData);
+    return renderTd(row, td, rowData);
 }

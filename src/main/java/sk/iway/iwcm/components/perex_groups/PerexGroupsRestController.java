@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
@@ -23,8 +24,11 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 
     @Override
     public PerexGroupsEntity processFromEntity(PerexGroupsEntity entity, ProcessItemAction action, int rowCount) {
-        if(entity != null && entity.getEditorFields() == null) {
-            PerexGroupsEditorFields pgef = new PerexGroupsEditorFields();
+        if(entity != null) {
+            if (entity.getEditorFields() == null) {
+                entity.setEditorFields(new PerexGroupsEditorFields());
+            }
+            PerexGroupsEditorFields pgef = entity.getEditorFields();
 
             //Set "volitelne polia"
             if(rowCount == 1)
@@ -48,12 +52,21 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 
     @Override
     public PerexGroupsEntity editItem(PerexGroupsEntity entity, long id) {
-        return processFromEntity(PerexGroupsService.save(entity, (PerexGroupsRepository)getRepo()), ProcessItemAction.EDIT, 1);
+        entity = processToEntity(entity, ProcessItemAction.EDIT);
+        PerexGroupsEntity saved = PerexGroupsService.save(entity, (PerexGroupsRepository)getRepo());
+        setForceReload(true);
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override
     public void afterDelete(PerexGroupsEntity entity, long id) {
         DocDB.getInstance().getPerexGroups(true);
+    }
+
+    @Override
+    public void beforeSave(PerexGroupsEntity entity) {
+        if(entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());
+        super.beforeSave(entity);
     }
 
     @Override

@@ -20,7 +20,6 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
@@ -39,13 +38,13 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.news.NewsQuery.OrderEnum;
 import sk.iway.iwcm.components.news.NewsQuery.SortEnum;
-import sk.iway.iwcm.components.news.NewsTemplateBean.PagingPosition;
 import sk.iway.iwcm.components.news.criteria.Criteria;
 import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
 import sk.iway.iwcm.components.news.criteria.DatabaseCriteria.CriteriaType;
+import sk.iway.iwcm.components.news.templates.NewsTemplatesService;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -55,11 +54,11 @@ import sk.iway.iwcm.helpers.RequestHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.json.JsonObjectGenerator;
 import sk.iway.iwcm.system.json.ObjectFormaterFactory;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.BindPageParams;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -150,11 +149,7 @@ public class NewsActionBean extends WebJETActionBean
 	@PageParamOnly
 	private OrderEnum order = OrderEnum.SAVE_DATE;
 
-	@Validate(converter= NewsTemplateConverter.class)
-	private NewsTemplateBean template;
-
-	@Validate(converter= NewsTemplateConverter.class)
-	private NewsTemplateBean templateUpdate;
+	private String template;
 
 	private int page = 1;
 
@@ -477,7 +472,7 @@ public class NewsActionBean extends WebJETActionBean
 				if (alsoSubGroups)
 				{
 					//All subgroups
-					if(subGroupsDepth < 1) { 
+					if(subGroupsDepth < 1) {
 						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());
@@ -718,8 +713,11 @@ public class NewsActionBean extends WebJETActionBean
 
 		if (template != null)
 		{
-			String templateText = template.getValue();
-			if (Tools.isNotEmpty(templateText))
+			NewsTemplatesEntity newsEntity = NewsTemplatesService.getTemplateByName(template);
+			if (newsEntity == null) return;
+
+			String templateCode = newsEntity.getTemplateCode();
+			if (Tools.isNotEmpty(templateCode))
 			{
 				VelocityEngine ve = new VelocityEngine();
 
@@ -771,7 +769,7 @@ public class NewsActionBean extends WebJETActionBean
 				{
 //					VelocityEngine ve = new VelocityEngine();
 					ve.init();
-					ve.evaluate(vc, swOut, "Template evaluate", VelocityTools.upgradeTemplate(templateText));
+					ve.evaluate(vc, swOut, "Template evaluate", VelocityTools.upgradeTemplate(templateCode));
 				}
 				catch (Exception e)
 				{
@@ -794,17 +792,17 @@ public class NewsActionBean extends WebJETActionBean
 				htmlOut = swOut.toString();
 			}
 
-			String pagingText = template.getPagingValue();
-			if (isPaging() && Tools.isNotEmpty(pagingText))
+			String pagingCode = newsEntity.getPagingCode();
+			if (isPaging() && Tools.isNotEmpty(pagingCode))
 			{
-				String pagingHtml = getPaging(pagingText);
+				String pagingHtml = getPaging(pagingCode);
 				if (Tools.isNotEmpty(pagingHtml))
 				{
-					if (template.getPagingPosition() == PagingPosition.BEFORE || template.getPagingPosition() == PagingPosition.BEFORE_AND_AFTER) {
+					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut = pagingHtml + htmlOut;
 					}
 
-					if (template.getPagingPosition() == PagingPosition.AFTER || template.getPagingPosition() == PagingPosition.BEFORE_AND_AFTER) {
+					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.AFTER.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut += pagingHtml;
 					}
 				}
@@ -878,45 +876,6 @@ public class NewsActionBean extends WebJETActionBean
 			jog.addObject(result, "template", template, "key,keyShort,pagingKey,image,value,pagingValue,pagingPosition");
 		}
 		return new StreamingResolution("application/json", new StringReader(result.toString()));
-	}
-
-	public Resolution loadTemplates()
-	{
-		JSONObject result = new JSONObject();
-		List<NewsTemplateBean> templates = getTemplates();
-
-		JsonObjectGenerator jog = new JsonObjectGenerator();
-		jog.setObjectFormaterFactory(new ObjectFormaterFactory());
-
-		jog.addArrayOfObjects(result, "templates", templates, "image,key,keyShort,pagingKey,pagingValue,selected,value");
-
-		return new StreamingResolution("application/json", new StringReader(result.toString()));
-	}
-
-	public Resolution deleteTemplate()
-	{
-		if (templateUpdate != null)
-		{
-			templateUpdate.delete();
-		}
-
-		return loadTemplates();
-	}
-
-	public Resolution saveTemplate()
-	{
-		if (templateUpdate != null)
-		{
-			String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());
-			if (Tools.isNotEmpty(domainAlias) && templateUpdate.getKeyShort().indexOf(domainAlias)==-1)
-			{
-				templateUpdate.setKeyShort(templateUpdate.getKeyShort()+" ("+domainAlias+")");
-			}
-
-			templateUpdate.fillTemplateBean();
-			templateUpdate.save();
-		}
-		return loadTemplates();
 	}
 
 	public Resolution setTags() {
@@ -1625,87 +1584,25 @@ public class NewsActionBean extends WebJETActionBean
 		return DocDB.getInstance().getDocLink(doc.getDocId(), doc.getExternalLink(), getRequest());
 	}
 
-	public void setTemplate(NewsTemplateBean template)
+	public void setTemplate(String template)
 	{
 		this.template = template;
 	}
 
-	public NewsTemplateBean getTemplate()
+	public String getTemplate()
 	{
 		return template;
 	}
 
-	public List<NewsTemplateBean> getTemplates()
+	public List<NewsTemplatesEntity> getTemplates()
 	{
-		//natvrdo sk lebo sablony zapisujeme do SK propertiesov (aby boli pre vsetky jazyky)
-		Prop prop = Prop.getInstance(getRequest().getServletContext(), "sk", false);
-		Map<String, String> templatesMap = prop.getTextStartingWith("news.template.");
-
-		for (Iterator<Map.Entry<String, String>> iterator = templatesMap.entrySet().iterator(); iterator.hasNext();)
-		{
-			if (Tools.isEmpty(iterator.next().getValue()))
-			{
-				iterator.remove();
-			}
-		}
-
-		return getTemplatesList(templatesMap);
-	}
-
-	private List<NewsTemplateBean> getTemplatesList(Map<String, String> templatesMap)
-	{
-		List<NewsTemplateBean> result = new ArrayList<>();
-		for (Map.Entry<String, String> entry : templatesMap.entrySet())
-		{
-			if (!entry.getKey().endsWith(NewsTemplateBean.PAGING_KEY) && !entry.getKey().endsWith(NewsTemplateBean.PAGING_POSITION_KEY))
-			{
-				result.add(new NewsTemplateBean(getRequest(), entry.getKey(), template));
-			}
-		}
-
-		Collections.sort(result, new Comparator<NewsTemplateBean>() {
-			@Override
-			public int compare(NewsTemplateBean one, NewsTemplateBean two) {
-				return one.getKey().compareTo(two.getKey());
-			}
-		});
-
-
-
-		return filterMultidomainTemplates(result);
-	}
-
-	private List<NewsTemplateBean> filterMultidomainTemplates(List<NewsTemplateBean> templates)
-	{
-		String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());
-		if (Tools.isEmpty(domainAlias)) return templates;
-
-		List<NewsTemplateBean> filtered = new ArrayList<>();
-		for (NewsTemplateBean newsTemp : templates)
-		{
-			if (newsTemp.getKey().indexOf("(")==-1 || newsTemp.getKey().indexOf("("+domainAlias+")")!=-1)
-			{
-				filtered.add(newsTemp);
-			}
-		}
-		return filtered;
-	}
-
-	public NewsTemplateBean getTemplateUpdate()
-	{
-		return templateUpdate;
-	}
-
-	public void setTemplateUpdate(NewsTemplateBean templateUpdate)
-	{
-		this.templateUpdate = templateUpdate;
+		return NewsTemplatesService.getTemplates();
 	}
 
 	public List<NewsContextMenuItem> getVelocityProperties()
 	{
 		return NewsContextMenuItems.getVelocityProperties();
 	}
-
 
 	public List<NewsContextMenuItem> getDocDetailsProperties()
 	{
@@ -1722,9 +1619,14 @@ public class NewsActionBean extends WebJETActionBean
 		return NewsContextMenuItems.getPagingProperties();
 	}
 
-	public boolean isCanEdit()
+	public boolean isSelected(NewsTemplatesEntity entity)
 	{
-		return UsersDB.checkUserPerms(getCurrentUser(), "components.news.edit_templates");
+		if (template == null || entity == null) return false;
+		String templateNameFixed = template;
+		if (templateNameFixed == null) templateNameFixed = "";
+		if (templateNameFixed.startsWith("news.template.")) templateNameFixed = templateNameFixed.substring("news.template.".length());
+
+		return templateNameFixed.equals(entity.getName());
 	}
 
 	/**

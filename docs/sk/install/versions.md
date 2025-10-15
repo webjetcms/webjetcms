@@ -1,6 +1,6 @@
 # Predpoklady a verzie
 
-WebJET 2024 vyžaduje ```Java 17``` a ```Tomcat 9```.
+WebJET 2024 vyžaduje `Java 17` a `Tomcat 9`.
 
 Základný projekt vo formáte gradle nájdete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -14,38 +14,41 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
-- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
-- ```2025.0``` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny
-- ```2024.52``` - stabilizovaná verzia 2024.52, nepribúdajú do nej denné zmeny
-- ```2024.0.52``` - stabilizovaná verzia 2024.0.52 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.0.47``` - stabilizovaná verzia 2024.0.47 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.40``` - stabilizovaná verzia 2024.40, nepribúdajú do nej denné zmeny
-- ```2024.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2024.0 skompilovaná s Java verzie 17.
-- ```2024.18``` - stabilizovaná verzia 2024.18, nepribúdajú do nej denné zmeny
-- ```2024.0.34``` - stabilizovaná verzia 2024.0.34 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.0.21``` - stabilizovaná verzia 2024.0.21 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.0.17``` - stabilizovaná verzia 2024.0.17 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.0.9``` - stabilizovaná verzia 2024.0.9 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- ```2024.0``` - stabilizovaná verzia 2024.0 (technicky zhodná s 2023.52-java17), nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
-- ```2023.52-java17``` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
-- ```2023.52``` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny
-- ```2023.40-SNAPSHOT-java17``` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.40 skompilovaná s Java verzie 17.
-- ```2023.40-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.40
-- ```2023.40``` - stabilizovaná verzia 2023.40, nepribúdajú do nej denné zmeny
-- ```2023.18-SNAPSHOT-java17``` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.18 skompilovaná s Java verzie 17.
-- ```2023.18-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.18
-- ```2023.18``` - stabilizovaná verzia 2023.18, nepribúdajú do nej denné zmeny
-- ```2023.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.0, z dôvodu API zmien táto verzia končí pred vydaním verzie 2023.18 aby nedošlo k neočakávanej zmene API v projektoch.
-- ```2023.0``` - stabilizovaná verzia 2023.0, nepribúdajú do nej denné zmeny
-- ```2022.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára
-- ```2022.52``` - stabilizovaná verzia 2022.52, nepribúdajú do nej denné zmeny
-- ```2022.40``` - stabilizovaná verzia 2022.40, nepribúdajú do nej denné zmeny
-- ```2022.18``` - stabilizovaná verzia 2022.18, nepribúdajú do nej denné zmeny
-- ```2022.0``` - stabilizovaná verzia 2022.0, nepribúdajú do nej denné zmeny
-- ```2021.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára
-- ```2021.52``` - stabilizovaná verzia 2021.52, nepribúdajú do nej denné zmeny
-- ```2021.40``` - stabilizovaná verzia 2021.40, nepribúdajú do nej denné zmeny
-- ```2021.13``` - stabilizovaná verzia 2021.13, nepribúdajú do nej denné zmeny
+- `2025.0-jakarta-SNAPSHOT` - pravidelne aktualizovaná verzia z main repozitára verzie 2025 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
+- `2025.0-SNAPSHOT` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.18` - stabilizovaná verzia 2025.18, nepribúdajú do nej denné zmeny.
+- `2025.0.23` - stabilizovaná verzia 2025.0.23 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2025.0` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny.
+- `2024.52` - stabilizovaná verzia 2024.52, nepribúdajú do nej denné zmeny.
+- `2024.0.52` - stabilizovaná verzia 2024.0.52 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.0.47` - stabilizovaná verzia 2024.0.47 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.40` - stabilizovaná verzia 2024.40, nepribúdajú do nej denné zmeny.
+- `2024.0-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára verzie 2024.0 skompilovaná s Java verzie 17.
+- `2024.18` - stabilizovaná verzia 2024.18, nepribúdajú do nej denné zmeny.
+- `2024.0.34` - stabilizovaná verzia 2024.0.34 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.0.21` - stabilizovaná verzia 2024.0.21 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.0.17` - stabilizovaná verzia 2024.0.17 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.0.9` - stabilizovaná verzia 2024.0.9 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2024.0` - stabilizovaná verzia 2024.0 (technicky zhodná s 2023.52-java17), nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
+- `2023.52-java17` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
+- `2023.52` - stabilizovaná verzia 2023.52, nepribúdajú do nej denné zmeny.
+- `2023.40-SNAPSHOT-java17` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.40 skompilovaná s Java verzie 17.
+- `2023.40-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.40.
+- `2023.40` - stabilizovaná verzia 2023.40, nepribúdajú do nej denné zmeny.
+- `2023.18-SNAPSHOT-java17` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.18 skompilovaná s Java verzie 17.
+- `2023.18-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.18.
+- `2023.18` - stabilizovaná verzia 2023.18, nepribúdajú do nej denné zmeny.
+- `2023.0-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára verzie 2023.0, z dôvodu API zmien táto verzia končí pred vydaním verzie 2023.18 aby nedošlo k neočakávanej zmene API v projektoch.
+- `2023.0` - stabilizovaná verzia 2023.0, nepribúdajú do nej denné zmeny.
+- `2022.0-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára.
+- `2022.52` - stabilizovaná verzia 2022.52, nepribúdajú do nej denné zmeny.
+- `2022.40` - stabilizovaná verzia 2022.40, nepribúdajú do nej denné zmeny.
+- `2022.18` - stabilizovaná verzia 2022.18, nepribúdajú do nej denné zmeny.
+- `2022.0` - stabilizovaná verzia 2022.0, nepribúdajú do nej denné zmeny.
+- `2021.0-SNAPSHOT` - pravidelne aktualizovaná verzia z master repozitára.
+- `2021.52` - stabilizovaná verzia 2021.52, nepribúdajú do nej denné zmeny.
+- `2021.40` - stabilizovaná verzia 2021.40, nepribúdajú do nej denné zmeny.
+- `2021.13` - stabilizovaná verzia 2021.13, nepribúdajú do nej denné zmeny.
 
 Pre čísla verzií platí:
 
@@ -59,9 +62,73 @@ Zároveň ale nemusí byť verzia `YEAR.0.x` najbezpečnejšia. Ak je potrebné 
 
 Platí teda, že `YEAR.0.x` je **najstabilnejšia** z pohľadu zmien a `YEAR.0-SNAPSHOT` je **najbezpečnejšia** z pohľadu zraniteľností.
 
+## Zmeny pri prechode na Tomcat 9.0.104+
+
+V [Tomcat od verzie 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) je zmenená kontrola počtu parametrov pri `multipart` HTTP požiadavke. Je preto potrebné nastaviť/zvýšiť parameter `maxPartCount` na `<Connector` elemente s súbore `tomcat/conf/server.xml` na hodnotu minimálne 100, príklad:
+
+```xml
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443"
+               maxPartCount="1000"
+               URIEncoding="UTF-8"
+               useBodyEncodingForURI="true" relaxedQueryChars="^{}[]|&quot;"
+    />
+```
+
+## Zmeny pri prechode na Jakarta verziu
+
+Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7. Prelomové zmeny:
+
+- URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
+- V Spring DATA repozitároch pre `IN/NOTIN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:
+
+```java
+  //old
+  Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+  List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
+
+  //new - add @Query and @Param to correctly create JPQL query for Eclipselink
+  @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
+  Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
+
+  @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
+  List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
+```
+
+Pre vyhľadanie v kóde môžete použiť hľadanie v súboroch `*Repository.java` a hľadať regulárny výraz `\(.*List[^)]*\)`, `\(.*Long\[\][^)]*\)`, `\(.*Integer\[\][^)]*\)`. Odporúčame vykonať kód, v logu sa zobrazí chyba a použiť vygenerované SQL do `Query` hodnoty. Problémom je len kontrola typu, kde `EclipseLink` nevie identifikovať, že má kontrolovať pole/zoznam a nie priamo dátový typ.
+
+V `build.gradle` je potrebné aktualizovať `gretty` konfiguráciu a pridať nastavenie kompilácie `options.compilerArgs += ['-parameters']`:
+
+```gradle
+plugins {
+    id 'org.gretty' version "4.1.6"
+}
+
+configurations {
+    grettyRunnerTomcat10 {
+        // gretty uses old version of commons-io
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+}
+
+gretty {
+    servletContainer = 'tomcat10'
+}
+
+tasks.withType(JavaCompile) {
+    options.failOnError = false
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
+    //needed for Spring
+    options.compilerArgs += ['-parameters']
+}
+```
+
 ## Zmeny pri prechode na 2025.0-SNAPSHOT
 
-Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
+Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
 
 ```gradle
 repositories {

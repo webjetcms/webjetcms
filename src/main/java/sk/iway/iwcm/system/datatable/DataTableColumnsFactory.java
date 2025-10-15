@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.datatable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -15,6 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -158,7 +158,7 @@ public class DataTableColumnsFactory {
             columnsToSort.remove(0);
             //inak ho pridame na koniec, asi je zavisle na nejakom poli v toSort pred nim
             if (c != null) {
-                if (i>500) Logger.debug(DataTableColumnsFactory.class, "sortColumns("+failsafe+") POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, prilis vysoke i sortovania - nenaslo sa, c="+c.getName());
+                if (i>500) Logger.error(DataTableColumnsFactory.class, "sortColumns("+failsafe+") POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, prilis vysoke i sortovania - nenaslo sa, c="+c.getName());
                 columnsToSort.add(c);
             }
         }
@@ -166,6 +166,7 @@ public class DataTableColumnsFactory {
         if (columnsToSort.size()>0) {
             //nieco je zle zosortovane, pre istotu pridame na koniec
             columnsSorted.addAll(columnsToSort);
+            Logger.error(DataTableColumnsFactory.class, "sortColumns POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, zostali stlpce na sort, pocet="+columnsToSort.size());
         }
 
         return columnsSorted;
@@ -231,7 +232,7 @@ public class DataTableColumnsFactory {
         }
 
         //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
-        boolean includeCommonSettings = true;
+        boolean includeCommonSettings = false;
         if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {
             includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
         }

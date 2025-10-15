@@ -6,10 +6,7 @@
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/a-inline.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" import="sk.iway.iwcm.common.WriteTagToolsForCore" %><%@ page import="sk.iway.iwcm.stat.BrowserDetector"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%@ page import="com.sun.org.apache.bcel.internal.classfile.Constant"%><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 */
 
 <%
@@ -318,7 +315,7 @@ function wjInlineOverlayClass() {
 			$('.wjInlineHighlighterHint').html('<iwcm:text key='editor.dubleclickToEdit'/>');
 		}
 		if($('#'+el.id).hasClass('cke_editable')){
-			$('.wjInlineHighlighterHint').html('<i class="fa fa-exclamation-triangle" aria-hidden="true" style="background-position: center center;background-repeat: no-repeat;background-size:20px;display:inline-block;width:20px;height:20px;vertical-align:middle;background-image: url(\'/admin/webpages/page-builder/images/alert-triangle-black.png\')"></i> <iwcm:text key='editor.dubleclickToEdit.change'/>');
+			$('.wjInlineHighlighterHint').html('<i class="fa fa-triangle" aria-hidden="true" style="background-position: center center;background-repeat: no-repeat;background-size:20px;display:inline-block;width:20px;height:20px;vertical-align:middle;background-image: url(\'/admin/webpages/page-builder/images/alert-triangle-black.png\')"></i> <iwcm:text key='editor.dubleclickToEdit.change'/>');
 		}
 		// end - uprava textov a pozicie labela
 

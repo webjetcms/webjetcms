@@ -145,9 +145,9 @@
             }
         },
         {
-            "label": "appStartNNDB",
+            "label": "appStartMSSQL",
             "type": "shell",
-            "command": "webjetDbname=/poolman-local-nnsk.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-mssql.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -314,6 +314,45 @@
                 "clear": true,
                 "showReuseMessage": false,
                 "close": true
+            }
+        },
+        {
+            "label": "Sass Compile PB style.css",
+            "type": "shell",
+            "options": {
+                "cwd": "src/main/webapp/admin/webpages/page-builder/style/sass/"
+            },
+            "command": "sass --style=expanded --watch style.scss:../style.css",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB MSSQL Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-mssql.yml up -d",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB MSSQL Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-mssql.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
             }
         }
     ]

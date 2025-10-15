@@ -33,6 +33,7 @@ import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.logon.UserForm;
 import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class UserChangePasswordService {
 
@@ -208,7 +209,9 @@ public class UserChangePasswordService {
 
 			if (request !=null && request.getAttribute("sendPasswordUrl") != null) pageUrl = (String)request.getAttribute("sendPasswordUrl");
 
-			pageUrl = Tools.getBaseHref(request) + pageUrl + "?login="+loginHash+"&auth="+auth;
+            String currentLng = (request != null) ? Prop.getLng(request, false) : Constants.getString("defaultLanguage");
+
+			pageUrl = Tools.getBaseHref(request) + pageUrl + "?language=" + currentLng + "&login="+loginHash+"&auth="+auth;
 
             String cancelActionLink = pageUrl + "&act=" + CANCEL_ACTION;
 
@@ -346,7 +349,7 @@ public class UserChangePasswordService {
             auth = new Password().decrypt(auth);
 
             //Login handle
-			login = org.apache.struts.util.ResponseUtils.filter(login);
+			login = ResponseUtils.filter(login);
 
             //Login CAN BE combination of more logins separated by LOGINS_SEPARATOR
 			String[] logins = login.split(LOGINS_SEPARATOR);

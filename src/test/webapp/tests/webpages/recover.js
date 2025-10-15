@@ -6,7 +6,7 @@ Before(({ I }) => {
 
 
 Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
 
     I.say("We are not in trash tab, dont see recovery button");
@@ -33,7 +33,7 @@ Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
 });
 
 Scenario('Recovery tree buttons visibility logic', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
 
     I.say("We are not in trash tab, dont see recovery buttons");
@@ -151,10 +151,12 @@ Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
     I.see("Priečinok recoverSubFolderOne bol úspešne obnovený do", "div.toast-message");
     I.see("/Test stavov/page_folder_recovery", "div.toast-message");
     I.toastrClose();
+    DT.waitForLoader();
 
     //
     I.say("Check folder position");
     I.clickCss("#pills-folders-tab");
+    DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "page_folder_recovery", "recoverSubFolderOne"]);
     I.click(DT.btn.tree_edit_button);
     DTE.waitForLoader();

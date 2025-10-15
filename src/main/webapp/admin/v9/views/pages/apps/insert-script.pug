@@ -7,7 +7,7 @@ block content
         window.domReady.add(function () {
 
             var tabs = [
-                { id: 'main', title: '[[\#{editor.tab.basic_info}]]', selected: true },
+                { id: 'main', title: '[[\#{datatable.tab.basic}]]', selected: true },
                 { id: 'scriptPerms', title: '[[\#{components.insert_script.perms}]]' },
                 { id: 'scriptBody', title: '[[\#{components.insert_script.body}]]', content: "<div></div>" }
             ];
@@ -62,5 +62,6 @@ block content
 
     style.
         div.DTE_Field_Name_scriptBody label { display: none; }
+        div.DTE_Field_Type_textarea .col-sm-7 { width: 99%; }
 
     <table id="insertScriptTable" class="datatableInit table"></table>

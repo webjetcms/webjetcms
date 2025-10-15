@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.layout.MenuService;
@@ -56,7 +57,7 @@ public class ThymeleafAdminController {
     * @param request HttpServletRequest
     * @return String
     */
-   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[^.]*}" })
+   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9_-]*}/" })
    public ModelAndView defaultHandler(@PathVariable(required = false) String page,
          @PathVariable(required = false) String subpage,
          @RequestParam(required = false) final MultiValueMap<String, String> allParams,
@@ -76,7 +77,7 @@ public class ThymeleafAdminController {
       // @TODO: nepotrebujeme sem nejaku kontrolu URL parametrov?
       String forward = "admin/v9/dist/views/" + page + "/" + subpage;
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
 
       removePermissionFromCurrentUser(request);
       fireEvent(page, subpage, model, redirectAttributes, request);
@@ -90,7 +91,7 @@ public class ThymeleafAdminController {
       return new ModelAndView(forward);
    }
 
-   @PostMapping(path = { "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[^.]*}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+   @PostMapping(path = { "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9_-]*}/" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
    public ModelAndView defaultHandlerPost(@PathVariable(required = false) String page,
          @PathVariable(required = false) String subpage,
          @RequestParam(required = false) final MultiValueMap<String, String> allParams,
@@ -98,7 +99,7 @@ public class ThymeleafAdminController {
          final RedirectAttributes redirectAttributes,
          final HttpServletRequest request) {
 
-         Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
+         //Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
 
          return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);
    }
@@ -113,8 +114,7 @@ public class ThymeleafAdminController {
     * @param request HttpServletRequest
     * @return String
     */
-   @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
+   @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" })
    public ModelAndView appHandler(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
@@ -138,7 +138,7 @@ public class ThymeleafAdminController {
       }
       model.addAttribute("appIncludePath", appIncludePath);
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
 
       //check if there is index.js file to include as script element
       String jsFilePath = "/apps/"+app+"/admin/"+app+".js";
@@ -158,15 +158,14 @@ public class ThymeleafAdminController {
       return new ModelAndView(forward);
    }
 
-   @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
+   @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
    public ModelAndView appHandlerPost(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
            final ModelMap model,
            final RedirectAttributes redirectAttributes,
            final HttpServletRequest request) {
-      Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
+      //Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
 
       return appHandler(app, subpage, model, redirectAttributes, request);
    }
@@ -212,6 +211,7 @@ public class ThymeleafAdminController {
 
    private void removePermissionFromCurrentUser(String permissionString, HttpServletRequest request) {
       Identity user = UsersDB.getCurrentUser(request);
+      //allow remove perms for e2e tests
       if (user != null && user.getLogin().startsWith("tester")) {
 
          String[] permsArr = Tools.getTokens(permissionString, ",");

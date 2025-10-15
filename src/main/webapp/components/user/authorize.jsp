@@ -1,8 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.users.*" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%
@@ -42,9 +40,9 @@ else if (userId == -1 && Tools.isNotEmpty(hash))
 }
 %>
 
-<%@page import="sk.iway.iwcm.i18n.Prop"%><logic:notPresent name="authorizeOK">
+<%@page import="sk.iway.iwcm.i18n.Prop"%><iwcm:notPresent name="authorizeOK">
    <iwcm:text key="user.authorize.fail"/>
-</logic:notPresent>
-<logic:present name="authorizeOK">
+</iwcm:notPresent>
+<iwcm:present name="authorizeOK">
    <iwcm:text key="user.authorize.success"/>
-</logic:present>
+</iwcm:present>

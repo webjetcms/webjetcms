@@ -22,8 +22,6 @@ import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -37,6 +35,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  StatNewDB.java
@@ -237,6 +236,7 @@ public class StatNewDB
 				"url varchar(255),"+
 				"query_string varchar(255),"+
 				"count int unsigned DEFAULT 0,"+
+				"browser_ua_id int unsigned DEFAULT 0,"+
 				"domain_id int unsigned DEFAULT 0,"+
 				"KEY i_stat_error"+suffix+" (year, week)"+
 				") ENGINE="+Constants.getString("mariaDbDefaultEngine");
@@ -249,6 +249,7 @@ public class StatNewDB
 				"url nvarchar(255),"+
 				"query_string nvarchar(255),"+
 				"count int DEFAULT 0,"+
+				"browser_ua_id int DEFAULT 0,"+
 				"domain_id int DEFAULT 0"+
 				");"+
 				"CREATE INDEX IX_yw"+suffix+" ON stat_error"+suffix+" (year, week);";
@@ -261,6 +262,7 @@ public class StatNewDB
 				"url nvarchar2(255),"+
 				"query_string nvarchar2(255),"+
 				"count INTEGER DEFAULT 0,"+
+				"browser_ua_id INTEGER DEFAULT 0,"+
 				"domain_id INTEGER DEFAULT 0"+
 				");"+
 				"CREATE INDEX IX_ywse"+suffix+" ON stat_error"+suffix+" (year, week);";

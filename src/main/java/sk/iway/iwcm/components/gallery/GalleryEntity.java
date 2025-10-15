@@ -1,6 +1,19 @@
 package sk.iway.iwcm.components.gallery;
 
-import javax.persistence.*;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -14,9 +27,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
-
-import java.util.Date;
 
 @Entity
 @Table(name = "gallery")
@@ -55,16 +67,12 @@ public class GalleryEntity {
 
     @Size(max = 255)
     @Column(name = "image_path")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="admin.temp_group_list.directory", tab = "metadata",
-        editor = {
-            @DataTableColumnEditor(attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-            })
-    })
-    private String imagePath;    
-    
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private String imagePath;
+
+    @Lob
     @Column(name = "image_source")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.imagePath", visible = false,
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -86,6 +94,7 @@ public class GalleryEntity {
             })
     private String descriptionShortSk;
 
+    @Lob
     @Column(name = "l_description_sk")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -110,6 +119,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCz;
 
+    @Lob
     @Column(name = "l_description_cz")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -133,6 +143,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEn;
 
+    @Lob
     @Column(name = "l_description_en")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -157,6 +168,7 @@ public class GalleryEntity {
             })
     private String descriptionShortDe;
 
+    @Lob
     @Column(name = "l_description_de")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -181,6 +193,7 @@ public class GalleryEntity {
             })
     private String descriptionShortPl;
 
+    @Lob
     @Column(name = "l_description_pl")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -205,6 +218,7 @@ public class GalleryEntity {
             })
     private String descriptionShortRu;
 
+    @Lob
     @Column(name = "l_description_ru")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -229,6 +243,7 @@ public class GalleryEntity {
             })
     private String descriptionShortHu;
 
+    @Lob
     @Column(name = "l_description_hu")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -253,6 +268,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCho;
 
+    @Lob
     @Column(name = "l_description_cho")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -277,6 +293,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEsp;
 
+    @Lob
     @Column(name = "l_description_esp")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -287,11 +304,13 @@ public class GalleryEntity {
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEsp;
 
+    @Lob
     @Column(name = "author")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
             tab = "metadata",
-            title = "components.gallery.author"
+            title = "components.gallery.author",
+            sortAfter = "imageSource"
         )
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String author;
@@ -300,12 +319,13 @@ public class GalleryEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             tab = "metadata",
-            title = "components.gallery.metadata.uploadDateTime"
+            title = "components.gallery.metadata.uploadDateTime",
+            sortAfter = "author"
     )
     public Date uploadDatetime;
 
     @Column(name = "sort_priority")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority", sortAfter = "uploadDatetime")
     private Integer sortPriority;
 
     @Column(name = "selected_height")
@@ -337,4 +357,8 @@ public class GalleryEntity {
 
     @Column(name = "domain_id")
     private Integer domainId;
+
+    @Transient
+    @DataTableColumnNested
+    private GalleryEditorFields editorFields = null;
 }

@@ -140,9 +140,11 @@ export default class ReadyExtender {
             return 0;
         }
         /** @type {string} */
-        const lastKey = Object.keys(this._listStore[this.listName]).sort((a, b) => {
-            return a - b;
-        }).pop();
+        const lastKey = Object.keys(this._listStore[this.listName])
+            .map(Number)
+            .filter(key => key < 900) // filter out keys that are too high (e.g. 900+), they are reserved for special purposes/to be last in order
+            .sort((a, b) => a - b)
+            .pop();
         return parseInt(lastKey, 10) + 1;
     }
 

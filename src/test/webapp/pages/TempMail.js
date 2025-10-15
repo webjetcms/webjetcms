@@ -12,6 +12,13 @@ module.exports = {
      * @param {string} [emailDomain="fexpost.com"] - Doména e-mailového účtu, predvolene "fexpost.com".
      */
     login(name, emailDomain = "fexpost.com"){
+        //if name contains '@' then split it and use the first part as name and the second part as emailDomain
+        if (name.includes('@')) {
+            const parts = name.split('@');
+            name = parts[0];
+            emailDomain = parts[1];
+        }
+
         I.say('Prihlasujem sa do TempMail-u');
         I.amOnPage('https://tempmail.plus');
         I.switchTo();
@@ -76,6 +83,8 @@ module.exports = {
     deleteCurrentEmail() {
         I.clickCss("#delete_mail");
         I.waitForElement("#modal-destroy-mail", 10);
+        I.waitForElement("#confirm_mail");
+        I.wait(1);
         I.clickCss("#confirm_mail");
         I.waitForInvisible("#modal-destroy-mail", 60);
     },

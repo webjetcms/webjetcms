@@ -2,6 +2,7 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
@@ -19,8 +20,10 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.FileArchivFilter;
 import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
 import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 
@@ -30,6 +33,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableSpringDataWebSupport
 @Configuration
 @EnableWebMvc
+@MultipartConfig
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -50,6 +54,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.system.logging",
     "sk.iway.iwcm.system.adminlog",
     "sk.iway.iwcm.system.monitoring.rest",
+    "sk.iway.iwcm.system.jpa",
     "sk.iway.iwcm.system.ntlm",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.users",
@@ -123,10 +128,25 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",
     "sk.iway.webjet.v9",
+    "sk.iway.iwcm.components.forum",
+    "sk.iway.iwcm.components.emoticon",
+    "sk.iway.iwcm.components.appuser",
+    "sk.iway.iwcm.components.video",
+    "sk.iway.iwcm.components.appslitslider",
+    "sk.iway.iwcm.components.appslider",
     "sk.iway.iwcm.components.sitemap",
+    "sk.iway.iwcm.components.appsocialicon",
+    "sk.iway.iwcm.components.qa",
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
-    "sk.iway.iwcm.search"
+    "sk.iway.iwcm.components.restaurant_menu",
+    "sk.iway.iwcm.search",
+    "sk.iway.iwcm.components.appweather",
+    "sk.iway.iwcm.components.appimpressslideshow",
+    "sk.iway.iwcm.components.carouselslider",
+    "sk.iway.iwcm.components.ai.rest",
+    "sk.iway.iwcm.components.ai.providers",
+    "sk.iway.iwcm.components.ai.stat.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
@@ -170,6 +190,9 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
         http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);
 
         //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
-        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
+        http.addFilterAfter(new SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
+
+        // filter for setting non filter header for files "X-Robots-Tag","noindex, nofollow"
+        http.addFilterAfter(new FileArchivFilter(), SetCharacterEncodingFilter.class);
     }
 }

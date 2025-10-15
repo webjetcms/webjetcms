@@ -3,7 +3,6 @@ package sk.iway.iwcm.doc;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
-import org.apache.struts.util.ResponseUtils;
 import org.json.JSONObject;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
@@ -24,6 +23,7 @@ import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -131,8 +131,8 @@ public class DocDB extends DB
 	 */
 	private Map<Integer, DocDetails> cachedDocs;
 
-	//tabulka pre skupiny perexov (zrychleny pristup)
-	private List<PerexGroupBean> perexGroups = null;
+	//tabulka pre skupiny perexov (zrychleny pristup) - mapovana podla domainId
+	private Map<Integer, List<PerexGroupBean>> perexGroupsByDomainIdMap = null;
 
 	private final String serverName;
 
@@ -2859,6 +2859,7 @@ public class DocDB extends DB
 			if (Tools.isEmpty(htmlFileName))
 			{
 				htmlFileName = doc.getNavbar();
+				if (htmlFileName.contains("<") && htmlFileName.contains(">")) htmlFileName = Tools.html2text(htmlFileName);
 			}
 			StringBuilder fileName = new StringBuilder(groupDiskPath);
 			if (group == null)
@@ -3545,6 +3546,10 @@ public class DocDB extends DB
 	 */
 	public List<PerexGroupBean> getPerexGroups(boolean forceRefresh)
 	{
+		//initialize perexGroupsMap if it is null
+		if (perexGroupsByDomainIdMap == null) perexGroupsByDomainIdMap = new HashMap<>();
+
+		List<PerexGroupBean> perexGroups = perexGroupsByDomainIdMap.get(CloudToolsForCore.getDomainId());
 		if (perexGroups != null && forceRefresh == false) {
 			return perexGroups;
 		}
@@ -3555,6 +3560,7 @@ public class DocDB extends DB
 			Logger.error(DocDB.class, "Error loading PerexGroups", e);
 			if (perexGroups == null) perexGroups = new ArrayList<>();
 		}
+		perexGroupsByDomainIdMap.put(CloudToolsForCore.getDomainId(), perexGroups);
 
 		return perexGroups;
 	}

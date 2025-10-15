@@ -17,7 +17,7 @@ body.modal-open {
         text-overflow: ellipsis;
         font-size: 18px;
         font-weight: 500;
-        margin-right: 80px;
+        margin-right: 110px; //because there are buttons on the right side such as maximize, close, etc
         //space for possible input elements in title
         padding-top: 2px;
         padding-bottom: 2px;
@@ -132,6 +132,14 @@ body.modal-open {
                 }
             }
         }
+        .DTE_Field_Type_icon {
+            .input-group {
+                span.icon-preview {
+                    width: 2.5rem;
+                    display: inline-block;
+                }
+            }
+        }
         .form-group.row.DTE_Field_Type_wysiwyg {
             margin-top: 0px;
             margin-bottom: 0px;
@@ -165,6 +173,19 @@ body.modal-open {
                 white-space: nowrap;
                 @include show-scrollbar;
             }
+
+            &.height-md textarea {
+                height: 11rem;
+            }
+
+            &.height-lg textarea {
+                height: 20rem;
+            }
+
+            &.height-xl textarea {
+                height: 30rem;
+            }
+
             &.wrap textarea {
                 white-space: pre-wrap;
             }
@@ -235,6 +256,7 @@ body.modal-open {
                     background-size: cover;
                     background-position: center;
                     width: 41px;
+                    cursor: zoom-in;
                     i {
                         display: none;
                     }
@@ -798,92 +820,29 @@ div.DTE_Bubble_Background {
     html:not(.in-iframe-show-table) .jstree {
         height: auto !important;
     }
+}
+
+/* max-height to use full screen modal in small notebook screens */
+@media (max-width: ($bp-tablet - 1)) {
     .modal.DTED {
-        .modal-dialog {
-            max-width: 100%;
-            margin: 0px;
-        }
-        /* IFRAME model opened, not needed anymore
-        .modal-header {
-            padding-top: 5px;
-            padding-bottom: 5px;
+        @include DTED-tablet-base;
+    }
+}
 
-            h5 {
-                font-size: 1.05em;
-            }
+@media (min-width: $bp-tablet) and (max-height: 760px) {
+    .modal.DTED:has(div.modal-xl) {
+        @include DTED-tablet-base;
 
-            .DTE_Header_Content .row {
-                .col-sm-4 {
-                    width: auto;
-                }
-                .col-sm-8 {
-                    width: 100%;
-                }
-            }
-        }
-        */
-
-        .modal-footer {
-            padding-top: 4px;
-            padding-bottom: 4px;
-        }
-
-        .modal-dialog-scrollable {
-            margin: 0px;
-            width: 100%;
-            max-width: 100%;
-            height: 100%;
-            max-height: 100%;
-
-            .modal-content {
-                height: 100vh;
-                max-height: 100vh;
-
-                div.modal-body-bg {
-                    min-height: 100%;
-                }
-                .modal-body.has-content {
-                    //ak ma content, napr. ckeditor tak musi mat auto height
-                    div.modal-body-bg {
-                        min-height: auto;
-                    }
-                }
-                div.DTE_Header_Content {
-                    div.dialog-buttons {
-                        display: none;
-                    }
-                }
-            }
-        }
         div.DTE_Action_Edit h5.modal-title, div.DTE_Action_Create h5.modal-title {
-            display: none;
-        }
-        .cke_top {
-            overflow: scroll;
-        }
-        .cke_top span.cke_toolbox {
-            max-height: 55px;
-            min-height: auto;
-            width: 1100px;
+            display: block;
+            font-size: 12px;
+            padding-top: 0px;
+            padding-bottom: 0px;
         }
 
-        .modal-footer {
-            .DTE_Footer_Content {
-                margin-top: 5px;
-                margin-bottom: 0px
-            }
-            .DTE_Form_Error {
-                margin-top: 0px !important;
-            }
-            .DTE_Form_Buttons {
-                margin-top: 1px;
-                margin-bottom: 1px;
-                display: contents;
-
-                .btn {
-                    line-height: 18px;
-                }
-            }
+        .md-tabs a.nav-link {
+            padding-top: 2px;
+            padding-bottom: 0px;
         }
     }
 }

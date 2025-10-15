@@ -62,7 +62,9 @@ public class AllowSafeHtmlAttributeConverter implements AttributeConverter<Strin
          .allowElements("img")
          .allowUrlProtocols("http", "https", "data")
          .allowAttributes("href").onElements("a")
-         .allowAttributes("src").onElements("img")
+         .allowAttributes("src", "alt", "title").onElements("img")
+         .allowAttributes("class").onElements("a", "img", "div", "span", "p", "h1", "h2", "h3", "h4", "h5", "h6", "i", "b", "strong", "em", "li", "ul", "ol", "blockquote", "table", "tr", "td", "th", "thead", "tbody", "tfoot", "br")
+         .allowAttributes("data-list").onElements("li") //quill editor support for lists
          .toFactory();
       String safeHTML = policy.sanitize(unsafeHtml);
       safeHTML = Tools.replace(safeHTML, Constants.NON_BREAKING_SPACE, "&nbsp;");

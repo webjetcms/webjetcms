@@ -636,6 +636,14 @@
 
             this.mark_sections(this.$wrapper);
             // <%--// this.mark_editable_elements(this.$wrapper);--%>
+
+            //check for empty-placeholder and remove it if neccessary
+            var sections = $(this.$wrapper).children(this.grid.section);
+            if(sections.length==0){
+                this.create_empty_placeholder(this.$wrapper);
+            } else {
+                this.remove_empty_placeholder();
+            }
         },
 
         /*==================================================================
@@ -1067,6 +1075,10 @@
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
                 }
             }
+        },
+
+        remove_empty_placeholder: function(){
+            this.$wrapper.find(this.tagc.empty_placeholder).remove();
         },
 
         create_dimmer: function(el){
@@ -2193,7 +2205,7 @@
         create_notify: function () {
 
             var notify  = '<div class="'+this.tag.notify+'">';
-            notify += '<div class="'+this.tag.notify_header+'"><iwcm:text key="pagebuilder.helper"/></div>';
+            //notify += '<div class="'+this.tag.notify_header+'"><iwcm:text key="pagebuilder.helper"/></div>';
             notify += '<div class="'+this.tag.notify_content+'"></div>';
             notify += '<div class="'+this.tag.notify_footer+'">'+ this.build_button(this.tag.notify_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
             notify += '</div>';
@@ -2559,7 +2571,7 @@
                     '<div class="'+this.tag.style_label+'">'+label+'</div>'+
                     '<div class="input-group">'+
                         '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="input-group-addon" style="min-width: 34px; background-color: #304866;background-size:26px;background-repeat:no-repeat;background-position:center;background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
+                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
                     '</div>'+
                 '</div>';
 
@@ -2628,6 +2640,9 @@
                     $(this).addClass('active');
                     $('.tab-content .tab-item').removeClass('active');
                     $('.tab-content .tab-item[data-tab-id="'+id+'"]').addClass('active');
+
+                    //select first menu tab
+                    $('.tab-content .tab-item[data-tab-id="'+id+'"] .tab-item-button').first().trigger('click');
                 }
             });
 

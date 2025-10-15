@@ -1,20 +1,18 @@
-<%
+<%@page import="java.util.List"%><%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
 <%@ page import="java.io.*,java.util.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
+<%@
 		taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%@page import="org.apache.commons.lang.time.DateUtils"%>
 <%@page import="sk.iway.iwcm.PathFilter"%>
 <%@page import="java.util.regex.Pattern"%>
 <%@page import="sk.iway.iwcm.Tools"%>
-<%@page import="org.apache.struts.util.RequestUtils"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%><iwcm:checkLogon admin="true" perms="cmp_adminlog_logging"/>
+<%@page import="sk.iway.iwcm.tags.support.RequestUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><iwcm:checkLogon admin="true" perms="cmp_adminlog_logging"/>
 <jsp:useBean id="iwcm_useriwcm" scope="session" type="sk.iway.iwcm.Identity"/>
 <%@ include file="layout_top.jsp" %>
 
@@ -132,11 +130,9 @@
 		int linesAfter = Tools.getIntValue(Tools.getRequestParameter(request, "linesAfter"), 0);
 		int freeTokens = 0;
 
-
 		if (f.canRead())
 		{
 			Date d = new Date();
-			f.setLastModified(d.getTime());
 			FileReader fr = new FileReader(f);
 			BufferedReader br = new BufferedReader(fr);
 			long totalSize = f.length();

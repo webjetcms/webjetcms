@@ -38,6 +38,15 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	//file browser
 	public static final int TYPE_FILES = 4;
 	public static final int TYPE_PAGES = 5;
+	public static final int TYPE_VIDEOS = 6;
+	//images and videos
+	public static final int TYPE_MULTIMEDIA = 7;
+
+	private int selectedType = 1;
+
+	public int getSelectedType() {
+		return selectedType;
+	}
 
 	FsSecurityChecker _securityChecker = new FsSecurityCheckerChain(); //NOSONAR
 	FsServiceConfig _serviceConfig = new IwcmFsServiceConfig(); //NOSONAR
@@ -125,9 +134,11 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	{
 		Logger.debug(FsService.class, "IwcmFsService initialize, type="+type);
 
+		selectedType = type;
+
 		int counter = 0;
 
-		if (type == TYPE_IMAGES)
+		if (type == TYPE_IMAGES || type == TYPE_MULTIMEDIA || type == TYPE_VIDEOS)
 		{
 			_volumes = new FsVolume[2];
 

@@ -27,51 +27,51 @@
     <div class="time-book-form">
         <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${reservationEntity}" method="post">
 
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="mb-3 row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.admin_addObject.name}" for="reservationObjectId">Reservation Object</label>
                     <select id="reservationObjectId" class="form-control" th:field="*{reservationObjectId}" onchange="loadSupportData()">
                         <option th:each="reservationObject : ${reservationObjects}" th:value="${reservationObject.value}" th:text="${reservationObject.label}"></option>
                     </select>
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.reservations.price}" for="price">Reservation Price</label>
-                    <input type="text" class="form-control" data-th-field="*{price}" disabled>
+                    <input type="text" class="form-control" data-th-field="*{price}" disabled />
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="mb-3 row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.day_book.arriving}" for="dateFrom">Reservation Arriving</label>
-                    <input id="dateFrom" name="dateFrom" type="text" class="form-control" readonly="">
+                    <input id="dateFrom" name="dateFrom" type="text" class="form-control readonly-input" readonly />
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.day_book.departure}" for="dateTo">Reservation Departure</label>
-                    <input id="dateTo" name="dateTo" type="text" class="form-control" readonly="readonly">
+                    <input id="dateTo" name="dateTo" type="text" class="form-control readonly-input" readonly />
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="mb-3 row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.firstName}" for="name">Name</label>
-                    <input type="text" class="form-control" data-th-field="*{name}" required>
+                    <input type="text" class="form-control" data-th-field="*{name}" required />
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.lastName}" for="surname">Surname</label>
-                    <input type="text" class="form-control" data-th-field="*{surname}" required>
+                    <input type="text" class="form-control" data-th-field="*{surname}" required />
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="mb-3 row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.email}" for="email">Email</label>
-                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required>
+                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required />
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.formsimple.label.telefon}" for="phoneNumber">Phone Number</label>
-                    <input type="text" class="form-control" data-th-field="*{phoneNumber}">
+                    <input type="text" class="form-control" data-th-field="*{phoneNumber}" />
                 </div>
             </div>
-            <div class="form-row">
+            <div class="mb-3 row">
                 <div class="form-group col-12">
                     <label class="form-label" data-th-text="#{components.reservation.reservation_list.purpose}" for="purpose">Purpose</label>
                     <textarea class="form-control" data-th-field="*{purpose}"></textarea>
@@ -148,7 +148,7 @@
                 cancelableDay: false,
                 displayMonthsCount: 2,
                 monthsToSwitch: 1,
-                locale: 'sk-SK',
+                locale: localization,
                 displayDatesOutside: false,
                 disableDatesPast: true,
                 selectedMonth: currentMonth,
@@ -485,5 +485,11 @@
         text-align: center;
         top: -40px;
         background-color: #f1f5f9 !important;
+    }
+
+    .readonly-input {
+        background-color: var(--bs-secondary-bg);
+        opacity: 1;
+        cursor: default;
     }
 </style>

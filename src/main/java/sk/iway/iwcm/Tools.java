@@ -8,7 +8,7 @@ import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.util.EntityUtils;
-import org.apache.struts.util.ResponseUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.springframework.context.ApplicationContext;
@@ -29,6 +29,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -38,6 +40,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.swing.*;
@@ -1035,7 +1038,7 @@ public class Tools
 		{
 			ret = ret.substring(0, ret.indexOf('#'));
 		}
-		return org.apache.struts.util.ResponseUtils.filter(ret);
+		return ResponseUtils.filter(ret);
 	}
 
 	/**
@@ -1591,7 +1594,7 @@ public class Tools
 		   String[] values = request.getParameterValues(name);
 		   for (int i=0; i<values.length; i++)
 		   {
-			   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
+			   String value = ResponseUtils.filter(values[i]);
 			   baseLink = addParameterToUrl(baseLink, name, value);
 		   }
 		}
@@ -2889,6 +2892,15 @@ public class Tools
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");
 		if (text.contains("|*")) text = Tools.replace(text, "|*", ">");
 		if (text.contains("&amp;#47;")) text = Tools.replace(text, "&amp;#47;", "&#47;");
+		if (text.contains("&lt;&#47;") || text.contains("<&#47;")) {
+			//enable HTML mode
+			text = Tools.replace(text, "&lt;&#47;", "</");
+			text = Tools.replace(text, "<&#47;", "</");
+			text = Tools.replace(text, "&lt;", "<");
+			text = Tools.replace(text, "&gt;", ">");
+
+			text = AllowSafeHtmlAttributeConverter.sanitize(text);
+		}
 
 		return  text;
 	}
@@ -3263,5 +3275,38 @@ public class Tools
 
 		Matcher m = pattern.matcher(source);
 		return m.replaceAll(newStr);
+	}
+
+	/*
+	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @param value
+	 */
+	public static void sessionSetAttribute(HttpSession session, String name, Object value) {
+		if (session == null) return;
+		try {
+			session.setAttribute(name, value);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionSetAttribute() - session is invalid, attribute " + name + " is not set");
+			//session is already invalid
+		}
+	}
+
+	/**
+	 * Safely get session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @return
+	 */
+	public static Object sessionGetAttribute(HttpSession session, String name) {
+		if (session == null) return null;
+		try {
+			return session.getAttribute(name);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionGetAttribute() - session is invalid, attribute " + name + " is not get");
+			//session is already invalid
+			return null;
+		}
 	}
 }

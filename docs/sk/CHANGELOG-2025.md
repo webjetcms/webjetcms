@@ -6,8 +6,200 @@
 
 ### Prelomové zmeny
 
+- Odstránený `Struts Framework`, je potrebné vykonať aktualizáciu `JSP` súborov, Java tried a upraviť súbor `web.xml`, viac v [sekcii pre programátora](#pre-programátora) (#57789).
+- Ak používate aplikačný server Tomcat vo verzii 9.0.104 a viac je potrebné [aktualizovať nastavenie](install/versions.md#zmeny-pri-prechode-na-tomcat-90104) parametra `maxPartCount` na `<Connector` elemente (#54273-70).
+- Značky - rozdelené podľa domén - pri štarte sa vytvorí kópia značiek pre každú doménu (ak je používané rozdelenie údajov podľa domén - nastavená konfiguračná premenná `enableStaticFilesExternalDir=true`). Aktualizujú sa ID značiek pre web stránky a galériu. Je potrebné manuálne skontrolovať ID značiek pre všetky aplikácie novinky a iné aplikácie, ktoré obsahujú ID značky - aktualizácia sa ich pokúsi opraviť, ale odporúčame ID skontrolovať. Viac informácii v sekcii pre programátora. (#57837).
+- Novinky - [šablóny noviniek](frontend/templates/news/README.md) prerobené z definície cez prekladové kľúče na vlastnú databázovú tabuľku. Pri štarte WebJETu sa skonvertujú záznamy z pôvodného formátu. Sú oddelené podľa domén, ak obsahujú doménový alias vytvoria sa len v príslušnej doméne (#57937).
+- Bezpečnosť - prísnejšia kontrola URL adries administrácie - je potrebné, aby URL adresa v administrácii mala na konci znak `/`, nesprávna adresa je `/admin/v9/webpages/web-pages-list` alebo `/apps/quiz/admin`, správna `/admin/v9/webpages/web-pages-list/` alebo `/apps/quiz/admin/`. Je potrebné aby programátor skontroloval definície URL adries v súboroch `modinfo.properties` (#57793).
+
+### AI Asistent
+
+V dnešnom svete je umelá inteligencia všade okolo nás a samozrejme, WebJET ako moderný redakčný systém nechce zostať pozadu. Preto s hrdosťou predstavujeme novú verziu WebJET CMS, kde sme integrovali [pokročilé AI nástroje](redactor/ai/README.md).
+
+![](redactor/ai/datatables/ckeditor-assistants.png)
+
+Tieto funkcie vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky, cez preklady textov, návrhy titulkov, až po generovanie ilustračných obrázkov.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+### Web stránky
+
+- AB Testovanie - pridaná možnosť [zobrazovať AB verziu](redactor/apps/abtesting/README.md) podľa stavu prihláseného používateľa - neprihlásenému používateľovi sa zobrazí A verzia a prihlásenému B verzia. Režim aktivujete nastavením konfiguračnej premennej `ABTestingForLoggedUser` na hodnotu `true` (#57893).
+- [Page Builder](redactor/webpages/pagebuilder.md) - upravený vizuál, aby lepšie zapadal do aktuálneho dizajnu WebJET CMS (#57893).
+
+![](redactor/webpages/pagebuilder-style.png)
+
+- Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka neprekážala medzi štandardnými web stránkami (#57657-8).
+- Značky - rozdelené zobrazenie značiek podľa aktuálne zvolenej domény, aby ste mohli mať značky zvlášť pre každú doménu vo WebJETe (#57837).
+- Klonovanie štruktúry - pridaná informácia o nakonfigurovanom prekladači a koľko voľných znakov na preklad ostáva (#57881).
+- Zrkadlenie štruktúry - pridaná možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať zrkadlenie stránok (#57881).
+
+![](redactor/apps/clone-structure/clone_structure_set_translator.png)
+
+- Zrkadlenie - pridanie novej sekcie [zrkadlenie](redactor/webpages/mirroring/README.md) na sledovanie a manažovanie previazaných priečinkov a stránok po akcií zrkadlenia (#57941).
+
+![](redactor/webpages/mirroring/groups_datatable.png)
+
+- Pri výbere obrázka, alebo video súboru, v editore stránok sú v prieskumníkovi zobrazené len vhodné typy súborov, ostatné sú filtrované (#57921).
+
+### Šablóny
+
+- Pridaná nová sekcia [Šablóny noviniek](frontend/templates/news/README.md) na správu a manažovanie šablón noviniek (#57937).
+
+![](frontend/templates/news/news-temps-datatable.png)
+
+### Používateľské rozhranie
+
+- Pri použití malého monitora (výška okna menej ako 760 bodov) sa zobrazí okno automaticky na celú plochu a zmenší sa hlavička a pätička (titulok okna je menším písmom). Zvýši sa tak zobrazené množstvo informácií, čo je potrebné hlavne v sekcii web stránky. Používa sa pri oknách používajúcich CSS triedu `modal-xl`, čo sú aktuálne web stránky, foto galéria, editor obrázkov a používatelia (#57893).
+
+![](redactor/webpages/pagebuilder.png)
+
+- V editore pridaná možnosť kliknúť na ikonu obrázka na začiatku poľa, pre jeho zobrazenie v novej karte.
+
+![](developer/datatables-editor/field-type-elfinder.png)
+
+### Aplikácie
+
+- Pridaná možnosť zobraziť aplikáciu len prihlásenému/neprihlásenému používateľovi. Režim sa nastavuje v karte [Zobrazenie nastavenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie) v editore stránok (#57893).
+
+![](custom-apps/appstore/common-settings-tab.png)
+
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
+
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Emotikony](redactor/apps/emoticon/README.md)
+- [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Otázky a odpovede](redactor/apps/qa/README.md)
+- [Používatelia](redactor/apps/user/README.md)
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Reštauračné menu](redactor/apps/restaurant-menu/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Sociálne ikony](redactor/apps/app-social_icon/README.md)
+- [Video](redactor/apps/video/README.md)
+
+![](redactor/apps/app-slit_slider/editor-items.png)
+
+### Menu
+
+- Ak [menu web stránky](redactor/apps/menu/README.md) nemá zadaný koreňový priečinok (hodnota je nastavená na 0), automaticky sa použije koreňový priečinok pre aktuálne zobrazenú web stránku. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
+
+### Štatistika
+
+- V sekcií [návštevnosť](redactor/apps/stat/README.md#návštevnosť) pridaný sumárny počet Videní, Návštev a Počet rôznych používateľov pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (#57929).
+
+![](redactor/apps/stat/stats-page.png)
+
+- V sekcií [chybné stránky](redactor/apps/stat/README.md#chybné-stránky) pridané filtrovanie podľa botov (aplikuje sa len na novo zaznamenané údaje) a sumárny počet v pätičke. Je potrebné upraviť stránku `404.jsp` vo vašom projekte pridaním objektu `request` do volania `StatDB.addError(statPath, referer, request);` (#58053).
+
+![](redactor/apps/stat/error-page.png)
+
+### Voliteľné polia
+
+- Pridaná podpora pre nové typy [voliteľných polí](frontend/webpages/customfields/README.md):
+  - [Výber priečinku webových stránok](frontend/webpages/customfields/README.md#výber-priečinku-webových-stránok) (#57941).
+  - [Výber webovej stránky](frontend/webpages/customfields/README.md#výber-webovej-stránky) (#57941).
+
+![](frontend/webpages/customfields/webpages-doc-null.png)
+![](frontend/webpages/customfields/webpages-group-null.png)
+
+### Bezpečnosť
+
+- Opravená možná zraniteľnosť v Safari pri špeciálnej URL adrese smerujúcej na archív súborov v kombinácii s peknou 404 stránkou (#57657-8).
+
+### Iné menšie zmeny
+
+- Audit zmien - vyhľadávanie - pole Typ je usporiadané podľa abecedy (#58093).
+- Elektronický obchod - pridaná možnosť nastaviť [koreňový priečinok](redactor/apps/eshop/product-list/README.md) so zoznamom produktov pomocou konfiguračnej premennej `basketAdminGroupIds`, ak nevyhovuje automatické hľadanie podľa vloženej aplikácie zoznam produktov (#58057).
+- Elektronický obchod - aplikácia na nastavenie platobných metód presunutá z priečinka `/apps/eshop/admin/payment-methods/` do štandardného `/apps/basket/admin/payment-methods/` (#58057).
+- Elektronický obchod - po zmazaní objednávky sú zmazané z databázy aj jej položky a platby (#58070).
+- Prekladač - pri prekladači `DeepL` sa zlepšilo spracovanie vrátených chybových hlášok, pre presnejšie identifikovanie problému (#57881).
+- Prekladač - pridaná podpora pre implementáciu viacerých prekladačov a ich automatické spracovanie/využitie (#57881).
+- Prekladač - pridané automatické [auditovanie počtu spotrebovaných znakov](admin/setup/translation.md) pri každom preklade. Do audit záznamu typu `TRANSLATION` sa do stĺpca `EntityID` zapíše spotrebované množstvo kreditov pri preklade. Audituje sa aj počet dostupných znakov, výsledok je uložený do cache a aktualizuje sa znova najskôr o 5 minút (#57965).
+- Prieskumník - optimalizované načítanie, opravené duplicitné čítanie knižnice `jQuery UI` (#57997).
+
+### Oprava chýb
+
+- Datatabuľky - opravené nastavenie možností do výberového menu externého filtra (#57657-8).
+- Klonovanie štruktúry - opravená validácia zadaných id priečinkov a pridaný výpis chybovej správy (#57941).
+- Galéria - pridaná podpora pre výber priečinka galérie, v aplikácii Galéria vo web stránke, pri použití doménových aliasov a editácia záznamu v galérii s doménovým aliasom (#57657-11).
+- Webové stránky - opravené zobrazenie zoznamu stránok pri zobrazení priečinkov ako tabuľky (#57657-12).
+- Grafy - opravené zobrazenie veľkého množstva legend v grafoch, automaticky sa využije posúvanie v legendách (#58093).
+
+### Dokumentácia
+
+- Doplnená dokumentácia pre nastavenie a používanie [dvoj stupňového overovania/autorizácie](redactor/admin/logon.md#dvojstupňové-overovanie) (#57889).
+
+### Pre programátora
+
+- Zrušená trieda `ImportXLSForm`, ktorá sa používala v importoch z `XLS` formátu v [spec/import_xls.jsp](../../src/main/webapp/admin/spec/import_xls.jsp). Technicky trieda nie je potrebná, stačí zmazať referenciu v JSP a upraviť formulár na štadardný HTML formulár (#57789).
+- Zlepšený aktualizačný skript `/admin/update/update-2023-18.jsp` pre Archív súborov - vie aktualizovať štandardné zmeny a doplniť potrebné zmeny do vašej verzie `FileArchivatorBean` a pomocných tried (#57789).
+- Trieda `org.apache.struts.action.ActionMessage` nahradená objektom `String`, trieda `ActionMessages` nahradená `List<String>` (#57789).
+- Zrušený framework `Struts`, tagy `<logic:present/iterate/...` nahradené za zodpovedajúce `<iwcm:present/iterate/...`, pozor `<bean:write` za `<iwcm:beanWrite`.
+- V Java kóde sú z dôvodu odstránenia `Struts` nasledovné zmeny:
+  - `ActionMessage` nahradený za `String`
+  - `ActionMessages` nahradený za `List<String>`
+  - `BasicLdapLogon.logon` vráti `List<String>` namiesto `ActionMessages`
+  - `org.apache.struts.util.ResponseUtils.filter` nahradený `sk.iway.iwcm.tags.support.ResponseUtils.filter`
+- Amcharts - pridaná podpora pre zadanie funkcie na transformáciu textu v štítkoch kategórií u grafu typu `PIE` (#58093).
+- Amcharts - pridaná podpora pre zadanie funkcie na transformáciu textu v legende grafu typu `LINE` (#58093).
+- Amcharts - pridaná možnosť skryť tooltip keď hodnota je `null` alebo `0` v grafe typu `LINE` (#58093).
+
+Na konverziu JSP aj Java súborov môžete použiť skript `/admin/update/update-2023-18.jsp`. Ak zadáte ako cestu hodnotu `java` vykoná sa nahradenie aj v `../java/*.java` súboroch. Problémom je spustenie projektu, ak obsahuje chyby. Môžete ale priečinok `src/main/java` premenovať na `src/main/java-update` aby išiel spustiť čistý WebJET. Následne môžete použiť aktualizačný skript. Ten prehľadáva a aktualizuje priečinok `../java/*.java` aj `../java-update/*.java`.
+
+V súbore `WEB-INF/web.xml` už nie je potrebná inicializácia `Apache Struts`, zmažte celú `<servlet>` sekciu obsahujúcu `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` obsahujúci `<servlet-name>action</servlet-name>`.
+
+- Rozdelené značky podľa domén (ak je nastavená konfiguračná premenná `enableStaticFilesExternalDir=true`), aby bolo možné jednoducho mať samostatné značky pre každú doménu. Pri spustení WebJET nakopíruje existujúce značky pre všetky definované domény. Preskočí značky, ktoré majú nastavene zobrazenie len v špecifickom priečinku, kde podľa prvého priečinku nastaví doménu pre značku. Aktualizuje značky pre Novinky, čiže pre aplikáciu `/components/news/news-velocity.jsp` kde vyhľadá výraz `perexGroup` a `perexGroupNot` pri ktorých sa pokúsi ID značiek aktualizovať podľa domény danej web stránky. Informácia sa zapíše do histórie a v Audite vznikne záznam s podrobnosťou ako sa `INCLUDE` nahradil, príklad:
+
+```txt
+UPDATE:
+id: 76897
+
+news-velocity.jsp - update perexGroups+perexGroupsNot for domainId, old code::
+INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="625", perexGroupNot="626")
+new code:
+INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="", perexGroupNot="")
+
+INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="3+645", perexGroupNot="794")
+new code:
+INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="1438+1439", perexGroupNot="1440")
+```
+
+Pre prvý `INCLUDE` boli odstránené značky s ID 625 a 626, pretože tie sa nezobrazujú v danom priečinku/doméne - mali nastavené zobrazenie len pre určitý priečinok. V druhom `INCLUDE` boli zmenené značky `3+645` na novo vzniknuté `1438+1439` a `794` za `1440`.
+
+| perex_group_id | perex_group_name      | domain_id | available_groups |
+|----------------|-----------------------|-----------|-----------------|
+| 3              | ďalšia perex skupina  | 1         | NULL            |
+| 645            | deletedPerexGroup     | 1         | NULL            |
+| 794            | kalendár-udalostí     | 1         | NULL            |
+| 1438           | ďalšia perex skupina  | 83        | NULL            |
+| 1439           | deletedPerexGroup     | 83        | NULL            |
+| 1440           | kalendár-udalostí     | 83        | NULL            |
+
+Pred spustením aktualizácie existovali v databáze len záznamy `3, 645 a 794`, ktorým sa nastavilo `domain_id=1`. Záznamy `1438, 1439 a 1440` vznikli pri aktualizácii pre `domain_id=83`.
+
+- Dátové tabuľky - pridaná podpora pre úpravu [lokálnych JSON dát](developer/datatables-editor/field-datatable.md#lokálne-json-dáta) (#57409).
+- Dátové tabuľky - pridané rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop` (#57409).
+- Datatabuľky - Pridaná možnosť nastavenia [Pätičky pre súčet hodnôt](developer/datatables/README.md#pätička-pre-súčet-hodnôt) (#57929).
+- Aplikácie - doplnená možnosť použiť lokálne JSON dáta pre nastavenie položiek aplikácie, napríklad položiek pre [pôsobivú prezentáciu](redactor/apps/app-impress_slideshow/README.md) (#57409).
+
+![](redactor/apps/app-impress_slideshow/editor-items.png)
+
+## 2025.18
+
+> Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.
+>
+> Vylepšený bol aj systém **Hromadného e-mailu** s novými možnosťami pre odosielateľa a pohodlnejším výberom príjemcov. **Rezervácie** získali nové možnosti ako **nadmerné rezervácie**, vytváranie rezervácií spätne do minulosti a zasielanie notifikácií na špecifické emaily pre každý rezervačný objekt.
+>
+> Optimalizovali sme počet súborov v **Prieskumníku**, čo vedie k **rýchlejšiemu načítaniu** a pridali nové informácie do **Monitorovania servera**.
+
+### Prelomové zmeny
+
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializácia Spring a JPA, viac informácií v sekcii pre programátora (#43144).
+- Prerobená backend časť aplikácie elektronický obchod, viac v sekcii pre programátora (#57685).
 
 ### Dátové tabuľky
 
@@ -28,6 +220,7 @@
 ![](redactor/files/file-archive/export_all.png)
 
 - **Import hlavných súborov** bol opravený a upravený, aby dokázal pracovať s rozšírenými možnosťami exportu. Viac sa dočítate v časti [Import hlavných súborov](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexovanie** dokumentov vo vyhľadávačoch typu `Google` upravené tak, aby sa neindexovali staré/historické verzie dokumentov a dokumenty mimo dátum platnosti (nastavená HTTP hlavička `X-Robots-Tag=noindex, nofollow`). Indexovanie týchto dokumentov sa dá povoliť v editore v manažérovi dokumentov (#57805).
 
 ### Aplikácie
 
@@ -53,6 +246,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Doplnené fotky obrazovky aplikácií v českej jazykovej mutácii pre väčšinu aplikácií (#57785).
+
 ### Hromadný e-mail
 
 - **Presunuté pole Web stránka** – teraz sa nachádza pred poľom **Predmet**, aby sa po výbere stránky predmet automaticky vyplnil podľa názvu zvolenej web stránky (#57541).
@@ -66,6 +261,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/dmail/campaings/users.png)
 
+- Odhlásenie - pri priamom zadaní emailu na odhlásenie (nie kliknutie na odkaz v emaile) je zaslaný na zadanú email adresu potvrdzujúci email. V ňom je potrebné kliknúť na odkaz pre odhlásenie. Pôvodná verzia nekontrolovala žiadnym spôsobom platnosť/vlastníctvo email adresy a bolo možné odhlásiť aj cudzí email (#57665).
+
 ### Kalendár noviniek
 
 - Kalendár noviniek oddelený ako samostatná aplikácia, pôvodne to bola možnosť v aplikácii Kalendár (#57409).
@@ -76,6 +273,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Monitorovanie servera
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
+- Doplnená informácia o verzii knižníc `Spring (Core, Data, Security)` do sekcie Monitorovanie servera-Aktuálne hodnoty (#57793).
 
 ### Rezervácie
 
@@ -87,6 +285,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Pridaná nová aplikácia [Rezervácia dní](redactor/apps/reservation/day-book-app/README.md), pre rezerváciu celodenných objektov na určitý interval pomocou integrovaného kalendára (#57389).
 
 ![](redactor/apps/reservation/day-book-app/app-table_B.png)
+
+### Galéria
+
+- Pridaná podpora pre **zmenu priečinka** obrázku, ktorá umožňuje [presunúť obrázok](redactor/apps/gallery/README.md#) pri úprave alebo duplikovaní do iného priečinka. Užitočné to je práve pri duplikovaní, keď môžete rovno nastaviť nový priečinok, kam chcete obrázok duplikovať. Ak priečinok zadáte manuálne a neexistuje, automaticky sa vytvorí a nastavia sa mu vlastnosti podľa najbližšieho existujúceho rodičovského priečinka (#57885).
 
 ### Elektronický obchod
 
@@ -113,6 +315,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
 - Prieskumník - rýchlejšie načítanie a nižšie zaťaženie servera znížením počtu súborov/požiadaviek na server (#56953).
+- `dt-tree-dir-simple` - pridaná podpora na [skrytie rodičovských priečinkov](developer/datatables-editor/field-json.md#možnosti-classname) v zobrazenej stromovej štruktúre atribútom `data-dt-field-hideRootParents` (#57885).
 
 ### Oprava chýb
 
@@ -156,8 +359,46 @@ Iné zmeny:
 - Web stránky - doplnený test vytvorenia novej stránky s publikovaním v budúcnosti (#57625).
 - Galéria - doplnený test vodoznaku s porovnaním obrázku, doplnený test kontroly práv (#57625).
 - Web stránky - doplnený test voliteľných polí pri vytváraní web stránky (#57625).
+- Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
 
-## 2025.0.x
+![meme](_media/meme/2025-18.jpg ":no-zoom")
+
+## 2025.0.40
+
+> Opravná verzia pôvodnej verzie 2025.0.
+
+!> **Upozornenie:** možná zmena správania polí typu `quill` pre odrážkový zoznam v dátových tabuľkách (#54273-72).
+
+- PDF - opravené nastavenie cesty do `fonts` priečinka s písmami. Je potrebné zadať plnú cestu na disku servera (#57657).
+- Aktualizovaná knižnica `Apache Commons BeanUtils` na verziu 1.11.0.
+- Inicializácia - doplnená kontrola existencie súboru `autoupdate.xml`, aby na verejných uzloch clustra nepísalo chybu pri štarte WebJETu (#54273-68).
+- Bezpečnosť - doplnená kontrola výrazu `onwebkit` pri URL parametroch pre zamedzenie vykonania XSS útoku (#54273-68).
+- Pole typu `QUILL` (malý HTML editor používaný v Banneroch, Galérii...) - opravené duplikovanie `P` elementu ak obsahuje CSS triedu alebo iný atribút (#54273-69).
+- Bezpečnosť - v anotácii `@AllowSafeHtmlAttributeConverter` povolené vkladanie atribútov `alt,title` pre `img` a `class` pre elementy `a,img,div,span,p,h1,h2,h3,h4,h5,h6,i,b,strong,em` (#54273-69).
+- Bezpečnosť - aktualizovaná knižnica `hibernate-validator` na verziu `6.2.5.Final` (#54273-69).
+- Bezpečnosť - opravená možná zraniteľnosť v AB testovaní.
+- Bezpečnosť - opravené zbytočné čítanie `dataAsc` v JSON objekte `DocBasic`.
+- Bezpečnosť - znížene množstvo textu pri logovaní chyby `Session has already been invalidated` pri zahltení/útoku na web server (#BVSSLA-34).
+- Administrácia - pridaná možnosť vkladať [doplnkový CSS/JavaScript](custom-apps/apps/customize-admin.md) súbor do administračnej časti, napr. pre vlastné CSS štýly pre [pole typu Quill](developer/datatables-editor/standard-fields.md#quill) (#54273-69).
+- Dátové tabuľky - pre Oracle a Microsoft SQL vypnutá možnosť usporiadania podľa stĺpcov obsahujúcich dlhý text (`ntext/clob`) - tieto databázové systémy nepodporujú usporiadanie v prípade použitia tohto dátového typu. Atribút musí v `Entite` mať anotáciu `@Lob`, ktorá pre uvedené databázy vypne možnosť usporiadania pre daný stĺpec. Pre MariaDB a PostgreSQL je usporiadanie stále podporované (#54273-70).
+- Dátové tabuľky - opravené vyhľadávanie ak v jednom poli zvolíte možnosť "Začína na" a v inom poli napr. "Končí na" (#54273-70).
+- Dátové tabuľky / vyhľadávanie v administrácii - povolené špeciálne znaky (napr. úvodzovky) pre vyhľadávanie v dátových tabuľkách (#54273-70).
+- Formuláre - schované zbytočné tlačidlo na vytvorenie nového záznamu v zozname vyplnených formulárov (#54273-70).
+- Formulár ľahko - opravené nastavenie povinných polí v položkách formuláru (#57657-12).
+- Webové stránky - doplnená možnosť vkladať HTML kód do názvov priečinkov ako napríklad `WebJET<sup>TM</sup>` - v zozname webových stránok sa z dôvodu bezpečnosti HTML kód nevykoná, ale v aplikáciach ako Menu a navigačná lišta sa HTML kód zobrazí korektne a vykoná sa. Dôležitá podmienka je, aby kód obsahoval uzatváraciu značku `</...>`. HTML kód je odstránený aj z automaticky generovanej URL adresy. Povolený je len bezpečný HTML kód povolený v triede `AllowSafeHtmlAttributeConverter` (#54273-70).
+- Webové stránky - opravené zobrazenie karty média pri starých používateľoch, ktorý nemali právo na správu médií (#57657-10).
+- Dátové tabuľky - pre polia typu malý HTML editor (`quill`) **upravené správanie pre odrážkový zoznam** (HTML značka `ul`). Pôvodný editor nastavoval pre tento prípad na `li` elemente atribút `data-list="bullet"` a nedokázal použiť priamo `ul` element namiesto `ol` elementu. Nové správanie používa korektnú HTML značku `ul` a odstraňuje nepotrebný atribút `data-list="bullet"` (#54273-72).
+- Galéria - opravené zobrazenie perex skupín ak je ich viac ako 30 v galérii a editore obrázkov - zobrazené ako výberové pole. Opravené načítanie a uloženie skupín v editore obrázkov (#57657-9).
+- Prieskumník - opravené nahrávanie celého priečinku s pod priečinkami do `/images/gallery` cez Prieskumník - korektné vytvorenie `o_` a `s_` obrázkov (#57657-11).
+- Galéria - opravené zobrazenie ikony zdieľania v galérii typu `PrettyPhoto` (#57657-11).
+- Galéria - opravené zobrazenie zoznamu priečinkov pri použití doménových aliasov (zobrazenie iba priečinkov z aktuálne zvolenej domény) (#57657-11).
+- Galéria - opravené získanie vodoznaku pre galérie používajúce doménový alias (#57657-11).
+- Nahrávanie súborov - upravené spracovanie súborov nahrávaných cez `/XhrFileUpload`. Upravená verzia umožní reštartovať server a následne po obnovení `session` súbor korektne spracovať. Doplnené zobrazenie varovania ak súbor je nepovoleného typu (#PR75).
+- Galéria - zrušené nastavenie URL adresy pri zobrazení fotografií v galérii typu `PrettyPhoto` pre jednoduchšie použitie tlačidla späť v prehliadači (#57657-12).
+- Novinky - opravené nastavenie zobrazenia hlavných stránok z priečinkov (#57657-12).
+- PDF - pri generovaní PDF opravená chyba odhlásenia používateľa, ak PDF obsahuje obrázky vložené cez `/thumb` prefix (#57657-13).
+
+## 2025.0.23
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
@@ -175,6 +416,7 @@ Iné zmeny:
 - Web stránky - schvaľovanie - opravené načítanie zoznamu v karte Neschválené pri použití databázového servera `Oracle` (#54273-62).
 - Web stránky - opravená aktualizácia nodov clustra pri zmene značiek (#57717).
 - Web stránky - opravené zobrazenie zoznamu stránok ak má používateľ právo iba na vybrané webové stránky (#57725-4).
+- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenná `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
 - Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikácie - pridaná podpora vkladania nového riadku cez klávesovú skratku `SHIFT+ENTER` do jednoduchého textového editora používaného napr. v Otázky a odpovede (#57725-1).
 - Číselníky - presunutý výber číselníka priamo do nástrojovej lišty dátovej tabuľky (#49144).
@@ -190,6 +432,15 @@ Iné zmeny:
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 - Štatistika - opravené vytvorenie tabuľky pre štatistiku kliknutí v teplotnej mape.
+- Prekladač - implementácia inteligentného oneskorenia pre prekladač `DeepL` ako ochrana proti chybe `HTTP 429: too many requests`, ktorá spôsobovala výpadok prekladov (#57833).
+- Klonovanie štruktúry - opravené nechcené prekladanie implementácie aplikácií `!INCLUDE(...)!`, pri automatickom preklade tela stránky (#57833).
+- Klonovanie štruktúry - pridaný preklad perex anotácie automatickom preklade stránok (#57833).
+- Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
+- Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
+- Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
+- Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
+- Galéria - doplnené chýbajúce značky (#57837).
+- Značky - opravené nastavenie priečinkov existujúcej značky v sekcii Zobraziť pre (#57837).
 
 ### Bezpečnosť
 

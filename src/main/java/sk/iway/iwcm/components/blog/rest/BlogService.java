@@ -30,7 +30,10 @@ public class BlogService {
 		Page<DocDetails> page = null;
 		List<Integer> allGroupIds = getBloggerDataList(options.getCurrentUser(), Tools.getIntValue(options.getRequest().getParameter("groupId"), -1));
 		if(allGroupIds == null || allGroupIds.isEmpty()) page = new DatatablePageImpl<>(new ArrayList<>());
-		else page = options.getDocDetailsRepository().findAllByGroupIdIn(allGroupIds.toArray(new Integer[0]), options.getPageable());
+		else  {
+			int[] groupIdsArray = allGroupIds.stream().mapToInt(Integer::intValue).toArray();
+			page = options.getDocDetailsRepository().findAllByGroupIdIn(groupIdsArray, options.getPageable());
+		}
 
         return WebpagesService.preparePage(page, options);
     }

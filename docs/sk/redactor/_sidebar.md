@@ -31,6 +31,16 @@
   - [Média](/redactor/webpages/media.md)
   - [Značky](/redactor/webpages/perexgroups.md)
   - [Export do HTML](/redactor/webpages/export-to-html/README.md)
+  - [Zrkadlenie](/redactor/webpages/mirroring/README.md)
+    - [Priečinky](/redactor/webpages/mirroring/groups.md)
+    - [Stránky](/redactor/webpages/mirroring/docs.md)
+    - [Konfigurácia](/redactor/webpages/mirroring/settings.md)
+- AI asistent
+  - [AI asistent](/redactor/ai/README.md)
+  - [Používanie AI asistentov](/redactor/ai/datatables/README.md)
+  - [Nastavenie](/redactor/ai/settings/README.md)
+  - [Písanie inštrukcií](/redactor/ai/instructions/README.md)
+  - [Štatistika](/redactor/ai/stat/README.md)
 - Aplikácie
   - AB testovanie
     - [Úvod](/redactor/apps/abtesting/README.md)
@@ -121,7 +131,6 @@
     - [Aplikácia Rezervácie](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)
     - [Aplikácia Rezervácia dní](/redactor/apps/reservation/day-book-app/README.md)
-  - [SEO](/redactor/apps/seo/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
@@ -130,6 +139,7 @@
   - [Video](/redactor/apps/video/README.md)
   - [Vloženie dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vloženie HTML kódu](/redactor/apps/app-htmlembed/README.md)
+  - [Vyhľadávače (SEO)](/redactor/apps/seo/README.md)
   - [Vyhľadávanie](/redactor/apps/search/README.md)
   - [Zobrazenie súborov](/redactor/apps/site-browser/README.md)
   - [Zrkadlenie štruktúry](/redactor/apps/docmirroring/README.md)

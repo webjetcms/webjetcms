@@ -314,14 +314,14 @@ public class MenuService {
             { "/components/abtesting/admin_abtesting.jsp", "/apps/abtesting/admin/"},
 
             //ESHOP
-            { "/components/basket/admin_payment_methods.jsp", "/apps/eshop/admin/payment-methods/"},
+            { "/components/basket/admin_payment_methods.jsp", "/apps/basket/admin/payment-methods/"},
             { "/components/basket/admin_invoices_list.jsp", "/apps/basket/admin/"},
-            { "/components/basket/admin_pricelist.jsp", "/apps/basket/admin/product-list"},
+            { "/components/basket/admin_pricelist.jsp", "/apps/basket/admin/product-list/"},
 
             { "/admin/elFinder/", "/admin/v9/files/index/"},
-            { "/admin/elFinder/dialog.jsp", "/admin/v9/files/dialog"},
-            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp", "/admin/v9/files/wj_link"},
-            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp", "/admin/v9/files/wj_image"},
+            { "/admin/elFinder/dialog.jsp", "/admin/v9/files/dialog/"},
+            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp", "/admin/v9/files/wj_link/"},
+            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp", "/admin/v9/files/wj_image/"},
 
             {"/admin/adminlog/logging/", "/admin/v9/apps/audit-log-levels/"},
 

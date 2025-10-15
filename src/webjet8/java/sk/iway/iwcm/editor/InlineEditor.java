@@ -14,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
+import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.users.UsersDB;
 
 
@@ -232,7 +233,7 @@ public class InlineEditor
 
 		return (inlineEditingEnabled
 					&& request.getHeader("dmail")==null
-					&& request.getParameter("NO_WJTOOLBAR")==null
+					&& request.getParameter(WriteTag.NO_WJTOOLBAR)==null
 					&& request.getParameter("isDmail")==null
 					&& !isHeatmapEnabled
 					&& request.getAttribute("disableInlineEditing")==null

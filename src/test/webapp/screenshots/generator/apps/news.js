@@ -8,8 +8,8 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/news/admin/");
     DT.waitForLoader();
 
-    I.clickCss("#groupId_extfilter > div > div > div > button.dropdown-toggle");
-    I.waitForElement("body > div.bs-container.dropdown.bootstrap-select > div.dropdown-menu");
+    I.clickCss("#groupSelect_wrapper > div > button");
+    I.waitForElement(".dropdown-menu.show .dropdown-menu.inner.show");
     I.click( locate("a.dropdown-item > span").withText("/English/News") );
     DT.waitForLoader();
 

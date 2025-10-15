@@ -79,7 +79,7 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     I.waitForVisible("#reservationObjectId");
     I.clickCss("#reservationObjectId");
     I.executeScript(function() {
-        $("#reservationObjectId").val("3962");
+        $("#reservationObjectId").val("4146");
     });
 
     I.click( locate("div.vc-header__content").find("button.vc-month") );

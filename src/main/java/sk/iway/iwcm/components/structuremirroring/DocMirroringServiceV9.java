@@ -63,21 +63,19 @@ public class DocMirroringServiceV9 {
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
-            if (mappedGroupsList.size()>syncedDocs.size()) {
-               //there is new mapping group created in allready synced groups, we must create missing one
-               for (GroupDetails mappedGroup : mappedGroupsList) {
-                  boolean containGroup = false;
-                  for (DocDetails syncedDoc : syncedDocs) {
-                     if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {
-                        //ok, this group is allready synced
-                        containGroup = true;
-                        break;
-                     }
+            //find groups which are not synced yet
+            for (GroupDetails mappedGroup : mappedGroupsList) {
+               boolean containGroup = false;
+               for (DocDetails syncedDoc : syncedDocs) {
+                  if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {
+                     //ok, this group is allready synced
+                     containGroup = true;
+                     break;
                   }
-                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
                }
-               mappedGroupsList = mappedGroupsListNotExisting;
+               if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
             }
+            mappedGroupsList = mappedGroupsListNotExisting;
 
             if (syncedDocs.isEmpty() || mappedGroupsListNotExisting.isEmpty()==false) {
                //este neexistuje mirror doc, musime vytvorit novy (kopiu)
@@ -262,9 +260,13 @@ public class DocMirroringServiceV9 {
 
       doc.setNavbar(translator.translate(source.getNavbar()));
 
+      // translate perex
+      doc.setHtmlData(translator.translate(source.getHtmlData()));
+
       //regenerate URL based on title
       doc.setVirtualPath("");
 
+      //translate doc body
       doc.setData(translator.translate(source.getData()));
    }
 

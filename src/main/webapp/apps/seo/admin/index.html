@@ -20,7 +20,7 @@
     });
 
     window.getBotDetials = function (botId) {
-        window.location.href="/apps/seo/admin/bots-details?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(null);
+        window.location.href="/apps/seo/admin/bots-details/?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(null);
     }
 
     window.domReady.add(function () {

@@ -1,0 +1,577 @@
+.ti-sparkles {
+    transform: rotate(186deg);
+}
+
+.btn-ai {
+    .ti-sparkles {
+        color: var(--wj-ai-color);
+        display: inline-block;
+    }
+
+    .ti-loader {
+        display: none;
+        color: var(--wj-ai-color);
+    }
+
+    &:hover, &:focus, &:active {
+        background-color: var(--wj-ai-color-hover);
+        .ti-sparkles {
+            transform: rotate(200deg);
+            transition: all 0.2s ease-in-out;
+        }
+    }
+}
+
+.cke_dialog_ui_input_text {
+    .btn-ai {
+        padding-top: 0px;
+        padding-bottom: 1px;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+}
+
+.modal {
+    .DTE {
+        .DTE_Field {
+
+
+            .btn-ai-wysiwyg {
+                display: none;
+            }
+
+            .quill-wrapper {
+                .ql-formats {
+                    .btn-ai {
+                        padding-top: 3px;
+                        padding-bottom: 3px;
+                    }
+                    .ti-loader {
+                        font-size: 18px !important;
+                    }
+                }
+            }
+
+            &.ai-loading {
+                .btn-ai {
+                    background-color: var(--wj-ai-color-hover);
+
+                    .ti-sparkles {
+                        display: none;
+                    }
+
+                    .ti-loader {
+                        display: inline-block;
+                        animation: ti-loader-spin 2s linear infinite;
+                    }
+                }
+
+                .form-control {
+                    animation: ai-pulsate-color 1.5s infinite;
+                }
+
+                .form-control, div.wysiwyg {
+                    background-color: var(--wj-ai-color-hover);
+                    cursor: not-allowed;
+
+                    .wysiwyg_textarea, .wysiwyg-pageBuilder {
+                        opacity: 0.2;
+                    }
+                }
+                .exit-inline-editor {
+                    background-color: var(--wj-ai-color-hover);
+                    opacity: 0.2;
+                }
+
+                .input-group {
+                    .btn.btn-outline-secondary {
+                        cursor: not-allowed;
+                        background-color: var(--wj-ai-color-hover);
+                    }
+                }
+            }
+        }
+    }
+}
+
+@keyframes ti-loader-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes ai-pulsate-color {
+    0% {
+        color: var(--wj-ai-color);
+    }
+    50% {
+        color: var(--wj-ai-color-dark);
+    }
+    100% {
+        color: var(--wj-ai-color);
+    }
+}
+
+@keyframes ai-toast-zoom {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.ai-field {
+    width: auto !important;
+}
+
+.ai-toast-zoom {
+    animation: ai-toast-zoom 0.5s ease;
+}
+
+#toast-container-ai {
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000030;
+    pointer-events: auto;
+    display: flex;
+    justify-content: center;   // center horizontally
+    align-items: flex-end;     // align to bottom
+
+    &.ai-status-success {
+        //allow to scroll webpage when action was successful
+        pointer-events: none;
+    }
+
+    .btn {
+        white-space: nowrap;
+        i.ti {
+            vertical-align: text-bottom;
+        }
+    }
+
+    .ai-status-buttons-container {
+        .btn {
+            i.ti {
+                vertical-align: middle;
+            }
+        }
+    }
+
+    .btn-primary {
+        background-color: var(--wj-ai-color);
+        border-color: var(--wj-ai-color);
+        background: linear-gradient(92.29deg, #8A3EFF 0%, #6E00DC 100%),
+                    radial-gradient(65.28% 65.28% at 26.39% 20.83%, rgba(255, 255, 255, 0.236) 0%, rgba(255, 255, 255, 0) 69.79%, rgba(255, 255, 255, 0) 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */,
+                    radial-gradient(92.09% 85.42% at 86.3% 87.5%, rgba(0, 0, 0, 0.23) 0%, rgba(0, 0, 0, 0) 86.18%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+        padding-left: 11px;
+        padding-right: 12px;
+
+        .ti {
+            display: inline-block;
+            margin-right: 3px;
+        }
+
+        &:hover {
+            background: none;
+            background-color: var(--wj-ai-color-dark);
+            border-color: var(--wj-ai-color-dark);
+            transition: none;
+            .ti-sparkles {
+                transform: rotate(200deg);
+                transition: all 0.2s ease-in-out;
+            }
+        }
+    }
+
+    .form-control {
+        font-size: 14px;
+        padding: 6px 2px 2px 11px;
+    }
+
+    .btn-outline-secondary {
+        background-color: white;
+        &:hover {
+            background-color: var(--wj-dark-20);
+            border-color: var(--wj-dark-50);
+            color: var(--bs-body-color);
+        }
+    }
+
+    .toast-close-button {
+        background-color: var(--wj-dark-20);
+        border-radius: 20px;
+        width: 30px;
+        height: 30px;
+        top: 9px;
+        right: 16px;
+        opacity: 1;
+        &::before {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 14px;
+        }
+        &:hover {
+            background-color: var(--wj-dark-60);
+            color: var(--bs-body-color);
+        }
+    }
+
+    .toast.toast-info {
+        opacity: 1;
+        transition: none;
+        width: 472px;
+        max-width: 472px;
+        border: 1px solid var(--wj-ai-color);
+        border-radius: 10px;
+        cursor: auto;
+        margin-bottom: 20px;
+        &::before {
+            content: "\f6d7"; //sparkles
+            color: var(--wj-ai-color);
+            transform: rotate(186deg);
+            left: 17px;
+        }
+
+        div.toast-title {
+            background-color: var(--wj-nice-gray);
+            color: var(--wj-ai-color);
+            padding-top: 14px;
+            padding-left: 48px;
+        }
+
+        div.toast-message {
+            background-color: white;
+            max-height: 82vh; //because of bottom padding and small window in elfinder image dialog in editor
+            overflow: auto;
+
+            a {
+                color: var(--wj-primary);
+                &:hover {
+                    color: var(--wj-primary-hover);
+                }
+            }
+            a.jstree-anchor {
+                color: #1f2022;
+            }
+            .btn-vue-jstree-item-edit {
+                i.ti {
+                    vertical-align: middle;
+                }
+            }
+
+            .btn-ai-action {
+                width: 100%;
+                background-color: white;
+                text-align: left;
+                border-width: 0px;
+                padding: 4px 10px 4px 10px;
+
+                &:hover {
+                    color: white;
+                    background-color: var(--wj-ai-color);
+                    .provider {
+                        color: white;
+                    }
+                }
+
+                i.ti {
+                    display: inline-block;
+                    vertical-align: middle;
+                    margin-right: 3px;
+                }
+                i.has-user-prompt {
+                    color: var(--wj-nice-gray-200);
+                    margin-left: 3px;
+                    vertical-align: text-top;
+                }
+            }
+
+            .group-title {
+                color: var(--wj-dark-60);
+                //same as btn
+                margin-top: 8px;
+                margin-bottom: 2px;
+                padding-top: 6px;
+                padding-bottom: 4px;
+                padding-left: 12px;
+            }
+
+            #toast-container-ai-content > .group-title:first-child {
+                margin-top: 0;
+                padding-top: 0;
+            }
+
+            .provider {
+                color: var(--wj-nice-gray-200);
+                float: right;
+            }
+
+            .pulsate-text {
+                animation: ai-pulsate-color 1.5s infinite;
+            }
+
+            .current-status {
+                .ti {
+                    vertical-align: bottom;
+                    font-size: 24px;
+                    margin-right: 3px;
+                    margin-left: -2px;
+                }
+
+            }
+
+            #toast-ai-name-selection {
+
+                button {
+                    margin: 5px;
+                }
+            }
+
+            .chat-error-container {
+                .current-status {
+                    margin-bottom: 1rem !important;
+                }
+            }
+
+            .explanatory-text-container {
+                max-height: 200px;
+                overflow: scroll;
+                margin-top: 16px;
+                margin-bottom: 16px;
+                border: 1px solid var(--wj-nice-gray-100);
+                border-radius: var(--wj-border-radius);
+                padding-top: 0px;
+                padding-left: 8px;
+                padding-right: 8px;
+                padding-bottom: 0px;
+
+                //show scrollbar
+                &::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                &::-webkit-scrollbar-thumb {
+                    background-color: var(--wj-nice-gray-200);
+                    border-radius: 4px;
+                }
+
+                &::-webkit-scrollbar-thumb:hover {
+                    background-color: var(--wj-nice-gray-300);
+                }
+
+                h1 {
+                    font-size: 17px;
+                }
+                h2 {
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                h3 {
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                h4, h5, h6 {
+                    font-size: 13px;
+                }
+                h1, h2, h3, h4, h5, h6 {
+                    margin-top: 4px;
+                    margin-bottom: 4px;
+                }
+            }
+        }
+
+        div.ai-image-preview-div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 0;
+
+            .image-preview {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                position: relative;
+
+                img {
+                    width: 138px;
+                    margin: 0;
+                    border-radius: 8px;
+                    object-fit: cover;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.00);
+                    transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+                    border: 2px solid transparent;
+
+                    &:hover {
+                        box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                        //transform: scale(1.05);
+                        border-color: var(--wj-ai-color);
+                        background-color: transparent;
+                        cursor: pointer;
+                    }
+                }
+
+                img.selected {
+                    box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                    transform: scale(1.05);
+                    border: 2px solid var(--wj-ai-color);
+                    background-color: transparent;
+                }
+
+                a.zoom-in {
+                    position: absolute;
+                    bottom: 8px;
+                    right: 8px;
+                    background-color: var(--wj-ai-color);
+                    border-radius: 6px;
+                    padding: 6px;
+                    padding-bottom: 4px;
+                    width: 32px;
+                    opacity: 0.5;
+                    color: white;
+                    cursor: zoom-in;
+
+                    &:hover {
+                        opacity: 1;
+                    }
+                }
+            }
+        }
+
+        .button-div {
+            margin-top: 7px;
+        }
+
+    }
+
+    .toast.toast-info {
+        .bonus-content {
+            label { color: black; }
+            div.btn-group {
+                .btn-check:checked + .btn {
+                    color: white;
+                }
+            }
+        }
+    }
+
+    &.has-back-button {
+        //padding-top: 11px;
+        //padding-bottom: 7px;
+        //padding-left: 18px;
+
+        .toast.toast-info {
+
+            &::before {
+                content: ""
+            }
+            .toast-title {
+                padding-left: 16px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+
+            .header-back-button {
+                color: var(--bs-body-color);
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                .btn {
+                    padding-top: 4px;
+                    padding-right: 11px;
+                    padding-bottom: 3px;
+                    padding-left: 10px;
+                    margin-right: 11px;
+                    font-size: 14px;
+                    flex: 0 0 auto;
+
+                    .ti {
+                        font-size: 15px;
+                        vertical-align: text-bottom;
+                        margin-right: 5px;
+                    }
+                }
+                .ai-title {
+                    flex: 1 1 auto;
+                    .ti {
+                        vertical-align: middle;
+                        margin-right: 5px;
+                    }
+                    span {
+                        position: relative;
+                        top: 1px;
+                    }
+                    span.provider {
+                        font-weight: normal;
+                        color: var(--wj-nice-gray-200);
+                    }
+                }
+            }
+        }
+    }
+    &.ai-status-working {
+        .current-status {
+            color: var(--wj-yellow-60);
+        }
+        button.btn-primary {
+            i {
+                animation: ti-loader-spin 2s linear infinite;
+                &.ti-sparkles {
+                    vertical-align: text-top;
+                    &::before {
+                        content: "\eca3";
+                    }
+                }
+            }
+        }
+        input, textarea, select, .header-back-button .btn, div.btn-group {
+            //disable form elements
+            background-color: var(--wj-nice-gray);
+            color: var(--wj-dark-60);
+            pointer-events: none;
+        }
+        div.btn-group {
+            label {
+                border-color: var(--wj-nice-gray-300);
+            }
+            .btn-check:checked + .btn {
+                background-color: var(--wj-nice-gray-300) !important;
+            }
+        }
+        .user-prompt-container .btn-primary {
+            //status will be same as with normal fields - ai is working on it
+            display: none;
+        }
+    }
+    &.ai-status-success {
+        .current-status {
+            color: var(--wj-green-60);
+        }
+    }
+    &.ai-status-error {
+        .current-status {
+            color: var(--wj-red-60);
+        }
+    }
+
+    .btn-ai-continue-chat {
+        display: none;
+    }
+    &.ai-action-live-chat {
+        .btn-ai-continue-chat {
+            display: inline-block;
+        }
+    }
+    &.ai-action-generate-image, &.ai-action-edit-image {
+        //hide continue and OK buttons in image-dialog, because we have special insert buttons
+        .ai-status-buttons-container {
+            display: none !important;
+        }
+    }
+}
+
+.tooltip-ai {
+    z-index: 1000000;
+}

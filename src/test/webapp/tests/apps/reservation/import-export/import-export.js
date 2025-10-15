@@ -34,8 +34,8 @@ Scenario('Export and import reservation', async ({ I, DT, DTE }) => {
     const downloadedFile = `export-${randomNumber}.xlsx`;
     I.handleDownloads(`downloads/${downloadedFile}`);
     I.clickCss('#submit-export');
-    I.amInPath('../../../build/test/downloads');
-    I.waitForFile(downloadedFile, 30);
+    //I.amInPath('../../../build/test/downloads');
+    I.waitForFile('../../../build/test/downloads/'+downloadedFile, 30);
 
     await SL.deleteReservation(I, DT, DTE,'editorFields.selectedReservation', reservationObjectName);
 

@@ -1,10 +1,14 @@
 package sk.iway.iwcm.system.spring.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.WebApplicationContext;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -32,10 +36,13 @@ import java.util.StringTokenizer;
  * @author mpijak
  */
 @Service("WebjetSecurityService") //NOSONAR
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class WebjetSecurityService {
+
     private final HttpSession session;
     private final HttpServletRequest request;
 
+    @Autowired
     public WebjetSecurityService(HttpSession session, HttpServletRequest request) {
         this.session = session;
         this.request = request;

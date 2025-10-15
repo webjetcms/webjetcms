@@ -22,6 +22,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -103,6 +104,8 @@ public class AtrDB
          	}
          }
 
+         sql.append(CloudToolsForCore.getDomainIdSqlWhere(true, "dad")).append(" ");
+
          sql.append("ORDER BY dad.order_priority ");
          ps = db_conn.prepareStatement(sql.toString());
          ps.setInt(1, docId);
@@ -179,7 +182,7 @@ public class AtrDB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM doc_atr_def WHERE atr_group=? ORDER BY order_priority");
+			ps = db_conn.prepareStatement("SELECT * FROM doc_atr_def WHERE atr_group=? "+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY order_priority");
    		ps.setString(1, groupName);
    		rs = ps.executeQuery();
          AtrBean atr;
@@ -265,7 +268,7 @@ public class AtrDB
       try
       {
          db_conn = DBPool.getConnection(request);
-         String sql = "SELECT * FROM doc_atr_def WHERE atr_id=?";
+         String sql = "SELECT * FROM doc_atr_def WHERE atr_id=?"+CloudToolsForCore.getDomainIdSqlWhere(true);
          ps = db_conn.prepareStatement(sql);
          ps.setInt(1, atrId);
          rs = ps.executeQuery();
@@ -328,7 +331,7 @@ public class AtrDB
       try
       {
          db_conn = DBPool.getConnection(request);
-         String sql = "SELECT * FROM doc_atr_def WHERE atr_name=?";
+         String sql = "SELECT * FROM doc_atr_def WHERE atr_name=?"+CloudToolsForCore.getDomainIdSqlWhere(true);
          if(Tools.isNotEmpty(atrGroup))
          {
          	sql += " AND atr_group=?";
@@ -399,7 +402,7 @@ public class AtrDB
       try
       {
          db_conn = DBPool.getConnection(request);
-         String sql = "SELECT distinct atr_group FROM doc_atr_def ORDER BY atr_group";
+         String sql = "SELECT distinct atr_group FROM doc_atr_def "+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY atr_group";
          ps = db_conn.prepareStatement(sql);
          rs = ps.executeQuery();
          while (rs.next())
@@ -528,6 +531,8 @@ public class AtrDB
             sql.append(sqlWhere).append(" ");
             request.removeAttribute("getAtributesTableSqlWhere");
          }
+
+         sql.append(CloudToolsForCore.getDomainIdSqlWhere(true, "dad")).append(" ");
 
          sql.append("ORDER BY d.doc_id, d.sort_priority, d.title, dad.order_priority ");
 
@@ -712,7 +717,7 @@ public class AtrDB
    	List<AtrBean> ret = new ArrayList<>();
    	try {
    		Connection db_conn = DBPool.getConnection();
-   		PreparedStatement ps = db_conn.prepareStatement("SELECT * FROM doc_atr_def ORDER BY atr_group ASC, atr_name ASC");
+   		PreparedStatement ps = db_conn.prepareStatement("SELECT * FROM doc_atr_def "+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY atr_group ASC, atr_name ASC");
    		ResultSet rs = ps.executeQuery();
          AtrBean atr;
          while (rs.next())
@@ -786,6 +791,8 @@ public class AtrDB
    		params.add(filterSkupina);
    	}
 
+      sql.append(CloudToolsForCore.getDomainIdSqlWhere(true)).append(" ");
+
    	sql.append(" ORDER BY atr_group ASC, atr_name ASC");
 
       List<AtrBean> atrs = new ComplexQuery().setSql(sql.toString()).setParams(params.toArray()).list(new Mapper<AtrBean>()
@@ -842,14 +849,14 @@ public class AtrDB
 
 
    		for(int i=0; i<atrStlpceString.length;i++) {
-   			ps=db_conn.prepareStatement("UPDATE doc_atr_def SET "+atrStlpceString[i]+" = ? WHERE atr_id = ?");
+   			ps=db_conn.prepareStatement("UPDATE doc_atr_def SET "+atrStlpceString[i]+" = ? WHERE atr_id = ?"+CloudToolsForCore.getDomainIdSqlWhere(true));
    			ps.setString(1,atrHodnotyString[i]);
    			ps.setInt(2, attribute.getAtrId());
    			ps.executeUpdate();
 
    		}
    		for(int i=0; i<atrStlpceInt.length;i++) {
-   			ps=db_conn.prepareStatement("UPDATE doc_atr_def SET "+atrStlpceInt[i]+" = ? WHERE atr_id = ?");
+   			ps=db_conn.prepareStatement("UPDATE doc_atr_def SET "+atrStlpceInt[i]+" = ? WHERE atr_id = ?"+CloudToolsForCore.getDomainIdSqlWhere(true));
    			ps.setInt(1,atrHodnotyInt[i]);
    			ps.setInt(2, attribute.getAtrId());
    			ps.executeUpdate();
@@ -889,7 +896,7 @@ public class AtrDB
 		PreparedStatement ps = null;
    	try {
    		db_conn = DBPool.getConnection(request);
-   		ps = db_conn.prepareStatement("DELETE FROM doc_atr_def WHERE atr_id = ? ");
+   		ps = db_conn.prepareStatement("DELETE FROM doc_atr_def WHERE atr_id = ? "+CloudToolsForCore.getDomainIdSqlWhere(true));
    		ps.setInt(1, id);
    		ps.executeUpdate();
          ps.close();
@@ -927,7 +934,7 @@ public class AtrDB
    		db_conn = DBPool.getConnection(request);
    		ps = db_conn.prepareStatement(
    					"INSERT INTO doc_atr_def (atr_name, order_priority, atr_description,atr_default_value," +
-   					"atr_type, atr_group, true_value, false_value) VALUES(?,?,?,?,?,?,?,?)");
+   					"atr_type, atr_group, true_value, false_value, domain_id) VALUES(?,?,?,?,?,?,?,?,?)");
 
    		if(attribute.getAtrName()==null) ps.setNull(1, Types.VARCHAR);
    		else ps.setString(1, attribute.getAtrName());
@@ -948,6 +955,8 @@ public class AtrDB
 
    		if(attribute.getFalseValue()==null) ps.setNull(8, Types.VARCHAR);
    		else ps.setString(8, attribute.getFalseValue());
+
+         ps.setInt(9, CloudToolsForCore.getDomainId());
 
    		ps.executeUpdate();
          ps.close();
@@ -1004,7 +1013,7 @@ public class AtrDB
    	try
    	{
          @SuppressWarnings("unchecked")
-   		List<Number> tempList = new SimpleQuery().forList("SELECT DISTINCT atr_type FROM doc_atr_def");
+   		List<Number> tempList = new SimpleQuery().forList("SELECT DISTINCT atr_type FROM doc_atr_def"+CloudToolsForCore.getDomainIdSqlWhere(true));
 
    		for (Number type : tempList)
 			{

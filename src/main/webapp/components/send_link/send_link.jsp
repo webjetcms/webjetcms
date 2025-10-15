@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%><%@page import="org.apache.commons.codec.binary.Base64"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"%>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
 <%
 PageParams pageParams = new PageParams(request);
 String sendType = pageParams.getValue("sendType", "link");
@@ -32,6 +29,6 @@ if (Tools.isNotEmpty(qs))
 <!-- // dialogove okno s funkciami -->
 <jsp:include page="/components/dialog.jsp" /> 
 
-<logic:equal name="showLink" value="true">
+<iwcm:equal name="showLink" value="true">
 	<a class="sendLink" href="javascript:void(0);" onclick="openWJDialog('sendLink', '/components/send_link/send_link_form.jsp?docid=<%=Tools.getDocId(request)%>&sendType=<%=sendType%>&qs=<%=urlParams %>');" title="<iwcm:text key="components.send_link.title" />"><iwcm:text key="components.send_link.title" /></a>
-</logic:equal>
+</iwcm:equal>

@@ -3,9 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@page import="sk.iway.iwcm.Tools"%>
 <%@page import="sk.iway.iwcm.doc.*"%>
@@ -79,29 +76,29 @@ function showChanges(checkbox)
 				request.setAttribute("doc", doc);
 				%>
 				 <iwcm:text key="history.changedBy"/>:
-			    <a href="mailto:<bean:write name="doc" property="authorEmail"/>"><bean:write name="doc" property="authorName"/></a>
-			    <bean:write name="doc" property="dateCreatedString"/> <bean:write name="doc" property="timeCreatedString"/>&nbsp;<br />
+			    <a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a>
+			    <iwcm:beanWrite name="doc" property="dateCreatedString"/> <iwcm:beanWrite name="doc" property="timeCreatedString"/>&nbsp;<br />
 				<%
 				if (Tools.isNotEmpty(doc.getPublishStartString()))
 				{
 					if (doc.isPublicable())
 					{
-						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <bean:write name="doc" property="publishStartString"/> <bean:write name="doc" property="publishStartTimeString"/></strong><%
+						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <iwcm:beanWrite name="doc" property="publishStartString"/> <iwcm:beanWrite name="doc" property="publishStartTimeString"/></strong><%
 					}
 					else if (historyId > 0)
 					{
-						%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <bean:write name="doc" property="publishStartString"/> <bean:write name="doc" property="publishStartTimeString"/><%
+						%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <iwcm:beanWrite name="doc" property="publishStartString"/> <iwcm:beanWrite name="doc" property="publishStartTimeString"/><%
 					}
 				}
 				if (Tools.isNotEmpty(doc.getPublishEndString()))
 				{
 					if (doc.isDisableAfterEnd())
 					{
-						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <bean:write name="doc" property="publishEndString"/> <bean:write name="doc" property="publishEndTimeString"/></strong><%
+						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <iwcm:beanWrite name="doc" property="publishEndString"/> <iwcm:beanWrite name="doc" property="publishEndTimeString"/></strong><%
 					}
 					else if (historyId > 0)
 					{
-						%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <bean:write name="doc" property="publishEndString"/> <bean:write name="doc" property="publishEndTimeString"/><%
+						%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <iwcm:beanWrite name="doc" property="publishEndString"/> <iwcm:beanWrite name="doc" property="publishEndTimeString"/><%
 					}
 				}
 			}

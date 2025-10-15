@@ -285,7 +285,7 @@ function insertLink(I, link) {
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
     I.clickCss('.cke_dialog_ui_button_ok');
     I.executeScript(() => {
-    const element = document.querySelector('#cke_710_uiElement #wjLinkIframe');
+    const element = document.querySelector('#cke_730_uiElement #wjLinkIframe');
         if (element) {
           element.remove();
         }
@@ -325,7 +325,7 @@ async function validateThumb(I, elementText) {
     I.clickCss(".cke_dialog_ui_button_cancel");
 
     await I.executeScript(() => {
-        const element = document.querySelector('#cke_672_uiElement #wjImageIframeElement');
+        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
             if (element) {
               element.remove();
             }
@@ -333,3 +333,34 @@ async function validateThumb(I, elementText) {
 
     I.switchTo();
 }
+
+Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({I, DTE, Document}) => {
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe");
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(locate("h3").withText("Etiam orci"), 10);
+
+    I.switchTo();
+    DTE.cancel();
+
+    I.clickCss("#datatableInit_wrapper .dt-buttons .buttons-create");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+
+    I.dontSeeElement("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(".cke_wysiwyg_frame.cke_reset", 10);
+
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.dontSee("Etiam orci");
+    I.switchTo();
+
+    DTE.cancel();
+
+});

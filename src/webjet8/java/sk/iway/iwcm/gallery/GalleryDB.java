@@ -52,7 +52,6 @@ import com.drew.metadata.Tag;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.struts.util.ResponseUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -85,6 +84,8 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.spirit.MediaDB;
 
 /**
@@ -318,6 +319,7 @@ public class GalleryDB
 				gBean.setPerexGroup(convertPerexGroupString(rs.getString("perex_group")));
 				gBean.setUploadDate(DB.getDate(rs, "upload_datetime"));
 				gBean.setSortPriority(rs.getInt("sort_priority"));
+				gBean.setImageSource(DB.getDbString(rs, "image_source"));
 				gBeanTable.put(gBean.getImageUrl(), gBean);
 			}
 
@@ -381,6 +383,7 @@ public class GalleryDB
 				gb.setImagePath(file.getVirtualParent());
 				gb.setLongDescription("");
 				gb.setShortDescription("");
+				gb.setImageSource("");
 				if (Constants.getBoolean("galleryUseFastLoading")==false) gb.setUploadDate(new Date(file.lastModified()));
 			}
 			else if (file.getName().startsWith("o_"))
@@ -567,8 +570,8 @@ public class GalleryDB
 		dt.diff("After filter perex group");
 
 		//filtrovanie na zaklade datumu
-		String filterDateFrom = session != null && session.getAttribute(DATE_FROM_SESSION_FILTER) != null ? (String)session.getAttribute(DATE_FROM_SESSION_FILTER) : null;
-		String filterDateTo = session != null && session.getAttribute(DATE_TO_SESSION_FILTER) != null ? (String)session.getAttribute(DATE_TO_SESSION_FILTER) : null;
+		String filterDateFrom = session != null && Tools.sessionGetAttribute(session, DATE_FROM_SESSION_FILTER) != null ? (String)Tools.sessionGetAttribute(session, DATE_FROM_SESSION_FILTER) : null;
+		String filterDateTo = session != null && Tools.sessionGetAttribute(session, DATE_TO_SESSION_FILTER) != null ? (String)Tools.sessionGetAttribute(session, DATE_TO_SESSION_FILTER) : null;
 
 		if(Tools.isNotEmpty(filterDateFrom) || Tools.isNotEmpty(filterDateTo))
 		{
@@ -994,6 +997,7 @@ public class GalleryDB
 				gBean.setLongDescription(DB.getDbString(rs, "l_description" + lngAdd));
 				gBean.setShortDescription(DB.getDbString(rs, "s_description" + lngAdd));
 				gBean.setPerexGroup(convertPerexGroupString(DB.getDbString(rs, "perex_group")));
+				gBean.setImageSource(DB.getDbString(rs, "image_source"));
 			}
 			rs.close();
 			ps.close();
@@ -1506,6 +1510,7 @@ public class GalleryDB
 					gBean.setSelectedHeight(rs.getInt("selected_height"));
 					gBean.setUploadDate(rs.getTimestamp("upload_datetime"));
 					gBean.setSortPriority(rs.getInt("sort_priority"));
+					gBean.setImageSource(DB.getDbString(rs, "image_source"));
 				}
 				rs.close();
 				ps.close();
@@ -2537,10 +2542,9 @@ public class GalleryDB
 
 	private static List<GalleryDimension> getDirectoriesToGalleryRoot(GalleryDimension dir)
 	{
-		String pathToGallery = "/images/gallery"; //NOSONAR
 		List<GalleryDimension> upDirs = new ArrayList<>();
 		GalleryDimension currentDir = dir;
-		while(currentDir != null && currentDir.getGalleryPath().startsWith(pathToGallery))
+		while(currentDir != null && isBasePathCorrect(currentDir.getGalleryPath()))
 		{
 			upDirs.add(currentDir);
 			String nextGalleryPath = IwcmFile.fromVirtualPath(currentDir.getGalleryPath()).getVirtualParent();
@@ -2548,7 +2552,6 @@ public class GalleryDB
 		}
 		return upDirs;
 	}
-
 
 	/**
 	 * Samotny kod, ktory sposobi pridanie vodotlace do obrazku. Spolieha
@@ -4213,6 +4216,20 @@ public class GalleryDB
 		}
 	}
 
+	public static boolean clearInterestPoint(String dir, String name)
+	{
+		try
+		{
+			new SimpleQuery().execute("UPDATE gallery SET selected_x=NULL, selected_y=NULL, selected_width=NULL, selected_height=NULL WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);
+			return true;
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+			return false;
+		}
+	}
+
 	/**
 	 * Konvertuje obrazok na JPG
 	 * @param f
@@ -4759,4 +4776,26 @@ public class GalleryDB
 	{
 		return GalleryDBTools.cropAndResize(from,cwidth,cheight,cleft,ctop,finalWidth,finalHeight,fillColor,exactFinalSize,to,imageQuality,ip);
 	}
+
+	/**
+     * Checks if the given path starts with the base gallery path, which is either
+     * /images/gallery or /images/{domainAlias}/gallery depending on the domain.
+     *
+     * @param path The file path to check.
+     * @return true if the path starts with the base gallery path or the domain-specific gallery path;
+     *         false otherwise.
+     */
+    public static boolean isBasePathCorrect(String path) {
+        String basePath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        String basePathDomainAlias;
+
+		String domain = null;
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null) domain = rb.getDomain();
+        String domainAlias = MultiDomainFilter.getDomainAlias(domain);
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) basePathDomainAlias = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+		else basePathDomainAlias = basePath;
+
+        return path.startsWith(basePath) || path.startsWith(basePathDomainAlias);
+    }
 }

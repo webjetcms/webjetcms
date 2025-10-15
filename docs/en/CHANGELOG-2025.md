@@ -4,15 +4,25 @@
 
 > Development version
 
+## 2025.18
+
+> View Full Version **2025.18** brings a completely redesigned module **E-commerce** with support **payment gateway GoPay** and an improved order list. Application **News calendar** has been separated as **standalone application** and at the same time we have redesigned the settings of several applications in the page editor. **Document Manager** (formerly File Archive) has passed **visual and functional reboot** including new tools for managing, exporting and importing documents.
+>
+> The system has also been improved **Bulk email** with new options for the sender and a more convenient choice of recipients. **Reservations** have gained new opportunities as **overbooking** creating bookings back in time and sending notifications to specific emails for each booking object.
+>
+> We have optimized the number of files in **Explore** leading to **faster loading** and added new information to **Server monitoring**.
+
 ### Groundbreaking changes
 
 - News Calendar app separated into a separate app, if you use News Calendar you need to edit the path `/components/calendar/news_calendar.jsp` at `/components/news-calendar/news_calendar.jsp` (#57409).
 - Modified Spring and JPA initialization, see the programmer's section (#43144) for more information.
+- Redesigned backend part of ecommerce application, more in the section for programmer (#57685).
 
 ### Data tables
 
 - When the numeric value filter is set to from-to, the field is enlarged to better display the entered value, similar to what the date field does (#57685).
 - The File Archive application has been converted into a Spring application. For more information, see the programmer's section (#57317).
+- The E-Commerce application was on `BE` partly remodeled. For more information see the section for the programmer (#56609).
 
 ### Document Manager (File Archive)
 
@@ -27,6 +37,7 @@
 ![](redactor/files/file-archive/export_all.png)
 
 - **Importing master files** has been corrected and modified to work with the extended export options. Read more in [Importing master files](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexing** documents in search engines like `Google` modified to not index old/historical versions of documents and documents out of date (HTTP header set `X-Robots-Tag=noindex, nofollow`). Indexing of these documents can be enabled in the editor in the document manager (#57805).
 
 ### Applications
 
@@ -51,6 +62,8 @@ Redesigned application properties settings in the editor from the old code in `J
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Added application screenshots in Czech language for most applications (#57785).
+
 ### Bulk e-mail
 - **Moved Web page field** - now located in front of the field **Subject** so that when you select a page, the subject is automatically filled in according to the name of the selected web page (#57541).
 - **Modifying the order in the Groups tab** - email groups are now shown before user groups (#57541).
@@ -63,6 +76,8 @@ Redesigned application properties settings in the editor from the old code in `J
 
 ![](redactor/apps/dmail/campaings/users.png)
 
+- Unsubscribe - when you directly enter your email to unsubscribe (not by clicking on the link in the email), a confirmation email is sent to the email address you entered. In it you need to click on the unsubscribe link. The original version did not check the validity/ownership of the email address in any way, and it was possible to unsubscribe from someone else's email (#57665).
+
 ### News calendar
 
 - News Calendar separated as a separate app, originally it was an option in the Calendar app (#57409).
@@ -73,6 +88,7 @@ Redesigned application properties settings in the editor from the old code in `J
 ### Server monitoring
 
 - Added table with information about database connections and memory occupied (#54273-61).
+- Added information about the version of libraries `Spring (Core, Data, Security)` in the Server Monitoring-Actual Values section (#57793).
 
 ### Reservations
 
@@ -98,6 +114,17 @@ Redesigned application properties settings in the editor from the old code in `J
 - In the order list, redesigned country selection via the selection field, which offers only countries defined by a constant `basketInvoiceSupportedCountries` (#57685).
 
 ![](redactor/apps/eshop/invoice/editor_personal-info.png)
+
+- New version [configurations of payment methods](redactor/apps/eshop/payment-methods/README.md) and integration to payment gateways. Data is separated by domain. We have added support for [payment gateway GoPay](https://www.gopay.com), which also means accepting payment cards, supporting `Apple/Google Pay`, payments via internet banking, `PayPal`, `Premium SMS` etc. In addition, payments by bank transfer and cash on delivery are supported. For each type of payment it is also possible to set a price, which will be automatically added to the order when the option is selected. The set payment methods are also automatically reflected in the options when the customer creates an order.
+
+![](redactor/apps/eshop/payment-methods/datatable.png)
+
+- New Order List application with a list of orders of the currently logged in user. By clicking on an order, you can view the order detail and download it in PDF format (#56609).
+
+### Other minor changes
+
+- Administration search - customized interface `RestController` a `Service` (#57561).
+- Explorer - faster loading and lower server load by reducing the number of files/server requests (#56953).
 
 ### Error correction
 
@@ -129,6 +156,10 @@ Other changes:
 - Added option in annotation `@DataTableColumn` set attribute `orderProperty` which will determine [columns for arrangement](developer/datatables/restcontroller.md#Arrangement), e.g. `orderProperty = "contactLastName,deliverySurName"`. Convenient for `EditorFields` classes that can aggregate data from multiple columns (#57685).
 - For an array type `dt-tree-dir-simple` with set `data-dt-field-root` added tree structure of parent folders for better [tree structure display](developer/datatables-editor/field-json.md) (before, folders were displayed only from the specified root folder). Added the ability to define a list of folders that will not appear in the tree structure using a configuration variable set to `data-dt-field-skipFolders`.
 - Selection [editable field](developer/datatables-editor/field-select-editable.md) modified so that when a new record is added, that record is automatically selected in the field (#57757).
+- Redesigned e-commerce application on `BE` parts. Since new classes are already being used, you must:
+  - make use of the update script `/admin/update/update-2023-18.jsp` for basic updating of your JSP files
+  - as the type is now used `BigDecimnal` instead of `float`, you must additionally adjust all comparisons of these values. Type `BigDecimal` is not compared classically using `<, =, >` but by means of `BigDecimal.compareTo( BigDecimal )`
+  - you need to remove file calls or add back any files that were removed because they were not used
 
 ### Testing
 
@@ -136,6 +167,9 @@ Other changes:
 - Web pages - added test for creating a new page with publishing in the future (#57625).
 - Gallery - added watermark test with image comparison, added rights check test (#57625).
 - Web pages - added test for optional fields when creating a web page (#57625).
+- Allure - jUnit test results added to the common Allure report (#57801).
+
+![meme](_media/meme/2025-18.jpg ":no-zoom")
 
 ## 2025.0.x
 
@@ -155,6 +189,7 @@ Other changes:
 - Web pages - approvals - corrected list loading in the Unapproved tab when using the database server `Oracle` (#54273-62).
 - Web site - fixed cluster nodes updating when tags change (#57717).
 - Web pages - fixed displaying the list of pages if the user has the right to only selected web pages (#57725-4).
+- Web pages - domain switcher added even if no configuration variable is set `enableStaticFilesExternalDir` but only `multiDomainEnabled` (#57833).
 - Applications - corrected display of the translation keys tab when using the component `editor_component_universal.jsp` (#54273-57).
 - Applications - added support for inserting a new line via keyboard shortcut `SHIFT+ENTER` into a simple text editor such as the one used in Questions and Answers (#57725-1).
 - Dialers - moved dialer selection directly to the data table toolbar (#49144).
@@ -169,6 +204,16 @@ Other changes:
 - Users - added the ability to also select the Root Folder in the User Rights in the Upload Files to Directories section (54273-60).
 - Users - modified rights settings - simplified rights settings for administrators and registered users (no longer necessary to select the Users right as well), corrected duplicate entries, modified grouping in the Templates section (#57725-4).
 - Explorer - added better reporting on ZIP archive creation error (#56058).
+- Statistics - fixed creation of table for click statistics in the temperature map.
+- Translator - implementation of intelligent delay for translator `DeepL` as protection against error `HTTP 429: too many requests` which caused a translation outage (#57833).
+- Cloning structure - fixed unwanted interleaving of application implementations `!INCLUDE(...)!`, when automatically translating the page body (#57833).
+- Cloning structure - added translation of perex annotation to automatic page translation (#57833).
+- Explorer - fixed folder and file property settings rights (#57833).
+- Server monitoring - fixed report about configuration variable settings for Applications, WEB pages and SQL queries (#57833).
+- Introduction - corrected display of the requirement for two-step verification when integrating via `IIS` (#57833).
+- Cloning/mirroring structure - fixed folder URL settings (removing diacritics and spaces) (#57657-7).
+- Gallery - missing tags added (#57837).
+- Tags - corrected the folder settings of an existing tag in the View For section (#57837).
 
 ### Security
 

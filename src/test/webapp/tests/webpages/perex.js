@@ -42,8 +42,7 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
         },
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
-        },
-        skipSwitchDomain: true
+        }
     });
 });
 
@@ -156,6 +155,35 @@ Scenario('Check Perex Groups Rendering Behavior in Editor', async ({ I, DT, DTE 
     Document.setConfigValue('perexGroupsRenderAsSelect', 3);
 
     checkElements(I, DTE, DT, false);
+});
+
+Scenario('Check Perex Groups Rendering Behavior in Gallery', async ({ I, DT, DTE , Document }) => {
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 30);
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236');
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, true);
+    DTE.cancel();
+
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor/?id=-1&dir=/images/apps&name=apps-monitor.jpg&showOnlyEditor=true";
+    });
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, true);
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 3);
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236');
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, false);
+    DTE.cancel();
+
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor/?id=-1&dir=/images/apps&name=apps-monitor.jpg&showOnlyEditor=true";
+    });
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, false);
 
 });
 
@@ -213,6 +241,32 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
     DTE.cancel();
 }
 
+function checkGalleryElements(I, DTE, DT, shouldSeeCheckbox) {
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+
+    if (shouldSeeCheckbox) {
+        I.say('Check if I see checkbox in perex tab');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds');
+
+        I.seeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("podnikanie").find("input"));
+        I.seeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("investícia").find("input"));
+        I.dontSeeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("Newsletter perex skupina").find("input"));
+
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds_0');
+    } else {
+        I.say('Check if I see multiselect in perex tab');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds');
+
+        I.see("podnikanie", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+        I.see("investícia", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+        I.dontSee("Newsletter perex skupina", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds_0');
+    }
+}
+
 Scenario('Delete language mutation perex', async ({ I, DT, DTE }) => {
     I.relogin('admin', true, true, 'sk');
     await deletePerex(I, DT, DTE, 'Skupina jazyková mutácia');
@@ -223,7 +277,7 @@ Scenario('Testing language mutation perex', ({ I, DT, DTE }) => {
     const perexGroupNameSk = 'Jazyková mutácia';
     const perexGroupNameEn = 'Language mutation';
 
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
     I.click(DT.btn.perex_add_button);
     I.waitForVisible('.DTE.modal-content');
     I.clickCss('#perexDataTable_modal button.btn.btn-primary');
@@ -290,7 +344,7 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
     I.switchToNextTab()
 
     I.say("Verify that perex was created");
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
     checkPerex(I, DT, perexName, true, 'Nenašli sa žiadne vyhovujúce záznamy');
 
     I.say("Verify that perex is in web page and is checked");
@@ -315,7 +369,7 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
  * @param {string} perexName - The name of the perex to be deleted.
  */
 async function deletePerex(I, DT, DTE, perexName) {
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
 
     DT.filterEquals('perexGroupName', perexName);
     const isPerexDeleted = await I.grabNumberOfVisibleElements('td.dt-empty');
@@ -378,4 +432,35 @@ Scenario('Check language variants in news', ({ I, DTE }) => {
     I.amOnPage("/zo-sveta-financii/?language=hu");
     I.see("PODNIKANIE", ".portfolio-item .tag");
     I.see("INVESTÍCIA", ".portfolio-item .tag");
+});
+
+Scenario('Verify domain_id groups', ({ I, DT, Document }) => {
+    /*
+    INSERT INTO `perex_groups` (`perex_group_name`, `available_groups`, `perex_group_name_sk`, `perex_group_name_cz`, `perex_group_name_en`, `perex_group_name_de`, `perex_group_name_pl`, `perex_group_name_ru`, `perex_group_name_hu`, `perex_group_name_cho`, `perex_group_name_esp`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `domain_id`)
+    VALUES
+        ('DOMAIN: test23', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 83),
+        ('DOMAIN: demo.webjetcms.sk', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 1);
+
+    INSERT INTO `perex_groups` (`perex_group_name`, `available_groups`, `perex_group_name_sk`, `perex_group_name_cz`, `perex_group_name_en`, `perex_group_name_de`, `perex_group_name_pl`, `perex_group_name_ru`, `perex_group_name_hu`, `perex_group_name_cho`, `perex_group_name_esp`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`)
+    VALUES
+        ('DOMAIN: test23', '83', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', ''),
+        ('DOMAIN: demo.webjetcms.sk', '1', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '');
+    */
+    var demoName = "DOMAIN: demo.webjetcms.sk";
+    var test23Name = "DOMAIN: test23";
+    var selector = "#perexDataTable td.dt-row-edit";
+
+    I.amOnPage("/admin/v9/webpages/perex/");
+    DT.filterContains("perexGroupName", "DOMAIN:");
+    I.dontSee(test23Name, selector);
+    I.see(demoName, selector);
+
+    Document.switchDomain('test23.tau27.iway.sk');
+    DT.filterContains("perexGroupName", "DOMAIN:");
+    I.see(test23Name, selector);
+    I.dontSee(demoName, selector);
+});
+
+Scenario('Verify domain_id groups-logout', ({ I }) => {
+    I.logout();
 });

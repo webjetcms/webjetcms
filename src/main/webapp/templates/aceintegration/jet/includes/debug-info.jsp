@@ -1,4 +1,4 @@
-<%@ page pageEncoding="windows-1250" %>
+<%@ page pageEncoding="utf-8" %>
 <c:if test="${ninja.debug}">
 <div class="md-debug-info">
     <div class="debug-table">

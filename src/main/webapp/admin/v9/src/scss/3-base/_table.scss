@@ -140,9 +140,10 @@ table.table {
             td {
                 font-size: 13px;
                 line-height: 18px;
-                padding: 8px 16px;
+                padding: 8px 6px;
                 white-space: nowrap;
                 overflow: hidden;
+                text-align: right;
             }
         }
     }
@@ -183,6 +184,9 @@ table.datatableInit {
     td.dt-style-text-wrap {
         white-space: normal;
     }
+    td.dt-style-text-nowrap {
+        white-space: pre-wrap;
+    }
     td.dt-style-image {
         img{
             max-width: 230px;
@@ -190,6 +194,28 @@ table.datatableInit {
         }
         div.datatable-column-width {
             line-height: 16px;
+        }
+    }
+    td.dt-style-color {
+        span.dt-color-box {
+            display: block;
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            margin-top: 2px;
+            border: 1px solid $nice-black;
+            border-radius: 4px;
+        }
+    }
+    td.dt-style-icon {
+        span.dt-icon-box {
+            float: left;
+            margin-right: 8px;
+            margin-top: 0px;
+            i.ti {
+                vertical-align: middle;
+            }
         }
     }
 
@@ -207,6 +233,11 @@ table.datatableInit {
                     background-color: $nice-primary;
                 }
             }
+            &.dt-rowReorder-moving {
+                td {
+                    background-color: $nice-primary;
+                }
+            }
             td {
                 transition: background-color 500ms linear;
 
@@ -214,6 +245,12 @@ table.datatableInit {
                     text-align: left;
                 }
                 a:hover { text-decoration: none; }
+                span.row-reorder-handler {
+                    float: left;
+                    margin-left: 4px;
+                    margin-right: 4px;
+                    cursor: move;
+                }
             }
         }
     }
@@ -354,6 +391,7 @@ table.datatableInit {
     &.cardView
     {
         width: 100% !important;
+        position: initial !important;
 
         colgroup {
             col[data-dt-column="0"] {
@@ -557,6 +595,9 @@ table.datatableInit {
             &.buttons-refresh {
                 padding-left: 6px;
                 padding-right: 6px;
+            }
+            &.buttons-select:active {
+                background-color: transparent;
             }
         }
 
@@ -1429,6 +1470,26 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+    margin-bottom: 5px;
+}
+//variant with textarea-code in textarea element
+.input-group:has(.textarea-code) {
+    width: 892px;
+    margin-bottom: 5px;
+    .textarea-code {
+        //if there is ai/button in group we need to be smaller
+        width: 842px;
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
+}
+//varianf with textare-code on DTE div
+div.DTE_Field.textarea-code .input-group {
+    margin-bottom: 5px;
+    textarea.form-control {
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
 }
 
 div.textarea-code-small textarea {
@@ -1543,6 +1604,20 @@ div.dt-scroll-body > table {
     //ratanie total v _fnCalculateColumnWidths
     max-width: 100% !important;
 }
+div.dt-scroll-foot {
+    border-top: 2px solid #DDDFE6 !important;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+    display: none;
+    table {
+        tfoot {
+            tr {
+                td:first-child {
+                    text-align: left !important;
+                }
+            }
+        }
+    };
+}
 
 .DTE_Field_Type_select div.filter-option-inner-inner {
     //ak je renderovany perexGroups ako select nastav riadkovanie
@@ -1573,4 +1648,12 @@ div.DTE_Field_Type_datatable div.dt-container table.dataTable, div.DTE_Field_Typ
 
 table.dataTable thead > tr > th.dt-orderable-asc:hover, table.dataTable thead > tr > th.dt-orderable-desc:hover, table.dataTable thead > tr > td.dt-orderable-asc:hover, table.dataTable thead > tr > td.dt-orderable-desc:hover {
     outline: none;
+}
+
+//row reorder
+div.dt-rowReorder-float-parent {
+    position: absolute;
+    z-index: 9999999;
+    opacity: 0.8;
+    border: 2px solid $primary;
 }

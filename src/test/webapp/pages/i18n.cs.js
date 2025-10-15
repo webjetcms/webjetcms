@@ -38,7 +38,21 @@ module.exports = {
             "Cell Properties": "Vlastnosti buňky",
             "Map": "Mapa",
             "English": "Česky",
-            "File archive": "Manažer dokumentů"
+            "File archive": "Manažer dokumentů",
+            "All document versions":  "Všechny verze dokumentu",
+            "Replace current document": "Nahradit aktuální dokument",
+            "Add to version history":"Přidat do historie verzí",
+            "Upload a new version":"Nahrát novou verzi",
+            "Add":"Přidat",
+            "Please wait, EXPORT of documents is in progress and may take several minutes.":"Čekejte prosím, probíhá EXPORT dokumentů a může trvat několik minut.",
+            "was successfully deleted":"byl úspěšně vymazán",
+            "Document manager":"Manažer dokumentů",
+            "Rating form":"Rating formulář",
+            "Page rating":"Rating stránky",
+            "Top users":"Top uživatelé",
+            "Top pages":"Top stránky",
+            "Delete":"Odstranit",
+            "No matching records found":"Nenašly se žádné vyhovující záznamy",
         }
     }
 }

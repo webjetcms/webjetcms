@@ -2,7 +2,6 @@
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
-%><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
 %><%
@@ -89,8 +88,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 <%
     Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
     String constStr = "Admin";
-    String lng = (String)session.getAttribute(Prop.SESSION_I18N_PROP_LNG);
-    if (Tools.isEmpty(lng)) lng = "sk";
+    String lng = Prop.getLng(request, false);
 %>
 <div class="container">
     <div class="container-inner">
@@ -108,21 +106,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 <div class="alert-wrapper">
                     <div class="alert alert-danger">
                         <span>
-                            <logic:notPresent name="errorsList">
+                            <iwcm:notPresent name="errorsList">
                                 <c:if test="${empty param.auth}">
                                     <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
                                 </c:if>
                                 <c:if test="${not empty param.auth}">
                                     <iwcm:text key="logon.password.enter_new_password"/><br/>
                                 </c:if>
-                            </logic:notPresent>
-                            <logic:present name="errorsList">
+                            </iwcm:notPresent>
+                            <iwcm:present name="errorsList">
                                 <iwcm:text key="user.form.errors"/>
-                            </logic:present>
+                            </iwcm:present>
                         </span>
                     </div>
                     <div class="infotext">
-                        <logic:notPresent name="errorsList">
+                        <iwcm:notPresent name="errorsList">
                         <ul>
                             <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
                                 <li><iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/></li>
@@ -135,19 +133,19 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                             <% } %>
                                 <li><iwcm:text key="logon.change_password.used_in_history2"/></li>
                         </ul>
-                        </logic:notPresent>
-                        <logic:present name="errors">
+                        </iwcm:notPresent>
+                        <iwcm:present name="errors">
                             <ul>
                                 <li>${errors}</li>
                             </ul>
-                        </logic:present>
-                        <logic:present name="errorsList">
+                        </iwcm:present>
+                        <iwcm:present name="errorsList">
                             <ul>
                                 <c:forEach var="error" items="${errorsList}">
-                                    <li>${error.values[0]}</li>
+                                    <li>${error}</li>
                                 </c:forEach>
                             </ul>
-                        </logic:present>
+                        </iwcm:present>
                     </div>
                 </div>
 
@@ -181,7 +179,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                         <div class="form-group">
                             <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/><i class="ti ti-arrow-right"></i></button>
-                            <input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(lng)%>"/>
+                            <input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(lng)%>"/>
                             <form:hidden path="login"/>
                             <form:hidden path="auth"/>
                             <%--<form:button name="login-submit" value="Submit">Submit</form:button>--%>
