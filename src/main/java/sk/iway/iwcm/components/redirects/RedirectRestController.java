@@ -20,6 +20,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
+import sk.iway.iwcm.system.UrlRedirectDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -79,5 +80,26 @@ public class RedirectRestController extends DatatableRestControllerV2<UrlRedirec
 
         //ak nebol zadany kod presmerovania, nastav na predvoleny kod 301
         if (entity.getRedirectCode() == null) entity.setRedirectCode(301);
+    }
+
+    @Override
+    public boolean deleteItem(UrlRedirectBean entity, long id) {
+        // Use UrlRedirectDB to delete and update cache
+        UrlRedirectDB.delete(id);
+        return true;
+    }
+
+    @Override
+    public UrlRedirectBean editItem(UrlRedirectBean entity, long id) {
+        // use UrlRedirectDB to save and update cache
+        UrlRedirectDB.save(entity);
+        return entity;
+    }
+
+    @Override
+    public UrlRedirectBean insertItem(UrlRedirectBean entity) {
+        // Use UrlRedirectDB to save and update cache
+        UrlRedirectDB.save(entity);
+        return entity;
     }
 }
