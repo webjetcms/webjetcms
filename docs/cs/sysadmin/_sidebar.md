@@ -19,5 +19,6 @@
   - [Restartovat](/sysadmin/restart.md)
   - [Výměna údajů uzlů clusteru](/sysadmin/monitoring/nodes-logic.md)
   - [Mazání dat](/sysadmin/data-deleting/README.md)
+  - [Nastavení licenčního čísla](/install/license/README.md)
 - Soubory
   - [Zálohování systému](/sysadmin/files/backup/README.md)
