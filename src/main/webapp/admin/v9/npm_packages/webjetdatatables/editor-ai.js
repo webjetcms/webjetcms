@@ -176,6 +176,13 @@ export class EditorAi {
         let renderFormat = column.renderFormat ?? "";
 
         if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
+
+        let inputField = $(".form-control[name='"+fieldName+"']");
+        if (inputField.length===0) inputField = $("#"+fieldName);
+        renderFormat = $(inputField).attr("data-ai-render-format") ?? "";
+
+        if(renderFormat.indexOf("dt-format-image") != -1) return "image";
+
         return "text";
     }
 
@@ -325,8 +332,10 @@ export class EditorAi {
         if(inputValues !== null && typeof inputValues === 'object' && !Array.isArray(inputValues)) {
             inputData = inputValues;
         }
+
         //Add other values
-        inputData.inputValueType = this._getColumnType(column, aiCol.to);
+        inputData.inputValueType = this._getColumnType(column, aiCol.from);
+        inputData.outputValueType = this._getColumnType(column, aiCol.to);
 
         //console.log(inputData);
 
@@ -581,7 +590,7 @@ export class EditorAi {
         } else {
             // IS IMAGE
 
-            if ("image"===inputData.inputValueType) {
+            if ("image"===inputData.outputValueType) {
                 //inputData.value = "/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg";
 
                 //We want IMAGE AI response, because SRC field is IMAGE

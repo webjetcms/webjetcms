@@ -4,9 +4,7 @@ package sk.iway.iwcm.components.ai.providers.gemini;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -104,9 +102,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return supportedValues;
     }
 
-    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
         // Build base request body
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -120,9 +122,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return parts.get(0).path("text").asText();
     }
 
-    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
         //Prepare body object
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -158,19 +164,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        ObjectNode mainObject = MAPPER.createObjectNode();
-        ArrayNode contentsArray = MAPPER.createArrayNode();
-
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
+        ObjectNode mainObject;
+        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addPartWithFile(contentsArray, instructions, inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
-        } else {
+            mainObject = getBaseMainObjectWithImage(inputData, instructions);
+        else
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            addPart(contentsArray, instructions);
-        }
-
-        mainObject.set("contents", contentsArray);
+            mainObject = getBaseMainObject(instructions);
 
         HttpPost httpPost = new HttpPost( BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);

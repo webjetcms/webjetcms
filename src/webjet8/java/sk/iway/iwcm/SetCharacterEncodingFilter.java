@@ -154,6 +154,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			requestBean.setRemoteHost(Tools.getRemoteHost(request));
 			requestBean.setBaseHref(Tools.getBaseHref(request));
 			requestBean.setLng(PageLng.getUserLng(request));
+			requestBean.setLngCookie(Tools.getCookieValue(request.getCookies(), "lng", requestBean.getLng()));
 			requestBean.setUrl(url);
 			requestBean.setQueryString(request.getQueryString());
 			requestBean.setSessionId(session.getId());
