@@ -64,10 +64,13 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
 
     I.say("Navigating to simple newsletter registration page");
     I.amOnPage("/newsletter/registracia-do-newslettera-simple.html");
+    I.waitForElement("#subscribeForm input[name='email']");
     I.fillField("#subscribeForm input[name='email']", userEmail);
+    I.wait(3);
 
     I.say("Submitting the subscription form");
     I.click(locate("button[type=submit]").withText("Odoslať"));
+    I.wait(2);
     I.waitForElement(locate(".modal-content > .modal-header > .modal-title").withText("Newsletter"), 10);
     I.click(locate("button").withText("OK"));
 
