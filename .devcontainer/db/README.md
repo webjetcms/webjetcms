@@ -98,12 +98,29 @@ docker compose -f docker-compose-[database].yml down
 - All databases are initialized with the WebJET CMS schema from the corresponding SQL files in `src/main/webapp/WEB-INF/sql/`
 - MariaDB uses utf8 charset to avoid key length issues with the legacy schema
 - PostgreSQL creates tables in the `webjet_cms` schema
-- Oracle may take longer to start (large image ~4GB) and may require additional setup for initialization scripts
+- Oracle may take longer to start (large image ~4GB) and initialization scripts may need manual execution
 - Persistent volumes are created for each database to maintain data between container restarts
+
+### Oracle Initialization Notes
+Oracle containers work differently than MySQL/PostgreSQL for script initialization:
+- The init script is mounted to `/opt/oracle/scripts/setup/` but may not auto-execute
+- To manually run the WebJET schema setup:
+  ```bash
+  # After container is running
+  docker exec oracle sqlplus system/${WEBJET_DB_PASS}@XEPDB1 @/opt/oracle/scripts/setup/webjet_init.sql
+  ```
+- The `webjetcms` user may need to be created manually if not auto-created
+- Oracle requires significant system resources (minimum 2GB RAM recommended)
 
 ## Troubleshooting
 
 1. **Permission denied**: Ensure Docker is running and you have permissions
 2. **Port conflicts**: Stop any existing database services on the same ports
 3. **Oracle startup issues**: Oracle container requires significant resources and may take 2-3 minutes to fully start
-4. **Character encoding**: MariaDB is configured with utf8 charset for compatibility with legacy schema
+4. **Oracle initialization**: If WebJET schema is not automatically created, run manual initialization:
+   ```bash
+   docker exec oracle sqlplus system/${WEBJET_DB_PASS}@XEPDB1 @/opt/oracle/scripts/setup/webjet_init.sql
+   ```
+5. **MariaDB character encoding**: MariaDB is configured with utf8 charset for compatibility with legacy schema
+6. **PostgreSQL schema**: Tables are created in `webjet_cms` schema, ensure your connection uses this schema
+7. **Large Oracle image**: First Oracle startup requires downloading ~4GB image, subsequent starts are faster
