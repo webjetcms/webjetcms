@@ -3,7 +3,7 @@
         {
             "title": "Version 2025.40",
             "perex": "**WebJET CMS 2025.40** brings an integrated **AI Assistant**, which greatly simplifies work with content. It allows you to automatically **correct grammar**, **translate** texts, suggest headlines, summarize articles and generate **illustration images** directly in the editor. Thanks to this, content creation is **faster, more accurate and more creative** than ever before.\\n\\nSignificant changes also apply to **tags** and **news templates**, which have been reworked into **separate database tables** with support for separation by domain. This brings greater **transparency, easier management** and the ability to effectively adapt content for multiple websites. The user interface has been **optimized for smaller screens** - the system automatically adjusts the display of windows and maximizes usable space.\\n\\nOn a technical level, the outdated Struts Framework has been removed. Thanks to this, WebJET CMS is more powerful, more stable, **more secure** and ready for the further development of modern web solutions.",
-            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202540"
+            "link": "https://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202540"
         },
         {
             "title": "Version 2025.18",
