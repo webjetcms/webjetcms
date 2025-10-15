@@ -2394,5 +2394,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>15.10.2025</string></void>
+                <void property="desc"><string>ai_assistants - INSERT ALT TAG generator</string></void>
+                <void property="mysql"><string></string></void>
+                <void property="mssql"><string></string></void>
+                <void property="oracle"><string></string></void>
+                <void property="pgsql"><string></string></void>
+            </object>
+        </void>
+
     </object>
 </java>

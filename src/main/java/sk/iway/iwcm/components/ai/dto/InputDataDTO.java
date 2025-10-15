@@ -84,7 +84,7 @@ public class InputDataDTO {
         this.assistantId = Tools.getLongValue(data.get("assistantId"), -1L);
         this.inputValue = data.get("inputValue");
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
-        this.inputValueType = InputValueType.from( data.get("outputValueType") );
+        this.outputValueType = InputValueType.from( data.get("outputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
         this.userPrompt = data.get("userPrompt");
     }

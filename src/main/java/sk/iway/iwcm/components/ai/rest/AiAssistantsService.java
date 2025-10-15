@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -322,6 +324,27 @@ public class AiAssistantsService {
             //inputValue if it is required for the action
             inputData.setInputValue("");
             inputData.setUserPrompt("");
+        }
+
+        //replace user language
+        if (instructions.contains("{userLanguage}")) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                String userLang = rb.getLng();
+                Prop prop = Prop.getInstance("en");
+                String language = prop.getText("language."+userLang);
+                instructions = Tools.replace(instructions, "{userLanguage}", language);
+            }
+        }
+        //replace language (language of last shown page from lng cookie)
+        if (instructions.contains("{language}")) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                String userLang = rb.getLngCookie();
+                Prop prop = Prop.getInstance("en");
+                String language = prop.getText("language."+userLang);
+                instructions = Tools.replace(instructions, "{language}", language);
+            }
         }
 
         if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
