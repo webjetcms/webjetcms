@@ -5,11 +5,11 @@ The Scripts web page or application uses a 1:N mapping to other objects. In the 
 JSON type field for DT Editor implements **UI for displaying directory or web page selection** from JS tree component with the possibility to set JSON object for **one field or a list (List) of fields**.
 
 In the JSON data from the server, this mapping is returned as:
-- [private GroupDetails groupDetails](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) for the directory in which the web page is
-- [private List\<GroupDetails> groupCopyDetails](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) for a copy of a page in directories
-- [List\<InsertScriptGroupBean> groupIds](../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for application Scripts mapping to directories
-- [List\<InsertScriptDocBean> docIds](../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for Scripts application mapping to web pages
-- [List\<DirTreeItem> writableFolders](../../../src/main/java/sk/iway/iwcm/components/users/UserDetailsEditorFields.java) to select a list of directories in the file system
+- [private GroupDetails groupDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) for the directory in which the web page is
+- [private List\<GroupDetails> groupCopyDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) for a copy of a page in directories
+- [List\<InsertScriptGroupBean> groupIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for application Scripts mapping to directories
+- [List\<InsertScriptDocBean> docIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for Scripts application mapping to web pages
+- [List\<DirTreeItem> writableFolders](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsEditorFields.java) to select a list of directories in the file system
 
 The above attributes use annotation `@DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-group"`, i.e. the JSON field type. The className attribute is used to specify the behavior of the returned object.
 
@@ -82,7 +82,7 @@ note the use of the attribute `data-dt-json-addbutton` to set the button text in
 
 `dt-tree-dir` - returned JSON object of type `DirTreeItem` For **directory selection in the file system**
 
-`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**, it is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Do `data-dt-field-skipFolders` it is possible to specify the name of a configuration variable with a comma-separated list of folders that do not appear in the tree structure.
+`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**, it is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Do `data-dt-field-skipFolders` it is possible to specify the name of a configuration variable with a comma-separated list of folders that do not appear in the tree structure (hidden folders). It is also possible to hide the parents of a selected root folder using the `@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")`, preset, the parents of the root folder are displayed even if they cannot be selected (for a better overview of the structure).
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
@@ -109,7 +109,7 @@ For example, the output JSON object needs to look like this:
 }
 ```
 
-A sample Java implementation is in [InsertScriptBean](../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) where the following annotations are used:
+A sample Java implementation is in [InsertScriptBean](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) where the following annotations are used:
 
 ```java
 @JsonManagedReference(value="insertScriptBeanGr")
@@ -129,7 +129,7 @@ the important thing is the marking `inputType=DataTableColumnType.JSON` and sett
 
 On the frontend it is possible to define an object in the Datatable constructor `jsonField` wherein the function `getItem` converts the returned node from the jstree (GroupDetails or DocDetails) to the target format. Function `getKey` is used when verifying the existence of an object in an array, it returns the unique identifier of the object.
 
-An example is in the file [insert-script.pug](../../../src/main/webapp/admin/v9/views/pages/apps/insert-script.pug), which provides conversion of standard `DocDetails` a `GroupDetails` objects to type format:
+An example is in the file [insert-script.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/insert-script.pug), which provides conversion of standard `DocDetails` a `GroupDetails` objects to type format:
 
 ```javascript
 insertScriptTable = WJ.DataTable({
@@ -359,18 +359,18 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 
 ## Implementation details
 
-[field-type-json.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a new data type is defined `$.fn.dataTable.Editor.fieldTypes.json`. This is implemented using the VUE component [webjet-dte-jstree](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). It also contains a hidden field of type `textarea` to which the current JSON object is copied. But this field is only used to "inspect" the current data. In the get function, the current data from the VUE component is always returned.
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a new data type is defined `$.fn.dataTable.Editor.fieldTypes.json`. This is implemented using the VUE component [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). It also contains a hidden field of type `textarea` to which the current JSON object is copied. But this field is only used to "inspect" the current data. In the get function, the current data from the VUE component is always returned.
 
-[datatables-config.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements the function `renderJson(td, type, rowData, row)` to display the data in the table. The latter passes the records from which it uses the attribute `fullPath`.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements the function `renderJson(td, type, rowData, row)` to display the data in the table. The latter passes the records from which it uses the attribute `fullPath`.
 
-[webjet-dte-jstree.vue](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) is the root component, which, according to the data, passes through `child` component of the record line. For objects of type **array** also displays a button to add a new record to the field.
+[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) is the root component, which, according to the data, passes through `child` component of the record line. For objects of type **array** also displays a button to add a new record to the field.
 
-The component uses [EventBus](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) in which he listens to the event `change-jstree`. This event occurs when you click on a directory or web page in the JS Tree.
+The component uses [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) in which he listens to the event `change-jstree`. This event occurs when you click on a directory or web page in the JS Tree.
 
 Feature `processTreeItem(that, data)` handles clicking on an object (DocDetails or GroupDetails) in the JS tree component. Performs validation and possible JSON conversion of the object.
 
-[webjet-dte-jstree-item.js](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) is a line of the list of existing objects. Each row displays a button for editing and deleting the record. The click is handled by the root component via a call `this.$parent.processTreeItem(this, data);`.
+[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) is a line of the list of existing objects. Each row displays a button for editing and deleting the record. The click is handled by the root component via a call `this.$parent.processTreeItem(this, data);`.
 
-[vue-folder-tree.vue](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) encapsulates the JS Tree library into a VUE component.
+[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) encapsulates the JS Tree library into a VUE component.
 
 If `Doc/GroupDetails` object `null` no field would appear. Therefore, in `field-type-json.js` is a function of `fixNullData` which artificially creates a base object for this case. If it is a web page it contains the attribute `docId=-1`, for the directory `groupId=-1` and for other objects `id=-1`. Attribute `fullPath` is set to an empty value.

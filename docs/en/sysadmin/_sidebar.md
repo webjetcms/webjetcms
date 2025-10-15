@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manual for operation</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Security
   - [Safety tests](/sysadmin/pentests/README.md)
   - [Vulnerability scanning of libraries](/sysadmin/dependency-check/README.md)
@@ -19,5 +20,6 @@
   - [Restart](/sysadmin/restart.md)
   - [Exchange cluster node data](/sysadmin/monitoring/nodes-logic.md)
   - [Data deletion](/sysadmin/data-deleting/README.md)
+  - [Setting the license number](/install/license/README.md)
 - Files
   - [System backup](/sysadmin/files/backup/README.md)

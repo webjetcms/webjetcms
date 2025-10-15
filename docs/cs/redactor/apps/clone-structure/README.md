@@ -2,7 +2,7 @@
 
 Pomocí Klonování struktury můžeme naklonovat celý obsah adresáře ve stránkách do jiného adresáře bez nutnosti znovu vytváření celé adresářové struktury. Tato možnost je dostupná v sekci **Web stránky** jak **Klonování struktury**. Po výběru této možnosti se zobrazí okno k akci klonování. Typicky se používá k vytvoření nové jazykové mutace web sídla ze stávající verze. Jazyk je stažen z nastavení zdrojové a cílové složky.
 
-![](clone_structure.png)
+![](clone_structure_set_translator.png)
 
 Pro provedení akce klonování je třeba zadat ID zdrojové složky (kterou složku klonujeme) a ID cílové složky (kam na naklonuje zdrojovou složku). ID složek můžete zadat přímo, pokud si je pamatujete, nebo může využít možnosti **Vybrat**, která otevře nové okno se stromovou strukturou složek, kde si konkrétní složku volíte kliknutím na její název.
 
@@ -31,3 +31,17 @@ Zvolením možnosti **Ponechat URL adresu** za bezpečí, že se URL adresa str�
 Příklad: Mějme složky SK (s nastaveným slovenským jazykem) a EN (s nastaveným slovenským jazykem). Složka SK obsahuje podsložku **majetek**, který má hlavní stránku se stejným názvem. Adresa takové stránky je **/cs/majetek/**. Použijeme-li klonování struktury **bez ponechání URL**, ze složky SK do složky EN, kopie této stránky bude mít URL **/en/property/**. Použijeme-li klonování struktury **s ponecháním URL**, ze složky SK do složky EN, kopie této stránky bude mít URL **/en/majetek/**. Jak vidíme, url nebyla přeložena, změnil se pouze prefix ze /sk na /en, což reprezentuje nadřazenou složku.
 
 ![](clone_structure_result.png)
+
+## Překladač
+
+Nakolik klonování využívá [Automatický překlad](../../../admin/setup/translation.md), zobrazuje se informace, jaký překladač je nakonfigurován a kolik volných znaků pro překlad ještě zbývá. Pokud žádný překladač nakonfigurován není (např. pokud není zadán licenční klíč pro překladač `DeepL`) nebo již nezůstávají žádné volné znaky k překladu, budeme při klonování upozorněni. V takovém případě se **nebude** automaticky překládat klonovaná struktura.
+
+![](clone_structure_no_set_translator.png)
+
+## Zrušení zrcadlení
+
+Okno nabízí možnost [zrušit zrcadlení](../docmirroring/README.md) zvolené složky. Stačí a v dolní části okna zvolíte složku a stisknete tlačítko <button class="btn btn-sm btn-outline-secondary" type="button">Zrušit zrcadlení</button>. Následně se pro zvolenou složku, všechny podsložky jako jejich stránky vymaže hodnota `sync_id`, která zajišťovala zrcadlení.
+
+![](clone_structure_undo_sync.png)
+
+!>**Upozornění:** během akce rušení zrcadlení nebude možné spustit klonování, protože tyto akce by spolu kolidovaly.

@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manuál pro správce</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Konfigurace
   - [Konfigurace](/admin/setup/configuration/README.md)
   - [Jazyky](/admin/setup/languages.md)

@@ -434,6 +434,7 @@ The function contains the parameters:
   - `link` - by default, links are not inserted into the generated HTML code, by setting it to `true` link insertion is switched on
   - `badge` - by setting it to `true` the first word before the hyphen character in the unnumbered list will be wrapped in `<span class="badge bg-secondary">`
   - `imgSrcPrefix` - URL address of the prefix for the image (domain name) if the image is read from another domain, the same prefix is used for links
+  - `removeLastBr` - after setting to `true` the last marker is removed `<br>` at the end of the text
 
 Example of use:
 
@@ -547,7 +548,7 @@ If you need to hide a block during upload, you can set its CSS class `hide-while
 - `WJ.showHelpWindow(link)` - Calling causes the help window to be displayed. The value of the opened link is obtained from the parameter `link` or from `window.helpLink`.
 - `WJ.changeDomain(select)` - Invokes the change action for the selected domain. Used in the window header in a multidomain installation with external files. In this mode, both files and application data (e.g. banners, scripts) are bound to the selected domain.
 - `WJ.translate(key, ...params)` - Function on [translation of the key to text](jstranslate.md).
-- `WJ.openPopupDialog(url, width, height)` - Opens a popup window with the specified URL and the specified window size, but we recommend using [WJ.openIframeModal](#iframe-dialog) if possible
+- `WJ.openPopupDialog(url, width, height)` - Opens a popup window with the specified URL and the specified window size, but we recommend using `WJ.openIframeModal` if possible
 - `WJ.urlAddPath(url, pathAppend)` - Adds a path to the (rest) URL, checks if there is no path in the URL `?param` - e.g. `WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')` will be created `/admin/rest/tree/list?click=groups`.
 - `WJ.urlAddParam(url, paramName, paramValue)` - Adds a parameter to the URL. Checks if there is already a parameter in the URL and adds ? or &, value `paramValue` encodes using `encodeURIComponent`.
 - `WJ.urlUpdateParam(url, paramName, paramValue)` - Updates the specified parameter in the URL.
