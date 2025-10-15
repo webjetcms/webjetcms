@@ -260,7 +260,21 @@ public class UrlRedirectDB
 				oldUrl = normalizeUrl(oldUrl);
 				Map<String, Map<String, UrlRedirectBean>> redirects = getCachedRedirects();
 				if (redirects == null) return null;
-				return redirects.get(domainName).get(oldUrl);
+
+				UrlRedirectBean toReturn = redirects.get(domainName).get(oldUrl);
+
+				// cache realod is not that often, so do check of publishDate and validTo here
+				if(toReturn != null) {
+					boolean noMoreValid = toReturn.getValidTo() != null && toReturn.getValidTo().before(new Date());
+					boolean notPublishedYet = toReturn.getPublishDate() != null && toReturn.getPublishDate().after(new Date());
+
+					if(noMoreValid || notPublishedYet) {
+						// remove from cache
+						removeRedirectFromCache(toReturn);
+						toReturn = null;
+					}
+				}
+				return toReturn;
 			}
 
 			String params = null;
@@ -311,8 +325,12 @@ public class UrlRedirectDB
 
 		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
 		try {
-			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publish_date").lessThanEqual( new java.sql.Time(new Date().getTime()) );
-			conditions = conditions.or( new ExpressionBuilder().get("publish_date").isNull() );
+			java.sql.Time now = new java.sql.Time(new Date().getTime());
+			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publishDate").lessThanEqual(now);
+			conditions = conditions.or( new ExpressionBuilder().get("publishDate").isNull() );
+
+			// check that valid_to is in the future or is null
+			conditions = conditions.and( new ExpressionBuilder().get("validTo").greaterThanEqual(now).or( new ExpressionBuilder().get("validTo").isNull() ) );
 
 			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);
 			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
@@ -357,7 +375,9 @@ public class UrlRedirectDB
 
 		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
 		try {
-			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publish_date").greaterThanEqual( new java.sql.Time(new Date().getTime()) );
+			java.sql.Time now = new java.sql.Time(new Date().getTime());
+			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publishDate").greaterThanEqual( now );
+			conditions = conditions.or( new ExpressionBuilder().get("validTo").lessThanEqual( now ) );
 
 			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);
 			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
@@ -432,7 +452,10 @@ public class UrlRedirectDB
 					conditions = conditions.and(new ExpressionBuilder().get("oldUrl").equal(url));
 			}
 			if(!adminSearch) {
+				// publishDate must be in the past or null
 				conditions = conditions.and(new ExpressionBuilder().get("publishDate").lessThanEqual(new Date()).or(new ExpressionBuilder().get("publishDate").isNull()));
+				// validTo must be in the future or null
+				conditions = conditions.and(new ExpressionBuilder().get("validTo").greaterThanEqual(new Date()).or(new ExpressionBuilder().get("validTo").isNull()));
 			}
 
 			if (isNotEmpty(domain))

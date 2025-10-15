@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -131,6 +132,22 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
     )
 	Date publishDate;
 
+	@Lob
+	@Column(name="description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = "groupedit.comment"
+    )
+	String description;
+
+	@Column(name="valid_to")
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = "inquiry.valid_till"
+    )
+	Date validTo;
+
 	public Long getUrlRedirectId() {
 		return urlRedirectId;
 	}
@@ -212,5 +229,21 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@JsonIgnore
 	public String getPublishTime() {
 		return Tools.formatTime(this.getPublishDate());
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Date getValidTo() {
+		return validTo;
+	}
+
+	public void setValidTo(Date validTo) {
+		this.validTo = validTo;
 	}
 }
