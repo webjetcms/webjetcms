@@ -130,6 +130,8 @@ When you click on the icon, you will see a dialog box for inserting an image:
 
 ![](image_dialog.png)
 
+When navigating through the tree structure, only image or video files are shown, other files are filtered.
+
 ### Tab Contents
 
 If the image file is already on the server, you can search for it in the directory structure, and clicking on it will automatically enter the location of the image in the URL address field.
@@ -249,6 +251,17 @@ When you click on the "Insert into page" button, the application is inserted int
 ![](appstore-editorcomponent.png)
 
 If the app is already embedded in the page, clicking inside the app will bring up the same app settings window. You can easily edit its existing settings.
+
+### Tab view
+
+Most applications include a View tab for common settings (unless this option is turned off in the application for various reasons).
+
+![](../../../custom-apps/appstore/common-settings-tab.png)
+
+The card contains the parameters:
+- View on devices, used for setting up [conditional display application](../../../custom-apps/appstore/README.md#conditional-application-view) on a tablet, phone or standard computer. If no option is selected, the app will be displayed on all devices (just like when all options are selected).
+- Logged user - allows to set the application display according to the login status of the website visitor - display always, only if the user is logged in, or if the user is not logged in. In the page editor the application will always be displayed, but in the preview or page view it will be displayed according to the set value.
+- Buffer time (minutes) - used to set the amount of time in minutes that the initialized application should be buffered for faster display. For example, the list of news items does not change frequently and loading them is demanding on the database server, so it is advisable to set a value of 30, for example. If an administrator is logged in, the buffer is not used and the current data is always displayed.
 
 ## Pre-prepared blocks
 

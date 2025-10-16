@@ -9,7 +9,7 @@ export function typeElfinder() {
         if (conf._prepend != null) {
             if (val.indexOf(".jpg")!=-1 || val.indexOf(".jpeg")!=-1 || val.indexOf(".gif")!=-1 || val.indexOf(".png")!=-1) {
                 conf._prepend.addClass("has-image");
-                conf._prepend.css("background-image", "url("+val+")");
+                conf._prepend.css("background-image", "url("+WJ.urlAddParam(val, "v", (new Date().getTime()))+")");
             } else {
                 conf._prepend.removeClass("has-image");
                 conf._prepend.css("background-image", "none");
@@ -23,13 +23,25 @@ export function typeElfinder() {
             //console.log("conf=", conf);
 
             var prependHtmlCode = "";
-            var isImage = false;
             var volumes = "link";
+
+            var isImage = false;
+            var isVideo = false;
+
             if (conf.className != null && conf.className.indexOf("image")!=-1) {
                 isImage = true;
                 prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
                 volumes = "images";
                 //console.log("is image class=", conf.className);
+            } else if (conf.className != null && conf.className.indexOf("multimedia")!=-1) {
+                isImage = true;
+                prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
+                volumes = "multimedia";
+                //console.log("is image class=", conf.className);
+            } else if (conf.className != null && conf.className.indexOf("video") != -1) {
+                isVideo = true;
+                prependHtmlCode = '<span class="input-group-text"><i class="ti ti-video"></i></span>';
+                volumes = "videos";
             }
 
             var htmlCode = $('<div class="input-group">'+prependHtmlCode+'<input type="text" class="form-control"><button class="btn btn-outline-secondary" type="button" data-toggle="tooltip" title="'+WJ.translate('button.select')+'"><i class="ti ti-focus-2"></i></button></div>');
@@ -62,7 +74,19 @@ export function typeElfinder() {
 
             //odkaz na prepend div
             conf._prepend = null;
-            if (isImage) conf._prepend = htmlCode.find(".input-group-text");
+            if (isVideo) {
+                conf._prepend = htmlCode.find(".input-group-text");
+            } else if (isImage) {
+                conf._prepend = htmlCode.find(".input-group-text");
+
+                //add on click handler - open background-image on new tab on click
+                conf._prepend.on("click", function() {
+                    var imageUrl = conf._input.val();
+                    if (imageUrl) {
+                        window.open(imageUrl, "_blank");
+                    }
+                });
+            }
 
             return htmlCode;
         },

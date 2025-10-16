@@ -486,7 +486,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	/**
 	 * @deprecated use getFileSizeFormatted() instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "2024-06")
 	public long getFileSizeKB() {
 		if (fileSize == null) return 0;
 		return fileSize / 1024;
@@ -495,7 +495,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	/**
 	 * @deprecated use getFileSizeFormatted() instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "2024-06")
 	public double getFileSizeMB() {
 		if (fileSize == null) return 0;
 		return getFileSizeKB() / 1024d;
@@ -530,7 +530,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	 * @return
 	 * @deprecated use getId() instead and convert your API to use Long object
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "2024-06")
 	@JsonIgnore
 	public int getIdInt()
 	{

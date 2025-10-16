@@ -169,6 +169,13 @@
    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
    <cve>CVE-2024-38820</cve>
  </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-context-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-context@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-22233</vulnerabilityName>
+ </suppress>
 
  <!-- NOTE: we are not using WebMvc.fn or WebFlux.fn in WebJET CMS, 5.4.41 is not available for OpenSource projects, plan to migrate to Spring 6.x in 2025 -->
  <suppress>
@@ -204,6 +211,40 @@
    ]]></notes>
    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-crypto@.*$</packageUrl>
    <vulnerabilityName>CVE-2025-22228</vulnerabilityName>
+ </suppress>
+
+ <!-- we are not using @EnableMethodSecurity or if you do not use security annotations on methods in generic superclasses or generic interfaces. -->
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-core-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-core@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-41249</vulnerabilityName>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-web-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-41249</vulnerabilityName>
+ </suppress>
+
+ <!-- we do not deploy to a non-compliant Servlet container -->
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-core-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-core@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-41242</vulnerabilityName>
+ </suppress>
+
+ <!-- false positive, it's for Spring 6.x -->
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-web-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-41234</vulnerabilityName>
  </suppress>
 
 </suppressions>

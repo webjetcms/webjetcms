@@ -589,6 +589,16 @@ Pole pro výběr barvy v `HEX` formátu včetně průsvitnosti, například. `#F
     private String color_text;
 ```
 
+## ICON
+
+Pole pro zadání ikony ze sady [Tabler Icons](https://tabler.io/icons/).
+
+```java
+    @Column(name = "icon")
+    @DataTableColumn(inputType = DataTableColumnType.ICON, title = "components.ai_assistants.icon", tab = "basic")
+    private String icon;
+```
+
 ## IFRAME
 
 Pole pro vložení jiné stránky do `iframe` elementu, používá se v aplikacích v editoru pro vložení např. foto galerie:
@@ -610,7 +620,7 @@ public class GalleryApp extends WebjetComponentAbstract {
 }
 ```
 
-### BASE64
+## BASE64
 
 Pole, které kóduje a dekóduje hodnotu pomocí algoritmu `base64`, zobrazeno jako `textarea`. Používá se primárně jako pole pro aplikaci v editoru pro zachování speciálních znaků vložené hodnoty. Pokud potřebujete použít `base64` i na jiný typ pole můžete nastavit `className = "dt-style-base64"`.
 
@@ -633,7 +643,7 @@ Pole, které kóduje a dekóduje hodnotu pomocí algoritmu `base64`, zobrazeno j
     private String url;
 ```
 
-### STATIC\_TEXT
+## STATIC\_TEXT
 
 Zobrazení statického textu na pozici běžného vstupního pole, tedy v pravé části. V překladovém klíči je podporována markdown syntax.
 
@@ -646,7 +656,7 @@ Zobrazení statického textu na pozici běžného vstupního pole, tedy v pravé
     private String explain;
 ```
 
-### IMAGE\_RADIO
+## IMAGE\_RADIO
 
 Zobrazení výběru jedné z možností na základě obrázku. Používá se například v aplikaci Anketa. Obrázky se získají jako seznam ze souborového systému, je třeba je plnit do objektu `options` odpovědi REST služby. Odkaz na obrázek se zadává do objektu `OptionDto.original`.
 

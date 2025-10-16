@@ -49,12 +49,14 @@ import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
+import * as fieldTypeIcon from './field-type-icon';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
 import $ from 'jquery';
@@ -474,6 +476,17 @@ export const dataTableInit = options => {
                 if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
             }
         }
+
+        //update checkboxes
+        setTimeout(()=> {
+            //console.log("Updating checkboxes:", $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]'));
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
+
+            //refresh selectpickers
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('select').selectpicker('refresh');
+        }, 100);
     }
 
     /**
@@ -540,9 +553,13 @@ export const dataTableInit = options => {
             var dtToolbarRowHeight = 48;
             var dtScrollHeadHeight = 66;
             var dtFooterHeight = 48;
+            var dtSummaryHeight = 0;
 
             if (DATA.autoHeight === true && typeof DATA.defaultSearch === "object" && DATA.defaultSearch != null) {
                 dtScrollHeadHeight = dtScrollHeadHeight + 31;
+            }
+            if (typeof DATA.summary == "object" && DATA.summary != null) {
+                dtSummaryHeight = 37;
             }
 
             if ($(window).width()<1200) {
@@ -552,7 +569,7 @@ export const dataTableInit = options => {
 
             var scrollbarWidth = dtWJ.getScrollbarWidth();
 
-            height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - scrollbarWidth;
+            height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - dtSummaryHeight - scrollbarWidth;
             //console.log("height=", height, "headerHeight=", headerHeight, "breadcrumbHeight=", breadcrumbHeight, "dtToolbarRowHeight=", dtToolbarRowHeight, "dtScrollHeadHeight=", dtScrollHeadHeight, "dtFooterHeight=", dtFooterHeight, "scrollbarWidth=", scrollbarWidth);
 
             pageLength = Math.floor(height / 41);
@@ -633,7 +650,8 @@ export const dataTableInit = options => {
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
                 col.editor.array = col.array;
-
+                if (typeof col.ai != "undefined") col.editor.ai = col.ai;
+                if (typeof col.entityDecode != "undefined") col.editor.entityDecode = col.entityDecode;
 
                 if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";
@@ -841,7 +859,8 @@ export const dataTableInit = options => {
                 $("#" + dte._bootstrapDisplay.id).modal("show");
                 //firni event
                 WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
                 });
                 setTimeout(()=> {
                     WJ.dispatchEvent('WJ.DTE.opened', {
@@ -971,7 +990,8 @@ export const dataTableInit = options => {
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {
-                dte: dte
+                dte: dte,
+                id: dte.TABLE.DATA.id
             });
         }
 
@@ -1045,6 +1065,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
+        $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
 
         fieldTypeSelectEditable.typeSelectEditable();
 
@@ -2268,7 +2289,7 @@ export const dataTableInit = options => {
 
         $.fn.dataTable.ext.errMode = function(settings, tn, msg) {
             console.error("DataTables error: ", msg, "tn=", tn, "settings=", settings);
-            WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
+            //WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
             dtWJ.stateResetLocalStorage(settings);
             dtWJ.stateReset(TABLE);
             if (msg.indexOf("ColReorder - column count mismatch") != -1) {
@@ -2637,6 +2658,14 @@ export const dataTableInit = options => {
                         return dtConfig.renderColor(td, type, rowData, row);
                     }
 
+                },
+                {
+                    targets: "dt-format-icon",
+                    className: "dt-style-icon",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderIcon(td, type, rowData, row);
+                    }
+
                 }
             ]
 
@@ -2912,6 +2941,7 @@ export const dataTableInit = options => {
                         data.recordsFiltered = totalElements;
                         data.options = sourceData.options || {};
                         data.notify = sourceData.notify || null;
+                        data.summary = sourceData.summary || null;
 
                         //WJ.log("fnCallback2, data=", data);
                         fnCallback(data);
@@ -3623,6 +3653,8 @@ export const dataTableInit = options => {
     TABLE.getAjaxUrl = function() {
         return TABLE.DATA.url;
     }
+
+    var editorAi = new EditorAi(EDITOR);
 
     return TABLE;
 }

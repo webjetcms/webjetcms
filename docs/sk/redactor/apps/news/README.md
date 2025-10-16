@@ -10,10 +10,10 @@ Zoznam noviniek v administrácii je podobný zoznamu web stránok, ale neobsahuj
 
 ![](admin-dt.png)
 
-Hodnoty vo výberovom poli priečinku v hlavičke sa generujú:
+Hodnoty vo výberovom poli sekcie v hlavičke sa generujú:
 
 - automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`.
-- podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiadkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
+- podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
 
 Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor.md).
 
@@ -31,12 +31,14 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 
 - Adresár - ID adresárov (priečinkov web stránok), z ktorých sa budú vyberať novinky (stránky). Tlačítkom Pridať, môžete vybrať viac ID adresárov.
 - Zahrnúť podadresáre - zvolením tejto možnosti sa načítajú novinky aj z podadresárov zvolených adresárov z poľa Adresár.
+- Hĺbka podpriečinkov - pri zobrazení noviniek z pod priečinkov je možné nastaviť maximálnu hĺbku hľadania pod priečinkov. Hodnota menej ako 1 nastaví hľadanie bez obmedzení.
 - Typy stránok - výber stránok podľa dátumovej platnosti
   - Aktuálne – je platný dátum začiatku a konca - zobrazia sa len novinky, ktorých dátum platnosti (začiatok a koniec pulikovania) je v rozmedzí aktuálneho dátumu.
   - Staré – zobrazia sa novinky, ktoré majú dátum konca v minulosti (archív).
   - Všetky – zobrazia sa novinky bez ohľadu na dátum začiatku a konca ich publikovania.
   - Nasledujúce – zobrazia sa len novinky, ktoré majú dátum začiatku publikovania v budúcnosti.
   - Aktuálne platné - zobrazia sa len novinky s vyplneným dátumom začiatku (koniec nemusí byť vyplnený) a konca ktorých rozsah je platný v aktuálny dátum a čas.
+- Režim zobrazenia hlavných stránok - nastavuje zobrazenie hlavných stránok pod priečinkov. Často máte štruktúru Novinky a v ňom roky 2025, 2026 a podobne. V zozname noviniek nechcete zobrazovať hlavné stránky týchto priečinkov, keďže je to typicky stránka so zoznamom. Alebo naopak, potrebujete zobraziť len hlavné stránky pod priečinkov.
 - Usporiadať podľa - určuje spôsob usporiadania zoznamu noviniek
   - Priority
   - Dátumu začiatku publikovania

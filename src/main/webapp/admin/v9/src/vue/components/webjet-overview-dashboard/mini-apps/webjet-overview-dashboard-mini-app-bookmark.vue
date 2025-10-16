@@ -56,7 +56,7 @@ export default {
       const baseLineBookmarks = [
         {
           name: this.$WJ.translate("admin.welcome.bookmarks.default.webPages.js"),
-          path: "/admin/v9/webpages/web-pages-list",
+          path: "/admin/v9/webpages/web-pages-list/",
         },
         {
           name: this.$WJ.translate("admin.welcome.bookmarks.default.forms.js"),

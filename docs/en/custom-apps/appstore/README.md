@@ -603,6 +603,7 @@ The View tab for Common Settings, is displayed by default for each application, 
 
 The card contains the parameters:
 - View on devices, used for setting up [conditional display application](#conditional-application-view).
+- Logged in user - allows to set the application display according to the login status of the website visitor - display always, only if the user is logged in, or if the user is not logged in.
 - Buffer time (minutes), used to set the amount of time in minutes that the initialized application should be buffered.
 
 If you do not want to display the tab in the Spring application, set the attribute `commonSettings=false` in the annotation `@WebjetAppStore`.
@@ -618,6 +619,15 @@ When previewing an application in the editor that has a conditional view, the pr
 To test when displaying a web page, you can use the URL parameter `?forceBrowserDetector=` that we can convince WebJET that we are accessing a specific type of device. The supported types for this parameter are `phone`, `tablet` a `pc`.
 
 When using old `editor_component.jsp` you can add a display settings tab for the device by calling `$(document).ready(function() { addAdvancedSettingsTab(); });` and get the set value as `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. The implementation of the function is in `/components/bottom.jsp` and is thus ready for your easy use.
+
+### Logged in user
+
+The application will be displayed according to the status of the logged-in user. V `PageParams` set by the parameter `showForLoggedUser`:
+- Blank value/parameter is not entered - the application is always displayed.
+- `onlyLogged` - the app will only be displayed to the logged-in user.
+- `onlyNotLogged` - the application will only be displayed if the user is not logged in.
+
+In the page editor, the application will always be displayed, but in the preview or page view, it will be displayed according to the set value.
 
 ### Buffer time (minutes)
 
@@ -654,11 +664,12 @@ public class CalendarApp extends WebjetComponentAbstract {
 The entered HTML code is inserted into the application editor page. It is possible to use the following functions to execute the JavaScript code:
 - `appBeforeXhr(data)` - called before getting information about the editor, `data` contains the object sent to the REST service.
 - `appAfterXhr(response)` - called after getting data from the REST service, it is possible to modify the data (e.g. add an input field) in `response` facility.
-- `appAfterInit(response, datatable)` - called after initializing the datatable, in `datatable` is a datatable/editor instance.
+- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - called after initializing the datatable, in `componentDatatable` is an instance of the datatable/editor and in `isInsert` indicates whether the application is a newly inserted application or a modification.
 - `appGetComponentPath(componentPath, componentDatatable)` - called when you embed an application in a page, you can change the path for the embedded `INCLUDE` e.g. based on the selected options.
-- `appGetComponentCode(componentPath, params, componentDatatable)` - called when the application is inserted into the page, it can return the complete code for inserting into the page (it does not have to be directly `!INCLUDE` code).
+- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - called when the application is inserted into the page, it can return the complete code for inserting into the page (it does not have to be directly `!INCLUDE` code).
+- `async appCodeExecute(params)` - call after clicking OK, it can call the server's REST service.
 
-Sample code that responds to a selection field change:
+Sample code of different options:
 
 ```html
 <script>
@@ -702,6 +713,37 @@ Sample code that responds to a selection field change:
                 }
             });
         });
+    }
+
+    async function appCodeExecute(params) {
+        let result = false;
+        try {
+            await $.ajax({
+                url: "/admin/rest/forum/prepare-structure",
+                method: "POST",
+                data: paramsX.toString(),
+                success: async function(response) {
+                    if(response != undefined && response != null && response != "") {
+                        //It's error
+                        console.log("ERROR: ", response);
+                        window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                    }
+
+                    try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
+                    try { await window.parent.reloadParentWindow(); } catch (e) {}
+                    try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
+                    result = true;
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                }
+            });
+        } catch (e) {
+            console.log("ERROR: ", e);
+            window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+        }
+        return result;
     }
 
 </script>

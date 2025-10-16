@@ -28,6 +28,7 @@ import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -36,6 +37,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -160,9 +162,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         // For gallery only
         if(isImageEditor() == false) {
             // DirSimpleGallery aka image path MUST be set
-            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || entity.getEditorFields().getImagePath().startsWith(getBaseGalleryPath()) == false) {
+            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || GalleryDB.isBasePathCorrect(entity.getEditorFields().getImagePath()) == false) {
                 // Check if DirSimpleGallery starts with /images/gallery
-                errors.rejectValue("errorField.editorFields.dirSimpleGallery", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
+                errors.rejectValue("errorField.editorFields.imagePath", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
             }
         }
     }
@@ -288,7 +290,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             }
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override
@@ -307,7 +309,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             setForceReload(true);
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     private void setLastModified(String path, long lastModified) {
@@ -333,7 +335,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
      * @param destPath
      */
     private void checkAndCreateGallery(String destPath) {
-        if(Tools.isEmpty(destPath) || destPath.startsWith(getBaseGalleryPath()) == false) return;
+        if(Tools.isEmpty(destPath) || GalleryDB.isBasePathCorrect(destPath) == false) return;
 
         // Sanitize path
         destPath = DocTools.removeCharsDir(destPath, true).toLowerCase();
@@ -399,6 +401,8 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     private String getBaseGalleryPath() {
-        return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) return Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+        else return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
     }
 }

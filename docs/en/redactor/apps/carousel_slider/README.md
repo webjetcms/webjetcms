@@ -4,17 +4,26 @@ Bring your page to life with an interactive image carousel. Click on a small ver
 
 ## Application settings
 
-### Style
+Available cards:
+- **Generated CSS styles**
+- **Expanded**
+- **Items**
 
-In this section you can choose the style of the application. The available styles are: `Classic, Fashion, Gallery, Rotator, Simplicity, Stylish`
+### Generated CSS styles
+
+In this section, you can choose the style of the Carousel Slider application.
 
 ![](editor-style.png)
 
-### Settings
+### Expanded
 
-In this section it is possible to set:
-- Dimensions
-- Small image quality
+In this section you can set advanced settings:
+- **Dimensions**
+  - Width
+  - Height
+- **Small image quality**
+  - Width
+  - Height
 - Maximum number of images per slide
 - Direction (horizontal, vertical)
 - Image preview
@@ -34,9 +43,17 @@ In this section it is possible to set:
 
 ### Items
 
-In this section, you can add or remove an item from the app. When adding an item, you can specify a title, subtitle, redirect, and select an image. The item is removed by clicking on the red cross.
+In this section you can see and manage the application items, so classic actions like add/edit/delete...
 
 ![](editor-items.png)
+
+You can set the following parameters for each item:
+- **Image**, image selection using the explorer is supported, as well as direct entry of the image path
+- **Title**, picture caption
+- **Subtitle**, image caption
+- **Click to view another page (redirect)**, select the page you will be redirected to (direct path entry is also supported)
+
+![](editor-items-edit.png)
 
 ## View application
 

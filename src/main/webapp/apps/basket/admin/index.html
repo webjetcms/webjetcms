@@ -106,7 +106,7 @@
                 itemsDataTable.button().add(1, {
                     text: '<i class="ti ti-plus"></i>',
                     action: function (e, dt, node) {
-                        let url = '/apps/basket/admin/product-list?previewMode=true';
+                        let url = '/apps/basket/admin/product-list/?previewMode=true';
                         WJ.openIframeModal({
                             title: "",
                             url: url,
@@ -159,7 +159,12 @@
 
         window.addEventListener("WJ.DTE.opened", function(e) {
             if ("basketInvoiceDataTable" === e.detail.id) {
-                actualCurrent = e.detail.dte.currentJson['currency'];
+                try {
+                    //this is not available on delete
+                    actualCurrent = e.detail.dte.currentJson['currency'];
+                } catch (e) {
+
+                }
 
                 $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
 

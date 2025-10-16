@@ -234,6 +234,7 @@ public class BaseEditorFields {
                     if(groupId > 0) {
                         GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
                         if(group != null) {
+                            field.setOriginalValue( value );
                             field.setValue( new IdFullPath(groupId, group.getFullPath()).toString() );
                         }
                     }
@@ -242,6 +243,7 @@ public class BaseEditorFields {
                     if(docId > 0) {
                         DocDetails doc = DocDB.getInstance().getDoc(docId);
                         if(doc != null) {
+                            field.setOriginalValue( value );
                             field.setValue( new IdFullPath(docId, doc.getFullPath()).toString() );
                         }
                     }

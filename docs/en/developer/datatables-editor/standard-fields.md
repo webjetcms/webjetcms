@@ -589,6 +589,16 @@ Field for selecting the colour in `HEX` format including transparency, e.g. `#FF
     private String color_text;
 ```
 
+## ICON
+
+Field for entering an icon from the set [Tabler Icons](https://tabler.io/icons/).
+
+```java
+    @Column(name = "icon")
+    @DataTableColumn(inputType = DataTableColumnType.ICON, title = "components.ai_assistants.icon", tab = "basic")
+    private String icon;
+```
+
 ## IFRAME
 
 Field for inserting another page into `iframe` element, it is used in applications in the editor for inserting e.g. photo galleries:
@@ -610,7 +620,7 @@ public class GalleryApp extends WebjetComponentAbstract {
 }
 ```
 
-### BASE64
+## BASE64
 
 An array that encodes and decodes a value using an algorithm `base64`, shown as `textarea`. It is primarily used as a field for application in the editor to preserve special characters of the inserted value. If you need to use `base64` you can also set to another field type `className = "dt-style-base64"`.
 
@@ -633,7 +643,7 @@ An array that encodes and decodes a value using an algorithm `base64`, shown as 
     private String url;
 ```
 
-### STATIC\_TEXT
+## STATIC\_TEXT
 
 Display static text at the position of the normal input field, i.e. on the right. Markdown syntax is supported in the translation key.
 
@@ -646,7 +656,7 @@ Display static text at the position of the normal input field, i.e. on the right
     private String explain;
 ```
 
-### IMAGE\_RADIO
+## IMAGE\_RADIO
 
 Display a selection of one of the options based on the image. Used, for example, in the Poll app. Images are retrieved as a list from the file system, they need to be populated into an object `options` REST service responses. The image reference is entered into the object `OptionDto.original`.
 

@@ -1,0 +1,17 @@
+services:
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-mssql
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${WEBJET_DB_PASS}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+
+volumes:
+  sqlserverdata:

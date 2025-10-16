@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manual for the administrator</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Configuration
   - [Configuration](/admin/setup/configuration/README.md)
   - [Languages](/admin/setup/languages.md)

@@ -1,6 +1,7 @@
  <div class="sidebar-section">Instalace</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Instalace
   - [Předpoklady a verze](/install/versions.md)
   - [Zřízení nové instalace](/install/setup/README.md)

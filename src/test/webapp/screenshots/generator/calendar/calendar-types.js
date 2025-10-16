@@ -5,7 +5,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('calendar-types', ({ I, Document }) => {
-    I.amOnPage("/apps/calendar/admin/calendar-types");
+    I.amOnPage("/apps/calendar/admin/calendar-types/");
 
     Document.screenshot("/redactor/apps/calendar/calendar-types/datatable.png", 1280, 700);
 

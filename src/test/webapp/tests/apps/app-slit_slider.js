@@ -51,7 +51,7 @@ Scenario("Slit slider - test zobrazovania", async ({ I }) => {
 Scenario('Slit slider app - test INCLUDE building', async ({ I, DT, DTE, Apps, Document }) => {
     Apps.insertApp('Slit slider', '#components-app-slit_slider-title', null, false);
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
 
     I.say('Check tabs');

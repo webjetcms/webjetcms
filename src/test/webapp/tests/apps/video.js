@@ -22,11 +22,11 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
     const defaultParams = {
         "field": "logo_youtube_color",
         "file": "https://www.youtube.com/watch?v=e-K-6Z_m-hg&amp;ab_channel=WebJETodInterWay",
-        "widthType": "fixed",
+        "widthType": "responsive",
         "align": "left",
         "width": "425",
         "height": "355",
-        "percentageWidth": "",
+        "percentageWidth": "100",
         "autoplay": "0",
         "showinfo": "0",
         "byline": "0",
@@ -38,7 +38,7 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
         "badge": "1"
     }
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
 
     I.say("Check images");
@@ -87,7 +87,7 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
         "width": "425",
         "height": "355",
         "align": "center",
-        "percentageWidth": "",
+        "percentageWidth": "100",
         "autoplay": "1",
         "showinfo": "1",
         "byline": "1",

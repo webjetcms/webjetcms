@@ -186,9 +186,8 @@ public class LogonTools {
                                 boolean passok = false;
                                 String salt = db_result.getString("password_salt");
                                 String passwordInDb = db_result.getString("password");
-                                sk.iway.Password pass = new sk.iway.Password();
                                 //spatna kompatibilita je potrebna, ak admin zmeni passwordUseHash a zabudne zavolat update_passwords.jsp
-                                if (pass.encrypt(password).equals(passwordInDb) || PasswordSecurity.isPasswordCorrect(password, salt, passwordInDb))
+                                if (isPasswordCorrect(password, salt, passwordInDb))
                                 {
                                     passok = true;
                                 }
@@ -552,8 +551,7 @@ public class LogonTools {
                                 String salt = db_result.getString("password_salt");
 
                                 //skontroluj heslo
-                                sk.iway.Password pass = new sk.iway.Password();
-                                if (pass.encrypt(password).equals(db_result.getString("password")) || PasswordSecurity.isPasswordCorrect(password, salt, passwordInDb))
+                                if (isPasswordCorrect(password, salt, passwordInDb))
                                 {
                                     passok = true;
 
@@ -1126,5 +1124,33 @@ public class LogonTools {
             //Logger.debug(UsrLogonAction.class, "Nastavujem pocet pokusov na : 1 a trvanie na "+(Constants.getInt("logonLoginBlockedDelay") / 60)+" minut");
             cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY, 1, Constants.getInt("logonLoginBlockedDelay"), false);
         }
+    }
+
+    /**
+     * Verify if given password is correct including support for old Rijndael encryption
+     * @param password
+     * @param salt
+     * @param passwordInDb
+     * @return
+     */
+    public static boolean isPasswordCorrect(String password, String salt, String passwordInDb) {
+        boolean rijndaelCorrect = false;
+        try {
+            //for long passwords / passwords with diacritics this can have exception, because Rijndael doesn't support such long strings
+            sk.iway.Password pass = new sk.iway.Password();
+            rijndaelCorrect = pass.encrypt(password).equals(passwordInDb);
+            if (rijndaelCorrect) return true;
+            //if false continue to check PasswordSecurity
+        } catch (javax.crypto.IllegalBlockSizeException ex) {
+            //ignore
+        } catch (Exception ex) {
+            sk.iway.iwcm.Logger.error(ex);
+        }
+        try {
+            return PasswordSecurity.isPasswordCorrect(password, salt, passwordInDb);
+        } catch (Exception ex) {
+            sk.iway.iwcm.Logger.error(ex);
+        }
+        return false;
     }
 }

@@ -33,6 +33,8 @@ public class RequestBean
 	private String remoteHost;
 	private String baseHref;
 	private String lng;
+	//last value of lng cookie (last page language) OR lng of current page if no cookie is set
+	private String lngCookie;
 	private String url;
 	private String queryString;
 	private String userAgent;
@@ -481,5 +483,11 @@ public class RequestBean
 	}
 	public void setGroupId(int groupId) {
 		this.groupId = groupId;
+	}
+	public String getLngCookie() {
+		return lngCookie;
+	}
+	public void setLngCookie(String lngCookie) {
+		this.lngCookie = lngCookie;
 	}
 }

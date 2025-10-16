@@ -158,7 +158,7 @@ public class DataTableColumnsFactory {
             columnsToSort.remove(0);
             //inak ho pridame na koniec, asi je zavisle na nejakom poli v toSort pred nim
             if (c != null) {
-                if (i>500) Logger.debug(DataTableColumnsFactory.class, "sortColumns("+failsafe+") POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, prilis vysoke i sortovania - nenaslo sa, c="+c.getName());
+                if (i>500) Logger.error(DataTableColumnsFactory.class, "sortColumns("+failsafe+") POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, prilis vysoke i sortovania - nenaslo sa, c="+c.getName());
                 columnsToSort.add(c);
             }
         }
@@ -166,6 +166,7 @@ public class DataTableColumnsFactory {
         if (columnsToSort.size()>0) {
             //nieco je zle zosortovane, pre istotu pridame na koniec
             columnsSorted.addAll(columnsToSort);
+            Logger.error(DataTableColumnsFactory.class, "sortColumns POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, zostali stlpce na sort, pocet="+columnsToSort.size());
         }
 
         return columnsSorted;

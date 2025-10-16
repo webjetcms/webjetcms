@@ -164,14 +164,33 @@ export function typeWysiwyg() {
             if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
                 var htmlCode = conf.wjeditor.getData();
                 //console.log("WYSIWYG get, htmlCode=", htmlCode);
+                //set htmlCode to input element, because it can be PageBuilder instance
                 conf._input.val(htmlCode);
+            }
+            try {
+                //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
+                if (window.currentUser.login.indexOf("tester")==0) {
+                    let val = conf._input.val();
+                    if (val != null && val.length > 32000) {
+                        if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
+                            val = val.substring(0, 16000);
+                            console.log("shrinking val to length=", val.length);
+                            conf._input.val(val);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
             }
             //console.log("WYSIWYG get, conf=", conf, "returning=", conf._input.val());
             return conf._input.val();
         },
 
         set: function ( conf, val ) {
-            //console.log("WYSIWYG set, val=", val, "conf=", conf);
+            //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
+            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+                conf.wjeditor.setData(val);
+            }
             conf._input.val(val);
         },
 
