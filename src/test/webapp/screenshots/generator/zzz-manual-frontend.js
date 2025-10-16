@@ -61,6 +61,7 @@ Scenario('templates-bare', async({ I, DT, DTE, Document }) => {
     I.say("Presun kurzor nad logo a drz focus");
     I.say("Presun kurzor nad logo a drz focus");
     I.say("Presun kurzor nad logo a drz focus");
+    pause();
     I.say("Presun kurzor nad logo a drz focus");
 
     I.wait(10);
@@ -107,11 +108,19 @@ Scenario('templates-bare', async({ I, DT, DTE, Document }) => {
 });
 
 Scenario('editor style combo', ({ I, DTE, Document }) => {
-    I.say("TOTO TREBA SPUSTIT so standardnou demo databazou");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("POZOR: musí existovať ")
+    pause();
 
     I.relogin("admin");
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=265");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63");
     DTE.waitForEditor();
+
+    I.selectOption("#DTE_Field_data-editorTypeSelector select", "");
+    I.wait(2);
 
     I.resizeWindow(1280, 700);
     I.wait(6);
@@ -151,6 +160,8 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
     Document.screenshot("/frontend/examples/template-bare/editor-stylecombo-table.png");
 
     I.wjSetDefaultWindowSize();
+
+    Document.resetPageBuilderMode();
 });
 
 Scenario('template-creative', async({ I, DT, DTE, Document }) => {
@@ -171,8 +182,9 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     I.say("Kllikni aby bolo vidno PageBuilder ciary");
     I.say("Kllikni aby bolo vidno PageBuilder ciary");
     I.say("Kllikni aby bolo vidno PageBuilder ciary");
+    pause();
     I.say("Kllikni aby bolo vidno PageBuilder ciary");
-    I.wait(30);
+    I.wait(10);
     Document.screenshot("/frontend/examples/templates-creative/editor-webpage.png");
     DTE.cancel();
 
@@ -215,4 +227,13 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     I.pressKey("ArrowDown");
 
     Document.screenshot("/frontend/examples/templates-creative/creativepage.png", 1000, 700);
+});
+
+Scenario('reset DB', async({ I, DT, DTE, Document }) => {
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    pause();
 });

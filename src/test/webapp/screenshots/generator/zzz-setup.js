@@ -18,6 +18,8 @@ CREATE DATABASE blank_web_2 DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb
 
 Scenario('Setup action', ({I, Document}) => {
 
+    I.say("DROP DATABASE IF EXISTS blank_web;");
+    I.say("CREATE DATABASE blank_web DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci;");
     I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
     I.say("Databaza musí byť prázdna !!! Nesmie obsahovať žiadne tabuľky");
     I.say("-----------------------------------------------------------------");
@@ -26,7 +28,19 @@ Scenario('Setup action', ({I, Document}) => {
     I.amOnPage("/admin");
     Document.screenshot("/install/setup/error.png", 660, 200);
 
-    I.amOnPage("/wjerrorpages/setup/setup");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/wjerrorpages/setup/setup");
+            break;
+        case 'en':
+            I.amOnPage("/wjerrorpages/setup/setup?language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/wjerrorpages/setup/setup?language=cz");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
+    }
 
     I.say("Nastavte udaje na screenshot");
     I.fillField("#dbDomain", "mariadb.srv.local");
@@ -46,7 +60,7 @@ Scenario('Setup action', ({I, Document}) => {
             I.amOnPage("/wjerrorpages/setup/setup?language=en");
             break;
         case 'cs':
-            I.amOnPage("/wjerrorpages/setup/setup?language=cs");
+            I.amOnPage("/wjerrorpages/setup/setup?language=cz");
             break;
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
@@ -148,14 +162,14 @@ Scenario('License expiration notification test', ({I, Document}) => {
 
 Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
-    I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
-    I.say("Tento test vykonaj ta, že zadaj sasdfadsfasdf (neplatné licenčné číslo, min. 10 znakov) do konf. premennej license a reštartuj WebJET");
-    I.say("Prihlasujes sa ako ADMIN ale s heslom testera");
-    I.say("-----------------------------------------------------------------");
-
     I.relogin("ADMIN");
     Document.setConfigValue("license", "sasdfadsfasdf");
     I.logout();
+
+    I.say("POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR ! POZOR !");
+    I.say("Reštartni aplikačný server aby sa použila neplatná licencia");
+    I.say("Prihlasujes sa ako ADMIN ale s heslom testera");
+    I.say("-----------------------------------------------------------------");
 
     pause();
 
@@ -167,7 +181,7 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
             I.amOnPage("/wjerrorpages/setup/license?language=en");
             break;
         case 'cs':
-            I.amOnPage("/wjerrorpages/setup/license?language=cs");
+            I.amOnPage("/wjerrorpages/setup/license?language=cz");
             break;
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
@@ -199,3 +213,11 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
     Document.screenshot("/install/license/license-saved.png");
 });
 
+Scenario('reset DB', async({ I, DT, DTE, Document }) => {
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    I.say("Spusti nazad standard DB");
+    pause();
+});
