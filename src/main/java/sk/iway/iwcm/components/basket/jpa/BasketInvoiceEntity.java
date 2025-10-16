@@ -24,6 +24,7 @@ import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -373,31 +374,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	// private String htmlCode;
 
 	public BigDecimal getTotalPriceVatIn(String currency) {
-		try {
-			String constantName = "kurz_" + currency + "_" + getCurrency();
-			BigDecimal rate;
-
-			// nasli sme bezny kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName))) {
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return rate.multiply( getPriceToPayVat() );
-			}
-
-			// nevyslo, skusime opacnu konverziu
-			constantName = "kurz_" + getCurrency() + "_" + currency;
-
-			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
-			// 1/kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName))) {
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return (BigDecimal.valueOf(1).divide(rate)).multiply( getPriceToPayVat() );
-			}
-		} catch (NumberFormatException e) {
-			sk.iway.iwcm.Logger.error(e);
-			throw new IllegalStateException("Malformed constant format for currencies " + getCurrency() + " and " + currency);
-		}
-
-		return getPriceToPayVat();
+		return BasketTools.convertCurrency(getPriceToPayVat(), currency, getCurrency());
 	}
 
 	/**
