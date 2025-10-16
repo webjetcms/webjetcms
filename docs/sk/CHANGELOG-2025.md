@@ -4,6 +4,10 @@
 
 > Vývojová verzia
 
+## 2025.0.x
+
+- Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
+
 ## 2025.0.40
 
 > Opravná verzia pôvodnej verzie 2025.0.
