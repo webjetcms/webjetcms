@@ -20,10 +20,6 @@
 
     <property name="compress" value="false"/>
 
-    <!-- Maven Central properties -->
-    <property name="ossrh-staging-repository-url" value="https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/" />
-    <property name="ossrh-server-id" value="ossrh" />
-
     <!-- GitHub snapshot repository -->
     <property name="github-repository-url" value="https://maven.pkg.github.com/webjetcms/webjetcms" />
     <property name="github-server-id" value="github" />
@@ -43,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.40" />
+        <property name="artifact.version" value="2025.0-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -444,50 +440,6 @@
 
     <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Prepare all JAR files for deployment">
 
-    </target>
-
-    <target name="deployStaging" depends="define-artifact-properties,prepareAllJars" description="deploy version to Maven staging repository">
-        <exec executable="mvn">
-            <arg value="-e"/>
-            <arg value="-X"/>
-            <arg value="gpg:sign-and-deploy-file"/>
-            <arg value="-Dgpg.keyname=0x36F2327F"/>
-            <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=${ossrh-server-id}"/>
-            <arg value="-DpomFile=${artifact.pom}"/>
-            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
-        </exec>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="admin"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="components"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="javadoc"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="sources"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="libs"/>
-        </antcall>
-
-        <echo message="Continue on https://s01.oss.sonatype.org/#stagingRepositories"/>
-        <echo message="Verify on https://repo1.maven.org/maven2/com/webjetcms/webjetcms/"/>
-    </target>
-
-    <target name="deployStagingImpl">
-        <echo message="-------------------> Deploying classifier: ${classifier}"/>
-        <exec executable="mvn">
-            <arg value="gpg:sign-and-deploy-file"/>
-            <arg value="-Dgpg.keyname=0x36F2327F"/>
-            <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=${ossrh-server-id}"/>
-            <arg value="-DpomFile=${artifact.pom}"/>
-            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}-${classifier}.jar"/>
-            <arg value="-Dclassifier=${classifier}"/>
-        </exec>
     </target>
 
     <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
