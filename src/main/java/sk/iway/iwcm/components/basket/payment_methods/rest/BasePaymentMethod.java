@@ -20,12 +20,12 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
+import sk.iway.iwcm.components.basket.supprot.FieldMapAttr;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
@@ -166,7 +166,7 @@ public abstract class BasePaymentMethod {
         PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
         if(annotation == null) return;
 
-        for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
+        for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
             if(fieldMapAttr.isRequired() == true) {
                 String fieldValue = getPaymentFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
                 if(Tools.isAnyEmpty(fieldValue) == true) {
@@ -200,7 +200,7 @@ public abstract class BasePaymentMethod {
             if(index < 0 || index > fields.size() - 1) continue;
 
             boolean found = false;
-            for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
+            for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
                 if(alphabet == fieldMapAttr.fieldAlphabet()) {
                     fields.get(index).setLabel( prop.getText(fieldMapAttr.fieldLabel()) );
                     fields.get(index).setType( fieldMapAttr.fieldType().name().toLowerCase() );
@@ -234,7 +234,7 @@ public abstract class BasePaymentMethod {
      * @return
      */
     private final boolean isPaymentMethodConfigured(PaymentMethod annotation, PaymentMethodEntity paymentMethod) {
-        for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
+        for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
             if(fieldMapAttr.isRequired() == true) {
                 String fieldValue = getPaymentFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
                 if(Tools.isAnyEmpty(fieldValue) == true) {

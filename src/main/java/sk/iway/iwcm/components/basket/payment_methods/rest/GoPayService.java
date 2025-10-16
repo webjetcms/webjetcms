@@ -35,28 +35,28 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
+import sk.iway.iwcm.components.basket.supprot.FieldMapAttr;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
 @PaymentMethod(
     nameKey = "apps.eshop.payments.go_pay",
     fieldMap = {
-        @PaymentFieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.secret", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.url", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.NUMBER, fieldLabel = "apps.eshop.payments.go_id", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'E', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'F', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'G', fieldType = FieldType.TEXT, fieldLabel = "components.basket.invoice_payments.gopay.orderDescription", isRequired = false, defaultValue = ""),
-        @PaymentFieldMapAttr(fieldAlphabet = 'H', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
-        @PaymentFieldMapAttr(fieldAlphabet = 'I', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
+        @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.secret", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.url", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.NUMBER, fieldLabel = "apps.eshop.payments.go_id", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'E', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'F', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'G', fieldType = FieldType.TEXT, fieldLabel = "components.basket.invoice_payments.gopay.orderDescription", isRequired = false, defaultValue = ""),
+        @FieldMapAttr(fieldAlphabet = 'H', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
+        @FieldMapAttr(fieldAlphabet = 'I', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
 })
 public class GoPayService extends BasePaymentMethod {
     //Scope only for craeting payments
