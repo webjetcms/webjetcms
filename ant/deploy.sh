@@ -7,8 +7,6 @@ echo "WARNING: CHECK VERSION IN build.xml"
 
 date
 
-./mount-license.sh
-
 source ~/.nvm/nvm.sh
 nvm install;
 nvm use;
@@ -21,6 +19,7 @@ ant update-version
 #ant deploy
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
+ant rsyncToLicenseServer
 
 #MavenCentral: just run ant deployMavenCentral
 #then deploy it manually on https://central.sonatype.com/publishing/deployments

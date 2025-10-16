@@ -16,6 +16,7 @@
     <property name="outdir" value="${root}/WebContent/"/>
     <property name="wardir" value="build/libs/"/>
     <property name="finalwar" value="${root}/finalwar"/>
+    <property environment="env"/>
 
     <property name="compress" value="false"/>
 
@@ -39,7 +40,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.0.23" />
+        <property name="artifact.version" value="2025.0.40" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -347,10 +348,6 @@
     </target>
 
     <target name="createUpdateZip" depends="define-artifact-properties,makejars,makepom"  description="Create update.zip for update directly from WebJET CMS in old/expanded mode (no jar packaging)">
-        <exec executable="ant/mount-license.sh">
-        </exec>
-        <echo message="Sleeping for 60 seconds"/>
-        <sleep seconds="60"/>
         <delete file="${artifact.dir}/archive.zip"/>
 
         <!-- skopiruj logback.xml do buildu -->
@@ -382,21 +379,9 @@
                 <include name="aop-ajc.xml"/>
             </zipfileset>
         </zip>
-        <mkdir dir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}"/>
-        <copy file="${artifact.dir}/archive.zip" todir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}" preservelastmodified="true" overwrite="true">
-        </copy>
-        <copy todir="/Volumes/Webapps-AU20/docs.webjetcms.sk/json/" preservelastmodified="true" overwrite="true">
-            <fileset dir="${outdir}admin/v9/json/">
-                <include name="wjnews*.json"/>
-            </fileset>
-        </copy>
     </target>
 
     <target name="createUpdateZipJar" depends="define-artifact-properties"  description="Create update ZIP in jar packaging format for update directly from WebJET CMS }jar packaging enabled)">
-        <exec executable="ant/mount-license.sh">
-        </exec>
-        <echo message="Sleeping for 60 seconds"/>
-        <!--sleep seconds="60"/-->
         <delete file="${artifact.dir}/archive-jar.zip"/>
 
         <!-- skopiruj logback.xml do buildu -->
@@ -422,14 +407,26 @@
                 <include name="aop-ajc.xml"/>
             </zipfileset>
         </zip>
-        <mkdir dir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}"/>
-        <copy file="${artifact.dir}/archive-jar.zip" todir="/Volumes/TomcatLicense/webapps/license/WEB-INF/archive/WebJET/${artifact.version}" preservelastmodified="true" overwrite="true">
-        </copy>
-        <copy todir="/Volumes/Webapps-AU20/docs.webjetcms.sk/json/" preservelastmodified="true" overwrite="true">
-            <fileset dir="${outdir}admin/v9/json/">
-                <include name="wjnews*.json"/>
-            </fileset>
-        </copy>
+    </target>
+
+    <target name="rsyncToLicenseServer" depends="define-artifact-properties">
+        <echo message="License Server: ${env.LICENSE_SERVER}"/>
+        <echo message="License Path: ${env.LICENSE_PATH}"/>
+        <echo message="Docs Server: ${env.DOCS_SERVER}"/>
+        <echo message="Docs Path: ${env.DOCS_PATH}"/>
+
+        <exec executable="rsync">
+            <arg value="-av"/>
+            <arg value="--rsync-path=mkdir -p ${env.LICENSE_PATH}${artifact.version} &amp;&amp; rsync"/>
+            <arg value="${artifact.dir}/archive.zip"/>
+            <arg value="${env.LICENSE_SERVER}:${env.LICENSE_PATH}${artifact.version}/"/>
+        </exec>
+
+        <exec executable="rsync">
+            <arg value="-av"/>
+            <arg value="${artifact.dir}/archive-jar.zip"/>
+            <arg value="${env.LICENSE_SERVER}:${env.LICENSE_PATH}${artifact.version}/"/>
+        </exec>
     </target>
 
     <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">
