@@ -11,7 +11,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethod;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodsRepository;
-import sk.iway.iwcm.components.basket.supprot.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.basket.supprot;
+package sk.iway.iwcm.components.basket.support;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

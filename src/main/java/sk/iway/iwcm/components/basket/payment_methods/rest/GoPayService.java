@@ -41,7 +41,7 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
-import sk.iway.iwcm.components.basket.supprot.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
