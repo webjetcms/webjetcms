@@ -464,13 +464,13 @@ block content
                             span(data-th-switch="${param.volumes != null ? param.volumes[0] : ''}" data-th-remove="tag")
                                 span(data-th-case="'videos'" data-th-text="#{elfinder.images.video}" data-th-remove="tag")
                                 span(data-th-case="'images'" data-th-text="#{elfinder.images}" data-th-remove="tag")
-                                span(data-th-case="*" data-th-text="${param.volumes}" data-th-remove="tag")
+                                span(data-th-case="*" data-th-text="#{fbrowse.file}" data-th-remove="tag")
             #finder [[\#{divpopup-blank.wait_please}]]
             #pixabay(style='display: none;')
                 iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')
         #linkInput.inputs.container-fluid
             .row.template
-                .form-group.col-sm-12
+                .form-group.col-sm-12.cke_dialog_ui_input_text
                     label.control-label.block(for='file') [[\#{editor.media.link}]]
                     input#file.form-control.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
 
