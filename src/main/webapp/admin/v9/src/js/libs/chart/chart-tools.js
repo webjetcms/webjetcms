@@ -1664,6 +1664,11 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
         for(let i = 0; i < mapOfDirs.length; i++) {
             select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
             if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
+            else if(valueToSelect === null && i == 0) {
+                // by default select first value
+                valueToSelect = mapOfDirs[i]['value'];
+                isInList = true;
+            }
         }
 
         //If valueToSelect is in list of valued, select it
