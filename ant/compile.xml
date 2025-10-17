@@ -99,6 +99,8 @@
      <!--toto uz netreba, parsne si to z jarka mapstruct aj lombok z META-INF/services/javax.annotation.processing.Processor compilerarg line="-processorpath ${root}/WebContent/WEB-INF/lib/mapstruct-processor-1.3.0.Final.jar"/-->
      <compilerarg line="-s ${root}/WebContent/WEB-INF/generated-sources"/>
 
+     <compilerarg value="-parameters"/>
+
      <classpath>
         <fileset dir="${root}/WebContent/WEB-INF/lib/" >
           <include name="*.jar" />
@@ -200,6 +202,8 @@
         debug="true"
         destDir="${root}/WebContent/WEB-INF/classes/"
         >
+
+      <compilerarg value="-parameters"/>
 
       <sourceroots>
         <pathelement location="${root}/src-aspectj/"/>
