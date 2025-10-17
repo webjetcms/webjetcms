@@ -53,6 +53,18 @@ module.exports = {
             "Top pages":"Top stránky",
             "Delete":"Vymazať",
             "No matching records found":"Nenašli sa žiadne vyhovujúce záznamy",
+            "Delete": "Zmazať",
+            "Two-Step Verification": "Dvojstupňové overenie",
+            "Create new image": "Vytvoriť nový obrázok",
+            "Remove background": "Odstrániť pozadie",
+            "AI is working on it...": "AI na tom pracuje...",
+            "Web Designer (PageBuilder)": "Webový dizajnér (PageBuilder)",
+            "Generate summary": "Vytvoriť zhrnutie",
+            "Write new text/article": "Napísať nový text/článok",
+            "Generate": "Generovať",
+            "Improve text": "Vylepšiť text",
+            "Fix grammar": "Opraviť gramatiku",
+            "Browser": "Prehliadač",
         }
     }
 }

@@ -8,7 +8,7 @@ module.exports = {
             "Icons view": "Ikony",
             "Tools": "Nástroje",
             "Preview" : "Náhled",
-            "Get info": "Zobrazit informace",
+            "Get info": "Získat info",
             "In Subfolders": "V podadresářích",
             "Folder properties": "Nastavení složky",
             "File indexing completed": "Indexování souborů bylo dokončeno",
@@ -53,6 +53,18 @@ module.exports = {
             "Top pages":"Top stránky",
             "Delete":"Odstranit",
             "No matching records found":"Nenašly se žádné vyhovující záznamy",
+            "Delete": "Smazat",
+            "Two-Step Verification": "Dvoustupňové ověřování",
+            "Create new image": "Vytvořit nový obrázek",
+            "Remove background": "Odstranit pozadí",
+            "AI is working on it...": "AI již na tom pracuje...",
+            "Web Designer (PageBuilder)": "Webový designér (PageBuilder)",
+            "Generate summary": "Vytvořit shrnutí",
+            "Write new text/article": "Napsat nový text/článek",
+            "Generate": "Generovat",
+            "Improve text": "Vylepšit text",
+            "Fix grammar": "Opravit gramatiku",
+            "Browser": "Prohlížeč",
         }
     }
 }

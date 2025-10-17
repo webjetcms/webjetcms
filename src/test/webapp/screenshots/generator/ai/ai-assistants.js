@@ -1,9 +1,5 @@
 Feature('ai.ai-assistants');
 
-Before(({ login }) => {
-    login('admin');
-});
-
 let pageIdText = "16";
 let pageIdImage = "16";
 let pageIdCK = "16";
@@ -13,14 +9,20 @@ let openAI = "OpenAI";
 let gemini = "Gemini";
 let browser = "Prehliadač";
 
+Before(({ login, i18n }) => {
+    login('admin');
+    browser = i18n.get("Browser");
+});
+
+
+
 Scenario('ai-assistants table screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/ai-assistants/");
 
     Document.screenshot("/redactor/ai/settings/datatable.png");
 
     DT.filterEquals("name", "DOC-SEO-01 Generate Keywords");
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-edit");
+    I.click(locate("a").withText("DOC-SEO-01 Generate Keywords").first());
     DTE.waitForEditor();
 
     Document.screenshotElement("#datatableInit_modal > div > div.DTE_Action_Edit", "/redactor/ai/settings/datatable-basic-tab.png");
@@ -38,7 +40,7 @@ Scenario('ai-assistants table screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("#datatableInit_modal > div > div.DTE_Action_Edit", "/redactor/ai/settings/datatable-advanced-tab.png");
 });
 
-Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document }) => {
+Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageIdText);
     DTE.waitForEditor();
 
@@ -61,8 +63,8 @@ Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document }) => {
 
     I.resizeWindow(1000, 400);
 
-    I.click( locate('button.btn-ai-action').withText("Vytvoriť zhrnutie").withChild(locate('span.provider').withText(openAI)) );
-    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText("AI už na tom pracuje...") );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Generate summary")).withChild(locate('span.provider').withText(openAI)) );
+    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText(i18n.get("AI is working on it...")) );
     Document.screenshot("/redactor/ai/datatables/textarea-done.png");
 
     //AFTER DONE fake waiting because its to fast
@@ -86,7 +88,7 @@ Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document }) => {
 
     I.click(locate("div.DTE_Field_Name_htmlData").find("button.btn-ai"));
     I.waitForVisible("#toast-container-ai > div.toast-info");
-    I.click( locate('button.btn-ai-action').withText("Napísať nový text/článok").withChild(locate('span.provider').withText(browser)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Write new text/article")).withChild(locate('span.provider').withText(browser)) );
     Document.screenshot("/redactor/ai/datatables/textarea-prompt.png");
 
     //Fake loading
@@ -97,7 +99,7 @@ Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document }) => {
     Document.screenshot("/redactor/ai/datatables/textarea-prompt-loading.png");
 });
 
-Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Document }) => {
+Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageIdImage);
     DTE.waitForEditor();
 
@@ -120,7 +122,7 @@ Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Docume
 
     //fake blank input value
     I.fillField("div.DTE_Field_Name_perexImage input", "");
-    I.click( locate("#toast-container-ai-content").find(locate("button.btn-ai-action").withText("Odstrániť pozadie")) );
+    I.click( locate("#toast-container-ai-content").find(locate("button.btn-ai-action").withText(i18n.get("Remove background"))));
     I.waitForText("Nastala chyba pri volaní AI asistenta");
     Document.screenshot("/redactor/ai/datatables/image-error-1.png");
 
@@ -128,13 +130,13 @@ Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Docume
     I.fillField("div.DTE_Field_Name_perexImage input", originalValue);
     I.click(locate("div.DTE_Field_Name_perexImage").find("button.btn-ai"));
     I.waitForVisible("#toast-container-ai > div.toast-info");
-    I.click( locate("#toast-container-ai-content").find(locate("button.btn-ai-action").withText("Odstrániť pozadie")) );
+    I.click( locate("#toast-container-ai-content").find(locate("button.btn-ai-action").withText(i18n.get("Remove background"))) );
 
     Document.screenshot("/redactor/ai/datatables/image-loading.png");
 
     I.resizeWindow(1000, 600);
 
-    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText("AI už na tom pracuje...") );
+    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText(i18n.get("AI is working on it...")) );
     Document.screenshot("/redactor/ai/datatables/image-done.png");
 
     I.resizeWindow(1000, 500);
@@ -144,7 +146,7 @@ Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Docume
     Document.screenshot("/redactor/ai/datatables/image-name-select.png");
 });
 
-Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document }) => {
+Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageIdImage);
     DTE.waitForEditor();
 
@@ -157,11 +159,11 @@ Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document 
     I.click(locate("div.DTE_Field_Name_perexImage").find("button.btn-ai"));
     I.waitForVisible("#toast-container-ai > div.toast-info");
 
-    I.click( locate('button.btn-ai-action').withText("Vytvoriť nový obrázok").withChild(locate('span.provider').withText(gemini)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Create new image")).withChild(locate('span.provider').withText(gemini)) );
     I.waitForVisible("#ai-user-prompt");
 
     I.fillField("#ai-user-prompt", "Hokejista Hossa dáva víťazný gól");
-    I.click( locate("#toast-container-ai-content").find(locate("button").withText("Generovať")) );
+    I.click( locate("#toast-container-ai-content").find(locate("button").withText(i18n.get("Generate"))) );
     I.waitForText("PROHIBITED_CONTENT", 60);
     Document.screenshot("/redactor/ai/datatables/image-error-2.png");
 
@@ -171,7 +173,7 @@ Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document 
     I.click(locate("div.DTE_Field_Name_perexImage").find("button.btn-ai"));
     I.waitForVisible("#toast-container-ai > div.toast-info");
 
-    I.click( locate('button.btn-ai-action').withText("Vytvoriť nový obrázok").withChild(locate('span.provider').withText(openAI)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Create new image")).withChild(locate('span.provider').withText(openAI)) );
     I.waitForVisible("#ai-user-prompt");
     Document.screenshot("/redactor/ai/datatables/image-prompt.png");
 
@@ -179,13 +181,13 @@ Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document 
 
     I.fillField("#bonusContent-imageCount", 3);
     I.fillField("#ai-user-prompt", "Izometrický pohľad na bratislavský hrad");
-    I.click( locate("#toast-container-ai-content").find(locate("button").withText("Generovať")) );
+    I.click( locate("#toast-container-ai-content").find(locate("button").withText(i18n.get("Generate"))) );
     I.waitForElement( ".ai-image-preview-div", 100 );
 
     Document.screenshot("/redactor/ai/datatables/image-select.png");
 });
 
-Scenario('ai-assistants usage - TEXT - CKEditor', async ({ I, DTE, Document }) => {
+Scenario('ai-assistants usage - TEXT - CKEditor', async ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageIdCK);
     DTE.waitForEditor();
     DTE.waitForCkeditor();
@@ -203,11 +205,11 @@ Scenario('ai-assistants usage - TEXT - CKEditor', async ({ I, DTE, Document }) =
     I.waitForVisible("#toast-container-ai > div.toast-info");
     Document.screenshot("/redactor/ai/datatables/ckeditor-assistants.png");
 
-    I.click( locate('button.btn-ai-action').withText("Vylepšiť text").withChild(locate('span.provider').withText(gemini)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Improve text")).withChild(locate('span.provider').withText(gemini)) );
     I.wait(2);
     Document.screenshot("/redactor/ai/datatables/ckeditor-loading.png");
 
-    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText("AI už na tom pracuje..."), 100 );
+    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText(i18n.get("AI is working on it...")), 100 );
     Document.screenshot("/redactor/ai/datatables/ckeditor-done.png");
 });
 
@@ -237,7 +239,7 @@ Scenario('ai-assistants usage - TEXT - CKEditor - line', async ({ I, DTE, Docume
     Document.screenshot("/redactor/ai/datatables/ckeditor-text-selection.png");
 });
 
-Scenario('ai-assistants usage - TEXT - PageBuilder', async ({ I, DTE, Document }) => {
+Scenario('ai-assistants usage - TEXT - PageBuilder', async ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageIdPageBuilder);
     DTE.waitForEditor();
     DTE.waitForCkeditor();
@@ -260,11 +262,11 @@ Scenario('ai-assistants usage - TEXT - PageBuilder', async ({ I, DTE, Document }
     I.waitForVisible("#toast-container-ai > div.toast-info");
     Document.screenshot("/redactor/ai/datatables/page_builder-assistants.png");
 
-    I.click( locate('button.btn-ai-action').withText("Opraviť gramatiku").withChild(locate('span.provider').withText(gemini)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Fix grammar")).withChild(locate('span.provider').withText(gemini)) );
     I.wait(2);
     Document.screenshot("/redactor/ai/datatables/page_builder-loading.png");
 
-    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText("AI už na tom pracuje..."), 100 );
+    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .current-status > span").withText(i18n.get("AI is working on it...")), 100 );
     Document.screenshot("/redactor/ai/datatables/page_builder-done.png");
 });
 
@@ -336,7 +338,7 @@ Scenario('ai-assistants empty', async ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/ai/datatables/no-assistants-available.png", 1280, 420);
 });
 
-Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document }) => {
+Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=34495");
     DT.waitForLoader();
     I.click(DT.btn.add_button);
@@ -350,7 +352,7 @@ Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document }) => {
     I.switchTo();
     I.waitForVisible("#toast-container-ai > div.toast-info");
 
-    I.click( locate('button.btn-ai-action').withText("Webový dizajnér (PageBuilder)").withChild(locate('span.provider').withText(gemini)) );
+    I.click( locate('button.btn-ai-action').withText(i18n.get("Web Designer (PageBuilder)")).withChild(locate('span.provider').withText(gemini)) );
     I.wait(2);
     I.waitForElement("#ai-user-prompt");
     I.doubleClick("#ai-user-prompt");

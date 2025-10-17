@@ -63,7 +63,7 @@ function doRequest(qrCodeImageData) {
   });
 }
 
-Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Document }) =>{
+Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Document, i18n }) =>{
     I.say('Prihlasenie sa ako admin');
     I.relogin('admin');
     I.amOnPage('/admin/v9/users/user-list/');
@@ -87,7 +87,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Docume
     Document.screenshot("/redactor/admin/2fa_part_1.png", 1280, 450, "#dropdownMenuUser");
 
     I.clickCss("#dropdownMenuUser");
-    I.waitForVisible( locate("a.dropdown-item").withText("Dvojstupňové overovanie"), 10);
+    I.waitForVisible( locate("a.dropdown-item").withText(i18n.get("Two-Step Verification")), 10);
 
     let path = '/admin/2factorauth.jsp';
     Document.screenshot("/redactor/admin/2fa_part_2.png", 1280, 450, 'a[onclick*="WJ.openPopupDialog(\'' + path + '\')"]');
@@ -126,7 +126,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Docume
 
     I.say('Overenie dvojstupňového overovania');
     I.relogin(randomLogin, true, false);
-    I.see('Pre váš účet je zapnuté dvojstupňové overovanie. Zadajte kód z aplikácie Authenticator:');
+    I.see('Authenticator:');
 
     I.fillField('token', secret("548376"));
 
@@ -137,7 +137,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Docume
     Document.screenshot("/redactor/admin/2fa_part_7.png", 1280, 600);
 });
 
-Scenario("Delete 2fa test user", ({ I, DT, DTE }) => {
+Scenario("Delete 2fa test user", ({ I, DT, DTE, i18n }) => {
     //
     I.relogin('admin')
     I.amOnPage('/admin/v9/users/user-list/');
@@ -148,7 +148,7 @@ Scenario("Delete 2fa test user", ({ I, DT, DTE }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-remove");
     DTE.waitForEditor();
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.click(i18n.get("Delete"), "div.DTE_Action_Remove");
     DTE.waitForLoader();
     DTE.waitForModalClose('datatableInit_modal');
 
