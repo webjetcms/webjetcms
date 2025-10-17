@@ -396,7 +396,7 @@ public class AiService {
                 }
 
                 //for custom fields detect if we have any assistant specially for this field, if yes, remove other general assistants
-                if (Tools.isNotEmpty(toField) && toField.startsWith("field") && toField.length()==6) {
+                if (Tools.isNotEmpty(toField) && toField.startsWith("field") && toField.length()=="fieldX".length()) {
                     List<DataTableAi> specificAis = new ArrayList<>();
                     for (DataTableAi ai : aiList) {
                         String[] toFields = Tools.getTokens(ai.getToDefinition(), "\n,;", true);

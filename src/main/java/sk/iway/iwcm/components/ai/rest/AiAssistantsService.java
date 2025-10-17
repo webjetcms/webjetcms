@@ -87,7 +87,7 @@ public class AiAssistantsService {
 
         //for custom fields try to detect type and update renderFormat
         String colRenderFormat = column.getRenderFormat();
-        if (Tools.isNotEmpty(fieldTo) && fieldTo.startsWith("field") && fieldTo.length()==6) {
+        if (Tools.isNotEmpty(fieldTo) && fieldTo.startsWith("field") && fieldTo.length()=="fieldX".length()) {
             String titleKey = column.getTitleKeyOriginal();
             //use default language for detection
             Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
