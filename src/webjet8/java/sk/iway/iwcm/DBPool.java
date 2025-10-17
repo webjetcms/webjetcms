@@ -176,6 +176,16 @@ public class DBPool
 
 							Logger.println(this,"DATA SET from XML ["+dbname+"], maxActive="+maxActive);
 
+							//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+							if (password != null && password.startsWith("${") && password.endsWith("}")) {
+								String envName = password.substring(2, password.length()-1);
+								String envValue = getSystemProperty(envName);
+								if (Tools.isNotEmpty(envValue)) {
+									password = envValue;
+									Logger.println(this,"Using environment variable "+envName+" for password");
+								}
+							}
+
 							/**
 							 * ak su premenne pre db nastavene ako parametre jvm/env, pouzi tie
 							 * pre ine ako iwcm spojenie ma meno suffix _dbname, cize napr. -DwebjetDbUserName_ip_data_jpa
