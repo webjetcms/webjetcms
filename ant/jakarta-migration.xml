@@ -23,6 +23,7 @@
         <mkdir dir="${tempDir}/src-utf8/main/java" />
         <mkdir dir="${tempDir}/src-utf8/main/webapp" />
         <mkdir dir="${tempDir}/src-utf8/test" />
+        <mkdir dir="${tempDir}/src-utf8/test/java" />
 
         <!-- copy java src -->
         <copy todir="${tempDir}/src-utf8/main/java" overwrite="true">
@@ -37,7 +38,7 @@
             </fileset>
         </copy>
 
-        <copy todir="${tempDir}/src-utf8/test" overwrite="true">
+        <copy todir="${tempDir}/src-utf8/test/java/" overwrite="true">
             <fileset dir="${root}/src/test/java">
                 <include name="**/*"/>
             </fileset>
@@ -147,8 +148,8 @@
         </sync>
 
         <!-- sync test sources -->
-        <sync todir="${jakartaDir}/src/test/" overwrite="true">
-            <fileset dir="${tempDir}/src-utf8-jakarta/test/">
+        <sync todir="${jakartaDir}/src/test/java/" overwrite="true">
+            <fileset dir="${tempDir}/src-utf8-jakarta/test/java/">
                 <include name="**/*"/>
             </fileset>
         </sync>
@@ -174,9 +175,53 @@
                 <include name="**/*"/>
             </fileset>
         </sync>
+
+        <sync todir="${jakartaDir}/src/main/aspectj/" overwrite="true">
+            <fileset dir="${root}/src/main/aspectj/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/resources/" overwrite="true">
+            <fileset dir="${root}/src/main/resources/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
         <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/sql/" overwrite="true">
             <fileset dir="${root}/src/main/webapp/WEB-INF/sql/">
                 <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/files/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/files/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/images/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/images/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/static-files/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/static-files/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/formfiles/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/WEB-INF/formfiles/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <sync todir="${jakartaDir}/src/test/resources/" overwrite="true">
+            <fileset dir="${root}/src/test/resources/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/test/webapp/" overwrite="true">
+            <fileset dir="${root}/src/test/webapp/">
+                <include name="**/*"/>
+                <exclude name="node_modules/**"/>
             </fileset>
         </sync>
     </target>

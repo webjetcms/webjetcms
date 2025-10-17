@@ -28,6 +28,7 @@ import net.sourceforge.stripes.util.ReflectUtil;
 import net.sourceforge.stripes.util.ResolverUtil;
 import net.sourceforge.stripes.util.StringUtil;
 import net.sourceforge.stripes.vfs.VFS;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 
 /**
