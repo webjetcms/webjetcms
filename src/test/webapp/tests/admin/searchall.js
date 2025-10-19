@@ -117,6 +117,29 @@ Scenario('SearchAll - webpages tab tests', async ({ I, DT }) => {
     filter(I, DT, 'naštartoval obchodnú stránku');
     await verifyRecordCountChange(I, DT, 'title', 'sales', TableWrappers.WEB_PAGES);
     I.see('McGregor sales force', 'table tr');
+
+    //BUG: filter by folder doesn't work correctly
+    await removeAllFilters(I);
+    filter(I, DT, 'newsletter');
+    DT.waitForLoader();
+    I.waitForText('Testovaci newsletter', 10, '#webPagesDataTable_wrapper table tr td');
+    I.see('Hromadný e-mail', '#webPagesDataTable_wrapper table tr td');
+    I.see("/apps/hromadny-mail/", '#webPagesDataTable_wrapper table tr td');
+
+    //set folder to newsletter
+    I.click("button.btn-vue-jstree-item-edit");
+    I.waitForElement(locate(".jstree-anchor").withText("Newsletter"), 10);
+    I.click(locate(".jstree-anchor").withText("Newsletter"));
+    DT.waitForLoader();
+
+    I.waitForText('Testovaci newsletter', 10, '#webPagesDataTable_wrapper table tr td');
+    I.dontSee('Hromadný e-mail', '#webPagesDataTable_wrapper table tr td');
+    I.dontSee("/apps/hromadny-mail/", '#webPagesDataTable_wrapper table tr td');
+
+    //flter by title
+    await verifyRecordCountChange(I, DT, 'title', 'HTML', TableWrappers.WEB_PAGES);
+    I.waitForText('Testovaci newsletter - HTML', 10, '#webPagesDataTable_wrapper table tr td');
+    I.dontSee('Registracia do newslettera - simple', '#webPagesDataTable_wrapper table tr td');
 });
 
 //v suboroch viem hladat "txt" a potom v Nazov suboru odfiltrovat len bankers

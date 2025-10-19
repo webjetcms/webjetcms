@@ -20,10 +20,6 @@
 
     <property name="compress" value="false"/>
 
-    <!-- Maven Central properties -->
-    <property name="ossrh-staging-repository-url" value="https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/" />
-    <property name="ossrh-server-id" value="ossrh" />
-
     <!-- GitHub snapshot repository -->
     <property name="github-repository-url" value="https://maven.pkg.github.com/webjetcms/webjetcms" />
     <property name="github-server-id" value="github" />
@@ -454,50 +450,6 @@
 
     </target>
 
-    <target name="deployStaging" depends="define-artifact-properties,prepareAllJars" description="deploy version to Maven staging repository">
-        <exec executable="mvn">
-            <arg value="-e"/>
-            <arg value="-X"/>
-            <arg value="gpg:sign-and-deploy-file"/>
-            <arg value="-Dgpg.keyname=0x36F2327F"/>
-            <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=${ossrh-server-id}"/>
-            <arg value="-DpomFile=${artifact.pom}"/>
-            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
-        </exec>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="admin"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="components"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="javadoc"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="sources"/>
-        </antcall>
-        <antcall target="deployStagingImpl">
-            <param name="classifier" value="libs"/>
-        </antcall>
-
-        <echo message="Continue on https://s01.oss.sonatype.org/#stagingRepositories"/>
-        <echo message="Verify on https://repo1.maven.org/maven2/com/webjetcms/webjetcms/"/>
-    </target>
-
-    <target name="deployStagingImpl">
-        <echo message="-------------------> Deploying classifier: ${classifier}"/>
-        <exec executable="mvn">
-            <arg value="gpg:sign-and-deploy-file"/>
-            <arg value="-Dgpg.keyname=0x36F2327F"/>
-            <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=${ossrh-server-id}"/>
-            <arg value="-DpomFile=${artifact.pom}"/>
-            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}-${classifier}.jar"/>
-            <arg value="-Dclassifier=${classifier}"/>
-        </exec>
-    </target>
-
     <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
         <exec executable="mvn">
             <arg value="-e"/>
@@ -551,6 +503,100 @@
             <arg value="https://${env.GITHUB_USERNAME}:${env.GITHUB_TOKEN}@github.com/webjetcms/webjetcms.git"/>
         </exec>
 
+    </target>
+
+    <target name="generateSignatures" depends="define-artifact-properties" description="Generate asc, md5 and sha1 files">
+        <delete includeemptydirs="true">
+            <fileset dir="${artifact.dir}">
+                <include name="*.md5"/>
+                <include name="*.sha1"/>
+                <include name="*.asc"/>
+            </fileset>
+        </delete>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value=".jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value=".pom"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-admin.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-components.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-sources.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-javadoc.jar"/>
+        </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-libs.jar"/>
+        </antcall>
+    </target>
+
+    <target name="generateSignatureImpl" description="Generate asc, md5 and sha1 signatures">
+        <echo message="-> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
+            <arg value="-c"/>
+            <arg value="shasum -a 1 ${artifact.dir}/${artifact.name}-${artifact.version}${signExt} | awk '{print $1}'"/>
+        </exec>
+        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.md5">
+            <arg value="-c"/>
+            <arg value="md5 -q ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        </exec>
+        <exec executable="gpg">
+            <arg value="-ab"/>
+            <arg value="--yes"/>
+            <arg value="--local-user"/>
+            <arg value="0x36F2327F"/>
+            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
+        </exec>
+    </target>
+
+    <target name="deployMavenCentral" depends="define-artifact-properties,prepareAllJars,generateSignatures" description="Generate ZIP file uploadable to maven central with all artifacts, POM and signatures">
+        <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.zip" />
+
+        <zip destfile="${artifact.dir}/${artifact.name}-${artifact.version}.zip">
+            <zipfileset dir="${artifact.dir}" prefix="com/webjetcms/${artifact.name}/${artifact.version}">
+                <include name="*.jar"/>
+                <include name="*.md5"/>
+                <include name="*.sha1"/>
+                <include name="*.asc"/>
+                <include name="*.pom"/>
+            </zipfileset>
+        </zip>
+
+        <exec executable="bash" outputproperty="auth.header">
+            <arg value="-c"/>
+            <arg value='printf "${MAVENCENTRAL_USERNAME}:${MAVENCENTRAL_PASSWORD}" | base64 | tr -d "\n"'/>
+        </exec>
+
+        <exec executable="curl">
+            <arg value="--request"/>
+            <arg value="POST"/>
+            <arg value="--verbose"/>
+            <arg value="--header"/>
+            <arg value="Authorization: Bearer ${auth.header}"/>
+            <arg value="--form"/>
+            <arg value="bundle=@${artifact.dir}/${artifact.name}-${artifact.version}.zip"/>
+            <arg value="--form"/>
+            <arg value="name=${artifact.dir}/${artifact.name}-${artifact.version}"/>
+            <arg value="--form"/>
+            <arg value="publishingType=USER_MANAGED"/>
+            <arg value="https://central.sonatype.com/api/v1/publisher/upload"/>
+        </exec>
+
+        <echo message="Continue on https://central.sonatype.com/publishing/deployments"/>
+        <echo message="Verify on https://repo1.maven.org/maven2/com/webjetcms/webjetcms/"/>
     </target>
 
 </project>

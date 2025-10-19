@@ -44,6 +44,7 @@ import net.sourceforge.stripes.util.Log;
 import net.sourceforge.stripes.util.UrlBuilder;
 import net.sourceforge.stripes.validation.ValidationError;
 import net.sourceforge.stripes.validation.ValidationErrors;
+import sk.iway.iwcm.Tools;
 
 /**
 * <p>Form tag for use with the Stripes framework.  Supports all of the HTML attributes applicable
@@ -449,7 +450,7 @@ public class FormTag extends net.sourceforge.stripes.tag.FormTag
 		if (bean == null) {
 			HttpSession session = request.getSession(false);
 			if (session != null)
-				bean = (ActionBean) session.getAttribute(binding);
+				bean = (ActionBean) Tools.sessionGetAttribute(session, binding);
 		}
 		return bean;
 	}

@@ -124,6 +124,20 @@ block content
                         }
                     });
 
+                    if (window.perexGroupsRenderAsSelect===true) {
+                        window.WJ.DataTable.mergeColumns(columns, {
+                            name: "editorFields.perexGroupsIds",
+                            renderFormat: "dt-format-text",
+                            "editor" : {
+                                type : "select",
+                                multiple: true,
+                                attr: {
+                                    "data-multiple-separator": "\x0a\x0d"
+                                }
+                            }
+                        });
+                    }
+
                     //console.log(JSON.stringify(columns));
 
                     //console.log("tabsFolders", tabsFolders);

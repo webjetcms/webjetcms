@@ -32,10 +32,12 @@ public class GalleryEditorFields {
         inputType = DataTableColumnType.CHECKBOX,
         title = "[[#{editor.perex.group}]]",
         tab = "metadata",
+        sortAfter = "sortPriority",
         editor = {
             @DataTableColumnEditor(
                 attr = {
-                    @DataTableColumnEditorAttr(key = "unselectedValue", value = "")
+                    @DataTableColumnEditorAttr(key = "unselectedValue", value = ""),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
                 }
             )
         }

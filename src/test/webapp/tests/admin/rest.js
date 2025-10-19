@@ -26,7 +26,7 @@ Scenario("Test retrieving document details by docId ", ({ I }) => {
         'tempFieldDDocId', 'showInMenu', 'showInNavbar', 'showInSitemap', 'loggedShowInMenu',
         'loggedShowInNavbar', 'loggedShowInSitemap', 'htmlHead', 'publishStartDate',
         'publishEndDate', 'eventDateDate', 'htmlData', 'perexPlace', 'perexImage',
-        'authorName', 'docLink', 'data', 'dataAsc', 'authorId', 'tempName', 'logonPageDocId',
+        'authorName', 'docLink', 'data', 'authorId', 'tempName', 'logonPageDocId',
         'fileName', 'authorEmail', 'authorPhoto', 'fullPath', 'id', 'rootGroupL1', 'rootGroupL2',
         'rootGroupL3', 'publicable', 'historyActual', 'historyApproveDate', 'historyApprovedByName',
         'historyDisapprovedByName', 'historySaveDate', 'historyId', 'historyApprovedBy',

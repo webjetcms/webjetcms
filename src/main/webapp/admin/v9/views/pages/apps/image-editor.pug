@@ -43,36 +43,27 @@ block content
 
         var customInitialData = dtWJ.getEmptyData(true);
 
-        let perexGroupsOptionsRaw = "[(${perexGroupsOptions})]";
-        var perexGroupsOptions = [];
-        if(perexGroupsOptionsRaw != null && perexGroupsOptionsRaw != undefined && perexGroupsOptionsRaw.length > 0) {
-            // Remove curly braces
-            const trimmed = perexGroupsOptionsRaw.slice(1, -1);
-
-            // Split into key-value pairs
-            const entries = trimmed.split(', ').map(pair => {
-                const [key, value] = pair.split('=');
-                return [key.trim(), value.trim()];
-            });
-
-            // Sort by value
-            const sortedEntries = entries.sort((a, b) => {
-                return a[1].localeCompare(b[1]);
-            });
-
-            // Prepare options
-            sortedEntries.forEach(([key, value]) => {
-                perexGroupsOptions.push({
-                    label: value,
-                    value: key,
-                    original: null
-                });
-            });
-        }
-
+        let perexGroupsOptions = [(${perexGroupsOptions})];
         customInitialData.options = {
             "editorFields.perexGroupsIds": perexGroupsOptions
         }
+
+        if (window.perexGroupsRenderAsSelect===true) {
+            window.WJ.DataTable.mergeColumns(columns, {
+                name: "editorFields.perexGroupsIds",
+                renderFormat: "dt-format-text",
+                "editor" : {
+                    type : "select",
+                    multiple: true,
+                    attr: {
+                        "data-multiple-separator": "\x0a\x0d"
+                    }
+                }
+            });
+        }
+
+        //do not update ID param in URL, because F5 will not work anymore
+        window.dtOpenerDoNotUpdateQuery = true;
 
         window.domReady.add(function () {
             galleryTable = WJ.DataTable( {

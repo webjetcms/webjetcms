@@ -119,6 +119,17 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             throwError("user.rights.no_folder_rights");
         }
 
+        //we are editing not saved entity in jstree (it is just folder on disk, not in DB yet)
+        if (id == -1 && Tools.isNotEmpty(entity.getPath())) {
+            //split path to parent and name
+            int lomka = entity.getPath().lastIndexOf("/");
+            if (lomka > 1 && lomka < entity.getPath().length()) {
+                entity.setName(entity.getPath().substring(lomka+1));
+                entity.setPath(entity.getPath().substring(0, lomka));
+                return insertItem(entity);
+            }
+        }
+
         GalleryDimension saved = super.editItem(entity, id);
 
         if (entity.getEditorFields().isForceResizeModeToSubgroups()) {

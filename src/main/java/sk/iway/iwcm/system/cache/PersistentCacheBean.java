@@ -46,6 +46,7 @@ public class PersistentCacheBean extends ActiveRecordRepository implements Seria
     @DataTableColumn(
             inputType = {DataTableColumnType.OPEN_EDITOR},
             renderFormat = "dt-format-text-wrap",
+            className = "ai-off",
             title = "[[#{components.data_deleting.name}]]",
             tab = "basicTab"
     )
@@ -70,15 +71,10 @@ public class PersistentCacheBean extends ActiveRecordRepository implements Seria
     @Column(name = "data_result")
     @Convert(converter = AllowHtmlAttributeConverter.class)
     @DataTableColumn(
+            inputType = DataTableColumnType.TEXTAREA,
             hidden = true,
             tab = "descriptionTab",
-            editor = @DataTableColumnEditor(
-                    type = "textarea",
-                    attr = @DataTableColumnEditorAttr(
-                            key = "class",
-                            value = "textarea-code"
-                    )
-            )
+            className = "textarea-code ai-off"
     )
     String dataResult;
 

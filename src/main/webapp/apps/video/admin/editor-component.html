@@ -16,6 +16,17 @@
             //align them to center
             $(".DTE_Field_Name_field > div").css("text-align", "center");
 
+            const url = $("#DTE_Field_file").val();
+            if (url && (url.includes("youtube.com") || url.includes("youtu.be"))) {
+                youtube.prop("checked", true);
+            } else if (url && url.includes("vimeo.com")) {
+                vimeo.prop("checked", true);
+            } else if (url && url.includes("facebook.com")) {
+                facebook.prop("checked", true);
+            } else if (url && (url.endsWith(".mp4") || url.endsWith(".webm") || url.endsWith(".ogg") || url.endsWith(".mkv") || url.endsWith(".flv") || url.endsWith(".ts") || url.endsWith(".m4v"))) {
+                video.prop("checked", true);
+            }
+
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
                 setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile"], []);
             }
@@ -33,7 +44,7 @@
 
 
                 let defaultValue = $("#DTE_Field_percentageWidth").val();
-                if(defaultValue == null || defaultValue == "") defaultValue = 0;
+                if(defaultValue == null || defaultValue == "") defaultValue = 100;
                 responsive.off("change").on("change", function () {
                     if ($(this).is(":checked")) {
                         if ($(facebook).is(":checked")) {

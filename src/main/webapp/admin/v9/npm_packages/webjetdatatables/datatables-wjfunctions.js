@@ -279,7 +279,12 @@ export function getTitle(EDITOR, row = null) {
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
             if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
-                title = row[col.data];
+                if (col.data.indexOf(".")!=-1) {
+                    //hlbsi objekt
+                    title = WJ.getJsonProperty(row, col.data);
+                } else {
+                    title = row[col.data];
+                }
                 try {
                     if ("[object Object]"==title && "group"==col.data) {
                         title = row[col.data].fullPath;
@@ -290,7 +295,15 @@ export function getTitle(EDITOR, row = null) {
         });
     } catch (ex) {console.log(ex);}
     title = WJ.htmlToText(title);
-    if (title != null && typeof title == "string") title = title.replaceAll("&#47;", "/");
+    if (title != null && typeof title == "string") {
+        title = title.trim();
+        //get only first line (eg. in audit we have often multiline text)
+        let newLine = title.indexOf("\n");
+        if (newLine > 0) title = title.substring(0, newLine);
+
+        title = title.replaceAll("&#47;", "/");
+        title = title.replaceAll("-&gt;", "->");
+    }
     if ("[object Object]"==title) title = "";
     //console.log("Returning title=", title);
     return title;
@@ -380,7 +393,11 @@ function calculateAutoHeight(DATA) {
     var dtFooterRow = $('#' + DATA.id + '_wrapper .dt-footer-row').outerHeight();
     if (dtFooterRow < 30) dtFooterRow = dtFooterRow + 31; //footer not initialized/empty, add text height
 
-    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow;
+    var dtFooterSummary = 0;
+    var dtFooterSummaryEl = $('#' + DATA.id + '_wrapper .dt-scroll-foot')
+    if (dtFooterSummaryEl.is(":visible")) dtFooterSummary = dtFooterSummaryEl.outerHeight();
+
+    var height = vh - lyHeader - breadcrumb - dtHeaderRow - dtFooterRow - dtFilterRow - dtFooterSummary;
 
     //console.log(DATA.id+" vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "dtFilterRow=", dtFilterRow, "dtFooterRow=", dtFooterRow, "height=", height);
 

@@ -18,10 +18,10 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -111,7 +111,6 @@ public class LicenseActionService {
 		//Check if user exist
 		if (user != null) {
 			//Check password
-			boolean passok = false;
 			String passwordInDb = null;
 			try {
 				passwordInDb = (new SimpleQuery()).forString("SELECT password FROM users WHERE login=?", username);
@@ -126,29 +125,7 @@ public class LicenseActionService {
 				//Salt fiel does not EXIST yet -> in case when we run setup without license (it's not inicialized yet)
 			}
 
-			try {
-				sk.iway.Password pass = new sk.iway.Password();
-				if(Tools.isNotEmpty(passwordInDb) && salt == null) {
-					if(pass.encrypt(password).equals(passwordInDb)) passok = true;
-				} else {
-
-					if(Tools.isEmpty(passwordInDb)) {
-						//This situation can happen is password is BCRYPT -> UserDetails cant handle this type of password and gonna return "" string
-						passwordInDb = (new SimpleQuery()).forString("SELECT password FROM users WHERE login=?", username);
-
-						//Now VERIFY that password is BCRYPT type
-						if(passwordInDb.startsWith("bcrypt:")) salt = "bcrypt:"; //Need set salt, so check will work right
-					}
-
-					if (pass.encrypt(password).equals(passwordInDb) || PasswordSecurity.isPasswordCorrect(password, salt, passwordInDb))
-						passok = true;
-				}
-			} catch (Exception ex) {
-				Logger.error(LicenseActionService.class,"LogonAction: error");
-				sk.iway.iwcm.Logger.error(ex);
-			}
-
-			if (passok == true) {
+			if (LogonTools.isPasswordCorrect(password, salt, passwordInDb)) {
 				if (user.isAuthorized()) {
 					if (!user.isAdmin()) {
                         //User is no admin, he has no right o do this action

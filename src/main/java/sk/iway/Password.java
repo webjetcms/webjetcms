@@ -305,7 +305,7 @@ public class Password
 		if(isLogonForm || (!isLogonForm && password.trim().compareToIgnoreCase(UserTools.PASS_UNCHANGED) == 0))
 		{
 			//skontroluj este exspiraciu terajsieho hesla
-			if(!isLogonForm || (isLogonForm && jeChybneHeslo == false && session != null && session.getAttribute(Constants.USER_KEY+"_changepassword") == null))
+			if(!isLogonForm || (isLogonForm && jeChybneHeslo == false && session != null && Tools.sessionGetAttribute(session, Constants.USER_KEY+"_changepassword") == null))
 			{
 				if(vyprsanieHesla > 0)
 				{

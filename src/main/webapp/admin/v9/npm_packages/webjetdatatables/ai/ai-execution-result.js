@@ -1,0 +1,14 @@
+/**
+ * DTO for AI execution result
+ */
+export class AiExecutionResult {
+
+    success = false;
+    statusKey = null;
+    statusKeyParams = null;
+    errorText = null;
+    totalTokens = 0;
+    explanatoryText = null;
+    stopped = false;
+
+}

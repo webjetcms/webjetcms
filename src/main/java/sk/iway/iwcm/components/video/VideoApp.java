@@ -32,14 +32,14 @@ public class VideoApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.video_player.file", tab = "basic")
     private String file;
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.video_player.file_video", tab = "basic", className = "dt-app-skip")
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.video_player.file_video", tab = "basic", className = "dt-app-skip video")
     private String videoFile;
 
     @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "&nbsp", tab = "basic", editor = @DataTableColumnEditor(options = {
             @DataTableColumnEditorAttr(key = "components.video_player.fixedWidth", value = "fixed"),
             @DataTableColumnEditorAttr(key = "components.video_player.responsiveWidth", value = "responsive")
     }))
-    private String widthType = "fixed";
+    private String widthType = "responsive";
 
     @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.video_player.videoAlign", tab = "basic", editor = @DataTableColumnEditor(options = {
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-left", value = "left"),

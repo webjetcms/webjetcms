@@ -1,6 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,javax.servlet.http.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,jakarta.servlet.http.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%
 String lng = PageLng.getUserLng(request);

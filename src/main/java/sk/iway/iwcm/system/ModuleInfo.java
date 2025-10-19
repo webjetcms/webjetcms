@@ -90,6 +90,11 @@ public class ModuleInfo
 	private boolean custom = false;
 
 	/**
+	 * Set to false if the module is not an application in AppStore, or you have multiple modinfo.properties files in one /components/app folder
+	 */
+	private boolean app = true;
+
+	/**
 	 * @return Returns the available.
 	 */
 	public boolean isAvailable()
@@ -416,5 +421,12 @@ public class ModuleInfo
 
 	public void setCustom(boolean custom) {
 		this.custom = custom;
+	}
+
+	public boolean isApp() {
+		return app;
+	}
+	public void setApp(boolean app) {
+		this.app = app;
 	}
 }

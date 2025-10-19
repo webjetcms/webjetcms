@@ -77,7 +77,7 @@ public class ThymeleafAdminController {
       // @TODO: nepotrebujeme sem nejaku kontrolu URL parametrov?
       String forward = "admin/v9/dist/views/" + page + "/" + subpage;
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
 
       removePermissionFromCurrentUser(request);
       fireEvent(page, subpage, model, redirectAttributes, request);
@@ -99,7 +99,7 @@ public class ThymeleafAdminController {
          final RedirectAttributes redirectAttributes,
          final HttpServletRequest request) {
 
-         Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
+         //Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
 
          return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);
    }
@@ -138,7 +138,7 @@ public class ThymeleafAdminController {
       }
       model.addAttribute("appIncludePath", appIncludePath);
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
 
       //check if there is index.js file to include as script element
       String jsFilePath = "/apps/"+app+"/admin/"+app+".js";
@@ -165,7 +165,7 @@ public class ThymeleafAdminController {
            final ModelMap model,
            final RedirectAttributes redirectAttributes,
            final HttpServletRequest request) {
-      Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
+      //Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
 
       return appHandler(app, subpage, model, redirectAttributes, request);
    }

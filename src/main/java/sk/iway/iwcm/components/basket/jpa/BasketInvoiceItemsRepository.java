@@ -43,4 +43,9 @@ public interface BasketInvoiceItemsRepository extends DomainIdRepository<BasketI
     Optional<Long> getBrowserIdByInvoiceId(@Param("invoiceId") Long invoiceId, @Param("domainId") Integer domainId);
 
     Optional<BasketInvoiceItemEntity> findByInvoiceIdAndItemIdAndDomainId(Long invoiceId, Long itemId, Integer domainId);
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM BasketInvoiceItemEntity biie WHERE biie.invoiceId = :invoiceId AND biie.domainId = :domainId")
+    void deleteByInvoiceId(@Param("invoiceId") Long invoiceId, @Param("domainId") Integer domainId);
 }

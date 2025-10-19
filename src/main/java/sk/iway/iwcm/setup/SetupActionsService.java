@@ -224,6 +224,11 @@ public class SetupActionsService {
 			if(Tools.isNotEmpty(oldLng)) sForm.setPageLngIndicator(oldLng);
 		}
 
+		String language = request.getParameter("language");
+		if (language != null && language.length() == 2) {
+			sForm.setConf_defaultLanguage(language);
+		}
+
 		setModel(model, sForm, false, false);
 
 		return FORWARD;
@@ -273,11 +278,15 @@ public class SetupActionsService {
 
 			String msg = ex.getMessage();
 
-			if (msg.indexOf("Unknown database ") != -1) {
+			if (msg.contains("Unknown database ") || msg.contains("Cannot open database")) {
 				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
 
 				String origDBName = setupForm.getDbName();
 				setupForm.setDbName("mysql");
+				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("master");
+				else if ("org.postgresql.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("postgres");
 
 				try {
 					if (setupForm.isDbUseSuperuser()) {

@@ -143,4 +143,9 @@ public enum DataTableColumnType {
      * Row reordering type, used for drag and drop reordering of rows in datatable
      */
     ROW_REORDER,
+
+    /**
+     * Tabler icons renderer
+     */
+    ICON,
 }

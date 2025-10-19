@@ -85,13 +85,15 @@ String framesetSize = "*,*";
         if (doc != null)
         {
             DocDetails history = docDB.getDoc(docId, historyId, false);
-            //out.println(doc.getDateCreated()+" vs " + history.getDateCreated());
-            long abs = Math.abs(doc.getDateCreated() - history.getDateCreated());
-            if (abs < (1000))
-            {
-                request.setAttribute("historyEqualsDoc", "1");
-                framesetSize = "*";
-            }
+			if (history != null) {
+				//out.println(doc.getDateCreated()+" vs " + history.getDateCreated());
+				long abs = Math.abs(doc.getDateCreated() - history.getDateCreated());
+				if (abs < (1000))
+				{
+					request.setAttribute("historyEqualsDoc", "1");
+					framesetSize = "*";
+				}
+			}
         }
     }
 %>

@@ -18,7 +18,9 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /**
  * REST rozhranie pre zobrazenie stromovej struktury v type pola json
@@ -31,6 +33,17 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
     @Override
     protected void tree(Map<String, Object> result, JsTreeMoveItem item) {
+
+        // /images/gallery -> /images/{domainAlias}/gallery
+        String imagesGalleryRoot = Constants.getString("imagesRootDir")+"/"+Constants.getString("galleryDirName");
+        if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled")) {
+            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+            if (Tools.isNotEmpty(domainAlias)) {
+                if (imagesGalleryRoot.equals(item.getId())) item.setId(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
+                item.setRootFolder(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
+            }
+        }
+
         String parentPath = item.getId();
         if ("-1".equals(parentPath)) parentPath = "/";
 

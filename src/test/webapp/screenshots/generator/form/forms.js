@@ -33,13 +33,15 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/export-advanced.png");
 });
 
-Scenario('forms email confirmation', ({ I , DT, Document }) => {
+Scenario('forms email confirmation', ({ I , DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=93982");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.waitForElement('#WebJETEditorBody > form', 10);
     I.doubleClick('#WebJETEditorBody > form');
     I.switchTo();
-    I.clickCss('#cke_wjFormAttributes_149');
+    I.clickCss('#cke_wjFormAttributes_151');
     Document.screenshotElement('.cke_dialog_body', '/redactor/apps/form/advanced-settings.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(label[for="attribute-doubleOptIn"])', '/redactor/apps/form/checkbox-confirmation.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[id="attribute_recipients_id"])', '/redactor/apps/form/input-recipient.png');

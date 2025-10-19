@@ -67,8 +67,8 @@ public class UpdateDatabaseService {
 			Prop prop = Prop.getInstance("sk");
 			Map<String, String> templatesMap = prop.getTextStartingWith("news.template.");
 
-			Map<String, NewsTemplatesEntity> baseTemplatesMap = UpdateDatabaseService.getBaseNewsTemplates(templatesMap);
-			List<NewsTemplatesEntity> templates = UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, templatesMap);
+			Map<String, NewsTemplatesEntity> baseTemplatesMap = getBaseNewsTemplates(templatesMap);
+			List<NewsTemplatesEntity> templates = getFilledNewsTemplates(baseTemplatesMap, templatesMap);
 			for (NewsTemplatesEntity template : templates) {
 
 				if (template.getDomainId() == null || template.getDomainId() < 0) {

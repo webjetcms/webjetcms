@@ -1,0 +1,269 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var aiAssistantsDataTable;
+
+        var fieldsWereSet = false;
+        var hideOnCreate = [];
+        var hideOnEdit = [];
+
+        let url = "/admin/rest/ai/assistant-definition/";
+
+        window.domReady.add(function () {
+
+            var tabs = [
+                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
+                {id: 'action', title: '[[\#{editor.form.action}]]'},
+                {id: 'provider', title: '[[\#{components.ai_assistants.provider}]]'},
+                {id: 'instructions', title: '[[\#{components.ai_assistants.instruction_tab}]]'},
+                {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'}
+            ]
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
+
+            for(let i = 0; i < columns.length; i++) {
+                var columnClassName = columns[i]?.className;
+                if(columnClassName == undefined || columnClassName == null) {
+                    columnClassName = "";
+                }
+
+                if(columnClassName.indexOf("hideOnCreate") != -1) {
+                    hideOnCreate.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnCreate", "");
+                }
+
+                if(columnClassName.indexOf("hideOnEdit") != -1) {
+                    hideOnEdit.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnEdit", "");
+                }
+
+                columns[i].className = columnClassName;
+            }
+
+            let order = [];
+            order.push([1, 'asc']);
+
+            aiAssistantsDataTable = WJ.DataTable({
+                url: "/admin/rest/ai/assistant-definition/",
+                columns: columns,
+                serverSide: true,
+                tabs: tabs,
+                order: order,
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+
+            var eventsBinded = false;
+            aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
+                if (eventsBinded==false) {
+                    $("#DTE_Field_provider").on("change", function() {
+                        changeFieldsVisibility($(this).val(), action);
+
+                        let oldValue = aiAssistantsDataTable.EDITOR.currentJson["provider"];
+                        let newValue = $("#DTE_Field_provider").val();
+                        if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
+                            //Provider was changed and oldValue != newValue ... so remove value from model
+                            $("#DTE_Field_model").val("");
+                        }
+                    });
+
+                    $("#DTE_Field_description").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
+                    });
+
+                    $("#DTE_Field_userPromptLabel").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
+                    });
+
+                    // Initialize instructions editor enhancements (line numbers, tab insert, whitespace toggle)
+                    initInstructionsEnhancements();
+
+                    eventsBinded = true;
+                } else {
+                    // Ensure enhancements applied on subsequent opens
+                    initInstructionsEnhancements();
+                }
+            });
+
+            function initInstructionsEnhancements() {
+                var $ta = $("#DTE_Field_instructions");
+                if (!$ta.length || $ta.data("enhanced")) {
+                    updateLineNumbers();
+                    return;
+                }
+
+                // Wrap textarea with editor container and add gutter
+                $ta.wrap('<div class="instructions-editor"></div>');
+                $('<div class="instructions-line-numbers" aria-hidden="true"></div>').insertBefore($ta);
+
+                // Apply initial classes
+                var $taContainer = $ta.parent();
+                $taContainer.addClass("ws-nowrap monospace");
+
+                function updateLineNumbers() {
+                    var lines = $ta.val().split('\n').length || 1;
+                    var buf = [];
+                    for (var i=1; i<=lines; i++) buf.push('<div>'+i+'</div>');
+                    $ta.prev('.instructions-line-numbers').html(buf.join(''));
+                }
+
+                // Insert tab character at caret
+                $ta.on('keydown', function(ev) {
+                    if (ev.key === 'Tab') {
+                        ev.preventDefault();
+                        var start = this.selectionStart;
+                        var end = this.selectionEnd;
+                        var val = $ta.val();
+                        $ta.val(val.substring(0,start) + "\t" + val.substring(end));
+                        // Move caret
+                        this.selectionStart = this.selectionEnd = start + 1;
+                        updateLineNumbers();
+                    }
+                });
+
+                // Toggle white-space mode on double click (pre <-> nowrap)
+                $ta.on('dblclick', function() {
+                    if ($taContainer.hasClass('ws-pre')) {
+                        $taContainer.removeClass('ws-pre').addClass('ws-nowrap');
+                    } else {
+                        $taContainer.removeClass('ws-nowrap').addClass('ws-pre');
+                    }
+                });
+
+                // Sync line numbers with content and scroll
+                $ta.on('input', updateLineNumbers);
+                $ta.on('scroll', function() {
+                    $ta.prev('.instructions-line-numbers').scrollTop(this.scrollTop);
+                });
+
+                updateLineNumbers();
+                $ta.data("enhanced", true);
+            }
+
+            function changeFieldsVisibility(provider, action) {
+                $.ajax({
+                    type: "GET",
+                    url: url + "provider-fields",
+                    data: {
+                        "provider": provider,
+                        "action": action
+                    },
+                    success: function(res)
+                    {
+                        var toShow = Object.values(res);
+
+                        if("create" == action) {
+                            hideOnCreate.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        } else if("edit" == action) {
+                            hideOnEdit.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        }
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+
+                    }
+                });
+            }
+
+            function getTranslatedKey(keyToTranslate, fieldId) {
+                if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
+
+                $.ajax({
+                    url: url + "translate-key",
+                    method: "get",
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: { key: keyToTranslate },
+                    success: function(response) {
+                        $("#DTE_Field_" + fieldId).val(response);
+                    }
+                });
+            }
+        });
+
+    style.
+        /* Removed !important so JS toggle can work */
+        .instructions-editor.ws-pre textarea{ white-space: break-spaces !important; overflow-wrap: normal; }
+        .instructions-editor.ws-pre .instructions-line-numbers { display: none; }
+        .instructions-editor.ws-nowrap textarea{ white-space: nowrap !important; overflow-x: auto; }
+        .instructions-editor {
+            display: flex;
+            border: 1px solid var(--wj-nice-gray-300);
+            background: #fff;
+            height: 502px;
+            position: relative;
+            margin-left: 6px;
+            border-radius: var(--wj-border-radius);
+        }
+        .instructions-editor textarea, .instructions-editor .instructions-line-numbers {
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.2;
+            tab-size: 2;
+        }
+        .instructions-editor textarea {
+            flex: 1;
+            border: none;
+            resize: vertical;
+            padding: 4px 8px;
+            outline: none;
+        }
+        .instructions-line-numbers {
+            background: #f5f5f7;
+            color: #666;
+            border-right: 1px solid #ddd;
+            padding: 4px 6px 4px 4px;
+            text-align: right;
+            min-width: 5ch;
+            user-select: none;
+            overflow: hidden;
+            border-top-left-radius: var(--wj-border-radius);
+            border-bottom-left-radius: var(--wj-border-radius);
+            padding-bottom: 25px; /* account for textarea scrollbars */
+        }
+        .instructions-line-numbers div { padding: 0; }
+        div.DTE_Field_Name_instructions label { display: none; }
+        textarea.textarea-code { white-space: pre-line; }
+        textarea.textarea-code:focus { outline: none; box-shadow: none; }
+        .input-group > .instructions-editor {
+            position: relative;
+            flex: 1 1 auto;
+            width: 1%;
+            min-width: 0;
+        }
+
+        label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields\.translatedDescription div.form-group-tooltip { display: none; }
+
+        label[for='DTE_Field_editorFields-translatedUserPromptLabel'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields\.translatedUserPromptLabel div.form-group-tooltip { display: none; }
+
+        tr.not-active td {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-active td div a {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-init td {
+            color: var(--bs-warning) !important;
+        }
+
+        tr.not-init td div a {
+            color: var(--bs-warning) !important;
+        }
+
+    table.datatableInit.table

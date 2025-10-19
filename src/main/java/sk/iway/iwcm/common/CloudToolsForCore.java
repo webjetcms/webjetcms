@@ -851,8 +851,12 @@ public class CloudToolsForCore {
      * @return
      */
     public static int getDomainIdByAlias(String domainAlias) {
-        int domainId = GroupsDB.getDomainId( getDomainByAlias(domainAlias) );
-        return domainId == -1 ? getDomainId() : domainId;
+        int domainId = 1;
+        if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+            domainId = GroupsDB.getDomainId( getDomainByAlias(domainAlias) );
+            if (domainId == -1) domainId = getDomainId();
+        }
+        return domainId;
     }
 }
 

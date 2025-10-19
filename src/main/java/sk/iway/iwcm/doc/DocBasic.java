@@ -709,6 +709,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String data;
 
+	@JsonIgnore
 	@Lob
 	@Column(name = "data_asc")
 	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)

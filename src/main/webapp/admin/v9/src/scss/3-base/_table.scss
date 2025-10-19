@@ -208,6 +208,16 @@ table.datatableInit {
             border-radius: 4px;
         }
     }
+    td.dt-style-icon {
+        span.dt-icon-box {
+            float: left;
+            margin-right: 8px;
+            margin-top: 0px;
+            i.ti {
+                vertical-align: middle;
+            }
+        }
+    }
 
     tbody {
         tr {
@@ -381,6 +391,7 @@ table.datatableInit {
     &.cardView
     {
         width: 100% !important;
+        position: initial !important;
 
         colgroup {
             col[data-dt-column="0"] {
@@ -584,6 +595,9 @@ table.datatableInit {
             &.buttons-refresh {
                 padding-left: 6px;
                 padding-right: 6px;
+            }
+            &.buttons-select:active {
+                background-color: transparent;
             }
         }
 
@@ -1456,6 +1470,26 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+    margin-bottom: 5px;
+}
+//variant with textarea-code in textarea element
+.input-group:has(.textarea-code) {
+    width: 892px;
+    margin-bottom: 5px;
+    .textarea-code {
+        //if there is ai/button in group we need to be smaller
+        width: 842px;
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
+}
+//varianf with textare-code on DTE div
+div.DTE_Field.textarea-code .input-group {
+    margin-bottom: 5px;
+    textarea.form-control {
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
 }
 
 div.textarea-code-small textarea {
@@ -1573,6 +1607,16 @@ div.dt-scroll-body > table {
 div.dt-scroll-foot {
     border-top: 2px solid #DDDFE6 !important;
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+    display: none;
+    table {
+        tfoot {
+            tr {
+                td:first-child {
+                    text-align: left !important;
+                }
+            }
+        }
+    };
 }
 
 .DTE_Field_Type_select div.filter-option-inner-inner {
