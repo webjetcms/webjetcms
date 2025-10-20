@@ -567,9 +567,9 @@ task writePom() {
                 if (verA[i].equals("+")) verA[i] = "0"
                 if (verB[i].equals("+")) verB[i] = "0"
                 def numA = 0;
-                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC1", "").replace("-RC2", "").replace("-RC3", "").toInteger(); } catch (Exception ex) {}
+                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
                 def numB = 0;
-                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC1", "").replace("-RC2", "").replace("-RC3", "").toInteger(); } catch (Exception ex) {}
+                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
 
                 if (numA != numB) {
                     return numA <=> numB
