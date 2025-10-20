@@ -2,11 +2,14 @@ package sk.iway.iwcm.common;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class BasketTools {
+
+	public static final String COUNTRY_KEY_PREFIX = "stat.countries.tld.";
 
 	private BasketTools() {}
 
@@ -46,5 +49,12 @@ public class BasketTools {
 		}
 
 		return ammount;
+	}
+
+	public static String getCountryName(String countryCode, Prop prop) {
+		if(Tools.isEmpty(countryCode)) return "";
+		if(prop == null) prop = Prop.getInstance();
+		if(countryCode.startsWith(".")) countryCode = countryCode.substring(1);
+		return prop.getText(COUNTRY_KEY_PREFIX + countryCode.toLowerCase());
 	}
 }

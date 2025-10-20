@@ -81,7 +81,7 @@ Scenario('Test admin product list', ({ I, DT}) => {
 });
 
 Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', async ({Document, I, DT, DTE }) => {
-    Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.pl,.fr,.de");
+    Document.setConfigValue("basketInvoiceSupportedCountries", "sk,pl,fr,de");
     I.amOnPage(SL.BASKET_ADMIN);
     DT.filterContains("editorFields.firstName", "Test");
     I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").first());
@@ -93,7 +93,7 @@ Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', asy
 });
 
 Scenario('Set config value to default', ({ Document }) => {
-    Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.cz,.pl");
+    Document.setConfigValue("basketInvoiceSupportedCountries", "sk,cz,pl");
 });
 
 
