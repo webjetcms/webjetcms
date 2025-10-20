@@ -207,6 +207,11 @@
                 <include name="**/*"/>
             </fileset>
         </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/fonts/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/WEB-INF/fonts/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
         <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/formfiles/" overwrite="true">
             <fileset dir="${root}/src/main/webapp/WEB-INF/formfiles/">
                 <include name="**/*"/>
