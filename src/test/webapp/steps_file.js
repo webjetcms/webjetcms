@@ -145,6 +145,18 @@ module.exports = function () {
       if (waitForText===true) this.waitForText(helper, 10);
     },
 
+    amOnPageLng(url) {
+      var lng = this.getConfLng();
+      if (lng != "sk") {
+        if (url.indexOf("?")!=-1) {
+          url += "&language="+lng;
+        } else {
+          url += "?language="+lng;
+        }
+      }
+      this.amOnPage(url);
+    },
+
     //vygenerovanie nahodneho retazca
     getRandomText() {
       const startDate = new Date();
