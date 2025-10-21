@@ -55,7 +55,7 @@ public interface IncludeRequestWrapperInterface {
 			// najdem StripesRequestWrapper (ten moze byt niekde v request wrapperoch)
 			StripesRequestWrapper stripesWrapper = StripesRequestWrapper.findStripesWrapper(request);
 			//nemal by byt null, kedze ide o stripes RQ, ale istota je gulomet a zaroven actionBeana je anotovana @InjectPageParams
-			if (stripesWrapper!=null && getClass().isAnnotationPresent(BindPageParams.class))
+			if (stripesWrapper!=null && clazz.isAnnotationPresent(BindPageParams.class))
 			{
 				HttpServletRequest originalRequest = (HttpServletRequest) stripesWrapper.getRequest();
 

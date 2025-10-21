@@ -17,6 +17,8 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
 
     I.click("McGregor sales force");
     DTE.waitForEditor("newsDataTable");
+    I.wait(10);
+    I.toastrClose();
     Document.screenshot("/redactor/apps/news/admin-edit.png");
 
     //editor
@@ -33,7 +35,7 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
         addFilter(I, "AUTHOR_ID", "<=", "123");
         addFilter(I, "DATE_CREATED", "=", "01.10.2025");
         addFilter(I, "DATA", "Začína na", "This is first ");
-        addFilter(I, "AVAILABLE", "false", null);
+        addFilter(I, "AVAILABLE", "=", "false");
         I.clickCss("td.valueTd > input");
         Document.screenshot("/redactor/apps/news/editor-dialog-filter.png");
 
@@ -52,5 +54,11 @@ function addFilter(I, docField, operator, value) {
     I.clickCss("button.btn-success");
     I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , docField);
     I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , operator);
-    if(value != null) { I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value); }
+    if(value != null) {
+        if ("true" === value || "false" === value) {
+            I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > select") , value);
+        } else {
+            I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value);
+        }
+    }
 }

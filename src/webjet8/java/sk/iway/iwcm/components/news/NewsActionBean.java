@@ -730,7 +730,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				String[] contextClassesArray = getContextClassesArr();
 				if (contextClassesArray != null && contextClassesArray.length > 0)
 				{
-					for (String clazzName : Tools.getTokens(String.join("+", contextClasses), ",;+|"))
+					for (String clazzName : contextClassesArray)
 					{
 						//uz pridavame implicitne
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;

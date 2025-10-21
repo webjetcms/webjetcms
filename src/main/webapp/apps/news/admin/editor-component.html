@@ -18,7 +18,7 @@
 		// If no more filters, remove the table
 		if($("#filtersTable tbody tr").length === 0) {
 			$("#filtersTable").remove();
-			$("#filtersTable").remove();
+
 		}
 	}
 
@@ -37,8 +37,7 @@
 			filterSelect.append( getOption("ew", "[[#{datatables.select.endwith.js}]]") );
 			filterSelect.append( getOption("co", "[[#{datatables.select.contains.js}]]") );
 		} else if("Boolean" === type) {
-			filterSelect.append( getOption("true", "true") );
-			filterSelect.append( getOption("false", "false") );
+			filterSelect.append( getOption("eq", "=") );
 		}
 
 		return filterSelect;
@@ -52,7 +51,7 @@
 		} else if("String" === type) {
 			return $("<input type='text' class='form-control form-control-sm' />");
 		} else {
-			return $("<span class='class='form-control form-control-sm text-muted small'>n/a</span>");
+			return $("<select class='form-select-sm form-control form-select'><option value='true'>true</option><option value='false'>false</option></select>");
 		}
 	}
 
@@ -114,9 +113,6 @@
 		}
 
 		let fieldType = getFieldType(selectedField);
-		if("Boolean" === fieldType) {
-			selectedFilter = inputValue;
-		}
 
 		let tr = $("<tr></tr>");
 
@@ -147,18 +143,14 @@
 		operatorTd.append(operatorSelect);
 		tr.append(operatorTd);
 
-		// Value input (skip for Boolean)
+		// Value input
 		let valueTd = $("<td class='valueTd'></td>");
-		if("Boolean" !== fieldType) {
-			let valueInput = getInput(fieldType);
-			valueInput.removeClass("col-sm").addClass("form-control form-control-sm");
-			if(inputValue != null && inputValue !== "") {
-				valueInput.val(inputValue);
-			}
-			valueTd.append(valueInput);
-		} else {
-			valueTd.append($("<span class='text-muted small'>n/a</span>"));
+		let valueInput = getInput(fieldType);
+		valueInput.removeClass("col-sm").addClass("form-control form-control-sm");
+		if(inputValue != null && inputValue !== "") {
+			valueInput.val(inputValue);
 		}
+		valueTd.append(valueInput);
 		tr.append(valueTd);
 
 		filtersTable.find("tbody").append(tr);
@@ -246,14 +238,8 @@
 			let operator = filterRow.find("td.operatorTd select").first().val();
 
 			let value;
-			let input = filterRow.find("td.valueTd input");
-			if(input == null || input.length === 0) {
-				//Boolean (value stored in select that we called operator)
-				value = operator;
-				operator = "eq";
-			} else {
-				value = input.val();
-			}
+			let input = filterRow.find("td.valueTd .form-control");
+			value = input.val();
 
 			if(value == null || value === "") {
 				continue; // nothing to filter
