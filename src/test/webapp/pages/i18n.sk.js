@@ -65,6 +65,8 @@ module.exports = {
             "Improve text": "Vylepšiť text",
             "Fix grammar": "Opraviť gramatiku",
             "Browser": "Prehliadač",
+            "Yes": "Áno",
+            "No": "Nie"
         }
     }
 }

@@ -107,7 +107,7 @@ Scenario('apps screenshot for editor-components.jsp 1', ({ I, DT, DTE, Document 
     screenshotWebAndApp(I, Document, 77875, "/components/search", ".ly-content .container", tabLinkNone, null);
 });
 
-Scenario('apps screenshot for editor-components.jsp send link @current', ({ I, DT, DTE, Document }) => {
+Scenario('apps screenshot for editor-components.jsp send link', ({ I, DT, DTE, Document }) => {
     screenshotWebAndApp(I, Document, 77774, "/components/send_link", ".ly-content .container", tabLinkNone, null, 800, 600);
     I.amOnPageLng("/apps/poslat-stranku-emailom/");
     I.clickCss("a.sendLink");
