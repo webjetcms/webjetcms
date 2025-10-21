@@ -58,28 +58,28 @@ Správné nastavení bloku obsahuje přednastavené všechny šířky, napříkl
     <div class="row">
       <div class="col-12 col-md-6 col-xl-3 text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Etiam orci</h3>
         <p>Suspendisse interdum dolor justo, ac venenatis massa suscipit nec. Vivamus dictum malesuada mollis.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Aenean </h3>
         <p>Aliquam elementum ut ante vitae dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Maecenas</h3>
         <p>Sed sollicitudin eros quis leo imperdiet, id congue lorem ornare. Suspendisse eleifend at ante id ultrices.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Suspendisse</h3>
         <p>Nullam ornare, magna in ultrices mattis, lectus neque mollis libero, vitae varius mauris metus a risus.</p>
@@ -121,9 +121,11 @@ Doporučujeme bloky generovat pomocí [PugJS](https://pugjs.org).
 
 ## CSS třídy pro obrázek
 
-Pokud má obrázek nastavenou CSS třídu `fixedSize-w-h-ip` je automaticky po změně adresy obrázku nastaven zadaný rozměr `w` a `h`, je-li zadán i poslední údaj `ip` nastaví se také [bod zájmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). Např. CSS třída `fixedSize-160-160-5` automaticky generuje obrázek rozměru 160 x 160 bodů s nastaveným bodem zájmu 5. Třídu doporučujeme nastavit na všechny ilustrační obrázky, u kterých je důležitý jejich rozměr.
+Pokud má obrázek nastavenou CSS třídu `fixedSize-w-h-ip` je automaticky po změně adresy obrázku nastaven zadaný rozměr `w` a `h`, je-li zadán i poslední údaj `ip` nastaví se také [bod zájmu](../../frontend/thumb-servlet/README.md). Např. CSS třída `fixedSize-160-160-5` automaticky generuje obrázek rozměru 160 x 160 bodů s nastaveným bodem zájmu 5. Třídu doporučujeme nastavit na všechny ilustrační obrázky, u kterých je důležitý jejich rozměr.
 
 Při kliknutí na obrázek s CSS třídou `fixedSize/w-100/autoimg` se ihned otevře okno vlastností obrázku pro jeho jednoduchou výměnu. Redaktor tak nemusí kliknout na obrázek a následně v nástrojové liště na ikonu změny obrázku.
+
+Pokud obrázek obsahuje v URL adrese výraz `placeholder` nebo `stock` neotevře se dialogové okno výběru obrázku do složky s tímto obrázkem, ale do složky Média této stránky. Uživatel tak může snadno nahrát nový obrázek.
 
 ## Podpora karet
 

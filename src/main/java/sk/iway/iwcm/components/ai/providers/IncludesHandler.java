@@ -17,7 +17,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 public class IncludesHandler {
 
     private final Map<Integer, String> replacedIncludes;
-    private final Integer milliSleep;
+    private final StringBuilder wholeResponse = new StringBuilder();
 
     private int state = 0;
     private boolean digits = false;
@@ -31,17 +31,10 @@ public class IncludesHandler {
      */
     public IncludesHandler(Map<Integer, String> replacedIncludes) {
         this.replacedIncludes = replacedIncludes;
-        this.milliSleep = null;
     }
 
-    /**
-     *
-     * @param replacedIncludes
-     * @param milliSleep - in milliseconds how long wait between flush
-     */
-    public IncludesHandler(Map<Integer, String> replacedIncludes, Integer milliSleep) {
-        this.replacedIncludes = replacedIncludes;
-        this.milliSleep = milliSleep;
+    public String getWholeResponse() {
+        return wholeResponse.toString();
     }
 
     /**
@@ -96,18 +89,16 @@ public class IncludesHandler {
         this.state = state;
         this.digits = digits;
 
-        if(milliSleep != null && milliSleep > 0) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException ignored) {}
-        }
-
         Matcher m = LOCK_PATTERN.matcher(buffer);
+        String stringToWrite = "";
         if(m.find()) {
-            writer.write(IncludesHandler.returnIncludesToPlaceholders(buffer.toString(), replacedIncludes));
+            stringToWrite = IncludesHandler.returnIncludesToPlaceholders(buffer.toString(), replacedIncludes);
         } else {
-            writer.write(buffer.toString());
+            stringToWrite = buffer.toString();
         }
+        wholeResponse.append(stringToWrite);
+
+        writer.write(stringToWrite);
         writer.flush();
 
         buffer.setLength(0);

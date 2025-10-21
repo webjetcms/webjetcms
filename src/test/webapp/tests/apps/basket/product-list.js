@@ -73,7 +73,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
     DT.filterContainsForce("title", "Apple Watch Series 4 44mm");
     DT.checkTableRow("productListDataTable", 1, ["92897", "", "Apple Watch Series 4 44mm Vesmírne čierny hliník s čiernym športovým remi", "Tester Playwright"]);
 
-    changeFolder(I, "/shop.tau27.iway.sk/Produkty/Mobily");
+    changeFolder(I, "/sk/Produkty/Mobily");
     DT.filterContainsForce("title", "Apple Watch Series 4 44mm");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -82,7 +82,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
     DT.filterEquals("title", "Smasung Galaxy S9 128GB");
     DT.checkTableRow("productListDataTable", 1, ["92892", "", "Smasung Galaxy S9 128GB", "Tester Playwright"]);
 
-    changeFolder(I, "/shop.tau27.iway.sk/Produkty/Mobily/Android");
+    changeFolder(I, "/sk/Produkty/Mobily/Android");
     DT.filterEquals("title", "iPhone X 256GB");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     DT.filterEquals("title", "Smasung Galaxy S9 128GB");
@@ -99,7 +99,7 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet");
     I.seeElement( locate("div.toast-title").withText("Pridanie kategórie produktov") );
-    I.seeElement( locate("div.toastr-message").withText("Zadajte unikátny názov novej kategórie produktov, ktorá sa má vytvoriť v priečinku: /shop.tau27.iway.sk/Produkty") );
+    I.seeElement( locate("div.toastr-message").withText("Zadajte unikátny názov novej kategórie produktov, ktorá sa má vytvoriť v priečinku: /sk/Produkty") );
 
     I.say("Wait for err if no name is set");
     I.clickCss("div.toastr-buttons > button.btn-primary");
@@ -116,10 +116,10 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
     checkToaster(I, true);
 
     I.say("That folder is in select now");
-    I.click ( locate("#productListDataTable_extfilter").find("button.dropdown-toggle") );
+    I.click ( locate("#groupSelect_wrapper").find("button.dropdown-toggle") );
     I.waitForElement("div.dropdown-menu.show");
-    I.seeElement( locate("div.dropdown-menu.show").find( locate("a.dropdown-item > span").withText("/shop.tau27.iway.sk/Produkty/" + newGroupA) ) );
-    I.click ( locate("#productListDataTable_extfilter").find("button.dropdown-toggle") );
+    I.seeElement( locate("div.dropdown-menu.show").find( locate("a.dropdown-item > span").withText("/sk/Produkty/" + newGroupA) ) );
+    I.click ( locate("#groupSelect_wrapper").find("button.dropdown-toggle") );
 
     I.say("Try set same name in same folder - wait for err");
     I.clickCss("button.buttons-add-folder");
@@ -130,7 +130,7 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
 
     I.say("Create sub group");
     let newGroupB = "TestGroupA_child_" + random + "_autotest";
-    changeFolder(I, "/shop.tau27.iway.sk/Produkty/" + newGroupA);
+    changeFolder(I, "/sk/Produkty/" + newGroupA);
 
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.clickCss("button.buttons-add-folder");
@@ -188,9 +188,9 @@ async function changeDomain(I, Document, url) {
 }
 
 function changeFolder(I, folderName) {
-    I.clickCss("#productListDataTable_extfilter > div > div > div > button.dropdown-toggle");
-    I.waitForElement("body > div.dropdown.bootstrap-select > div.dropdown-menu", 5);
-    I.click( locate("a.dropdown-item > span").withText(folderName) );
+    I.clickCss("#groupSelect_wrapper button.dropdown-toggle");
+    I.waitForElement("#groupSelect_wrapper > div.dropdown.bootstrap-select > div.dropdown-menu", 5);
+    I.click( locate("#groupSelect_wrapper a.dropdown-item > span").withText(folderName) );
 }
 
 function checkToaster(I, success) {

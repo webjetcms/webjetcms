@@ -58,7 +58,7 @@ Editor obsahuje následující karty:
 
 **Popis**
 
-Krátký a dlouhý popis fotografie v různých jazycích.
+Krátký a dlouhý popis fotografie v různých jazykových mutacích.
 
 Tyto popisy jsou důležité pro mezinárodní uživatele. Krátký popis poskytuje rychlý náhled na obsah fotografie, zatímco dlouhý popis poskytuje detailnější informace. Popisy se automaticky zobrazují podle zvoleného jazyka stránky.
 
@@ -108,6 +108,12 @@ Výsledná galerie na web stránce může vypadat následovně:
 
 ![](photoswipe.png)
 
+## Přesunutí obrázku
+
+Změnou hodnoty **Složka** v kartě **Metadata** nastane změna uložení v rámci úložiště. Složku můžete změnit při editaci i při duplikování obrázku. Cílovou složku si můžete vybrat přes výběrové okno, nebo můžete zadat přímo cestu. Cesta musí **vždy** začínat na `/images/gallery`. Tato funkcionalita je užitečná při přesouvání, jelikož galerie nepodporuje akci `drag&drop`.
+
+Pokud zadaná složka ještě neexistuje, automaticky se vytvoří. Podle nejbližší rodičovské složky se nastaví vlastnosti vytvořené složky. Funguje to také pro několik úrovní současně, takže se může automaticky vytvořit celý strom vnoření.
+
 ## Možné konfigurační proměnné
 
 - `imageMagickDir` - Je-li nastaveno použije se pro změnu velikosti obrázků příkaz `convert` z balíku `ImageMagick` (výchozí hodnota: `/usr/bin`).
@@ -136,3 +142,12 @@ Výsledná galerie na web stránce může vypadat následovně:
 - `galleryWatermarkApplyOnUploadExceptions` - Seznam názvů cest pro které se nebude aplikovat vodoznak při nahrání souboru do WebJETu (výchozí hodnota: `logo,nowatermark,system,funkcionari`).
 - `galleryWatermarkSvgSizePercent` - Výše v procentech kterou bude zabírat SVG vodoznak z výšky obrázku (výchozí hodnota: 5).
 - `galleryWatermarkSvgMinHeight` - Minimální výška SVG vodoznaku v bodech (výchozí hodnota: 30).
+
+### Zmenšení rozměrů originál obrázku
+
+Pokud vám originál obrázek zabírá na disku hodně místa, je možné nastavit jeho zmenšení při nahrání pomocí konfiguračních proměnných:
+- `metadataRemoverCommand` - je-li nastaveno aktivuje se odstraňování metadat z nahraných souborů, nebo se použije `imageMagick` pro zmenšení velikosti - nastavte na `/usr/bin/convert`.
+- `metadataRemoverParams` - parametry, pro zmenšení obrázku přes `imageMagick` nastavte na `{filePath} -resize 1920x1080 {filePath}`. Rozměr nastavte podle potřeby.
+- `metadataRemoverExtensions` - přípony, pro které se použije, pro obrázky nastavte na `jpg,jpeg,png,gif`.
+
+Vyžadován je nástroj `ImageMagick` na serveru.

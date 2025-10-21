@@ -18,6 +18,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 public interface SupportLogicInterface {
     String getServiceName();
@@ -28,11 +29,12 @@ public interface SupportLogicInterface {
     HttpRequestBase getModelsRequest(HttpServletRequest request);
     List<LabelValue> extractModels(JsonNode root);
 
-    HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request);
+    HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException;
     String extractResponseText(JsonNode jsonNodeRes);
 
-    HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request);
-    JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException;
+    HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException;
+    //String if full text response, JsonNode contains usage info
+    Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException;
 
     default String getStreamEncoding(HttpEntity entity) {
         return java.nio.charset.StandardCharsets.UTF_8.name();

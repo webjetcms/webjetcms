@@ -32,9 +32,18 @@ String perexImage = "";
 private String externalLink;
 ```
 
+## Nastavení
+
+Pomocí atributu `className` je možné nastavit doplňkové filtrování zobrazených souborů:
+- `image` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/`.
+- `video` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `video/`.
+- `multimedia` - zobrazí se pouze soubory, jejichž `mime-type` začíná na `image/` nebo `video/`.
+
+Nastavení `mime-type` je čteno ze souboru [mime.types](../../../../src/main/webapp/WEB-INF/mime.types).
+
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-elfinder.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle `className` generuje vhodný HTML kód input pole. Do proměnné `conf._prepend` ukládá odkaz na prepend element (`div.input-group-prepend .input-group-text`) s náhledem obrázku. Funkce `setValue(conf, val)` se používá k nastavení hodnoty pole a zároveň k nastavení náhledového obrázku (je-li typu `.jpg` nebo `.png`).
+Implementace je v souboru [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle `className` generuje vhodný HTML kód input pole. Do proměnné `conf._prepend` ukládá odkaz na prepend element (`div.input-group-prepend .input-group-text`) s náhledem obrázku. Funkce `setValue(conf, val)` se používá k nastavení hodnoty pole a zároveň k nastavení náhledového obrázku (je-li typu `.jpg` nebo `.png`).
 
 Náhledový obrázek je nastaven jako `background-image`, zároveň je `prepend` elementu nastavená CSS třída `has-image`.
 

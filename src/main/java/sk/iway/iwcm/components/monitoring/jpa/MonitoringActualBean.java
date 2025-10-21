@@ -61,6 +61,7 @@ public class MonitoringActualBean {
     private Integer dbActive;
     private Integer dbIdle;
     private Integer dbWaiting;
+    private String dbServerName;
 
     private Integer cacheItems;
     private Integer sessionsTotal;
@@ -145,6 +146,10 @@ public class MonitoringActualBean {
         } catch (Exception ex) {
             //
         }
+        dbServerName = "MariaDB";
+        if (Constants.DB_TYPE==Constants.DB_ORACLE) dbServerName = "Oracle";
+        else if (Constants.DB_TYPE==Constants.DB_MSSQL) dbServerName = "Microsoft SQL Server";
+        else if (Constants.DB_TYPE==Constants.DB_PGSQL) dbServerName = "PostgreSQL";
 
         cacheItems = Cache.getInstance().getSize();
         sessionsTotal = SessionHolder.getTotalSessions();

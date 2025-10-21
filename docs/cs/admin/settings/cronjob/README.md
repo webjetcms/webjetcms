@@ -38,7 +38,7 @@ Změny pro časování úloh se aplikují okamžitě, ale již odstartované úl
 
 **Parametry:**
 
-1. URL, včetně `http://` předpony, například `https://www.interway.sk/`.
+1. URL, včetně `http://` předpony, například. `https://www.interway.sk/`.
 
 2. Email odesílatele.
 

@@ -293,6 +293,10 @@ else
 			div.deviceInfo span.deviceInfoTitle {
 				font-weight: bold;
 			}
+			#componentCodeDiv iframe {
+				/*fix elfinder drop upload over iframes like docsembed or video*/
+				pointer-events: none !important;
+			}
 		</style>
 		<% if (FileTools.isFile("/jscripts/common.js")) { %>
 		<script type="text/javascript" src="/jscripts/common.js"></script>

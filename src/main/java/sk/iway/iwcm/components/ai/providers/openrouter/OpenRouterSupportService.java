@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.ai.providers.openrouter;
 
+import java.io.IOException;
+
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.providers.SupportLogic;
 
 public abstract class OpenRouterSupportService extends SupportLogic {
@@ -39,38 +42,50 @@ public abstract class OpenRouterSupportService extends SupportLogic {
         return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    protected ObjectNode getBaseMainObject(String... contents) {
+    protected ObjectNode getBaseMainObject(String... contents) throws IOException {
+        return getBaseMainObjectWithImage(null, contents);
+    }
+
+    protected ObjectNode getBaseMainObjectWithImage(InputDataDTO inputData, String... contents) throws IOException {
         ObjectNode mainObject = MAPPER.createObjectNode();
+
+        ArrayNode contentArray = MAPPER.createArrayNode();
+
+        // Text content
+        for (String content : contents)
+            if (Tools.isNotEmpty(content)) addContent(contentArray, content);
+
+        // Image content
+        if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            addImageContent(contentArray, inputData);
+
+        ObjectNode message = MAPPER.createObjectNode();
+        message.put("role", "user");
+        message.set("content", contentArray);
+
         ArrayNode messagesArray = MAPPER.createArrayNode();
-        for (String content : contents) if (Tools.isNotEmpty(content)) addMessage(messagesArray, content);
+        messagesArray.add(message);
+
         mainObject.set("messages", messagesArray);
         return mainObject;
     }
 
-    protected void addMessageWithImage(ArrayNode messagesArray, String value, String format, String base64Img) {
-        ObjectNode imageMsg = MAPPER.createObjectNode();
-        imageMsg.put("role", "user");
-
-        ObjectNode imageUrl = MAPPER.createObjectNode();
-        imageUrl.put("url", "data:" + format + ";base64," + base64Img);
-
-        ArrayNode content = MAPPER.createArrayNode();
+    protected void addImageContent(ArrayNode contentArray, InputDataDTO inputData) throws IOException {
         ObjectNode contentItem = MAPPER.createObjectNode();
         contentItem.put("type", "image_url");
+
+        ObjectNode imageUrl = MAPPER.createObjectNode();
+        imageUrl.put("url", "data:" + inputData.getMimeType() + ";base64," + inputData.getFileAsBase64());
+
         contentItem.set("image_url", imageUrl);
-        content.add(contentItem);
-
-        imageMsg.set("content", content);
-        messagesArray.add(imageMsg);
-
-        addMessage(messagesArray, value);
+        contentArray.add(contentItem);
     }
 
-    protected void addMessage(ArrayNode messagesArray, String value) {
-        ObjectNode message = MAPPER.createObjectNode();
-        message.put("role", "user");
-        message.put("content", value);
-        messagesArray.add(message);
+    private void addContent(ArrayNode contentArray, String value) {
+        ObjectNode contentItem = MAPPER.createObjectNode();
+        contentItem.put("type", "text");
+        contentItem.put("text", value);
+        contentArray.add(contentItem);
     }
 
     public static String handleFinishReasonValue(String finishReason) {

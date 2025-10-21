@@ -115,7 +115,7 @@ function doScreens(I, Document, TempMail, isAdmin) {
     I.fillField(retypeInput, randomPassword);
     I.clickCss(submitBtn);
 
-    Document.screenshot(".container", basePath + screensPrefix + "-recovery-form-4.png");
+    Document.screenshotElement(".container", basePath + screensPrefix + "-recovery-form-4.png");
 
     I.closeCurrentTab();
 

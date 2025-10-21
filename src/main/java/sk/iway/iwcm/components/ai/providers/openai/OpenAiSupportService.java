@@ -1,11 +1,14 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.providers.SupportLogic;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -143,15 +146,25 @@ public abstract class OpenAiSupportService extends SupportLogic {
         return Constants.getString("ai_openAiAuthKey");
     }
 
-    protected ObjectNode getBaseMainObject(String systemInput, String... userInputs) {
+    protected ObjectNode getBaseMainObject(String systemInput, String... userInputs) throws IOException {
+        return getBaseMainObjectWithImage(systemInput, null, userInputs);
+    }
+
+    protected ObjectNode getBaseMainObjectWithImage(String systemInput, InputDataDTO inputData, String... userInputs) throws IOException {
         ObjectNode mainObject = MAPPER.createObjectNode();
         ArrayNode inputsArray = MAPPER.createArrayNode();
 
+        //System instructions
         addInput(inputsArray, systemInput, true);
 
-        for(String userInput : userInputs) {
+        //USer input's
+        for(String userInput : userInputs)
             if (Tools.isNotEmpty(userInput)) addInput(inputsArray, userInput, false);
-        }
+
+        //Image input
+        if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            addImageInput(inputsArray, inputData);
+
 
         mainObject.set("input", inputsArray);
 
@@ -163,6 +176,21 @@ public abstract class OpenAiSupportService extends SupportLogic {
             .put("role", isSystem ? "system" : "user")
             .put("content", value);
 
+        inputsArray.add(input);
+    }
+
+    protected void addImageInput(ArrayNode inputsArray, InputDataDTO inputData) throws IOException {
+        ObjectNode input = MAPPER.createObjectNode()
+            .put("role", "user");
+
+        ObjectNode content = MAPPER.createObjectNode()
+            .put("type", "input_image")
+            .put("image_url", "data:" + inputData.getMimeType() + ";base64," + inputData.getFileAsBase64());
+
+        // Wrap content in an array - NEEDED from Jackson ≥2.17
+        ArrayNode contentArray = MAPPER.createArrayNode().add(content);
+
+        input.set("content", contentArray);
         inputsArray.add(input);
     }
 }

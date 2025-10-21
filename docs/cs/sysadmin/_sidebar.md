@@ -1,6 +1,7 @@
  <div class="sidebar-section">Manuál pro provoz</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Bezpečnost
   - [Bezpečnostní testy](/sysadmin/pentests/README.md)
   - [Kontrola zranitelností knihoven](/sysadmin/dependency-check/README.md)
@@ -19,5 +20,6 @@
   - [Restartovat](/sysadmin/restart.md)
   - [Výměna údajů uzlů clusteru](/sysadmin/monitoring/nodes-logic.md)
   - [Mazání dat](/sysadmin/data-deleting/README.md)
+  - [Nastavení licenčního čísla](/install/license/README.md)
 - Soubory
   - [Zálohování systému](/sysadmin/files/backup/README.md)

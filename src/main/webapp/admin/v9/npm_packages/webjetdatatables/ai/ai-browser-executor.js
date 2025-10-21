@@ -345,7 +345,8 @@ export class AiBrowserExecutor {
             this.languageDetector = await LanguageDetector.create({});
         }
         const results = await this.languageDetector.detect(text);
-        //console.log("Detected languages:", results);
+        //preserve this for complaints
+        console.info("Detected languages:", results);
         if (results.length > 0) {
             return results[0].detectedLanguage;
         }

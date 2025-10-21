@@ -4,7 +4,6 @@ import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.A
 import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STORE;
 import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STREAM;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.methods.HttpGet;
@@ -35,6 +33,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for OpenAI assistants - handles calls to OpenAI API
@@ -98,8 +97,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return supportedValues;
     }
 
-    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(instructions, inputData, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
 
@@ -129,8 +133,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return contentArray.get(0).path("text").asText();
     }
 
-    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(instructions, inputData, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
         mainObject.put(STREAM.value(), assistant.getUseStreaming());
@@ -143,10 +152,10 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return post;
     }
 
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+    public Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
         OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
         streamHandler.handleBufferedReader(reader, writer);
-        return streamHandler.getUsageChunk();
+        return new Pair<>(streamHandler.getWholeResponse(), streamHandler.getUsageChunk());
     }
 
 
@@ -221,7 +230,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return "";
     }
 
-    private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) throws IOException {
+    private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) {
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 
@@ -235,9 +244,6 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         //1024x1024 is valid for gpt-image dalle-3 and dalle-2 ... soo best default value
         builder.addTextBody("size", inputData.getImageSize() == null ? "1024x1024" : inputData.getImageSize());
-
-        BufferedImage image = ImageIO.read( inputData.getInputFile() );
-        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
 
         //Set image
         if("dall-e-2".equals(model)) {

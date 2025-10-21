@@ -127,6 +127,36 @@ Similar to the image, the setting is `.type` to the value of `link` possible to 
 
 `editor.field_x.type=link`
 
+### Choosing a website folder
+
+To select a folder for a website, you can use the type `json_group`:
+- `editor.field_x.type=json_group` - displays a selection of web page folders
+
+![](webpages-group.png)
+
+- `editor.field_x.type=json_group_null` - by adding `null` it is also possible to set a blank value at the end of the type (a button to delete the selected folder will be displayed)
+
+![](webpages-group-null.png)
+
+### Choosing a website
+
+To select pages, you can use the type `json_doc`:
+- `editor.field_x.type=json_doc` - displays a selection of pages
+
+![](webpages-doc.png)
+
+- `editor.field_x.type=json_doc_null` - by adding `null` it is also possible to set a blank value at the end of the type (a button to delete the selected web page will be displayed)
+
+![](webpages-doc-null.png)
+
+### Selecting a file system folder
+
+![](webpages-dir.png)
+
+To select a directory in the file system by setting `.type` to the value of `dir`. Click the cross icon at the end of the text box to display a dialog box for selecting a folder in the file system.
+
+`editor.field_x.type=dir`
+
 ### Selecting an existing page from the directory
 
 ![](webpages-docsin.png)
@@ -141,14 +171,6 @@ To select an existing page (its `docId`) it is possible to use the type `docsIn_
 
 The connection to the dialer is via type `enumeration_X` where X is the ID of the dial type. The value is set to the ID of the record from the dial:
 - `editor.field_x.type=enumeration_2` - displays options from dial type 2 as a selection field
-
-### Selecting a filesystem directory
-
-![](webpages-dir.png)
-
-To select a directory in the file system by setting `.type` to the value of `dir`. Click the cross icon at the end of the text box to display a dialog box for selecting a directory on the file system.
-
-`editor.field_x.type=dir`
 
 ### Unique identifier
 

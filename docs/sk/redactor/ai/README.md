@@ -8,6 +8,8 @@ Tieto funkcie vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky,
     <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+Na vyskúšanie môžete použiť [AI v prehliadači](settings/README.md#prehliadač) alebo získať zdarma API kľúče pre [Gemini](settings/README.md#gemini) alebo [OpenRouter](settings/README.md#openrouter).
+
 ## Vylúčenie zodpovednosti
 
 AI nástroje v WebJET CMS sú navrhnuté ako užitoční pomocníci, ktorí urýchľujú tvorbu a úpravu obsahu. Avšak, vždy pamätajte: výstupy umelej inteligencie môžu obsahovať chyby, nepresnosti alebo nevhodný obsah. Preto je nevyhnutné, aby každý používateľ vždy skontroloval a overil výsledky pred ich publikáciou.

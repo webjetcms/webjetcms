@@ -1,6 +1,7 @@
  <div class="sidebar-section">WebJET CMS programmer</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Installation and start-up
   - [Installation and start-up](/developer/install/README.md)
   - [Development Containers](/developer/install/devcontainers/README.md)

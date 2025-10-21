@@ -149,3 +149,5 @@ Jak můžete vidět z předchozí série obrázků, zobrazené nástroje se liš
 - `elfinderMoveConfirm` - standardně se zobrazí potvrzení přesunu souboru nebo složky, při použití funkce "drag & drop" nebo kopírování/vložení přes kontextové menu. Chcete-li potvrzování přesunu souboru nebo složky vypnout změňte hodnotu konfigurační proměnné `elfinderMoveConfirm` na `false`.
 
 ![](move-confirm.png)
+
+- Po nastavení konf. proměnné `iwfs_useVersioning` na `true` se začne zapisovat historie změn v souborech (každý soubor se po nahrání a před přepsáním archivuje do složky `/WEB-INF/libfilehistory`). Seznam je dostupný v průzkumníku v kontextovém menu Nastavení souboru s možností porovnání, zobrazení historické verze a vrácení změny. Cestu `/WEB-INF/libfilehistory` umíte upravit v konfigurační proměnné `fileHistoryPath`, pokud soubory potřebujete ukládat například. na síťový disk.

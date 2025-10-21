@@ -553,12 +553,16 @@ public class PathFilter implements Filter
 			//kontrola jsessionid v URL, vynimka pre .jsessionid. je pre grpd cookie modul kde sa edituje takyto kluc
 			if (path.toLowerCase().contains("jsessionid") || (req.getQueryString()!=null && req.getQueryString().toLowerCase().contains("jsessionid") && req.getQueryString().toLowerCase().contains(".jsessionid.")==false) || req.isRequestedSessionIdFromURL())
 			{
-				String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
-				Logger.error(PathFilter.class, description);
+				//jsessionid is added to URL by PD4ML, so allow /thumb and /images paths
+				if (path.startsWith("/images/")==false && path.startsWith("/thumb/images/")==false)
+				{
+					String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
+					Logger.error(PathFilter.class, description);
 
-				//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
-				req.getSession().invalidate();
-				req.getSession(true);
+					//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
+					req.getSession().invalidate();
+					req.getSession(true);
+				}
 
 				String pathFixed = path;
 				int i = pathFixed.toLowerCase().indexOf(";jsessionid");
@@ -1415,7 +1419,7 @@ public class PathFilter implements Filter
 
 		//kontrola pristupu podla povolenych IP adries
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_WEB_ACCESS_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking to access web from session: " + val.booleanValue());
@@ -1423,7 +1427,7 @@ public class PathFilter implements Filter
 		}
 
 		boolean ret = Tools.checkIpAccess(request, "webEnableIPs");
-		session.setAttribute(CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1441,7 +1445,7 @@ public class PathFilter implements Filter
 	private boolean checkDomain(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_DOMAIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_DOMAIN_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking DOMAIN to access web from session: " + val.booleanValue());
@@ -1466,7 +1470,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1652,7 +1656,7 @@ public class PathFilter implements Filter
 	public static boolean checkAdmin(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_ADMIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_ADMIN_SESSION_KEY);
 		if (val != null)
 		{
 			return (val.booleanValue());
@@ -1679,7 +1683,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 

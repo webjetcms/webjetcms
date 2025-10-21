@@ -19,7 +19,7 @@ export class BarChartForm {
 }
 ```
 
-The individual class parameters are used to :
+The individual class parameters are used to:
 - `yAxeName`, a text value representing the name of a variable in the object that stores the Y-axis text value (representing a category).
 - `xAxeName`, a text value representing the name of a variable in the object that stores the numeric value of the X-axis (representing the category value).
 - `chartTitle`, a text value representing the title that appears as a header above the chart.
@@ -52,26 +52,28 @@ Graph type **PIE** is created by an instance of the class `PieChartForm`, which 
 
 ```javascript
 export class PieChartForm {
-    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey) {
+    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null) {
         this.yAxeName = yAxeName;
         this.xAxeName = xAxeName;
         this.chartTitle = chartTitle;
         this.chartDivId = chartDivId;
         this.chartData = chartData;
         this.labelKey = labelKey;
+        this.labelTransformationFn = labelTransformationFn;
         this.chart = undefined;
         this.chartLegend = undefined;
     }
 }
 ```
 
-The individual class parameters are used to :
+The individual class parameters are used to:
 - `yAxeName`, a text value representing the name of a variable in the object that stores the numeric value of the category.
 - `xAxeName`, a text value representing the name of a variable in the object that stores a text value representing a category.
 - `chartTitle`, a text value representing the title that appears as a header above the chart.
 - `chartDivId`, a text value representing the div ID of the element to display the generated graph.
 - `chartData`, an array of objects that represent the graph data. Each object must contain a category variable (xAxeName) and a category value variable(yAxeName).
 - `labelKey`, **optional** a text value representing a translation handle with a caption to the summary
+- `labelTransformationFn`, **optional** function that will be used to transform the text in the category labels (the format itself will remain the same, only the text will be changed), The function must have one input parameter that represents the original text and must return the transformed text.
 - `chart`, represents our chart, which will be automatically saved to this class parameter when created.
 - `chartLegend`, represents the set graph legend. It is not set by the user, it is set automatically and is needed in the background when updating the chart.
 
@@ -125,7 +127,7 @@ export class DoublePieChartForm {
 }
 ```
 
-The individual class parameters are used to :
+The individual class parameters are used to:
 - `yAxeName_inner`, a text value representing the name of a variable in the object that stores the numeric value of the category. This is an inner ring.
 - `yAxeName_outer`, a text value representing the name of a variable in the object that stores the numeric value of the category. This is the outer ring.
 - `xAxeName`, a text value representing the name of a variable in the object that stores a text value representing a category.
@@ -162,7 +164,7 @@ Parameters `labelKey` a `labelSeries` are special in that they are not mandatory
 
 Parameters `labelKey` is used as a translation key to retrieve the text. This text is automatically set to the center of the chart as the title for the calculated value.
 
-Parameter `labelSeries` is used to set which series of data we want to have counted. can take the value :
+Parameter `labelSeries` is used to set which series of data we want to have counted. can take on the value:
 - `inner`, the values of the inner graph (`yAxeName_inner`)
 - `outer`, the values of the outer graph (`yAxeName_outer`)
 
@@ -176,25 +178,29 @@ Graph type **LINE** is created by an instance of the class `LineChartForm`, whic
 
 ```javascript
 export class LineChartForm {
-    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType) {
+    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
         this.yAxeNames = yAxeNames;
         this.xAxeName = xAxeName;
         this.chartTitle = chartTitle;
         this.chartDivId = chartDivId;
         this.chartData = chartData;
         this.dateType = dateType;
+        this.legendTransformationFn = legendTransformationFn;
+        this.hideEmpty = hideEmpty;
         this.chart = undefined;
     }
 }
 ```
 
-The individual class parameters are used to :
+The individual class parameters are used to:
 - `yAxeName`, (discussed in more detail in a separate sub-chapter)
 - `xAxeName`, a text value representing the name of a variable in the object that stores the numeric value of the Y-axis (the recorded value).
 - `chartTitle`, a text value representing the title that appears as a header above the chart.
 - `chartDivId`, a text value representing the div ID of the element to display the generated graph.
 - `chartData`, (discussed in more detail in a separate sub-chapter)
 - `dateType`, (discussed in more detail in a separate sub-chapter)
+- `legendTransformationFn`, **optional** function that is used to transform the text in the legend of the graph. The function must have one input parameter that represents the original text and must return the transformed text.
+- `hideEmpty`, **optional** Boolean value that determines whether tooltips for empty values (null or 0) should be displayed in the chart. The default value is `true`, which means that blank values will not be displayed. This is only applied if the chart displays more than 8 lines.
 - `chart`, the chart represents our chart, which will be automatically stored in this class parameter when it is created.
 
 **Attention**, parameter `chart` cannot be set through the constructor and serves as a background auxiliary variable.
@@ -276,13 +282,13 @@ This case is a combination of the previous ones. As a result, the graph will con
 
 The last special parameter of the LINE graph is **dateType**. Since the X axis of the graph is a date axis, there is a need for proper granularity of this axis. That is, if the X axis of the graph shows an interval of 1 year and the date values are 1 week apart, we want the granularity to be set to weeks with a step of 1. In another case, if the X axis of the chart shows an interval of a few days and the date values are 5 minutes apart, we scheme the X axis of the chart to set the granularity to minutes with a step of 5.
 
-To set the granularity we use the provided enumeration `DateType` from the file [chart-tools.js](../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
+To set the granularity we use the provided enumeration `DateType` from the file [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
 
 Value **DateType.Auto** is set if we want to leave the granularity setting to the preset logic (which is in the chart-tools.js file). The latter, in addition to selecting the correct granularity value, will also set the best step to fit the chart data.
 
 Value **DateType.Day\_1** is a special value that is used when it is necessary to set the range to exactly 1 day. In this case, the parameter marked as **xAxeName** (representing the date value) and the parameter `hour` which must be contained in the data for the chart in numeric format in the range 0-23 (representing whole hours of the day).
 
-There may still be a situation as in the case of the page **Traffic** from the statistics section, where the data for the LINE graph is specifically granularized on the BackEnd according to the specified clustering. This means that the automatic granulation set by **DateType.Auto** will not work, because even if the interval is set to 3 years, the data will still be granular by days. For this case the enumeration `DateType` also offers the possibility of manual adjustment of granulation to values :
+There may still be a situation as in the case of the page **Traffic** from the statistics section, where the data for the LINE graph is specifically granularized on the BackEnd according to the specified clustering. This means that the automatic granulation set by **DateType.Auto** will not work, because even if the interval is set to 3 years, the data will still be granular by days. For this case the enumeration `DateType` also offers the possibility to manually adjust the granulation to the following values:
 - `DateType.Seconds`
 - `DateType.Minutes`
 - `DateType.Hours`
@@ -294,9 +300,9 @@ In the case of manual granulation setting, the logic around the graph calculates
 
 ## Special (LIVE) charts
 
-We will also mention the special charts that are used in the sections `Monitorovanie servera - Aktuálne hodnoty`. These are special LINE type charts that can update automatically. These charts and the logic that operates them is fixed for this page and cannot be reused on other pages. The implemented usage is in the file [vue-amchart-monitoring-server.vue](../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
+We will also mention the special charts that are used in the sections `Monitorovanie servera - Aktuálne hodnoty`. These are special LINE type charts that can update automatically. These charts and the logic that operates them is fixed for this page and cannot be reused on other pages. The implemented usage is in the file [vue-amchart-monitoring-server.vue](../../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
 
-The logic provided by the file is again used to create the graphs [chart-tools.js](../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) and it is a function of `createServerMonitoringChart()`. Its input parameters are only the id of the div element in which the graph will be displayed and the text value of the graph type. The supported type is `memoryAmchart` a `cpuAmchart`.
+The logic provided by the file is again used to create the graphs [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) and it is a function of `createServerMonitoringChart()`. Its input parameters are only the id of the div element in which the graph will be displayed and the text value of the graph type. The supported type is `memoryAmchart` a `cpuAmchart`.
 
 ### Example of use
 
@@ -314,7 +320,7 @@ Example of creating monitoring graphs
     }
 ```
 
-Updating the values of these graphs is done using the function `addData()` from the file `chart-tools.js`, whose input parameters are :
+Updating the values of these graphs is done using the function `addData()` from the file `chart-tools.js` whose input parameters are:
 - `allSeries`, all graph series (lines) can be obtained from the graph instance
 - `xAxis`, the X axis of the graph, can be obtained from the instance of the graph
 - `data`, new data to be added to existing data

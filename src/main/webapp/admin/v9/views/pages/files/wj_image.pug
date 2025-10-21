@@ -134,7 +134,7 @@ block content
             lastTitle = getPageNavbar();
 
             var customData = {
-                volumes: "images",
+                volumes: "multimedia",
                 docId: docId,
                 groupId: groupId,
                 title: getPageNavbar()
@@ -224,7 +224,7 @@ block content
             //console.log("Update elfinder data, docid="+docId+" groupId="+groupId, " virtualPath="+virtualPath);
 
             var customData = {
-                    volumes: "images",
+                    volumes: "multimedia",
                     docId: docId,
                     groupId: groupId,
                     title: getPageNavbar()
@@ -288,7 +288,7 @@ block content
                     label.cke_dialog_ui_labeled_label [[\#{editor.image.alt}]]:
                 td.cke_dialog_ui_vbox_child
                     div.cke_dialog_ui_input_text
-                        input#txtAlt(style='width: 100%;' type='text' class="form-control cke_dialog_ui_input_text")
+                        input#txtAlt(style='width: 100%;' type='text' class="form-control cke_dialog_ui_input_text ai-field" data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet")
                 td(style='white-space: nowrap; width: 200px;').cke_dialog_ui_vbox_child
                     label.cke_dialog_ui_labeled_label.secondLabel [[\#{editor.image.align}]]:
                     select#cmbAlign(style='width: 100px;').cke_dialog_ui_input_select

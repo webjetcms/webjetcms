@@ -16,6 +16,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
+import sk.iway.iwcm.components.ai.stat.dto.TokenUsersDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -46,7 +47,7 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
 
     @Override
     public Page<AiStatEntity> getAllItems(Pageable pageable) {
-       DatatablePageImpl<AiStatEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new AiStatEntity(), pageable));
+        DatatablePageImpl<AiStatEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new AiStatEntity(), pageable));
 
         page.addOptions("assistantProvider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("assistantAction", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
@@ -58,7 +59,7 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
     @Override
     public Page<AiStatEntity> searchItem(Map<String, String> params, Pageable pageable, AiStatEntity search) {
         Page<AiStatEntity> page = asr.findAll( AiStatService.getSpecification(params, pageable), pageable);
-        return new DatatablePageImpl<>( AiStatService.fillStatEntities(page.getContent(), adr), pageable, page.getTotalElements() );
+        return new DatatablePageImpl<>( AiStatService.fillStatEntities(page.getContent(), adr, getProp()), pageable, page.getTotalElements() );
     }
 
     @Override
@@ -100,5 +101,15 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
         @RequestParam("groupName") String groupName
     ) {
         return AiStatService.getLineChartData(created, provider, action, groupName, asr, adr);
+    }
+
+    @GetMapping("barChartTop10Users")
+    public List<LabelValueInteger> getBarChartDataTop10Users(@RequestParam("created") String created) {
+        return AiStatService.getBarChartDataTop10Users(asr, created, getProp());
+    }
+
+    @GetMapping("tokenUsers/all")
+    public Page<TokenUsersDTO> getTokenUsers(@RequestParam("created") String created) {
+       return new DatatablePageImpl<>( AiStatService.getTokenUsersTableList(created, getProp()) );
     }
 }

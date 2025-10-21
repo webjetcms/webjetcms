@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumn;
  */
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
 public class AssistantController {
 
     private final AiService aiService;
@@ -58,9 +58,13 @@ public class AssistantController {
         String exceptionMessage = null;
         try {
             responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
+        } catch (ProviderCallException e) {
+            e.printStackTrace();
+            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
+            Adminlog.add(Adminlog.TYPE_AI, "AI response error: " + exceptionMessage, 0L, -1L);
         }
 
         if (responseDto == null) {
@@ -78,11 +82,13 @@ public class AssistantController {
 
         try {
             responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
+        } catch (ProviderCallException e) {
+            e.printStackTrace();
+            exceptionMessage = e.getLocalizedMessage();
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
-            if (Tools.isNotEmpty(inputData.getUserPrompt())) RequestBean.addAuditValue("userPrompt", inputData.getUserPrompt());
-            Adminlog.add(Adminlog.TYPE_AI, "AI image generation error: " + exceptionMessage, 0L, -1L);
+            Adminlog.add(Adminlog.TYPE_AI, "AI response image error: " + exceptionMessage, 0L, -1L);
         }
 
         if (responseDto == null) {
@@ -113,9 +119,13 @@ public class AssistantController {
 
         try {
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
+        } catch (ProviderCallException e) {
+            e.printStackTrace();
+            exceptionMessage = e.getLocalizedMessage();
         } catch(Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
+            Adminlog.add(Adminlog.TYPE_AI, "AI streamed response error: " + exceptionMessage, 0L, -1L);
         } finally {
 
             if (responseDto == null) {
@@ -176,11 +186,11 @@ public class AssistantController {
     }
 
     @PostMapping("/other-button-column/")
-    public DataTableColumn getOtherButtonData(@RequestParam String fieldName, @RequestParam String javaClassName, @RequestParam String renderFormat, HttpServletRequest request) {
+    public DataTableColumn getOtherButtonData(@RequestParam String fieldName, @RequestParam String javaClassName, @RequestParam(required = false) String renderFormat, HttpServletRequest request) {
         //create fake DatatableColumn for passing to service
         DataTableColumn column = new DataTableColumn();
         column.setName(fieldName);
-        column.setRenderFormat(renderFormat);
+        if (Tools.isNotEmpty(renderFormat)) column.setRenderFormat(renderFormat);
 
         List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
         column.setAi(ai); //set also to column for future use

@@ -23,7 +23,6 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.SpecSearch;
 
 /**
  * SearchRestController is responsible for handling search requests related to
@@ -53,9 +52,7 @@ public class SearchRestController extends WebpagesDatatable {
 
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
-        SpecSearch<DocDetails> specSearch = new SpecSearch<>();
-        WebpagesService.addBaseSpecSearch(specSearch, params, predicates, root, builder);
-        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
         super.addSpecSearch(params, predicates, root, builder);
+        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
     }
 }
