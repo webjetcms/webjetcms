@@ -50,7 +50,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         addFilter(I, "AUTHOR_ID", "<=", "666");
         addFilter(I, "DATE_CREATED", "=", "01.10.2025");
         addFilter(I, "DATA", "Končí na", "Kokos je king");
-        addFilter(I, "AVAILABLE", "false", null);
+        addFilter(I, "AVAILABLE", "=", "false");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
@@ -67,10 +67,10 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         perexNotRequired: 'false',
         loadData: 'false',
         checkDuplicity: 'true',
-        removeDefaultDocs: 'false',
+        docMode: '0',
         template: 'news01',
         perexGroup: '3+794',
-        perexGroupNot: '1879+2'
+        perexGroupNot: '1875+2'
     };
 
     await Apps.assertParams(checkParams1);
@@ -132,7 +132,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         perexNotRequired: 'false',
         loadData: 'false',
         checkDuplicity: 'true',
-        removeDefaultDocs: 'false',
+        docMode: '0',
         template: 'news01',
         perexGroup: '3+625',
         perexGroupNot: '626+2'
@@ -153,7 +153,14 @@ function addFilter(I, docField, operator, value) {
     I.clickCss("button.btn-success");
     I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , docField);
     I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , operator);
-    if(value != null) { I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value); }
+    if(value != null) {
+        if ("true" === value || "false" === value) {
+            I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > select") , value);
+        } else {
+            I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value);
+        }
+    }
+
 }
 
 function checkFilter(I, position, docField, operator, value) {
@@ -255,7 +262,10 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
 
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
-    I.see("Produktová stránka - B verzia")
+    I.dontSee("Produktová stránka - B verzia");
+    I.see("/Jet portal 4/Zo sveta financií", "#groupIdFilterSelect option");
+    I.see("/Newsletter", "#groupIdFilterSelect option");
+    I.see("/Jet portal 4/Produktová stránka", "#groupIdFilterSelect option");
 
     I.switchTo();
 });

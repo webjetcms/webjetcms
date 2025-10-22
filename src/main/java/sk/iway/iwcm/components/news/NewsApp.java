@@ -87,10 +87,16 @@ public class NewsApp extends WebjetComponentAbstract  {
                 @DataTableColumnEditorAttr(key = "components.news.PUBLISH_ALL", value = "all"),
                 @DataTableColumnEditorAttr(key = "components.news.PUBLISH_NEXT", value = "next"),
                 @DataTableColumnEditorAttr(key = "components.news.PUBLISH_VALID", value = "valid")
+            },
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
             }
         )
     )
     protected String publishType = PublishType.NEW.name();
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.noPerexCheck")
+    protected Boolean perexNotRequired = false;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.doc_mode.title",
         editor = @DataTableColumnEditor(
@@ -119,7 +125,17 @@ public class NewsApp extends WebjetComponentAbstract  {
     )
     protected String order = OrderEnum.DATE.name();
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.asc")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "&nbsp;",
+        editor = @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = "components.gallery.sort.asc", value = "true"),
+                @DataTableColumnEditorAttr(key = "components.gallery.sort.desc", value = "false")
+            },
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
+            }
+        )
+    )
     protected Boolean ascending = true;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.paging")
@@ -131,19 +147,18 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.offset")
     protected Integer offset = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.noPerexCheck")
-    protected Boolean perexNotRequired = false;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.no_data")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.no_data",
+        editor = @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
+            }
+    ))
     protected Boolean loadData = false;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.check_duplicty")
     protected Boolean checkDuplicity;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.remove_default_docs")
-    protected Boolean removeDefaultDocs;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses", className="ai-off")
 	protected String contextClasses;
 
     @DataTableColumn(

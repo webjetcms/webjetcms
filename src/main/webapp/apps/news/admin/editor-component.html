@@ -164,6 +164,14 @@
 		window.addEventListener("WJ.DTE.opened", function (e) {
 			docFields = response.options.docFields;
 
+			//move asc/desc option to be after order option
+			let ascendingSelect = $(".DTE_Field_Name_ascending .col-sm-7 .DTE_Field_InputControl div.dropdown");
+			let orderSelect = $(".DTE_Field_Name_order .col-sm-7 .DTE_Field_InputControl div.dropdown");
+			if (ascendingSelect.length>0) {
+				ascendingSelect.insertAfter(orderSelect);
+				$(".DTE_Field_Name_ascending").hide();
+			}
+
 			$("#pills-dt-component-datatable-news-tab").on("click", function() {
 				let params = datatable.EDITOR.get();
 				delete params['id'];
@@ -283,6 +291,33 @@
 			}
 		}
 	}
+
+	function appAfterXhr(response) {
+        if (window.perexGroupsRenderAsSelect===true) {
+			window.WJ.DataTable.mergeColumns(response.columns, {
+				name: "perexGroup",
+				renderFormat: "dt-format-text",
+				"editor" : {
+					type : "select",
+					multiple: true,
+					attr: {
+						"data-multiple-separator": "\x0a\x0d"
+					}
+				}
+			});
+			window.WJ.DataTable.mergeColumns(response.columns, {
+				name: "perexGroupNot",
+				renderFormat: "dt-format-text",
+				"editor" : {
+					type : "select",
+					multiple: true,
+					attr: {
+						"data-multiple-separator": "\x0a\x0d"
+					}
+				}
+			});
+		}
+    }
 </script>
 
 <style>
@@ -306,5 +341,14 @@
 	.custom-template {
 		display: grid;
 		text-align: left !important;
+	}
+	div.DTE_Field_Name_order {
+		div.dropdown {
+			width: 70% !important;
+		}
+		div.dropdown:nth-child(2) {
+			padding-left: 1rem;
+			width: 30% !important;
+		}
 	}
 </style>

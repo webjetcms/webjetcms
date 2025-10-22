@@ -163,7 +163,8 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
 
         I.clickCss("button.btn-success");
         I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , "AVAILABLE");
-        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , "false");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , "=");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > select") , "false");
 
         I.clickCss("td.valueTd > input");
         Document.screenshot(basePath+"/components/news/screenshot-4.jpg");
