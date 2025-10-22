@@ -89,7 +89,7 @@ Scenario("feedback", ({ I }) => {
     I.toastrClose();
 });
 
-Scenario("update-2023-18.jsp @current", ({ I }) => {
+Scenario("update-2023-18.jsp", ({ I }) => {
     //verify JSP is able to compile without errors
     I.amOnPage("/admin/update/update-2023-18.jsp");
     I.waitForText("Upraviť kód v JSP súboroch pre aktuálny WebJET", 10);

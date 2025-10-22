@@ -41,7 +41,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     nameKey = "components.news.title",
     descKey = "components.news.desc",
     itemKey = "cmp_news",
-    imagePath = "ti ti-news",
+    imagePath = "/components/news/editoricon.png",
     galleryImages = "/components/news/screenshot-1.jpg,/components/news/screenshot-2.jpg,/components/news/screenshot-3.jpg,/components/news/screenshot-4.jpg",
     componentPath = "/components/news/news-velocity.jsp",
     customHtml = "/apps/news/admin/editor-component.html"
@@ -74,10 +74,10 @@ public class NewsApp extends WebjetComponentAbstract  {
     protected List<GroupDetails> groupIds;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.export.expandGroupIds")
-    protected Boolean alsoSubGroups = false;
+    protected boolean alsoSubGroups = false;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.subGroupsDepth")
-    protected Integer subGroupsDepth = -1;
+    protected int subGroupsDepth = -1;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.publishtype",
         editor = @DataTableColumnEditor(
@@ -96,7 +96,7 @@ public class NewsApp extends WebjetComponentAbstract  {
     protected String publishType = PublishType.NEW.name();
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.noPerexCheck")
-    protected Boolean perexNotRequired = false;
+    protected boolean perexNotRequired = false;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.doc_mode.title",
         editor = @DataTableColumnEditor(
@@ -107,7 +107,7 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     )
-    protected Integer docMode = 0;
+    protected int docMode = 0;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.ordertype",
         editor = @DataTableColumnEditor(
@@ -136,16 +136,16 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     )
-    protected Boolean ascending = true;
+    protected boolean ascending = true;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.paging")
-    protected Boolean paging = false;
+    protected boolean paging = false;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.pageSize")
-    protected Integer pageSize = 10;
+    protected int pageSize = 10;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.offset")
-    protected Integer offset = 0;
+    protected int offset = 0;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.no_data",
         editor = @DataTableColumnEditor(
@@ -153,10 +153,10 @@ public class NewsApp extends WebjetComponentAbstract  {
                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
             }
     ))
-    protected Boolean loadData = false;
+    protected boolean loadData = false;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.check_duplicty")
-    protected Boolean checkDuplicity;
+    protected boolean checkDuplicity;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses", className="ai-off")
 	protected String contextClasses;
@@ -176,7 +176,7 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     })
-	protected Integer[] perexGroup;
+	protected int[] perexGroup;
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "perex", title="components.news.perexGroupNot", editor = {
         @DataTableColumnEditor(
@@ -185,7 +185,7 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     })
-	protected Integer[] perexGroupNot;
+	protected int[] perexGroupNot;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
@@ -212,24 +212,6 @@ public class NewsApp extends WebjetComponentAbstract  {
 
         return options;
     }
-
-    public int getPageSize()
-	{
-		return pageSize == null ? 10 : pageSize.intValue();
-	}
-
-    public int getOffset()
-	{
-		return offset == null ? 0 : offset.intValue();
-	}
-
-    public int getSubGroupsDepth() {
-		return subGroupsDepth == null ? -1 : subGroupsDepth;
-	}
-
-	public int getDocMode() {
-		return docMode == null ? 0 : docMode;
-	}
 
     public String[] getContextClassesArr()
 	{

@@ -187,7 +187,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 			newsList = returnDocsWithAtributes ? newsQuery.getNewsListWithAtributes() : newsQuery.getNewsList();
 		}
 
-		if (isCheckDuplicity())
+		if (checkDuplicity)
 		{
 			//pridajme do zoznamu IDecka nacitanych web stranok vratane ich child stranok
 
@@ -218,10 +218,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return new ForwardResolution(WebJETActionBean.RESOLUTION_CONTINUE);
 	}
 
-
-
-
-	/* KOKOS */
+	//methods normally from WebJETActionBean.java, but as we extend NewsApp, we need to copy them here
 	private ActionBeanContext context;
 
 	@Override
@@ -245,15 +242,13 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return UsersDB.getCurrentUser(context);
 	}
 
-
-
 	/**
 	 * Metoda pre odfiltrovanie duplicitnych noviniek.
 	 * Vyuzite pre viacero instancii news velocity na tej istej stranke.
 	 */
 	private void addDuplicityFilter()
 	{
-		if (isCheckDuplicity())
+		if (checkDuplicity)
 		{
 			LinkedList<Integer> duplicityList = getDuplicityList();
 			DocDB docDB = DocDB.getInstance();
@@ -400,12 +395,12 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	}
 
 	private void addLoadData() {
-		newsQuery.setLoadData(isLoadData());
+		newsQuery.setLoadData(loadData);
 	}
 
 	private void addPaging()
 	{
-		if (isPaging()) {
+		if (paging) {
 			newsQuery.setPageSize(pageSize).setPage(page);
 			if (offset>0) newsQuery.setInitialOffset(offset);
 		}
@@ -455,7 +450,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 			for (GroupDetails group : groupIds)
 			{
 				groupIdsExpanded.add(group.getGroupId());
-				if (isAlsoSubGroups())
+				if (alsoSubGroups)
 				{
 					//All subgroups
 					if(subGroupsDepth < 1) {
@@ -540,11 +535,10 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 			if(tmpPerexGroups != null) {
 				int[] perexGroups = Arrays.asList(tmpPerexGroups).stream().mapToInt(Integer::parseInt).toArray();
 				if(perexGroups.length > 0) {
-					perexGroup = Arrays.stream(perexGroups).boxed().toArray(Integer[]::new);
+					perexGroup = perexGroups;
 				}
 			}
 		}
-
 
 		if (perexGroup!=null&& perexGroup.length>0)
 		{
@@ -589,7 +583,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 	private void addPerexNotRequired()
 	{
-		if (!isPerexNotRequired())
+		if (perexNotRequired==false)
 		{
 			newsQuery.addCriteria(DatabaseCriteria.isNotEmptyText(FieldEnum.HTML_DATA));
 		}
@@ -1062,21 +1056,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return value;
 	}
 
-	public void setAscending(boolean ascending)
-	{
-		this.ascending = ascending;
-	}
-
-	public void setPaging(boolean paging)
-	{
-		this.paging = paging;
-	}
-
-	public void setPageSize(int pageSize)
-	{
-		this.pageSize = pageSize;
-	}
-
 	public void setNewsName(String newsName)
 	{
 		this.newsName = newsName;
@@ -1118,21 +1097,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void setSearchAlsoProtectedPages(boolean searchAlsoProtectedPages)
 	{
 		this.searchAlsoProtectedPages = searchAlsoProtectedPages;
-	}
-
-	public boolean isLoadData()
-	{
-		return Tools.isTrue(loadData);
-	}
-
-	public void setLoadData(boolean loadData)
-	{
-		this.loadData = loadData;
-	}
-
-	public boolean isPaging()
-	{
-		return Tools.isTrue(paging);
 	}
 
 	public boolean isPerex()
@@ -1429,19 +1393,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		this.search = search;
 	}
 
-	public void setAlsoSubGroups(boolean alsoSubGroups)
-	{
-		this.alsoSubGroups = alsoSubGroups;
-	}
-
-	public void setSubGroupsDepth(int subGroupsDepth) {
-		this.subGroupsDepth = subGroupsDepth;
-	}
-
-	public void setDocMode(int docMode) {
-		this.docMode = docMode;
-	}
-
 	public String getGroupIdsString()
 	{
 		StringBuilder result = new StringBuilder();
@@ -1480,16 +1431,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return result.indexOf(",") == 0 ? result.substring(1) : result.toString();
 	}
 
-	public boolean isAscending()
-	{
-		return Tools.isTrue(ascending);
-	}
-
-	public boolean isAlsoSubGroups()
-	{
-		return Tools.isTrue(alsoSubGroups);
-	}
-
 	public int getPerexCrop()
 	{
 		return perexCrop;
@@ -1498,11 +1439,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void setPerexCrop(int perexCrop)
 	{
 		this.perexCrop = perexCrop;
-	}
-
-	public void setPerexNotRequired(boolean perexNotRequired)
-	{
-		this.perexNotRequired = perexNotRequired;
 	}
 
 	public enum PublishType
@@ -1538,11 +1474,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return htmlOut;
 	}
 
-	public boolean isPerexNotRequired()
-	{
-		return Tools.isTrue(perexNotRequired);
-	}
-
 	public boolean isSearchAlsoProtectedPages()
 	{
 		return searchAlsoProtectedPages;
@@ -1551,16 +1482,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public String link(DocDetails doc)
 	{
 		return DocDB.getInstance().getDocLink(doc.getDocId(), doc.getExternalLink(), getRequest());
-	}
-
-	public void setTemplate(String template)
-	{
-		this.template = template;
-	}
-
-	public String getTemplate()
-	{
-		return template;
 	}
 
 	public List<NewsTemplatesEntity> getTemplates()
@@ -1638,15 +1559,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		return authorUserDetails;
 	}
 
-	public void setCacheMinutes(int cacheMinutes)
-	{
-		this.cacheMinutes = cacheMinutes;
-	}
 
-	public void setOffset(int offset)
-	{
-		this.offset = offset;
-	}
 
 	public boolean isIncludeActualDoc() {
 		return includeActualDoc;
@@ -1659,14 +1572,6 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void clearList()
 	{
 		this.newsList=null;
-	}
-
-	public boolean isCheckDuplicity() {
-		return Tools.isTrue(checkDuplicity);
-	}
-
-	public void setCheckDuplicity(boolean checkDuplicity) {
-		this.checkDuplicity = checkDuplicity;
 	}
 
 	public String getTagClickLink() {
