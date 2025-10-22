@@ -70,7 +70,9 @@ module.exports = {
             "Import completed": "Import ukončen",
             "Money Transfer": "Převodem",
             "You need to reload the page to change the domain.": "Pro změnu domény je potřeba znovu načíst stránku.",
-            "Confirm": "Potvrdit"
+            "Confirm": "Potvrdit",
+            "Logon form": "Přihlašovací formulář",
+            "Registration form": "Registrační formulář"
         }
     }
 }
