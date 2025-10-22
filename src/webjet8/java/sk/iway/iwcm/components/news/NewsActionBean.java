@@ -438,7 +438,8 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	{
 		if (groupIds == null && doc != null) {
 			GroupDetails group = doc.getGroup();
-			groupIds = List.of(group);
+			groupIds = new ArrayList<>();
+			groupIds.add(group);
 		}
 
 		List<Integer> defaultDocs = new ArrayList<>();
