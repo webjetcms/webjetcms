@@ -1,4 +1,4 @@
-Feature('settings.update');
+Feature('update');
 
 Before(({ I, login }) =>{
     login('admin');
@@ -9,7 +9,7 @@ Scenario('Screens', async ({ I, Document }) => {
     I.waitForElement("#version-selector");
     I.wait(1);
 
-    I.click("2023.40");
+    I.click("2025.40");
 
     Document.screenshot("/sysadmin/update/main-page.png");
 
@@ -32,7 +32,7 @@ Scenario('Screens', async ({ I, Document }) => {
             break;
         default:
             throw new Error("Unknown language: " + I.getConfLng());
-    }    
+    }
     I.wait(1);
 
     Document.screenshot("/sysadmin/update/upload-page.png");
