@@ -66,7 +66,8 @@ module.exports = {
             "Fix grammar": "Opravit gramatiku",
             "Browser": "Prohlížeč",
             "Yes": "Ano",
-            "No": "Ne"
+            "No": "Ne",
+            "Import completed": "Import ukončen"
         }
     }
 }

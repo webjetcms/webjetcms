@@ -2,7 +2,7 @@
 # .git/hooks/pre-commit
 
 # Získaj zoznam zmenených JPG súborov
-CHANGED_FILES=$(git diff --name-only --diff-filter=M | grep ".jpg$")
+CHANGED_FILES=$(git diff --name-only --diff-filter=M | grep -E "\.jpg$|\.jpeg$|\.png$|\.gif$")
 
 #clear diff dir
 DIFF_BASE_DIR="../../../build/images-diff"
