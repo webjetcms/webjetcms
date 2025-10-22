@@ -2382,7 +2382,8 @@ public class UpdateDatabase
 
 			int pageSize = 100;
 			int pageNumber = 0;
-			int failsafe = 0;
+			int pageFailsafe = 0;
+			int counter = 1;
 			Page<BasketInvoiceEntity> page;
 			do {
 				page = bir.findAll(PageRequest.of(pageNumber, pageSize));
@@ -2390,6 +2391,8 @@ public class UpdateDatabase
 				dt.diffInfo("[page "+pageNumber+"/"+page.getTotalPages()+"], rows="+items.size());
 				// calculate itemQty, priceNotVat, priceVat
 				for (BasketInvoiceEntity invoice : items) {
+					Logger.info(UpdateDatabase.class, "Processing invoice ID: " + invoice.getId()+" "+(counter++)+"/"+page.getTotalElements());
+
 					Integer itemsCount = 0;
 					BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
 					BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
@@ -2403,15 +2406,25 @@ public class UpdateDatabase
 					}
 
 					//Set and save invoice
-					invoice.setItemQty(itemsCount);
+					/*invoice.setItemQty(itemsCount);
 					invoice.setPriceToPayNoVat(totalPrice);
 					invoice.setPriceToPayVat(totalPriceVat);
 					invoice.setBalanceToPay( totalPriceVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ) );
 
-					bir.save(invoice);
+					bir.save(invoice);*/
+
+					//this is faster and will not spam audit log
+					String sql = "UPDATE basket_invoice SET balance_to_pay = ?, item_qty = ?, price_no_vat = ?, price_vat = ? WHERE (basket_invoice_id = ?)";
+					DB.execute(sql,
+							totalPriceVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ),
+							itemsCount,
+							totalPrice,
+							totalPriceVat,
+							invoice.getId()
+					);
 				}
 				pageNumber++;
-			} while (!page.isLast() && failsafe++ < 5000);
+			} while (!page.isLast() && pageFailsafe++ < 500);
 
 			dt.diffInfo("DONE");
 
