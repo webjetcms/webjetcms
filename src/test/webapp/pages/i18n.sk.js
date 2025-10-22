@@ -53,7 +53,7 @@ module.exports = {
             "Top pages":"Top stránky",
             "Delete":"Vymazať",
             "No matching records found":"Nenašli sa žiadne vyhovujúce záznamy",
-            "Delete": "Zmazať",
+            "Delete::2": "Zmazať",
             "Two-Step Verification": "Dvojstupňové overenie",
             "Create new image": "Vytvoriť nový obrázok",
             "Remove background": "Odstrániť pozadie",
@@ -67,7 +67,10 @@ module.exports = {
             "Browser": "Prehliadač",
             "Yes": "Áno",
             "No": "Nie",
-            "Import completed": "Import ukončený"
+            "Import completed": "Import ukončený",
+            "Money Transfer": "Prevodom",
+            "You need to reload the page to change the domain.": "Pre zmenu domény je potrebné znovu načítať stránku.",
+            "Confirm": "Potvrdiť"
         }
     }
 }

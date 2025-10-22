@@ -148,7 +148,7 @@ Scenario("Delete 2fa test user", ({ I, DT, DTE, i18n }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-remove");
     DTE.waitForEditor();
-    I.click(i18n.get("Delete"), "div.DTE_Action_Remove");
+    I.click(i18n.get("Delete::2"), "div.DTE_Action_Remove");
     DTE.waitForLoader();
     DTE.waitForModalClose('datatableInit_modal');
 

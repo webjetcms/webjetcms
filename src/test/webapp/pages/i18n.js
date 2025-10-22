@@ -30,7 +30,7 @@ module.exports = {
             translated = text;
         }
 
-        //you can use :: to separate different translations of same source text
+        //you can use :: to separate different translations of same source text (in EN variant - will use first one as result)
         if (translated != null && translated.indexOf("::") > -1) {
             translated = translated.split("::")[0];
         }
@@ -63,7 +63,7 @@ module.exports = {
         }
         return date;
     },
-    
+
 
     /**
      * Shortcut to I.click(i18n.get(text), context, options)
