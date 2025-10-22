@@ -22,7 +22,7 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
     //editor
     Document.screenshotAppEditor(10, "/redactor/apps/news/editor-dialog.png", function(Document, I, DT, DTE) {
         I.clickCss("#tabLink2");
-        I.scrollTo("div[data-key='news.template.news01']");
+        I.scrollTo("div[data-key='news01']");
         Document.screenshot("/redactor/apps/news/editor-dialog-templates.png");
 
         I.clickCss("#tabLink3");
