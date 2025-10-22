@@ -7,6 +7,7 @@
 ## 2025.0.x
 
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
+- Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
 
 ## 2025.0.40
 

@@ -422,3 +422,23 @@ Scenario("BUF: filter table with startsWith and endsWith", ({ I, DT }) => {
     I.see("InterWay, a. s.", tdSelector);
     I.dontSee("Tretia firma a. s.", tdSelector);
 });
+
+Scenario("BUG: DT export advanced tab", ({ I, DT }) => {
+    //serverSide=false
+    I.amOnPage("/admin/v9/webpages/perex/");
+    DT.waitForLoader();
+    I.click("button.btn-export-dialog");
+    I.waitForElement("#datatableExportModal");
+    I.seeElement("#pills-export-basic-tab");
+    I.dontSeeElement("#pills-export-advanced-tab");
+
+    //serverSide=true
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+    I.click("button.btn-export-dialog");
+    I.waitForElement("#datatableExportModal");
+    I.seeElement("#pills-export-basic-tab");
+    I.seeElement("#pills-export-advanced-tab");
+    I.clickCss("#pills-export-advanced-tab");
+    I.see("Aktuálne vyfiltrované dáta", "#datatablesExportWhichData");
+});
