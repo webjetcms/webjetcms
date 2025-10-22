@@ -1076,7 +1076,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 		this.place = place;
 	}
 
-	public final void setGroupIds(int[] groupIds)
+	public void setGroupIds(int[] groupIds)
 	{
 		GroupsDB gdb = GroupsDB.getInstance();
 		List<GroupDetails> groups = new ArrayList<>();
