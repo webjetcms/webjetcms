@@ -223,12 +223,12 @@ const baseUrl = "/tseer/ai-buttons-test.html";
 const toRedirectUrl_prefix = "/tseer/ai-buttons-test-redirected-"
 Scenario('Test publish, validation logic WITHOUT cache', ({ I, DT, DTE, Document }) => {
     const toRedirectUrl = toRedirectUrl_prefix + randomNumber + "-no_cache.html";
-    testPusblishingAndValidity(I, DT, DTE, Document, toRedirectUrl, false);
+    testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, false);
 });
 
 Scenario('Test publish, validation logic WITH cache', ({ I, DT, DTE, Document }) => {
     const toRedirectUrl = toRedirectUrl_prefix + randomNumber + "-with_cache.html";
-    testPusblishingAndValidity(I, DT, DTE, Document, toRedirectUrl, true);
+    testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, true);
 });
 
 Scenario('Post publish, validation', async ({ I, DT, Document }) => {
@@ -248,7 +248,7 @@ Scenario('Post publish, validation', async ({ I, DT, Document }) => {
     }
 });
 
-function testPusblishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache) {
+function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache) {
     const shift5m = (5 * 60 * 1000);
 
     Document.setConfigValue('cacheUrlRedirects', useCache);
@@ -274,10 +274,10 @@ function testPusblishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCach
         I.seeInCurrentUrl(baseUrl);
         I.see("AI BUTTONS TEST");
 
-    I.say("Set valid pusblish in PAST - redirection must work");
+    I.say("Set valid publish in PAST - redirection must work");
         updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() - shift5m, null, true);
 
-    I.say("Set valid pusblish in FUTURE - redirection must NOT work");
+    I.say("Set valid publish in FUTURE - redirection must NOT work");
         updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() + shift5m, null, false);
 
     I.say("Set valid to in PAST - redirection must NOT work");
