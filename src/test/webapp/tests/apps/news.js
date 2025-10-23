@@ -7,7 +7,7 @@ Before(({ login }) => {
 Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     Apps.insertApp('Novinky', '#components-news-title', null, false);
 
-    I.switchTo('#cke_123_iframe');
+    I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
     I.say('Check tabs');
@@ -35,6 +35,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.fillField("#DTE_Field_pageSize", 25);
         I.fillField("#DTE_Field_offset", 8);
         I.checkOption("#DTE_Field_checkDuplicity_0");
+        I.fillField("#DTE_Field_contextClasses", 'iway"sk", test ",pokus"');
 
     I.clickCss("#pills-dt-component-datatable-templates-tab");
         I.click( locate("label.custom-template").withChild(locate("span").withText("news01")) );
@@ -43,13 +44,13 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
         I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
 
-        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
         I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
 
     I.clickCss("#pills-dt-component-datatable-filter-tab");
         addFilter(I, "AUTHOR_ID", "<=", "666");
         addFilter(I, "DATE_CREATED", "=", "01.10.2025");
-        addFilter(I, "DATA", "Končí na", "Kokos je king");
+        addFilter(I, "DATA", "Končí na", 'Kokos, "je", king"');
         addFilter(I, "AVAILABLE", "=", "false");
 
     I.switchTo();
@@ -70,17 +71,18 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         docMode: '0',
         template: 'news01',
         perexGroup: '3+794',
-        perexGroupNot: '1875+2'
+        perexGroupNot: '1+2',
     };
 
     await Apps.assertParams(checkParams1);
 
     //Check filter values .. because of format I cant use assertParams
     Apps.switchEditor('html');
-    I.see("filter[DATA_ew]=Kokos je king");
+    I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
     I.see("filter[AUTHORID_le]=666,");
-    I.see("filter[DATECREATED_eq]=2025-10-01,");
+    I.see("filter[DATECREATED_eq]=&quot;2025-10-01&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
+    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 
     Apps.switchEditor('standard');
     Apps.openAppEditor();
@@ -95,12 +97,12 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.clickCss("#pills-dt-component-datatable-perex-tab");
         I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
         I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
-        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
         I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
 
         //Uncheck
         I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
-        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("Import perex") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
 
         //Check new one
         I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("PerexWithGroup_A") ));
@@ -109,7 +111,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.clickCss("#pills-dt-component-datatable-filter-tab");
         checkFilter(I, 1, "AUTHOR_ID", "<=", "666");
         checkFilter(I, 2, "DATE_CREATED", "=", "2025-10-01");
-        checkFilter(I, 3, "DATA", "Končí na", "Kokos je king");
+        checkFilter(I, 3, "DATA", "Končí na", 'Kokos, "je", king"');
         checkFilter(I, 4, "AVAILABLE", "false", null);
 
         I.say("Remove some filters");
@@ -142,10 +144,11 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
 
     //Check filter values .. because of format I cant use assertParams
     Apps.switchEditor('html');
-    I.see("filter[DATA_ew]=Kokos je king");
+    I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
     I.dontSee("filter[AUTHORID_le]=666,");
-    I.dontSee("filter[DATECREATED_eq]=2025-10-01,");
+    I.dontSee("filter[DATECREATED_eq]=&quot;2025-10-01&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
+    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 });
 
 function addFilter(I, docField, operator, value) {
@@ -264,7 +267,7 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     I.see("Zo sveta financií");
     I.dontSee("Produktová stránka - B verzia");
     I.see("/Jet portal 4/Zo sveta financií", "#groupIdFilterSelect option");
-    I.see("/Newsletter", "#groupIdFilterSelect option");
+    I.dontSee("/Newsletter", "#groupIdFilterSelect option");
     I.see("/Jet portal 4/Produktová stránka", "#groupIdFilterSelect option");
 
     I.switchTo();

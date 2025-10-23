@@ -252,7 +252,10 @@
 				continue; // nothing to filter
 			}
 
-			include += ", filter[" + field + "_" + operator + "]=" + value;
+			//replace " with \" to be able to parse it later
+			if (value.indexOf("\"") != -1) value = value.replace(/"/g, '\\"');
+
+			include += ", filter[" + field + "_" + operator + "]=" + addQuotes(value);
 		}
 
 		include += ")!";
@@ -266,6 +269,20 @@
 
 		for(let i = 0; i < params.length; i++) {
 			let param = params[i].trim();
+
+			//params can be like filter[DATA_ew]="Kokos, \"je\", king", so we need to handle that and add next params until we find closing "
+			if(param.includes("=\"") && !param.endsWith("\"")) {
+				let j = i + 1;;
+				while(j < params.length) {
+					param += "," + params[j];
+					if(params[j].trim().endsWith("\"") && !params[j].trim().endsWith("\\\"")) {
+						i = j; //move outer loop
+						break;
+					}
+					j++;
+				}
+			}
+
 			if(param.startsWith("filter[")) {
 				param = param.substring(7); //remove filter[
 				let parts = param.split("]=");
@@ -285,6 +302,12 @@
 				let field = fieldParts[0];
 				let operator = fieldParts[1];
 				let value = parts[1].replace("]", "");
+				//if it is "value" remove outside quotes
+				if(value.startsWith("\"") && value.endsWith("\"")) {
+					value = value.substring(1, value.length - 1);
+				}
+				//unescape inner quotes
+				value = value.replace(/\\"/g, '"');
 
 				defaultFilters.push( { field: field, operator: operator, value: value } );
 			}

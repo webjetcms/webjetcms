@@ -52,6 +52,13 @@ public interface IncludeRequestWrapperInterface {
 			PageParams pp = new PageParams(request);
 			Map<String, String> includeParams = pp.getParams();
 
+			//we need to call getValue to de-escape values like "
+			for (Map.Entry<String, String> entry : includeParams.entrySet())
+			{
+				String unescapedValue = pp.getValue(entry.getKey(), entry.getValue());
+				entry.setValue(unescapedValue);
+			}
+
 			// najdem StripesRequestWrapper (ten moze byt niekde v request wrapperoch)
 			StripesRequestWrapper stripesWrapper = StripesRequestWrapper.findStripesWrapper(request);
 			//nemal by byt null, kedze ide o stripes RQ, ale istota je gulomet a zaroven actionBeana je anotovana @InjectPageParams
