@@ -12,9 +12,8 @@ block content
             var order = [];
             order.push([0, 'desc']);
 
-            var now = new Date().getTime();
+            var now;
             var isActive = true;
-            console.log("now=", now);
 
             redirectTable = WJ.DataTable({
                 url: url,
@@ -23,6 +22,8 @@ block content
                 editorId: "urlRedirectId",
                 order: order,
                 onRowCallback: function(TABLE, row, data) {
+                    //we must have now here, because on reload it will be not reinitialized
+                    now = new Date().getTime();
                     isActive = true;
                     if (data.publishDate != null && now < data.publishDate) {
                         isActive = false;
