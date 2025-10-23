@@ -10,7 +10,9 @@ The available folders representing the categories are arranged in a so-called tr
 
 ![](select-options.png)
 
-The first option in the list is always the main section, which represents all categories (all products will be displayed). When a category (folder) is selected, the data of that folder and all sub-folders will be displayed.
+The values in the section selection field in the header are generated:
+- automatically - if the conf. variable is `basketAdminGroupIds` set to empty, a list of news folder IDs is obtained by searching for the term `%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%"` in the bodies of the pages.
+- by conf. variable `basketAdminGroupIds`, where you can specify a comma-separated list of folder IDs, e.g. `17,23*,72`, where if the folder ID ends in a character `*` products (web pages) from subfolders are loaded during selection.
 
 ## Adding a new product category
 
@@ -60,7 +62,7 @@ In the charts **Perex** is an important setting:
 
 ### Attributes tab
 
-In the attributes tab, we use the phone group selection on the item specifications. As can be seen in the figure below, for the group `iPhone X` it is possible to set the colour and memory variant of the device. These selection fields are displayed in the e-shop, next to the product details.
+In the attributes tab, we use the phone group selection on the item specifications. As can be seen in the figure below, for the group `Monitor` manufacturer, diagonal, etc. settings are possible. These selection fields are displayed in the e-shop, next to the product details.
 
 ![](new-product-attr.png)
 

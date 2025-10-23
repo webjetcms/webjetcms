@@ -2,11 +2,11 @@
 
 This is a special table that primarily uses optional fields for its operation. In this way, we have achieved modularity of the editor, where each payment method has customized fields in the editor.
 
-The basic element is the class [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentMethodEntity.java) which has optional fields A-L (easily added if necessary).
+The basic element is the class [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentMethodEntity.java) which has optional fields A-L (easily added if necessary).
 
 ## Adding a new payment method
 
-To add a new payment method we need to create a Service e.g. as [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/GoPayService.java). Each payment method requires its own file.
+To add a new payment method we need to create a Service e.g. as [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/GoPayService.java). Each payment method requires its own file.
 
 ```java
 @Service
@@ -32,7 +32,7 @@ public class GoPayService extends BasePaymentMethod {
 - Mandatory `PaymentMethod` annotation, use this annotation to set the appearance of the editor for a given payment method.
 - Compulsory class inheritance `BasePaymentMethod`, which defines mandatory methods to implement as well as provides supporting logic.
 
-Each Service created in this way is subsequently obtained in [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java). The process is automatic, so if the new payment method has been created correctly, it will automatically appear in the spreadsheet and has all the necessary logic.
+Each Service created in this way is subsequently obtained in [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java). The process is automatic, so if the new payment method has been created correctly, it will automatically appear in the spreadsheet and has all the necessary logic.
 
 ## Annotation `PaymentMethod`
 
@@ -42,7 +42,7 @@ The annotation provides parameters for the setup:
 
 ### `PaymentFieldMapAttr`
 
-Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentFieldMapAttr.java) allows you to define an optional field for the payment method.
+Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java) allows you to define an optional field for the payment method.
 
 Available parameters to set are:
 - `fieldAlphabet`, indicating which optional field we are setting
@@ -53,7 +53,7 @@ Available parameters to set are:
 
 ## Class `BasePaymentMethod`
 
-Class [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/BasePaymentMethod.java) contains all the necessary logic for adding a new payment method to avoid duplication. The class is primarily for inheriting payments, so only the error logging methods are publicly available.
+Class [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/BasePaymentMethod.java) contains all the necessary logic for adding a new payment method to avoid duplication. The class is primarily for inheriting payments, so only the error logging methods are publicly available.
 
 Automatic:
 - sets the name of the payment method and according to the annotation `PaymentMethod`
@@ -69,7 +69,7 @@ Class `BasePaymentMethod` also provides `beforeSave` a method that serves to ove
 
 ## Class `PaymentMethodsService`
 
-Class [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java) provides all the public methods to work with the payment methods you will need.
+Class [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java) provides all the public methods to work with the payment methods you will need.
 
 It provides methods for:
 - obtaining all or individual payment methods

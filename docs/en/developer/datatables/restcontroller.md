@@ -25,12 +25,12 @@ public class RedirectRestController extends DatatableRestControllerV2<RedirectBe
 
     @Autowired
     public RedirectRestController(RedirectsRepository redirectsRepository) {
-        super(redirectsRepository);
+        super(redirectsRepository, RedirectBean.class);
     }
 }
 ```
 
-important is the constructor that passes the Spring DATA repository `RedirectsRepository`, annotation `@Datatable` to ensure correct processing of error messages and annotation `PreAuthorize` for the control of rights:
+important is the constructor that passes the Spring DATA repository `RedirectsRepository` and the entity class to be used when creating the new record. This will also set the values when the new record is created. Annotation `@Datatable` ensure correct error message handling and annotation `PreAuthorize` used to control rights:
 
 ```java
 @Datatable
@@ -234,7 +234,7 @@ you can use existing APIs in the implementation, e.g.:
 @Override
 public Page<DomainRedirectBean> getAllItems(Pageable pageable) {
     List<DomainRedirectBean> listedBeans = DomainRedirectDB.getAllRedirects();
-    return new PageImpl<>(listedBeans);
+    return new DatatablePageImpl<>(listedBeans);
 }
 
 @Override

@@ -58,28 +58,28 @@ The correct block setting includes all preset widths, e.g. `col-12 col-md-6 col-
     <div class="row">
       <div class="col-12 col-md-6 col-xl-3 text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Etiam orci</h3>
         <p>Suspendisse interdum dolor justo, ac venenatis massa suscipit nec. Vivamus dictum malesuada mollis.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Aenean </h3>
         <p>Aliquam elementum ut ante vitae dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Maecenas</h3>
         <p>Sed sollicitudin eros quis leo imperdiet, id congue lorem ornare. Suspendisse eleifend at ante id ultrices.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Suspendisse</h3>
         <p>Nullam ornare, magna in ultrices mattis, lectus neque mollis libero, vitae varius mauris metus a risus.</p>
@@ -121,9 +121,11 @@ We recommend to generate blocks using [PugJS](https://pugjs.org).
 
 ## CSS classes for image
 
-If the image has a CSS class set `fixedSize-w-h-ip` the specified dimension is set automatically after changing the image address `w` a `h` if the last entry is also entered `ip` is also set [point of interest](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). E.g. CSS class `fixedSize-160-160-5` automatically generates a 160 x 160 pixel image with a set point of interest of 5. We recommend setting the class to all illustration images where the size is important.
+If the image has a CSS class set `fixedSize-w-h-ip` the specified dimension is set automatically after changing the image address `w` a `h` if the last entry is also entered `ip` is also set [point of interest](../../frontend/thumb-servlet/README.md). E.g. CSS class `fixedSize-160-160-5` automatically generates a 160 x 160 pixel image with a set point of interest of 5. We recommend setting the class to all illustration images where the size is important.
 
 When you click on an image with CSS class `fixedSize/w-100/autoimg` will immediately open the image properties window for easy replacement. This way the editor does not have to click on the image and then on the change image icon in the toolbar.
+
+If the image contains the phrase in the URL `placeholder` or `stock` the dialog box for selecting an image will not open in the folder containing that image, but in the Media folder of this page. This allows the user to easily upload a new image.
 
 ## Card support
 

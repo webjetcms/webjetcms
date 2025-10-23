@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.ai.providers.gemini;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.methods.HttpRequestBase;
@@ -11,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.providers.SupportLogic;
 
 /**
@@ -23,45 +26,52 @@ public abstract class GeminiSupportService extends SupportLogic {
     protected static final String PARTS = "parts";
     protected static final ObjectMapper MAPPER = new ObjectMapper();
 
-    protected void addPartWithFile(ArrayNode contentsArray, String value, String mimeType, String fileData) {
-        ObjectNode inlineData = MAPPER.createObjectNode();
-        inlineData.put("mime_type", mimeType);
-        inlineData.put("data", fileData);
-
-        ObjectNode part = MAPPER.createObjectNode();
-        part.set("inline_data", inlineData);
-
-        addPart(contentsArray, value, part);
+    protected ObjectNode getBaseMainObject(String... parts) throws IOException {
+        return getBaseMainObjectWithImage(null, parts);
     }
 
-    protected ObjectNode getBaseMainObject(String... parts) {
+    protected ObjectNode getBaseMainObjectWithImage(InputDataDTO inputData, String... parts) throws IOException {
         ObjectNode mainObject = MAPPER.createObjectNode();
         ArrayNode contentsArray = MAPPER.createArrayNode();
 
         // Add parts
-        for (String part : parts) {
-            if (Tools.isNotEmpty(part)) addPart(contentsArray, part);
-        }
+        for (String part : parts)
+            if(Tools.isNotEmpty(part)) addTextPart(contentsArray, part);
+
+        //Image input
+        if(inputData != null && InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            addImagePart(contentsArray, inputData);
 
         mainObject.set("contents", contentsArray);
         return mainObject;
     }
 
-    protected void addPart(ArrayNode contentsArray, String value) {
-        addPart(contentsArray, value, null);
-    }
-
-    protected void addPart(ArrayNode contentsArray, String value, ObjectNode inlineData) {
+    private void addTextPart(ArrayNode contentsArray, String value) {
         ObjectNode content = MAPPER.createObjectNode();
         content.put("role", "user");
+        ArrayNode parts = MAPPER.createArrayNode();
 
         ObjectNode partValue = MAPPER.createObjectNode();
         partValue.put("text", value);
-
-        ArrayNode parts = MAPPER.createArrayNode();
         parts.add(partValue);
 
-        if (inlineData != null) parts.add(inlineData);
+        content.set(PARTS, parts);
+        contentsArray.add(content);
+    }
+
+    private void addImagePart(ArrayNode contentsArray, InputDataDTO inputData) throws IOException {
+        ObjectNode content = MAPPER.createObjectNode();
+        content.put("role", "user");
+
+        ObjectNode inlineData = MAPPER.createObjectNode();
+        inlineData.put("mime_type", inputData.getMimeType());
+        inlineData.put("data", inputData.getFileAsBase64());
+
+        ObjectNode inlineDataPart = MAPPER.createObjectNode();
+        inlineDataPart.set("inline_data", inlineData);
+
+        ArrayNode parts = MAPPER.createArrayNode();
+        parts.add(inlineDataPart);
 
         content.set(PARTS, parts);
         contentsArray.add(content);

@@ -172,10 +172,24 @@ export class EditorAi {
     }
 
     _getColumnType(column, fieldName) {
-        let className = column.className ?? "";
-        let renderFormat = column.renderFormat ?? "";
+        //console.log("Determining column type for field:", fieldName, "column=", column);
+        try {
+            let className = column.className ?? "";
+            let renderFormat = column.renderFormat ?? "";
 
-        if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
+            if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
+
+            if (fieldName != null && fieldName != "") {
+                let inputField = $(".form-control[name='"+fieldName+"']");
+                if (inputField.length===0) inputField = $("#"+fieldName);
+                renderFormat = $(inputField).attr("data-ai-render-format") ?? "";
+            }
+
+            if(renderFormat.indexOf("dt-format-image") != -1) return "image";
+        } catch (error) {
+            console.error("Error determining column type:", error);
+        }
+
         return "text";
     }
 
@@ -325,8 +339,10 @@ export class EditorAi {
         if(inputValues !== null && typeof inputValues === 'object' && !Array.isArray(inputValues)) {
             inputData = inputValues;
         }
+
         //Add other values
-        inputData.inputValueType = this._getColumnType(column, aiCol.to);
+        inputData.inputValueType = this._getColumnType(column, aiCol.from);
+        inputData.outputValueType = this._getColumnType(column, aiCol.to);
 
         //console.log(inputData);
 
@@ -581,7 +597,7 @@ export class EditorAi {
         } else {
             // IS IMAGE
 
-            if ("image"===inputData.inputValueType) {
+            if ("image"===inputData.outputValueType) {
                 //inputData.value = "/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg";
 
                 //We want IMAGE AI response, because SRC field is IMAGE

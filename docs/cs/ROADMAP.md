@@ -13,34 +13,34 @@ Vysvětlení použitých piktogramů:
 
 ## 2025
 
-- [ ] Přechod na `Jakarta EE` - změna Java packages z `javax.servlet` na `jakarta.servlet`, připravit migrační skript.
-- [ ] Přechod na aplikační server Tomcat 11+.
-- [ ] Přechod na `Spring` verze 7.
+- [ ] Přechod na `Jakarta EE` - změna Java packages z `javax.servlet` na `jakarta.servlet`, připravit migrační skript (#57793).
+- [ ] Přechod na aplikační server Tomcat 11+ (#57793).
+- [ ] Přechod na `Spring` verze 7 (#57793).
 - [ ] Zavést do projektu povinnost použití `SonarLint` a formátování kódu přes `.editorconfig` nebo `Spotless` - příklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
-- [ ] Primární používání GitHub repozitáře pro vývoj.
-- [ ] Zrušení generování artifaktů na starý `iwmsp.sk` repozitář, artefakty budou dostupné už jen přes [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
-- [ ] Aktualizace knihovny `pd4ml` na novou verzi, jednotlivé weby si budou muset pořídit licenci samostatně, nebude již poskytována WebJET CMS.
+- [x] Primární používání GitHub repozitáře pro vývoj.
+- [x] Zrušení generování artifaktů na starý `iwmsp.sk` repozitář, artefakty budou dostupné už jen přes [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [x] Aktualizace knihovny `pd4ml` na novou verzi, jednotlivé weby si budou muset pořídit licenci samostatně, nebude již poskytována WebJET CMS.
 - [ ] Přechod nejpoužívanějších aplikací do Spring verze s využitím Thymeleaf šablon.
-- [ ] Zrušení `Apache Struts` framework, nahrazení `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, nebo implementace podobné funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [x] Zrušení `Apache Struts` framework, nahrazení `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, nebo implementace podobné funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Přesun JSP souborů, Java tříd a JavaScript knihoven staré verze 8 do `obsolete` jaro archivu, který nebude standardní součástí WebJET CMS. Může být použit na starých projektech, kde zatím není provedena aktualizace všech zákaznických aplikací na `Spring` verze, ale bez podpory a aktualizací ze strany WebJET CMS.
 - [ ] Statistika - mapa kliknutí - obnovení funkcionality, vyřešení problému responzivnosti (samostatná evidence dle šířky okna).
-- [ ] Statistika - možnost filtrovat botů pro statistiku vadných stránek.
+- [x] Statistika - možnost filtrovat botů pro statistiku vadných stránek (#58053).
 - [ ] Log soubory - filtrovat podle jména instalace.
 - [ ] `quill` - přidat možnost nastavit položky menu včetně barev.
 - [ ] Aplikace - možnost nákupu aplikace pro OpenSource verzi (#55825).
 - [ ] Možnost provést Thymeleaf kód v hlavičce/patičce a možná i v těle web stránky.
 - [ ] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
 - [ ] Formuláře - přidat možnost volat Java třídu pro validaci formuláře.
-- [ ] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech.
+- [x] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech (#57837).
 - [ ] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), není-li posílán stav `available` nastavit na `true`.
 - [ ] V testech nějak automatizovaně kontrolovat výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí zaseknutí automatizovaných testů.
 - [ ] Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče.
-- [ ] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants`.
-- [ ] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky.
+- [ ] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants` (#57849).
+- [x] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky (#57885).
 - [ ] Hromadný email - auditovat změny ve skupinách uživatelů.
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
-- [ ] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
+- [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
 - [ ] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči `ADFS/SAML` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
@@ -51,7 +51,7 @@ Vysvětlení použitých piktogramů:
 - [ ] +Elektronický obchod - do emailu přidat `JSON-LD` data https://schema.seznam.cz/objednávky/dokumentace/.
 - [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
 - [ ] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci.
-- [ ] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#56665).
 - [ ] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu.
 - [ ] +Galerie - pokud nastavuji perex obrázek na obrázek v galerii, stáhnu z fotobanky, a obrázek přejmenuji na existující v databázi (je-li soubor smazán z disku) tak vznikne v `gallery` tabulce duplicitní záznam. Navíc se nepřejmenují ostatní obrázky `o_,s_`. Třeba pamatovat na to, že teoreticky mohu přejmenovat libovolný, mělo by to detekovat, že jsem v galerii a přejmenovat všechny verze.
 - [x] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
@@ -65,8 +65,18 @@ Vysvětlení použitých piktogramů:
 - [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
 - [ ] +Konfigurace - v případě `cluster` instalace doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze). Původně to řešilo výběrové pole `applyToAllClusterNodes`.
 - [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jako máme ve volitelných polích.
-- [ ] +Statistika - do sekce návštěvnost přidat sumární počet Vidění a Návštěv pro snadný přehled celkové návštěvnosti za zvolené období (součet čísel v tabulce). Mohlo by jít doplnit `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html
-- [ ] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuju `SK,DE,EN` pak vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku.
+- [x] +Statistika - do sekce návštěvnost přidat sumární počet Vidění a Návštěv pro snadný přehled celkové návštěvnosti za zvolené období (součet čísel v tabulce). Mohlo by jít doplnit `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html (#57929).
+- [x] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuju `SK,DE,EN` pak vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složka (#57561).
+- [ ] +Do testů v GitHube přidat verifikaci `autoupdate` pro všechny podporované databázové servery - tedy inicializovat prázdnou databázi a ověřit všechny `autoupdate` a ověřit, že projdou bez chyby. Udělat jako samostatnou pipeline.
+- [ ] Galerie - umožnit změnu cesty galerie (složky) a nastavit vše s tím spojené.
+- [ ] +Konfigurace - doplnit sloupec skupina s hodnotou `modules` konfigurační proměnné (výběrové pole, může mít více hodnot). Doplnit možnost zobrazit i nenastavené proměnné (neboli kompletní seznam). Vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci pro přehled všech proměnných.
+- [ ] +Pokud mám neuloženou stránku s titulkem Úklid a už existuje jiná stránka s názvem Úklid, tak nově nahrané obrázky se před jejím uložením nahrají do složky `upratovanie`. Ale když se stránka uloží, získá URL adresu úklid-2.html a další obrázky se již nahrají do složky `upratovanie-2`. Je třeba upravit kód v `getPageUploadSubDir` tak, aby místo přímého použití titulku stránky zkusil získat URL adresu pro novou stránku a to pak použil.
+- [ ] +HTTP hlavičky - rozšířit maximální velikost hodnoty HTTP hlavičky na více než 255 znaků, pro `Content-Security-Policy` je to nedostatečná velikost (#PR83).
+- [x] +Integrace AI nástrojů, pomocníků, asistentů (#57997).
+- [ ] +V editaci profilu se nezobrazí API klíč po jeho vygenerování, notifikace se nepřenesou do rodičovského okna.
+- [ ] +Formuláře - upravit ochranu formulářů tak, aby se nepoužíval `document.write`.
+- [ ] +Přidat možnost nastavit typ `textarea` jako je v AI asistentech is čísly řádků, například. do skriptů nebo jinde, kde se předpokládá psaní kódu.
+- [ ] +Novinky - přesunout pole `contextClasses` z aplikace novinky do šablony novinek. Pole nastavit jako `hidden` aby zůstalo funkční (někde může být nastaveno), pokud je prázdné použít hodnotu ze šablony. Musí tedy fungovat obě možnosti, lze spojit obě hodnoty do jednoho seznamu.
 
 ## 2024
 
@@ -242,7 +252,7 @@ Vysvětlení použitých piktogramů:
 - [x] přidat `code coverage` report, například. přes JaCoCo - https://docs.gradle.org/current/userguide/jacoco\_plugin.html (#54909).
 - [ ] ~~(přesun do 2023.40) upravit posílání zpráv mezi administrátory z vyskakovacího okna na lepší uživatelské rozhraní~~
 - [ ] ~~(přesun do 2023.40) Aplikace - zlepšit popis každé aplikace, aktualizovat obrázky aplikace.~~
-- [x] Galerie - přidat fyzickou změnu jména souboru (včetně vygenerovaných s\* a o\* obrázků) po změně atributu Jméno souboru v editoru (#39751-52).
+- [x] Galerie - přidat fyzickou změnu jména souboru (včetně vygenerovaných `s_` a `o_` obrázků) po změně atributu Jméno souboru v editoru (#39751-52).
 - [x] +Datatabulky - zapamatovat si počet záznamů na stranu pro každou datatabulku (#39751-50).
 - [ ] +`Command Palette` - přidat příkazovou paletu s integrovaným vyhledáváním podobně jako má VS Code - https://trevorsullivan.net/2019/09/18/frictionless-user-experiences-add-a-command-palette-to-your-react-application/
 - [ ] ~~(přesun do 2023.40) +foto galerie - optimalizovat množství načtených dat~~

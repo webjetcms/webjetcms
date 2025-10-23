@@ -510,7 +510,7 @@ static {
 	replaces.add(new OptionDto("sk.iway.iwcm.components.news.NewsTemplateBean", "sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity", null));
 
 	//404.jsp
-	replaces.add("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp");
+	replaces.add(new OptionDto("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

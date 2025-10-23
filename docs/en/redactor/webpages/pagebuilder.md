@@ -16,6 +16,32 @@ If necessary, there is an option in the window to switch the editor to standard 
 
 !>**Warning:** the content of the editors is not synchronized during your edits. They both load the same content only when the window is opened. So you can't start making changes in Page Builder and then switch to the standard editor and make more changes there.
 
+## Basic work
+
+When you use Page Builder, you create a web page from pre-made blocks. Moving the cursor over the block will highlight the individual sections where:
+- The blue color represents a section - the main building block, usually the full width of the screen.
+- The red color represents a container - a block designed for inserting columns, it is usually narrower than a section for better readability of the texts on the page.
+- The green color represents a column - this already contains typically editable text, images or applications.
+
+![](pagebuilder.png)
+
+Each highlighted part displays a gear icon, click on the gear to display the toolbar. This contains options:
+- Style - allows to set advanced block style/properties such as background image, color, alignment, indentation, etc.
+- Column width - sets the column width, different widths can be set for different devices (phone, tablet, computer).
+- Move block - allows you to move a block to another place in the page, after clicking on the icon you will see options where the block can be moved.
+- Duplicate - duplicates the selected block.
+- Favorites - adds the block to the list of favorite blocks.
+- Delete - deletes the selected block.
+
+![](pagebuilder-style.png)
+
+Clicking on the gear will also display the + icons for inserting a new block. Clicking on the appropriate location will display the block selection. This contains the tabs:
+- Basic - simple blocks of different sizes.
+- Library - blocks created for your web page.
+- Favorites - blocks that you have marked as favorites.
+
+![](pagebuilder-library.png)
+
 ## Setting the width of the columns
 
 The editor allows you to adjust the column widths according to the selected device. In the toolbar, next to the editor type toggle, there is an option to set the size (width) of the device.

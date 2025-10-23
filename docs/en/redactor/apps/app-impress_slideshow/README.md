@@ -4,6 +4,8 @@ Animated presentation view with 3D effect of transition between slides. You can 
 
 ## Application settings
 
+Settings tabs **Style and settings** a **Items**.
+
 ### Style and settings
 
 In this section it is possible to set:
@@ -15,9 +17,20 @@ In this section it is possible to set:
 
 ### Items
 
-This section is to add or remove an item: When adding, the heading, subheading, redirect, heading color, subheading color, background color can be filled in. At the same time, the font style (bold, italic, indent, size and style) can be adjusted for the heading and subheading using the advanced settings. For headings, the order can be changed by dragging and dropping. You can remove an item by clicking on the red cross.
+In this section you can see and manage the application items, so classic actions like add/edit/delete...
 
 ![](editor-items.png)
+
+You can set the following parameters for each item:
+- **Image**, image selection using the explorer is supported, as well as direct entry of the image path
+- **Title**, image caption (text styling is also possible)
+- **Subtitle**, image subtitle (text styling is also possible)
+- **Click to view another page (redirect)**, select the page you will be redirected to (direct path entry is also supported)
+- **Title colour**
+- **Colour of the subtitle**
+- **Background colour**
+
+![](editor-items-edit.png)
 
 ## View application
 

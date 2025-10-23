@@ -108,6 +108,12 @@ The resulting gallery on the web page may look like this:
 
 ![](photoswipe.png)
 
+## Move image
+
+By changing the value **Folder** in charts **Metadata** a storage change occurs within the repository. You can change the folder both when editing and when duplicating an image. You can select the destination folder via the selection window, or you can specify the path directly. The path must **always** start at `/images/gallery`. This functionality is useful when moving, as the gallery does not support action `drag&drop`.
+
+If the specified folder does not already exist, it will be created automatically. The properties of the created folder are set according to the nearest parent folder. This also works for several levels at the same time, so that an entire nesting tree can be created automatically.
+
 ## Possible configuration variables
 
 - `imageMagickDir` - If set, the command is used to resize the images `convert` from the package `ImageMagick` (default value: `/usr/bin`).
@@ -136,3 +142,12 @@ The resulting gallery on the web page may look like this:
 - `galleryWatermarkApplyOnUploadExceptions` - List of path names for which the watermark will not be applied when the file is uploaded to WebJET (default value: `logo,nowatermark,system,funkcionari`).
 - `galleryWatermarkSvgSizePercent` - The height in percentage that the SVG watermark will occupy of the image height (default value: 5).
 - `galleryWatermarkSvgMinHeight` - Minimum SVG watermark height in pixels (default: 30).
+
+### Reduce the dimensions of the original image
+
+If the original image is taking up a lot of disk space, you can set it to shrink on upload using configuration variables:
+- `metadataRemoverCommand` - if set, the removal of metadata from uploaded files is activated, or `imageMagick` to reduce the size - set to `/usr/bin/convert`.
+- `metadataRemoverParams` - parameters, to shrink the image via `imageMagick` set to `{filePath} -resize 1920x1080 {filePath}`. Adjust the size as required.
+- `metadataRemoverExtensions` - suffixes for which it will be used, for images set to `jpg,jpeg,png,gif`.
+
+The tool is required `ImageMagick` on the server.

@@ -7,17 +7,28 @@ Bring your page to life with a stunning animated photo slider. Take advantage of
 ### Style and settings
 
 In this section it is possible to set:
-- Height
-- Setting the heading font (Font Alignment, Font Size, Top Indent)
-- Setting the subheading font (Font Alignment, Font Size, Top Indent)
+- **Height**
+- **Setting the heading font** (Font Alignment, Font Size, Top Offset)
+- **Setting the subtitle font** (Font Alignment, Font Size, Top Offset)
 
 ![](editor-style.png)
 
 ### Items
 
-This section is to add or remove an item: When adding, the heading, subheading, redirect, heading color, subheading color, background color, and image can be filled in. For items, the order can be changed by dragging and dropping. Removing an item can be done by clicking on the red cross.
+In this section you can see and manage the application items, so classic actions like add/edit/delete...
 
 ![](editor-items.png)
+
+You can set the following parameters for each item:
+- **Image**, image selection using the explorer is supported, as well as direct entry of the image path
+- **Title**, picture caption
+- **Subtitle**, image caption
+- **Click to view another page (redirect)**, select the page you will be redirected to (direct path entry is also supported)
+- **Title colour**
+- **Colour of the subtitle**
+- **Background colour**
+
+![](editor-items-edit.png)
 
 ## View application
 
