@@ -136,7 +136,7 @@ Scenario('spring - nastavenie parametra', ({ I, DTE, Apps }) => {
 
     //check param in HTML view
     Apps.switchEditor('html');
-    I.see('stringField=&quot;' + stringField.replace(/"/g, '\\\&quot;')) + '&quot;,';
+    I.see('stringField=&quot;' + stringField.replace(/"/g, '\\\&quot;') + '&quot;,');
     Apps.switchEditor();
 
     DTE.save();
