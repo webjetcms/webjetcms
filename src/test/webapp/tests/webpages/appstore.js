@@ -6,7 +6,7 @@ Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
-        stringField = "stringField-autotest-"+randomNumber;
+        stringField = "stringField-autotest-"+randomNumber+", auto, \"test\", pokus\"";
         cookieTitle = "Používanie cookies autotest-"+randomNumber;
     }
 });
@@ -108,7 +108,7 @@ Scenario('spring - zoznam aplikacii', ({ I, DT, DTE, Browser }) => {
     testDemoComponent(I, true);
 });
 
-Scenario('spring - nastavenie parametra', ({ I, DTE }) => {
+Scenario('spring - nastavenie parametra', ({ I, DTE, Apps }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=27030");
     DTE.waitForEditor();
     I.wait(6);
@@ -123,6 +123,21 @@ Scenario('spring - nastavenie parametra', ({ I, DTE }) => {
     I.switchTo();
     I.clickCss("a.cke_dialog_ui_button_cancel");
     I.wait(2);
+
+    //check params inside editor
+    I.switchTo();
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.switchTo('iframe.wj_component');
+
+    I.see("Demo component view, params:");
+    I.see("stringField: " + stringField);
+
+    I.switchTo();
+
+    //check param in HTML view
+    Apps.switchEditor('html');
+    I.see('stringField=&quot;' + stringField.replace(/"/g, '\\\&quot;')) + '&quot;,';
+    Apps.switchEditor();
 
     DTE.save();
 
