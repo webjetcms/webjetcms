@@ -10,6 +10,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/news/editor-dialog.png)
 
+### Presmerovania
+
+- Pridané možnosť ukončiť platnosť presmerovania v stanovenom čase a možnosť zadať poznámku s informáciou na čo presmerovanie slúži. Presmerovania, ktoré už nie sú časovo platné sa zobrazia červenou farbou (#58105).
+
+![](redactor/webpages/redirects/path-editor.png)
+
 ### Iné menšie zmeny
 
 - Vyhľadávanie - upravené načítanie zoznamu šablón pri hľadaní web stránok. Načítajú sa všetky šablóny bez ohľadu na ich dostupnosť v priečinkoch, aby sa nestalo, že pri editácii web stránky šablóna nie je dostupná (#58073).
@@ -67,7 +73,6 @@ Tieto funkcie vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky,
 ![](redactor/webpages/mirroring/groups_datatable.png)
 
 - Pri výbere obrázka, alebo video súboru, v editore stránok sú v prieskumníkovi zobrazené len vhodné typy súborov, ostatné sú filtrované (#57921).
-- Presmerovania - pridané nové polia **Poznámka** a **Platnosť do** (#58105).
 
 ### Šablóny
 

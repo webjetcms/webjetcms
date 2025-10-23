@@ -12,12 +12,28 @@ block content
             var order = [];
             order.push([0, 'desc']);
 
+            var now = new Date().getTime();
+            var isActive = true;
+            console.log("now=", now);
+
             redirectTable = WJ.DataTable({
                 url: url,
                 columns: columns,
                 serverSide: true,
                 editorId: "urlRedirectId",
-                order: order
+                order: order,
+                onRowCallback: function(TABLE, row, data) {
+                    isActive = true;
+                    if (data.publishDate != null && now < data.publishDate) {
+                        isActive = false;
+                    }
+                    if (data.validTo != null && now > data.validTo) {
+                        isActive = false;
+                    }
+                    if (isActive == false) {
+                        $(row).addClass('is-not-public');
+                    }
+                }
             });
         });
 

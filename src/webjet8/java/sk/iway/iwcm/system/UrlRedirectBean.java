@@ -136,7 +136,12 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title = "components.banner.dateTo"
+        title = "components.banner.dateTo",
+		editor = {
+            @DataTableColumnEditor(
+				message="components.redirect.publishEndDateNote"
+			)
+        }
     )
 	Date validTo;
 

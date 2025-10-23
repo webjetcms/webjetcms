@@ -264,9 +264,10 @@ public class UrlRedirectDB
 				UrlRedirectBean toReturn = redirects.get(domainName).get(oldUrl);
 
 				// cache reload is not that often, so do check of publishDate and validTo here
-				if(toReturn != null) {
-					boolean noMoreValid = toReturn.getValidTo() != null && toReturn.getValidTo().before(new Date());
-					boolean notPublishedYet = toReturn.getPublishDate() != null && toReturn.getPublishDate().after(new Date());
+				if(toReturn != null && (toReturn.getValidTo() != null || toReturn.getPublishDate() != null)) {
+					Date now = new Date();
+					boolean noMoreValid = toReturn.getValidTo() != null && toReturn.getValidTo().before(now);
+					boolean notPublishedYet = toReturn.getPublishDate() != null && toReturn.getPublishDate().after(now);
 
 					if(noMoreValid || notPublishedYet) {
 						// remove from cache
