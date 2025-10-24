@@ -127,6 +127,8 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("x-frame-options: sub-folder");
     I.see("x-webjet-header: sub-folder");
     I.see("x-macro-test: aceintegration-"+I.getDefaultDomainName());
+    //test header with new line, it should be replaced by space
+    I.see("x-multiline-test: aceintegration "+I.getDefaultDomainName());
     //^/apps/http-hlavicky/$
     I.dontSee("x-webjet-equals");
     // /apps/http-hlavicky/*.html

@@ -19,8 +19,6 @@ import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Entity
 @Table(name = "response_headers")
@@ -68,13 +66,7 @@ public class ResponseHeaderEntity {
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="apps.response-header.change_date",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
-                }
-            )
-        }
+        disabled = true
     )
     private Date changeDate;
 
