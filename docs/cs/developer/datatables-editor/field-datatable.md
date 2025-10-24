@@ -13,6 +13,7 @@ Anotace se používá jako `DataTableColumnType.DATATABLE`, přičemž je třeba
 - `data-dt-field-dt-columns` - jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md) Např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
 - `data-dt-field-dt-columns-customize` - jméno JavaScript funkce, která může být použita k úpravě`columns` objektu, například `removeEditorFields`. Funkce musí být dostupná přímo ve `windows` objektu, jak parametr dostane`columns` objekt a očekává se, že jej vrátí upravený. Příklad `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
+- `data-dt-field-dt-localJson` - aktivuje režim, který pracuje s lokálním JSON objektem. Používá se primárně pro aplikace ve web stránce pro evidenci položek aplikace (např. položky slide show), které se navíc automaticky kódují do řetězce vhodného do `PageParams` objektu a jsou kódovaném v `Base64`.
 
 Kompletní příklad anotace:
 
@@ -49,6 +50,49 @@ Vytvořená datatabulka se zpřístupní jako:
 - `window` objekt s názvem `datatableInnerTable_fieldName` - objekt lze použít pro automatizované testování nebo jiné JavaScript operace.
 
 Po vytvoření vnořené datatabulky je vyvolána událost `WJ.DTE.innerTableInitialized` kde v objektu `event.detail.conf` je přenesena konfigurace.
+
+## Lokální JSON data
+
+Aktivuje režim práce s lokálními JSON daty. Data jsou získána přímo z hodnoty pole, které může být typu `String` při kterém se provede volání `JSON.parse`.
+
+Pro parametry aplikace ve web stránce se výsledek kóduje do `Base64` aby nedošlo k poškození JSON objektu. Zároveň se aktivuje rozšíření [Row Reorder](https://datatables.net/extensions/rowreorder/) pro možnost uspořádání seznamu pomocí funkce `Drag&Drop`.
+
+V aplikaci tak bude možné upravovat seznam položek, měnit jejich pořadí atp. bez použití a definování REST služby. Výsledek se uloží zpět do JSON objektu a zakóduje přes `Base64`. Při inicializaci se doplní sloupec `ID` a `rowOrder`. Využívá se atribut `DATA.src` objektu `datatables` pro přímé nastavení dat pro tabulku.
+
+Automaticky se aktivuje i funkce pro možnost změny pořadí řádků pomocí funkce `Drag&Drop`. Z důvodu konfliktů při přesunu řádků a jejich různého uspořádání je vypnuta možnost uspořádat seznam podle libovolného sloupce, seznam se pořádá automaticky podle pořadí uspořádání. Pro režim JSON editor se tento sloupec automaticky přidá - všimněte si, že třída `ImpressSlideshowItem` v příkladu níže neobsahuje ani `ID` ani `rowOrder` sloupec, jelikož technicky pro zobrazení dat nejsou nutné. Přidají se automaticky. Pokud potřebujete sloupec ručně zobrazit, použijte anotaci `DataTableColumnType.ROW_REORDER`.
+
+Příklad použití:
+
+```java
+public class ImpressSlideshowApp extends WebjetComponentAbstract{
+    ...
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
+}
+
+public class ImpressSlideshowItem {
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        className = "image",
+        title = "editor.perex.image",
+        renderFormat = "dt-format-image-notext"
+    )
+    private String image;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="dt-row-edit", title = "components.app-cookiebar.cookiebar_title")
+    private String title;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.subtitle")
+    private String subtitle;
+
+    ...
+}
+```
 
 ## Poznámky k implementaci
 

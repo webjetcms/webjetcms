@@ -32,10 +32,19 @@ String perexImage = "";
 private String externalLink;
 ```
 
+## Settings
+
+Using the attribute `className` additional filtering of the displayed files can be set:
+- `image` - only files whose `mime-type` starting at `image/`.
+- `video` - only files whose `mime-type` starting at `video/`.
+- `multimedia` - only files whose `mime-type` starting at `image/` or `video/`.
+
+Settings `mime-type` is read from the file [mime.types](../../../../src/main/webapp/WEB-INF/mime.types).
+
 ## Notes on implementation
 
-The implementation is in the file [field-type-elfinder.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). According to `className` generates the appropriate HTML code for the input field. Into the variable `conf._prepend` stores a reference to the prepend element (`div.input-group-prepend .input-group-text`) with a preview image. Feature `setValue(conf, val)` is used to set the value of the field and also to set the preview image (if it is of type `.jpg` or `.png`).
+The implementation is in the file [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). According to `className` generates the appropriate HTML code for the input field. Into the variable `conf._prepend` stores a reference to the prepend element (`div.input-group-prepend .input-group-text`) with a preview image. Feature `setValue(conf, val)` is used to set the value of the field and also to set the preview image (if it is of type `.jpg` or `.png`).
 
 The preview image is set as `background-image`, at the same time is `prepend` element set CSS class `has-image`.
 
-Opening the elfinder window is provided by calling the function [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialog) with set `callback` to function `setValue`.
+Opening the elfinder window is provided by calling the function [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialogue) with set `callback` to function `setValue`.

@@ -90,6 +90,7 @@
                         'dbActive': this.formatedData.dbActive,
                         'dbIdle': this.formatedData.dbIdle,
                         'dbWaiting': this.formatedData.dbWaiting,
+                        'dbServerName': this.formatedData.dbServerName
                     }
                 } else if (this.keyIndex == 3) {
                     this.sortedData = {

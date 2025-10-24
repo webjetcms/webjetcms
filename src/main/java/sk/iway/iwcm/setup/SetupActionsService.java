@@ -224,6 +224,11 @@ public class SetupActionsService {
 			if(Tools.isNotEmpty(oldLng)) sForm.setPageLngIndicator(oldLng);
 		}
 
+		String language = request.getParameter("language");
+		if (language != null && language.length() == 2) {
+			sForm.setConf_defaultLanguage(language);
+		}
+
 		setModel(model, sForm, false, false);
 
 		return FORWARD;

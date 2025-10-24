@@ -13,7 +13,11 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
+- `2025.0-jakarta-SNAPSHOT` - regularly updated version from the main repository version 2025 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.40-jakarta` - stabilized version 2025.40 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
+- `2025.40` - Stabilized version 2025.40, no daily changes are added.
+- `2025.0.40` - Stabilized version 2025.0.49 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.18` - Stabilized version 2025.18, no daily changes are added.
 - `2025.0.23` - Stabilized version 2025.0.23 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.0` - Stabilized version 2025.0, no daily changes are added.
@@ -58,6 +62,69 @@ View Full Version `YEAR.0.x` is therefore not fundamentally changed, it contains
 But at the same time, the version does not have to be `YEAR.0.x` the safest. If the library used in WebJET needs to be updated and it contains major changes, we cannot make this change in `YEAR.0.x` version, as it would break compatibility.
 
 It is therefore true that `YEAR.0.x` Is **most stable** in terms of changes and `YEAR.0-SNAPSHOT` Is **safest** in terms of vulnerabilities.
+
+## Changes when moving to Tomcat 9.0.104+
+
+V [Tomcat from version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) the control of the number of parameters is changed at `multipart` HTTP request. It is therefore necessary to set/increase the parameter `maxPartCount` at `<Connector` elements with file `tomcat/conf/server.xml` to a value of at least 100, example:
+
+```xml
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443"
+               maxPartCount="1000"
+               URIEncoding="UTF-8"
+               useBodyEncodingForURI="true" relaxedQueryChars="^{}[]|&quot;"
+    />
+```
+
+## Changes when switching to Jakarta version
+
+Version for `jakarta namespace`, requires Tomcat 10/11 application server, uses Spring version 7. Breakthrough changes:
+- URLs - Spring has introduced exact matches for URLs, if a REST service defines a URL with a slash at the end, it must be used as such. There is a difference in the URL `/admin/rest/service` a `/admin/rest/service/`.
+- In Spring DATA repositories for `IN/NOTIN query` it is necessary to add `@Query`, otherwise the SQL will not be created correctly, example:
+
+```java
+  //old
+  Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+  List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
+
+  //new - add @Query and @Param to correctly create JPQL query for Eclipselink
+  @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
+  Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
+
+  @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
+  List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
+```
+
+To search the code, you can use the file search `*Repository.java` and search for a regular expression `\(.*List[^)]*\)`, `\(.*Long[\][^)]*\)`, `\(.*Integer[\][^)]*\)`. We recommend to execute the code, display the error in the log and use the generated SQL to `Query` Values. The only problem is the type checking, where `EclipseLink` can't identify that it should check the field/list and not directly the data type.
+
+V `build.gradle` need to be updated `gretty` configuration and add compilation settings `options.compilerArgs += ['-parameters']`:
+
+```gradle
+plugins {
+    id 'org.gretty' version "4.1.6"
+}
+
+configurations {
+    grettyRunnerTomcat10 {
+        // gretty uses old version of commons-io
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+}
+
+gretty {
+    servletContainer = 'tomcat10'
+}
+
+tasks.withType(JavaCompile) {
+    options.failOnError = false
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
+    //needed for Spring
+    options.compilerArgs += ['-parameters']
+}
+```
 
 ## Changes in the transition to 2025.0-SNAPSHOT
 

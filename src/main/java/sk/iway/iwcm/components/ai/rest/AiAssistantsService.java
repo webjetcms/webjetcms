@@ -15,7 +15,10 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -82,8 +85,26 @@ public class AiAssistantsService {
             strictBinding = true;
         }
 
+        //for custom fields try to detect type and update renderFormat
+        String colRenderFormat = column.getRenderFormat();
+        if (Tools.isNotEmpty(fieldTo) && fieldTo.startsWith("field") && fieldTo.length()=="fieldX".length()) {
+            String titleKey = column.getTitleKeyOriginal();
+            //use default language for detection
+            Prop propType = Prop.getInstance(Constants.getString("defaultLanguage"));
+            if (Tools.isNotEmpty(titleKey)) {
+                String type = propType.getText(titleKey + ".type");
+                if (type.equals("image")) {
+                    colRenderFormat = "dt-format-image";
+                } else if (type.equals("link")) {
+                    colRenderFormat = "dt-format-elfinder";
+                } else if (type.equals("dir")) {
+                    colRenderFormat = "dt-format-elfinder";
+                }
+            }
+        }
+
         String[] classNames = Tools.getTokens(column.getClassName(), " ", true);
-        String[] renderFormats = Tools.getTokens(column.getRenderFormat(), " ", true);
+        String[] renderFormats = Tools.getTokens(colRenderFormat, " ", true);
 
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
 
@@ -208,12 +229,12 @@ public class AiAssistantsService {
 
     /* PRIVATE SUPPORT METHODS */
     @SuppressWarnings("java:S1871")
-    private static boolean isMatching(String text, String search) {
-        if (search.equals(text)) return true;
+    protected static boolean isMatching(String text, String fieldName) {
+        if (fieldName.equals(text)) return true;
         else if ("*".equals(text)) return true;
-        else if (text.startsWith("%") && text.endsWith("!") && text.length()>4 && search.endsWith(text.substring(1, text.length()-1))) return true;
-        else if (text.startsWith("%") && text.length()>2 && search.indexOf(text.substring(1))!=-1) return true;
-        else if (text.endsWith("!") && text.length()>=2 && search.equals(text.substring(0, text.length()-1))) return true;
+        else if (text.startsWith("%") && text.endsWith("!") && text.length()>4 && fieldName.endsWith(text.substring(1, text.length()-1))) return true;
+        else if (text.startsWith("%") && text.length()>2 && fieldName.indexOf(text.substring(1))!=-1) return true;
+        else if (text.endsWith("!") && text.length()>=2 && fieldName.equals(text.substring(0, text.length()-1))) return true;
 
         return false;
     }
@@ -322,6 +343,27 @@ public class AiAssistantsService {
             //inputValue if it is required for the action
             inputData.setInputValue("");
             inputData.setUserPrompt("");
+        }
+
+        //replace user language
+        if (instructions.contains("{userLanguage}")) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                String userLang = rb.getLng();
+                Prop prop = Prop.getInstance("en");
+                String language = prop.getText("language."+userLang);
+                instructions = Tools.replace(instructions, "{userLanguage}", language);
+            }
+        }
+        //replace language (language of last shown page from lng cookie)
+        if (instructions.contains("{language}")) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                String userLang = rb.getLngCookie();
+                Prop prop = Prop.getInstance("en");
+                String language = prop.getText("language."+userLang);
+                instructions = Tools.replace(instructions, "{language}", language);
+            }
         }
 
         if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);

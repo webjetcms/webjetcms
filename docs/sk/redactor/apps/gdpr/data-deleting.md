@@ -2,7 +2,7 @@
 
 Aplikácia GDPR obsahuje uzol „Mazanie dát“, ktorý slúži na odstraňovanie starých dát z databázy.
 
-Umožňuje mazať:
+Umožňuje zmazať:
 
 -	účty **neaktívnych používateľov** (tí, ktorí neboli prihlásený za posledných X dní, základne nastavené na 730dní = 2roky)
 -	**formuláre** (záznamy staršie ako X dní, základne nastavené na 730dní = 2roky

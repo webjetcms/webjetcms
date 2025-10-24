@@ -67,7 +67,7 @@ Scenario('Recovery web page logic', ({ I, DT, DTE }) => {
     I.see("page_to_delete", ".DTE.modal-content.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy", "#datatableInit_wrapper .dt-scroll-body");
 
     I.say("Recovering web page");
     I.clickCss("#pills-trash-tab");

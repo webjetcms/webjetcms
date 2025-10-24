@@ -13,7 +13,11 @@ ext {
 ```
 
 Přičemž aktuálně existují následující verze WebJET:
+- `2025.0-jakarta-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2025.40` - stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
+- `2025.0.40` - stabilizovaná verze 2025.0.49 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
 - `2025.0.23` - stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
@@ -58,6 +62,69 @@ Verze `YEAR.0.x` se tedy zásadně nemění, obsahuje opravy chyb (pokud oprava 
 Zároveň ale nemusí být verze `YEAR.0.x` nejbezpečnější. Pokud je třeba aktualizovat použitou knihovnu ve WebJETu a ta obsahuje zásadnější změny nemůžeme tuto změnu provést v `YEAR.0.x` verzi, protože by se porušila kompatibilita.
 
 Platí tedy, že `YEAR.0.x` je **nejstabilnější** z pohledu změn a `YEAR.0-SNAPSHOT` je **nejbezpečnější** z pohledu zranitelností.
+
+## Změny při přechodu na Tomcat 9.0.104+
+
+V [Tomcat od verze 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) je změněna kontrola počtu parametrů při `multipart` HTTP požadavku. Je proto třeba nastavit/zvýšit parametr `maxPartCount` na `<Connector` elemente s souboru `tomcat/conf/server.xml` na hodnotu minimálně 100, příklad:
+
+```xml
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443"
+               maxPartCount="1000"
+               URIEncoding="UTF-8"
+               useBodyEncodingForURI="true" relaxedQueryChars="^{}[]|&quot;"
+    />
+```
+
+## Změny při přechodu na Jakarta verzi
+
+Verze určená pro `jakarta namespace`, vyžaduje aplikační server Tomcat 10/11, používá Spring verze 7. Průlomové změny:
+- URL adresy - pro URL adresy Spring zavedl přesné shody, pokud REST služba definuje URL adresu s lomítkem na konci, musí být takto použita. Je rozdíl v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
+- Ve Spring DATA repozitářích pro `IN/NOTIN query` je třeba přidat `@Query`, jinak nebude korektně SQL vytvořeno, příklad:
+
+```java
+  //old
+  Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+  List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
+
+  //new - add @Query and @Param to correctly create JPQL query for Eclipselink
+  @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
+  Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
+
+  @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
+  List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
+```
+
+Pro vyhledání v kódu můžete použít hledání v souborech `*Repository.java` a hledat regulární výraz `\(.*List[^)]*\)`, `\(.*Long[\][^)]*\)`, `\(.*Integer[\][^)]*\)`. Doporučujeme provést kód, v logu se zobrazí chyba a použít vygenerované SQL do `Query` hodnoty. Problémem je jen kontrola typu, kde `EclipseLink` neumí identifikovat, že má kontrolovat pole/seznam a ne přímo datový typ.
+
+V `build.gradle` je třeba aktualizovat `gretty` konfiguraci a přidat nastavení kompilace `options.compilerArgs += ['-parameters']`:
+
+```gradle
+plugins {
+    id 'org.gretty' version "4.1.6"
+}
+
+configurations {
+    grettyRunnerTomcat10 {
+        // gretty uses old version of commons-io
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+}
+
+gretty {
+    servletContainer = 'tomcat10'
+}
+
+tasks.withType(JavaCompile) {
+    options.failOnError = false
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
+    //needed for Spring
+    options.compilerArgs += ['-parameters']
+}
+```
 
 ## Změny při přechodu na 2025.0-SNAPSHOT
 

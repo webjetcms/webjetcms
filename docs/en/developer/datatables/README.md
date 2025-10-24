@@ -114,7 +114,7 @@ Minimum configuration:
 - `editorId {string}` the unique identifier of the editor, if not specified the value is used `id`. Especially needed if you have multiple datatables in one web page.
 - `onXhr {function}` JavaScript function that is called after [loading data](https://datatables.net/reference/event/xhr) in the form of `function ( TABLE, e, settings, json, xhr ) {}`.
 - `onPreXhr(TABLE, e, settings, data) {function}` JavaScript function that is called [before loading data](https://datatables.net/reference/event/preXhr), allows you to add parameters to the sent data. These are entered with a prefix `fixed_` to distinguish them from standard datatable parameters. Example: `onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }`.
-- `onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}`: JavaScript function that is called when the record edit link is clicked. It receives as parameters: `TABLE` - datatable instance, `row` - jQuery object of the row that was clicked, `dataAfterFetch` - when the function is switched on `fetchOnEdit` json data retrieved after restoration, `dataBeforeFetch` the original JSON row data for the call to restore it. You can then open the standard editor by calling `TABLE.wjEdit(row);`. An example of use is in [web-pages-list.pug](../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
+- `onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}`: JavaScript function that is called when the record edit link is clicked. It receives as parameters: `TABLE` - datatable instance, `row` - jQuery object of the row that was clicked, `dataAfterFetch` - when the function is switched on `fetchOnEdit` json data retrieved after restoration, `dataBeforeFetch` the original JSON row data for the call to restore it. You can then open the standard editor by calling `TABLE.wjEdit(row);`. An example of use is in [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
 - `fetchOnCreate {boolean}` when set to true, a REST call with value -1 will be made to get the data of the new object before the new record is created. The values are set by calling `EDITOR.setJson(json)` implemented in `$.fn.dataTable.Editor.prototype.setJson` in the event `initCreate`.
 - `fetchOnEdit {boolean}` when set to true, a REST call will be made before editing the record to retrieve the current data of the record being edited. When using a datatable, for example for a web page, the record is updated from the server before the editor is opened, so the latest version is always opened in the editor. Implemented via JS function `refreshRow` and customer button `$.fn.dataTable.ext.buttons.editRefresh` to replace the standard button `edit`.
 - `idAutoOpener {boolean}` allows setting to `false` deactivate [automatic opening of the editor](../libraries/datatable-opener.md) by URL parameter and inserting the ID field into the table header.
@@ -290,6 +290,7 @@ export function getSearchCriteria() {
 - `dt-format-date, dt-format-date-time, dt-format-date--text, dt-format-date-time--text` - date/time, the filter displays from-to
 - `dt-format-link` - displays text as a link, option to use `renderFormatLinkTemplate`
 - `dt-format-image` - displays a small preview of the image and a link to its full view, below the image is the text of the link to the image.
+- `dt-format-image-notext` - displays a small preview of the image and a link to view the full image without the link text.
 - `dt-format-mail` - display text as email link
 - `dt-row-edit` - allows line editing
 
@@ -389,7 +390,7 @@ JS function `nejakaTable.executeAction(action, doNotCheckEmptySelection, confirm
 - `customData` - object added to the REST service call as a parameter `customData` (e.g. additional data required for the correct execution of the action).
 - `forceIds` - a number or array of numbers with the value of the record ID for which the action is to be performed. Used when you need to click on the status icon to trigger an action (without having to select a row).
 
-A call is made to the REST service on the server `/action/rotate` implemented in the method [DatatableRestControllerV2.processAction](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). A list of selected rows (their IDs) is sent to the REST service, which is processed in the DatatablesRestControllerV2.action method.
+A call is made to the REST service on the server `/action/rotate` implemented in the method [DatatableRestControllerV2.processAction](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). A list of selected rows (their IDs) is sent to the REST service, which is processed in the DatatablesRestControllerV2.action method.
 
 **Example of use** - added button to `toolbaru` above the datatable with the call to action:
 
@@ -468,9 +469,9 @@ if (webpagesDatatable.hasPermission("create")) {
 
 ## Line styling
 
-Sometimes it is necessary to set the CSS style of the whole line (e.g. bold font for the main page, or red for the inaccessible page). We use the transfer of nested attributes through the object to transfer this additional data [EditorFields](../datatables-editor/datatable-columns.md#nested-attributes). We created a class [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) which has a method `addRowClass(String addClass)` to add a CSS class to the line.
+Sometimes it is necessary to set the CSS style of the whole line (e.g. bold font for the main page, or red for the inaccessible page). We use the transfer of nested attributes through the object to transfer this additional data [EditorFields](../datatables-editor/datatable-columns.md#nested-attributes). We created a class [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) which has a method `addRowClass(String addClass)` to add a CSS class to the line.
 
-An example of use is in [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
+An example of use is in [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
 
 ```java
 ...
@@ -494,7 +495,7 @@ The following CSS line styles are available:
 - `is-default-page` - represents the main web page of the directory, shown in bold.
 - `is-not-public` - represents a non-public item, shown in red.
 
-The CSS line style setting is implemented in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) using the option `rowCallback` datatable constructor. Verifies the existence of the property `data.editorFields.rowClass` and if it exists it applies the value to the line.
+The CSS line style setting is implemented in [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) using the option `rowCallback` datatable constructor. Verifies the existence of the property `data.editorFields.rowClass` and if it exists it applies the value to the line.
 
 You can also set the line style in JavaScript code (e.g. based on attributes) using the `onRowCallback`. So you can easily mark lines as inactive with CSS style `is-not-public`.
 
@@ -512,11 +513,11 @@ domainRedirectTable = WJ.DataTable({
 
 ## Status icons
 
-Sometimes it is necessary to display status icons of a record (e.g. in web pages icons Not shown in menu, Redirected page and so on). We use the transfer of nested attributes through the object to transfer these additional data [EditorFields](../datatables-editor/datatable-columns.md#nested-attributes). We created a class [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) which has a method `addStatusIcon(String className)`. Icons are from FontAwesome.
+Sometimes it is necessary to display status icons of a record (e.g. in web pages icons Not shown in menu, Redirected page and so on). We use the transfer of nested attributes through the object to transfer these additional data [EditorFields](../datatables-editor/datatable-columns.md#nested-attributes). We created a class [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) which has a method `addStatusIcon(String className)`. Icons are from FontAwesome.
 
 ![](../../redactor/webpages/status-icons.png)
 
-An example of use is in [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). It is necessary to define the attribute `statusIcons` s `@DataTableColumn` annotations to display the column. It is displayed as a selection box, in `options` attribute, we recommend defining an icon and descriptive text. Like `value` search conditions are transmitted (see below):
+An example of use is in [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). It is necessary to define the attribute `statusIcons` s `@DataTableColumn` annotations to display the column. It is displayed as a selection box, in `options` attribute, we recommend defining an icon and descriptive text. Like `value` search conditions are transmitted (see below):
 
 ```java
 ...
@@ -584,7 +585,7 @@ The search after selecting a filter option is implemented in `DatatableRestContr
 
 ## View data based on rights
 
-In the columns definition it is possible to set the required right for displaying the column in the datatable or in the editor using the attribute `perms`. Example in file [redirect.pug](../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
+In the columns definition it is possible to set the required right for displaying the column in the datatable or in the editor using the attribute `perms`. Example in file [redirect.pug](../../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
 
 ```javascript
 {
@@ -631,11 +632,11 @@ A search type html-input is added to index.js, which does not filter HTML tags `
 
 ## External filter
 
-In addition to displaying the filters in the header of each column of the table, you can add a separate filter field anywhere in the HTML code of the page. An example is [Deleting records in the database](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) where the filter is moved directly to the page header to the title.
+In addition to displaying the filters in the header of each column of the table, you can add a separate filter field anywhere in the HTML code of the page. An example is [Deleting records in the database](../../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) where the filter is moved directly to the page header to the title.
 
 In the pug file you need to prepare the basic HTML structure by creating a div container with the ID `TABLEID_extfilter`. It searches for div elements with CSS class `dt-extfilter-title-FIELD` in which the column name is inserted and `dt-extfilter-FIELD` into which the search field is inserted.
 
-```
+```pug
 div#dateDependentEntriesTable_extfilter
     div.row.datatableInit
         div.col-auto.dt-extfilter-title-from
@@ -644,7 +645,7 @@ div#dateDependentEntriesTable_extfilter
 
 !>**Warning:** in the element for the search field there is a CSS class `.dt-extfilter` Also `.dt-extfilter-FIELD`, you need to use both. By CSS class `.dt-extfilter` the element is found after clicking on the magnifying glass, in the data attribute `data-column-index` the sequence number of the column is stored.
 
-If you want to move the filter to the page header, you can simply move it using jQuery as in [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
+If you want to move the filter to the page header, you can simply move it using jQuery as in [database-delete.pug](../../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
 
 **Implementation Notes:**
 
@@ -755,3 +756,44 @@ window.addEventListener("WJ.DTE.opened", function(e) {
     }
 });
 ```
+
+## Footer for sum of values
+
+The table offers the possibility to set the automatic addition of the values of selected numeric columns and their display as a footer `footer` tables.
+
+Set up `footer` you can add `summary` object as an option when defining a table.
+
+```javacript
+    let datatable = WJ.DataTable({
+        url: "/admin/rest/...",
+        summary: {
+            mode: "all",
+            columns: ["visits", "sessions", "uniqueUsers"],
+            title: "[[#{components.summary.total_title}]]"
+        }
+    });
+```
+
+Individual parameters:
+- `mode`, a mandatory parameter, specifies how the column data will be counted. Possible values:
+  - `all`, all column values (from all sides) are added, so changing a side in the table does not change the value
+  - `visible`, ONLY the values of the current (displayed) side are added
+  - `datatable`, values are returned directly via `DatatablePageImpl.summary` for calls of the type `/all` or `/findByColumns`, see. [ErrorRestController](../../../../src/main/java/sk/iway/iwcm/stat/rest/ErrorRestController.java)
+- `columns`, a mandatory parameter, an array containing the identifiers of the columns whose values we want to sum
+- `title`, optional parameter, the value is set under the column `ID` if displayed and used for informational text purposes.
+
+### Data acquisition
+
+If the table is set as `serverSide: false`, i.e. the data is not scanned, no `request` to the database, since the table already has all the necessary data in it.
+
+If the table is set as `serverSide: true`, i.e. the data is paged, the action changes according to the selected mode:
+- `visible`, only the data of the current page is counted. Since the table already has this data, there is no need to do `request` to the database
+- `all`, since we need to count all data, but the table has only the data of the current page, it is executed `request` end point `/sumAll`
+
+Logic for endpoint handling `/sumAll` is in the class [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java).
+
+### Footer and filtering
+
+Since `footer` uses the table data (except for one case), the resulting column value depends on the filtered data. This way you can easily find out the total value of the columns for specific parameters.
+
+!>**Warning:** If the table is set as `serverSide: true` and the mode of the footer is `all`, the summed values are **do not change** depending on the filtering in the table.

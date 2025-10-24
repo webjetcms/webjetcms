@@ -44,7 +44,7 @@ Scenario("Test quiz stat sekcie", async ({ I, DT, DTE, Document }) => {
     I.clickCss(quizResults + "wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.buttons-create");
     Document.screenshotElement("#datatableFieldDTE_Field_quizResults_modal > div > div.DTE_Action_Create", "/redactor/apps/quiz/quizResults-editor.png");
 
-    I.amOnPage("/apps/quiz/admin/stat?id=2");
+    I.amOnPage("/apps/quiz/admin/stat/?id=2");
     I.waitForVisible("#quizStat-correctAnswers");
     Document.screenshotElement("#pills-quizStat", "/redactor/apps/quiz/quizStat-header.png");
     if("en" === I.getConfLng()) {

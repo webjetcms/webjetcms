@@ -1,4 +1,4 @@
-Feature('apps.dmail');
+Feature('apps.dmail.dmail');
 
 Before(({ I, login }) => {
     login('admin');

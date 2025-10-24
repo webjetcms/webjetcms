@@ -13,6 +13,8 @@ Hodnota poľa [presmerovací kód](https://developer.mozilla.org/en-US/docs/Web/
 - `301` trvalé presmerovanie, vyhľadávače by si mali upraviť adresu stránky na túto novú hodnotu.
 - `302` dočasné presmerovanie.
 
+Môžete nastaviť aj platnosť presmerovania pre určité dátumy, zadaním buď začiatku, alebo konca, alebo oboch dátumov. Presmerovania, ktoré už nie sú časovo platné, sa zobrazia červenou farbou v tabuľke. Do poľa poznámka môžete zadať informáciu, na čo presmerovanie slúži.
+
 ![](path-editor.png)
 
 ### Presmerovania cez regulárne výrazy

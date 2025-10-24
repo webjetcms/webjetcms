@@ -1431,8 +1431,26 @@ public class Tools
 			retInt[i] = Tools.getIntValue(retStr[i], 0);
 
 		}
-		return(retInt);
+		return retInt;
+	}
 
+	/**
+	 * Vrati pole typu long s jednotlivymi polozkami v retazci
+	 * @param groups
+	 * @param delimiter
+	 * @return
+	 */
+	public static long[] getTokensLong(String groups, String delimiter)
+	{
+		if (Tools.isEmpty(groups)) return new long[0];
+		String[] retStr = getTokens(groups, delimiter, true);
+		long[] retLong = new long[retStr.length];
+		for (int i=0; i<retLong.length; i++)
+		{
+			retLong[i] = Tools.getLongValue(retStr[i], 0);
+
+		}
+		return retLong;
 	}
 
 	/**
