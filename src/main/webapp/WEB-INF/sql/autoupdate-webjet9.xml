@@ -2430,5 +2430,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>copilot</string></void>
+                <void property="date"><string>13.10.2025</string></void>
+                <void property="desc"><string>response_headers - extend header_value column size to support longer values like Content-Security-Policy</string></void>
+                <void property="mysql"><string>ALTER TABLE response_headers MODIFY COLUMN header_value TEXT</string></void>
+                <void property="mssql"><string>ALTER TABLE response_headers ALTER COLUMN header_value NTEXT</string></void>
+                <void property="oracle"><string>ALTER TABLE response_headers MODIFY header_value CLOB</string></void>
+                <void property="pgsql"><string>ALTER TABLE response_headers ALTER COLUMN header_value TYPE TEXT</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

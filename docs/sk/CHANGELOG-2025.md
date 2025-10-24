@@ -21,6 +21,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Iné menšie zmeny
 
 - Vyhľadávanie - upravené načítanie zoznamu šablón pri hľadaní web stránok. Načítajú sa všetky šablóny bez ohľadu na ich dostupnosť v priečinkoch, aby sa nestalo, že pri editácii web stránky šablóna nie je dostupná (#58073).
+- HTTP hlavičky - pridaná možnosť nastaviť hlavičku dlhšiu ako 255 znakov, napríklad pre nastavenie `Content-Security-Policy` ([#82](https://github.com/webjetcms/webjetcms/issues/82))
+
+![](admin/settings/response-header/editor.png)
 
 ### Pre programátora
 
@@ -402,7 +405,12 @@ Iné zmeny:
 
 ## 2025.0.x
 
+> Opravná verzia pôvodnej verzie 2025.0.
+
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
+- Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
+- Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
+- Webové stránky - PageBuilder - opravený jazyk používateľského rozhrania na jazyk prihláseného používateľa (nie jazyk web stránky) (#58133).
 
 ## 2025.0.40
 

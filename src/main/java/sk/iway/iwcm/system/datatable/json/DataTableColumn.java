@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Lob;
 import javax.persistence.Transient;
@@ -298,6 +299,28 @@ public class DataTableColumn {
             }
         }
 
+        boolean[] ai = annotation.ai();
+        if (ai.length > 0) {
+            if (ai[0]==false) {
+                addClassName("ai-off");
+            }
+        }
+
+        boolean[] disabled = annotation.disabled();
+        if (disabled.length > 0) {
+            if (disabled[0]==true) {
+                if (editor == null) {
+                    editor = new DataTableColumnEditor();
+                }
+                Map<String, String> attrs = editor.getAttr();
+                if (attrs == null) {
+                    attrs = new HashMap<>();
+                }
+                attrs.put("disabled", "disabled");
+                editor.setAttr(attrs);
+            }
+        }
+
         if (Tools.isNotEmpty(annotation.orderProperty())) {
             orderProperty = annotation.orderProperty();
         }
@@ -399,9 +422,12 @@ public class DataTableColumn {
             editor.setType("quill");
         }
 
-        if (dataTableColumnType == DataTableColumnType.TEXTAREA) {
+        if (dataTableColumnType == DataTableColumnType.TEXTAREA || dataTableColumnType == DataTableColumnType.TEXTAREA_WRAP) {
             renderFormat = "dt-format-text-wrap";
             addClassName("dt-style-text-wrap");
+            if (dataTableColumnType == DataTableColumnType.TEXTAREA_WRAP) {
+                addClassName("wrap");
+            }
 
             if (editor == null) {
                 editor = new DataTableColumnEditor();

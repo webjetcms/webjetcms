@@ -58,14 +58,14 @@ Voliteľné polia (teda polia ktorých názov je `fieldX`) sa môžu dynamicky m
 
 Zároveň ak je pre voliteľné pole nastavený konkrétny asistent (meno poľa sa zhoduje s hodnotou v poli Cieľové pole definície asistenta), nezobrazia sa ostatný všeobecný asistenti definovaný napr. podľa typu poľa a podobne. Predpokladá sa, že ak definujete asistenta pre konkrétne voliteľné pole, nepotrebujete ostatných všeobecných asistentov (ako napr. Opraviť gramatiku). Ak takéhoto asistenta potrebujete, stačí pridať meno voliteľného poľa aj do týchto všeobecných asistentov.
 
-Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov, stačí do anotácie pridať CSS triedu `ai-off`. V takom prípade sa pri poli zobrazí tlačidlo pre AI asistenta len vtedy, ak je zadaný presne pre danú entitu a pole.
+Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov, stačí do anotácie nastaviť atribút `ai=false` alebo pridať CSS triedu `ai-off`. V takom prípade sa pri poli zobrazí tlačidlo pre AI asistenta len vtedy, ak je zadaný presne pre danú entitu a pole.
 
 ```java
 	@Lob
 	@Column(name = "description")
-	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", ai=false, editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {
-					@DataTableColumnEditorAttr(key = "class", value = "textarea-code ai-off") }) })
+					@DataTableColumnEditorAttr(key = "class", value = "textarea-code") }) })
 	private String description;
 ```
 
