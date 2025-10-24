@@ -453,7 +453,7 @@ public class Constants {
 		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
 
 		setString("supportedCurrencies", "eur,czk,usd,gbp", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
-		setString("kurz_gpb_czk", "28.002", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_gbp_czk", "28.002", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 		setString("kurz_gbp_eur", "1.153", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 		setString("kurz_gbp_usd", "1.344", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 		setString("kurz_eur_usd", "1.166", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
