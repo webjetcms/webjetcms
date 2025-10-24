@@ -26,7 +26,7 @@
         { id: 'notify', title: '[[#{components.basket.tab.notify}]]'},
         { id: 'payments', title: '[[#{components.basket.invoice.payments.tab}]]'},
         { id: 'items', title: '[[#{components.basket.invoice_items}]]'},
-        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="500"></iframe><div>' },
+        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="600"></iframe><div>' },
         { id: 'fields', title: '[[#{editor.tab.fields}]]'}
     ];
 
@@ -48,6 +48,24 @@
         basketInvoiceDataTable.hideButton("duplicate");
         basketInvoiceDataTable.hideButton("import");
 
+        let resizing = false;
+        window.addEventListener('WJ.DTE.resize', function (e) {
+            const activeOrderTab = $("#pills-dt-basketInvoiceDataTable-order_status-tab.nav-link.active");
+            if(activeOrderTab.length > 0) {
+                if(resizing === false) {
+                    resizing = true;
+                    setTimeout(() => {
+                        const body = $("#basketInvoiceDataTable_modal").find("div.DTE_Body.modal-body");
+                        if(body.length > 0) {
+                            $("#dataDiv").height( body.height() );
+                        }
+                        resizing = false;
+                    }, 200);
+                }
+            }
+        });
+
+        let paymentFirstDraw = true;
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.payments") {
                 paymentsDataTable = event.detail.conf.datatable;
@@ -55,6 +73,11 @@
                 paymentsDataTable.on("draw", function() {
                     //Update footer value
                     setPaymentsFooter();
+
+                    if(paymentFirstDraw === true) {
+                        paymentFirstDraw = false;
+                        return;
+                    }
 
                     //Update ifarme so he show actual values
                     refreshIframeAndSetValues();
@@ -203,6 +226,17 @@
             }
         });
 
+        //
+        $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label>[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
+        ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
+
+        $("#currencySelect").on("change", function() {
+            //set table filter params
+            basketInvoiceDataTable.setAjaxUrl(WJ.urlUpdateParam( basketInvoiceDataTable.getAjaxUrl() , "showCurrency", $('#currencySelect').val()));
+            //reload tables values
+            basketInvoiceDataTable.ajax.reload();
+        });
+
         function refreshIframeAndSetValues() {
             if($("#dataDiv").length > 0) {
                 $( '#dataDiv' ).attr( 'src', function ( i, val ) { return val; });
@@ -279,6 +313,9 @@
 <style>
     table.datatableInit tbody tr.payment-not-confirmed td {
         color: #FF4B58;
+    }
+    #currencySelect_wrapper {
+        width: 120px;
     }
 </style>
 
