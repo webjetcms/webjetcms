@@ -12,11 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class SessionHolderTest extends BaseWebjetTest {
     
-    private SessionHolder sessionHolder;
-    
     @BeforeEach
     void setUp() {
-        sessionHolder = new SessionHolder();
+        // No setup needed - using singleton SessionHolder.getInstance()
     }
     
     @Test

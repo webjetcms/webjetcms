@@ -153,12 +153,6 @@ public class SessionHolder
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
 
-			// Check if this session is marked for invalidation
-			if (det.isInvalidate()) {
-				request.getSession().invalidate();
-				return false;
-			}
-
 			if (Constants.getBoolean("sessionStealingCheck") == true
 					&& det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {
 				// session stealing vyvolame len ak je niekto prihlaseny
@@ -181,6 +175,12 @@ public class SessionHolder
 				}
 			}
 
+			// Check if this session is marked for invalidation
+			if (det.isInvalidate()) {
+				request.getSession().invalidate();
+				return false;
+			}
+
 			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
 				request.getSession().invalidate();
 				return false;
@@ -198,7 +198,7 @@ public class SessionHolder
 				det.setLoggedUserName(user.getFullName());
 				
 				// Handle single logon - invalidate other sessions for the same user
-				if (Constants.getBoolean("sessionSingleLogon")) {
+				if (Constants.getBoolean("sessionSingleLogon") == true) {
 					invalidateOtherUserSessionsForSingleLogon(user.getUserId(), sessionId);
 				}
 			}
