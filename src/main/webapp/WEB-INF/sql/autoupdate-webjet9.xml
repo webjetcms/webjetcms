@@ -2399,7 +2399,6 @@
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>15.10.2025</string></void>
                 <void property="desc"><string>create new table delivery_methods</string></void>
-
                 <void property="mysql">
                     <string>
                         CREATE TABLE delivery_methods (
@@ -2408,7 +2407,6 @@
                             supported_countries VARCHAR(255) NOT NULL,
                             price decimal(10,2),
                             vat INT,
-                            currency VARCHAR(8),
                             sort_priority INT,
                             field_a VARCHAR(255),
                             field_b VARCHAR(255),
@@ -2418,11 +2416,14 @@
                             field_f VARCHAR(255),
                             field_g VARCHAR(255),
                             field_h VARCHAR(255),
+                            field_i VARCHAR(255),
+                            field_j VARCHAR(255),
+                            field_k VARCHAR(255),
+                            field_l VARCHAR(255),
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
                 </void>
-
                 <void property="mssql">
                     <string>
                         CREATE TABLE delivery_methods (
@@ -2431,7 +2432,6 @@
                             supported_countries NVARCHAR(255) NOT NULL,
                             price decimal(10,2),
                             vat INT,
-                            currency NVARCHAR(8),
                             sort_priority INT,
                             field_a NVARCHAR(255),
                             field_b NVARCHAR(255),
@@ -2441,11 +2441,14 @@
                             field_f NVARCHAR(255),
                             field_g NVARCHAR(255),
                             field_h NVARCHAR(255),
+                            field_i NVARCHAR(255),
+                            field_j NVARCHAR(255),
+                            field_k NVARCHAR(255),
+                            field_l NVARCHAR(255),
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
                 </void>
-
                 <void property="oracle">
                     <string>
                         CREATE TABLE delivery_methods (
@@ -2454,7 +2457,6 @@
                             supported_countries NVARCHAR2(255) NOT NULL,
                             price decimal(10,2),
                             vat INTEGER,
-                            currency NVARCHAR2(8),
                             sort_priority INTEGER,
                             field_a NVARCHAR(255),
                             field_b NVARCHAR(255),
@@ -2464,6 +2466,10 @@
                             field_f NVARCHAR(255),
                             field_g NVARCHAR(255),
                             field_h NVARCHAR(255),
+                            field_i NVARCHAR(255),
+                            field_j NVARCHAR(255),
+                            field_k NVARCHAR(255),
+                            field_l NVARCHAR(255),
                             domain_id INTEGER DEFAULT 1 NOT NULL
 
                         );
@@ -2481,7 +2487,6 @@
                         ;
                     </string>
                 </void>
-
                 <void property="pgsql">
                     <string>
                         CREATE SEQUENCE S_delivery_methods START WITH 1;
@@ -2491,7 +2496,6 @@
                             supported_countries VARCHAR(255) NOT NULL,
                             price decimal(10,2),
                             vat INT,
-                            currency VARCHAR(8),
                             sort_priority INT,
                             field_a VARCHAR(255),
                             field_b VARCHAR(255),
@@ -2501,11 +2505,14 @@
                             field_f VARCHAR(255),
                             field_g VARCHAR(255),
                             field_h VARCHAR(255),
+                            field_i VARCHAR(255),
+                            field_j VARCHAR(255),
+                            field_k VARCHAR(255),
+                            field_l VARCHAR(255),
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
                 </void>
-
             </object>
         </void>
 
