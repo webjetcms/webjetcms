@@ -68,13 +68,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
         inputType = DataTableColumnType.DATETIME,
         title ="components.redirect.admin_list.datum_vlozenia",
 		sortAfter = "validTo",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
-                }
-            )
-        }
+        disabled = true
     )
 	Date insertDate;
 
