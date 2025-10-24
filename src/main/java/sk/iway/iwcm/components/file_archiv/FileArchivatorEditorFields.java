@@ -99,7 +99,7 @@ public class FileArchivatorEditorFields extends BaseEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,remove,duplicate,import,export,celledit"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-forceVisibleColumns", value = "id,virtualFileName,fileName,filePath,showFile,priority,orderId"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "1,desc"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "0,asc"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'advanced', 'title': '[[#{datatable.tab.advanced}]]' },{ 'id': 'customFields', 'title': '[[#{editor.tab.fields}]]' }]")
             }
         )

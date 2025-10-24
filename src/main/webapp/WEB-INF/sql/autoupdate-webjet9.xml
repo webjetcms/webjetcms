@@ -1789,9 +1789,9 @@
                     ALTER TABLE payment_methods ADD field_i NVARCHAR(255), field_j NVARCHAR(255), field_k NVARCHAR(255), field_l NVARCHAR(255);
                 </string>
             </void>
-            <void property="oracle"
-                ><string
-                    >ALTER TABLE payment_methods ADD (field_i NVARCHAR2(255), field_j NVARCHAR2(255), field_k NVARCHAR2(255), field_l NVARCHAR2(255));
+            <void property="oracle">
+                <string>
+                    ALTER TABLE payment_methods ADD (field_i NVARCHAR2(255), field_j NVARCHAR2(255), field_k NVARCHAR2(255), field_l NVARCHAR2(255));
                 </string>
             </void>
             <void property="pgsql">
@@ -2030,7 +2030,7 @@
 
                             domain_id int DEFAULT 1 NOT NULL
                         );
-                                                INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                        INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
                         VALUES
                             ('AI-01 Prompt Expert', 'components.ai_assistants.description.prompt.expert', 'generate_text', 'sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity', '', 'instructions', 'gemini', 'I need you to help me prepare prompts for AI, used OpenAI or Gemini. Prompts will be used within the WebJet CMS system to improve and simplify work. I will write you assignments in turn and you suggest: \n\n- a suitable prompt and a model for use in OpenAI and also in Gemini (models may differ) \n- prompt/instructions try to formulate as a structured text in title: value format\n- prompt/instructions should include the role, task and possible restrictions \n- the name of such an assistant (for example, create a clickbait title) in the range of 3-5 words, the title must be concise to make it clear what the given AI assistant for the user will do.\n\n---------------------------------------\nExample\nASSIGNMENT: \nBased on the text of the page, I need to create a headline that will be the visitor Motivate in clicking on the page name (or pages in the list of articles) \n\nYOUR ANSWER: \nDesigned prompt/instructions for both OpenAI and Gemini model in structured format and a suitable and concise name of such an assistant (understandable for the user). Answer only structured format with the object to which you also add the recommended model and name of the provider without explanatory text.', 'gemini-pro-latest', NULL, '10-generate', 1, '', 'radioactive', 0, 0, 0, 1, 1);
                         INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
@@ -2396,29 +2396,49 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>14.10.2025</string></void>
+                <void property="desc"><string>url_redirect - add columns description, valid_to</string></void>
+                <void property="mysql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to DATETIME NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE url_redirect ADD description NTEXT, valid_to DATETIME NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE url_redirect ADD (description CLOB, valid_to DATE NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to TIMESTAMP NULL</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>15.10.2025</string></void>
+                <void property="desc"><string>ai_assistants - IMG-05 Generate ALT tag</string></void>
+                <void property="mysql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('IMG-05 Generate ALT tag', 'components.ai_assistants.description.generate-alt-tag', 'generate_text', 'sk.iway.iwcm.system.elfinder.ElfinderServlet', 'txtUrl', 'txtAlt', 'gemini', '{\n  \"role\": \"Web accessibility specialist\",\n  \"task\": \"Analyze the provided Base64-encoded image and generate a concise, descriptive ALT tag that accurately describes the image content for accessibility purposes. The ALT tag should align with WCAG 2.1 guidelines and be suitable for web use. Output only the ALT text as plain text.\",\n  \"constraints\": {\n    \"language\": \"{language}\",\n    \"length\": \"Maximum 100 characters\",\n    \"focus\": \"Descriptive, relevant, and compliant with WCAG 2.1\",\n    \"avoid\": \"Generic phrases or irrelevant details\",\n    \"output\": \"Only the ALT text as plain text, no additional explanations\"\n  }\n}', 'gemini-2.5-flash-image-preview', null, '10-generate', 0, '', 'photo-ai', 0, 0, 0, 1, 1)
+                </string></void>
+                <void property="mssql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('IMG-05 Generate ALT tag', 'components.ai_assistants.description.generate-alt-tag', 'generate_text', 'sk.iway.iwcm.system.elfinder.ElfinderServlet', 'txtUrl', 'txtAlt', 'gemini', '{\n  \"role\": \"Web accessibility specialist\",\n  \"task\": \"Analyze the provided Base64-encoded image and generate a concise, descriptive ALT tag that accurately describes the image content for accessibility purposes. The ALT tag should align with WCAG 2.1 guidelines and be suitable for web use. Output only the ALT text as plain text.\",\n  \"constraints\": {\n    \"language\": \"{language}\",\n    \"length\": \"Maximum 100 characters\",\n    \"focus\": \"Descriptive, relevant, and compliant with WCAG 2.1\",\n    \"avoid\": \"Generic phrases or irrelevant details\",\n    \"output\": \"Only the ALT text as plain text, no additional explanations\"\n  }\n}', 'gemini-2.5-flash-image-preview', null, '10-generate', 0, '', 'photo-ai', 0, 0, 0, 1, 1)
+                </string></void>
+                <void property="oracle"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('IMG-05 Generate ALT tag', 'components.ai_assistants.description.generate-alt-tag', 'generate_text', 'sk.iway.iwcm.system.elfinder.ElfinderServlet', 'txtUrl', 'txtAlt', 'gemini', '{\n  \"role\": \"Web accessibility specialist\",\n  \"task\": \"Analyze the provided Base64-encoded image and generate a concise, descriptive ALT tag that accurately describes the image content for accessibility purposes. The ALT tag should align with WCAG 2.1 guidelines and be suitable for web use. Output only the ALT text as plain text.\",\n  \"constraints\": {\n    \"language\": \"{language}\",\n    \"length\": \"Maximum 100 characters\",\n    \"focus\": \"Descriptive, relevant, and compliant with WCAG 2.1\",\n    \"avoid\": \"Generic phrases or irrelevant details\",\n    \"output\": \"Only the ALT text as plain text, no additional explanations\"\n  }\n}', 'gemini-2.5-flash-image-preview', null, '10-generate', 0, '', 'photo-ai', 0, 0, 0, 1, 1)
+                </string></void>
+                <void property="pgsql"><string>
+                    INSERT INTO ai_assistants (name, description, action, class_name, field_from, field_to, provider, instructions, model, last_update, group_name, user_prompt_enabled, user_prompt_label, icon, keep_html, use_streaming, use_temporal, active, domain_id)
+                    VALUES ('IMG-05 Generate ALT tag', 'components.ai_assistants.description.generate-alt-tag', 'generate_text', 'sk.iway.iwcm.system.elfinder.ElfinderServlet', 'txtUrl', 'txtAlt', 'gemini', '{\n  \"role\": \"Web accessibility specialist\",\n  \"task\": \"Analyze the provided Base64-encoded image and generate a concise, descriptive ALT tag that accurately describes the image content for accessibility purposes. The ALT tag should align with WCAG 2.1 guidelines and be suitable for web use. Output only the ALT text as plain text.\",\n  \"constraints\": {\n    \"language\": \"{language}\",\n    \"length\": \"Maximum 100 characters\",\n    \"focus\": \"Descriptive, relevant, and compliant with WCAG 2.1\",\n    \"avoid\": \"Generic phrases or irrelevant details\",\n    \"output\": \"Only the ALT text as plain text, no additional explanations\"\n  }\n}', 'gemini-2.5-flash-image-preview', null, '10-generate', false, '', 'photo-ai', false, false, false, true, 1)
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>copilot</string></void>
                 <void property="date"><string>13.10.2025</string></void>
                 <void property="desc"><string>response_headers - extend header_value column size to support longer values like Content-Security-Policy</string></void>
-                <void property="mysql">
-                    <string>
-                        ALTER TABLE response_headers MODIFY COLUMN header_value TEXT;
-                    </string>
-                </void>
-                <void property="mssql">
-                    <string>
-                        ALTER TABLE response_headers ALTER COLUMN header_value NTEXT;
-                    </string>
-                </void>
-                <void property="oracle">
-                    <string>
-                        ALTER TABLE response_headers MODIFY header_value CLOB;
-                    </string>
-                </void>
-                <void property="pgsql">
-                    <string>
-                        ALTER TABLE response_headers ALTER COLUMN header_value TYPE TEXT;
-                    </string>
-                </void>
+                <void property="mysql"><string>ALTER TABLE response_headers MODIFY COLUMN header_value TEXT</string></void>
+                <void property="mssql"><string>ALTER TABLE response_headers ALTER COLUMN header_value NTEXT</string></void>
+                <void property="oracle"><string>ALTER TABLE response_headers MODIFY header_value CLOB</string></void>
+                <void property="pgsql"><string>ALTER TABLE response_headers ALTER COLUMN header_value TYPE TEXT</string></void>
             </object>
         </void>
 

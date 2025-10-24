@@ -1,6 +1,6 @@
-# SEO
+# Search Engines (SEO)
 
-The SEO application is a support tool for search engine optimization. It is available in the Applications section in the left menu as an SEO item.
+The Search Engine Optimization (SEO) application is a support tool for search engine optimization. It is available in the Overview section in the left menu as a Search Engines item.
 
 The SEO section uses an external filter, which is described in more detail here [External filter](../stat/external-filter.md)
 

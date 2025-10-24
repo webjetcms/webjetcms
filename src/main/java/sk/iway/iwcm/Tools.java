@@ -40,6 +40,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.swing.*;
@@ -1430,8 +1431,26 @@ public class Tools
 			retInt[i] = Tools.getIntValue(retStr[i], 0);
 
 		}
-		return(retInt);
+		return retInt;
+	}
 
+	/**
+	 * Vrati pole typu long s jednotlivymi polozkami v retazci
+	 * @param groups
+	 * @param delimiter
+	 * @return
+	 */
+	public static long[] getTokensLong(String groups, String delimiter)
+	{
+		if (Tools.isEmpty(groups)) return new long[0];
+		String[] retStr = getTokens(groups, delimiter, true);
+		long[] retLong = new long[retStr.length];
+		for (int i=0; i<retLong.length; i++)
+		{
+			retLong[i] = Tools.getLongValue(retStr[i], 0);
+
+		}
+		return retLong;
 	}
 
 	/**
@@ -3274,5 +3293,38 @@ public class Tools
 
 		Matcher m = pattern.matcher(source);
 		return m.replaceAll(newStr);
+	}
+
+	/*
+	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @param value
+	 */
+	public static void sessionSetAttribute(HttpSession session, String name, Object value) {
+		if (session == null) return;
+		try {
+			session.setAttribute(name, value);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionSetAttribute() - session is invalid, attribute " + name + " is not set");
+			//session is already invalid
+		}
+	}
+
+	/**
+	 * Safely get session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @return
+	 */
+	public static Object sessionGetAttribute(HttpSession session, String name) {
+		if (session == null) return null;
+		try {
+			return session.getAttribute(name);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionGetAttribute() - session is invalid, attribute " + name + " is not get");
+			//session is already invalid
+			return null;
+		}
 	}
 }

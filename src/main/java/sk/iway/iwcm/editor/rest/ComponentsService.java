@@ -193,10 +193,23 @@ public class ComponentsService {
                 return Integer.valueOf(value);
             }
 
-            if (parameterType.getTypeName().equalsIgnoreCase("java.lang.Integer[]")) {
+            if (parameterType.getTypeName().equalsIgnoreCase("java.lang.Integer[]") || parameterType.getTypeName().equalsIgnoreCase("int[]")) {
                 //get tokens, it's probably + separated list
                 int[] tokens = Tools.getTokensInt(value, "+");
+                if (parameterType.getTypeName().equalsIgnoreCase("int[]")) {
+                    return tokens;
+                }
                 Integer[] result = Arrays.stream( tokens ).boxed().toArray( Integer[]::new );
+                return result;
+            }
+
+            if (parameterType.getTypeName().equalsIgnoreCase("java.lang.Long[]") || parameterType.getTypeName().equalsIgnoreCase("long[]")) {
+                //get tokens, it's probably + separated list
+                long[] tokens = Tools.getTokensLong(value, "+");
+                if (parameterType.getTypeName().equalsIgnoreCase("long[]")) {
+                    return tokens;
+                }
+                Long[] result = Arrays.stream( tokens ).boxed().toArray( Long[]::new );
                 return result;
             }
 

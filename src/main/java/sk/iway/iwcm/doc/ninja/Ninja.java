@@ -9,10 +9,10 @@ import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -107,9 +107,7 @@ public class Ninja {
     }
 
     private Optional<UserDetails> getUser() {
-        HttpSession session = request.getSession();
-
-        return Optional.ofNullable((Identity) session.getAttribute(Constants.USER_KEY));
+        return Optional.ofNullable(UsersDB.getCurrentUser(request));
     }
 
 

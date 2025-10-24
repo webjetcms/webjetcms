@@ -1,6 +1,7 @@
  <div class="sidebar-section">Programming of customer applications</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Spring
   - [Spring configuration](/custom-apps/spring-config/)
   - [Token authorisation](/custom-apps/spring/api-auth.md)
@@ -8,10 +9,12 @@
   - [Extension of Spring DATA repositories of WebJET CMS](/custom-apps/spring/repository-extend.md)
   - [Public services](/custom-apps/spring/public-services.md)
 - Applications
+  - [Customisation of administration](/custom-apps/apps/customize-admin.md)
   - [Menu item in the admin section](/custom-apps/admin-menu-item/)
   - [List of websites/news](/custom-apps/news/)
   - [Users](/custom-apps/apps/user/README.md)
   - [Configuration](/custom-apps/config/README.md)
+  - [AI - adding a new provider](/custom-apps/apps/ai/assistants/README.md)
   - Ecommerce
     - [Payment methods](/custom-apps/apps/eshop/payment-methods/README.md)
 - Spring MVC

@@ -10,7 +10,7 @@ Within the WebJET CMS, structure mirroring is activated by setting the configura
 
 The format of the entry is as follows:
 
-```
+```txt
 groupId-sk,groupId-en,groupId-cz:poznamka (napr meno domeny)
 ineGroupId1,ineGroupId2:poznamka inej domeny
 ```
@@ -92,6 +92,10 @@ At the set value `structureMirroringAutoTranslatorLogin` the detection is more r
 When you save a page, the changes are applied to all copies. So if I create an EN and a DE version from the SK version (which are not published yet, or have not been changed by a real editor), then when I change the EN version, the text is translated into the DE version. The SK version will not be affected, because it is typically already published or created by a real (not `structureMirroringAutoTranslatorLogin`) to users.
 
 If the conf. variable is set `syncGroupAndWebpageTitle` to the value of `true` (which is the default value) automatically synchronizes the folder name with the name of the main page in the folder. When the main page name is changed, the folder is renamed as well, even in translated versions.
+
+## Cancellation of mirroring
+
+Unmirroring requires that you remove the link from the configuration variable `structureMirroringConfig`. But the value is still set in the database `sync_id` which linked folders/pages in different languages. These values must be removed, otherwise the folders/pages will remain linked/synchronized. For this purpose, it needs to use [Cancellation of mirroring](../clone-structure/README.md#cancellation-of-mirroring).
 
 ## Technical information
 

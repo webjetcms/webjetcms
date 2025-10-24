@@ -29,7 +29,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 1 
 
 Scenario('forgotten password - customer zone - VIA login @singlethread', async ({ I, Document, TempMail }) => {
   I.logout();
-  const randomPassword = 'password_P' + I.getRandomText();
+  const randomPassword = 'password_Pľščťž' + I.getRandomText();
 
   I.say('Vyžiadanie zmeny hesla v zakaznickej zóne');
   I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona');
@@ -46,11 +46,12 @@ Scenario('forgotten password - customer zone - VIA login @singlethread', async (
   I.fillField('input[name="username"]', 'user_slabeheslo');
   I.fillField('input[type="password"][name="password"]', randomPassword);
   I.clickCss('input[type="submit"].btn.btn-success.login-submit');
+  I.waitForText("Táto sekcia a tento text sa zobrazí len prihlásenému používateľovi", 10, "p");
 });
 
 Scenario('forgotten password - administration - VIA login @singlethread', async ({ I, Document, TempMail }) => {
   I.logout();
-  const randomPassword = 'password_P' + I.getRandomText();
+  const randomPassword = 'password_Pľščť' + I.getRandomText();
 
   I.say('Wait 10 seconds for next login');
   I.wait(11);
@@ -66,7 +67,7 @@ Scenario('forgotten password - administration - VIA login @singlethread', async 
   I.fillField('#username', 'user_slabeheslo');
   I.fillField('#password', randomPassword);
   I.clickCss('button[name="login-submit"]');
-  I.waitForText("Vitajte", 15);
+  I.waitForText("Vitajte,", 15, ".overview__dashboard__title h2");
 });
 
 const emailName = 'samemail';
@@ -75,7 +76,7 @@ const users = ['sameA','sameB', 'sameC', 'sameD'];
 
 Scenario('forgotten password - administration - VIA email @singlethread', async ({ I, Document, TempMail, DT}) => {
   I.logout();
-  const randomPassword = 'password_P' + I.getRandomText();
+  const randomPassword = 'password_Pľščť' + I.getRandomText();
 
   I.say('Wait 10 seconds for next login');
   I.wait(11);
@@ -102,7 +103,7 @@ Scenario('forgotten password - administration - VIA email @singlethread', async 
     I.fillField('#password', randomPassword);
     I.clickCss('button[name="login-submit"]');
     if (user === selectedUserForPasswordChange){
-      I.waitForText("Vitajte", 15);
+      I.waitForText("Vitajte,", 15, ".overview__dashboard__title h2");
       I.logout();
     }
     else

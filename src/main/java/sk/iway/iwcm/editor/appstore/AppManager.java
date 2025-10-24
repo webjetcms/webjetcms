@@ -124,6 +124,7 @@ public class AppManager
 			for (i = 0; i < size; i++)
 			{
 				mi = modules.get(i);
+				if (mi.isApp() == false) continue;
 
 				if ("cmp_htmlbox_cloud".equals(mi.getItemKey()))
 				{

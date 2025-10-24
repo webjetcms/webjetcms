@@ -4,9 +4,7 @@ package sk.iway.iwcm.components.ai.providers.gemini;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +31,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for Google Gemini AI model integration. We do not use any official SDK, but
@@ -103,9 +102,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return supportedValues;
     }
 
-    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
         // Build base request body
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -119,9 +122,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return parts.get(0).path("text").asText();
     }
 
-    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
         //Prepare body object
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -132,10 +139,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return httpPost;
     }
 
-    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+    public Pair<String, JsonNode> handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
         GeminiStreamHandler streamHandler = new GeminiStreamHandler(replacedIncludes);
         streamHandler.handleBufferedReader(reader, writer);
-        return streamHandler.getUsageChunk();
+        return new Pair<>(streamHandler.getWholeResponse(), streamHandler.getUsageChunk());
     }
 
     @Override
@@ -157,19 +164,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        ObjectNode mainObject = MAPPER.createObjectNode();
-        ArrayNode contentsArray = MAPPER.createArrayNode();
-
-        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
+        ObjectNode mainObject;
+        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE))
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addPartWithFile(contentsArray, instructions, inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
-        } else {
+            mainObject = getBaseMainObjectWithImage(inputData, instructions);
+        else
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            addPart(contentsArray, instructions);
-        }
-
-        mainObject.set("contents", contentsArray);
+            mainObject = getBaseMainObject(instructions);
 
         HttpPost httpPost = new HttpPost( BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -181,6 +182,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     public String getFinishError(JsonNode jsonNodeRes) {
         // Extract finishReason from Jackson JsonNode response
         String finishReason = null;
+        String finishText = null;
         try {
             JsonNode candidates = jsonNodeRes.path("candidates");
             if (candidates.isArray()) {
@@ -190,6 +192,12 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
                         // Last non-null value wins (in case of multiple candidates)
                         finishReason = frNode.asText();
                     }
+
+                    JsonNode frNode2 = candidate.get("finishMessage");
+                    if (frNode2 != null && frNode2.isTextual()) {
+                        // Last non-null value wins (in case of multiple candidates)
+                        finishText = frNode2.asText();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -198,7 +206,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
         //Gemini do not give better explanation that just this (unlike OpenAI with detail object)
         if(Tools.isEmpty(finishReason) || "STOP".equalsIgnoreCase(finishReason)) return null; //its ok
-        else return finishReason; // NOT ok
+        else {
+            if(Tools.isNotEmpty(finishText)) return "(" + finishReason + ") " + finishText;
+            return finishReason;
+        }
     }
 
     public ArrayNode getImages(JsonNode jsonNodeRes) {

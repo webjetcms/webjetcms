@@ -232,7 +232,6 @@ Scenario('Special file upload - Add to version history', async ({ I, DT, DTE }) 
     I.clickCss('#fileArchiveDataTable_wrapper .buttons-edit');
     DTE.waitForEditor('fileArchiveDataTable');
     I.clickCss('#pills-dt-fileArchiveDataTable-listOfVersions-tab');
-    I.clickCss('#fileArchiveDataTable_modal .dt-th-id > .dt-column-order');
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-listOfVersions", 1, ["", virtualFileName, "files/archiv/", SL.getVersionName(addToHistoryFileName, 1), 'Áno', '0', '4']);
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-listOfVersions", 2, ["", virtualFileName, "files/archiv/", SL.getVersionName(addToHistoryFileName, 2), 'Áno', '0', '2']);
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-listOfVersions", 3, ["", virtualFileName, "files/archiv/", SL.getVersionName(addToHistoryFileName, 3), 'Áno', '0', '3']);

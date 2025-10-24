@@ -76,7 +76,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class WebpagesService {
 
-    private int groupId;
+    protected int groupId;
     private Prop prop;
 	private GroupDetails localSystemGroup;
 
@@ -928,8 +928,19 @@ public class WebpagesService {
 	 * @param options - options object
 	 */
 	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options) {
+		addOptions(pageImpl, options, false);
+	}
+
+	/**
+	 * Add options to DatatablePage object
+	 * @param pageImpl - current response Page object
+	 * @param options - options object
+	 * @param forceGroupId - if true, force options.groupId to WebpagesService even if it's < 1
+	 */
+	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options, boolean forceGroupId) {
 		Prop prop = Prop.getInstance(options.getRequest());
         WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
+		if (forceGroupId) ws.groupId = options.getGroupId();
 
 		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
         pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), TITLE, DOC_ID, false);

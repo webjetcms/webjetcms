@@ -13,6 +13,7 @@ Annotation is used as `DataTableColumnType.DATATABLE`, and the following editor 
 - `data-dt-field-dt-columns` - the name of the class (including packages) from which it is to be used [definition of datatable columns](datatable-columns.md), e.g. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
 - `data-dt-field-dt-columns-customize` - the name of the JavaScript function that can be used to modify `columns` object, e.g. `removeEditorFields`. The function must be available directly in `windows` object, as the parameter gets `columns` object and is expected to return it modified. Example `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - list of tabs for the editor in JSON format. All names and values of the JSON object need to be wrapped in `'`, translations are replaced automatically. Example: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
+- `data-dt-field-dt-localJson` - activates the mode that works with the local JSON object. It is primarily used for applications in a web page to keep track of application items (e.g. slide show items), which are additionally automatically encoded into a string suitable for `PageParams` object and are encoded in `Base64`.
 
 Full annotation example:
 
@@ -49,6 +50,49 @@ The created datatable is made available as:
 - `window` object called `datatableInnerTable_fieldName` - object can be used for automated testing or other JavaScript operations.
 
 After the nested datatable is created, the event is fired `WJ.DTE.innerTableInitialized` where in the object `event.detail.conf` is the transferred configuration.
+
+## Local JSON data
+
+Activates the mode of working with local JSON data. The data is obtained directly from the value of an array, which can be of type `String` where the call is made `JSON.parse`.
+
+For application parameters in a web page, the result is encoded into `Base64` to avoid corrupting the JSON object. At the same time, the extension is activated [Row Reorder](https://datatables.net/extensions/rowreorder/) for the ability to arrange the list using the function `Drag&Drop`.
+
+In this way it will be possible to edit the list of items in the application, change their order, etc. without using and defining the REST service. The result will be saved back to the JSON object and encoded via `Base64`. When initializing, the column `ID` a `rowOrder`. The attribute is used `DATA.src` object `datatables` to directly set the data for the table.
+
+The function for changing the order of the rows is also activated automatically using the function `Drag&Drop`. Because of conflicts when moving rows and their different ordering, the option to arrange the list by any column is disabled, the list is automatically arranged according to the order of the arrangement. For JSON editor mode, this column is automatically added - note that the class `ImpressSlideshowItem` in the example below does not even contain `ID` nor `rowOrder` column, since technically they are not needed to display the data. They will be added automatically. If you need to display the column manually, use the annotation `DataTableColumnType.ROW_REORDER`.
+
+Example of use:
+
+```java
+public class ImpressSlideshowApp extends WebjetComponentAbstract{
+    ...
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
+}
+
+public class ImpressSlideshowItem {
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        className = "image",
+        title = "editor.perex.image",
+        renderFormat = "dt-format-image-notext"
+    )
+    private String image;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="dt-row-edit", title = "components.app-cookiebar.cookiebar_title")
+    private String title;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.subtitle")
+    private String subtitle;
+
+    ...
+}
+```
 
 ## Notes on implementation
 

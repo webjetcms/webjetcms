@@ -17,6 +17,11 @@ import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 public class DataTableAi {
     private String from;
     private String to;
+
+    //original definition field to value, it is used in customFields validation
+    @JsonIgnore
+    private String toDefinition;
+
     private Long assistantId;
     private String provider;
     private String providerTitle;

@@ -12,12 +12,29 @@ block content
             var order = [];
             order.push([0, 'desc']);
 
+            var now;
+            var isActive = true;
+
             redirectTable = WJ.DataTable({
                 url: url,
                 columns: columns,
                 serverSide: true,
                 editorId: "urlRedirectId",
-                order: order
+                order: order,
+                onRowCallback: function(TABLE, row, data) {
+                    //we must have now here, because on reload it will be not reinitialized
+                    now = new Date().getTime();
+                    isActive = true;
+                    if (data.publishDate != null && now < data.publishDate) {
+                        isActive = false;
+                    }
+                    if (data.validTo != null && now > data.validTo) {
+                        isActive = false;
+                    }
+                    if (isActive == false) {
+                        $(row).addClass('is-not-public');
+                    }
+                }
             });
         });
 

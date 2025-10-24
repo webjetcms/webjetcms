@@ -1,8 +1,14 @@
 Feature('webpages.redirects');
 
+let randomNumber;
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/admin/v9/settings/redirect/");
+
+    if (typeof randomNumber=="undefined") {
+        randomNumber = I.getRandomText();
+    }
 });
 
 Scenario('redirects-zakladne testy @baseTest', async ({ I, DataTables }) => {
@@ -30,7 +36,7 @@ Scenario('export import testovanie', ({ I, DT }) => {
     //I.click({ css: 'input[aria-describedby=insert-file]' });
 });
 
-Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
+Scenario('Filter by actual domain', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
 
     //demotest.webjetcms.sk is selected by default
@@ -58,7 +64,7 @@ Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
     //Change domain
     Document.switchDomain("mirroring.tau27.iway.sk");
 
-    //No domain -> same record ... should be visible everzwhere, because domain is not set
+    //No domain -> same record ... should be visible everywhere, because domain is not set
     DT.filterContains("oldUrl", "/slovensky/");
     I.see("681");
     I.see("/slovensky/");
@@ -212,3 +218,117 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     });
 
  });
+
+const baseUrl = "/tseer/ai-buttons-test.html";
+const toRedirectUrl_prefix = "/tseer/ai-buttons-test-redirected-"
+Scenario('Test publish, validation logic WITHOUT cache', ({ I, DT, DTE, Document }) => {
+    const toRedirectUrl = toRedirectUrl_prefix + randomNumber + "-no_cache.html";
+    testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, false);
+});
+
+Scenario('Test publish, validation logic WITH cache', ({ I, DT, DTE, Document }) => {
+    const toRedirectUrl = toRedirectUrl_prefix + randomNumber + "-with_cache.html";
+    testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, true);
+});
+
+Scenario('Post publish, validation', async ({ I, DT, Document }) => {
+    I.say("Set redirect cache to false");
+    Document.setConfigValue('cacheUrlRedirects', false);
+
+    I.say("Remove autotest redirects");
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterStartsWith("oldUrl", toRedirectUrl_prefix + randomNumber);
+    const rowCount = await I.grabNumberOfVisibleElements('#datatableInit > tbody > tr > td.dt-row-edit');
+    if(rowCount > 0) {
+        I.clickCss("button.buttons-select-all");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        DT.waiForLoader();
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
+});
+
+function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache) {
+    const shift5m = (5 * 60 * 1000);
+
+    Document.setConfigValue('cacheUrlRedirects', useCache);
+
+    I.say("Test url's");
+        I.amOnPage(baseUrl);
+        I.see("AI BUTTONS TEST");
+
+        I.amOnPage(toRedirectUrl);
+        I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.say("Create redirect bean");
+        I.amOnPage("/admin/v9/settings/redirect/");
+        I.clickCss("button.buttons-create");
+        DTE.waitForEditor();
+
+        I.fillField("#DTE_Field_oldUrl", toRedirectUrl);
+        I.fillField("#DTE_Field_newUrl", baseUrl);
+        DTE.save();
+
+    I.say("Test redirect works");
+        I.amOnPage(toRedirectUrl);
+        I.seeInCurrentUrl(baseUrl);
+        I.see("AI BUTTONS TEST");
+
+    I.say("Set valid publish in PAST - redirection must work");
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() - shift5m, null, true);
+
+    I.say("Set valid publish in FUTURE - redirection must NOT work");
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, (new Date()).getTime() + shift5m, null, false);
+
+    I.say("Set valid to in PAST - redirection must NOT work");
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() - shift5m, false);
+
+    I.say("Set valid to in FUTURE - redirection must work");
+        updateEntityAndTest(I, DT, DTE, toRedirectUrl, null, (new Date()).getTime() + shift5m, true);
+
+    I.say("Delete redirect and test it do not work");
+        I.amOnPage("/admin/v9/settings/redirect/");
+        DT.filterEquals("oldUrl", toRedirectUrl);
+
+        I.clickCss("td.dt-select-td.sorting_1");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.dontSee(toRedirectUrl);
+
+        I.amOnPage(toRedirectUrl);
+        I.seeInCurrentUrl(toRedirectUrl);
+        I.see("Chyba 404 - požadovaná stránka neexistuje");
+}
+
+function updateEntityAndTest(I, DT, DTE, toRedirectUrl, publishDate, validToDate, shouldRedirect) {
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.filterEquals("oldUrl", toRedirectUrl);
+    I.click(toRedirectUrl);
+    DTE.waitForEditor();
+
+    if(publishDate !== null) {
+        I.fillField("#DTE_Field_publishDate", I.formatDateTime(publishDate) );
+    } else {
+        I.fillField("#DTE_Field_publishDate", "" );
+    }
+    I.clickCss(".DTE_Field_Name_oldUrl");
+
+    if(validToDate != null) {
+        I.fillField("#DTE_Field_validTo", I.formatDateTime(validToDate) );
+    } else {
+        I.fillField("#DTE_Field_validTo", "" );
+    }
+    I.clickCss(".DTE_Field_Name_oldUrl");
+
+    DTE.save();
+
+    if(shouldRedirect === true) {
+        I.amOnPage(toRedirectUrl);
+        I.seeInCurrentUrl(baseUrl);
+        I.see("AI BUTTONS TEST");
+    } else {
+        I.amOnPage(toRedirectUrl);
+        I.seeInCurrentUrl(toRedirectUrl);
+        I.see("Chyba 404 - požadovaná stránka neexistuje");
+    }
+}

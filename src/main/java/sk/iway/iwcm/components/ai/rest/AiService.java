@@ -33,6 +33,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
@@ -120,9 +121,11 @@ public class AiService {
         return ac;
     }
 
-    public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
 
         Prop prop = Prop.getInstance(request);
+        inputData.prepareData(request);
+
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
@@ -145,7 +148,7 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
 
         Prop prop = Prop.getInstance(request);
         inputData.prepareData(request);
@@ -168,9 +171,11 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
 
         Prop prop = Prop.getInstance(request);
+        inputData.prepareData(request);
+
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false || Tools.isFalse(assistant.getUseStreaming())) {
@@ -256,14 +261,9 @@ public class AiService {
     }
 
     private AssistantDefinitionEntity getAssistant(Long assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {
-        //
         if(assistantId == null || assistantId < 1L) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
-
-        //
         Optional<AssistantDefinitionEntity> assistant = assistantRepo.findByIdAndDomainId(assistantId, CloudToolsForCore.getDomainId());
-
         if(assistant.isPresent() == false) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
-
         return assistant.get();
     }
 
@@ -366,6 +366,7 @@ public class AiService {
                     ai.setAssistantId(ade.getId());
                     ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
+                    ai.setToDefinition(ade.getFieldTo());
                     if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
                     else ai.setDescription(prop.getText(ade.getDescription()));
                     ai.setProvider(ade.getProvider());
@@ -391,6 +392,24 @@ public class AiService {
                     }
                     if (ai.isEmpty()==false) {
                         aiList.add(ai);
+                    }
+                }
+
+                //for custom fields detect if we have any assistant specially for this field, if yes, remove other general assistants
+                if (Tools.isNotEmpty(toField) && toField.startsWith("field") && toField.length()=="fieldX".length()) {
+                    List<DataTableAi> specificAis = new ArrayList<>();
+                    for (DataTableAi ai : aiList) {
+                        String[] toFields = Tools.getTokens(ai.getToDefinition(), "\n,;", true);
+                        for (String tf : toFields) {
+                            if ("*".equals(tf)) continue;
+                            if (AiAssistantsService.isMatching(tf, toField)) {
+                                specificAis.add(ai);
+                                break;
+                            }
+                        }
+                    }
+                    if (specificAis.size()>0) {
+                        aiList = specificAis;
                     }
                 }
             }

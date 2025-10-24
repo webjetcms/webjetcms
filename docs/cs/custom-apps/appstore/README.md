@@ -603,6 +603,7 @@ Karta Zobrazení pro společná nastavení, se ve výchozím nastavení zobrazí
 
 Karta obsahuje parametry:
 - Zobrazení na zařízeních, sloužící k nastavení [podmíněného zobrazení aplikace](#podmíněné-zobrazení-aplikace).
+- Přihlášený uživatel - umožňuje nastavit zobrazení aplikace podle stavu přihlášení návštěvníka web sídla - zobrazení vždy, jen pokud je uživatel přihlášen, nebo není-li přihlášen.
 - Čas vyrovnávací paměti (minuty), slouží k nastavení doby v minutách, po jakou má být inicializovaná aplikace uložena ve vyrovnávací paměti.
 
 Pokud ve Spring aplikaci kartu nechcete zobrazit nastavte atribut `commonSettings=false` v anotaci `@WebjetAppStore`.
@@ -618,6 +619,15 @@ Při náhledu aplikace v editoru, která má podmíněné zobrazení, se v náhl
 Pro otestování při zobrazení web stránky můžete využít URL parametr `?forceBrowserDetector=`, kterým umíme WebJET přesvědčit, že přistupujeme se zařízením specifického typu. Podporované typy tohoto parametru jsou `phone`, `tablet` a `pc`.
 
 Při použití starých `editor_component.jsp` můžete přidat kartu s nastavením zobrazení pro zařízení voláním `$(document).ready(function() { addAdvancedSettingsTab(); });` a získat nastavenou hodnotu jako `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. Implementace funkce je v `/components/bottom.jsp` a je takto připravena pro vaše snadné použití.
+
+### Přihlášený uživatel
+
+Aplikace se zobrazí podle stavu přihlášeného uživatele. V `PageParams` nastaveno parametrem `showForLoggedUser`:
+- Prázdná hodnota/parametr není zadán - aplikace se zobrazí vždy.
+- `onlyLogged` - aplikace se zobrazí pouze přihlášenému uživateli.
+- `onlyNotLogged` - aplikace se zobrazí pouze pokud uživatel není přihlášen.
+
+V editoru stránek se aplikace zobrazí vždy, ale v náhledu nebo zobrazení stránky se zobrazí podle nastavené hodnoty.
 
 ### Čas vyrovnávací paměti (minuty)
 
@@ -654,11 +664,12 @@ public class CalendarApp extends WebjetComponentAbstract {
 Zadaný HTML kód je vložen do stránky s editorem aplikace. Je možné využít následující funkce pro provedení JavaScript kódu:
 - `appBeforeXhr(data)` - voláno před získáním informací o editoru, `data` obsahuje objekt posílaný do REST služby.
 - `appAfterXhr(response)` - volané po získání dat z REST služby, lze modifikovat data (např. doplnit vstupní pole) v `response` objektu.
-- `appAfterInit(response, datatable)` - voláno po inicializaci datatabulky, v `datatable` je instance datatabulky/editoru.
+- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - voláno po inicializaci datatabulky, v `componentDatatable` je instance datatabulky/editoru a v `isInsert` informuje, zda se jedná o nově vloženou aplikaci nebo úpravu.
 - `appGetComponentPath(componentPath, componentDatatable)` - volané při vložení aplikace do stránky, můžete změnit cestu pro vložený `INCLUDE` Např. na základě vybraných možností.
-- `appGetComponentCode(componentPath, params, componentDatatable)` - volané při vložení aplikace do stránky, může vrátit kompletní kód pro vložení do stránky (nemusí to být přímo `!INCLUDE` kód).
+- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané při vložení aplikace do stránky, může vrátit kompletní kód pro vložení do stránky (nemusí to být přímo `!INCLUDE` kód).
+- `async appCodeExecute(params)` - volání po kliknutí na tlačítko OK, může volat serverovou REST službu.
 
-Ukázkový kód, který reaguje na změnu výběrového pole:
+Ukázkový kód různých možností:
 
 ```html
 <script>
@@ -702,6 +713,37 @@ Ukázkový kód, který reaguje na změnu výběrového pole:
                 }
             });
         });
+    }
+
+    async function appCodeExecute(params) {
+        let result = false;
+        try {
+            await $.ajax({
+                url: "/admin/rest/forum/prepare-structure",
+                method: "POST",
+                data: paramsX.toString(),
+                success: async function(response) {
+                    if(response != undefined && response != null && response != "") {
+                        //It's error
+                        console.log("ERROR: ", response);
+                        window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                    }
+
+                    try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
+                    try { await window.parent.reloadParentWindow(); } catch (e) {}
+                    try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
+                    result = true;
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                }
+            });
+        } catch (e) {
+            console.log("ERROR: ", e);
+            window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+        }
+        return result;
     }
 
 </script>

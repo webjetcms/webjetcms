@@ -1,6 +1,6 @@
 # Transition from Struts to Spring
 
-Struts is an old MVC technology (framework) that with the help of a configuration file `struts-config.xml` maps incoming requests to `Struts Action` objects. In WebJET, we are gradually replacing Struts with Spring MVC/REST.
+Struts is an old MVC technology (framework) that with the help of a configuration file `struts-config.xml` maps incoming requests to `Struts Action` objects. As of WebJET 2025, struts is replaced by Spring MVC/REST.
 
 ## Original mapping using Struts
 
@@ -135,3 +135,7 @@ In case of moving a request to a JSP file, you can use the method `request.getRe
 		request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);
     }
 ```
+
+### JSP tags
+
+Brands like `<logic:present/iterate/...` substituted for the corresponding `<iwcm:present/iterate/...`, beware `<bean:write` For `<iwcm:beanWrite`.
