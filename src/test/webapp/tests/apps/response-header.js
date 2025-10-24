@@ -30,6 +30,8 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
 
 Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
 
+    var cspLongHeader = "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.example.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests; block-all-mixed-content;";
+
     I.click("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("responseHeadersDataTable");
 
@@ -44,7 +46,7 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
     I.fillField("#DTE_Field_headerName", "TestHeader_" + randomNumber);
 
     I.clickCss("#DTE_Field_headerValue");
-    I.fillField("#DTE_Field_headerValue", "Test_value");
+    I.fillField("#DTE_Field_headerValue", cspLongHeader);
 
     DTE.save();
 
@@ -54,7 +56,7 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
 
     I.see("/test");
     I.see("TestHeader_" + randomNumber);
-    I.see("Test_value");
+    I.see(cspLongHeader);
 
     I.clickCss("#DTE_Field_headerName");
     I.fillField("#DTE_Field_headerName", "TestHeader_" + randomNumber + "_changed");

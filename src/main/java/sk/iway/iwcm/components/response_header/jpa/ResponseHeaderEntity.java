@@ -19,6 +19,8 @@ import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Entity
 @Table(name = "response_headers")
@@ -37,7 +39,8 @@ public class ResponseHeaderEntity {
     @Column(name = "url")
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
-        title="apps.response-header.url"
+        title="apps.response-header.url",
+        ai = false
     )
     @NotEmpty
     @Size(max = 255)
@@ -54,7 +57,7 @@ public class ResponseHeaderEntity {
 
     @Column(name = "header_value")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
+        inputType = DataTableColumnType.TEXTAREA_WRAP,
         title="apps.response-header.header_value"
     )
     @NotEmpty
@@ -65,13 +68,19 @@ public class ResponseHeaderEntity {
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="apps.response-header.change_date",
-        hiddenEditor = true
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+                }
+            )
+        }
     )
     private Date changeDate;
 
     @Column(name = "note")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
+        inputType = DataTableColumnType.TEXT,
         title="apps.response-header.note"
     )
     @Size(max = 255)

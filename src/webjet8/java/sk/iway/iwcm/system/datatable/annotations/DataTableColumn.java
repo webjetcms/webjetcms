@@ -34,6 +34,12 @@ public @interface DataTableColumn {
     String perms() default "";
     boolean[] orderable() default {};
 
+    //disables global AI bindings to this field, only field specific AI bindings will work
+    boolean[] ai() default {};
+
+    //disables editing of this field in editor
+    boolean[] disabled() default {};
+
     /**
      * set default value for column in editor for new entity.
      * Can not be used with fetchOnCreate because it will be overridden by returned entity.
