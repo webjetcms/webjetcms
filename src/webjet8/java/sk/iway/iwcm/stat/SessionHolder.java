@@ -153,6 +153,12 @@ public class SessionHolder
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
 
+			// Check if this session is marked for invalidation
+			if (det.isInvalidate()) {
+				request.getSession().invalidate();
+				return false;
+			}
+
 			if (Constants.getBoolean("sessionStealingCheck") == true
 					&& det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {
 				// session stealing vyvolame len ak je niekto prihlaseny
@@ -190,6 +196,11 @@ public class SessionHolder
 				det.setLoggedUserId(user.getUserId());
 				det.setAdmin(user.isAdmin());
 				det.setLoggedUserName(user.getFullName());
+				
+				// Handle single logon - invalidate other sessions for the same user
+				if (Constants.getBoolean("sessionSingleLogon")) {
+					invalidateOtherUserSessionsForSingleLogon(user.getUserId(), sessionId);
+				}
 			}
 		} else {
 			if (det.getLoggedUserId() > 0) {
@@ -412,5 +423,63 @@ public class SessionHolder
 				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId +" uid="+sd.getLoggedUserId());
 			}
 		}
+	}
+
+	/**
+	 * Invalidate other sessions for user with userId for single logon feature
+	 * @param userId - ID of user that logged in
+	 * @param currentSessionId - current session ID to exclude from invalidation
+	 */
+	private void invalidateOtherUserSessionsForSingleLogon(int userId, String currentSessionId)
+	{
+		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
+		{
+			String sessionId = entry.getKey();
+			if (Tools.isEmpty(sessionId) || sessionId.equals(currentSessionId)) continue;
+
+			SessionDetails sd = entry.getValue();
+			if (sd == null) continue;
+
+			if (sd.getLoggedUserId() == userId)
+			{
+				//mark session for invalidation
+				sd.setInvalidate(true);
+				Logger.debug(SessionHolder.class, "Marking session for invalidation (single logon): " + sessionId +" uid="+sd.getLoggedUserId());
+			}
+		}
+		
+		//propagate to cluster - invalidate sessions for this user ID on other nodes
+		ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder", (long)userId);
+	}
+
+	/**
+	 * Invalidate sessions for userId from cluster refresh
+	 * @param userId - user ID whose sessions should be invalidated
+	 */
+	public static void refresh(long userId)
+	{
+		SessionHolder sh = SessionHolder.getInstance();
+		for (Map.Entry<String, SessionDetails> entry : sh.data.entrySet())
+		{
+			String sessionId = entry.getKey();
+			if (Tools.isEmpty(sessionId)) continue;
+
+			SessionDetails sd = entry.getValue();
+			if (sd == null) continue;
+
+			if (sd.getLoggedUserId() == (int)userId)
+			{
+				sd.setInvalidate(true);
+				Logger.debug(SessionHolder.class, "Session marked for invalidation from cluster refresh: " + sessionId + " uid=" + userId);
+			}
+		}
+	}
+
+	/**
+	 * Get data map for testing purposes
+	 * @return data map
+	 */
+	protected java.util.Map<String, SessionDetails> getDataMap() {
+		return data;
 	}
 }
