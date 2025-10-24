@@ -69,11 +69,11 @@ Scenario('Invoice items', ({I, DT, DTE, Document}) => {
     Document.screenshotElement(locate("#modalIframe").find(".modal-content"), "/redactor/apps/eshop/invoice/editor_items_add.png");
 });
 
-Scenario('Invoice payments', ({I, DT, DTE, Document}) => {
+Scenario('Invoice payments', ({I, DT, DTE, Document, i18n}) => {
     I.amOnPage("/apps/basket/admin/");
 
-    DT.filterEquals("editorFields.firstName", "Tester_Sivan");
-    I.click("Tester_Sivan");
+    DT.filterEquals("editorFields.firstName", "Tester_Screens (Tester_Screens)");
+    I.click("Tester_Screens (Tester_Screens)");
     DTE.waitForEditor("basketInvoiceDataTable");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
@@ -120,7 +120,7 @@ Scenario('Invoice payments', ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/eshop/invoice/editor_payments_refund_err.png");
 
     DT.filterContainsForce("paymentDescription", "");
-    DT.filterSelect("confirmed", "Áno");
+    DT.filterSelect("confirmed", i18n.get("Yes"));
 
     DT.filterSelect("paymentMethod", "GoPay", paymentDataTable_wrapper);
 

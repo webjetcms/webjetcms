@@ -52,7 +52,7 @@ Scenario('Screens', ({ I, DT, Document }) => {
     I.clickCss("#type2");
     I.clickCss("#btnOk");
     I.waitForElement("#xlsImportForm");
-    I.fillField("#xlsImportForm > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type=text]:nth-child(1)", "59160");
+    I.fillField("#xlsImportForm input[name=parentGroupIdString]", "59160");
     Document.screenshot("/redactor/webpages/import-excel-window.png");
     I.waitForElement(excelFileInput);
     I.attachFile(excelFileInput, excelFileLocation);

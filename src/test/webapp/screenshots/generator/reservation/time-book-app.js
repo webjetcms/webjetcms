@@ -110,7 +110,7 @@ Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/reservation/time-book-app/app-adding.png");
 });
 
-Scenario('reservation screens - PAGE section', ({ I, Document }) => {
+Scenario('reservation screens - PAGE section', ({ I, Document, i18n }) => {
     I.amOnPage("/apps/rezervacie/rezervacia-tenisovych-kurtov.html?NO_WJTOOLBAR=true&language="+I.getConfLng());
     I.waitForVisible("#reservationDate");
 
@@ -124,7 +124,7 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
 
     I.fillField("#email", "");
     Document.screenshot("/redactor/apps/reservation/time-book-app/app-page.png");
-    Document.screenshot("../../../src/main/webapp/apps/reservation/mvc/app-page.png");
+    Document.screenshot("../../../src/main/webapp/apps/reservation/mvc/app-page"+i18n.getImgSuffix()+".png");
 
     Document.screenshotElement("div.dateHeader", "/redactor/apps/reservation/time-book-app/app-date-header.png");
 
@@ -143,8 +143,6 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     Document.screenshotElement("#reservationForm", "/redactor/apps/reservation/time-book-app/app-reservation_form.png");
 
     Document.screenshot("/redactor/apps/reservation/time-book-app/app-ready-reservation.png");
-
-
 
     I.fillField("#reservationDate", "03-01-2045");
     I.clickCss("td[id='2560_13'].free");

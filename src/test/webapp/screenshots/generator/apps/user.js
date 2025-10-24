@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('User app screens', ({ I, DT, Document }) => {
+Scenario('User app screens', ({ I, DT, Document, i18n }) => {
 
     const lng = I.getConfLng();
 
@@ -36,9 +36,9 @@ Scenario('User app screens', ({ I, DT, Document }) => {
         Document.screenshot("/redactor/apps/user/editor-required.png");
 
         I.clickCss("#pills-dt-component-datatable-basic-tab");
-        DTE.selectOption("field", "Prihlasovací formulár");
+        DTE.selectOption("field", i18n.get("Logon form"));
         Document.screenshot("/redactor/apps/user/editor-login_form.png");
 
-        DTE.selectOption("field", "Registračný formulár");
+        DTE.selectOption("field", i18n.get("Registration form"));
     });
 });
