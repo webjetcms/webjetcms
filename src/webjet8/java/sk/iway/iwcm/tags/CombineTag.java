@@ -169,6 +169,8 @@ public final class CombineTag extends BodyTagSupport
 
 				if (filesToCombine.startsWith("admin"))
 				{
+					//for admin always use lng from login session not page context
+					lng = (String)Tools.sessionGetAttribute(request.getSession(), Prop.SESSION_I18N_PROP_LNG);
 					//zobrazenie v admin casti
 					if ("css".equals(getType()))
 					{

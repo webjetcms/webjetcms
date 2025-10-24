@@ -11,6 +11,7 @@
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
 - Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
 - Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
+- Webové stránky - PageBuilder - opravený jazyk používateľského rozhrania na jazyk prihláseného používateľa (nie jazyk web stránky) (#58133).
 
 ## 2025.0.40
 
