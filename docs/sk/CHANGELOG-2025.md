@@ -6,8 +6,11 @@
 
 ## 2025.0.x
 
+> Opravná verzia pôvodnej verzie 2025.0.
+
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
 - Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
+- Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
 
 ## 2025.0.40
 
