@@ -1,6 +1,9 @@
 package sk.iway.iwcm.components.basket.delivery_methods.jpa;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,9 +15,13 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.support.SupportMethodEntity;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
@@ -23,7 +30,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
-import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
 @Table(name = "delivery_methods")
@@ -31,14 +37,17 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Setter
 @EntityListeners(AuditEntityListener.class)
 @EntityListenersType(Adminlog.TYPE_BASKET_UPDATE)
-public class DeliveryMethodEntity {
+public class DeliveryMethodEntity extends SupportMethodEntity {
 
     @Id //We do not use this ID, it's here just because it must be here
     @Column(name = "id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
-    //For us, this is REAL ID, in DB set as UNIQUE
+    //For JSP files, here we gonna set name from translation key, based on "deliveryMethodName" plus price and currency
+    @Transient
+    private String title;
+
     @Column(name = "delivery_method_name")
     @NotBlank
     @DataTableColumn(
@@ -98,12 +107,7 @@ public class DeliveryMethodEntity {
             )
         }
     )
-    private BigDecimal priceWithVat;
-
-    @Column(name="currency")
-	@DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.basket.invoice.currency")
-    @Size(max = 8)
-	private String currency;
+    private BigDecimal priceVat;
 
     @Column(name = "sort_priority")
 	@DataTableColumn(
@@ -112,54 +116,6 @@ public class DeliveryMethodEntity {
 	)
 	private Integer sortPriority = 0;
 
-    @Column(name = "field_a")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldA;
-
-    @Column(name = "field_b")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldB;
-
-    @Column(name = "field_c")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldC;
-
-    @Column(name = "field_d")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldD;
-
-    @Column(name = "field_e")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldE;
-
-    @Column(name = "field_f")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldF;
-
-    @Column(name = "field_g")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldG;
-
-    @Column(name = "field_h")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
-    private String fieldH;
-
     @Transient
 	@DataTableColumnNested
 	private transient BaseEditorFields editorFields = null;
@@ -167,9 +123,19 @@ public class DeliveryMethodEntity {
     @Column(name = "domain_id")
     private Integer domainId;
 
-    public BigDecimal getPriceWithVat() {
-        if(vat == null || vat < 1) return price;
+    public BigDecimal getPriceVat() {
         if(price == null) return BigDecimal.ZERO;
-        return price.multiply(new BigDecimal(vat));
+        if(vat == null || vat < 1) return price;
+
+        BigDecimal bdVat = new BigDecimal(vat);
+        return price
+            .multiply(BigDecimal.ONE.add(bdVat.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP)))
+            .setScale(2, RoundingMode.HALF_UP);
     }
+
+    @JsonIgnore
+    public String[] getSupportedCountriesArr() { return Tools.getTokens(getSupportedCountriesStr(), ",+"); }
+
+    @JsonIgnore
+    public List<String> getSupportedCountriesList() { return Arrays.asList( getSupportedCountriesArr() ); }
 }

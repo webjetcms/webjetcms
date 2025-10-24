@@ -16,10 +16,11 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
 import sk.iway.iwcm.components.basket.support.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.SupportMethod;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
-@PaymentMethod(
+@SupportMethod(
     nameKey = "components.basket.editor.cash_on_delivery",
     fieldMap = {
         @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),

@@ -21,7 +21,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEditorFields;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
@@ -34,6 +36,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/admin/rest/eshop/basket")
@@ -45,22 +48,35 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     private final BasketInvoiceItemsRepository biir;
     private final BasketInvoicePaymentsRepository bipr;
 
+    private final PaymentMethodsService pms;
+    private final DeliveryMethodsService dms;
+
     private static final String ORDER_PLACEHOLDER = "{ORDER_DETAILS}";
     private static final String STATUS_PLACEHOLDER = "{STATUS}";
 
     @Autowired
-    public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
+    public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, PaymentMethodsService pms, DeliveryMethodsService dms) {
         super(bir);
         this.bir = bir;
         this.biir = biir;
         this.bipr = bipr;
+        this.pms = pms;
+        this.dms = dms;
     }
 
     @Override
     public Page<BasketInvoiceEntity> getAllItems(Pageable pageable) {
         DatatablePageImpl<BasketInvoiceEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new BasketInvoiceEntity(), pageable));
 
-        page.addOptions("paymentMethod", PaymentMethodsService.getConfiguredPaymentMethodsLabels(getProp()), "label", "value", false);
+        String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? Constants.getString("basketProductCurrency") : getRequest().getParameter("showCurrency");
+        for(BasketInvoiceEntity invoice : page.getContent()) {
+            invoice.setPriceToPayNoVat( BasketTools.convertCurrency(invoice.getPriceToPayNoVat(), invoice.getCurrency(), wantedCurrency) );
+            invoice.setPriceToPayVat( BasketTools.convertCurrency(invoice.getPriceToPayVat(), invoice.getCurrency(), wantedCurrency) );
+            invoice.setBalanceToPay( BasketTools.convertCurrency(invoice.getBalanceToPay(), invoice.getCurrency(), wantedCurrency) );
+        }
+
+        page.addOptions("paymentMethod", pms.getPaymentOptions(getProp()), "label", "value", false);
+        page.addOptions("deliveryMethod", dms.getDeliveryOptions(getProp()), "label", "value", false);
 
         fillStatusSelect(page);
         prepareCountriesSelect(page);
@@ -219,15 +235,18 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     }
 
     private final void prepareCountriesSelect(DatatablePageImpl<BasketInvoiceEntity> page) {
-        String[] supprotedCountries = Constants.getArray("basketInvoiceSupportedCountries");
-        String defaultKeyPrefix = "stat.countries.tld";
-
         Prop prop = getProp();
-
-        for (String countryCode : supprotedCountries) {
-            page.addDefaultOption("contactCountry", prop.getText( defaultKeyPrefix + countryCode ), countryCode);
-            page.addDefaultOption("deliveryCountry", prop.getText( defaultKeyPrefix + countryCode ), countryCode);
+        //deliveryCountry do not need to be set - add default empty value
+        page.addDefaultOption("deliveryCountry", "", "");
+        for (String countryCode : Constants.getArray("basketInvoiceSupportedCountries")) {
+            page.addDefaultOption("contactCountry", BasketTools.getCountryName(countryCode, prop), countryCode);
+            page.addDefaultOption("deliveryCountry", BasketTools.getCountryName(countryCode, prop), countryCode);
         }
+    }
+
+    @RequestMapping(value="/supported-currencies")
+    public List<LabelValue> getListOfSupportedCurrencies() {
+        return BasketTools.getSupportedCurrenciesOptions();
     }
 
     @GetMapping("/getPriceToPay")

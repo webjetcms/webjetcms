@@ -3,13 +3,11 @@ package sk.iway.iwcm.components.basket.rest;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.MutablePropertyValues;
@@ -24,6 +22,8 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
+import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
@@ -32,6 +32,8 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoiceStatus;
 import sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService;
+import sk.iway.iwcm.components.basket.support.MethodDto;
+
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -39,6 +41,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
+import sk.iway.iwcm.i18n.Prop;
 
 @Service
 public class EshopService {
@@ -51,10 +54,13 @@ public class EshopService {
     private final BasketInvoiceItemsRepository biir;
 	private final BasketInvoicePaymentsRepository bipr;
 
-	public EshopService(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
+	private final DeliveryMethodsService dms;
+
+	public EshopService(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, DeliveryMethodsService dms) {
 		this.bir = bir;
 		this.biir = biir;
 		this.bipr = bipr;
+		this.dms = dms;
 	}
 
 	/******************* INSTANCE METHOD **************************/
@@ -67,7 +73,8 @@ public class EshopService {
 			service = new EshopService(
 				Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class),
 				Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class),
-				Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class)
+				Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class),
+				Tools.getSpringBean("deliveryMethodsService", DeliveryMethodsService.class)
 			);
 			servletContext.setAttribute(EshopService.class.getName(), service);
 		}
@@ -248,18 +255,21 @@ public class EshopService {
 			invoice.setCurrency(EshopService.getDisplayCurrency(request));
 			invoice.setUserLng(PageLng.getUserLng(request));
 
-			int deliveryMethod = Tools.getIntValue(request.getParameter("deliveryMethod"),-1);
-			if(deliveryMethod > 0)
-			{
-				DocDetails deliveryDoc = DocDB.getInstance().getBasicDocDetails(deliveryMethod, false);
-				if (deliveryDoc != null) invoice.setDeliveryMethod(deliveryDoc.getTitle());
+			int deliveryMethodId = Tools.getIntValue(request.getParameter("deliveryMethod"),-1);
+			if(deliveryMethodId > 0) {
+				try {
+					DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, Prop.getInstance(request));
+					invoice.setDeliveryMethod(dme.getDeliveryMethodName());
+				} catch(Exception e) {
+					Logger.error(e);
+				}
 			}
 
 			//Get all items for adminlog
 			List<BasketInvoiceItemEntity> basketItems = new ArrayList<>();
 
 			//Add payment as basket item, if created add it to list
-			int newItemId = PaymentMethodsService.createPaymentInvoiceItemAndReturnId(invoice, request);
+			int newItemId = PaymentMethodsService.createPaymentInvoiceItemAndReturnId(invoice, request, biir);
 			if(newItemId != -1) {
 				BasketInvoiceItemEntity newBasketItem = getBasketItemById(newItemId);
 				basketItems.add( newBasketItem );
@@ -285,8 +295,7 @@ public class EshopService {
 				invoice = null;
 			}
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 			invoice = null;
 		}
@@ -384,17 +393,14 @@ public class EshopService {
 	{
 		BasketInvoiceEntity invoiceBean = getInvoiceById(basketInvoiceId);
 
-		if(invoiceBean == null )
-			return;
+		if(invoiceBean == null) return;
 
-		List<BasketInvoiceItemEntity> listItmes = invoiceBean.getBasketItems();
+		List<BasketInvoiceItemEntity> listItmes = biir.findAllByBrowserIdAndDomainId(invoiceBean.getBrowserId(), invoiceBean.getDomainId());
 		if(listItmes == null )
 			return;
 
 		for(BasketInvoiceItemEntity item: listItmes)
-		{
 			decreaseProductCount(item);
-		}
 	}
 
 	private synchronized void decreaseProductCount(BasketInvoiceItemEntity item )
@@ -415,6 +421,42 @@ public class EshopService {
 				DocDB.saveDoc(docDetails);
 			}
 		}
+	}
+
+	public boolean addDeliveryMethod(HttpServletRequest request, int deliveryMethodId, Prop prop) {
+		int itemId = Tools.getIntValue(deliveryMethodId, -1);
+		if (itemId == -1)
+			return false;
+
+		DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, prop);
+
+		long browserId = getBrowserId(request);
+		int userId = Tools.getUserId(request);
+
+		BasketInvoiceItemEntity basketItem = new BasketInvoiceItemEntity();
+		basketItem.setBrowserId(Long.valueOf(browserId));
+		basketItem.setLoggedUserId(userId);
+
+		basketItem.setItemId(0); // We do not reference any DOC
+		basketItem.setItemQty(1); // Allways one delivery
+
+		basketItem.setItemPrice( dme.getPrice() );
+		basketItem.setItemVat( dme.getVat() );
+
+		basketItem.setItemNote( prop.getText("components.basket.invoice_email.delivery_method") );
+		basketItem.setDateInsert(new Date(Tools.getNow()));
+
+		//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovany a vzdy sa vlozi aktualna domena.
+		basketItem.setDomainId(CloudToolsForCore.getDomainId());
+
+		basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(-1) );
+
+		basketItem.setItemTitle( DeliveryMethodsService.getDeliveryMethodLabel(dme.getDeliveryMethodName(), request) );
+		basketItem.setItemPartNo(null);
+
+		saveBasketItem(basketItem);
+
+		return true;
 	}
 
 	/**
@@ -468,8 +510,6 @@ public class EshopService {
 		//MBO: zabranenie ziskania DocDetails dokumentu pre inu domenu musi byt osetrene na urovni DocDB
 		DocDB docDB = DocDB.getInstance();
 		DocDetails doc = docDB.getDoc(itemId);
-
-		int invoiceId = -1;
 
 		if (doc != null)
 		{
@@ -529,10 +569,10 @@ public class EshopService {
 				basketItem.setItemNote(userNote);
 				basketItem.setDateInsert(new Date(Tools.getNow()));
 
-				//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovanya vzdy sa vlozi aktualna domena.
+				//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovany a vzdy sa vlozi aktualna domena.
 				basketItem.setDomainId(CloudToolsForCore.getDomainId());
 
-				basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(invoiceId) );
+				basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(-1) );
 
 				//uloz aj nazov a PN, lebo sa moze stat, ze dokument sa vymaze
 				basketItem.setItemTitle(doc.getTitle());
@@ -572,123 +612,18 @@ public class EshopService {
 		return result;
 	}
 
-	/**Vrati aktualne moznosti dopravy. Ak doprava neexistuje, vrati prazdny list
-	 *
-	 * MBO: moze sa poslat parameter lng, vtedy hlada [nazov][lng], ak nenajde, hlada [nazov]
-	 *
-	 * @return
-	 * @author		$Author: $(prau)
-	 * @Ticket 		Number: #15137
-	 */
-	public List<DocDetails> getModeOfTransports(String... lng)
-	{
-		return getModeOfTransports(null, lng);
+	public List<MethodDto> getModeOfTransports(HttpServletRequest request, String country) {
+		return getModeOfTransports(request, country, null);
 	}
 
-	/**
-	 * Vrati moznosti len osobneho vyzdvihnutia tovaru, ak je v kosiku polozka, ktora sa da vyzdvihnut len osobne.
-	 * Definovanie cez konf. premennu basketTransportInStorePickupFieldName, pokial nie je zadana, vrati vsetky moznosti dopravy
-	 *
-	 * @param request
-	 * @param lng
-	 * @return
-	 */
-	public List<DocDetails> getModeOfTransports(HttpServletRequest request, String... lng)
-	{
-		List<DocDetails> modeOfTransports = new ArrayList<>();
-		GroupsDB groupsDB = GroupsDB.getInstance();
-		String language = "";
-		String basketTransportsGroupName = Constants.getString("basketTransportGroupName");
-		if(Tools.isEmpty(basketTransportsGroupName)) basketTransportsGroupName = "ModeOfTransport"; //vychodzi nazov
-		if (lng!=null&&lng.length>0)
-		{
-			language = lng[0];
-		}
-		// ModeOfTransport je zapisany aj v /components/cloud/basket/admin_transports_list.jsp
-		GroupDetails groupDetails = groupsDB.getLocalSystemGroup();
-		if (groupDetails==null)
-		{
-			//asi to neni cloud alebo multidomain WJ, alebo bezi na localhost (iwcm.interway.sk)
-			groupDetails = groupsDB.getGroupByPath("/System");
-		}
-		boolean modeOfTransportsFound = false;
-		if(groupDetails != null)
-		{
-			List<GroupDetails> subgroups = groupsDB.getGroups(groupDetails.getGroupId());
-			if (subgroups!=null)
-			{
-				//hladaj najprv jazykovu mutaciu
-				for (GroupDetails group:subgroups)
-				{
-					if(group.getGroupName().equals(basketTransportsGroupName+language))
-					{
-						modeOfTransports.addAll(DocDB.getInstance().getDocByGroup(group.getGroupId()));
-						modeOfTransportsFound = true;
-					}
-				}
-				//ak nic nenasiel, hladaj bez pripony jazyka
-				if(modeOfTransportsFound == false)
-				{
-					for (GroupDetails group:subgroups)
-					{
-						if(group.getGroupName().equals(basketTransportsGroupName))
-						{
-							modeOfTransports.addAll(DocDB.getInstance().getDocByGroup(group.getGroupId()));
-							return modeOfTransports;
-						}
-					}
-				}
-			}
-		}
+	public List<MethodDto> getModeOfTransports(HttpServletRequest request, String country, String lng) {
+		Prop prop;
+		if(Tools.isNotEmpty(lng)) prop = Prop.getInstance(lng);
+		else if(request != null) prop = Prop.getInstance(request);
+		else prop = Prop.getInstance();
 
-		/**
-		 * [LESYSR-81]: ak niektory z produktov ma nastavene len osobny odber na predajni, tak cely nakupny kosik musi mat obmedzenie len na osobný odber
-		 * zistim, ci mam polozka v kosiku ktora sa da vyzdvihnut len osobne a vratim moznost len osobneho odberu celej objednavky
-		 * basketTransportInStorePickupFieldName - tu mam definovane pole kde je priznak osobneho odberu napr. fieldM
-		*/
-		String inStorePickupFieldName = Constants.getString("basketTransportInStorePickupFieldName");
-		if(request != null && Tools.isNotEmpty(inStorePickupFieldName) && modeOfTransportsFound && modeOfTransports.size() > 0)
-		{
-			List <BasketInvoiceItemEntity> basketItems = getBasketItems(request);
-			boolean foundInStorePickup = false;
-			if(basketItems != null && basketItems.size() > 0)
-			{
-				//zistim, ci je nieco zadane v danom poli. Ak je prazdne, beriem, ze je oznacene len pre odobny odber
-				for(BasketInvoiceItemEntity item : basketItems)
-				{
-					try
-					{
-						if(Tools.isNotEmpty(BeanUtils.getProperty(item.getDoc(), inStorePickupFieldName)))
-						{
-							foundInStorePickup = true;
-							break;
-						}
-					}
-					catch(Exception e)
-					{}
-				}
-				//ak ano, vymazem ine sposoby dorucenia. Osobny odber musi mat tiez zadane v danom volnom poli, ze sa jedna o osobny odber
-				if(foundInStorePickup)
-				{
-					Iterator<DocDetails> transportIterator = modeOfTransports.iterator();
-					while (transportIterator.hasNext())
-					{
-						DocDetails transport = transportIterator.next();
-						try
-						{
-							if(Tools.isEmpty(BeanUtils.getProperty(transport, inStorePickupFieldName)))
-								transportIterator.remove();
-						}
-						catch(Exception e)
-						{}
-					}
-				}
-			}
-		}
-
-		return modeOfTransports;
+		return dms.getAllDeliveryMethods(request, prop, country);
 	}
-
 
 	/******************* STATIC METHODS **************************/
 
@@ -748,9 +683,10 @@ public class EshopService {
         else
         {
 
-            String reqCurr = (String)request.getAttribute("displayCurrency");
-            if (Tools.isNotEmpty(reqCurr))
-                return reqCurr;
+			if(request != null) {
+				String reqCurr = (String)request.getAttribute("displayCurrency");
+				if (Tools.isNotEmpty(reqCurr)) return reqCurr;
+			}
 
             curr = Constants.getString("basketDisplayCurrency");
         }

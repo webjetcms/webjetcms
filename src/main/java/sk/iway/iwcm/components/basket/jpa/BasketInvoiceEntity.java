@@ -10,13 +10,15 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.PrePersist;
 import javax.persistence.Lob;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +26,6 @@ import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -125,17 +126,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title="components.basket.mode_of_transport",
-		hiddenEditor = true,
-		editor = {
-			@DataTableColumnEditor(
-				options = {
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_personally", value = "components.basket.order_form.delivery_personally"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_post", value = "components.basket.order_form.delivery_post"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_courier", value = "components.basket.order_form.delivery_courier"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery", value = "components.basket.order_form.delivery")
-				}
-			)
-		}
+		hiddenEditor = true
     )
 	private String deliveryMethod;
 
@@ -184,7 +175,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	private BigDecimal balanceToPay;
 
 	@Column(name="currency")
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.basket.invoice.currency", hiddenEditor = true)
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	private String currency;
 
 	/****** CONTACT ******/
@@ -373,10 +364,6 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	// @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	// private String htmlCode;
 
-	public BigDecimal getTotalPriceVatIn(String currency) {
-		return BasketTools.convertCurrency(getPriceToPayVat(), currency, getCurrency());
-	}
-
 	/**
 	 * Vypocita autorizacny token k objednavke. Ako autorizacny token
 	 * sa vezme retazec "INV"+id objednavky+Constants.getInstallName()
@@ -403,25 +390,24 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 		return this.id == null ? -1 : this.id.intValue();
 	}
 
-	public List<BasketInvoiceItemEntity> getBasketItems() {
-		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
-	}
-
-
-	//
-	public BigDecimal getTotalPriceVat() {
-		return priceToPayVat == null ? BigDecimal.ZERO : priceToPayVat;
-	}
-
-	public BigDecimal getTotalPrice() {
-		return priceToPayNoVat == null ? BigDecimal.ZERO : priceToPayNoVat;
-	}
-
 	public int getInvoiceId() {
 		return this.id == null ? -1 : this.id.intValue();
 	}
 	public void setInvoiceId(int invoiceId) {
 		this.id = Long.valueOf(invoiceId);
 	}
+
+	/* Used in JSP */
+
+	@JsonIgnore
+	public List<BasketInvoiceItemEntity> getBasketItems() {
+		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+	}
+
+	@JsonIgnore
+	public BigDecimal getTotalPriceVat() { return priceToPayVat == null ? BigDecimal.ZERO : priceToPayVat; }
+
+	@JsonIgnore
+	public BigDecimal getTotalPrice() { return priceToPayNoVat == null ? BigDecimal.ZERO : priceToPayNoVat; }
 }

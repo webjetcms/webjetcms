@@ -72,7 +72,7 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
         processFromEntity(page, ProcessItemAction.GETALL);
 
         //Set payment methods
-        page.addOptions("paymentMethod", PaymentMethodsService.getConfiguredPaymentMethodsLabels(getProp()), "label", "value", false);
+        page.addOptions("paymentMethod", paymentMethodsService.getPaymentOptions(getProp()), "label", "value", false);
         page.addOptions("paymentStatus", InvoicePaymentStatus.getOptions(getProp()), "label", "value", false);
         return page;
     }
@@ -144,13 +144,13 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
     @Override
     public void afterSave(BasketInvoicePaymentEntity entity, BasketInvoicePaymentEntity saved) {
         //After save we need to update invoice status
-        InvoiceService.updateInvoiceStatus(entity.getInvoiceId(), bir, biir, bipr);
+        ProductListService.updateInvoiceStats(entity.getInvoiceId(), true);
     }
 
     @Override
     public void afterDelete(BasketInvoicePaymentEntity entity, long id) {
         //After delete we need to update invoice status
-        InvoiceService.updateInvoiceStatus(entity.getInvoiceId(), bir, biir, bipr);
+        ProductListService.updateInvoiceStats(entity.getInvoiceId(), true);
     }
 
     private final long getInvoiceId() {

@@ -35,17 +35,14 @@ public class DeliveryMethodRestController extends DatatableRestControllerV2<Deli
 
     private final DeliveryMethodsService deliveryMethodsService;
 
-    private final DeliveryMethodsRepository repo;
-
     public DeliveryMethodRestController(DeliveryMethodsService deliveryMethodsService, DeliveryMethodsRepository repo) {
         super(repo);
-        this.repo = repo;
         this.deliveryMethodsService = deliveryMethodsService;
     }
 
     @Override
     public Page<DeliveryMethodEntity> getAllItems(Pageable pageable) {
-        Page<DeliveryMethodEntity> page = new DatatablePageImpl<>( deliveryMethodsService.getAllDeliveryMethods(getProp()) );
+        Page<DeliveryMethodEntity> page = new DatatablePageImpl<>( deliveryMethodsService.getAllDeliveryMethods(getRequest(), getProp(), false) );
         processFromEntity(page, ProcessItemAction.GETALL);
         return page;
     }
@@ -94,7 +91,7 @@ public class DeliveryMethodRestController extends DatatableRestControllerV2<Deli
 
     @Override
     public DeliveryMethodEntity processFromEntity(DeliveryMethodEntity entity, ProcessItemAction action) {
-        entity.setSupportedCountries( Tools.getTokens(entity.getSupportedCountriesStr(), ",+") );
+        entity.setSupportedCountries( entity.getSupportedCountriesArr() );
         return entity;
     }
 
