@@ -1,17 +1,16 @@
 services:
   postgres:
     image: postgres:16
-    container_name: postgres
+    container_name: webjetcms-postgres
     environment:
-      POSTGRES_DB: "webjetcms"
-      POSTGRES_USER: "webjetcms"
+      POSTGRES_DB: "webjetcms_autotest_web"
+      POSTGRES_USER: "webjetcms_autotest_web"
       POSTGRES_PASSWORD: "${WEBJET_DB_PASS}"
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
-      - postgresdata:/var/lib/postgresql/data
-      - ../../src/main/webapp/WEB-INF/sql/blank_web_pgsql.sql:/docker-entrypoint-initdb.d/init.sql
+      - webjetcms-postgresdata:/var/lib/postgresql/data
 
 volumes:
-  postgresdata:
+  webjetcms-postgresdata:

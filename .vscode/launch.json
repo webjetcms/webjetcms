@@ -42,6 +42,42 @@
         },
         {
             "type": "java",
+            "name": "Debug Docker MSSQL",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartDockerMSSQL",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
+        },
+        {
+            "type": "java",
+            "name": "Debug Docker Oracle",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartDockerOracle",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
+        },
+        {
+            "type": "java",
+            "name": "Debug Docker PgSQL",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartDockerPgSQL",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
+        },
+        {
+            "type": "java",
             "name": "Debug Demo DB",
             "request": "attach",
             "hostName": "localhost",

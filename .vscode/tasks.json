@@ -95,6 +95,99 @@
             }
         },
         {
+            "label": "appStartDockerMSSQL",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-mssql.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-mssql.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB MSSQL Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDockerOracle",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-oracle.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-oracle.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB Oracle Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDockerPgSQL",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-pgsql.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-pgsql.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB PgSQL Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartDemoDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",

@@ -1,4 +1,5 @@
 # WebJET CMS Database Containers
+<!-- spellcheck-off -->
 
 This directory contains Docker configurations for running test databases for WebJET CMS development.
 
@@ -13,19 +14,19 @@ This directory contains Docker configurations for running test databases for Web
 ### MariaDB
 
 - **Files**: `docker-compose-mariadb.yml`, `Dockerfile-mariadb`
-- **Port**: 3306
+- **Port**: 13306/3306
 - **VS Code Tasks**: "Docker DB MariaDB Start", "Docker DB MariaDB Stop"
 
 ### PostgreSQL
 
 - **Files**: `docker-compose-pgsql.yml`, `Dockerfile-pgsql`
-- **Port**: 5432
+- **Port**: 15432
 - **VS Code Tasks**: "Docker DB PostgreSQL Start", "Docker DB PostgreSQL Stop"
 
 ### Oracle Database Express Edition
 
 - **Files**: `docker-compose-oracle.yml`, `Dockerfile-oracle`
-- **Ports**: 1521 (database), 5500 (web console)
+- **Ports**: 11521 (database), 15500 (web console)
 - **VS Code Tasks**: "Docker DB Oracle Start", "Docker DB Oracle Stop"
 
 ## Usage
@@ -109,7 +110,6 @@ docker compose -f docker-compose-[database].yml down
 
 ## Notes
 
-- All databases are initialized with the WebJET CMS schema from the corresponding SQL files in `src/main/webapp/WEB-INF/sql/`
 - MariaDB uses `utf8` charset to avoid key length issues with the legacy schema
 - PostgreSQL creates tables in the `webjet_cms` schema
 - Oracle may take longer to start (large image ~4GB) and initialization scripts may need manual execution
@@ -117,26 +117,21 @@ docker compose -f docker-compose-[database].yml down
 
 ### Oracle Initialization Notes
 
-Oracle containers work differently than MySQL/PostgreSQL for script initialization:
+Oracle containers work differently than MySQL/PostgreSQL for script initialization, so you need to execute following commands manually.
 
-- The init script is mounted to `/opt/oracle/scripts/setup/` but may not auto-execute
-- To manually run the WebJET schema setup:
-  ```bash
-  # After container is running
-  docker exec oracle sqlplus system/${WEBJET_DB_PASS}@XEPDB1 @/opt/oracle/scripts/setup/webjet_init.sql
-  ```
-- The `webjetcms` user may need to be created manually if not auto-created
-- Oracle requires significant system resources (minimum 2GB RAM recommended)
+IMPORTANT: replace `${WEBJET_DB_PASS}` with real password, because your ENV variables are not populated inside container.
 
-## Troubleshooting
+```bash
+# After container is running
+docker exec -it webjetcms-oracle bash
+sqlplus system/${WEBJET_DB_PASS}@localhost/XEPDB1
+```
 
-1. **Permission denied**: Ensure Docker is running and you have permissions
-2. **Port conflicts**: Stop any existing database services on the same ports
-3. **Oracle startup issues**: Oracle container requires significant resources and may take 2-3 minutes to fully start
-4. **Oracle initialization**: If WebJET schema is not automatically created, run manual initialization:
-   ```bash
-   docker exec oracle sqlplus system/${WEBJET_DB_PASS}@XEPDB1 @/opt/oracle/scripts/setup/webjet_init.sql
-   ```
-5. **MariaDB character encoding**: MariaDB is configured with utf8 charset for compatibility with legacy schema
-6. **PostgreSQL schema**: Tables are created in `webjet_cms` schema, ensure your connection uses this schema
-7. **Large Oracle image**: First Oracle startup requires downloading ~4GB image, subsequent starts are faster
+Then create user and schema:
+
+```sql
+CREATE USER webjetcms_autotest_web IDENTIFIED BY "${WEBJET_DB_PASS}";
+GRANT CONNECT, RESOURCE TO webjetcms_autotest_web;
+ALTER USER webjetcms_autotest_web DEFAULT TABLESPACE users;
+ALTER USER webjetcms_autotest_web QUOTA UNLIMITED ON users;
+```

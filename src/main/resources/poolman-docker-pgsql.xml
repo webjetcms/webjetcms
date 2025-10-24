@@ -4,11 +4,11 @@
     <datasource>
         <dbname>iwcm</dbname>
         <jndiName>jndi-iwcm</jndiName>
-        <driver>org.mariadb.jdbc.Driver</driver>
+        <driver>org.postgresql.Driver</driver>
 
-        <url>jdbc:mariadb://host.docker.internal:13306/webjetcms_autotest_web</url>
+        <url>jdbc:postgresql://host.docker.internal:15432/webjetcms_autotest_web?currentSchema=webjet_cms</url>
 
-        <username>root</username>
+        <username>webjetcms_autotest_web</username>
         <password>${WEBJET_DB_PASS}</password>
 
         <initialConnections>0</initialConnections>

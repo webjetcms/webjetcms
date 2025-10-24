@@ -4,11 +4,11 @@
     <datasource>
         <dbname>iwcm</dbname>
         <jndiName>jndi-iwcm</jndiName>
-        <driver>org.mariadb.jdbc.Driver</driver>
+        <driver>oracle.jdbc.OracleDriver</driver>
 
-        <url>jdbc:mariadb://host.docker.internal:13306/webjetcms_autotest_web</url>
+        <url>jdbc:oracle:thin:@host.docker.internal:11521/XEPDB1</url>
 
-        <username>root</username>
+        <username>webjetcms_autotest_web</username>
         <password>${WEBJET_DB_PASS}</password>
 
         <initialConnections>0</initialConnections>
