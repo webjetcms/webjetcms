@@ -1,0 +1,9 @@
+FROM mariadb:11.5
+
+# Set proper character set and collation
+RUN echo '[mysqld]' > /etc/mysql/conf.d/charset.cnf && \
+    echo 'character-set-server = utf8mb4' >> /etc/mysql/conf.d/charset.cnf && \
+    echo 'collation-server = utf8mb4_unicode_ci' >> /etc/mysql/conf.d/charset.cnf && \
+    echo 'default-authentication-plugin = mysql_native_password' >> /etc/mysql/conf.d/charset.cnf
+
+EXPOSE 3306

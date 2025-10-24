@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: webjetcms-postgres
+    environment:
+      POSTGRES_DB: "webjetcms_autotest_web"
+      POSTGRES_USER: "webjetcms_autotest_web"
+      POSTGRES_PASSWORD: "${WEBJET_DB_PASS}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "15432:5432"
+    volumes:
+      - webjetcms-postgresdata:/var/lib/postgresql/data
+
+volumes:
+  webjetcms-postgresdata:

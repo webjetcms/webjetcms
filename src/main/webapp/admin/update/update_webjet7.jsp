@@ -288,7 +288,7 @@ if (Constants.getBoolean("statEnableTablePartitioning")==false)
 		catch (Exception ex)
 		{
 		   if (ex.getMessage()!=null) printLine(log, out, "<span style='color: red;'>ERROR: "+ex.getMessage()+"</span>");
-		   sk.iway.iwcm.Logger.error(ex);
+		   sk.iway.iwcm.Logger.error(null, ex.getMessage());
 		}
 		finally
 		{

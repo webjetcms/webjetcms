@@ -1,0 +1,18 @@
+services:
+  oracle:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: webjetcms-oracle
+    environment:
+      ORACLE_PWD: "${WEBJET_DB_PASS}"
+      ORACLE_CHARACTERSET: "AL32UTF8"
+      APP_USER: "webjetcms_autotest_web"
+      APP_USER_PASSWORD: "${WEBJET_DB_PASS}"
+    ports:
+      - "11521:1521"
+      - "15500:5500"
+    volumes:
+      - webjetcms-oracledata:/opt/oracle/oradata
+    shm_size: 1g
+
+volumes:
+  webjetcms-oracledata:
