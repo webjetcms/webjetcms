@@ -15,6 +15,8 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
 
+  String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+
   DocDB docDB = DocDB.getInstance();
 
   PageParams pageParams = new PageParams(request);
@@ -53,7 +55,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
     %>
          <div style='display:none'>
         <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=displayCurrency%>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
       <%
     }
@@ -110,8 +112,11 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
         });
 
 
-// peidavanie a uperanie mnozstva produktu v kosiku
- $("div.basketBox").on("click", '.addItem, .removeItem', function(){
+        // peidavanie a uperanie mnozstva produktu v kosiku
+         $("div.basketBox").on("click", '.addItem, .removeItem', function(){
+
+          console.log("ADD item 3");
+
           var input = $(this).parents("tr").find("input.basketQty");
           var inputVal = isNaN(input.val()) ? plugin.settings.itemQtyMin : Number(input.val());
           var endVal = 1;
@@ -240,14 +245,13 @@ $(".addToBasket").on("click", function(){
         }
 
         var sendData = function(options) {
-          console.log("SENDING DATA");
-
           $.ajax({
           type: "POST",
           url: plugin.settings.url,
           data: options,
           dataType: "json",
           success: function(data) {
+
             if (typeof(data.error) != "undefined") {
               alert(data.error);
               return;
@@ -269,7 +273,6 @@ $(".addToBasket").on("click", function(){
 
               var html = "";
               $.each(data.items, function(index, item){
-
                 html += getTrTemplate(item);
               });
 
@@ -370,6 +373,9 @@ $(".addToBasket").on("click", function(){
       }
 
         var getTrTemplate = function(options){
+
+          console.log(" getTrTemplate : ", options);
+
           var defaults = {
               id: "id",
               link: "link",
@@ -385,7 +391,7 @@ $(".addToBasket").on("click", function(){
 
           var result = "";
             <% if("01".equals(style)){%>
-          result += '<tr class="itemTr itemTr itemId_'+ options.id +' basketId_' + options.basketId + '">';
+          result += '<tr class="itemTr itemId_'+ options.id +' basketId_' + options.basketId + '">';
 
           result += '<td class="w-5"><a class="newWindow" href="'+ options.link +'">'+ options.title +'</a></td>';
 
@@ -496,9 +502,9 @@ $(".addToBasket").on("click", function(){
                 <input type="text" class="basketQty" name="basketQty" maxlength="4" value="<iwcm:beanWrite name="good" property="itemQty"/>">
                 <a href="javascript:void(0)" class="addItem"><span>add</span></a>
               </td>
-              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=displayCurrency%>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-              <td class="fL w-2"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+              <td class="fL w-2"><iway:curr currency="<%=displayCurrency%>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
 
               <td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td>
 
@@ -517,7 +523,7 @@ $(".addToBasket").on("click", function(){
               Celková cena
             </span>
             <span class="basketPrice">
-               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+               <iway:curr currency="<%=displayCurrency%>">
                  <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span></h3>
@@ -567,7 +573,7 @@ $(".addToBasket").on("click", function(){
 												<%} %>
 												</a>
 												<div class="media-body">
-													<span class="media-meta pull-right"><h4><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></h4></span>
+													<span class="media-meta pull-right"><h4><iway:curr currency="<%=displayCurrency%>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></h4></span>
 													<h4 class="title">
 														<iwcm:beanWrite name="good" property="title"/>
 													</h4>
@@ -591,7 +597,7 @@ $(".addToBasket").on("click", function(){
               Celková cena
             </span>
             <span class="basketPrice">
-               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+               <iway:curr currency="<%=displayCurrency%>">
                  <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span></h3>

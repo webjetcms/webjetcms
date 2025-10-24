@@ -5,6 +5,7 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
@@ -44,6 +45,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	String groupIds = pageParams.getValue("groupIds", (String)request.getAttribute("group_id"));
 	String style = pageParams.getValue("style", "01");
 
+	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
 
 	if(Tools.isEmpty(groupIds))
 	{
@@ -370,13 +372,18 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                 <% if(Tools.isNotEmpty(doc.getPerex())) out.print(doc.getPerex()); %>
                 </p>
                 	<%
-				if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+				if ( (doc.getLocalPrice(request).abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
       			<hr class="line">
 
       			<div class="bottom">
       				<div class="col-price col-md-6 col-sm-6">
-      					<p class="price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr> </p>
+      					<p class="price">
+							<span class="cenaOld">
+								<iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr>
+							</span>
+							<iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr>
+						</p>
       				</div>
       				<div class="col-addToBasket col-md-6 col-sm-6">
       					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>" ><iwcm:text key="components.basket.add_to_basket"/></a>
@@ -428,9 +435,14 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                 </div>
               </div>
               <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></a></h3>
-             <%  if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+             <%  if ( (doc.getLocalPrice(request).abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
-              <div class="pi-price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span> <iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></div>
+              	<div class="pi-price">
+			  		<span class="cenaOld">
+						<iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr>
+					</span>
+					<iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr>
+				</div>
               <a class="btn add2cart addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>"><iwcm:text key="components.basket.add_to_basket"/></a>
 
               <% } %>
@@ -484,13 +496,13 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
                 <% if(Tools.isNotEmpty(doc.getPerex())) out.print(doc.getPerex()); %>
                 </p>
                 	<%
-				if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+				if ( (doc.getLocalPrice(request).abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
       			<hr class="line">
 
       			<div class="row">
       				<div class="col-md-6 col-sm-6">
-      					<p class="price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr> </p>
+      					<p class="price"><span class="cenaOld"><iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr> </p>
       				</div>
       				<div class="col-md-6 col-sm-6">
       					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>"><span class="fa fa-shopping-cart" aria-hidden="true"></span></i>

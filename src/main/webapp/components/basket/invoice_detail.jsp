@@ -4,6 +4,7 @@
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*" %>
 
 <%@page import="sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService"%>
+<%@page import="sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService"%>
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
@@ -27,6 +28,7 @@
 
 	String lng = PageLng.getUserLng(request);
 	Prop prop = Prop.getInstance(lng);
+	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
 
 	//ziskaj ciastkove platby
 	List basketInvoicePayments = EshopService.getInstance().getBasketInvoicePaymentByInvoiceId(invoiceId, Boolean.TRUE);
@@ -40,8 +42,8 @@
 
 	String basketInvoiceServerName = Constants.getString("basketInvoiceServerName", Tools.getServerName(request));
 
-	String contactCountryKey = Tools.isEmpty(invoice.getContactCountry()) == true ? "&nbsp;" : prop.getText( "stat.countries.tld" + invoice.getContactCountry() );
-	String deliveryCountryKey = Tools.isEmpty(invoice.getDeliveryCountry()) == true ? "&nbsp;" : prop.getText( "stat.countries.tld" + invoice.getDeliveryCountry() );
+	String contactCountryKey = Tools.isEmpty(invoice.getContactCountry()) == true ? "&nbsp;" : prop.getText( "stat.countries.tld." + invoice.getContactCountry() );
+	String deliveryCountryKey = Tools.isEmpty(invoice.getDeliveryCountry()) == true ? "&nbsp;" : prop.getText( "stat.countries.tld." + invoice.getDeliveryCountry() );
 %>
 
 <iwcm:notPresent name="basketItems">
@@ -167,41 +169,40 @@
 						      </tr>
 						   </table>
 
-						   <hr>
-
+							<%-- Delivery method --%>
+							<hr>
 							<strong><iwcm:text key="components.basket.invoice_email.delivery_method"/>:</strong>
 							<br/>
 							<br/>
-							<iwcm:beanWrite name="invoice" property="deliveryMethod"/>
-
-						   <%
-
-							String paymentMethod = PaymentMethodsService.getPaymentMethodLabel(invoice.getPaymentMethod(), request);
-							if (Tools.isNotEmpty(paymentMethod))
-							{
-								%>
-								<hr>
-							   <strong><iwcm:text key="components.basket.invoice_email.payment_method"/>:</strong>
-							   <br/>
-							   <br/>
-								<%
-								out.println(paymentMethod);
-								%>
-								<br/>
-								<%
-							}
+						   	<%
+								String deliveryMethod = DeliveryMethodsService.getDeliveryMethodLabel(invoice.getDeliveryMethod(), request);
+								if (Tools.isNotEmpty(deliveryMethod)) { out.println(deliveryMethod); }
 							%>
-							<%
-								BigDecimal uhradene = EshopService.getInstance().getPaymentsSum(invoice.getBasketInvoiceId());
-								BigDecimal totalPriceVat = invoice.getPriceToPayVat(); //TODO - to local price
-								totalPriceVat = totalPriceVat.setScale(2,BigDecimal.ROUND_HALF_UP);
-								BigDecimal doplatit = totalPriceVat.subtract(uhradene);
+							<br/>
+
+							<%-- Payment method --%>
+							<hr>
+							<strong><iwcm:text key="components.basket.invoice_email.payment_method"/>:</strong>
+							<br/>
+							<br/>
+						   	<%
+								String paymentMethod = PaymentMethodsService.getPaymentMethodLabel(invoice.getPaymentMethod(), request);
+								if (Tools.isNotEmpty(paymentMethod)) { out.println(paymentMethod); }
 							%>
+							<br/>
+
+							<%-- Payment summary --%>
 							<hr>
 							<strong><iwcm:text key="components.basket.invoices_list.platba"/></strong>
 							<br/>
 							<br/>
-							<iwcm:text key="components.basket.allreadyPayed"/>: <iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=uhradene %></iway:curr>, <strong><iwcm:text key="components.basket.toPay"/> <iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=doplatit %></iway:curr></strong>
+							<%
+								BigDecimal payedPrice = EshopService.getInstance().getPaymentsSum(invoice.getBasketInvoiceId());
+								BigDecimal totalPriceVat = invoice.getPriceToPayVat(); //TODO - to local price
+								totalPriceVat = totalPriceVat.setScale(2,BigDecimal.ROUND_HALF_UP);
+								BigDecimal toBePaid = totalPriceVat.subtract(payedPrice);
+							%>
+							<iwcm:text key="components.basket.allreadyPayed"/>: <iway:curr currency="<%=displayCurrency%>"><%=payedPrice %></iway:curr>, <strong><iwcm:text key="components.basket.toPay"/> <iway:curr currency="<%=displayCurrency%>"><%=toBePaid %></iway:curr></strong>
 
 							<iwcm:present name="basketInvoicePayments">
 								<br/>
@@ -221,7 +222,7 @@
 										out.print(paymentMethod);
 										%>
 										</td>
-										<td><iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=invoicePayment.getPayedPrice()%></iway:curr></td>
+										<td><iway:curr currency="<%=displayCurrency%>"><%=invoicePayment.getPayedPrice()%></iway:curr></td>
 									</tr>
 									</iwcm:iterate>
 								</table>
@@ -294,7 +295,7 @@
 												%>&nbsp;<iwcm:beanWrite name="good" property="<%=\"doc.\"+qtyTypeFieldName%>"/>
 											<% } %>
 							         </td>
-							         <td align="center" class="basketPrice" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemPriceQty() %></iway:curr></td>
+							         <td align="center" class="basketPrice" nowrap="nowrap"><iway:curr currency="<%=displayCurrency %>" ><%=good.getItemPriceQty() %></iway:curr></td>
 							         <td align="center"><%=(""+Math.round(good.getItemVat()))%>%</td>
 							         <td align="center"><iway:curr currency="<%=invoice.getCurrency() %>" ><%=good.getItemPriceVatQty() %></iway:curr></td>
 							      </tr>
@@ -323,5 +324,4 @@
 			</td>
 		</tr>
 	</table>
-
 </iwcm:present>

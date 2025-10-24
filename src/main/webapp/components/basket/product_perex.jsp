@@ -1,6 +1,8 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.util.List"%>
 <%@page import="java.util.Map"%>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.io.*,java.io.*"%>
@@ -11,7 +13,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%
 DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 
-if (doc == null) 
+if (doc == null)
   return;
 
 String perexImage = doc.getPerexImageNormal();
@@ -194,7 +196,7 @@ img {
 	.ratingTable div.star{
 	display:inline-block;
 	}
-	
+
 </style>
 
 <%
@@ -217,15 +219,15 @@ else if (Tools.isNotEmpty(price)) {
         		{
              String perexGallery = "!INCLUDE(/components/gallery/gallery-basket.jsp,perexImagePath=\""+perexImage+"\" ,dir="+ perexGalleryDir +", galleryStyle=photoSwipe, orderBy=title, orderDirection=asc)!";
              request.setAttribute("perexGallery", perexGallery);
-             
+
              if (perexGalleryDir.length()<20) request.setAttribute("perexGalleryDontShow", "1");
         		}
         		else
         		{
         			request.setAttribute("perexGallery", "");
         		}
-        		
-        		
+
+
           %>
         <iwcm:notEmpty name="perexGallery">
           <iwcm:write name="perexGallery"/>
@@ -236,10 +238,10 @@ else if (Tools.isNotEmpty(price)) {
 			</div>
 					<div class="details col-md-6">
 						<h3 class="product-title"><iwcm:write name="doc_title"/></h3>
-						<% 	
+						<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");
 			%>
-				<iwcm:write name="ratingForm"/> 
+				<iwcm:write name="ratingForm"/>
 						<p class="product-description"> <%=doc.getPerex() %></p>
 											<%
 												//fieldP=velkost:S,M,L,XL|farba:modra,zelena,cervena|style:muzske,zenske
@@ -258,12 +260,12 @@ else if (Tools.isNotEmpty(price)) {
 			request.setAttribute("variants", variants);
 			%>
 				<h5 class="colors">
-			
+
 			<c:if test="${fn:length(variants) > 0 }">
 				<div class="variantsBox">
 					<table>
 						<c:forEach items="${variants}" var="variant">
-							
+
 							<tr>
 								<td>
 									<label for="${variant.key}">${variant.key}:</label>
@@ -276,25 +278,25 @@ else if (Tools.isNotEmpty(price)) {
 									</select>
 								</td>
 							</tr>
-							
+
 						</c:forEach>
 					</table>
 				</div>
 			</c:if>
 						</h5>
-			<h4 class="price">Cena: <span><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></span></h4>
-						
+			<h4 class="price">Cena: <span><iway:curr currency="<%=EshopService.getInstance().getDisplayCurrency(request)%>"><%=doc.getLocalPriceVat(request) %></iway:curr></span></h4>
+
 						<div class="action">
-							 <a  class="addToBasket add-to-cart btn btn-default itemId_<%=doc.getDocId()%>" type="button"> <i class="fa fa-shopping-cart" aria-hidden="true"></i> 								
+							 <a  class="addToBasket add-to-cart btn btn-default itemId_<%=doc.getDocId()%>" type="button"> <i class="fa fa-shopping-cart" aria-hidden="true"></i>
 							 <iwcm:text key="components.basket.add_to_basket"/></a>
-							
+
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div></div>
-<% 
-} 
+<%
+}
 %>
 
