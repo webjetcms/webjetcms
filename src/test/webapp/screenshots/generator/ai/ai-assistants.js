@@ -121,7 +121,7 @@ Scenario('ai-assistants usage - IMAGE - without prompt', async ({ I, DTE, Docume
     //fake blank input value
     I.fillField("div.DTE_Field_Name_perexImage input", "");
     I.click( locate("#toast-container-ai-content").find(locate("button.btn-ai-action").withText(i18n.get("Remove background"))));
-    I.waitForText("Nastala chyba pri volaní AI asistenta");
+    I.waitForText(i18n.get("An error occurred while calling AI assistant"));
     Document.screenshot("/redactor/ai/datatables/image-error-1.png");
 
     I.click( locate("#toast-container-ai").find(".toast-close-button") );
@@ -162,7 +162,7 @@ Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document,
 
     I.fillField("#ai-user-prompt", "Hokejista Hossa dáva víťazný gól");
     I.click( locate("#toast-container-ai-content").find(locate("button").withText(i18n.get("Generate"))) );
-    I.waitForText("PROHIBITED_CONTENT", 60);
+    I.waitForText(i18n.get("An error occurred while calling AI assistant"), 60);
     Document.screenshot("/redactor/ai/datatables/image-error-2.png");
 
     I.click( locate("#toast-container-ai").find(".toast-close-button") );

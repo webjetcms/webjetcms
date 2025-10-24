@@ -72,7 +72,8 @@ module.exports = {
             "You need to reload the page to change the domain.": "Pro změnu domény je potřeba znovu načíst stránku.",
             "Confirm": "Potvrdit",
             "Logon form": "Přihlašovací formulář",
-            "Registration form": "Registrační formulář"
+            "Registration form": "Registrační formulář",
+            "An error occurred while calling AI assistant": "Nastala chyba při volání AI asistenta"
         }
     }
 }
