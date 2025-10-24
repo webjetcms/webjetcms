@@ -3,12 +3,10 @@ Feature('apps-editor-component');
 var basePath = "/../../src/main/webapp";
 let lngSuffix = "";
 
-Before(({ I, login, DT }) => {
+Before(({ I, login, DT, i18n }) => {
     login('admin');
     DT.addContext("recipients","#datatableFieldDTE_Field_recipientsTab_wrapper");
-    lngSuffix = I.getConfLng();
-    if ("sk"==lngSuffix) lngSuffix = "";
-    else lngSuffix = "-" + lngSuffix;
+    lngSuffix = i18n.getImgSuffix();
 });
 
 function tabLinkNone(Document, I, DT, DTE) {

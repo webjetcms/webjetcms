@@ -14,8 +14,6 @@ Before(({ login, i18n }) => {
     browser = i18n.get("Browser");
 });
 
-
-
 Scenario('ai-assistants table screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/ai-assistants/");
 

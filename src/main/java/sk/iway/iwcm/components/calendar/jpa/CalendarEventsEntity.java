@@ -14,7 +14,6 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
-import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
 @Table(name = "calendar")
@@ -137,7 +136,6 @@ public class CalendarEventsEntity extends CalendarEventsBasic {
         tab = "description",
         hidden = true
     )
-    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String description;
 
     @Column(name = "notify_hours_before")

@@ -1,7 +1,9 @@
 Feature('day-book-app');
 
-Before(({ I, login }) => {
+let imgSuffix = "";
+Before(({ I, login, i18n }) => {
     login('admin');
+    imgSuffix = i18n.getImgSuffix();
 });
 
 Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
@@ -118,7 +120,7 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     Document.screenshotElement("#calendar", "/redactor/apps/reservation/day-book-app/calendar_C.png");
 
     Document.screenshotElement(".ly-content .container", "/redactor/apps/reservation/day-book-app/app-table_B.png");
-    Document.screenshotElement(".ly-content .container", "/../../src/main/webapp/apps/reservation/admin/day-book-screenshot-1.png");
+    Document.screenshotElement(".ly-content .container", "/../../src/main/webapp/apps/reservation/admin/day-book-screenshot-1"+imgSuffix+".png");
 
     Document.screenshotElement("#reservationForm", "/redactor/apps/reservation/day-book-app/reservation_form.png");
 

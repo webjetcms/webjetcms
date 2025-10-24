@@ -21,7 +21,6 @@ Scenario('banner-stat a banner-detail', ({I, Document}) => {
             throw new Error("Unknown language: " + I.getConfLng());
     }
 
-
     I.clickCss("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
     I.wait(2);
 

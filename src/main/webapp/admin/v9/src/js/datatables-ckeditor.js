@@ -1534,19 +1534,19 @@ export class DatatablesCkEditor {
 
 				'getData' : function(e)
 				{
-					console.log("getData, e=", e);
+					//console.log("getData, e=", e);
 					var data = e.editor.getData(true);
 					data = data.replace(/<article>/gi, '');
 					data = data.replace(/<\/article>/gi, '');
 					data = data.replace(/&lt;article&gt;/gi, '');
 					data = data.replace(/&lt;\/article&gt;/gi, '');
 					e.data.dataValue = data;
-					console.log("Vysledne data=", data);
+					//console.log("Vysledne data=", data);
 				},
 
 				'setData' : function(e)
 				{
-					console.log("setData, e=", e);
+					//console.log("setData, e=", e);
 					if (typeof e.data.dataValue == "undefined") {
 						//ked je to standalone nemame dataValue, nastavujeme podla aktualnej hodnoty HTML kodu editora
 						e.data.dataValue = e.editor.getData(true);
@@ -1557,7 +1557,7 @@ export class DatatablesCkEditor {
 					data = data.replace(/<article><article>/gi, '<article>');
 					data = data.replace(/<\/article><\/article>/gi, '</article>');
 					e.data.dataValue = data;
-					console.log("Vysledne data=", data);
+					//console.log("Vysledne data=", data);
 				},
 
 				afterPasteFromWord: function( evt ) {

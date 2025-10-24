@@ -64,7 +64,6 @@ module.exports = {
         return date;
     },
 
-
     /**
      * Shortcut to I.click(i18n.get(text), context, options)
      * @param {*} text
@@ -110,5 +109,16 @@ module.exports = {
      */
     fillField(context, text){
         I.fillField(context, this.get(text));
+    },
+
+    /**
+     * Returns image suffix based on current language, for SK returns empty string, for others returns -XX
+     * @returns
+     */
+    getImgSuffix() {
+        var lngSuffix = I.getConfLng();
+        if ("sk"==lngSuffix) lngSuffix = "";
+        else lngSuffix = "-" + lngSuffix;
+        return lngSuffix;
     }
 }
