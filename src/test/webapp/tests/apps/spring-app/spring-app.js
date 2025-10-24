@@ -1,6 +1,6 @@
 Feature('apps.spring-app');
 
-Scenario('zakladne testy zobrazenia', async ({I, DataTables}) => {
+Scenario('zakladne testy zobrazenia', async ({I}) => {
     I.amOnPage("/apps/spring-app/");
 
     I.dontSee("Ospravedlňujeme sa, ale nastala chyba pri vykonávaní komponenty");
@@ -27,7 +27,7 @@ Scenario('zakladne testy zobrazenia', async ({I, DataTables}) => {
     I.see("/English/Home/Home, ID => 31");
 });
 
-Scenario('volanie podla URL', async ({I, DataTables}) => {
+Scenario('volanie podla URL', async ({I}) => {
     I.amOnPage("/apps/spring-app/");
     await I.executeScript(function() {
         window.location.href="/apps/spring-app/?save";
@@ -75,7 +75,7 @@ Scenario('demo component page params', ({I, DTE}) => {
     I.switchTo();
 });
 
-Scenario('mvc aplikacia', async ({I, DataTables}) => {
+Scenario('mvc aplikacia', async ({I}) => {
     I.amOnPage("/apps/spring-app/kontakty/");
     I.switchTo();
 

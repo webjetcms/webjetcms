@@ -843,6 +843,15 @@ public class NewsQuery
 		{
 			return prefix + "." + orderField;
 		}
+
+		public static OrderEnum fromString(String value) {
+			for (OrderEnum oe : OrderEnum.values()) {
+				if (oe.name().equalsIgnoreCase(value)) {
+					return oe;
+				}
+			}
+			return null;
+		}
 	}
 
 	/**

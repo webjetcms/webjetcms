@@ -16,7 +16,15 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -25,11 +33,15 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
 import org.json.JSONObject;
 
+import net.sourceforge.stripes.action.ActionBean;
+import net.sourceforge.stripes.action.ActionBeanContext;
+import net.sourceforge.stripes.action.After;
+import net.sourceforge.stripes.action.Before;
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
-import net.sourceforge.stripes.validation.Validate;
+import net.sourceforge.stripes.controller.LifecycleStage;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
@@ -55,6 +67,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.json.JsonObjectGenerator;
 import sk.iway.iwcm.system.json.ObjectFormaterFactory;
 import sk.iway.iwcm.system.stripes.BindPageParams;
+import sk.iway.iwcm.system.stripes.IncludeRequestWrapperInterface;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
@@ -74,19 +87,10 @@ import sk.iway.iwcm.users.UsersDB;
  * modified Date: 12.11.2014 8:54:56
  */
 @BindPageParams
-public class NewsActionBean extends WebJETActionBean
+public class NewsActionBean extends NewsApp implements ActionBean, IncludeRequestWrapperInterface
 {
 	@PageParamOnly
 	private String requestPerexGroupsName = "";
-
-	@PageParamOnly
-	private boolean ascending = true;
-
-	@PageParamOnly
-	private boolean paging = false;
-
-	@PageParamOnly
-	private int pageSize = 10;
 
 	@PageParamOnly
 	private String newsName = "";
@@ -104,59 +108,19 @@ public class NewsActionBean extends WebJETActionBean
 	private boolean includeActualDoc = false;
 
 	@PageParamOnly
-	private int[] groupIds;
-
-	@PageParamOnly
-	private int[] perexGroup;
-
-	@PageParamOnly
-	private int[] perexGroupNot;
-
-	@PageParamOnly
-	private boolean alsoSubGroups = false;
-
-	@PageParamOnly
-	private int subGroupsDepth = -1;
-
-	@PageParamOnly
-	private int docMode = 0;
-
-	@PageParamOnly
-	private boolean loadData = false;
-
-	@PageParamOnly
 	private boolean returnDocsWithAtributes = false;
 
 	@PageParamOnly
-	private String[] contextClasses;
-
-	@PageParamOnly
 	private int perexCrop = 0;
-
-	@PageParamOnly
-	private boolean perexNotRequired = false;
 
 	@PageParamOnly
 	private String tagClickLink;
 
 	private String htmlOut;
 
-	@Validate(converter = EnumeratedTypeConverter.class)
-	@PageParamOnly
-	private PublishType publishType = PublishType.NEW;
-
-	@Validate(converter = EnumeratedTypeConverter.class)
-	@PageParamOnly
-	private OrderEnum order = OrderEnum.SAVE_DATE;
-
-	private String template;
-
 	private int page = 1;
 
 	private int totalPages = 1;
-
-	@PageParamOnly
-	private int offset=0;
 
 	@PageParamOnly
 	private boolean searchAlsoProtectedPages = false;
@@ -178,9 +142,6 @@ public class NewsActionBean extends WebJETActionBean
 
 	private DocDetails doc;
 	private Identity user;
-
-	@PageParamOnly
-	private boolean checkDuplicity;
 
 	private String tag;
 
@@ -212,8 +173,6 @@ public class NewsActionBean extends WebJETActionBean
 		addPasswordProtected();
 		addGroups();
 		addDuplicityFilter();
-
-
 
 		addPerexGroups();
 		addPerexNotRequired();
@@ -257,6 +216,30 @@ public class NewsActionBean extends WebJETActionBean
 		fillTemplate();
 
 		return new ForwardResolution(WebJETActionBean.RESOLUTION_CONTINUE);
+	}
+
+	//methods normally from WebJETActionBean.java, but as we extend NewsApp, we need to copy them here
+	private ActionBeanContext context;
+
+	@Override
+	public ActionBeanContext getContext()
+	{
+		return context;
+	}
+	@Override
+	public void setContext(ActionBeanContext context)
+	{
+		this.context = context;
+	}
+
+	public HttpServletRequest getRequest()
+	{
+		return context.getRequest();
+	}
+
+	public Identity getCurrentUser()
+	{
+		return UsersDB.getCurrentUser(context);
 	}
 
 	/**
@@ -455,9 +438,8 @@ public class NewsActionBean extends WebJETActionBean
 	{
 		if (groupIds == null && doc != null) {
 			GroupDetails group = doc.getGroup();
-			groupIds = new int[] {
-					group.getGroupId()
-			};
+			groupIds = new ArrayList<>();
+			groupIds.add(group);
 		}
 
 		List<Integer> defaultDocs = new ArrayList<>();
@@ -466,21 +448,21 @@ public class NewsActionBean extends WebJETActionBean
 		{
 			groupIdsExpanded = new LinkedList<>();
 			GroupsDB gdb = GroupsDB.getInstance();
-			for (Integer groupId : groupIds)
+			for (GroupDetails group : groupIds)
 			{
-				groupIdsExpanded.add(groupId);
+				groupIdsExpanded.add(group.getGroupId());
 				if (alsoSubGroups)
 				{
 					//All subgroups
 					if(subGroupsDepth < 1) {
-						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
+						List<GroupDetails> groupList = gdb.getGroupsTree(group.getGroupId(), false, false);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());
 							defaultDocs.add(g.getDefaultDocId());
 						}
 					} else {
 						//Subgroups to specific depth
-						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false, false, subGroupsDepth);
+						List<GroupDetails> groupList = gdb.getGroupsTree(group.getGroupId(), false, false, false, subGroupsDepth);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());
 							defaultDocs.add(g.getDefaultDocId());
@@ -559,7 +541,6 @@ public class NewsActionBean extends WebJETActionBean
 			}
 		}
 
-
 		if (perexGroup!=null&& perexGroup.length>0)
 		{
 			DatabaseCriteria orPerexGroups = null;
@@ -603,7 +584,7 @@ public class NewsActionBean extends WebJETActionBean
 
 	private void addPerexNotRequired()
 	{
-		if (!perexNotRequired)
+		if (perexNotRequired==false)
 		{
 			newsQuery.addCriteria(DatabaseCriteria.isNotEmptyText(FieldEnum.HTML_DATA));
 		}
@@ -611,7 +592,9 @@ public class NewsActionBean extends WebJETActionBean
 
 	private void addPublishType() {
 		// typ noviniek
-		switch (publishType)
+		PublishType publishTypeEnum = PublishType.fromString(publishType);
+		if(publishTypeEnum == null) return;
+		switch (publishTypeEnum)
 		{
 			case NEW:
 				newsQuery.addCriteria(
@@ -686,9 +669,10 @@ public class NewsActionBean extends WebJETActionBean
 
 	private void addOrder()
 	{
-		if (order != null)
+		OrderEnum orderEnum = OrderEnum.fromString(order);
+		if (orderEnum != null)
 		{
-			newsQuery.addOrder(order, ascending ? SortEnum.ASC : SortEnum.DESC);
+			newsQuery.addOrder(orderEnum, isAscending() ? SortEnum.ASC : SortEnum.DESC);
 		}
 		else
 		{
@@ -738,9 +722,10 @@ public class NewsActionBean extends WebJETActionBean
 				vc.put("pageParams", new PageParams(getRequest()));
 				vc.put("dateTool", new DateTool());
 
-				if (contextClasses!=null && contextClasses.length>0)
+				String[] contextClassesArray = getContextClassesArr();
+				if (contextClassesArray != null && contextClassesArray.length > 0)
 				{
-					for (String clazzName : Tools.getTokens(String.join("+", contextClasses), ",;+|"))
+					for (String clazzName : contextClassesArray)
 					{
 						//uz pridavame implicitne
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;
@@ -1072,26 +1057,6 @@ public class NewsActionBean extends WebJETActionBean
 		return value;
 	}
 
-	public void setPerexGroup(int[] perexGroup)
-	{
-		this.perexGroup = perexGroup;
-	}
-
-	public void setAscending(boolean ascending)
-	{
-		this.ascending = ascending;
-	}
-
-	public void setPaging(boolean paging)
-	{
-		this.paging = paging;
-	}
-
-	public void setPageSize(int pageSize)
-	{
-		this.pageSize = pageSize;
-	}
-
 	public void setNewsName(String newsName)
 	{
 		this.newsName = newsName;
@@ -1114,7 +1079,15 @@ public class NewsActionBean extends WebJETActionBean
 
 	public void setGroupIds(int[] groupIds)
 	{
-		this.groupIds = groupIds;
+		GroupsDB gdb = GroupsDB.getInstance();
+		List<GroupDetails> groups = new ArrayList<>();
+		for (int groupId : groupIds)
+		{
+			GroupDetails group = gdb.getGroup(groupId);
+			if (group != null) groups.add(group);
+		}
+
+		this.groupIds = groups;
 	}
 
 	public void setNewsQuery(NewsQuery newsQuery)
@@ -1125,21 +1098,6 @@ public class NewsActionBean extends WebJETActionBean
 	public void setSearchAlsoProtectedPages(boolean searchAlsoProtectedPages)
 	{
 		this.searchAlsoProtectedPages = searchAlsoProtectedPages;
-	}
-
-	public boolean isLoadData()
-	{
-		return loadData;
-	}
-
-	public void setLoadData(boolean loadData)
-	{
-		this.loadData = loadData;
-	}
-
-	public boolean isPaging()
-	{
-		return paging;
 	}
 
 	public boolean isPerex()
@@ -1436,27 +1394,14 @@ public class NewsActionBean extends WebJETActionBean
 		this.search = search;
 	}
 
-	public void setAlsoSubGroups(boolean alsoSubGroups)
-	{
-		this.alsoSubGroups = alsoSubGroups;
-	}
-
-	public void setSubGroupsDepth(int subGroupsDepth) {
-		this.subGroupsDepth = subGroupsDepth;
-	}
-
-	public void setDocMode(int docMode) {
-		this.docMode = docMode;
-	}
-
 	public String getGroupIdsString()
 	{
 		StringBuilder result = new StringBuilder();
-		if (groupIds != null)
+		if (getGroupIds() != null)
 		{
-			for (Integer in : groupIds)
+			for (GroupDetails in : getGroupIds())
 			{
-				result.append(",").append(in);
+				result.append(",").append(in.getGroupId());
 			}
 		}
 		return result.indexOf(",") == 0 ? result.substring(1) : result.toString();
@@ -1487,39 +1432,6 @@ public class NewsActionBean extends WebJETActionBean
 		return result.indexOf(",") == 0 ? result.substring(1) : result.toString();
 	}
 
-	public boolean isAscending()
-	{
-		return ascending;
-	}
-
-	public int getPageSize()
-	{
-		return pageSize;
-	}
-
-	public boolean isAlsoSubGroups()
-	{
-		return alsoSubGroups;
-	}
-
-	public int getSubGroupsDepth() {
-		return subGroupsDepth;
-	}
-
-	public int getDocMode() {
-		return docMode;
-	}
-
-	public int[] getPerexGroup()
-	{
-		return perexGroup;
-	}
-
-	public int[] getGroupIds()
-	{
-		return groupIds;
-	}
-
 	public int getPerexCrop()
 	{
 		return perexCrop;
@@ -1530,11 +1442,6 @@ public class NewsActionBean extends WebJETActionBean
 		this.perexCrop = perexCrop;
 	}
 
-	public void setPerexNotRequired(boolean perexNotRequired)
-	{
-		this.perexNotRequired = perexNotRequired;
-	}
-
 	public enum PublishType
 	{
 		NEW,
@@ -1542,36 +1449,30 @@ public class NewsActionBean extends WebJETActionBean
 		ALL,
 		NEXT,
 		VALID;
+
+		public static PublishType fromString(String value) {
+			for (PublishType pt : PublishType.values()) {
+				if (pt.name().equalsIgnoreCase(value)) {
+					return pt;
+				}
+			}
+			return null;
+		}
 	}
 
 	public void setPublishType(PublishType publishType)
 	{
-		this.publishType = publishType;
-	}
-
-	public PublishType getPublishType()
-	{
-		return publishType;
-	}
-
-	public OrderEnum getOrder()
-	{
-		return order;
+		this.publishType = publishType == null ? null : publishType.name();
 	}
 
 	public void setOrder(OrderEnum order)
 	{
-		this.order = order;
+		this.order = order == null ? null : order.name();
 	}
 
 	public String getHtmlOut()
 	{
 		return htmlOut;
-	}
-
-	public boolean isPerexNotRequired()
-	{
-		return perexNotRequired;
 	}
 
 	public boolean isSearchAlsoProtectedPages()
@@ -1582,16 +1483,6 @@ public class NewsActionBean extends WebJETActionBean
 	public String link(DocDetails doc)
 	{
 		return DocDB.getInstance().getDocLink(doc.getDocId(), doc.getExternalLink(), getRequest());
-	}
-
-	public void setTemplate(String template)
-	{
-		this.template = template;
-	}
-
-	public String getTemplate()
-	{
-		return template;
 	}
 
 	public List<NewsTemplatesEntity> getTemplates()
@@ -1670,46 +1561,6 @@ public class NewsActionBean extends WebJETActionBean
 	}
 
 
-	public int getCacheMinutes()
-	{
-		return cacheMinutes;
-	}
-
-
-	public void setCacheMinutes(int cacheMinutes)
-	{
-		this.cacheMinutes = cacheMinutes;
-	}
-
-	public String[] getContextClasses()
-	{
-		return contextClasses;
-	}
-
-	public void setContextClasses(String[] contextClasses)
-	{
-		this.contextClasses = contextClasses;
-	}
-
-	public int[] getPerexGroupNot()
-	{
-		return perexGroupNot;
-	}
-
-	public int getOffset()
-	{
-		return offset;
-	}
-
-	public void setOffset(int offset)
-	{
-		this.offset = offset;
-	}
-
-	public void setPerexGroupNot(int[] perexGroupNot)
-	{
-		this.perexGroupNot = perexGroupNot;
-	}
 
 	public boolean isIncludeActualDoc() {
 		return includeActualDoc;
@@ -1722,14 +1573,6 @@ public class NewsActionBean extends WebJETActionBean
 	public void clearList()
 	{
 		this.newsList=null;
-	}
-
-	public boolean isCheckDuplicity() {
-		return checkDuplicity;
-	}
-
-	public void setCheckDuplicity(boolean checkDuplicity) {
-		this.checkDuplicity = checkDuplicity;
 	}
 
 	public String getTagClickLink() {
@@ -1774,5 +1617,19 @@ public class NewsActionBean extends WebJETActionBean
 
 	public void setAuthor(String author) {
 		this.author = author;
+	}
+
+	private static Map<Class<? extends ActionBean>, List<String>> includeParamsOnly = new HashMap<>();
+
+	@Before(stages={LifecycleStage.BindingAndValidation})
+	public void prepareIncludeRequestWrapper()
+	{
+		prepareIncludeRequestWrapper(context, includeParamsOnly, getClass(), getClass());
+	}
+
+	@After(stages={LifecycleStage.BindingAndValidation})
+	public void removeIncludeRequestWrapper()
+	{
+		removeIncludeRequestWrapper(context);
 	}
 }

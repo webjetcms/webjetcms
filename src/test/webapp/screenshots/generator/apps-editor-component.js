@@ -160,7 +160,33 @@ Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document 
 
     screenshotWebAndApp(I, Document, 24008, "/components/media", ".ly-content .container", tabLinkNone, null, 800, 600);
 
-    screenshotWebAndApp(I, Document, 10, "/components/news", "section.md-news-subpage", tabLink1, tabLink2);
+    screenshotWebAndApp(I, Document, 10, "/components/news", "section.md-news-subpage", tabLink1Spring, function(Document, I, DT, DTE) {
+
+        I.clickCss("#pills-dt-component-datatable-filter-tab");
+
+        I.clickCss("button.btn-success");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , "AUTHOR_ID");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , "<=");
+        I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , "123");
+
+        I.clickCss("button.btn-success");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , "DATE_CREATED");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , "=");
+        I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , "01.10.2025");
+
+        I.clickCss("button.btn-success");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , "AVAILABLE");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , "=");
+        I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > select") , "false");
+
+        I.clickCss("td.valueTd > input");
+        Document.screenshot(basePath+"/components/news/screenshot-4.jpg");
+
+        tabLink2Spring(Document, I, DT, DTE);
+        I.scrollTo(locate("label.custom-template").withChild(locate("span").withText("novinky")));
+        I.click( locate("label.custom-template").withChild(locate("span").withText("novinky")) );
+    });
+
     screenshotWebAndApp(I, Document, 77772, "/components/app-social_icon", ".ly-content .container", tabLink2Spring, null);
     screenshotWebAndApp(I, Document, 77773, "/components/app-testimonials", ".ly-content .container", tabLink1, tabLink2, 800, 600);
     screenshotWebAndApp(I, Document, 17322, "/components/qa", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);

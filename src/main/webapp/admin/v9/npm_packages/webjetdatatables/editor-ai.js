@@ -172,16 +172,23 @@ export class EditorAi {
     }
 
     _getColumnType(column, fieldName) {
-        let className = column.className ?? "";
-        let renderFormat = column.renderFormat ?? "";
+        //console.log("Determining column type for field:", fieldName, "column=", column);
+        try {
+            let className = column.className ?? "";
+            let renderFormat = column.renderFormat ?? "";
 
-        if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
+            if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
 
-        let inputField = $(".form-control[name='"+fieldName+"']");
-        if (inputField.length===0) inputField = $("#"+fieldName);
-        renderFormat = $(inputField).attr("data-ai-render-format") ?? "";
+            if (fieldName != null && fieldName != "") {
+                let inputField = $(".form-control[name='"+fieldName+"']");
+                if (inputField.length===0) inputField = $("#"+fieldName);
+                renderFormat = $(inputField).attr("data-ai-render-format") ?? "";
+            }
 
-        if(renderFormat.indexOf("dt-format-image") != -1) return "image";
+            if(renderFormat.indexOf("dt-format-image") != -1) return "image";
+        } catch (error) {
+            console.error("Error determining column type:", error);
+        }
 
         return "text";
     }
