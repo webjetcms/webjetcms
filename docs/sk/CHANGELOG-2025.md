@@ -25,6 +25,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](admin/settings/response-header/editor.png)
 
+### Dokumentácia
+
+- Aktualizované všetky fotky obrazovky v českej verzii dokumentácie (#58113).
+
 ### Pre programátora
 
 - Zmazané nepoužívané súbory `/admin/spec/gallery_editor_perex_group.jsp,/admin/spec/perex_group.jsp`, ak ich vo vašom projekte používate zoberte ich zo [staršej verzie](https://github.com/webjetcms/webjetcms/tree/release/2025.40/src/main/webapp/admin/spec) WebJET CMS (#58073).
