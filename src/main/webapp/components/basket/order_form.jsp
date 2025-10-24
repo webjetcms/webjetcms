@@ -31,14 +31,8 @@
 	let lastSelectedCountry = null;
 
 	function updateDeliveryMethod() {
-
-		console.log("updateDeliveryMethod");
-
 		let contactCountry = $("#contactCountryId").val();
 		let deliveryCountry = $("#deliveryCountryId").val();
-
-		console.log("contactCountry : ", contactCountry);
-		console.log("deliveryCountry : ", deliveryCountry);
 
 		if(deliveryCountry == undefined || deliveryCountry == null || deliveryCountry === "") {
 			deliveryCountry = contactCountry;
@@ -67,7 +61,7 @@
 						$select.append($option);
 					});
 
-					//
+					//after chnage of country, delivery method could be chnaged .... so compute the total price again
 					countPrice();
 				},
 				error: function(xhr, status, error) {
@@ -456,7 +450,6 @@ else {%>
 									});
 
 									function countPrice() {
-										console.log("Counting total price...");
 										var deliveryOptionSelected = $("select#deliveryMethodId option:selected"),
 										deliveryPrice = +deliveryOptionSelected.data("value"),
 
@@ -465,10 +458,6 @@ else {%>
 
 										var paymentOptionSelected = $("select#paymentMethodId option:selected"),
 										paymentPrice = +paymentOptionSelected.data("value");
-
-										console.log("Delivery price : ", deliveryPrice);
-										console.log("Payment Price : ", paymentPrice);
-										console.log("Price items : ", price);
 
 										var totalPrice = Number(price + deliveryPrice + paymentPrice).toFixed(2) + " " + "<%=displayCurrency%>";
 										totalPrice = totalPrice.replace(".", ",");

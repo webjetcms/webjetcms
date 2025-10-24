@@ -116,9 +116,6 @@
 
            // remove and add item count
         $("div.basketBox .addItem, div.basketBox .removeItem").on("click", function(){
-
-          console.log("ADD item 1");
-
           var input = $(this).parents("tr").find("input.basketQty");
           var inputVal = isNaN(input.val()) ? plugin.settings.itemQtyMin : Number(input.val());
           var endVal = 1;

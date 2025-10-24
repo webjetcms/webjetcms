@@ -130,9 +130,6 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
            // remove and add item count
         $("div.basketBoxInPage").on("click", '.addItem, .removeItem', function(){
-
-          console.log("ADD item 2");
-
           var input = $(this).parents("tr").find("input.basketQty");
           var inputVal = isNaN(input.val()) ? plugin.settings.itemQtyMin : Number(input.val());
           var endVal = 1;

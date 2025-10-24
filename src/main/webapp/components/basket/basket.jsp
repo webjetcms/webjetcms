@@ -114,9 +114,6 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
         // peidavanie a uperanie mnozstva produktu v kosiku
          $("div.basketBox").on("click", '.addItem, .removeItem', function(){
-
-          console.log("ADD item 3");
-
           var input = $(this).parents("tr").find("input.basketQty");
           var inputVal = isNaN(input.val()) ? plugin.settings.itemQtyMin : Number(input.val());
           var endVal = 1;
@@ -373,9 +370,6 @@ $(".addToBasket").on("click", function(){
       }
 
         var getTrTemplate = function(options){
-
-          console.log(" getTrTemplate : ", options);
-
           var defaults = {
               id: "id",
               link: "link",
