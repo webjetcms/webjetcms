@@ -1552,6 +1552,7 @@ export class DatatablesCkEditor {
 						e.data.dataValue = e.editor.getData(true);
 					}
 					var data = e.data.dataValue;
+					if (data == null) data = "";
 					data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
 					data = data.replace(/<article><article>/gi, '<article>');
 					data = data.replace(/<\/article><\/article>/gi, '</article>');

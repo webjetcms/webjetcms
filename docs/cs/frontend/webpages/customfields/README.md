@@ -128,6 +128,36 @@ Podobně jako pro obrázek je nastavením `.type` na hodnotu `link` možné otev
 
 `editor.field_x.type=link`
 
+### Výběr složky webových stránek
+
+Pro výběr složky webových stránek lze použít typ `json_group`:
+- `editor.field_x.type=json_group` - zobrazí výběr složek webových stránek
+
+![](webpages-group.png)
+
+- `editor.field_x.type=json_group_null` - přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané složky)
+
+![](webpages-group-null.png)
+
+### Výběr webové stránky
+
+Pro výběr stránek lze použít typ `json_doc`:
+- `editor.field_x.type=json_doc` - zobrazí výběr stránek
+
+![](webpages-doc.png)
+
+- `editor.field_x.type=json_doc_null` - přidáním `null` na konec typu lze nastavit i prázdnou hodnotu (zobrazí se tlačítko pro smazání vybrané webové stránky)
+
+![](webpages-doc-null.png)
+
+### Výběr složky souborového systému
+
+![](webpages-dir.png)
+
+Pro výběr adresáře v souborovém systému nastavením `.type` na hodnotu `dir`. Po kliknutí na ikonu kříže na konci textového pole se zobrazí dialogové okno pro výběr složky v souborovém systému.
+
+`editor.field_x.type=dir`
+
 ### Výběr stávající stránky z adresáře
 
 ![](webpages-docsin.png)
@@ -142,14 +172,6 @@ Pro výběr existující stránky (její `docId`) lze použít typ `docsIn_GROUP
 
 Propojení na číselník je přes typ `enumeration_X` kde X je ID typu číselníku. Jako hodnota se nastaví ID záznamu z číselníku:
 - `editor.field_x.type=enumeration_2` - zobrazí jako výběrové pole možnosti z typu číselníku 2
-
-### Výběr adresáře souborového systému
-
-![](webpages-dir.png)
-
-Pro výběr adresáře v souborovém systému nastavením `.type` na hodnotu `dir`. Po kliknutí na ikonu kříže na konci textového pole se zobrazí dialogové okno pro výběr adresáře v souborovém systému.
-
-`editor.field_x.type=dir`
 
 ### Unikátní identifikátor
 

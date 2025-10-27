@@ -10,7 +10,7 @@ V rámci WebJET CMS zrcadlení struktury aktivuje nastavením konfigurační pro
 
 Formát zápisu je následující:
 
-```
+```txt
 groupId-sk,groupId-en,groupId-cz:poznamka (napr meno domeny)
 ineGroupId1,ineGroupId2:poznamka inej domeny
 ```
@@ -92,6 +92,10 @@ Při nastavené hodnotě `structureMirroringAutoTranslatorLogin` je tedy detekce
 Při ukládání stránky se změny aplikují na všechny kopie. Pokud tedy z SK verze vytvořím EN a DE verzi (které ještě nejsou publikovány, nebo nebyly změněny reálným redaktorem), tak při změně EN verze se text přeloží do DE verze. SK verze se neovlivní, protože je již typicky publikována, respektive je vytvořena reálným (ne `structureMirroringAutoTranslatorLogin`) uživatelům.
 
 Je-li nastavena konf. proměnná `syncGroupAndWebpageTitle` na hodnotu `true` (což je standardní hodnota) automaticky se synchronizuje název složky s názvem hlavní stránky ve složce. Při změně názvu hlavní stránky se přejmenuje také složka a to iv přeložených verzích.
+
+## Zrušení zrcadlení
+
+Zrušení zrcadlení vyžaduje, abyste propojení odstranili z konfigurační proměnné `structureMirroringConfig`. Jenže v databázi zůstane ještě nastavená hodnota `sync_id`, která propojovala složky/stránky v různých jazykových mutacích. Tyto hodnoty musí být odstraněny, jinak složky/stránky zůstanou nadále propojeny/synchronizované. K tomuto účelu potřebuje využít [Zrušení zrcadlení](../clone-structure/README.md#zrušení-zrcadlení).
 
 ## Technické informace
 

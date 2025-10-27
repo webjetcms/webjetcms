@@ -25,12 +25,12 @@ public class RedirectRestController extends DatatableRestControllerV2<RedirectBe
 
     @Autowired
     public RedirectRestController(RedirectsRepository redirectsRepository) {
-        super(redirectsRepository);
+        super(redirectsRepository, RedirectBean.class);
     }
 }
 ```
 
-důležitý je konstruktor, který předává Spring DATA repozitář `RedirectsRepository`, anotace `@Datatable`, která zajistí korektní zpracování chybových zpráv a anotace `PreAuthorize` pro kontrolu práv:
+důležitý je konstruktor, který předává Spring DATA repozitář `RedirectsRepository` a třídu entity, která se použije při vytvoření nového záznamu. Nastaví se tak i hodnoty při vytvoření nového záznamu. Anotace `@Datatable` zajistí korektní zpracování chybových zpráv a anotace `PreAuthorize` slouží ke kontrole práv:
 
 ```java
 @Datatable
@@ -234,7 +234,7 @@ v implementaci můžete využít již existující API, např.:
 @Override
 public Page<DomainRedirectBean> getAllItems(Pageable pageable) {
     List<DomainRedirectBean> listedBeans = DomainRedirectDB.getAllRedirects();
-    return new PageImpl<>(listedBeans);
+    return new DatatablePageImpl<>(listedBeans);
 }
 
 @Override

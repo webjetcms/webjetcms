@@ -7,9 +7,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import org.apache.commons.fileupload.FileItem;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -66,5 +71,9 @@ public class ContactEntity {
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.contact.property.phone")
     private String phone;
+
+    @Transient
+    @JsonIgnore
+    private FileItem document;
 
 }

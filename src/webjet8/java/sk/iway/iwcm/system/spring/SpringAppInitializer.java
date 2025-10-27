@@ -75,6 +75,8 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		if (initialized == false) {
 			//WebJET is not initialized - there is no DB connection, allow only setup
 			springConfigClasses.clear();
+			//we need this to handle localeResolver correctly during setup
+			springConfigClasses.add("sk.iway.iwcm.setup.SetupSpringConfig");
 			addScanPackagesInit(ctx);
 		} else {
 			loadSpringConfigs(springConfigClasses, ctx);

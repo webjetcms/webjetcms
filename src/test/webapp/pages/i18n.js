@@ -30,7 +30,7 @@ module.exports = {
             translated = text;
         }
 
-        //you can use :: to separate different translations of same source text
+        //you can use :: to separate different translations of same source text (in EN variant - will use first one as result)
         if (translated != null && translated.indexOf("::") > -1) {
             translated = translated.split("::")[0];
         }
@@ -63,7 +63,6 @@ module.exports = {
         }
         return date;
     },
-    
 
     /**
      * Shortcut to I.click(i18n.get(text), context, options)
@@ -110,5 +109,16 @@ module.exports = {
      */
     fillField(context, text){
         I.fillField(context, this.get(text));
+    },
+
+    /**
+     * Returns image suffix based on current language, for SK returns empty string, for others returns -XX
+     * @returns
+     */
+    getImgSuffix() {
+        var lngSuffix = I.getConfLng();
+        if ("sk"==lngSuffix) lngSuffix = "";
+        else lngSuffix = "-" + lngSuffix;
+        return lngSuffix;
     }
 }

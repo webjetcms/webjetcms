@@ -803,6 +803,18 @@ window.WJ.DataTable.mergeColumns = function (columns, obj) {
     }
 };
 
+function fire(el, type, props = {}) {
+  let ev;
+  if (type.startsWith('key')) {
+    ev = new KeyboardEvent(type, { bubbles: true, cancelable: true, ...props });
+  } else if (type === 'input') {
+    ev = new InputEvent('input', { bubbles: true, cancelable: true, ...props });
+  } else {
+    ev = new Event(type, { bubbles: true, cancelable: true, ...props });
+  }
+  el.dispatchEvent(ev);
+}
+
 function initAiOtherButtons() {
     try {
         //fake editor object for EditorAI
@@ -818,8 +830,13 @@ function initAiOtherButtons() {
                 let inputField = $(".form-control[name='"+fieldName+"']");
                 if (inputField.length===0) inputField = $("#"+fieldName);
                 //console.log("Setting field '"+fieldName+"' to value:", value, "inputField=", inputField);
-                inputField.first().val(value);
-                inputField.first().trigger("change");
+
+                const el = inputField.first()[0];
+                el.focus();
+                el.value = value;
+                fire(el, 'input');
+                fire(el, 'change');
+                el.blur();
 
                 //console.log("selectLink:", inputField.data("ai-select-link"), "typeof window.selectLink", typeof window.selectLink);
 

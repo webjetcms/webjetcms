@@ -130,6 +130,8 @@ Po kliknutí na ikonku se vám zobrazí dialogové okno pro vložení obrázku:
 
 ![](image_dialog.png)
 
+Při procházení přes stromovou strukturu jsou zobrazeny pouze soubory typu obrázek nebo video, ostatní soubory jsou filtrovány.
+
 ### Karta Obsah
 
 Pokud se soubor obrázku již nachází na serveru, můžete jej vyhledat v adresářové struktuře a klepnutím na něj se umístění obrázku automaticky zapíše do políčka URL adresa.
@@ -249,6 +251,17 @@ Při kliknutí na tlačítko "Vložit do stránky" se aplikace vloží do strán
 ![](appstore-editorcomponent.png)
 
 Pokud již je aplikace vložena ve stránce kliknutím dovnitř aplikace se vám zobrazí stejné okno nastavení aplikace. Můžete tak snadno upravit její stávající nastavení.
+
+### Karta zobrazení
+
+Většina aplikací obsahuje kartu Zobrazení pro společná nastavení (pokud tato možnost v aplikaci není z různých důvodů vypnuta).
+
+![](../../../custom-apps/appstore/common-settings-tab.png)
+
+Karta obsahuje parametry:
+- Zobrazení na zařízeních, sloužící k nastavení [podmíněného zobrazení aplikace](../../../custom-apps/appstore/README.md#podmíněné-zobrazení-aplikace) na zařízeních typu tablet, telefon nebo standardní počítač. Pokud není zvolena žádná možnost, zobrazí se aplikace na všech zařízeních (stejně jako když jsou zvoleny všechny možnosti).
+- Přihlášený uživatel - umožňuje nastavit zobrazení aplikace podle stavu přihlášení návštěvníka web sídla - zobrazení vždy, jen pokud je uživatel přihlášen, nebo není-li přihlášen. V editoru stránek se aplikace zobrazí vždy, ale v náhledu nebo zobrazení stránky se zobrazí podle nastavené hodnoty.
+- Čas vyrovnávací paměti (minuty) - slouží k nastavení doby v minutách, po jakou má být inicializovaná aplikace uložena ve vyrovnávací paměti pro její rychlejší zobrazení. Například seznam novinek se nemění často a jejich načtení je náročné na databázový server, je tedy vhodné nastavit například hodnotu 30. Pokud je přihlášen administrátor, vyrovnávací paměť se nepoužije a vždy se zobrazí aktuální údaje.
 
 ## Před připravené bloky
 

@@ -16,6 +16,9 @@ Pričom aktuálne existujú nasledovné verzie WebJET:
 
 - `2025.0-jakarta-SNAPSHOT` - pravidelne aktualizovaná verzia z main repozitára verzie 2025 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.40-jakarta` - stabilizovaná verzia 2025.40 pre aplikačný server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
+- `2025.40` - stabilizovaná verzia 2025.40, nepribúdajú do nej denné zmeny.
+- `2025.0.40` - stabilizovaná verzia 2025.0.49 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2025.18` - stabilizovaná verzia 2025.18, nepribúdajú do nej denné zmeny.
 - `2025.0.23` - stabilizovaná verzia 2025.0.23 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2025.0` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny.
@@ -310,7 +313,7 @@ Následne odporúčame reštartovať vaše vývojárske prostredie, v prípade V
 
 Ak na jednom Tomcat serveri prevádzkujete viacero inštalácii WebJETu je možné, že staršie verzie nebudú plne kompatibilné s Java 17. Pre chyby typu:
 
-```
+```txt
 [ERROR] ContextLoader - Context initialization failed <java.lang.IllegalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf>java.lang.Ill
 egalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf
 ...
@@ -319,7 +322,7 @@ Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protect
 
 nastavte pre Tomcat nasledovné ```JAVA_OPTS```:
 
-```
+```txt
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
 ```
 
@@ -327,7 +330,7 @@ JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --
 
 Ak ste prevádzkovali Tomcat ešte s Java verzie 8 môžu vzniknúť problémy s chýbajúcimi knižnicami (tie sú potrebné aj pre Java 11). Ak sa vám v logu objaví chyba ```java.lang.NoClassDefFoundError: javax/activation/DataSource```:
 
-```
+```txt
 java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[...].StandardContext[]]
     ...
     Caused by: java.lang.NoClassDefFoundError: javax/activation/DataSource
@@ -335,14 +338,14 @@ java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException:
 
 je potrebné do každej inštalácie WebJET CMS do priečinka ```WEB-INF/lib``` skopírovať knižnice z [tohto ZIP archívu](lib-java11.zip) a zmazať súbory (ak existujú):
 
-```
+```txt
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
 
 Ak ste používali WebJET verzie `8.0-8.6` - starší ako `08/2019`, alebo sa vám zobrazí pri štarte nasledovná chyba:
 
-```
+```txt
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.iwcm.io.FileHistoryBean
 [10.09 13:48:16 {vubintra} {WebJETJavaSECMPInitializer}] initPersistenceUnits[iwcm], beans=82

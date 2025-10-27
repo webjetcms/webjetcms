@@ -4838,7 +4838,7 @@ public class DocDB extends DB
 						int[] perexAvailableGroups = perexGroup.getAvailableGroupsInt();
 
 						//isGroupAvailable param "recursive" and "groupId" are set for getting perexGroups for child (all subfolders - if recursive is true)
-						if (perexAvailableGroups.length == 0 || isGroupAvailable(perexAvailableGroups, parentGroups, recursive, groupId))
+						if (perexAvailableGroups.length == 0 || groupId == -1 || isGroupAvailable(perexAvailableGroups, parentGroups, recursive, groupId))
 						{
 							if (duplicityCheck.contains(perexGroup.getPerexGroupId())==false) ret.add(perexGroup);
 							duplicityCheck.add(perexGroup.getPerexGroupId());

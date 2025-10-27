@@ -149,3 +149,5 @@ As you can see from the previous series of images, the tools displayed vary depe
 - `elfinderMoveConfirm` - by default, a confirmation of the file or folder move is displayed when using drag & drop or copy/paste via the context menu. To disable the file or folder move confirmation, change the value of the configuration variable `elfinderMoveConfirm` at `false`.
 
 ![](move-confirm.png)
+
+- After setting the conf. variable `iwfs_useVersioning` at `true` the history of changes in the files starts to be written (each file is archived in a folder after uploading and before being overwritten `/WEB-INF/libfilehistory`). The list is available in the explorer in the File Settings context menu, with options to compare, view the historical version, and undo the change. Path `/WEB-INF/libfilehistory` you can edit in the configuration variable `fileHistoryPath` if you need to store files on a network drive, for example.

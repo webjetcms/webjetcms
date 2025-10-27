@@ -153,7 +153,7 @@ public class ContactRestController extends DatatableRestControllerV2<ContactEnti
 
     @Autowired
     public ContactRestController(ContactRepository contactRepository) {
-        super(contactRepository);
+        super(contactRepository, ContactEntity.class);
         //odlozme si repozitar na pripadne specialne pouzitie
         this.contactRepository = contactRepository;
     }

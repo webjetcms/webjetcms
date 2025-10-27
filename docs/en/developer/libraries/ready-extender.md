@@ -78,7 +78,7 @@ window.domReady.fire();
 
 Adds a new function to the list.
 
-**Second input argument** determines the order of the added function. It is numbered from 1. If not specified, the function is added to the end of the list.
+**Second input argument** determines the order of the added function. It is numbered from 1. If not specified, the function is added to the end of the list. Order values >= 900 are not taken into account, it is assumed that these must always be at the end.
 
 **Third input argument** set to TRUE will ensure that when the function exists at that position (`orderId`), the function is overwritten and the previous function is added to the next available position.
 

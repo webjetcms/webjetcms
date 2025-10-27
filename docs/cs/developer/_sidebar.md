@@ -1,6 +1,7 @@
  <div class="sidebar-section">Programátor WebJET CMS</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Instalace a spuštění
   - [Instalace a spuštění](/developer/install/README.md)
   - [Development Containers](/developer/install/devcontainers/README.md)

@@ -8,8 +8,9 @@ Scenario('Elektronický obchod', ({ I, DT, Document }) => {
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/basket/basket.png");
 
-    Document.screenshotAppEditor(126186, "/redactor/apps/basket/editor.png", function(Document, I, DT, DTE, Apps) {
+    Document.screenshotAppEditor(126522, "/redactor/apps/basket/editor.png", function(Document, I, DT, DTE, Apps) {
         I.clickCss('#tabLink4');
+        I.wait(10);
         Document.screenshot("/redactor/apps/basket/editor-style.png");
         I.clickCss('#tabLink3');
         Document.screenshot("/redactor/apps/basket/editor-list.png");

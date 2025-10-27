@@ -1,6 +1,7 @@
  <div class="sidebar-section">Web designer</div>
 
 - [:point\_left: Back to Home](/?back)
+
 - Settings
   - [Templates](/frontend/setup/README.md)
   - [General settings](/frontend/setup/config.md)
@@ -10,6 +11,7 @@
   - [The way the page is displayed](/frontend/templates/README.md)
   - [Templates](/frontend/templates/templates.md)
   - [Template groups](/frontend/templates/template-groups.md)
+  - [News templates](/frontend/templates/news/README.md)
 - Thymeleaf templates
   - [Home](/frontend/thymeleaf/README.md)
   - [Attributes, conditions and cycles](/frontend/thymeleaf/statements.md)

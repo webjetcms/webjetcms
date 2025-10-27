@@ -1,4 +1,4 @@
-Feature('apps.inquiry-stat');
+Feature('inquiry.inquiry-stat');
 
 Before(({ login }) => {
     login('admin');
@@ -56,6 +56,11 @@ Scenario('inquiry stat screens', async ({I, DT, DTE, Document}) => {
 function setDates(I, DT, dateFrom, dateTo) {
     I.fillField("div.dt-extfilter-dayDate > form > div.input-group > input.datepicker.min", dateFrom);
     I.fillField("div.dt-extfilter-dayDate > form > div.input-group > input.datepicker.max", dateTo);
+    I.pressKey('Tab');
+    I.pressKey("Escape");
+    I.pressKey("PageDown");
+    I.pressKey("PageUp");
+    I.pressKey("PageUp");
     I.click("div.dt-extfilter-dayDate > form > div.input-group > button.filtrujem");
     DT.waitForLoader();
 }

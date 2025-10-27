@@ -392,6 +392,8 @@ public class UpdateService {
 		if ("eshop".equals(moduleKey)) moduleKey = "basket";
 		if ("news-calendar".equals(moduleKey)) moduleKey = "calendar";
 
+		if ("file-archive".equals(moduleKey)) moduleKey = "file_archiv";
+
 		//test if module is available
 		if (modules.get("cmp_"+directoryName) != null || modules.get("cmp_"+Tools.replace(directoryName, "-", "_")) != null ||
 			modules.get("cmp_"+moduleKey) != null || modules.get("cmp_"+Tools.replace(moduleKey, "-", "_")) != null ||
