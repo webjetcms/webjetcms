@@ -440,18 +440,6 @@ public class SetupActionsService {
 		}
 	}
 
-	private static String getEnvPassword(String password) {
-		//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
-		if (password != null && password.startsWith("${") && password.endsWith("}")) {
-			String envName = password.substring(2, password.length()-1);
-			String envValue = getSystemProperty(envName);
-			if (Tools.isNotEmpty(envValue)) {
-				password = envValue;
-			}
-		}
-		return password;
-	}
-
 	/**
 	 * Ulozenie suboru poolman.xml
 	 * @param sForm
@@ -563,6 +551,18 @@ public class SetupActionsService {
 		model.addAttribute("dbErrMsg", conErrMsg);
 		//Separe crate rr message, will be shown if != null
 		model.addAttribute("dbCreateErrMsg", createErrMsg);
+	}
+
+	private static String getEnvPassword(String password) {
+		//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+		if (password != null && password.startsWith("${") && password.endsWith("}")) {
+			String envName = password.substring(2, password.length()-1);
+			String envValue = getSystemProperty(envName);
+			if (Tools.isNotEmpty(envValue)) {
+				password = envValue;
+			}
+		}
+		return password;
 	}
 
 	private static String getSystemProperty(String name) {
