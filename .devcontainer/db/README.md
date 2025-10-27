@@ -104,7 +104,7 @@ docker compose -f docker-compose-[database].yml down
 
 #### Microsoft SQL Initialization Notes
 
-When you setup WebJET you need to check `Use different user for "CREATE DATABASE" command` and set username `sa` and password `${WEBJET_DB_PASS}`, setup will create new database using `sa` credentials.
+When you setup WebJET you need to check `Use different user for "CREATE DATABASE" command` and set username `sa` and password (use the actual password you set in WEBJET_DB_PASS environment variable), setup will create new database using `sa` credentials.
 
 ### Oracle
 

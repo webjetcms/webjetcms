@@ -459,7 +459,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "docker compose -f docker-compose-mssql.yml up -d",
+            "command": "if ! docker ps | grep -q mssql; then docker compose -f docker-compose-mssql.yml up -d && echo 'Started MSSQL container'; else echo 'MSSQL container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -511,7 +511,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "docker compose -f docker-compose-pgsql.yml up -d",
+            "command": "if ! docker ps | grep -q postgres; then docker compose -f docker-compose-pgsql.yml up -d && echo 'Started PostgreSQL container'; else echo 'PostgreSQL container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -537,7 +537,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "docker compose -f docker-compose-oracle.yml up -d",
+            "command": "if ! docker ps | grep -q oracle; then docker compose -f docker-compose-oracle.yml up -d && echo 'Started Oracle container'; else echo 'Oracle container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
