@@ -79,10 +79,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
 
     @Override
     public boolean deleteItem(ConfDetailsDto confDetailsDto, long id) {
-        String name = confDetailsDto.getName();
-        String oldValue = configurationService.getOldValue(name);
-        configurationService.deleteConfDetails(name);
-        Constants.setString(name, oldValue);
+        configurationService.deleteConfDetails(confDetailsDto.getName());
         return true;
     }
 
