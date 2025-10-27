@@ -1,4 +1,4 @@
-Feature('apps.file-archive');
+Feature('files.file-archive');
 
 Before(({ I, login }) => {
     login('admin');
@@ -106,7 +106,7 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/file_archiv_tab_patterns.png");
 });
 
-Scenario('Upload file field for DOC', ({ I, DTE, Document }) => {
+Scenario('Upload file field for DOC', ({ I, DTE, Document, i18n }) => {
     const validPdfFileName = 'archive_file_test.pdf';
 
     I.amOnPage('/apps/file-archive/admin/');
@@ -135,7 +135,7 @@ Scenario('Managers screens', ({ I, Document }) => {
 
 Scenario('Export', ({ I, Document, i18n }) => {
     I.say("EXPORT - only main files");
-        I.resizeWindow(1280, 500);
+        I.resizeWindow(1280, 700);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
         I.waitForVisible("#exportArchiveFileForm");
         Document.screenshot("/redactor/files/file-archive/export_base.png");
@@ -150,7 +150,7 @@ Scenario('Export', ({ I, Document, i18n }) => {
         Document.screenshot("/redactor/files/file-archive/export_removed.png");
 
     I.say("Export main + awaiting files");
-        I.resizeWindow(1280, 550);
+        I.resizeWindow(1280, 750);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
         I.waitForVisible("#exportArchiveFileForm");
         I.click( locate("#exportArchiveFileForm").find("input[name='includeAwaitingFiles']") );
@@ -164,7 +164,7 @@ Scenario('Export', ({ I, Document, i18n }) => {
         I.waitForText(i18n.get("was successfully deleted"), 30);
 
     I.say("Export main + history files");
-        I.resizeWindow(1280, 570);
+        I.resizeWindow(1280, 770);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
         I.waitForVisible("#exportArchiveFileForm");
         I.click( locate("#exportArchiveFileForm").find("input[name='includeHistoryFiles']") );
@@ -178,7 +178,7 @@ Scenario('Export', ({ I, Document, i18n }) => {
         I.waitForText(i18n.get("was successfully deleted"), 30);
 
     I.say("EXPORT - all files");
-        I.resizeWindow(1280, 590);
+        I.resizeWindow(1280, 790);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
         I.waitForVisible("#exportArchiveFileForm");
         I.click( locate("#exportArchiveFileForm").find("input[name='includeHistoryFiles']") );
@@ -193,7 +193,7 @@ Scenario('Export', ({ I, Document, i18n }) => {
         I.waitForText(i18n.get("was successfully deleted"), 30);
 });
 
-Scenario('Import', async ({ I, Document }) => {
+Scenario('Import', async ({ I, Document, i18n }) => {
     const importFile = "tests/apps/file-archive/docs/file_archiv_screenshots.zip";
 
     I.say("Import");
@@ -224,7 +224,7 @@ Scenario('Import', async ({ I, Document }) => {
     I.click("table#fab tbody tr:nth-child(3) input");
     Document.screenshot("/redactor/files/file-archive/import_replace.png");
     I.clickCss("#btnOk");
-    I.waitForText("Import ukončený", 10);
+    I.waitForText(i18n.get("Import completed"), 10);
 
     Document.screenshot("/redactor/files/file-archive/import_replace_done.png");
 });

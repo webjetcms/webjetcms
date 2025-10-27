@@ -262,13 +262,14 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && path.startsWith("/showdoc.do") && isFirstPathFilterCall &&
-					req.getParameterMap().size()==1 && req.getParameter("docid")!=null		)
+			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && path.startsWith("/showdoc.do") && isFirstPathFilterCall)
 			{
-				//presmeruj sa na stranku v HTML formate
+				//do this inly if there is only docid and/or language parameter
 				int docId = Tools.getIntValue(req.getParameter("docid"), -1);
-				if (docId > 0)
+				String languageParam = req.getParameter("language");
+				if (docId > 0 && (req.getParameterMap().size() == 1 || (languageParam != null && req.getParameterMap().size() == 2)))
 				{
+					//presmeruj sa na stranku v HTML formate
 					DocDB docDB = DocDB.getInstance();
 					if (InitServlet.isTypeCloud() || (Constants.getBoolean("enableStaticFilesExternalDir") && Constants.getBoolean("multiDomainEnabled")))
 					{
@@ -287,6 +288,7 @@ public class PathFilter implements Filter
 						}
 					}
 					String redirPath = docDB.getDocLink(docId, req);
+					if (languageParam != null) redirPath = Tools.addParameterToUrl(redirPath, "language", languageParam);
 
 					if (redirPath.startsWith("/showdoc.do")==false && Tools.isNotEmpty(redirPath))
 					{

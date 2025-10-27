@@ -1,6 +1,7 @@
 const { I } = inject();
 const DTE = require("./DTE");
 const DT = require("./DT");
+const i18n = require("./i18n");
 /**
  * Functions for interacting with the application
  */
@@ -164,7 +165,7 @@ module.exports = {
         I.clickCss(applicationSelector); //I.clickCss('div.menu-app[data-app-action^="sk.iway"]')
         I.waitForInvisible("div.appStore > div.block-header", 30);
         I.wait(1);
-        I.click("Vložiť do stránky"); //I.clickCss('a.buy');
+        I.click(i18n.get("Add to page")); //I.clickCss('a.buy');
         DTE.waitForEditor("component-datatable");
         I.switchTo();
         I.switchTo();

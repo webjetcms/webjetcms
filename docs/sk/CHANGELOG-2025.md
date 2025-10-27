@@ -1,5 +1,46 @@
 # Zoznam zmien verzia 2025
 
+## 2025.0-SNAPSHOT
+
+> Vývojová verzia
+
+### Aplikácie
+
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#58073).
+
+- [Novinky](redactor/apps/news/README.md)
+
+![](redactor/apps/news/editor-dialog.png)
+
+### Presmerovania
+
+- Pridané možnosť ukončiť platnosť presmerovania v stanovenom čase a možnosť zadať poznámku s informáciou na čo presmerovanie slúži. Presmerovania, ktoré už nie sú časovo platné sa zobrazia červenou farbou (#58105).
+
+![](redactor/webpages/redirects/path-editor.png)
+
+### Iné menšie zmeny
+
+- Vyhľadávanie - upravené načítanie zoznamu šablón pri hľadaní web stránok. Načítajú sa všetky šablóny bez ohľadu na ich dostupnosť v priečinkoch, aby sa nestalo, že pri editácii web stránky šablóna nie je dostupná (#58073).
+- HTTP hlavičky - pridaná možnosť nastaviť hlavičku dlhšiu ako 255 znakov, napríklad pre nastavenie `Content-Security-Policy` ([#82](https://github.com/webjetcms/webjetcms/issues/82))
+- Konfigurácia - upravený spôsob zmazania konfiguračnej premennej. Po vymazaní sa automatický nastaví pôvodná hodnota z `Constants`, aby bola rovnaká ako bude po reštarte servera. V pôvodnom riešení sa premenná len zmazala, ale jej hodnota zostala interne nastavená do reštartu servera (#57849).
+
+![](admin/settings/response-header/editor.png)
+
+### Dokumentácia
+
+- Aktualizované všetky fotky obrazovky v českej verzii dokumentácie (#58113).
+
+### Pre programátora
+
+- Zmazané nepoužívané súbory `/admin/spec/gallery_editor_perex_group.jsp,/admin/spec/perex_group.jsp`, ak ich vo vašom projekte používate zoberte ich zo [staršej verzie](https://github.com/webjetcms/webjetcms/tree/release/2025.40/src/main/webapp/admin/spec) WebJET CMS (#58073).
+- Mierne upravené API v [NewsActionBean](../../src/webjet8/java/sk/iway/iwcm/components/news/NewsActionBean.java), hlavne nastavenie `groupIds` ktoré sú teraz typu `List<GroupDetails>`. Môžete použiť `setGroupIds(int[] groupIds)` pre nastavenie s poľom ID hodnôt (#58073).
+- Opravená možnosť vkladania úvodzoviek do parametrov aplikácií (#58117).
+- Pripravené kontajnery pre všetky podporované databázové serveri vo WebJET CMS pre ľahké spustenie vo VS Code. Nachádzajú sa v priečinku `.devcontainer/db` (#58137).
+
+### Testovanie
+
+- Doplnený skript [rm-same-images.sh](../../src/test/webapp/rm-same-images.sh) pre odstránenie rovnakých obrázkov pri vytvorení nových snímkov obrazovky (#58113).
+
 ## 2025.40
 
 > **WebJET CMS 2025.40** prináša integrovaného **AI Asistenta**, ktorý zásadne zjednodušuje prácu s obsahom. Umožňuje automaticky **opravovať gramatiku**, **prekladať** texty, navrhovať titulky, sumarizovať články a generovať **ilustračné obrázky** priamo v editore. Vďaka tomu je tvorba obsahu **rýchlejšia, presnejšia a kreatívnejšia** než kedykoľvek predtým.
@@ -367,6 +408,15 @@ Iné zmeny:
 - Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
 
 ![meme](_media/meme/2025-18.jpg ":no-zoom")
+
+## 2025.0.x
+
+> Opravná verzia pôvodnej verzie 2025.0.
+
+- Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
+- Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
+- Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
+- Webové stránky - PageBuilder - opravený jazyk používateľského rozhrania na jazyk prihláseného používateľa (nie jazyk web stránky) (#58133).
 
 ## 2025.0.40
 

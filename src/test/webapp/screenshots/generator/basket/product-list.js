@@ -1,4 +1,4 @@
-Feature('apps.product-list');
+Feature('basket.product-list');
 
 Before(({ login }) => {
     login('admin');
@@ -56,14 +56,14 @@ Scenario('Product list screens', async ({I, DT, DTE, Document}) => {
     Document.screenshotElement("#productListDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/product-list/new-product-attr.png");
 });
 
-Scenario("delete created folder", async ({I, DT, DTE}) => {
+Scenario("delete created folder", async ({I, DT, DTE, i18n}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=72080");
     I.jstreeClick("Insert-autotest");
     DT.waitForLoader();
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.waitForText("Insert-autotest", 10, "#groups-datatable_modal .DTE_Form_Info");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.click(i18n.get("Delete::2"), "div.DTE_Action_Remove");
     DTE.waitForModalClose("groups-datatable_modal");
     DT.waitForLoader();
     I.waitForInvisible("Insert-autotest", 10);

@@ -1,4 +1,4 @@
-Feature('regexp');
+Feature('form.regexp');
 
 Before(({ I, login }) => {
     login('admin');

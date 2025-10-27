@@ -1,4 +1,4 @@
-Feature('forms');
+Feature('form.forms');
 
 Before(({ I, login }) => {
     login('admin');

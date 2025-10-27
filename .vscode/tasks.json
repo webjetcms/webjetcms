@@ -64,6 +64,130 @@
             }
         },
         {
+            "label": "appStartDockerMariaDB",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-mariadb.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-mariadb.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB MariaDB Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDockerMSSQL",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-mssql.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-mssql.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB MSSQL Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDockerOracle",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-oracle.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-oracle.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB Oracle Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartDockerPgSQL",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-docker-pgsql.xml ./gradlew appStartDebug",
+            "windows": {
+                "command": "SET webjetDbname=/poolman-docker-pgsql.xml && .\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker DB PgSQL Start"],
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartDemoDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",
@@ -335,7 +459,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "docker compose -f docker-compose-mssql.yml up -d",
+            "command": "if ! docker ps | grep -q webjetcms-mssql; then docker compose -f docker-compose-mssql.yml up -d && echo 'Started MSSQL container'; else echo 'MSSQL container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -349,6 +473,84 @@
                 "cwd": ".devcontainer/db/"
             },
             "command": "docker compose -f docker-compose-mssql.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB MariaDB Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "if ! docker ps | grep -q webjetcms-mariadb; then docker compose -f docker-compose-mariadb.yml up -d && echo 'Started MariaDB container'; else echo 'MariaDB container already running'; fi",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB MariaDB Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-mariadb.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB PgSQL Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "if ! docker ps | grep -q webjetcms-pgsql; then docker compose -f docker-compose-pgsql.yml up -d && echo 'Started PgSQL container'; else echo 'PgSQL container already running'; fi",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB PgSQL Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-pgsql.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB Oracle Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "if ! docker ps | grep -q webjetcms-oracle; then docker compose -f docker-compose-oracle.yml up -d && echo 'Started Oracle container'; else echo 'Oracle container already running'; fi",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker DB Oracle Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-oracle.yml down",
             "group": "build",
             "presentation": {
                 "clear": true,
