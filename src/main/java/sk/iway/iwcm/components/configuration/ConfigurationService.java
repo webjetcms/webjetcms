@@ -122,20 +122,12 @@ public class ConfigurationService {
             c.setValue(Constants.getString(name));
 
             //old value sa neda inak ziskat ako takto
-            c.setOldValue(getOldValue(name));
+            c.setOldValue(ConfDB.getOldValue(name));
             c.setDescription(Constants.getDescription(name));
             return c;
         }
 
         return null;
-    }
-
-    private String getOldValue(String name) {
-        List<ConfDetails> constantsData = Constants.getAllValues();
-        for (ConfDetails c : constantsData) {
-            if (c.getName().equals(name)) return c.getValue();
-        }
-        return "";
     }
 
     /**
