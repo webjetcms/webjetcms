@@ -506,7 +506,7 @@
             }
         },
         {
-            "label": "Docker DB PostgreSQL Start",
+            "label": "Docker DB PgSQL Start",
             "type": "shell",
             "options": {
                 "cwd": ".devcontainer/db/"
@@ -519,7 +519,7 @@
             }
         },
         {
-            "label": "Docker DB PostgreSQL Stop",
+            "label": "Docker DB PgSQL Stop",
             "type": "shell",
             "options": {
                 "cwd": ".devcontainer/db/"

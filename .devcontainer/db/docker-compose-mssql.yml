@@ -11,7 +11,7 @@ services:
     ports:
       - "11433:1433"
     volumes:
-      - webjetcms-mssqlserverdata:/var/opt/mssql
+      - webjetcms-mssqldata:/var/opt/mssql
 
 volumes:
-  webjetcms-mssqlserverdata:
+  webjetcms-mssqldata:

@@ -264,18 +264,9 @@ public class SetupActionsService {
 			}
 
 			String userName = setupForm.getDbUsername();
-			String password = setupForm.getDbPassword();
+			String password = getEnvPassword(setupForm.getDbPassword());
 			if (Tools.isEmpty(userName)) userName = null;
 			if (Tools.isEmpty(password)) password = null;
-
-			//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
-			if (password != null && password.startsWith("${") && password.endsWith("}")) {
-				String envName = password.substring(2, password.length()-1);
-				String envValue = getSystemProperty(envName);
-				if (Tools.isNotEmpty(envValue)) {
-					password = envValue;
-				}
-			}
 
 			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
 			con.close();
@@ -300,10 +291,10 @@ public class SetupActionsService {
 
 				try {
 					if (setupForm.isDbUseSuperuser()) {
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
 					} else {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
 					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
@@ -314,7 +305,7 @@ public class SetupActionsService {
 
 					setupForm.setDbName(origDBName);
 
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					con.close();
 
 					dbConnectOK = true;
@@ -332,10 +323,10 @@ public class SetupActionsService {
 				try {
 					if (setupForm.isDbUseSuperuser()) {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
 					} else {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
 					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
@@ -346,7 +337,7 @@ public class SetupActionsService {
 
 					setupForm.setDbName(origDBName);
 
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					con.close();
 
 					dbConnectOK = true;
@@ -447,6 +438,18 @@ public class SetupActionsService {
 			setModelWithErr(model, setupForm, true, connErrMsg, null);
 			return FORWARD;
 		}
+	}
+
+	private static String getEnvPassword(String password) {
+		//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+		if (password != null && password.startsWith("${") && password.endsWith("}")) {
+			String envName = password.substring(2, password.length()-1);
+			String envValue = getSystemProperty(envName);
+			if (Tools.isNotEmpty(envValue)) {
+				password = envValue;
+			}
+		}
+		return password;
 	}
 
 	/**

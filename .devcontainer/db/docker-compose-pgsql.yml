@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: webjetcms-postgres
+    container_name: webjetcms-pgsql
     environment:
       POSTGRES_DB: "webjetcms_autotest_web"
       POSTGRES_USER: "webjetcms_autotest_web"
@@ -10,7 +10,7 @@ services:
     ports:
       - "15432:5432"
     volumes:
-      - webjetcms-postgresdata:/var/lib/postgresql/data
+      - webjetcms-pgsqldata:/var/lib/postgresql/data
 
 volumes:
-  webjetcms-postgresdata:
+  webjetcms-pgsqldata:
