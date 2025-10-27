@@ -188,6 +188,10 @@ Scenario("overenie prav editacie vsetkych premennych", ({ I, DT, DTE }) => {
     DTE.cancel();
 });
 
+Scenario("logout", ({ I }) => {
+    I.logout();
+});
+
 const testConfiguration = "smsSendMaxlength";
 Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
     const oldValue = 140;
@@ -196,18 +200,18 @@ Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
 
     I.say("Check actual and default value");
-        I.clickCss("button.buttons-create");
+        I.click(DT.btn.config_add_button);
         DTE.waitForEditor("configurationDatatable");
 
-        I.fillField("#DTE_Field_name", testConfiguration);
+        DTE.fillField("name", testConfiguration);
         I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
         I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
 
         I.seeInField("#DTE_Field_value", oldValue);
         I.seeInField("#DTE_Field_oldValue", oldValue);
 
-    I.say("Change value and check stat value stay changed. But original value of not changed.");
-        I.fillField("#DTE_Field_value", newValue);
+    I.say("Change value and check that stat value stay changed. But original value of not changed.");
+        DTE.fillField("value", newValue);
         DTE.save();
 
         DT.filterEquals("name", testConfiguration);
@@ -228,7 +232,7 @@ Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
         I.clickCss("button.buttons-create");
         DTE.waitForEditor("configurationDatatable");
 
-        I.fillField("#DTE_Field_name", testConfiguration);
+        DTE.fillField("name", testConfiguration);
         I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
         I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
 
@@ -244,7 +248,7 @@ Scenario("Post delete", async ({ I, DT }) => {
         I.clickCss("td.dt-select-td");
         I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
-        DT.waiForLoader();
+        DT.waitForLoader();
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
     }
 });
