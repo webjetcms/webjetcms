@@ -25,7 +25,6 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /**
  *  UrlRedirectBean.java

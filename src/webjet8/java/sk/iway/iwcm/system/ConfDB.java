@@ -20,7 +20,6 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.configuration.ConfigurationService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.stat.StatDB;

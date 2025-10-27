@@ -15,6 +15,15 @@ on:
 
 jobs:
   build:
+    # Skip workflow for WIP pull requests (draft PRs or titles with WIP indicators)
+    # Patterns: draft PRs, "wip:", "[wip]", "wip ", " wip ", " wip", "work in progress" (case insensitive)
+    if: |
+      github.event_name == 'push' || (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.draft == false &&
+        !contains(github.event.pull_request.title, 'wip:') &&
+        !contains(github.event.pull_request.title, 'WIP:')
+      )
 
     runs-on: ubuntu-latest
     permissions:
@@ -69,6 +78,14 @@ jobs:
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
+    # Skip workflow for WIP pull requests (same logic as build job)
+    if: |
+      github.event_name == 'push' || (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.draft == false &&
+        !contains(github.event.pull_request.title, 'wip:') &&
+        !contains(github.event.pull_request.title, 'WIP:')
+      )
 
     runs-on: ubuntu-latest
     permissions:
@@ -85,4 +102,4 @@ jobs:
     # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
-      uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+      uses: gradle/actions/dependency-submission@v5
