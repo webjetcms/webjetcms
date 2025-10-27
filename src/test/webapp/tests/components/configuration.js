@@ -210,7 +210,7 @@ Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
         I.seeInField("#DTE_Field_value", oldValue);
         I.seeInField("#DTE_Field_oldValue", oldValue);
 
-    I.say("Change value and check that stat value stay changed. But original value of not changed.");
+    I.say("Change value and check that value stay changed. But original value of not changed.");
         DTE.fillField("value", newValue);
         DTE.save();
 
