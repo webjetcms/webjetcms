@@ -139,6 +139,11 @@ CKEDITOR.editorConfig = function( config )
 
 		toolbar += ",{ name: 'AI', items: ['Aibutton']}";
 
+		if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints")) && toolbar.contains("WebjetPicture")==false)
+		{
+			toolbar = Tools.replace(toolbar, "'Link'", "'Link' , 'WebjetPicture'");
+		}
+
 		out.print(toolbar);
 		%>
 	];
@@ -153,4 +158,8 @@ CKEDITOR.editorConfig = function( config )
 
 	//quicktable
 	config.qtWidth = "100%";
+
+	<% if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints"))) { %>
+		config.pictureDialogBreakpoints = <%=Constants.getString("ckeditor_pictureDialogBreakpoints")%>;
+	<% } %>
 }
