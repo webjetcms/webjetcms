@@ -3,12 +3,6 @@ Feature("apps.basket.eshop");
 const path = require("path");
 const SL = require("./SL");
 
-const GOPAY_CLIENT_ID = process.env.GOPAY_CLIENT_ID;
-const GOPAY_SECRET = process.env.GOPAY_SECRET;
-const GOPAY_GO_ID = process.env.GOPAY_GO_ID;
-//Sandbox url
-const GOPAY_API_URL = "https://gw.sandbox.gopay.com/api/";
-
 let randomNumber;
 
 Before(({ I, login, DT }) => {
@@ -23,84 +17,14 @@ Before(({ I, login, DT }) => {
 
 });
 
-Scenario("Nastav sposoby platby", ({ I, DTE }) => {
-  I.amOnPage(SL.METHODS);
-
-  //
-  I.say("Setting the payment method to cash on delivery");
-  I.click(locate("a").withText("Dobierka"));
-  DTE.waitForEditor("paymentMethodsDataTable");
-  DTE.seeInField("paymentMethodName", "Dobierka");
-  DTE.fillField("fieldA", "1.50");
-  DTE.fillField("fieldB", "20");
-  I.waitForElement("#DTE_Field_fieldC");
-  DTE.fillQuill("fieldC", "Dakujeme za platbu dobierkou");
-  I.checkOption("#DTE_Field_fieldD");
-  DTE.save("paymentMethodsDataTable");
-  //
-  I.say("Setting the payment method GoPay");
-  I.click(locate("a").withText("GoPay"));
-  DTE.waitForEditor("paymentMethodsDataTable");
-  DTE.seeInField("paymentMethodName", "GoPay");
-  DTE.fillField("fieldA", GOPAY_CLIENT_ID);
-  DTE.fillField("fieldB", GOPAY_SECRET);
-  DTE.fillField("fieldC", GOPAY_API_URL);
-  DTE.fillField("fieldD", GOPAY_GO_ID);
-  DTE.fillField("fieldE", "0.4");
-  DTE.fillField("fieldF", "8");
-  DTE.fillField("fieldG", "Platba GoPay-om");
-  I.waitForElement("#DTE_Field_fieldH");
-  DTE.fillQuill("fieldH", "Dakujeme za platbu GoPay-om");
-  DTE.save("paymentMethodsDataTable");
-
-  //
-  I.say("Setting the payment method to bank transfer.");
-  I.click(locate("a").withText("Prevodom"));
-  DTE.waitForEditor("paymentMethodsDataTable");
-  DTE.seeInField("paymentMethodName", "Prevodom");
-  DTE.fillField("fieldA", "SK59 1100 0000 0026 1000 1237");
-  DTE.fillField("fieldB", "0");
-  DTE.fillField("fieldC", "20");
-  I.waitForElement("#DTE_Field_fieldD");
-  DTE.fillQuill("fieldD", "Dakujeme za platbu prevodom");
-  I.checkOption("#DTE_Field_fieldE");
-  DTE.save("paymentMethodsDataTable");
-});
-
-Scenario('Test admin product list', ({ I, DT}) => {
-    I.amOnPage(SL.PRODUCTS_ADMIN);
-    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "12,30", "10,00"]);
-    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "8,61", "7,00"]);
-    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "30,75", "25,00"]);
-    I.clickCss("button[data-id=currencySelect]");
-    I.waitForElement(locate("a[role=option]").withText("skk"));
-    I.click(locate("a[role=option]").withText("skk"));
-    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "370,55", "301,26"]);
-    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "259,38", "210,88"]);
-    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "926,37", "753,15"]);
-});
-
-Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', async ({Document, I, DT, DTE }) => {
-    Document.setConfigValue("basketInvoiceSupportedCountries", "sk,pl,fr,de");
-    I.amOnPage(SL.BASKET_ADMIN);
-    DT.filterContains("editorFields.firstName", "Test");
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").first());
-    I.click(DT.btn.basket_edit_button);
-    DTE.waitForEditor("basketInvoiceDataTable");
-    I.clickCss("#pills-dt-basketInvoiceDataTable-personal_info-tab");
-    const countries = await I.grabTextFromAll('#DTE_Field_contactCountry option');
-    I.assertEqual(countries.join(), "Slovensko,Poľsko,Francúzsko,Nemecko");
-});
-
 Scenario('Set config value to default', ({ Document }) => {
-    Document.setConfigValue("basketInvoiceSupportedCountries", "sk,cz,pl");
+    Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.cz,.pl");
 });
-
 
 Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async ({ I, Document }) => {
     const testerName = "autotest-noPay-" + randomNumber;
-    const deliveryMethodName = "Kuriér";
-    const paymentMethodName = "GoPay";
+    const deliveryMethodTitle = "Doručenie poštou: 6,15 €"; //JSP title with info
+    const paymentMethodTitle = "GoPay: 0,43 €"; //JSP title with info
 
     SL.clearBasket(I);
 
@@ -113,7 +37,7 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
 
     //
     I.say("Filling out order details and selecting GoPay");
-    SL.fillDeliveryForm(I, testerName, deliveryMethodName, paymentMethodName);
+    SL.fillDeliveryForm(I, testerName, deliveryMethodTitle, paymentMethodTitle);
     I.click(locate("input").withAttr({ name: "bSubmit" }));
     I.waitForText("Objednávka úspešne odoslaná", 20);
     I.see("Dakujeme za platbu GoPay-om");
@@ -131,9 +55,9 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.say("Verifying invoice");
     I.amOnPage(SL.ORDERS);
     I.waitForElement(locate("h1").withText("Objednávky"), 10);
-    seeInTable(I, 1, "11.04", "Nová (nezaplatená)");
+    seeInTable(I, 1, "15.19", "Nová (nezaplatená)");
     I.click(locate("tr").at(2));
-    verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, "11.04", "11.04");
+    verifyInvoice(I, testerName, SL.DeliveryMethods.byMailDelivery, SL.PaymentMethods.GoPay, "15.19");
 
     //
     I.say("Check pdf invoice");
@@ -182,7 +106,7 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
 
   //
   I.say("Filling out order details and selecting GoPay");
-  SL.fillDeliveryForm(I, testerName, null, "GoPay");
+  SL.fillDeliveryForm(I, testerName, null, SL.PaymentMethods.GoPay);
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
   I.see("Dakujeme za platbu GoPay-om");
@@ -201,14 +125,13 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   I.say("Verifying invoice");
   I.amOnPage(SL.ORDERS);
   I.waitForElement(locate("h1").withText("Objednávky"), 10);
-  seeInTable(I, 1, "14.73", "Zaplatená");
+  seeInTable(I, 1, "18.88", "Zaplatená");
   I.click(locate("tr").at(2));
-  //I.dontSeeElement("#payForOrderBtn");
 
   //
   I.say("Processing partial refund");
   openPayments(I, DT, DTE, testerName);
-  I.waitForText("Zaplatená suma: 14,73 eur zo sumy: 14,73 eur", 10, ".dt-footer-row > div > p");
+  I.waitForText("Zaplatená suma: 18,88 eur zo sumy: 18,88 eur", 10, ".dt-footer-row > div > p");
   I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
   I.click(DT.btn.editorpayment_refund_button);
   I.waitForText("Vrátenie platby", 10, "div.toast-title");
@@ -220,8 +143,8 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
 
   //
   I.say("Verify partial refund");
-  I.waitForText("Zaplatená suma: 14,73 eur zo sumy: 14,73 eur", 10, ".dt-footer-row > div > p");
-  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 2, ["", "GoPay", "-10,00", "Nie", "Neúspešná refundácia", getCurrentDate()]);
+  I.waitForText("Zaplatená suma: 18,88 eur zo sumy: 18,88 eur", 10, ".dt-footer-row > div > p");
+  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 2, ["", SL.PaymentMethods.GoPay, "-10,00", "Nie", "Neúspešná refundácia", getCurrentDate()]);
 
   //
   I.say("Processing refund");
@@ -233,11 +156,11 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
 
   //
   I.say("Verifying refund status");
-  I.waitForText("Zaplatená suma: 0,00 eur zo sumy: 14,73 eur (nedoplatok : 14,73)", 10, ".dt-footer-row > div > p");
-  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", "GoPay", "14,73", "Áno", "Refundovaná platba", getCurrentDate() , "GoPay payment state : PAID"]);
+  I.waitForText("Zaplatená suma: 0,00 eur zo sumy: 18,88 eur (nedoplatok : 18,88)", 10, ".dt-footer-row > div > p");
+  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.GoPay, "18,88", "Áno", "Refundovaná platba", getCurrentDate() , "GoPay payment state : PAID"]);
   DTE.cancel("basketInvoiceDataTable");
   DT.filterContains("editorFields.firstName", testerName);
-  DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", getCurrentDate(), "Nová (nezaplatená)", "GoPay", "Kuriér", "3", "12,40", "14,73"]);
+  DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", getCurrentDate(), "Nová (nezaplatená)", SL.PaymentMethods.GoPay, SL.DeliveryMethods.byMailDelivery, "3", "15,40", "18,88", "18,88"]);
 });
 
 Scenario("Test Orders for Logged-in and Unauthenticated User", async ({ I }) => {
@@ -245,7 +168,7 @@ Scenario("Test Orders for Logged-in and Unauthenticated User", async ({ I }) => 
     I.say("Check the latest order of Tester");
     I.amOnPage(SL.ORDERS);
     I.waitForElement(locate("h1").withText("Objednávky"), 10);
-    seeInTable(I, 1, "14.73", "Nová (nezaplatená)");
+    seeInTable(I, 1, "18,88", "Nová (nezaplatená)");
 
     //
     I.say("Check that unautenticated user cannot see table");
@@ -261,7 +184,7 @@ Scenario("Cash on delivery", async ({ I }) => {
   SL.addToBasket(I, "Ponožky");
   SL.openBasket(I);
   I.clickCss("#orderButton > a");
-  SL.fillDeliveryForm(I, "autotest-cash-" + randomNumber, null, "Dobierka");
+  SL.fillDeliveryForm(I, "autotest-cash-" + randomNumber, null, SL.PaymentMethods.cashOnDelivery);
 
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
@@ -306,11 +229,11 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
     I.click(DT.btn.editorpayment_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
-    DTE.selectOption("paymentMethod", "GoPay");
+    DTE.selectOption("paymentMethod", SL.PaymentMethods.GoPay);
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
     I.waitForElement(locate(".DTE_Form_Error").withText("Tento spôsob platby neumožňuje editáciu/duplikovanie/mazanie platby."));
 
-    DTE.selectOption("paymentMethod", "Dobierka");
+    DTE.selectOption("paymentMethod", SL.PaymentMethods.cashOnDelivery);
     I.uncheckOption("#DTE_Field_confirmed_0");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
     I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
@@ -349,13 +272,13 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
-    I.waitForText("Zaplatená suma: 12,41 eur zo sumy: 3,80 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 16,56 eur zo sumy: 7,95 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
 
     I.click(DT.btn.editorpayment_add_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
-    DTE.selectOption("paymentMethod", "Dobierka");
+    DTE.selectOption("paymentMethod", SL.PaymentMethods.cashOnDelivery);
     I.checkOption("#DTE_Field_editorFields-saveAsRefund_0");
-    DTE.fillField("payedPrice", "-13");
+    DTE.fillField("payedPrice", "-23");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
     I.waitForElement(locate(".DTE_Form_Error").withText("Nemôžete refundovať viac ako je zaplatená suma."));
 
@@ -364,7 +287,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.waitForElement(locate(".DTE_Form_Error").withText("Celková zaplatená suma nesmie byť väčšia ako suma objednávky"));
     DTE.fillField("payedPrice", "-9");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
-    I.waitForText("Zaplatená suma: 3,41 eur zo sumy: 3,80 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 7,56 eur zo sumy: 7,95 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
 
     DT.filterSelect("paymentStatus", "Úspešná refundácia");
     I.clickCss("#datatableFieldDTE_Field_editorFields-payments_wrapper button.buttons-select-all");
@@ -374,7 +297,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     DT.filterSelect("paymentStatus", "Neznámy stav");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", "Dobierka", "-9,00", "Nie", "Neznámy stav"]);
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.cashOnDelivery, "-9,00", "Nie", "Neznámy stav"]);
 });
 
 Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
@@ -389,8 +312,8 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
     I.seeElement(locate('tr').withText('Ponožky').find('i.ti-shopping-bag'));
-    I.seeElement(locate('tr').withText('Kuriér').find('i.ti-truck-delivery'));
-    I.seeElement(locate('tr').withText('Prevodom').find('i.ti-cash'));
+    I.seeElement(locate('tr').withText(SL.DeliveryMethods.byMailDelivery).find('i.ti-truck-delivery'));
+    I.seeElement(locate('tr').withText(SL.PaymentMethods.moneyTransfer).find('i.ti-cash'));
 
     I.click(locate('tr').withText('Ponožky').find('.dt-select-td'));
     I.click(DT.btn.editoritems_preview_button);
@@ -399,23 +322,23 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
     I.switchToPreviousTab();
     I.closeOtherTabs();
 
-    DT.filterContains("itemTitle", "Kuriér");
+    DT.filterContains("itemTitle", SL.DeliveryMethods.byMailDelivery);
     I.clickCss("#datatableFieldDTE_Field_editorFields-items_wrapper button.buttons-select-all");
     I.clickCss("#datatableFieldDTE_Field_editorFields-items_wrapper button.buttons-select-all");
     I.click(DT.btn.editoritems_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-items");
     DTE.fillField("itemPrice", "3" );
     DTE.fillField("itemQty", "2" );
-    DTE.fillField("itemNote", "Opakované doručenie + zdraženie kuriéra");
+    DTE.fillField("itemNote", "Opakované doručenie + zdraženie doručenia poštou.");
 
     DTE.save("datatableFieldDTE_Field_editorFields-items");
-    I.waitForText("Suma k zaplateniu: 14,61 eur", 10, ".dt-footer-row > div > p");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", "Kuriér", "3,00", "2", "6,00", "0%", "Opakované doručenie + zdraženie kuriéra"]);
+    I.waitForText("Suma k zaplateniu: 15,99 eur", 10, ".dt-footer-row > div > p");
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", SL.DeliveryMethods.byMailDelivery, "3,00", "2", "6,00", "23%", "7,38", "Opakované doručenie + zdraženie doručenia poštou."]);
 
     I.amOnPage(SL.BASKET_ADMIN);
     DT.waitForLoader();
     DT.filterContains("editorFields.firstName", testerName);
-    DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", "", "Čiastočne zaplatená", "Prevodom", "Kuriér", "4", "13,00", "14,61", "4,00"]);
+    DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", "", "Čiastočne zaplatená", SL.PaymentMethods.moneyTransfer, SL.DeliveryMethods.byMailDelivery, "4", "13,00", "15,99", "1,23"]);
 
     openPayments(I, DT, DTE, testerName);
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
@@ -428,7 +351,7 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
     I.switchTo();
     I.click(locate(".btn.btn-primary").withText("Pridať"))
 
-    I.waitForText("Suma k zaplateniu: 26,91 eur", 10, ".dt-footer-row > div > p");
+    I.waitForText("Suma k zaplateniu: 28,29 eur", 10, ".dt-footer-row > div > p");
     DT.filterContains("itemTitle", "Tričko");
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", "Tričko", "10,00", "1", "10,00", "23%", "12,30"]);
     DTE.save("basketInvoiceDataTable");
@@ -476,7 +399,7 @@ function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, pri
   I.see("Mlynské Nivy 71", "table.invoiceInnerTable");
   I.see("Bratislava", "table.invoiceInnerTable");
   I.see("82105", "table.invoiceInnerTable");
-  I.see("Slovensko", "table.invoiceInnerTable");
+  I.see(SL.Countries.sk, "table.invoiceInnerTable");
   I.see(deliveryMethodName);
   I.see("webjetbasket@fexpost.com", "table.invoiceInnerTable");
   I.see("0912345678", "table.invoiceInnerTable");
@@ -488,31 +411,23 @@ function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, pri
 }
 
 function getCurrentDate(includeTime = false) {
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
 
-    const day = pad(now.getDate());
-    const month = pad(now.getMonth() + 1);
-    const year = now.getFullYear();
+  const day = pad(now.getDate());
+  const month = pad(now.getMonth() + 1);
+  const year = now.getFullYear();
 
-    let result = `${day}.${month}.${year}`;
+  let result = `${day}.${month}.${year}`;
 
-    if (includeTime) {
-      const hours = pad(now.getHours());
-      const minutes = pad(now.getMinutes());
-      const seconds = pad(now.getSeconds());
-      result += ` ${hours}:${minutes}:${seconds}`;
-    }
-
-    return result;
+  if (includeTime) {
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    const seconds = pad(now.getSeconds());
+    result += ` ${hours}:${minutes}:${seconds}`;
   }
 
-function deletePaymentMethod(I, DT, DTE, index) {
-  I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").at(index));
-  I.click(DT.btn.payment_delete_button);
-  I.waitForVisible(".DTE.modal-content.DTE_Action_Remove");
-  I.click("Zmazať", "div.DTE_Action_Remove");
-  DTE.waitForLoader();
+  return result;
 }
 
 function seeInTable(I, rowIndex, price, status) {

@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public class BasketTools {
 
-	public static final String COUNTRY_KEY_PREFIX = "stat.countries.tld.";
+	public static final String COUNTRY_KEY_PREFIX = "stat.countries.tld";
 	public static final String BASKET_PRODUCT_CURRENCY = "basketProductCurrency";
 	public static final String SUPPORTED_CURRENCIES = "supportedCurrencies";
 
@@ -67,7 +67,7 @@ public class BasketTools {
 	public static String getCountryName(String countryCode, Prop prop) {
 		if(Tools.isEmpty(countryCode)) return "";
 		if(prop == null) prop = Prop.getInstance();
-		if(countryCode.startsWith(".")) countryCode = countryCode.substring(1);
+		if(countryCode.startsWith(".") == false) countryCode = "." + countryCode;
 		return prop.getText(COUNTRY_KEY_PREFIX + countryCode.toLowerCase());
 	}
 

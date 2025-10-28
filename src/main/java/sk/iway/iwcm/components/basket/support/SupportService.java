@@ -47,6 +47,7 @@ public class SupportService {
         }
     }
 
+    @SuppressWarnings("java:S4449")
     public static final void validateCustomFields(SupportMethod annotation, SupportMethodEntity methodEntity, Errors errors, Prop prop) {
         for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
             if(fieldMapAttr.isRequired() == true) {

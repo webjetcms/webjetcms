@@ -335,7 +335,7 @@ else {%>
 								<label class="form-label " for="contactCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
 								<select name="contactCountry" id="contactCountryId" class="form-control" onchange="updateDeliveryMethod();">
 									<%for (String countryTld : Constants.getArray("basketInvoiceSupportedCountries")) {%>
-										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld." + countryTld)%></option>
+										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld" + countryTld)%></option>
 									<%}%>
 								</select>
 							</div>
@@ -410,7 +410,7 @@ else {%>
 								<select name="deliveryCountry" id="deliveryCountryId" autocomplete="off" class="form-control" onchange="updateDeliveryMethod();">
 									<option value="">-</option>
 									<%for (String countryTld : Constants.getArray("basketInvoiceSupportedCountries")) {%>
-										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld." + countryTld)%></option>
+										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld" + countryTld)%></option>
 									<%}%>
 								</select>
 							</div>

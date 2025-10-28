@@ -1,12 +1,16 @@
 Feature('apps.basket.basket-invoice');
 
+const SL = require("./SL");
+
 var randomNumber;
 let paymentDataTable = "#datatableFieldDTE_Field_editorFields-payments_wrapper";
 let itemsDataTable = "#datatableFieldDTE_Field_editorFields-items_wrapper";
 let editorItems = "datatableFieldDTE_Field_editorFields-items";
 
-Before(({ I, login }) => {
+Before(({ I, DT, login }) => {
     login('admin');
+
+    DT.addContext("basket", "#basketInvoiceDataTable_wrapper");
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
@@ -14,7 +18,6 @@ Before(({ I, login }) => {
 });
 
 Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
-
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("shop.tau27.iway.sk");
 
@@ -45,7 +48,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
     I.waitForText("Objednávka úspešne odoslaná", 10);
 
     I.say("Check that invoice was created");
-    I.amOnPage("/apps/basket/admin/");
+    I.amOnPage(SL.BASKET_ADMIN);
     DT.filterEquals("editorFields.firstName", testerName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -147,8 +150,52 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
+Scenario('Currency convertion', ({I, DT, DTE, Document}) => {
+    I.amOnPage(SL.BASKET_ADMIN);
+
+    Document.switchDomain("demo.webjetcms.sk");
+
+    I.say("Check that covertion in table is valid");
+    SL.validateCurrencyOptions(I, ["eur", "usd", "czk", "gbp"], []);
+    SL.selectCurrency(I, "eur");
+    DT.filterEquals("editorFields.lastName", "CurrencyConvertion");
+    DT.checkTableRow("basketInvoiceDataTable", 1, ["", "", "CurrencyConvertion", "", "", "", "", "", "48,50", "59,61", "59,61"]);
+
+    SL.selectCurrency(I, "czk");
+    DT.checkTableRow("basketInvoiceDataTable", 1, ["", "", "CurrencyConvertion", "", "", "", "", "", "1 175,16", "1 444,35", "1 444,35"]);
+
+    I.say("Check, that inside its still in EUR currency");
+        I.click("Tester");
+        DTE.waitForEditor("basketInvoiceDataTable");
+
+        I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
+        I.see("Zaplatená suma: 0,00 eur zo sumy: 59,61 eur (nedoplatok : 59,61)");
+        DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.cashOnDelivery, "59,61"]);
+
+        I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
+        DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", "Tričko", "10,00"]);
+        DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 2, ["", "", "Ponožky", "7,00"]);
+        DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 3, ["", "", "Džínsy", "25,00"]);
+});
+
+Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', async ({Document, I, DT, DTE }) => {
+    Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.pl,.fr,.de");
+    I.amOnPage(SL.BASKET_ADMIN);
+    DT.filterContains("editorFields.firstName", "Test");
+    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").first());
+    I.click(DT.btn.basket_edit_button);
+    DTE.waitForEditor("basketInvoiceDataTable");
+    I.clickCss("#pills-dt-basketInvoiceDataTable-personal_info-tab");
+    const countries = await I.grabTextFromAll('#DTE_Field_contactCountry option');
+    I.assertEqual(countries.join(), "Slovensko,Poľsko,Francúzsko,Nemecko");
+});
+
+Scenario('Set config value to default', ({ Document }) => {
+    Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.cz,.pl");
+});
+
 function checkBonusOptions(I, DT, DTE, testerName, seeOptions) {
-    I.amOnPage("/apps/basket/admin/");
+    I.amOnPage(SL.BASKET_ADMIN);
     DT.filterEquals("editorFields.firstName", testerName);
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-edit");

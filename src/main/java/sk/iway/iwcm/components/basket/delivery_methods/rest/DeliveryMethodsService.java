@@ -125,8 +125,10 @@ public class DeliveryMethodsService {
     }
 
     private void setCoutryOptions(DatatablePageImpl<DeliveryMethodEntity> page, Prop prop) {
-        for (String countryCode : Constants.getArray("basketInvoiceSupportedCountries"))
+        for (String countryCode : Constants.getArray("basketInvoiceSupportedCountries")) {
+            if(countryCode.startsWith(".") == false) countryCode = "." + countryCode;
             page.addDefaultOption("supportedCountries", BasketTools.getCountryName(countryCode, prop), countryCode);
+        }
     }
 
     private void setCurrencyOptions(DatatablePageImpl<DeliveryMethodEntity> page) {

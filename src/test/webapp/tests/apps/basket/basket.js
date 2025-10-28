@@ -4,6 +4,12 @@ const SL = require("./SL.js");
 
 var randomNumber, testerName;
 
+const BasketActions = {
+    REMOVE: '.deleteItem',
+    INCREASE: '.addItem',
+    DECREASE: '.removeItem'
+};
+
 Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber == "undefined") {
@@ -143,7 +149,7 @@ Scenario('Create and submit order', async ({ I, DT }) => {
     I.amOnPage(SL.BASKET_ADMIN);
     DT.filterEquals('editorFields.firstName', testerName);
     I.dontSeeElement('Nenašli sa žiadne vyhovujúce záznamy');
-    DT.checkTableRow('basketInvoiceDataTable', 1, ['', testerName, '', null, 'Nová (nezaplatená)', 'Dobierka', deliveryMethod.split(":")[0], '4', '']);
+    DT.checkTableRow('basketInvoiceDataTable', 1, ['', testerName, '', null, 'Nová (nezaplatená)', SL.PaymentMethods.cashOnDelivery, deliveryMethod.split(":")[0], '4', '']);
 });
 
 Scenario('Delete order', ({ I, DT, DTE }) => {
@@ -160,11 +166,113 @@ Scenario('Delete order', ({ I, DT, DTE }) => {
     DT.waitForLoader();
 });
 
-const BasketActions = {
-    REMOVE: '.deleteItem',
-    INCREASE: '.addItem',
-    DECREASE: '.removeItem'
-};
+Scenario('Delivery method by country logic', async ({ I }) => {
+    I.amOnPage(SL.PRODUCTS);
+
+    I.say("Add product to basket so we can show order form");
+        SL.addToBasket(I, 'Tričko');
+        SL.openBasket(I);
+        I.clickCss('#orderButton > a');
+        I.waitForVisible("#orderFormAccordion");
+
+    I.say("Check selected delivery method");
+        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+
+    I.say("Change constact and delivery country and verify value");
+        I.selectOption('#contactCountryId', SL.Countries.cz);
+        checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
+
+        I.clickCss("button.accordion-button.collapsed[data-bs-target='#orderFormDeliveryInfo']");
+        I.selectOption('#deliveryCountryId', SL.Countries.sk);
+        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+
+        I.selectOption('#contactCountryId', SL.Countries.pl);
+        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+
+        I.selectOption('#deliveryCountryId', "-");
+        checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
+});
+
+Scenario('Check price and currency based on selected basketDisplayCurrency', async ({ I, Document }) => {
+    Document.setConfigValue("basketDisplayCurrency", "eur");
+    I.say("Do EUR check");
+        I.amOnPage(SL.PRODUCTS);
+        await checkItemPriceLabel(I, "Tričko", "12,30 €");
+        await checkItemPriceLabel(I, "Ponožky", "8,61 €");
+        await checkItemPriceLabel(I, "Džínsy", "30,75 €");
+
+        SL.addToBasket(I, 'Džínsy');
+        SL.addToBasket(I, 'Ponožky');
+        SL.openBasket(I);
+
+        await checkItemPriceLabelInBasketBox(I, "itemId_126527", "30,75 €");
+        await checkItemPriceLabelInBasketBox(I, "itemId_126526", "8,61 €");
+
+        const basketPriceA = await I.grabTextFrom(locate("div.basketBox").find("span.basketPrice"));
+        I.assertEqual("39,36 €", sanitazeValue(basketPriceA));
+
+        I.clickCss('#orderButton > a');
+        I.waitForVisible("#orderFormAccordion");
+
+        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+
+        const totalOrderPriceA = await I.grabTextFrom("span.totalOrderPrice");
+        I.assertEqual("46,71 eur", sanitazeValue(totalOrderPriceA));
+
+    Document.setConfigValue("basketDisplayCurrency", "czk");
+    I.say("Do CZK check");
+        I.amOnPage(SL.PRODUCTS);
+        await checkItemPriceLabel(I, "Tričko", "298,03 Kč");
+        await checkItemPriceLabel(I, "Ponožky", "208,62 Kč");
+        await checkItemPriceLabel(I, "Džínsy", "745,07 Kč");
+
+        SL.addToBasket(I, 'Džínsy');
+        SL.addToBasket(I, 'Ponožky');
+        SL.openBasket(I);
+
+        await checkItemPriceLabelInBasketBox(I, "itemId_126527", "745,07 Kč");
+        await checkItemPriceLabelInBasketBox(I, "itemId_126526", "208,62 Kč");
+
+        //2x that items
+        const basketPriceB = await I.grabTextFrom(locate("div.basketBox").find("span.basketPrice"));
+        I.assertEqual("1 907,39 Kč", sanitazeValue(basketPriceB));
+
+        I.clickCss('#orderButton > a');
+        I.waitForVisible("#orderFormAccordion");
+
+        checkDeliveryValue(I, "Doručenie poštou: 149,01 Kč");
+
+        const totalOrderPriceB = await I.grabTextFrom("span.totalOrderPrice");
+        I.assertEqual("2085,48 czk", sanitazeValue(totalOrderPriceB));
+});
+
+Scenario('basketDisplayCurrency to default', ({ I, Document }) => {
+    Document.setConfigValue("basketDisplayCurrency", "eur");
+});
+
+
+async function checkItemPriceLabelInBasketBox(I, index, priceLabel) {
+    const value = await I.grabTextFrom("div.basketBox > table > tbody > tr." + (index) + " > td.basketPrice");
+    I.assertEqual(priceLabel, sanitazeValue(value));
+}
+
+async function checkItemPriceLabel(I, itemLabel, priceLabel) {
+    const foundPriceLabel = await I.grabTextFrom( (locate("div.basket > div").withChild( locate("span > h4 > a").withText(itemLabel))).find(locate("p.price")) );
+    I.assertEqual(priceLabel, sanitazeValue(foundPriceLabel));
+}
+
+function sanitazeValue(value) {
+    value = value.trim();
+    value = value.replace(/&nbsp;/g, ' ');
+    value = value.replace(/\u00A0/g, ' ');
+    value = value.replace(/\s+/g, ' ');
+    return value;
+}
+
+async function checkDeliveryValue(I, wantedValue) {
+    const deliveryValue = await I.grabTextFrom("#deliveryMethodId");
+    I.assertEqual(deliveryValue.trim(), wantedValue.trim());
+}
 
 async function sortAndCheck(I, sortMethod, expectedOrder) {
     await I.executeScript((sortMethod) => {
@@ -224,13 +332,4 @@ async function checkAmountInBasket(I, nameProduct = null, expectedAmount = null)
         I.switchToPreviousTab();
         I.closeOtherTabs();
     }
-}
-
-function getTodayDate() {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-
-    return `${day}.${month}.${year}`;
 }

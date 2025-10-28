@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.delivery_methods.rest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -98,6 +99,10 @@ public class DeliveryMethodRestController extends DatatableRestControllerV2<Deli
     @Override
     public DeliveryMethodEntity processToEntity(DeliveryMethodEntity entity, ProcessItemAction action) {
         entity.setSupportedCountriesStr( String.join("+", entity.getSupportedCountries()) );
+
+        if(entity.getPrice() == null) entity.setPrice(BigDecimal.ZERO);
+        if(entity.getVat() == null) entity.setVat(0);
+
         return entity;
     }
 

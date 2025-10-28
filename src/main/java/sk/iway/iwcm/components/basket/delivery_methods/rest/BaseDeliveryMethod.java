@@ -49,7 +49,14 @@ public abstract class BaseDeliveryMethod {
 
         SupportService.validateCustomFields(annotation, deliveryMethod, errors, prop);
 
-        //Now check, if this delivery method is allredy used for this country
+        //At least one country must be selected
+        String[] countries = deliveryMethod.getSupportedCountries();
+        if(countries == null || countries.length < 1) {
+            errors.rejectValue("errorField.supportedCountries", null, prop.getText("apps.eshop.delivery_methods.supproted_countries_empty_err"));
+            return;
+        }
+
+        //Now check, if this delivery method is allready used for this country
         List<String> handledCountries = new ArrayList<>();
         for(String countriesStr : repo.getHandledCountriesByDeliveryMethod(this.getClass().getName(), CloudToolsForCore.getDomainId(), deliveryMethod.getId() == null ? -1L : deliveryMethod.getId()))
             handledCountries.addAll( Arrays.asList( Tools.getTokens(countriesStr, ",+") ));
@@ -59,9 +66,10 @@ public abstract class BaseDeliveryMethod {
             if(handledCountries.contains(country)) redundantCountries.add(country);
 
         if(redundantCountries.size() > 0) {
-            StringBuilder errCoiuntries = new StringBuilder();
-            for(String country : redundantCountries) errCoiuntries.append( BasketTools.getCountryName(country, prop) ).append(", ");
-            errors.rejectValue("errorField.supportedCountries", null, prop.getText("apps.eshop.delivery_methods.supproted_countries_err", errCoiuntries.toString()));
+            StringBuilder errCountries = new StringBuilder();
+            for(String country : redundantCountries) errCountries.append( BasketTools.getCountryName(country, prop) ).append(", ");
+            errCountries.deleteCharAt(errCountries.length() - 1);
+            errors.rejectValue("errorField.supportedCountries", null, prop.getText("apps.eshop.delivery_methods.supproted_countries_err", errCountries.toString()));
         }
     }
 

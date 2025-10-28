@@ -68,13 +68,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     public Page<BasketInvoiceEntity> getAllItems(Pageable pageable) {
         DatatablePageImpl<BasketInvoiceEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new BasketInvoiceEntity(), pageable));
 
-        String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? Constants.getString("basketProductCurrency") : getRequest().getParameter("showCurrency");
-        for(BasketInvoiceEntity invoice : page.getContent()) {
-            invoice.setPriceToPayNoVat( BasketTools.convertCurrency(invoice.getPriceToPayNoVat(), invoice.getCurrency(), wantedCurrency) );
-            invoice.setPriceToPayVat( BasketTools.convertCurrency(invoice.getPriceToPayVat(), invoice.getCurrency(), wantedCurrency) );
-            invoice.setBalanceToPay( BasketTools.convertCurrency(invoice.getBalanceToPay(), invoice.getCurrency(), wantedCurrency) );
-        }
-
         page.addOptions("paymentMethod", pms.getPaymentOptions(getProp()), "label", "value", false);
         page.addOptions("deliveryMethod", dms.getDeliveryOptions(getProp()), "label", "value", false);
 
@@ -175,6 +168,14 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
            //Set fields definition
            bief.setFieldsDefinition(bief.getFields(entity, "components.invoice", 'F'));
         }
+
+        if(ProcessItemAction.GETALL.equals(action) || ProcessItemAction.FIND.equals(action)) {
+            String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? Constants.getString("basketProductCurrency") : getRequest().getParameter("showCurrency");
+            entity.setPriceToPayNoVat( BasketTools.convertCurrency(entity.getPriceToPayNoVat(), entity.getCurrency(), wantedCurrency) );
+            entity.setPriceToPayVat( BasketTools.convertCurrency(entity.getPriceToPayVat(), entity.getCurrency(), wantedCurrency) );
+            entity.setBalanceToPay( BasketTools.convertCurrency(entity.getBalanceToPay(), entity.getCurrency(), wantedCurrency) );
+        }
+
         return entity;
     }
 
