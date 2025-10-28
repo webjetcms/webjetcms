@@ -22,19 +22,19 @@ public class BasketTools {
 
 	private BasketTools() {}
 
-	public static BigDecimal convertToBasketDisplayCurrency(BigDecimal ammount, HttpServletRequest request) {
-		return convertCurrency(ammount, Constants.getString(BASKET_PRODUCT_CURRENCY), EshopService.getDisplayCurrency(request));
+	public static BigDecimal convertToBasketDisplayCurrency(BigDecimal amount, HttpServletRequest request) {
+		return convertCurrency(amount, Constants.getString(BASKET_PRODUCT_CURRENCY), EshopService.getDisplayCurrency(request));
 	}
 
-    public static BigDecimal convertCurrency(BigDecimal ammount, String fromCurrency, String toCurrency) {
-		if(BigDecimal.ZERO.equals(ammount)) return ammount;
+    public static BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
+		if(BigDecimal.ZERO.equals(amount)) return amount;
 
 		if(Tools.isEmpty(fromCurrency) || Tools.isEmpty(toCurrency)) throw new IllegalStateException("Currencies not valid.");
 
 		fromCurrency = fromCurrency.toLowerCase();
 		toCurrency = toCurrency.toLowerCase();
 
-		if(fromCurrency.equals(toCurrency)) return ammount;
+		if(fromCurrency.equals(toCurrency)) return amount;
 
 		try {
 			String constantName = "kurz_" + fromCurrency + "_" + toCurrency;
@@ -43,7 +43,7 @@ public class BasketTools {
 			// We found basic rate
 			if (Tools.isNotEmpty(Constants.getString(constantName))) {
 				rate = new BigDecimal( Constants.getString(constantName) );
-				return rate.multiply( ammount );
+				return rate.multiply( amount );
 			}
 
 			// unsuccessful, try reverse convert
@@ -53,7 +53,7 @@ public class BasketTools {
 			// 1/rate
 			if (Tools.isNotEmpty(Constants.getString(constantName))) {
 				rate = new BigDecimal( Constants.getString(constantName) );
-				return (BigDecimal.ONE.divide(rate, 3, RoundingMode.HALF_EVEN)).multiply( ammount );
+				return (BigDecimal.ONE.divide(rate, 3, RoundingMode.HALF_EVEN)).multiply( amount );
 			}
 
 		} catch (NumberFormatException e) {
@@ -61,7 +61,7 @@ public class BasketTools {
 			throw new IllegalStateException("Malformed constant format for currencies " + fromCurrency + " and " + toCurrency);
 		}
 
-		return ammount;
+		return amount;
 	}
 
 	public static String getCountryName(String countryCode, Prop prop) {

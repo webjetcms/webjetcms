@@ -61,7 +61,7 @@
 						$select.append($option);
 					});
 
-					//after chnage of country, delivery method could be chnaged .... so compute the total price again
+					//after change of country, delivery method could be changed .... so compute the total price again
 					countPrice();
 				},
 				error: function(xhr, status, error) {

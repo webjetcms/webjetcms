@@ -42,7 +42,7 @@ Scenario('Delivery methods datatable tests', ({I, DT, DTE}) => {
         DT.filterSelect("supportedCountries", SL.Countries.sk);
         I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
-    I.say("Check vaklues and do edit");
+    I.say("Check values and do edit");
         I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").first());
         I.clickCss("button.buttons-edit");
         DTE.waitForEditor("deliveryMethodsDataTable");
@@ -67,7 +67,7 @@ Scenario('Delivery methods datatable tests', ({I, DT, DTE}) => {
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('Post tets check', async ({I, DT}) => {
+Scenario('Post test check', async ({I, DT}) => {
     I.amOnPage("/apps/basket/admin/delivery-methods/");
     DT.filterSelect("deliveryMethodName", SL.DeliveryMethods.inStoreDelivery);
     DT.filterSelect("supportedCountries", SL.Countries.sk);

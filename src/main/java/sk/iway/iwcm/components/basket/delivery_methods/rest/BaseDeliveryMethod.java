@@ -56,7 +56,7 @@ public abstract class BaseDeliveryMethod {
             return;
         }
 
-        //Now check, if this delivery method is allready used for this country
+        //Now check, if this delivery method is already used for this country
         List<String> handledCountries = new ArrayList<>();
         for(String countriesStr : repo.getHandledCountriesByDeliveryMethod(this.getClass().getName(), CloudToolsForCore.getDomainId(), deliveryMethod.getId() == null ? -1L : deliveryMethod.getId()))
             handledCountries.addAll( Arrays.asList( Tools.getTokens(countriesStr, ",+") ));

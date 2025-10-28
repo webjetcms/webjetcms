@@ -13,7 +13,7 @@ public interface DeliveryMethodsRepository extends DomainIdRepository<DeliveryMe
 
     public List<DeliveryMethodEntity> findAllByDeliveryMethodNameAndDomainId(String deliveryMethodName, Integer domainId);
 
-    //ExceptIt is currentlz editing entity, so it wont failt at check
+    // parameter "exceptIt" is currently editing entity, so it won't fail at check
     @Query("SELECT dme.supportedCountriesStr FROM DeliveryMethodEntity dme WHERE dme.deliveryMethodName = :deliveryMethodName AND dme.domainId = :domainId AND dme.id != :exceptId")
     List<String> getHandledCountriesByDeliveryMethod(@Param("deliveryMethodName")String deliveryMethodName, @Param("domainId")Integer domainId, @Param("exceptId")Long exceptId);
 }
