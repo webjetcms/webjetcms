@@ -664,8 +664,8 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 
 			if(url.contains("basket") && fullUrl.contains(".jsp")) {
-				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
-					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
+				//f(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
+				//	content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
 
 				if(content.contains("sk.iway.iwcm.components.basket.*")) {
 					//Just replace it
@@ -676,6 +676,35 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 				//REPLACE double with BigDecimal when needed
 				content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+
+				//Fix duplicity
+				content = Tools.replace(content, "itemTr itemTr", "itemTr");
+
+				//Swap price with local price
+				content = Tools.replace(content, "getItemPriceVat()", "getLocalPriceVat(request)");
+				content = Tools.replace(content, "getItemPriceQty()", "getItemLocalPriceQty(request)");
+				content = Tools.replace(content, "getItemPriceVatQty()", "getItemLocalPriceVatQty(request)");
+				content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)\\)[\\s]*%" + ">", "<" + "%=doc.getLocalPriceVat(request)%" + ">", false);
+				content = Tools.replaceRegex(content, "doc\\.getPrice\\(\\)", "doc\\.getLocalPrice\\(request\\)", false);
+				content = Tools.replaceRegex(content, "%=doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)[\\s]*\\)[\\s]*%", "%=doc\\.getLocalPriceVat\\(request\\)%", false);
+
+				// Handle getting valid basket currency and using it
+				content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+				content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+				if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
+					if(content.contains("PageParams pageParams = new PageParams(request);") == true)
+						content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+					else
+						content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+
+					if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {
+						//Add needed import
+						content = Tools.replace(content, "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"");
+						content = Tools.replace(content, "<" + "%@ taglib prefix=\"iwcm\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib prefix=\"iwcm\"");
+					}
+				}
+
+				content = Tools.replace(content, "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, prop)", "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, request, prop)");
 
 				hasChange = true;
 			}
