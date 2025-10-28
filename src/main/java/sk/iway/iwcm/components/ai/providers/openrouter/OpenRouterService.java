@@ -3,9 +3,7 @@ package sk.iway.iwcm.components.ai.providers.openrouter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +83,14 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
         return supportedValues;
     }
 
-    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
+        // Build base request body
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+
         mainObject.put(MODEL, assistant.getModel());
 
         HttpPost post = new HttpPost(RESPONSES_URL);
@@ -104,8 +108,14 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
                 .asText();
     }
 
-    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) throws IOException {
+        // Build base request body
+        ObjectNode mainObject;
+        if(InputDataDTO.InputValueType.IMAGE.equals(inputData.getInputValueType()))
+            mainObject = getBaseMainObjectWithImage(inputData, instructions, inputData.getUserPrompt());
+        else
+            mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+
         mainObject.put(MODEL, assistant.getModel());
         mainObject.put("stream", true);
 
@@ -122,19 +132,15 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        ObjectNode mainObject = MAPPER.createObjectNode();
-        ArrayNode messagesArray = MAPPER.createArrayNode();
-
+        ObjectNode mainObject;
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addMessageWithImage(messagesArray, instructions, inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
+            mainObject = getBaseMainObjectWithImage(inputData, instructions);
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            addMessage(messagesArray, instructions);
+            mainObject = getBaseMainObject(instructions);
         }
 
-        mainObject.set("messages", messagesArray);
         mainObject.put(MODEL, assistant.getModel());
 
         HttpPost httpPost = new HttpPost(RESPONSES_URL);

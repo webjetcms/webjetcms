@@ -98,6 +98,10 @@ public class ResponseHeaderService {
                     String name = Constants.executeMacro(header.getHeaderName());
                     String value = Constants.executeMacro(header.getHeaderValue());
 
+                    //remove new lines from header value
+                    value = Tools.replace(value, "\r", " ");
+                    value = Tools.replace(value, "\n", " ");
+
                     if (name.equalsIgnoreCase("content-language")) {
                         setContentLanguageHeader(value, true, request, response);
                     } else {

@@ -46,9 +46,11 @@ So a visitor can create a new topic and then discussion posts are added to the t
 
 ![](forum-list-board.png)
 
-The application setup consists of two tabs **Application parameters** a **List of discussions**.
+The application setup consists of two tabs **Application parameters**, **Groups** a **List of discussions**.
 
 ![](message-board.png)
+
+!>**Warning:** app discussion format **Discussion board** (or **Message Board**) must be inserted into the already created page.
 
 ### Tab - Application Parameters
 
@@ -66,6 +68,25 @@ The application parameters tab contains several additional parameters:
 
 !>**Warning:** if you want the author of the discussion page to always receive a notification, you can set a configuration variable `forumAlwaysNotifyPageAuthor` to the value of `true`.
 
-### List of discussions
+### Card - Groups
+
+Card **Groups** is displayed only if the component is selected **Multi-topic discussion (Message Board)**. It offers the possibility to define the structure of a multi-topic discussion using groups and subgroups.
+
+The default structure (if there is no other discussion in the folder) is:
+
+```txt
+Skupina1
+ podskupina1
+Skupina2
+ podskupina1
+ podskupina2
+ podskupina3
+```
+
+!>**Warning:** subgroups must begin with a space.
+
+Of course, you can change this structure. After saving, the necessary structure is automatically created in the folder of the page where the application was inserted.
+
+### Tab - List of discussions
 
 The Discussion List tab is a nested page listing all discussions (both the Discussion Board and the Discussion Board). You can learn more about the Discussion List here [List of discussions](forum-list.md).

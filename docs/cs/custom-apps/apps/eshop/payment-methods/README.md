@@ -2,11 +2,11 @@
 
 Jedná se o speciální tabulku, která pro své fungování primárně využívá volitelná pole. Tímto jsme dosáhli modulárnosti editoru, kde každý způsob platby má na míru připravená pole v editoru.
 
-Základním prvkem je třída [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentMethodEntity.java), která má volitelná pole A-L (v případě potřeby lze snadno přidat).
+Základním prvkem je třída [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentMethodEntity.java), která má volitelná pole A-L (v případě potřeby lze snadno přidat).
 
 ## Přidání nového způsobu platby
 
-Pro přidání nového způsobu platby musíme vytvořit Servis např. jak [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/GoPayService.java). Každý způsob platby vyžaduje vlastní soubor.
+Pro přidání nového způsobu platby musíme vytvořit Servis např. jak [GoPayService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/GoPayService.java). Každý způsob platby vyžaduje vlastní soubor.
 
 ```java
 @Service
@@ -32,7 +32,7 @@ public class GoPayService extends BasePaymentMethod {
 - Povinná `PaymentMethod` anotace, pomocí této anotace nastavíte vzhled editoru pro daný způsob platby.
 - Povinné dědění třídy `BasePaymentMethod`, která definuje povinné metody k implementaci jakož i poskytuje podpůrnou logiku.
 
-Každý takto vytvořený Servis je následně získán v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže pokud byl nový způsob platby vytvořen korektně, automaticky se zobrazí v tabulce a má veškerou potřebnou logiku.
+Každý takto vytvořený Servis je následně získán v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže pokud byl nový způsob platby vytvořen korektně, automaticky se zobrazí v tabulce a má veškerou potřebnou logiku.
 
 ## Anotace `PaymentMethod`
 
@@ -42,7 +42,7 @@ Anotace poskytuje parametry pro nastavení:
 
 ### `PaymentFieldMapAttr`
 
-Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/jpa/PaymentFieldMapAttr.java) umožňuje definování volitelného pole pro způsob platby.
+Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java) umožňuje definování volitelného pole pro způsob platby.
 
 Dostupné parametry k nastavení jsou:
 - `fieldAlphabet`, označení, které volitelné pole nastavujeme
@@ -53,7 +53,7 @@ Dostupné parametry k nastavení jsou:
 
 ## Třída `BasePaymentMethod`
 
-Třída [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/BasePaymentMethod.java) obsahuje veškerou potřebnou logiku pro přidávaný nový způsob platby, aby zabránilo duplicitě. Třída je primárně určena dědicí platby, takže veřejně dostupné jsou pouze metody pro logování chyb.
+Třída [BasePaymentMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/BasePaymentMethod.java) obsahuje veškerou potřebnou logiku pro přidávaný nový způsob platby, aby zabránilo duplicitě. Třída je primárně určena dědicí platby, takže veřejně dostupné jsou pouze metody pro logování chyb.
 
 Automatický:
 - nastaví název platební metody a podle anotace `PaymentMethod`
@@ -69,7 +69,7 @@ Třída `BasePaymentMethod` poskytuje také `beforeSave` metodu, která slouží
 
 ## Třída `PaymentMethodsService`
 
-Třída [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/eshop/payment_methods/rest/PaymentMethodsService.java) poskytuje všechny veřejné metody pro práci s platebními způsoby, které budete potřebovat.
+Třída [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java) poskytuje všechny veřejné metody pro práci s platebními způsoby, které budete potřebovat.
 
 Poskytuje metody pro:
 - získání všech nebo jednotlivých platebních metod

@@ -457,3 +457,7 @@ Kompletná ukážka HTML kódu web stránky s ukážkovými sekciami:
     </div>
 </section>
 ```
+
+## Podporný JavaScript kód
+
+Ak potrebujete vlastný podporný JavaScript súbor (viď vyššie spomínaný `pagesupport.js`), môžete vytvoriť súbor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, ktorý ak existuje načíta sa po súbore `pagesupport.js`. Môžete tak doplniť vlastné funkcie, alebo upraviť štandardné existujúce funkcie z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).

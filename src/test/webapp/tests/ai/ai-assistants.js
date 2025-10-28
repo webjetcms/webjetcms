@@ -394,6 +394,64 @@ Scenario('STOP IMAGE answer WITH user prompts', async ({I, DTE}) => {
     I.seeElement( locate(containerAiContent).find("input#bonusContent-imageCount") );
 });
 
+Scenario('TEXT answer with image content - Gemini', async ({I, DTE}) => {
+    testGeneratingImageAlt(I, DTE, geminiId);
+});
+
+Scenario('TEXT answer with image content - OpenAI', async ({I, DTE}) => {
+    testGeneratingImageAlt(I, DTE, openAiId);
+});
+
+Scenario('TEXT answer with image content - OpenRouter', async ({I, DTE}) => {
+    testGeneratingImageAlt(I, DTE, openRouterId);
+});
+
+async function testGeneratingImageAlt(I, DTE, providerId) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForText('Vlastnosti obrázka', 20);
+    I.switchTo('#wjImageIframeElement');
+    I.waitForLoader(".WJLoaderDiv");
+
+    I.fillField("input#txtAlt", defaultValue);
+    I.fillField("input#txtUrl", "/images/gallery/chrysanthemum.jpg");
+    I.click( locate( locate(".input-group").withChild("#txtAlt") ).find("button.btn-ai") );
+    I.waitForVisible("#toast-container-ai");
+    I.click( locate('button.btn-ai-action').withText("Generate ALT tag").withChild(locate('span.provider').withText(providerId)));
+    I.waitForVisible("div.toast.toast-info");
+
+    checkBaseWaitDialog(I, "Generate ALT tag", providerId, "ti.ti-photo-ai");
+
+    waiToEndText(I);
+
+    I.waitForVisible( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-ok"), 5);
+    I.click( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-ok"));
+
+    const altValue = await I.grabValueFrom("input#txtAlt");
+    I.assertNotContain(altValue, defaultValue);
+
+    I.switchTo();
+    I.clickCss("a.cke_dialog_ui_button_ok");
+    I.waitForInvisible("div.cke_dialog_body");
+
+    I.switchTo("iframe.cke_wysiwyg_frame");
+    I.clickCss("body#WebJETEditorBody img");
+
+    I.switchTo();
+    I.waitForElement(".cke_button.cke_button__floatimage.cke_button_off", 10);
+    I.clickCss(".cke_button.cke_button__floatimage.cke_button_off");
+
+    I.waitForText('Vlastnosti obrázka', 20);
+    I.switchTo('#wjImageIframeElement');
+    I.waitForLoader(".WJLoaderDiv");
+
+    const altValueReopen = await I.grabValueFrom("input#txtAlt");
+    I.assertEqual(altValue, altValueReopen);
+}
+
 Scenario('logout', ({ I }) => {
     I.logout();
 });

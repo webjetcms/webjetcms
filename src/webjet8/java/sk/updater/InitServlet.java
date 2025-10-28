@@ -142,7 +142,6 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/za/");
 		files.add("/WEB-INF/classes/org/apache/axis/");
 		files.add("/WEB-INF/classes/org/apache/commons/httpclient/");
-		files.add("/WEB-INF/classes/org/apache/struts/");
 		files.add("/WEB-INF/classes/org/arabidopsis/");
 		files.add("/WEB-INF/classes/org/displaytag/");
 		files.add("/WEB-INF/classes/org/eclipse/");
@@ -1012,7 +1011,6 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/mfsr/MfsrCategoryBeanComparator.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/mfsr/MfsrCategoryDB.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/spu/SaveFileAction.class");
-		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gallery/ImageEditorListener.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gdpr/CookieManagerAction.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gdpr/GdprActionBean.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gdpr/test/GdprCronTest.class");
@@ -3996,9 +3994,9 @@ public class InitServlet extends HttpServlet
 
 		//update 2025-08-26
 		//ant/diff.sh src/main ../webjetcms_hotfix_main/src/main
-		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ComponentsRestController.java");
-        files.add("/WEB-INF/classes/sk/iway/iwcm/system/struts/UnknownAction.java");
-        files.add("/WEB-INF/classes/sk/iway/iwcm/xls/ImportXLSForm.java");
+		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ComponentsRestController.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/system/struts/UnknownAction.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/xls/ImportXLSForm.class");
         files.add("/admin/elFinder/Changelog");
         files.add("/admin/elFinder/composer.json");
         files.add("/admin/elFinder/css/commands.css");
@@ -4285,6 +4283,60 @@ public class InitServlet extends HttpServlet
         files.add("/components/video/logo_vimeo.png");
         files.add("/components/video/logo_youtube.png");
         files.add("/components/video/screenshot-3.jpg");
+
+		//2025.40
+		files.add("/admin/FCKeditor/fcktodo.txt");
+		files.add("/admin/FCKeditor/license.txt");
+		files.add("/admin/FCKeditor/editor/_source/");
+		files.add("/admin/FCKeditor/editor/css/");
+		files.add("/admin/FCKeditor/editor/dialog/");
+		files.add("/admin/FCKeditor/editor/images/");
+		files.add("/admin/FCKeditor/editor/js/");
+		files.add("/admin/FCKeditor/editor/lang/");
+		files.add("/admin/FCKeditor/editor/plugins/");
+		files.add("/admin/v9/reinstall.sh");
+
+		files.add("/WEB-INF/classes/cn/bluejoe/elfinder/controller/MultipleUploadItems.class");
+        files.add("/WEB-INF/classes/cn/bluejoe/elfinder/controller/MultipleUploadItems$1.class");
+        files.add("/WEB-INF/classes/cvu/html/COPYING");
+        files.add("/WEB-INF/classes/org/apache/commons/dbcp/ConfigurableDataSource.class");
+        files.add("/WEB-INF/classes/org/apache/commons/dbcp/WebJETAbandonedDataSource.class");
+        files.add("/WEB-INF/classes/org/apache/commons/dbcp/WebJETAbandonedObjectPool.class");
+        files.add("/WEB-INF/classes/org/apache/commons/dbcp/WebJETc3p0dataSource.class");
+        files.add("/WEB-INF/classes/org/apache/commons/dbcp/WebJetUcpDataSource.class");
+        files.add("/WEB-INF/classes/org/apache/http/impl/client/HttpClientBuilder.class");
+        files.add("/WEB-INF/classes/org/apache/http/impl/client/HttpClientBuilder$1.class");
+        files.add("/WEB-INF/classes/org/apache/http/impl/client/HttpClientBuilder$2.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$bar.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$candle.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$data_set.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$hlc.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$Line.class");
+        files.add("/WEB-INF/classes/org/openflashchart/Graph$point.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/common/BasketDBTools.class");
+        /*files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketDB.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketInvoiceBean.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketInvoicePayment.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketInvoicePaymentDB.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketItemBean.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/InvoiceDB.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/StavyObjednavok.class");*/
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/dictionary/DictionaryForm.class");
+        /*files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/FileArchivatorAction.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/FileArchivDefaultValidator.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/FileArchivValidator.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/file_archiv/SaveFileAction.class");*/
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/news/NewsActionBean$1.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/news/NewsTemplateBean.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/news/NewsTemplateBean$PagingPosition.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/news/NewsTemplateConverter.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/upload/XhrFileUploadServlet$PartialUploadHolder.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/upload/XhrFileUploadServlet$PathHolder.class");
+		files.add("/WEB-INF/classes/sk/iway/iwcm/ebanking/");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ComponentsRestController.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/system/struts/UnknownAction.class");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/xls/ImportXLSForm.class");
 
 		for (String file : files)
 		{

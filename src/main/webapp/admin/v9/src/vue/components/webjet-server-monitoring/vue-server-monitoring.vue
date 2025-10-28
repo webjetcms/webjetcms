@@ -57,7 +57,7 @@
                 chartData: Object,
                 firstTableItems: ['wjVersion', 'licenseExpirationDate', 'serverRuntime', 'serverActualTime', 'serverStartTime', 'remoteIP', 'serverIP', 'serverContry', 'serverLanguage', 'serverCpus', 'clusterNodeName'],
                 secondTableItems: ['swJavaVendor', 'swSpringVersion', 'swSpringDataVersion', 'swSpringSecurityVersion', 'swRuntime', 'swVmName', 'swJavaVersion', 'swVmVersion', 'swServerName', 'swServerOs', 'swServerOsVersion'],
-                dbTableItems: ['dbTotal', 'dbActive', 'dbIdle', 'dbWaiting'],
+                dbTableItems: ['dbTotal', 'dbActive', 'dbIdle', 'dbWaiting', 'dbServerName'],
                 memTableItems: ['memTotal', 'memFree', 'memUsed', 'memMax', 'cacheItems', 'sessionsTotal', 'sessionsList'],
             }
         },

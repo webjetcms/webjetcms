@@ -36,7 +36,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
-- [ ] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
+- [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
 - [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
 - [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
@@ -72,7 +72,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
 - [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
 - [ ] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil.
-- [ ] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83).
+- [x] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83, #58129).
 - [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
 - [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.

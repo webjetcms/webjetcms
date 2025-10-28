@@ -124,6 +124,8 @@ public class AiService {
     public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
 
         Prop prop = Prop.getInstance(request);
+        inputData.prepareData(request);
+
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
@@ -172,6 +174,8 @@ public class AiService {
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws IllegalStateException, ProviderCallException {
 
         Prop prop = Prop.getInstance(request);
+        inputData.prepareData(request);
+
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false || Tools.isFalse(assistant.getUseStreaming())) {
@@ -362,6 +366,7 @@ public class AiService {
                     ai.setAssistantId(ade.getId());
                     ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
+                    ai.setToDefinition(ade.getFieldTo());
                     if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
                     else ai.setDescription(prop.getText(ade.getDescription()));
                     ai.setProvider(ade.getProvider());
@@ -387,6 +392,24 @@ public class AiService {
                     }
                     if (ai.isEmpty()==false) {
                         aiList.add(ai);
+                    }
+                }
+
+                //for custom fields detect if we have any assistant specially for this field, if yes, remove other general assistants
+                if (Tools.isNotEmpty(toField) && toField.startsWith("field") && toField.length()=="fieldX".length()) {
+                    List<DataTableAi> specificAis = new ArrayList<>();
+                    for (DataTableAi ai : aiList) {
+                        String[] toFields = Tools.getTokens(ai.getToDefinition(), "\n,;", true);
+                        for (String tf : toFields) {
+                            if ("*".equals(tf)) continue;
+                            if (AiAssistantsService.isMatching(tf, toField)) {
+                                specificAis.add(ai);
+                                break;
+                            }
+                        }
+                    }
+                    if (specificAis.size()>0) {
+                        aiList = specificAis;
                     }
                 }
             }

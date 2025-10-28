@@ -9,6 +9,7 @@ import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.TemplateDetails;
@@ -169,6 +170,8 @@ public final class CombineTag extends BodyTagSupport
 
 				if (filesToCombine.startsWith("admin"))
 				{
+					//for admin always use lng from login session not page context
+					lng = (String)Tools.sessionGetAttribute(request.getSession(), Prop.SESSION_I18N_PROP_LNG);
 					//zobrazenie v admin casti
 					if ("css".equals(getType()))
 					{
@@ -277,6 +280,11 @@ public final class CombineTag extends BodyTagSupport
 		else if ("adminInlineJs".equals(set))
 		{
 			files = CombineTag.FILES_ADMIN_INLINE_JS;
+			String customPageSupport = "/components/"+Constants.getInstallName()+"/admin/pagesupport-custom.js";
+			if (FileTools.isFile(customPageSupport))
+			{
+				files += ","+customPageSupport;
+			}
 		}
 		else if ("adminInlineCss".equals(set))
 		{
