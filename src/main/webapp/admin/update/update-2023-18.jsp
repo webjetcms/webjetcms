@@ -664,8 +664,8 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 
 			if(url.contains("basket") && fullUrl.contains(".jsp")) {
-				//f(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
-				//	content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
+				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
+					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
 
 				if(content.contains("sk.iway.iwcm.components.basket.*")) {
 					//Just replace it
