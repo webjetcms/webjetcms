@@ -14,7 +14,7 @@ Podporované sú nasledovné konfiguračné premenné:
 
 ## PICTURE element
 
-Ak potrebujete vo vašom projekte podporu pre `PICTURE` element stačí, keď do konfigurácie `ckeditor_toolbar` pridáte na vhodné miesto hodnotu `WebjetPicture`. Ikona sa automaticky pridá aj ak máte nastavenú vlastnú hodnotu v konfiguračnej premennej `ckeditor_pictureDialogBreakpoints`.
+Ak potrebujete vo vašom projekte podporu pre `PICTURE` element, stačí, keď do konfigurácie `ckeditor_toolbar` pridáte na vhodné miesto hodnotu `WebjetPicture`. Ikona sa automaticky pridá aj ak máte nastavenú vlastnú hodnotu v konfiguračnej premennej `ckeditor_pictureDialogBreakpoints`.
 
 ![](picture-element.png)
 
