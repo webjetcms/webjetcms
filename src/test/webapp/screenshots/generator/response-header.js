@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('response headers screenshots @current', ({ I, DT, DTE, Document }) => {
+Scenario('response headers screenshots', ({ I, DT, DTE, Document }) => {
     var cspLongHeader = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://stackpath.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;";
 
     I.amOnPage("/apps/response-header/admin/");

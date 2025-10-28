@@ -261,3 +261,37 @@ table.urlFormTable {
         opacity: 0.2;
     }
 }
+
+div.cke_dialog_ui_labeled_content_append {
+    border: 1px solid #868EA5;
+    border-radius: 6px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    height: 28px;
+    width: 28px;
+    border-left-width: 0px;
+    .cke_dialog_ui_input_text {
+        i.ti {
+            display: block;
+            font-size: 18px;
+            padding-top: 5px;
+            padding-left: 5px;
+            cursor: pointer;
+        }
+    }
+    &:hover {
+        background-color: #13151B;
+        .cke_dialog_ui_input_text {
+            i.ti {
+                color: white;
+            }
+        }
+    }
+}
+div.wj-picture-url-input {
+    .cke_dialog_ui_input_text {
+        border-top-right-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
+        background-color: #f3f3f6 !important;
+    }
+}
