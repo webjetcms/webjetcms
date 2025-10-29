@@ -2735,10 +2735,16 @@
 
             var input = $('[name="'+this.options.prefix+"-"+element+'"]');
 
-            $(input).minicolors({
+            console.log("set_minicolors.val=", input.val());
+            if (!input.val()) {
+                input.val('rgba(0,0,0,1)');
+            }
+
+            input.minicolors({
                 inline:true,
                 opacity: true,
                 format:'rgb',
+                defaultValue: 'rgba(0,0,0,1)', // Set default opacity to 1
                 swatches: [
                     '#001f3f',
                     '#0074D9',
@@ -2758,6 +2764,9 @@
                     '#DDDDDD'
                 ]
             });
+
+            //initial value
+            input.attr("data-changed", "false");
         },
 
         /*==================================================================
@@ -3006,7 +3015,6 @@
             });
 
             //cleanup
-            //TODO: nejako detekovat co sa zmenilo a nedavat tam zbytocne cele CSS
             var new_style_clean = {};
             $.each(new_style, function( name, value ) {
                 //console.log("Iterating, name=", name, " value=", value);
@@ -3124,7 +3132,7 @@
 
             style += '}';
 
-            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             if($('style[style-id="'+style_id+'"]').length < 1) {
                 $('<style style-id="'+style_id+'">')
@@ -3164,7 +3172,12 @@
 
                 if(prop === 'background-color' || prop === 'border-color' || prop === 'box-shadow-color') {
 
+                    if (styleHtml.indexOf(prop+":")==-1 && "rgba(0, 0, 0, 0)"==value) {
+                        //default transparent, change opacity to 1 for easier color change
+                        value = "rgba(0,0,0,1)";
+                    }
                     input.minicolors('value', value);
+                    input.attr("data-changed", "false");
 
                 } else if (prop === 'border-style' || prop === 'text-align') {
 
