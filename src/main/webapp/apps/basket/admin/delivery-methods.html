@@ -35,6 +35,9 @@
         deliveryMethodsDataTable.hideButton("import");
         deliveryMethodsDataTable.hideButton("export");
 
+        //
+        $("div#select_wrapper").insertBefore("button.buttons-create");
+
         //Init select
         ChartTools.setSelect(url + "/supported-deliveries", null, "deliveryMethodSelect");
 
@@ -45,9 +48,6 @@
     });
 
     window.addEventListener('load', () => {
-
-        $("div#select_wrapper").insertBefore("button.buttons-create");
-
         const maxIteration = 5;
         let currentiteration = 0;
         const interval = setInterval(() => {
