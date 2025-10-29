@@ -2478,45 +2478,34 @@
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
             });
             me.$wrapper.on('change', me.tagc.style_input_group_four_in_row+' .pb-style-input-wrapper input', function() {
-                console.log("====== 4inputs, dis=", this.getAttribute("name"), " margin=", $("[name=pb-margin-bottom]").data("changed"));
+                //console.log("====== 4inputs, dis=", this.getAttribute("name"), " changed=", $(this).attr("data-changed"));
 
                 var $dis = $(this),
                     disVal = $dis.val(),
                     $parent = $dis.closest(me.tagc.style_input_group_four_in_row);
                 if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_all).is(':checked')){
+                    var changed = $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').attr("data-changed");
                     $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').each(function(i, e) {
-                        console.log("4inputs, e=", e.getAttribute("name"));
                         $(e).val(disVal);
-
-                        if ("pb-margin-bottom" === e.getAttribute("name")) {
-                            console.log("Style input changed, e=", e);
-                        }
-
-                        $(e).data("changed", "true");
+                        $(e).attr("data-changed", changed);
                     });
-                    //$parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').data("changed", "true");
-                    console.log("4inputs:", $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input'));
                 }else {
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_first).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_first_second).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_second+' input').val(disVal);
-                            //$parent.find(me.tagc.style_input_group_four_in_row_second+' input').data("changed", "true");
+                            $parent.find(me.tagc.style_input_group_four_in_row_second+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_first+' input').attr("data-changed"));
                         }
                     }
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_third).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_third_fourth).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').val(disVal);
-                            //$parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').data("changed", "true");
+                            $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_third+' input').attr("data-changed"));
                         }
                     }
                 }
-                console.log("====== 4inputs, dis=", this, " margin2=", $("[name=pb-margin-bottom]").data("changed"));
                 //always allow first input
                 //console.log("change2=", $dis, "disVal=", disVal, "parent=", $parent);
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
-
-                console.log("====== 4inputs, dis=", this, " margin3=", $("[name=pb-margin-bottom]").data("changed"));
-
             });
         },
 
@@ -2556,8 +2545,9 @@
 
         build_input_number: function (prop,label,options) {
             var klass = (options!=undefined && 'class' in options)? options.class:'';
-            var disabled = (options!=undefined && 'disabled' in options)? options.disabled:false;
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number" disabled="'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+this.options.prefix+"-"+prop+'" value="0" /></div>';
+            var disabled = "";
+            if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+this.options.prefix+"-"+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -2573,7 +2563,10 @@
             ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" checked="true" disabled="true"/>';
             ret += '</div>';
             $.each(sets,function(i,v){
-                ret += me.build_input_number(v.prop, v.label,{disabled:true,class:[me.tag.style_input_group_four_in_row_first,me.tag.style_input_group_four_in_row_second,me.tag.style_input_group_four_in_row_third,me.tag.style_input_group_four_in_row_fourth][index++]});
+                var disabled = true;
+                //first one is always enabled
+                if (i==0) disabled = false;
+                ret += me.build_input_number(v.prop, v.label,{disabled:disabled,class:[me.tag.style_input_group_four_in_row_first,me.tag.style_input_group_four_in_row_second,me.tag.style_input_group_four_in_row_third,me.tag.style_input_group_four_in_row_fourth][index++]});
             });
             ret += '</div>';
             return ret;
@@ -2978,12 +2971,12 @@
             var visibilityCounterTrue = 0;
             $.each(me.user_style.properties, function( index, propertie ) {
 
-                console.log("get_new_style, processing propertie=", propertie);
+                //console.log("get_new_style, processing propertie=", propertie);
 
                 //skip non changed elements
                 let el = $('[name="'+me.options.prefix+"-"+propertie+'"]');
-                if (el.data("changed")!=="true") {
-                    console.log("get_new_style, propertie=", propertie, " skipped, not changed, el=", el);
+                if (el.attr("data-changed")!=="true") {
+                    //console.log("get_new_style, propertie=", propertie, " skipped, not changed, el=", el);
                     return;
                 }
 
@@ -3023,8 +3016,6 @@
                 new_style_clean[name] = value;
             });
 
-            console.log("get_new_style, new_style=", new_style, " clean=", new_style_clean);
-
             return new_style_clean;
         },
 
@@ -3053,11 +3044,11 @@
             var style_id = me.get_current_element_style_id(),
                 style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{';
 
-            console.log("Creating style, id=", style_id, " styles=", styles);
+            //console.log("Creating style, id=", style_id, " styles=", styles);
 
             $.each(styles, function( prop, value ) {
 
-                console.log("Processing propertie=", prop, " value=", value);
+                //console.log("Processing propertie=", prop, " value=", value);
                 if (typeof value == "undefined") return;
 
                 if(prop.indexOf('attr-')==0) {
@@ -3131,7 +3122,7 @@
 
             style += '}';
 
-            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             if($('style[style-id="'+style_id+'"]').length < 1) {
                 $('<style style-id="'+style_id+'">')
@@ -3151,15 +3142,19 @@
             var me = this,
                 actual_style = me.get_grid_element_style(set_old);
 
-            console.log("set_modal_actual_style, actual_style=", actual_style, " set_old=", set_old);
-
             var styleHtml = "";
             var style_id = me.user_style.current_element.attr(me.user_style.attr_name);
             var style_element = $('style[style-id="'+style_id+'"]');
             if (style_element.length>0) {
                 styleHtml = style_element.html();
             }
-            console.log("set_modal_actual_style, styleHtml=", styleHtml);
+            //console.log("set_modal_actual_style, styleHtml=", styleHtml);
+
+            $.each( actual_style, function( prop, value ) {
+                var input = $('[name="'+me.options.prefix+"-"+prop+'"]');
+                //reset changed data value
+                input.attr("data-changed", "false");
+            });
 
             $.each( actual_style, function( prop, value ) {
 
@@ -3196,33 +3191,25 @@
                         }
                         value = url;
                     }
-                    try { input.val(value).trigger("change"); } catch (e) {}
+                    try {
+                        input.val(value);
+                    } catch (e) {}
 
                 } else {
 
-                    try { input.val(value).trigger("change"); } catch (e) {}
+                    try {
+                        input.val(value);
+                    } catch (e) {}
 
-                }
-
-                //reset changed data value
-                input.data("changed", "false");
-
-                //if it has parent div.pb-style-input-group-four-in-row reset changed on all items
-                if (input.parents(".pb-style-input-group-four-in-row").length>0) {
-                    input.parents(".pb-style-input-group-four-in-row").find("input[type=number]").each(function(i,e){
-                        $(e).data("changed", "false");
-                    });
                 }
 
                 //only set changed if value is defined in custom style element
                 if (styleHtml.indexOf(prop+":")>=0) {
-                    //console.log("changed propertie=", prop);
-                    input.data("changed", "true");
+                    //console.log("changed propertie=", prop, "input=", input);
+                    //trigger change to set changed attribute also for 4inputs
+                    input.attr("data-changed", "true");
+                    input.trigger("change");
                 }
-
-            });
-
-            $.each( actual_style, function( prop, value ) {
 
             });
         },
@@ -3363,7 +3350,7 @@
 
             me.$wrapper.on('change', me.tagc.style_input, function(e) {
                 //set data attribute to detect changes
-                $(e.target).data("changed", "true");
+                $(e.target).attr("data-changed", "true");
 
                 me.set_new_style();
             });
