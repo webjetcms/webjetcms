@@ -73,7 +73,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
         fillStatusSelect(page);
         prepareCountriesSelect(page);
-        processFromEntity(page, ProcessItemAction.GETALL);
         return page;
     }
 
@@ -170,7 +169,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         }
 
         if(ProcessItemAction.GETALL.equals(action) || ProcessItemAction.FIND.equals(action)) {
-            String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? Constants.getString("basketProductCurrency") : getRequest().getParameter("showCurrency");
+            String wantedCurrency = BasketTools.isCurrencySupported(getRequest().getParameter("showCurrency")) == false ? BasketTools.getSystemCurrency() : getRequest().getParameter("showCurrency");
             entity.setPriceToPayNoVat( BasketTools.convertCurrency(entity.getPriceToPayNoVat(), entity.getCurrency(), wantedCurrency) );
             entity.setPriceToPayVat( BasketTools.convertCurrency(entity.getPriceToPayVat(), entity.getCurrency(), wantedCurrency) );
             entity.setBalanceToPay( BasketTools.convertCurrency(entity.getBalanceToPay(), entity.getCurrency(), wantedCurrency) );

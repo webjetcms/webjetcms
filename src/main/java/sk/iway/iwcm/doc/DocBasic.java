@@ -839,7 +839,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		{
 			itemCurrency = BeanUtils.getProperty(this, Constants.getString("basketCurrencyField"));
 			if (Tools.isEmpty(itemCurrency))
-				itemCurrency = Constants.getString("basketProductCurrency");
+				itemCurrency = BasketTools.getSystemCurrency();
 			//ak sme stale nic nezistili, ideme na zaloznu moznost...eur
 			if (Tools.isEmpty(itemCurrency))
 				itemCurrency = "eur";

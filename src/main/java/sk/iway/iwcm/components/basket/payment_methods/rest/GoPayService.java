@@ -28,19 +28,22 @@ import cz.gopay.api.v3.model.payment.support.PayerContact;
 import cz.gopay.api.v3.model.payment.support.PaymentInstrument;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
+import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
+import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.components.basket.support.FieldMapAttr;
 import sk.iway.iwcm.components.basket.support.SupportMethod;
 import sk.iway.iwcm.editor.FieldType;
@@ -116,7 +119,7 @@ public class GoPayService extends BasePaymentMethod {
                 .build();
     }
 
-    private final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir) {
+    private final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
         Date currentDate = new Date();
 
         //Prepare payment builder
@@ -137,13 +140,19 @@ public class GoPayService extends BasePaymentMethod {
             );
         }
 
+        BigDecimal totalPayedPrice = ProductListService.getPayedPrice(bie.getId(), bipr);
+        totalPriceToPay = totalPriceToPay.subtract(totalPayedPrice);
+        if(totalPriceToPay.compareTo(BigDecimal.ZERO) < 1) return null;
+
+        totalPriceToPay = totalPriceToPay.setScale(2, java.math.RoundingMode.HALF_EVEN);
+
         //Retrun builded payment
         return
             payment
                 .order(
                     bie.getId().toString(),
                     bigDecimalPriceToLong( totalPriceToPay ),
-                    Currency.getByCode( bie.getCurrency().toUpperCase() ),
+                    Currency.getByCode( BasketTools.getSystemCurrency().toUpperCase() ),
                     paymentMethod.getFieldG()
                 ).build();
     }
@@ -152,6 +161,7 @@ public class GoPayService extends BasePaymentMethod {
     public String getPaymentResponse(Long invoiceId, String returnUrl, HttpServletRequest request) {
         BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
         BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+        BasketInvoicePaymentsRepository bipr = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
 
         BasketInvoiceEntity bie = bir.findById(invoiceId).orElse(null);
         if(bie == null) return adminLogError("BasketInvoiceEntity wasnt found by given invoiceId.", request);
@@ -165,7 +175,7 @@ public class GoPayService extends BasePaymentMethod {
         if(connector == null) return adminLogError("Cant init connector for GoPay.", request);
 
         //Prepare payment
-        BasePayment payment = getPayment(bie, returnUrl, paymentMethod, biir);
+        BasePayment payment = getPayment(bie, returnUrl, paymentMethod, biir, bipr);
         if(payment == null) return adminLogError("Cant init payment for GoPay.", request);
 
         try {

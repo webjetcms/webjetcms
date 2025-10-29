@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
@@ -97,6 +98,7 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
             BasketInvoicePaymentEditorFields bipef = new BasketInvoicePaymentEditorFields();
             bipef.fromBasketInvoicePayment(entity, MIN_PAYED_PRICE, action);
         }
+        entity.setCurrency(BasketTools.getSystemCurrency());
         return entity;
     }
 

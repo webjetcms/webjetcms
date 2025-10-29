@@ -736,6 +736,14 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 
 								&nbsp;
 								<br/><br/>
+								<iwcm:text key="components.catalog.price_without_vat"/> <input type="text" name="fieldK" value="<%=ResponseUtils.filter(doc.getFieldK())%>" class="poleMini" size="10" maxlength="10" onkeydown="elementOnChange(this)" onchange="calculateWithVat(this.form.name)" onkeyup="calculateWithVat(this.form.name)" onblur="calculateWithVat(this.form.name)" autocomplete="off"/>
+								<iwcm:text key="components.basket.invoice.currency"/> <input type="text" name="fieldJ" value="<%=ResponseUtils.filter(doc.getFieldJ())%>" class="poleMini" style="width: 60px !important;"  size="3" maxlength="3" autocomplete="off" onkeydown="elementOnChange(this)"/>
+								<iwcm:text key="components.catalog.vat"/> <input type="text" name="fieldL" value="<%=ResponseUtils.filter(doc.getFieldL())%>" class="poleMini" style="width: 40px !important;" size="4" maxlength="4" onkeydown="elementOnChange(this)" onchange="calculateWithVat(this.form.name)" onkeyup="calculateWithVat(this.form.name)" onblur="calculateWithVat(this.form.name)" autocomplete="off"/>
+								<iwcm:text key="components.catalog.price_with_vat"/> <input type="text" name="priceWithVat" value="<%=ResponseUtils.filter(CurrencyTag.formatNumber(doc.getPriceVat())) %>" class="poleMini" size="10" maxlength="10" onkeydown="elementOnChange(this)" onchange="calculateWithoutVat(this.form.name)" onkeyup="calculateWithoutVat(this.form.name)" onblur="calculateWithoutVat(this.form.name)" autocomplete="off"/>
+								<iwcm:text key="components.basket.old_price"/> <input type="text" name="fieldM" value="<%=ResponseUtils.filter(doc.getFieldM())%>" class="poleMini" size="10" maxlength="10" autocomplete="off" onkeydown="elementOnChange(this)"/>
+								<br/>
+								&nbsp;
+								<br/>
 								<iwcm:text key="components.basket.ean"/> <input type="text" name="fieldN" value="<%=ResponseUtils.filter(doc.getFieldN())%>" class="poleMini" style="width:135px !important;" autocomplete="off" onkeydown="elementOnChange(this)"/>
 								<iwcm:text key="components.basket.manufacturer"/> <input type="text" name="fieldO" value="<%=ResponseUtils.filter(doc.getFieldO())%>" class="poleMini" style="width:270px !important;" autocomplete="off" onkeydown="elementOnChange(this)"/>
 

@@ -144,7 +144,7 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   //
   I.say("Verify partial refund");
   I.waitForText("Zaplatená suma: 18,88 eur zo sumy: 18,88 eur", 10, ".dt-footer-row > div > p");
-  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 2, ["", SL.PaymentMethods.GoPay, "-10,00", "Nie", "Neúspešná refundácia", getCurrentDate()]);
+  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 2, ["", SL.PaymentMethods.GoPay, "-10,00", "eur", "Nie", "Neúspešná refundácia", getCurrentDate()]);
 
   //
   I.say("Processing refund");
@@ -157,7 +157,7 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   //
   I.say("Verifying refund status");
   I.waitForText("Zaplatená suma: 0,00 eur zo sumy: 18,88 eur (nedoplatok : 18,88)", 10, ".dt-footer-row > div > p");
-  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.GoPay, "18,88", "Áno", "Refundovaná platba", getCurrentDate() , "GoPay payment state : PAID"]);
+  DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.GoPay, "18,88", "eur", "Áno", "Refundovaná platba", getCurrentDate() , "GoPay payment state : PAID"]);
   DTE.cancel("basketInvoiceDataTable");
   DT.filterContains("editorFields.firstName", testerName);
   DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", getCurrentDate(), "Nová (nezaplatená)", SL.PaymentMethods.GoPay, SL.DeliveryMethods.byMailDelivery, "3", "15,40", "18,88", "18,88"]);
@@ -272,7 +272,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
-    I.waitForText("Zaplatená suma: 16,56 eur zo sumy: 7,95 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 15,96 eur zo sumy: 7,35 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
 
     I.click(DT.btn.editorpayment_add_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
@@ -287,7 +287,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.waitForElement(locate(".DTE_Form_Error").withText("Celková zaplatená suma nesmie byť väčšia ako suma objednávky"));
     DTE.fillField("payedPrice", "-9");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
-    I.waitForText("Zaplatená suma: 7,56 eur zo sumy: 7,95 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 6,96 eur zo sumy: 7,35 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
 
     DT.filterSelect("paymentStatus", "Úspešná refundácia");
     I.clickCss("#datatableFieldDTE_Field_editorFields-payments_wrapper button.buttons-select-all");
@@ -297,7 +297,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     DT.filterSelect("paymentStatus", "Neznámy stav");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.cashOnDelivery, "-9,00", "Nie", "Neznámy stav"]);
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments", 1, ["", SL.PaymentMethods.cashOnDelivery, "-9,00", "eur", "Nie", "Neznámy stav"]);
 });
 
 Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {

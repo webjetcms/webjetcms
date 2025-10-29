@@ -22,6 +22,10 @@ public class BasketTools {
 
 	private BasketTools() {}
 
+	public static String getSystemCurrency() {
+		return Constants.getString(BASKET_PRODUCT_CURRENCY);
+	}
+
 	public static BigDecimal convertToBasketDisplayCurrency(BigDecimal amount, HttpServletRequest request) {
 		return convertCurrency(amount, Constants.getString(BASKET_PRODUCT_CURRENCY), EshopService.getDisplayCurrency(request));
 	}

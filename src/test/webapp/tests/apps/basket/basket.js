@@ -18,6 +18,10 @@ Before(({ I, login }) => {
     }
 });
 
+Scenario('basketDisplayCurrency to default', ({ I, Document }) => {
+    Document.setConfigValue("basketDisplayCurrency", "eur");
+});
+
 Scenario('Test sorting', async ({ I }) => {
     I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
@@ -194,7 +198,15 @@ Scenario('Delivery method by country logic', async ({ I }) => {
 });
 
 Scenario('Check price and currency based on selected basketDisplayCurrency', async ({ I, Document }) => {
+    //Clear cache
+    I.amOnPage("/admin/v9/settings/cache-objects/");
+    I.clickCss("#datatableInit_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(3)");
+    I.click(locate("button.btn-primary").withText("Potvrdiť"));
+
+    I.relogin("tester");
+
     Document.setConfigValue("basketDisplayCurrency", "eur");
+
     I.say("Do EUR check");
         I.amOnPage(SL.PRODUCTS);
         await checkItemPriceLabel(I, "Tričko", "12,30 €");

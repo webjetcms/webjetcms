@@ -20,6 +20,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
@@ -252,7 +253,7 @@ public class EshopService {
 			invoice.setLoggedUserId(userId);
 			invoice.setCreateDate(new Date(Tools.getNow()));
 			invoice.setStatusId(InvoiceStatus.INVOICE_STATUS_NEW.getValue());
-			invoice.setCurrency(EshopService.getDisplayCurrency(request));
+			invoice.setCurrency( BasketTools.getSystemCurrency() );
 			invoice.setUserLng(PageLng.getUserLng(request));
 
 			int deliveryMethodId = Tools.getIntValue(request.getParameter("deliveryMethod"),-1);
