@@ -435,7 +435,7 @@
                     'border-bottom-right-radius'
                 ],
                 current_element: null,
-                current_element_old_style: []
+                current_element_old_style: ""
             };
 
             me.template = [];
@@ -2735,7 +2735,6 @@
 
             var input = $('[name="'+this.options.prefix+"-"+element+'"]');
 
-            console.log("set_minicolors.val=", input.val());
             if (!input.val()) {
                 input.val('rgba(0,0,0,1)');
             }
@@ -2915,7 +2914,12 @@
             }
 
             if(set_old) {
-                this.user_style.current_element_old_style = style;
+                var style_id = this.get_current_element_style_id();
+                this.user_style.current_element_old_style = "";
+                var styleElement = $('style[style-id="'+style_id+'"]');
+                if(styleElement.length > 0) {
+                    this.user_style.current_element_old_style = styleElement.html();
+                }
             }
 
             $.each(this.user_style.px_properties, function( index, value ) {
@@ -3037,7 +3041,16 @@
         },
 
         set_old_style: function () {
-            this.create_style_element(this.user_style.current_element_old_style);
+            if (""==this.user_style.current_element_old_style) {
+                this.reset_modal();
+                return;
+            }
+
+            var style_id = this.get_current_element_style_id();
+            var styleElement = $('style[style-id="'+style_id+'"]');
+            if(styleElement.length > 0) {
+                styleElement.html(this.user_style.current_element_old_style);
+            }
         },
 
         create_style_element: function (styles) {
@@ -3132,14 +3145,15 @@
 
             style += '}';
 
-            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
-            if($('style[style-id="'+style_id+'"]').length < 1) {
+            var styleElement = $('style[style-id="'+style_id+'"]');
+            if(styleElement.length < 1) {
                 $('<style style-id="'+style_id+'">')
                     .html(style)
                     .appendTo(me.$wrapper);
             } else {
-                $('style[style-id="'+style_id+'"]').html(style);
+                styleElement.html(style);
             }
         },
 
