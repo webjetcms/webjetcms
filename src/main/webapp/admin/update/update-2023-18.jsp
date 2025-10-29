@@ -680,30 +680,50 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				//Fix duplicity
 				content = Tools.replace(content, "itemTr itemTr", "itemTr");
 
-				//Swap price with local price
-				content = Tools.replace(content, "getItemPriceVat()", "getLocalPriceVat(request)");
-				content = Tools.replace(content, "getItemPriceQty()", "getItemLocalPriceQty(request)");
-				content = Tools.replace(content, "getItemPriceVatQty()", "getItemLocalPriceVatQty(request)");
-				content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)\\)[\\s]*%" + ">", "<" + "%=doc.getLocalPriceVat(request)%" + ">", false);
-				content = Tools.replaceRegex(content, "doc\\.getPrice\\(\\)", "doc\\.getLocalPrice\\(request\\)", false);
-				content = Tools.replaceRegex(content, "%=doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)[\\s]*\\)[\\s]*%", "%=doc\\.getLocalPriceVat\\(request\\)%", false);
+				if(fullUrl.contains("invoice_detail.jsp")) {
+					content = Tools.replace(content, //Add import
+						"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">",
+						"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">" + "\n<" + "%@page import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%" + ">"
+					);
 
-				// Handle getting valid basket currency and using it
-				content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
-				content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
-				if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
-					if(content.contains("PageParams pageParams = new PageParams(request);") == true)
-						content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
-					else
-						content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+					content = Tools.replace(content, "Prop prop = Prop.getInstance(lng);", "Prop prop = Prop.getInstance(lng);\n\tString invoiceCurrency = invoice.getCurrency();");
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*invoice.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
 
-					if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {
-						//Add needed import
-						content = Tools.replace(content, "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"");
-						content = Tools.replace(content, "<" + "%@ taglib prefix=\"iwcm\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib prefix=\"iwcm\"");
+					content = Tools.replace(content, "uhradene", "payedPrice");
+					content = Tools.replace(content, "doplatit", "toBePaid");
+					content = Tools.replace(content, "totalPriceVat.setScale(2,BigDecimal.ROUND_HALF_UP);", "totalPriceVat.setScale(2, java.math.RoundingMode.HALF_EVEN);");
+					content = Tools.replace(content,
+						"<iwcm:beanWrite name=\"invoice\" property=\"deliveryMethod\"/>",
+						"<" + "%\n" + "String deliveryMethod = DeliveryMethodsService.getDeliveryMethodLabel(invoice.getDeliveryMethod(), request);\n" + "if (Tools.isNotEmpty(deliveryMethod)) { out.println(deliveryMethod); }\n" + "%" + ">"
+					);
+				} else {
+					//Swap price with local price
+					content = Tools.replace(content, "getItemPriceVat()", "getLocalPriceVat(request)");
+					content = Tools.replace(content, "getItemPriceQty()", "getItemLocalPriceQty(request)");
+					content = Tools.replace(content, "getItemPriceVatQty()", "getItemLocalPriceVatQty(request)");
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)\\)[\\s]*%" + ">", "<" + "%=doc.getLocalPriceVat(request)%" + ">", false);
+					content = Tools.replaceRegex(content, "doc\\.getPrice\\(\\)", "doc\\.getLocalPrice\\(request\\)", false);
+					content = Tools.replaceRegex(content, "%=doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)[\\s]*\\)[\\s]*%", "%=doc\\.getLocalPriceVat\\(request\\)%", false);
+
+					// Handle getting valid basket currency and using it
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+					if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
+						if(content.contains("PageParams pageParams = new PageParams(request);") == true)
+							content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+						else
+							content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+
+						if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {
+							//Add needed import
+							content = Tools.replace(content, "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"");
+							content = Tools.replace(content, "<" + "%@ taglib prefix=\"iwcm\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib prefix=\"iwcm\"");
+						}
 					}
 				}
 
+				// add request param into isPaymentMethodConfigured
 				content = Tools.replace(content, "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, prop)", "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, request, prop)");
 
 				hasChange = true;
