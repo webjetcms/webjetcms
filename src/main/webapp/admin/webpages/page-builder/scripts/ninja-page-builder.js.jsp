@@ -2607,7 +2607,7 @@
                 html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'">'+label+'</div><div class="radio-group">';
 
             $.each(values, function( key, value ) {
-                id = prop + '-' + value;
+                id = prop + '-' + key;
                 html += '<input type="radio" class="'+me.tag.style_input+'" name="'+me.options.prefix+"-"+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
@@ -2691,17 +2691,6 @@
         },
 
         set_spinner: function (prop,min_val,max_val) {
-
-            /*$('[name="'+this.options.prefix+"-"+prop+'"]').spinner({
-                min: min_val,
-                max: max_val,
-                spin: function() {
-                    var input = $(this);
-                    setTimeout(function(){
-                        input.change();
-                    },100);
-                }
-            });*/
 
             $('[name="'+this.options.prefix+"-"+prop+'"]')
                 .attr('min', min_val)
@@ -2795,17 +2784,17 @@
 
             if($(me.user_style.current_element).hasClass(me.tag.section)) {
                 $(me.$wrapper).addClass(me.state.is_styling_section);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
             }
 
             else if($(me.user_style.current_element).hasClass(me.tag.container)) {
                 $(me.$wrapper).addClass(me.state.is_styling_container);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
             }
 
             else if($(me.user_style.current_element).hasClass(me.tag.column)) {
                 $(me.$wrapper).addClass(me.state.is_styling_column);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
             }
 
             else {
@@ -2814,8 +2803,10 @@
         },
 
         set_modal_default_state: function(){
-            $('.tab-menu .tab-link').first().click();
-            $('.tab-item .tab-item-button').first().click();
+            $('div.'+this.options.prefix + '-modal .tab-menu .tab-link').first().click();
+            if ($('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().hasClass('active')==false) {
+                $('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().click();
+            }
         },
 
         set_modal_zindex: function(el){
@@ -2990,6 +2981,10 @@
 
                 //skip non changed elements
                 let el = $('[name="'+me.options.prefix+"-"+propertie+'"]');
+                if (el.first().attr("type") === "radio") {
+                    el = $('[name="'+me.options.prefix+"-"+propertie+'"]:checked');
+                }
+
                 if (el.attr("data-changed")!=="true") {
                     //console.log("get_new_style, propertie=", propertie, " skipped, not changed, el=", el);
                     return;
