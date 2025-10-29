@@ -2886,9 +2886,11 @@
             if(typeof me.get_current_element_style_id() !== 'undefined') {
                 var style_id = me.get_current_element_style_id();
                 $('style[style-id="'+style_id+'"]').unbind().off().remove();
-            }
 
-            me.set_modal_actual_style(false);
+                //remove styleid attribute
+                me.user_style.current_element.removeAttr(me.user_style.attr_name);
+            }
+            me.clear_after_close_modal();
         },
 
         /*==================================================================

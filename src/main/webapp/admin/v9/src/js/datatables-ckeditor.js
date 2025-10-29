@@ -1722,15 +1722,18 @@ export class DatatablesCkEditor {
 			//ziskaj HTML kod z iframe elementu
 			let fieldId = this.options.fieldid;
 			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
-
-			let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
-			//console.log("saveData=", saveData);
-			//ziskaj data pre element doc_data
-			for (let i=0; i<saveData.editable.length; i++) {
-				let inlineData = saveData.editable[i];
-				if ("doc_data"===inlineData.wjAppField) {
-					htmlCode = inlineData.data;
+			try {
+				let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
+				//console.log("saveData=", saveData);
+				//ziskaj data pre element doc_data
+				for (let i=0; i<saveData.editable.length; i++) {
+					let inlineData = saveData.editable[i];
+					if ("doc_data"===inlineData.wjAppField) {
+						htmlCode = inlineData.data;
+					}
 				}
+			} catch (error) {
+				console.error("Error getting data from pageBuilderIframe:", error);
 			}
 		}
 		//console.log("getData, htmlCode=", htmlCode);
@@ -1861,12 +1864,23 @@ export class DatatablesCkEditor {
 		this.switchEditingMode(this.editingMode);
 	}
 
-	switchEditingMode(newEditingMode) {
-		//console.log("switchEditingMode to ", newEditingMode);
+	/**
+	 * Switch mode
+	 * @param {String} newEditingMode
+	 * @param {Boolean} userChange - true if this is user change and we would like to preserve HTML code between modes
+	 */
+	switchEditingMode(newEditingMode, userChange=false) {
+		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
 		let editorTypeSelector = $("#"+fieldId+"-editorTypeSelector");
+		let oldEditingMode = this.editingMode;
+
+		var data = null;
+		if (userChange === true) {
+			data = this.getData();
+		}
 
 		this.editingMode = newEditingMode;
 		if ("pageBuilder"===this.editingMode) {
@@ -1880,14 +1894,22 @@ export class DatatablesCkEditor {
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
 				pageBuilderElement.find("iframe")[0].contentWindow.$("div.exit-inline-editor select").val('pageBuilder');
 			}
+
+			if (data != null) {
+				this.pbInsertContent(data, "replace", true);
+			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			var data = this.ckEditorInstance.getData();
+			if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				ck.setMode('wysiwyg');
+				ck.setData(data);
+			}
 			setTimeout(()=>{
 				//this fix problems with codemirror line gutter
-				if (ckEditorInstance.mode!=="source") ck.setMode('source');
+				if (ck.mode!=="source") ck.setMode('source');
 				ck.setData(data);
 			}, 500);
 
@@ -1900,6 +1922,13 @@ export class DatatablesCkEditor {
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
+
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				var ck = this.ckEditorInstance;
+				setTimeout(()=>{
+					ck.setData(data);
+				}, 500);
+			}
 		}
 
 		this.editorHeightLatest = 0;
