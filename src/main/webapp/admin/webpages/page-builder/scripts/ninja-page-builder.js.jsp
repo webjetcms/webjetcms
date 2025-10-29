@@ -2478,26 +2478,44 @@
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
             });
             me.$wrapper.on('change', me.tagc.style_input_group_four_in_row+' .pb-style-input-wrapper input', function() {
+                console.log("====== 4inputs, dis=", this.getAttribute("name"), " margin=", $("[name=pb-margin-bottom]").data("changed"));
+
                 var $dis = $(this),
                     disVal = $dis.val(),
                     $parent = $dis.closest(me.tagc.style_input_group_four_in_row);
                 if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_all).is(':checked')){
-                    $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').val(disVal);
+                    $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').each(function(i, e) {
+                        console.log("4inputs, e=", e.getAttribute("name"));
+                        $(e).val(disVal);
+
+                        if ("pb-margin-bottom" === e.getAttribute("name")) {
+                            console.log("Style input changed, e=", e);
+                        }
+
+                        $(e).data("changed", "true");
+                    });
+                    //$parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').data("changed", "true");
+                    console.log("4inputs:", $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input'));
                 }else {
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_first).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_first_second).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_second+' input').val(disVal);
+                            //$parent.find(me.tagc.style_input_group_four_in_row_second+' input').data("changed", "true");
                         }
                     }
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_third).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_third_fourth).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').val(disVal);
+                            //$parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').data("changed", "true");
                         }
                     }
                 }
+                console.log("====== 4inputs, dis=", this, " margin2=", $("[name=pb-margin-bottom]").data("changed"));
                 //always allow first input
                 //console.log("change2=", $dis, "disVal=", disVal, "parent=", $parent);
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
+
+                console.log("====== 4inputs, dis=", this, " margin3=", $("[name=pb-margin-bottom]").data("changed"));
 
             });
         },
@@ -2539,7 +2557,7 @@
         build_input_number: function (prop,label,options) {
             var klass = (options!=undefined && 'class' in options)? options.class:'';
             var disabled = (options!=undefined && 'disabled' in options)? options.disabled:false;
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number" disabled="'+disabled+'" class="'+this.tag.style_input+'" name="'+prop+'" value="0" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number" disabled="'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+this.options.prefix+"-"+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -2562,7 +2580,7 @@
         },
 
         build_input: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" /></div>';
         },
 
         build_input_elfinder: function (prop,label) {
@@ -2570,8 +2588,8 @@
                 '<div class="'+this.tag.style_input_wrapper+'">'+
                     '<div class="'+this.tag.style_label+'">'+label+'</div>'+
                     '<div class="input-group">'+
-                        '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
+                        '<input type="text" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" style="width:80%" />'+
+                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+this.options.prefix+"-"+prop+'\', \'\')"></span>'+
                     '</div>'+
                 '</div>';
 
@@ -2579,7 +2597,7 @@
         },
 
         build_checkbox: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+prop+'" value="true" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="true" /></div>';
         },
 
         build_style_connections: function () {
@@ -2587,7 +2605,7 @@
         },
 
         build_input_hidden: function (prop) {
-            return '<input type="hidden" class="'+this.tag.style_input+'" name="'+prop+'" value="" />';
+            return '<input type="hidden" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" />';
         },
 
         build_radio: function (values,prop,label) {
@@ -2597,7 +2615,7 @@
 
             $.each(values, function( key, value ) {
                 id = prop + '-' + value;
-                html += '<input type="radio" class="'+me.tag.style_input+'" name="'+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
+                html += '<input type="radio" class="'+me.tag.style_input+'" name="'+me.options.prefix+"-"+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
             html += '</div></div>';
@@ -2665,22 +2683,23 @@
         },
 
         set_box_shadow: function(prop) {
-            $('[name="'+prop+'-color"], [name="'+prop+'-horizontal"], [name="'+prop+'-vertical"], [name="'+prop+'-blur"], [name="'+prop+'-spread"]').on('change', function () {
+            var me = this;
+            $('[name="'+me.options.prefix+"-"+prop+'-color"], [name="'+me.options.prefix+"-"+prop+'-horizontal"], [name="'+me.options.prefix+"-"+prop+'-vertical"], [name="'+me.options.prefix+"-"+prop+'-blur"], [name="'+me.options.prefix+"-"+prop+'-spread"]').on('change', function () {
 
-                var color = $('[name="'+prop+'-color"]').val(),
-                    x = $('[name="'+prop+'-horizontal"]').val(),
-                    y = $('[name="'+prop+'-vertical"]').val(),
-                    blur = $('[name="'+prop+'-blur"]').val(),
-                    spread = $('[name="'+prop+'-spread"]').val(),
+                var color = $('[name="'+me.options.prefix+"-"+prop+'-color"]').val(),
+                    x = $('[name="'+me.options.prefix+"-"+prop+'-horizontal"]').val(),
+                    y = $('[name="'+me.options.prefix+"-"+prop+'-vertical"]').val(),
+                    blur = $('[name="'+me.options.prefix+"-"+prop+'-blur"]').val(),
+                    spread = $('[name="'+me.options.prefix+"-"+prop+'-spread"]').val(),
                     new_val = color + ' '+ x + 'px ' + y + 'px ' + blur + 'px ' + spread + 'px';
 
-                $('[name="'+prop+'"]').val(new_val);
+                $('[name="'+me.options.prefix+"-"+prop+'"]').val(new_val);
             });
         },
 
         set_spinner: function (prop,min_val,max_val) {
 
-            $('[name="'+prop+'"]').spinner({
+            /*$('[name="'+this.options.prefix+"-"+prop+'"]').spinner({
                 min: min_val,
                 max: max_val,
                 spin: function() {
@@ -2689,13 +2708,13 @@
                         input.change();
                     },100);
                 }
-            });
+            });*/
 
-            $('[name="'+prop+'"]')
+            $('[name="'+this.options.prefix+"-"+prop+'"]')
                 .attr('min', min_val)
                 .attr('max', max_val);
 
-            $('[name="'+prop+'"]').on('keydown', function () {
+            $('[name="'+this.options.prefix+"-"+prop+'"]').on('keydown', function () {
                 var input = $(this);
 
                 setTimeout(function(){
@@ -2721,7 +2740,7 @@
 
         set_minicolors: function (element) {
 
-            var input = $('[name="'+element+'"]');
+            var input = $('[name="'+this.options.prefix+"-"+element+'"]');
 
             $(input).minicolors({
                 inline:true,
@@ -2959,25 +2978,35 @@
             var visibilityCounterTrue = 0;
             $.each(me.user_style.properties, function( index, propertie ) {
 
+                console.log("get_new_style, processing propertie=", propertie);
+
+                //skip non changed elements
+                let el = $('[name="'+me.options.prefix+"-"+propertie+'"]');
+                if (el.data("changed")!=="true") {
+                    console.log("get_new_style, propertie=", propertie, " skipped, not changed, el=", el);
+                    return;
+                }
+
                 if (propertie.indexOf('visibility-') === 0) {
-                    new_style[propertie] = $('[name="'+propertie+'"]').is(":checked");
+                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]').is(":checked");
                     if (new_style[propertie] == true) visibilityCounterTrue++;
                 }
                 else if(propertie === 'border-style' || propertie === 'text-align') {
-                    new_style[propertie] = $('[name="'+propertie+'"]:checked').val();
+                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]:checked').val();
                 } else if (propertie === 'background-image') {
-                    let bgimage = $('[name="'+propertie+'"]').val();
+                    let bgimage = $('[name="'+me.options.prefix+"-"+propertie+'"]').val();
                     if (""==bgimage) bgimage = "none";
                     else if (bgimage.indexOf("url(")==-1) bgimage = "url("+bgimage+")";
 
                     new_style[propertie] = bgimage;
                 } else {
-                    new_style[propertie] = $('[name="'+propertie+'"]').val();
+                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]').val();
                 }
 
             });
 
             $.each(this.user_style.px_properties, function( index, propertie ) {
+                if (typeof new_style[propertie] === 'undefined') return;
                 new_style[propertie] += 'px';
             });
 
@@ -2994,7 +3023,7 @@
                 new_style_clean[name] = value;
             });
 
-            //console.log("get_new_style, new_style=", new_style, " clean=", new_style_clean);
+            console.log("get_new_style, new_style=", new_style, " clean=", new_style_clean);
 
             return new_style_clean;
         },
@@ -3024,9 +3053,12 @@
             var style_id = me.get_current_element_style_id(),
                 style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{';
 
-            //console.log("Creating style, id=", style_id, " styles=", styles);
+            console.log("Creating style, id=", style_id, " styles=", styles);
 
             $.each(styles, function( prop, value ) {
+
+                console.log("Processing propertie=", prop, " value=", value);
+                if (typeof value == "undefined") return;
 
                 if(prop.indexOf('attr-')==0) {
                     //jedna sa o standardny HTML atribut
@@ -3089,6 +3121,9 @@
                     //overwrite background-image because it's probably inline
                     me.user_style.current_element.css('background-image', value);
                 } else {
+                    //check if element is changed
+
+
                     style += prop+':'+value+';';
                 }
 
@@ -3096,7 +3131,7 @@
 
             style += '}';
 
-            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             if($('style[style-id="'+style_id+'"]').length < 1) {
                 $('<style style-id="'+style_id+'">')
@@ -3107,23 +3142,40 @@
             }
         },
 
+        /**
+         * Sets the actual style values into the modal inputs
+         * @param set_old {boolean} - whether to set also the old style for rollback
+         */
         set_modal_actual_style: function (set_old) {
+
             var me = this,
                 actual_style = me.get_grid_element_style(set_old);
 
+            console.log("set_modal_actual_style, actual_style=", actual_style, " set_old=", set_old);
+
+            var styleHtml = "";
+            var style_id = me.user_style.current_element.attr(me.user_style.attr_name);
+            var style_element = $('style[style-id="'+style_id+'"]');
+            if (style_element.length>0) {
+                styleHtml = style_element.html();
+            }
+            console.log("set_modal_actual_style, styleHtml=", styleHtml);
+
             $.each( actual_style, function( prop, value ) {
+
+                var input = $('[name="'+me.options.prefix+"-"+prop+'"]');
 
                 if(prop === 'background-color' || prop === 'border-color' || prop === 'box-shadow-color') {
 
-                    $('[name="'+prop+'"]').minicolors('value', value);
+                    input.minicolors('value', value);
 
                 } else if (prop === 'border-style' || prop === 'text-align') {
 
-                    $('[name="'+prop+'"][value="'+value+'"]').prop('checked',true);
+                    $('[name="'+me.options.prefix+"-"+prop+'"][value="'+value+'"]').prop('checked',true);
 
                 } else if (prop === 'visibility-xs' || prop === 'visibility-sm' || prop === 'visibility-md' || prop === 'visibility-lg' || prop === 'visibility-xl') {
 
-                    $('[name="'+prop+'"]').prop('checked',value);
+                    input.prop('checked',value);
 
                 } else if(prop === 'background-image') {
 
@@ -3144,13 +3196,33 @@
                         }
                         value = url;
                     }
-                    try { $('[name="'+prop+'"]').val(value).trigger("change"); } catch (e) {}
+                    try { input.val(value).trigger("change"); } catch (e) {}
 
                 } else {
 
-                    try { $('[name="'+prop+'"]').val(value).trigger("change"); } catch (e) {}
+                    try { input.val(value).trigger("change"); } catch (e) {}
 
                 }
+
+                //reset changed data value
+                input.data("changed", "false");
+
+                //if it has parent div.pb-style-input-group-four-in-row reset changed on all items
+                if (input.parents(".pb-style-input-group-four-in-row").length>0) {
+                    input.parents(".pb-style-input-group-four-in-row").find("input[type=number]").each(function(i,e){
+                        $(e).data("changed", "false");
+                    });
+                }
+
+                //only set changed if value is defined in custom style element
+                if (styleHtml.indexOf(prop+":")>=0) {
+                    //console.log("changed propertie=", prop);
+                    input.data("changed", "true");
+                }
+
+            });
+
+            $.each( actual_style, function( prop, value ) {
 
             });
         },
@@ -3289,7 +3361,10 @@
                 me.save_modal($(this));
             });
 
-            me.$wrapper.on('change', me.tagc.style_input, function() {
+            me.$wrapper.on('change', me.tagc.style_input, function(e) {
+                //set data attribute to detect changes
+                $(e.target).data("changed", "true");
+
                 me.set_new_style();
             });
 

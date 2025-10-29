@@ -945,6 +945,10 @@
   padding: 0;
   color: #13151B;
 }
+.pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-wrapper input[type=number][disabled] {
+  background-color: #DDDFE6;
+  color: #686F83;
+}
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-wrapper .ui-spinner.ui-widget.ui-widget-content {
   width: 100%;
   overflow: hidden;
@@ -1669,12 +1673,6 @@
   position: relative;
   padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
   overflow: hidden;
-}
-
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
 }
 
 .pb-light {

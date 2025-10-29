@@ -178,6 +178,12 @@
                     color: $secondary;
                 }
 
+                input[type=number] {
+                    &[disabled] {
+                        background-color: $nice-gray-100;
+                        color: $dark-60;
+                    }
+                }
 
                 .ui-spinner.ui-widget.ui-widget-content {
                     width: 100%;
