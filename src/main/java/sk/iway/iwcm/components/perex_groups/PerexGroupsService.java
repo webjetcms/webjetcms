@@ -12,6 +12,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
 
@@ -133,7 +134,7 @@ public class PerexGroupsService {
 
     public static PerexGroupsEntity save(PerexGroupsEntity entity, PerexGroupsRepository perexGroupsRepository) {
         DocDB docDB = DocDB.getInstance();
-        String availableGroups = entity.getAvailableGroups();
+        String availableGroups = Tools.join(entity.getEditorFields().getAvailableGroups().stream().map(a -> a.getGroupId()).collect(Collectors.toList()),",");
         if (InitServlet.isTypeCloud() && Tools.isEmpty(availableGroups))
 		{
 			availableGroups = String.valueOf(CloudToolsForCore.getDomainId());
