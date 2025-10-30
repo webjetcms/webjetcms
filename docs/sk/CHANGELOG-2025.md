@@ -32,6 +32,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](admin/settings/response-header/editor.png)
 
+### Bezpečnosť
+
+- Pridaná podpora pre povolenie iba jednej aktívnej `session` na jedného používateľa pomocou konfiguračnej premennej `sessionSingleLogon`. Pri novom prihlásení sa zruší predchádzajúca aktívna `session` (#58121).
+
 ### Dokumentácia
 
 - Aktualizované všetky fotky obrazovky v českej verzii dokumentácie (#58113).
