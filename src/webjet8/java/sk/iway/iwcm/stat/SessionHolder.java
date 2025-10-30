@@ -443,7 +443,7 @@ public class SessionHolder
 	{
 		SessionHolder sh = SessionHolder.getInstance();
 
-		//Try get curentSession
+		//Try get currentSession
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb != null && rb.getUserId() > 0) {
 			invalidateOtherUserSessions((int)userId, rb.getSessionId(), sh.data);
