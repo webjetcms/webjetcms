@@ -14,14 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEditorFields;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService;
-import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/admin/rest/eshop/basket-items")
@@ -31,13 +32,18 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
 
     private final BasketInvoiceItemsRepository basketInvoiceItemsRepository;
 
-    private List<Integer> modeOfTransportsIds;
-    private List<String> configuredPaymentMethods;
+    private final PaymentMethodsService pms;
+    private final DeliveryMethodsService dms;
+
+    private List<LabelValue> paymentMethods;
+    private List<LabelValue> deliveryMethods;
 
     @Autowired
-    public BasketInvoiceItemRestController(BasketInvoiceItemsRepository basketInvoiceItemsRepository) {
+    public BasketInvoiceItemRestController(BasketInvoiceItemsRepository basketInvoiceItemsRepository, PaymentMethodsService pms, DeliveryMethodsService dms) {
         super(basketInvoiceItemsRepository);
         this.basketInvoiceItemsRepository = basketInvoiceItemsRepository;
+        this.pms = pms;
+        this.dms = dms;
     }
 
     @Override
@@ -47,12 +53,8 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
 
         Page<BasketInvoiceItemEntity> page = basketInvoiceItemsRepository.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId(), pageable);
 
-        //
-        configuredPaymentMethods = new ArrayList<>(PaymentMethodsService.getConfiguredPaymentMethodsMap(getProp()).values());
-        List<DocDetails> modeOfTransports = EshopService.getInstance().getModeOfTransports(getRequest());
-        modeOfTransportsIds = modeOfTransports.stream()
-            .map(DocDetails::getDocId)
-            .toList();
+        paymentMethods = pms.getPaymentOptions(getProp());
+        deliveryMethods = dms.getDeliveryOptions(getProp());
 
         processFromEntity(page, ProcessItemAction.GETALL);
         return page;
@@ -62,7 +64,7 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
     public BasketInvoiceItemEntity processFromEntity(BasketInvoiceItemEntity entity, ProcessItemAction action) {
         if(entity.getEditorFields() == null) {
            BasketInvoiceItemEditorFields biief = new BasketInvoiceItemEditorFields();
-           biief.fromBasketInvoiceItem(entity, modeOfTransportsIds, configuredPaymentMethods);
+           biief.fromBasketInvoiceItem(entity, paymentMethods, deliveryMethods);
         }
         return entity;
     }

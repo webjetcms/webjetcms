@@ -202,22 +202,19 @@ public class CurrencyTag extends BodyTagSupport
 	 * @param currency
 	 * @return
 	 */
-	public static String getLabelFromCurrencyCode(String currency)
-	{
+	public static String getLabelFromCurrencyCode(String currency) {
 		if ("eur".equalsIgnoreCase(currency))
-   		return  "€";
-   	if ("skk".equalsIgnoreCase(currency))
-   		return  "Sk";
-   	if ("czk".equalsIgnoreCase(currency))
-   		return  "Kč";
-   	if ("kč".equalsIgnoreCase(currency))
-   		return  "Kč";
-   	if ("kc".equalsIgnoreCase(currency))
-   		return  "Kč";
-   	if ("gbp".equalsIgnoreCase(currency))
-   		return  "Ł";
-   	if ("usd".equalsIgnoreCase(currency))
-   		return  "$";
-   	return currency;
+			return  "€";
+		if ("czk".equalsIgnoreCase(currency))
+			return  "Kč";
+		if ("kč".equalsIgnoreCase(currency))
+			return  "Kč";
+		if ("kc".equalsIgnoreCase(currency))
+			return  "Kč";
+		if ("gbp".equalsIgnoreCase(currency))
+			return  "Ł";
+		if ("usd".equalsIgnoreCase(currency))
+			return  "$";
+		return currency;
 	}
 }

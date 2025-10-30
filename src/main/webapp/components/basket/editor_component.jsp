@@ -124,8 +124,6 @@ $(document).ready(function(){
 	document.textForm.groupIds.value = "<%=ResponseUtils.filter(pageParams.getValue("groupIds", ""))%>";
 <%} %>
 });
-	<%-- musime si vediet dynamicky ziskat zoznam podporovanych elektronickych platieb--%>
-	var modeTransport="";
 
 	function checkChanges()
 	{
@@ -334,16 +332,6 @@ function getOrderFormParametersString()
 		var url = "/components/basket/admin_invoices_list.jsp";
 	 	$("#invoicesIframeWindowTab").attr("src", url);
 	}
-
-	function loadTransportsIframe()
-	{
-		var url = "/components/basket/admin_transports_list.jsp?include="+encodeURIComponent(getIncludeTextProducts());
-	 	$("#transportIframeWindowTab").attr("src", url);
-	}
-
-
-
-
 //-->
 
 
@@ -351,9 +339,8 @@ function getOrderFormParametersString()
 
 <div class="box_tab box_tab_thin left">
 	<ul class="tab_menu" id="Tabs">
-		<li class="first openFirst"><a href="#" onclick="loadTransportsIframe();showHideTab('1');" id="tabLink1"><iwcm:text key="components.settings"/></a></li>
-				<li class=""><a href="#" onclick="showHideTab('4');" id="tabLink4"><iwcm:text key="components.basket.visualStyle"/></a></li>
-
+		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.settings"/></a></li>
+		<li class=""><a href="#" onclick="showHideTab('4');" id="tabLink4"><iwcm:text key="components.basket.visualStyle"/></a></li>
 		<li class="noperms-cmp_basket"><a href="#" onclick="loadInvoicesIframe();showHideTab('3');" id="tabLink3"><iwcm:text key="components.basket.lis_of_invoices"/></a></li>
 		<li class="last"><a href="#" onclick="loadComponentIframe();showHideTab('2');" id="tabLink2"><iwcm:text key="components.news.items"/></a></li>
 	</ul>
@@ -596,13 +583,9 @@ function getOrderFormParametersString()
 						</div>
 					</div>
 				</div>
-			</form></div>
-<div class="clearfix">
-			<h2><iwcm:text key="components.basket.mode_of_transport"/></h2>
-			<div>
-				<iframe id="transportIframeWindowTab" frameborder="0" name="transportIframeWindowTab" width="100%" height="700" src="/admin/iframe_blank.jsp"></iframe>
-			</div>
-	</div></div>
+			</form>
+		</div>
+</div>
 
 	<div class="tab-page" id="tabMenu2">
 		<iframe id="componentIframeWindowTab" frameborder="0" name="componentIframeWindowTab" width="100%" height="530" src="/admin/iframe_blank.jsp"></iframe>
@@ -656,7 +639,6 @@ function getOrderFormParametersString()
 
 <script type="text/javascript">
 <!--
-	loadTransportsIframe();
 
 //inicializacia poloziek
 	if (isFck)

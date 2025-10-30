@@ -59,6 +59,13 @@ public class BasketInvoicePaymentEntity implements Serializable {
     )
     private BigDecimal payedPrice;
 
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.DISABLED,
+        title="apps.product-list.currency.js"
+    )
+    String currency;
+
     @Column(name="confirmed")
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,

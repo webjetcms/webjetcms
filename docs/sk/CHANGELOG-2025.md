@@ -24,6 +24,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/webpages/redirects/path-editor.png)
 
+### Elektronický obchod
+
+- Nová sekcia [Spôsoby doručenia](redactor/apps/eshop/delivery-methods/README.md), ako samostatná tabuľka nahrádza pôvodnú konfiguráciu dostupných spôsob doručenia, ktorá sa nachádzala priamo v nastaveniach aplikácie **elektornického obchodu**. Pre každý spôsob doručenia je možné nastaviť aj cenu, ktorá pri zvolení možnosti bude automaticky pripočítaná k objednávke. Nastavené spôsoby doručenia sa aj automaticky premietnu do možností pri vytváraní objednávky zákazníkom (#58061).
+
+![](redactor/apps/eshop/delivery-methods/datatable.png)
+
 ### Iné menšie zmeny
 
 - Vyhľadávanie - upravené načítanie zoznamu šablón pri hľadaní web stránok. Načítajú sa všetky šablóny bez ohľadu na ich dostupnosť v priečinkoch, aby sa nestalo, že pri editácii web stránky šablóna nie je dostupná (#58073).
@@ -42,6 +48,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Mierne upravené API v [NewsActionBean](../../src/webjet8/java/sk/iway/iwcm/components/news/NewsActionBean.java), hlavne nastavenie `groupIds` ktoré sú teraz typu `List<GroupDetails>`. Môžete použiť `setGroupIds(int[] groupIds)` pre nastavenie s poľom ID hodnôt (#58073).
 - Opravená možnosť vkladania úvodzoviek do parametrov aplikácií (#58117).
 - Pripravené kontajnery pre všetky podporované databázové serveri vo WebJET CMS pre ľahké spustenie vo VS Code. Nachádzajú sa v priečinku `.devcontainer/db` (#58137).
+- Elektroncký obchod - kvôli zmenám pri procese implementácie **spôsobov doručenia** je potrebné vykonať úpravu súborou pomocou aktualizačného skriptu `update-2025-40.jsp` a to nad sekciou `basket` (#58061).
+- Elektroncký obchod - pri procese implementácie **spôsobov doručenia** do súboru `order_form.jsp` pribudlo niekoľko zmien, ktoré si musíte implementovať manuálne. Tieto zmeny sú príliš komplexné, aby sa dali doplniť pomocou aktualizačného skriptu `update-2025-40.jsp` (#58061).
 
 ### Testovanie
 

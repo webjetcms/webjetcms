@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.components.basket.rest.ProductListService.AddingStatus;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -133,6 +134,6 @@ public class ProductListRestController extends WebpagesDatatable {
 
     @RequestMapping(value="/supported-currencies")
     public List<LabelValue> getListOfSupportedCurrencies() {
-        return ProductListService.getListOfSupportedCurrencies();
+        return BasketTools.getSupportedCurrenciesOptions();
     }
 }

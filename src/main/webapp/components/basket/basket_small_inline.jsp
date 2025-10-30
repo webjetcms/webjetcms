@@ -11,6 +11,7 @@
 <%
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
+  String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
 
   List<BasketInvoiceItemEntity> items = EshopService.getInstance().getBasketItems(request);
 %>
@@ -22,7 +23,7 @@
 
     <span class='basketSmallPrice'>
       <span>
-        <iway:curr currency="<%= EshopService.getDisplayCurrency(request) %>">
+        <iway:curr currency="<%=displayCurrency%>">
           <%= EshopService.getTotalLocalPriceVat(items, request) %>
         </iway:curr>
       </span>
