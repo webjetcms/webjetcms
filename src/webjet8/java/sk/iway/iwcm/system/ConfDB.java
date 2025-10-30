@@ -196,6 +196,9 @@ public class ConfDB
 				if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
 				if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
 
+				String oldValue = ConfDB.getOldValue(name);
+				Constants.setString(name, oldValue);
+
 				//if (update != 0)
 				return true;
 			}
@@ -804,4 +807,17 @@ public class ConfDB
 		if ("licenseExpiryDate".equals(name)) return true;
 		return false;
 	}
+
+	/**
+	 * Returns original value from Constants before any changes or empty string if not found (same as in Constants)
+	 * @param name - the configuration name
+	 * @return original value from Constants or empty string if not found
+	 */
+	public static String getOldValue(String name) {
+        List<ConfDetails> constantsData = Constants.getAllValues();
+        for (ConfDetails c : constantsData) {
+            if (c.getName().equals(name)) return c.getValue();
+        }
+        return "";
+    }
 }

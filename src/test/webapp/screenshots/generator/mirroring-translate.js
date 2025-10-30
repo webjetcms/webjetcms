@@ -2,11 +2,18 @@ Feature('wj9-webpage-mirroring-translate');
 
 var docDataSK = '<p class="text-center"><strong>Názov stránky</strong></p><p>Test prekladu stránky s&nbsp;rôznymi slovami.</p><ol>	<li>dnes</li>	<li>zajtra</li>	<li>pozajtra</li></ol>';
 
-var skVersionName = "dobré nové ráno";
-var enVersionName = "good new morning";
+var randomText;
+var skVersionName = "dobré ráno";
+var enVersionName = "good morning";
 
 Before(({ I, login }) => {
     login('admin');
+
+    if (typeof randomText=="undefined") {
+        randomText = I.getRandomTextShort();
+        skVersionName = "Dobré ráno - A - " + randomText;
+        enVersionName = "Good morning - A - " + randomText;
+    }
 });
 
 Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {

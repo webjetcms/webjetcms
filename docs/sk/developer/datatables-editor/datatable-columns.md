@@ -146,6 +146,8 @@ Voliteľné polia:
   - ```{currentDateTimeSeconds}``` - nahradí sa za aktuálny dátum a čas vrátane sekúnd
   - ```{currentTime}``` - nahradí sa za aktuálny čas
 - `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty zachovajú a skopírujú z existujúceho objektu v databáze. Pre polia typu dátum/čas to neplatí, tie sa prepíšu automaticky. Ak potrebujete toto použiť aj pre iný typ poľa a preniesť aj `null` hodnotu nastavte atribút na `true`, prípadne na `false` ak nechcete automatický prepis pre dátumové polia.
+- `ai` - nastavením na hodnotu `false` je možné vypnúť zobrazenie AI ikony pre všeobecné možnosti (preložiť, opraviť gramatiku...). AI ikona sa zobrazí len ak je asistent nastavený pre toto konkrétne pole.
+- `disabled` - nastavením na `false` sa vstupnému poľu v editore nastaví atribút `disabled="disabled"`.
 
 ## Vlastnosti @DataTableColumnEditor
 

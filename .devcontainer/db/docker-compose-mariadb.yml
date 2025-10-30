@@ -1,0 +1,15 @@
+services:
+  mariadb:
+    image: mariadb:11.5
+    container_name: webjetcms-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "${WEBJET_DB_PASS}"
+      MYSQL_DATABASE: "webjetcms_autotest_web"
+    ports:
+      - "13306:3306"
+    volumes:
+      - webjetcms-mariadbdata:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  webjetcms-mariadbdata:

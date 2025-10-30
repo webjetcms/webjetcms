@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.server.ResponseStatusException;
 
+import sk.iway.iwcm.tags.CombineTag;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -45,6 +47,7 @@ public class ThymeleafShowdocController {
         model.addAttribute("groupDetails", request.getAttribute("pageGroupDetails"));
         model.addAttribute("tempDetails", request.getAttribute("templateDetails"));
         model.addAttribute("templatesGroupDetails", request.getAttribute("templatesGroupDetails"));
+        model.addAttribute("version", CombineTag.getVersion());
 
         return template;
     }

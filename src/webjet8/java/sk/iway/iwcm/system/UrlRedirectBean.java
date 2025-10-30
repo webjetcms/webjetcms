@@ -25,7 +25,6 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /**
  *  UrlRedirectBean.java
@@ -68,13 +67,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
         inputType = DataTableColumnType.DATETIME,
         title ="components.redirect.admin_list.datum_vlozenia",
 		sortAfter = "validTo",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
-                }
-            )
-        }
+        disabled = true
     )
 	Date insertDate;
 
