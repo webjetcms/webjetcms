@@ -410,9 +410,7 @@
                     'visibility-xl',
 
                     //standardne atributy
-                    'attr-title'
-
-                    /*,
+                    'attr-title',
 
                     'width',
                     'min-width',
@@ -420,7 +418,6 @@
                     'height',
                     'min-height',
                     'max-height'
-                    */
                 ],
                 px_properties: [
                     'margin-top',
@@ -2268,6 +2265,14 @@
         /*====================|> CREATE MODAL
         /*=================================================================*/
 
+        /**
+         *
+         * @returns CSS selector prefix to modal form to safely get values from inputs
+         */
+        getModalFormPrefix: function() {
+            return "div." + this.options.prefix + "-modal form[name=" + this.options.prefix + "-form] ";
+        },
+
         create_modal: function () {
             var me = this,
                 content = '';
@@ -2345,10 +2350,10 @@
             // <%--  ---------------  TAB 06  --%>
 
             var box_shadow = '<div class="'+me.tag.style_input_group_four_in_row+'">';
-            box_shadow += me.build_input('box-shadow-horizontal', '<iwcm:text key="pagebuilder.modal.box-shadow.horizontal"/>');
-            box_shadow += me.build_input('box-shadow-vertical', '<iwcm:text key="pagebuilder.modal.box-shadow.vertical"/>');
-            box_shadow += me.build_input('box-shadow-blur', '<iwcm:text key="pagebuilder.modal.box-shadow.blur"/>');
-            box_shadow += me.build_input('box-shadow-spread', '<iwcm:text key="pagebuilder.modal.box-shadow.spread"/>');
+            box_shadow += me.build_input_number('box-shadow-horizontal', '<iwcm:text key="pagebuilder.modal.box-shadow.horizontal"/>');
+            box_shadow += me.build_input_number('box-shadow-vertical', '<iwcm:text key="pagebuilder.modal.box-shadow.vertical"/>');
+            box_shadow += me.build_input_number('box-shadow-blur', '<iwcm:text key="pagebuilder.modal.box-shadow.blur"/>');
+            box_shadow += me.build_input_number('box-shadow-spread', '<iwcm:text key="pagebuilder.modal.box-shadow.spread"/>');
             box_shadow += '</div>';
             box_shadow += me.build_input_hidden('box-shadow');
             box_shadow += me.build_input('box-shadow-color','<iwcm:text key="pagebuilder.modal.box-shadow.color"/>');
@@ -2359,9 +2364,9 @@
             var sizes = me.build_input('width','<iwcm:text key="pagebuilder.modal.width"/>');
             sizes += me.build_input('min-width','<iwcm:text key="pagebuilder.modal.width.min"/>');
             sizes += me.build_input('max-width','<iwcm:text key="pagebuilder.modal.width.max"/>');
-            sizes += me.build_input('height','<iwcm:text key="pagebuilder.modal.width"/>');
-            sizes += me.build_input('min-height','<iwcm:text key="pagebuilder.modal.width.min"/>');
-            sizes += me.build_input('max-height','<iwcm:text key="pagebuilder.modal.width.max"/>');
+            sizes += me.build_input('height','<iwcm:text key="pagebuilder.modal.height"/>');
+            sizes += me.build_input('min-height','<iwcm:text key="pagebuilder.modal.height.min"/>');
+            sizes += me.build_input('max-height','<iwcm:text key="pagebuilder.modal.height.max"/>');
 
             content += me.build_input_group(sizes,'07');
 
@@ -2563,7 +2568,7 @@
             var klass = (options!=undefined && 'class' in options)? options.class:'';
             var disabled = "";
             if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+this.options.prefix+"-"+prop+'" value="0" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -2589,7 +2594,7 @@
         },
 
         build_input: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
         },
 
         build_input_elfinder: function (prop,label) {
@@ -2597,8 +2602,8 @@
                 '<div class="'+this.tag.style_input_wrapper+'">'+
                     '<div class="'+this.tag.style_label+'">'+label+'</div>'+
                     '<div class="input-group">'+
-                        '<input type="text" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" style="width:80%" />'+
-                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+this.options.prefix+"-"+prop+'\', \'\')"></span>'+
+                        '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
+                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
                     '</div>'+
                 '</div>';
 
@@ -2606,7 +2611,7 @@
         },
 
         build_checkbox: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="true" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+prop+'" value="true" /></div>';
         },
 
         build_style_connections: function () {
@@ -2614,7 +2619,7 @@
         },
 
         build_input_hidden: function (prop) {
-            return '<input type="hidden" class="'+this.tag.style_input+'" name="'+this.options.prefix+"-"+prop+'" value="" />';
+            return '<input type="hidden" class="'+this.tag.style_input+'" name="'+prop+'" value="" />';
         },
 
         build_radio: function (values,prop,label) {
@@ -2624,7 +2629,7 @@
 
             $.each(values, function( key, value ) {
                 id = prop + '-' + key;
-                html += '<input type="radio" class="'+me.tag.style_input+'" name="'+me.options.prefix+"-"+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
+                html += '<input type="radio" class="'+me.tag.style_input+'" name="'+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
             html += '</div></div>';
@@ -2693,26 +2698,26 @@
 
         set_box_shadow: function(prop) {
             var me = this;
-            $('[name="'+me.options.prefix+"-"+prop+'-color"], [name="'+me.options.prefix+"-"+prop+'-horizontal"], [name="'+me.options.prefix+"-"+prop+'-vertical"], [name="'+me.options.prefix+"-"+prop+'-blur"], [name="'+me.options.prefix+"-"+prop+'-spread"]').on('change', function () {
+            $(me.getModalFormPrefix() + '[name="'+prop+'-color"], '+me.getModalFormPrefix()+'[name="'+prop+'-horizontal"], '+me.getModalFormPrefix()+'[name="'+prop+'-vertical"], '+me.getModalFormPrefix()+'[name="'+prop+'-blur"], '+me.getModalFormPrefix()+'[name="'+prop+'-spread"]').on('change', function () {
 
-                var color = $('[name="'+me.options.prefix+"-"+prop+'-color"]').val(),
-                    x = $('[name="'+me.options.prefix+"-"+prop+'-horizontal"]').val(),
-                    y = $('[name="'+me.options.prefix+"-"+prop+'-vertical"]').val(),
-                    blur = $('[name="'+me.options.prefix+"-"+prop+'-blur"]').val(),
-                    spread = $('[name="'+me.options.prefix+"-"+prop+'-spread"]').val(),
+                var color = $(me.getModalFormPrefix() + '[name="'+prop+'-color"]').val(),
+                    x = $(me.getModalFormPrefix() + '[name="'+prop+'-horizontal"]').val(),
+                    y = $(me.getModalFormPrefix() + '[name="'+prop+'-vertical"]').val(),
+                    blur = $(me.getModalFormPrefix() + '[name="'+prop+'-blur"]').val(),
+                    spread = $(me.getModalFormPrefix() + '[name="'+prop+'-spread"]').val(),
                     new_val = color + ' '+ x + 'px ' + y + 'px ' + blur + 'px ' + spread + 'px';
 
-                $('[name="'+me.options.prefix+"-"+prop+'"]').val(new_val);
+                $(me.getModalFormPrefix() + '[name="'+prop+'"]').val(new_val);
             });
         },
 
         set_spinner: function (prop,min_val,max_val) {
 
-            $('[name="'+this.options.prefix+"-"+prop+'"]')
+            $(this.getModalFormPrefix() + '[name="'+prop+'"]')
                 .attr('min', min_val)
                 .attr('max', max_val);
 
-            $('[name="'+this.options.prefix+"-"+prop+'"]').on('keydown', function () {
+            $(this.getModalFormPrefix() + '[name="'+prop+'"]').on('keydown', function () {
                 var input = $(this);
 
                 setTimeout(function(){
@@ -2738,7 +2743,7 @@
 
         set_minicolors: function (element) {
 
-            var input = $('[name="'+this.options.prefix+"-"+element+'"]');
+            var input = $(this.getModalFormPrefix() + '[name="'+element+'"]');
 
             if (!input.val()) {
                 input.val('rgba(0,0,0,1)');
@@ -2923,7 +2928,7 @@
 
             if(style['box-shadow'] === 'none') {
 
-                style['box-shadow-color'] = 'rgba(0,0,0,0)';
+                style['box-shadow-color'] = 'rgba(0,0,0,0.5)';
                 style['box-shadow-horizontal'] = 0;
                 style['box-shadow-vertical'] = 0;
                 style['box-shadow-blur'] = 0;
@@ -2984,30 +2989,30 @@
                 //console.log("get_new_style, processing propertie=", propertie);
 
                 //skip non changed elements
-                let el = $('[name="'+me.options.prefix+"-"+propertie+'"]');
+                let el = $(me.getModalFormPrefix() + '[name="'+propertie+'"]');
                 if (el.first().attr("type") === "radio") {
-                    el = $('[name="'+me.options.prefix+"-"+propertie+'"]:checked');
+                    el = $(me.getModalFormPrefix() + '[name="'+propertie+'"]:checked');
                 }
 
                 if (el.attr("data-changed")!=="true") {
-                    //console.log("get_new_style, propertie=", propertie, " skipped, not changed, el=", el);
+                    //console.log("get_new_style, propertie=", propertie, " skipped, not changed, value=", el.val(), " el=", el);
                     return;
                 }
 
                 if (propertie.indexOf('visibility-') === 0) {
-                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]').is(":checked");
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').is(":checked");
                     if (new_style[propertie] == true) visibilityCounterTrue++;
                 }
                 else if(propertie === 'border-style' || propertie === 'text-align') {
-                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]:checked').val();
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]:checked').val();
                 } else if (propertie === 'background-image') {
-                    let bgimage = $('[name="'+me.options.prefix+"-"+propertie+'"]').val();
+                    let bgimage = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').val();
                     if (""==bgimage) bgimage = "none";
                     else if (bgimage.indexOf("url(")==-1) bgimage = "url("+bgimage+")";
 
                     new_style[propertie] = bgimage;
                 } else {
-                    new_style[propertie] = $('[name="'+me.options.prefix+"-"+propertie+'"]').val();
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').val();
                 }
 
             });
@@ -3134,9 +3139,6 @@
                     //overwrite background-image because it's probably inline
                     me.user_style.current_element.css('background-image', value);
                 } else {
-                    //check if element is changed
-
-
                     style += prop+':'+value+';';
                 }
 
@@ -3144,7 +3146,10 @@
 
             style += '}';
 
-            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            //replace default values
+            style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
+
+            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             var styleElement = $('style[style-id="'+style_id+'"]');
             if(styleElement.length < 1) {
@@ -3174,14 +3179,14 @@
             //console.log("set_modal_actual_style, styleHtml=", styleHtml);
 
             $.each( actual_style, function( prop, value ) {
-                var input = $('[name="'+me.options.prefix+"-"+prop+'"]');
+                var input = $(me.getModalFormPrefix() + '[name="'+prop+'"]');
                 //reset changed data value
                 input.attr("data-changed", "false");
             });
 
             $.each( actual_style, function( prop, value ) {
 
-                var input = $('[name="'+me.options.prefix+"-"+prop+'"]');
+                var input = $(me.getModalFormPrefix() + '[name="'+prop+'"]');
 
                 if(prop === 'background-color' || prop === 'border-color' || prop === 'box-shadow-color') {
 
@@ -3194,7 +3199,7 @@
 
                 } else if (prop === 'border-style' || prop === 'text-align') {
 
-                    $('[name="'+me.options.prefix+"-"+prop+'"][value="'+value+'"]').prop('checked',true);
+                    $(me.getModalFormPrefix() + '[name="'+prop+'"][value="'+value+'"]').prop('checked',true);
 
                 } else if (prop === 'visibility-xs' || prop === 'visibility-sm' || prop === 'visibility-md' || prop === 'visibility-lg' || prop === 'visibility-xl') {
 
@@ -3379,6 +3384,11 @@
             me.$wrapper.on('change', me.tagc.style_input, function(e) {
                 //set data attribute to detect changes
                 $(e.target).attr("data-changed", "true");
+
+                //if it's box-shadow mark also box-shadow hidden input
+                if (e.target.getAttribute("name").startsWith("box-shadow")) {
+                    $(me.getModalFormPrefix() + '[name="box-shadow"]').attr("data-changed", "true");
+                }
 
                 me.set_new_style();
             });
