@@ -2494,8 +2494,6 @@
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
             });
             me.$wrapper.on('change', me.tagc.style_input_group_four_in_row+' .pb-style-input-wrapper input', function() {
-                //console.log("====== 4inputs, dis=", this.getAttribute("name"), " changed=", $(this).attr("data-changed"));
-
                 var $dis = $(this),
                     disVal = $dis.val(),
                     $parent = $dis.closest(me.tagc.style_input_group_four_in_row);
@@ -2509,12 +2507,14 @@
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_first).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_first_second).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_second+' input').val(disVal);
+                            //set data-changed attribute same as first input
                             $parent.find(me.tagc.style_input_group_four_in_row_second+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_first+' input').attr("data-changed"));
                         }
                     }
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_third).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_third_fourth).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').val(disVal);
+                            //set data-changed attribute same as third input
                             $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_third+' input').attr("data-changed"));
                         }
                     }

@@ -1764,6 +1764,7 @@ export class DatatablesCkEditor {
 			if ("replace" === mode || "edit" === mode) {
 				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
 				$container.children('section').remove();
+				//remove all custom styles
 				$container.children('style').remove();
 			}
 			const $lastSection = $container.children('section').last();
