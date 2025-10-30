@@ -175,12 +175,6 @@ public class SessionHolder
 				}
 			}
 
-			// Check if this session is marked for invalidation
-			if (det.isInvalidate()) {
-				request.getSession().invalidate();
-				return false;
-			}
-
 			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
 				request.getSession().invalidate();
 				return false;
@@ -196,10 +190,10 @@ public class SessionHolder
 				det.setLoggedUserId(user.getUserId());
 				det.setAdmin(user.isAdmin());
 				det.setLoggedUserName(user.getFullName());
-				
+
 				// Handle single logon - invalidate other sessions for the same user
 				if (Constants.getBoolean("sessionSingleLogon") == true) {
-					invalidateOtherUserSessionsForSingleLogon(user.getUserId(), sessionId);
+					invalidateOtherUserSessions(user.getUserId(), sessionId);
 				}
 			}
 		} else {
@@ -408,30 +402,16 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
-		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
-		{
-			String sessionId = entry.getKey();
-			if (Tools.isEmpty(sessionId)) continue;
-
-			SessionDetails sd = entry.getValue();
-			if (sd == null) continue;
-
-			if (sd.getLoggedUserId() == userId && sessionId.equals(rb.getSessionId())==false)
-			{
-				//destroy session
-				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
-				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId +" uid="+sd.getLoggedUserId());
-			}
-		}
+		invalidateOtherUserSessions(userId, rb.getSessionId());
 	}
 
-	/**
-	 * Invalidate other sessions for user with userId for single logon feature
-	 * @param userId - ID of user that logged in
-	 * @param currentSessionId - current session ID to exclude from invalidation
-	 */
-	private void invalidateOtherUserSessionsForSingleLogon(int userId, String currentSessionId)
-	{
+	public void invalidateOtherUserSessions(int userId, String currentSessionId) {
+		invalidateOtherUserSessions(userId, currentSessionId, data);
+	}
+
+	private static void invalidateOtherUserSessions(int userId, String currentSessionId, Map<String, SessionDetails> data) {
+		boolean foundInvalid = false;
+
 		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
 		{
 			String sessionId = entry.getKey();
@@ -442,14 +422,17 @@ public class SessionHolder
 
 			if (sd.getLoggedUserId() == userId)
 			{
-				//mark session for invalidation
-				sd.setInvalidate(true);
-				Logger.debug(SessionHolder.class, "Marking session for invalidation (single logon): " + sessionId +" uid="+sd.getLoggedUserId());
+				//destroy session
+				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
+				foundInvalid = true;
+				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			}
 		}
-		
-		//propagate to cluster - invalidate sessions for this user ID on other nodes
-		ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder", (long)userId);
+
+		if(foundInvalid && Constants.getBoolean("sessionSingleLogon") == true) {
+			//propagate to cluster - invalidate sessions for this user ID on other nodes
+			ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder", (long) userId);
+		}
 	}
 
 	/**
@@ -459,20 +442,25 @@ public class SessionHolder
 	public static void refresh(long userId)
 	{
 		SessionHolder sh = SessionHolder.getInstance();
-		for (Map.Entry<String, SessionDetails> entry : sh.data.entrySet())
-		{
-			String sessionId = entry.getKey();
-			if (Tools.isEmpty(sessionId)) continue;
 
-			SessionDetails sd = entry.getValue();
-			if (sd == null) continue;
-
-			if (sd.getLoggedUserId() == (int)userId)
-			{
-				sd.setInvalidate(true);
-				Logger.debug(SessionHolder.class, "Session marked for invalidation from cluster refresh: " + sessionId + " uid=" + userId);
-			}
+		//Try get curentSession
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null && rb.getUserId() > 0) {
+			invalidateOtherUserSessions((int)userId, rb.getSessionId(), sh.data);
+			return;
 		}
+
+		// Find last session by last logon time
+		String lastSession = "";
+		long lastLogonTime = -1L;
+		for (Map.Entry<String, SessionDetails> entry : sh.data.entrySet()) {
+			SessionDetails sd = entry.getValue();
+			if(sd == null) continue;
+
+			if(sd.getLoggedUserId() == userId && sd.getLogonTime() > lastLogonTime) lastSession = entry.getKey();
+		}
+
+		invalidateOtherUserSessions((int)userId, lastSession, sh.data);
 	}
 
 	/**

@@ -24,7 +24,6 @@ public class SessionDetails
    private boolean admin = false;
    private int domainId;
    private String domainName;
-   private boolean invalidate = false;
 
 	public String getRemoteAddr()
 	{
@@ -113,14 +112,6 @@ public class SessionDetails
 	public void setDomainName(String domainName)
 	{
 		this.domainName = domainName;
-	}
-	public boolean isInvalidate()
-	{
-		return invalidate;
-	}
-	public void setInvalidate(boolean invalidate)
-	{
-		this.invalidate = invalidate;
 	}
 
 }
