@@ -795,7 +795,7 @@
                     $(column).html("<p>"+html+"</p>");
                 }
 
-                //me.grid.column_content can be like div.column_content extract just CSS classes
+                //can be in format like "div.column-content", extract just CSS classes
                 var columnContentClass = me.grid.column_content;
                 var dot = columnContentClass.indexOf(".");
                 if (dot!=-1) columnContentClass = columnContentClass.substring(dot+1);
@@ -2568,7 +2568,7 @@
             var klass = (options!=undefined && 'class' in options)? options.class:'';
             var disabled = "";
             if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+' class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -3149,7 +3149,7 @@
             //replace default values
             style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
 
-            console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
+            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             var styleElement = $('style[style-id="'+style_id+'"]');
             if(styleElement.length < 1) {
