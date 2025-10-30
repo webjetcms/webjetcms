@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,7 +14,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * Generovanie navigacnej listy (navbar) pre rozne typy zobrazenia
  */
-public class NavbarService {
+public class NavbarService implements NavbarInterface {
 
     public String getNavbar(DocDetails doc, HttpServletRequest request) {
 		GroupsDB groupsDB = GroupsDB.getInstance();
@@ -21,13 +22,37 @@ public class NavbarService {
 
         String navbar = doc.getNavbar();
         String navbar2;
+        String navbarDefaultType = Constants.getString("navbarDefaultType");
+        
         //najskor zisti ako je na tom adresar
         GroupDetails group = groupsDB.getGroup(doc.getGroupId());
-        if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
+        
+        // Try to load custom implementation
+        NavbarInterface customNavbar = getCustomNavbarImplementation(navbarDefaultType);
+        
+        if (customNavbar != null)
+        {
+            // Use custom implementation for RDF format
+            if ("rdf".equalsIgnoreCase(navbarDefaultType))
+            {
+                navbar2 = customNavbar.getNavbarRDF(doc.getGroupId(), doc.getDocId(), request);
+            }
+            // Use custom implementation for schema.org format
+            else if ("schema.org".equalsIgnoreCase(navbarDefaultType))
+            {
+                navbar2 = customNavbar.getNavbarSchema(doc.getGroupId(), doc.getDocId(), request);
+            }
+            // Use custom implementation for standard format
+            else
+            {
+                navbar2 = customNavbar.getNavbar(doc.getGroupId(), doc.getDocId(), request);
+            }
+        }
+        else if ("rdf".equalsIgnoreCase(navbarDefaultType))
         {
             navbar2 = getNavbarRDF(doc.getGroupId(), doc.getDocId(), request.getSession());
         }
-        else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
+        else if ("schema.org".equalsIgnoreCase(navbarDefaultType))
         {
             navbar2 = getNavbarSchema(doc.getGroupId(), doc.getDocId(), request.getSession());
         }
@@ -355,5 +380,51 @@ public class NavbarService {
 
 		htmlCode = "<div class=\"breadcrumbrdf\" xmlns:v=\"http://rdf.data-vocabulary.org/#\">" + htmlCode + "</div>";
 		return (htmlCode);
+	}
+
+	/**
+	 * Try to load custom navbar implementation if navbarDefaultType is a class name
+	 * @param navbarDefaultType - value from Constants.getString("navbarDefaultType")
+	 * @return Custom NavbarInterface implementation or null if not a valid class or standard type
+	 */
+	private NavbarInterface getCustomNavbarImplementation(String navbarDefaultType) {
+		// Check if it's a standard type (not a custom class)
+		if (Tools.isEmpty(navbarDefaultType) || 
+		    "normal".equalsIgnoreCase(navbarDefaultType) || 
+		    "rdf".equalsIgnoreCase(navbarDefaultType) || 
+		    "schema.org".equalsIgnoreCase(navbarDefaultType)) {
+			return null;
+		}
+		
+		// Try to load the class as a custom implementation
+		try {
+			Class<?> clazz = Class.forName(navbarDefaultType);
+			if (NavbarInterface.class.isAssignableFrom(clazz)) {
+				return (NavbarInterface) clazz.getDeclaredConstructor().newInstance();
+			} else {
+				Logger.error(NavbarService.class, "Class " + navbarDefaultType + " does not implement NavbarInterface");
+			}
+		} catch (ClassNotFoundException e) {
+			Logger.debug(NavbarService.class, "Class " + navbarDefaultType + " not found, using standard navbar implementation");
+		} catch (Exception e) {
+			Logger.error(NavbarService.class, "Error while initializing custom navbar implementation: " + navbarDefaultType, e);
+		}
+		
+		return null;
+	}
+
+	@Override
+	public String getNavbarRDF(int groupId, int docId, HttpServletRequest request) {
+		return getNavbarRDF(groupId, docId, request.getSession());
+	}
+
+	@Override
+	public String getNavbarSchema(int groupId, int docId, HttpServletRequest request) {
+		return getNavbarSchema(groupId, docId, request.getSession());
+	}
+
+	@Override
+	public String getNavbar(int groupId, int docId, HttpServletRequest request) {
+		return getNavbar(groupId, docId, request.getSession());
 	}
 }
