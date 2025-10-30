@@ -447,6 +447,12 @@
         margin-bottom: 8px;
     }
 
+    .minicolors.no-color-picker {
+        .minicolors-slider, .minicolors-opacity-slider, .minicolors-grid {
+            display: none;
+        }
+    }
+
     .tab-menu {
         margin: 0;
         display: block;

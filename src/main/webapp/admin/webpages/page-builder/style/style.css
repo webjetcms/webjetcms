@@ -1160,6 +1160,9 @@
   margin-right: 8px;
   margin-bottom: 8px;
 }
+.pb-modal .minicolors.no-color-picker .minicolors-slider, .pb-modal .minicolors.no-color-picker .minicolors-opacity-slider, .pb-modal .minicolors.no-color-picker .minicolors-grid {
+  display: none;
+}
 .pb-modal .tab-menu {
   margin: 0;
   display: block;

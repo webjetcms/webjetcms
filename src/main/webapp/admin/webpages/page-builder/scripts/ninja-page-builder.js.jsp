@@ -17,6 +17,10 @@
         this.element = element;
         this._name = pluginName;
 
+        if (typeof window.pbCustomOptions === "function") {
+            window.pbCustomOptions(options);
+        }
+
         this.options = $.extend( {}, this.get_defaults(), options );
         this.generate_default_options();
 
@@ -33,6 +37,11 @@
         init: function () {
             this.build_cache();
             this.set_settings();
+
+            if (typeof window.pbCustomSettings === "function") {
+                window.pbCustomSettings(this);
+            }
+
             this.setTemplateData();
             this.mark_grid_elements();
             this.create_modal();
@@ -789,7 +798,14 @@
                     $(column).html("<p>"+html+"</p>");
                 }
 
-                $(column).wrapInner('<div class="column-content '+me.tag.column_content+' '+me.tag.editable_content+'"></div>');
+                //me.grid.column_content can be like div.column_content extract just CSS classes
+                var columnContentClass = me.grid.column_content;
+                var dot = columnContentClass.indexOf(".");
+                if (dot!=-1) columnContentClass = columnContentClass.substring(dot+1);
+                //replace multiple . with space
+                columnContentClass = columnContentClass.replace(/\./g, ' ');
+
+                $(column).wrapInner('<div class="'+columnContentClass+' '+me.tag.column_content+' '+me.tag.editable_content+'"></div>');
             } else {
                 // <%--console.log("wrapChildren", column);--%>
                 $(column).children(me.grid.column_content).addClass(me.tag.column_content).addClass(me.tag.editable_content);
@@ -2733,25 +2749,12 @@
                 opacity: true,
                 format:'rgb',
                 defaultValue: 'rgba(0,0,0,1)', // Set default opacity to 1
-                swatches: [
-                    '#001f3f',
-                    '#0074D9',
-                    '#7FDBFF',
-                    '#39CCCC',
-                    '#3D9970',
-                    '#2ECC40',
-                    '#01FF70',
-                    '#FFDC00',
-                    '#FF851B',
-                    '#FF4136',
-                    '#85144b',
-                    '#F012BE',
-                    '#B10DC9',
-                    '#111111',
-                    '#AAAAAA',
-                    '#DDDDDD'
-                ]
+                swatches: this.options.color_swatches,
             });
+
+            if (this.options.color_picker === false) {
+                input.parent().addClass("no-color-picker");
+            }
 
             //initial value
             input.attr("data-changed", "false");
@@ -2914,6 +2917,7 @@
             }
 
             $.each(this.user_style.px_properties, function( index, value ) {
+                if (typeof style[value] === 'undefined' || style[value] === null) return;
                 style[value] = style[value].replace('px','');
             });
 
@@ -3056,7 +3060,7 @@
             me.set_current_element_style_id();
 
             if(me.user_style.current_element.hasClass(me.tags.column)) {
-                column_content = '> .column-content';
+                column_content = '> '+me.grid.column_content;
             }
 
             var style_id = me.get_current_element_style_id(),
@@ -3584,6 +3588,26 @@
                         parent: parent
                     });
                 },
+                color_swatches: [
+                    '#001f3f',
+                    '#0074D9',
+                    '#7FDBFF',
+                    '#39CCCC',
+                    '#3D9970',
+                    '#2ECC40',
+                    '#01FF70',
+                    '#FFDC00',
+                    '#FF851B',
+                    '#FF4136',
+                    '#85144b',
+                    '#F012BE',
+                    '#B10DC9',
+                    '#111111',
+                    '#AAAAAA',
+                    '#DDDDDD'
+                ],
+                //if false disable any color picker, only swatches will be available
+                color_picker: true,
                 template_basic_containers_sizes: [] // <%-- dopocitava sa automaticky z max_col_size vo funkcii generate_default_options--%>
             };
         },
