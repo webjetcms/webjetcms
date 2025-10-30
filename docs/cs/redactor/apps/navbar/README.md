@@ -30,3 +30,56 @@ nebo je možné ji vložit přímo do web stránky jako výraz:
 ```
 
 ![](editor-dialog.png)
+
+## Vlastní implementace navigační lišty
+
+Pro některé projekty může být nutné vytvořit vlastní implementaci navigační lišty s odlišným formátováním nebo strukturou. WebJET umožňuje definovat vlastní třídu pro generování navigační lišty.
+
+### Vytvoření vlastní implementace
+
+Vlastní implementace musí implementovat rozhraní `sk.iway.iwcm.doc.NavbarInterface`:
+
+```java
+package com.example.custom;
+
+import javax.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.doc.NavbarInterface;
+
+public class CustomNavbar implements NavbarInterface {
+    
+    @Override
+    public String getNavbarRDF(int groupId, int docId, HttpServletRequest request) {
+        // Vlastní implementace pro RDF formát
+        return "<div class=\"custom-rdf\">...</div>";
+    }
+
+    @Override
+    public String getNavbarSchema(int groupId, int docId, HttpServletRequest request) {
+        // Vlastní implementace pro Schema.org formát
+        return "<ol class=\"custom-schema\">...</ol>";
+    }
+
+    @Override
+    public String getNavbar(int groupId, int docId, HttpServletRequest request) {
+        // Vlastní implementace pro standardní formát
+        return "Vlastní navigace...";
+    }
+}
+```
+
+### Nastavení
+
+Po vytvoření vlastní implementace je nutné nastavit konfigurační proměnnou `navbarDefaultType` na plný název třídy (včetně package):
+
+```
+navbarDefaultType=com.example.custom.CustomNavbar
+```
+
+Tato konfigurace se nastavuje v **Nastavení > Konfigurace** v administraci WebJET.
+
+### Poznámky
+
+- Pokud konfigurační proměnná `navbarDefaultType` obsahuje název třídy (ne standardní hodnoty `normal`, `rdf`, `schema.org`), WebJET se pokusí načíst tuto třídu a použít ji.
+- Pokud třída neexistuje nebo neimplementuje `NavbarInterface`, použije se standardní implementace.
+- Vlastní třída musí mít veřejný konstruktor bez parametrů.
+
