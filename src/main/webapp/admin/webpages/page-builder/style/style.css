@@ -945,6 +945,13 @@
   padding: 0;
   color: #13151B;
 }
+.pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-wrapper input[type=number][disabled] {
+  background-color: #DDDFE6;
+  color: #686F83;
+}
+.pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-wrapper input[data-changed=true] {
+  border-color: #0063FB;
+}
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-wrapper .ui-spinner.ui-widget.ui-widget-content {
   width: 100%;
   overflow: hidden;
@@ -1010,25 +1017,26 @@
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row {
   overflow: hidden;
   position: relative;
+  padding-bottom: 3px;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-wrapper {
   float: left;
-  width: 22.75%;
-  margin-right: 3%;
+  width: 21%;
+  margin-right: 5.3%;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-wrapper:last-child {
   margin-right: 0;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-group-four-in-row-tools {
   position: absolute;
-  bottom: 0;
+  bottom: 1px;
   width: 100%;
   border-bottom: 1px solid #868EA5;
   margin-bottom: 5px;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-group-four-in-row-tools .pb-style-input-group-four-in-row-checkbox {
   position: absolute;
-  bottom: 10px;
+  bottom: 12px;
   z-index: 9;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-group-four-in-row-tools .pb-style-input-group-four-in-row-checkbox.pb-style-input-group-four-in-row-all {
@@ -1037,10 +1045,10 @@
   transform: translateX(-50%);
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-group-four-in-row-tools .pb-style-input-group-four-in-row-checkbox.pb-style-input-group-four-in-row-first-second {
-  left: 22.5%;
+  left: 21.7%;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row .pb-style-input-group-four-in-row-tools .pb-style-input-group-four-in-row-checkbox.pb-style-input-group-four-in-row-third-fourth {
-  right: 22.5%;
+  right: 21.9%;
 }
 .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row.all .pb-style-input-wrapper:not(.pb-style-input-group-four-in-row-first) .ui-spinner input, .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row.first-second .pb-style-input-wrapper.pb-style-input-group-four-in-row-second .ui-spinner input, .pb-modal .pb-style-input-group .pb-style-input-group-content .pb-style-input-group-four-in-row.third-fourth .pb-style-input-wrapper.pb-style-input-group-four-in-row-fourth .ui-spinner input {
   background-color: transparent;
@@ -1151,6 +1159,9 @@
   overflow: hidden;
   margin-right: 8px;
   margin-bottom: 8px;
+}
+.pb-modal .minicolors.no-color-picker .minicolors-slider, .pb-modal .minicolors.no-color-picker .minicolors-opacity-slider, .pb-modal .minicolors.no-color-picker .minicolors-grid {
+  display: none;
 }
 .pb-modal .tab-menu {
   margin: 0;
@@ -1669,12 +1680,6 @@
   position: relative;
   padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
   overflow: hidden;
-}
-
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
 }
 
 .pb-light {

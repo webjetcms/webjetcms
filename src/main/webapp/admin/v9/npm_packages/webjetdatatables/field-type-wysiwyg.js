@@ -135,7 +135,7 @@ export function typeWysiwyg() {
             window.switchEditorType = function(select, e) {
                 //console.log("Switch editor type to:", select.value, "conf=", conf.wjeditor, "e=", e);
                 let editorType = select.value;
-                conf.wjeditor.switchEditingMode(editorType);
+                conf.wjeditor.switchEditingMode(editorType, true);
                 window.editorTypeForced = editorType;
                 if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
             }
