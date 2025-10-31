@@ -67,6 +67,15 @@ public class SpringSecurityConf {
 		// configure security from BaseSpringConfig
 		configureSecurity(http, "sk.iway.iwcm.system.spring.BaseSpringConfig");
 
+		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
+		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
+		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
+			basicAuthEnabled = true;
+			http.httpBasic(customizer -> {});
+		}
+
+
 		if (Tools.isNotEmpty(Constants.getInstallName()))
 		{
 			//WebJET 9

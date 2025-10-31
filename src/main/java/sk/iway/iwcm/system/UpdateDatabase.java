@@ -41,6 +41,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -108,6 +109,7 @@ public class UpdateDatabase
 		disabledItemsConfigRights();
 
 		updateStatViewsColumns();
+		updateStatErrorColumns();
 
 		updateStopwords();
 
@@ -134,6 +136,8 @@ public class UpdateDatabase
 			DomainIdUpdateService.updateExportDatDomainId();
 			DomainIdUpdateService.updatePerexGroupDomainId();
 		}
+
+		UpdateDatabaseService.setNewsTemplates();
 
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
@@ -437,6 +441,27 @@ public class UpdateDatabase
 
 								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);
 
+								if (constrainKey==null) {
+									constrainSql = """
+											SELECT kc.name AS constraint_name,
+												t.name  AS table_name,
+												STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
+											FROM sys.key_constraints kc
+											JOIN sys.tables t          ON kc.parent_object_id = t.object_id
+											JOIN sys.indexes i         ON kc.unique_index_id = i.index_id AND i.object_id = t.object_id
+											JOIN sys.index_columns ic  ON ic.object_id = t.object_id AND ic.index_id = i.index_id
+											JOIN sys.columns c         ON c.object_id = t.object_id AND c.column_id = ic.column_id
+											WHERE kc.type = 'UQ'
+											AND t.name = N'%s'
+											AND SCHEMA_NAME(t.schema_id) = N'dbo'
+											GROUP BY kc.name, t.name
+											ORDER BY constraint_name;
+											""".formatted(tableName);
+									constrainKey = new SimpleQuery(dbName).forString(constrainSql);
+								}
+
+								if (constrainKey==null) continue;
+
 								String replaceText = sql.substring(i, sql.indexOf("}", i)+1);
 								sql = Tools.replace(sql, replaceText, constrainKey);
 							}
@@ -455,10 +480,34 @@ public class UpdateDatabase
 								sql = Tools.replace(sql, "ENGINE=MyISAM", "ENGINE="+defaultEngine);
 								sql = Tools.replace(sql, "engine=MyISAM", "ENGINE="+defaultEngine);
 							}
+
+							if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_MSSQL) {
+								//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
+								sql = Tools.replace(sql, "\\'", "''");
+								sql = Tools.replace(sql, "\\\"", "\"");
+								//mariadb has \\" in instructions like <img src=\\"/components/...
+								sql = Tools.replace(sql, "\\\\\"", "\\\"");
+
+								if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+									//convert literal backslash-n to real newline character
+								sql = Tools.replace(sql, "\\n", "\n");
+								} else {
+									sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
+								}
+							}
+
 							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] "+sql);
 							counter++;
 
+							if (db_conn.isClosed()) {
+								db_conn = DBPool.getConnection(dbName);
+							}
+
 							sta = db_conn.createStatement();
+							if (Constants.DB_TYPE == Constants.DB_MSSQL && sql.indexOf('{') != -1) {
+                                // Disable JDBC escape processing to prevent treating {placeholders} as JDBC escapes
+                                try { sta.setEscapeProcessing(false); } catch (SQLException ignore) {}
+                            }
 							sta.execute(sql);
 							sta.close();
 
@@ -2370,5 +2419,73 @@ public class UpdateDatabase
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
+	}
+
+	/**
+	 * Add browser_ua_id into stat_error* tables
+	 */
+	public static void updateStatErrorColumns()
+	{
+		String note = "16.09.2025 [sivan] pridanie stlpca browser_ua_id do stat_error";
+		if (Constants.getBoolean("updateDisableFixBrowserId") || isAllreadyUpdated(note)) return;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, 1);
+		long to = cal.getTimeInMillis();
+		cal.set(Calendar.YEAR, 2000);
+		cal.set(Calendar.DATE, 1);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		long from = cal.getTimeInMillis();
+
+		String[] suffixes = StatNewDB.getTableSuffix(from, to);
+		StringBuilder sql = null;
+		for (int s=0; s<suffixes.length; s++)
+		{
+			try
+			{
+				Logger.println(UpdateDatabase.class, "Updating stat_error columns "+(s+1)+"/"+suffixes.length+" "+suffixes[s]);
+
+				db_conn = DBPool.getConnection();
+
+				sql = new StringBuilder("ALTER TABLE stat_error");
+				sql.append(suffixes[s]);
+				sql.append(' ');
+				sql.append("ADD browser_ua_id INT NOT NULL DEFAULT 0");
+
+				ps = db_conn.prepareStatement(sql.toString());
+				ps.execute();
+				ps.close();
+				db_conn.close();
+				ps = null;
+				db_conn = null;
+			}
+			catch (Exception ex)
+			{
+				if (ex.getMessage().indexOf("exist")==-1 && ex.getMessage().indexOf("duplicate")==-1)
+				{
+					Logger.error(UpdateDatabase.class, "Error updating stat_error"+suffixes[s]+" - "+sql+" - "+ex.getMessage());
+					//sk.iway.iwcm.Logger.error(ex);
+				}
+			}
+			finally
+			{
+				try
+				{
+					if (ps != null)
+						ps.close();
+					if (db_conn != null)
+						db_conn.close();
+				}
+				catch (Exception ex2)
+				{
+				}
+			}
+		}
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
 	}
 }

@@ -928,24 +928,26 @@ public class InitServlet extends HttpServlet
 	@Override
 	public void destroy()
 	{
-		setWebjetInitialized(false);
+		if (isWebjetInitialized()) {
+			setWebjetInitialized(false);
 
-		Logger.println(InitServlet.class,"Destroying Cron4j");
-		CronFacade.getInstance().stop();
-		Logger.println(InitServlet.class,"Cron 4j destroyed");
+			Logger.println(InitServlet.class,"Destroying Cron4j");
+			CronFacade.getInstance().stop();
+			Logger.println(InitServlet.class,"Cron 4j destroyed");
 
-		Sender sender = Sender.getInstance();
-		if (sender != null)
-		{
-			sender.cancelTask();
-		}
+			Sender sender = Sender.getInstance();
+			if (sender != null)
+			{
+				sender.cancelTask();
+			}
 
-		SpamProtection.destroy();
+			SpamProtection.destroy();
 
-		if (clusterRefresher != null)
-		{
-			clusterRefresher.cancelTask();
-			clusterRefresher = null; //NOSONAR
+			if (clusterRefresher != null)
+			{
+				clusterRefresher.cancelTask();
+				clusterRefresher = null; //NOSONAR
+			}
 		}
 
 		//JRASKA destroy JPA

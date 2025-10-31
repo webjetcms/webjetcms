@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
@@ -23,26 +24,27 @@ public class AdminMessageBean implements Serializable
 	@Id
 	@GeneratedValue(generator="WJGen_admin_message")
 	@TableGenerator(name="WJGen_admin_message",pkColumnValue="admin_message")	
-   @Column(name="admin_message_id")
+   	@Column(name="admin_message_id")
 	private int adminMessageId;
 	
-   @Column(name="create_by_user_id")
+   	@Column(name="create_by_user_id")
 	private Integer createByUserId;
 	
-   @Column(name="create_date")
-   @Temporal(TemporalType.TIMESTAMP)
+   	@Column(name="create_date")
+   	@Temporal(TemporalType.TIMESTAMP)
 	private Date createDate;
 	
-   @Column(name="is_readed")
+   	@Column(name="is_readed")
 	private Boolean isReaded;
 	
-   @Column(name="message_text")
+	@Lob
+   	@Column(name="message_text")
 	private String messageText;
 	
-   @Column(name="only_for_logged")
+   	@Column(name="only_for_logged")
 	private Boolean onlyForLogged;
 	
-   @Column(name="recipient_user_id")
+   	@Column(name="recipient_user_id")
 	private Integer recipientUserId;
 
 	public int getAdminMessageId()

@@ -45,7 +45,7 @@ public class NavbarService {
                 {
                     if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")) && navbar.indexOf("</div>")!=-1)
                     {
-                        navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+doc.getNavbar()+"</span></div>";
+                        navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+Tools.convertToHtmlTags(doc.getNavbar())+"</span></div>";
                     }
                     else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
                     {
@@ -136,6 +136,7 @@ public class NavbarService {
 		catch (Exception ex)
 		{
 		}
+		path = Tools.convertToHtmlTags(path);
 		return (path);
 	}
 
@@ -309,7 +310,7 @@ public class NavbarService {
 				if (group.getDefaultDocId() > 0 && groupNavbar.length() > 1 && (groupNavbar.indexOf("<a") < 0 || groupNavbar.toLowerCase().indexOf("<aparam") >= 0))
 				{
 					//odstrani <aparam>
-					String text = groupNavbar.replaceAll("(?i)<aparam.*>","");
+					String text = Tools.convertToHtmlTags(groupNavbar.replaceAll("(?i)<aparam.*>",""));
 					groupNavbar = "<span typeof=\"v:Breadcrumb\"><a href='"+docDB.getDocLink(group.getDefaultDocId())+"' class='navbar' rel=\"v:url\" property=\"v:title\">" + text + "</a></span>";
 				}
 
@@ -317,7 +318,7 @@ public class NavbarService {
 				{
 					if (Constants.getBoolean("navbarRenderAllLinks")==false && group.getDefaultDocId()==docId)
 					{
-						String newPath = " "+Constants.getString("navbarSeparator")+" " + group.getNavbarName().replaceAll("(?i)<aparam.*>","");
+						String newPath = " "+Constants.getString("navbarSeparator")+" " + Tools.convertToHtmlTags(group.getNavbarName().replaceAll("(?i)<aparam.*>",""));
 						//ochrana pred duplikovanim cesty (ak mame root a v nom mame hlavnu stranku v podadresari s rovnakym nazvom)
 						if (htmlCode.startsWith(newPath)==false) htmlCode = newPath + htmlCode;
 					}

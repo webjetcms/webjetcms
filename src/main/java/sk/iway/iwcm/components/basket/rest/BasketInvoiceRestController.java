@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -170,6 +171,17 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
             //Reject delete
             throwError("components.basket.invoice.delete_err");
             return false;
+        }
+    }
+
+    @Override
+    public void afterDelete(BasketInvoiceEntity entity, long id) {
+        try {
+            // After invoice is deleted, remove items and payments bound to this invoice
+            biir.deleteByInvoiceId(id, CloudToolsForCore.getDomainId());
+            bipr.deleteByInvoiceId(id);
+        } catch (Exception e) {
+            Logger.error(BasketInvoiceRestController.class, "Error afterDelete", e);
         }
     }
 

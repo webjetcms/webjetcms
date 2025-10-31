@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -66,16 +67,12 @@ public class GalleryEntity {
 
     @Size(max = 255)
     @Column(name = "image_path")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="admin.temp_group_list.directory", tab = "metadata",
-        editor = {
-            @DataTableColumnEditor(attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-            })
-    })
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private String imagePath;
 
+    @Lob
     @Column(name = "image_source")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.imagePath", visible = false,
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -97,6 +94,7 @@ public class GalleryEntity {
             })
     private String descriptionShortSk;
 
+    @Lob
     @Column(name = "l_description_sk")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -121,6 +119,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCz;
 
+    @Lob
     @Column(name = "l_description_cz")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -144,6 +143,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEn;
 
+    @Lob
     @Column(name = "l_description_en")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -168,6 +168,7 @@ public class GalleryEntity {
             })
     private String descriptionShortDe;
 
+    @Lob
     @Column(name = "l_description_de")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -192,6 +193,7 @@ public class GalleryEntity {
             })
     private String descriptionShortPl;
 
+    @Lob
     @Column(name = "l_description_pl")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -216,6 +218,7 @@ public class GalleryEntity {
             })
     private String descriptionShortRu;
 
+    @Lob
     @Column(name = "l_description_ru")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -240,6 +243,7 @@ public class GalleryEntity {
             })
     private String descriptionShortHu;
 
+    @Lob
     @Column(name = "l_description_hu")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -264,6 +268,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCho;
 
+    @Lob
     @Column(name = "l_description_cho")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -288,6 +293,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEsp;
 
+    @Lob
     @Column(name = "l_description_esp")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -298,11 +304,13 @@ public class GalleryEntity {
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEsp;
 
+    @Lob
     @Column(name = "author")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
             tab = "metadata",
-            title = "components.gallery.author"
+            title = "components.gallery.author",
+            sortAfter = "imageSource"
         )
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String author;
@@ -311,12 +319,13 @@ public class GalleryEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             tab = "metadata",
-            title = "components.gallery.metadata.uploadDateTime"
+            title = "components.gallery.metadata.uploadDateTime",
+            sortAfter = "author"
     )
     public Date uploadDatetime;
 
     @Column(name = "sort_priority")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority", sortAfter = "uploadDatetime")
     private Integer sortPriority;
 
     @Column(name = "selected_height")

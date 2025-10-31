@@ -199,13 +199,15 @@ public class GalleryTreeService {
 
         if(url == null) return Arrays.asList();
 
+        final Set<String> blacklistedNames = getBlacklistedNames();
+
         return Arrays.asList(directory.listFiles(file -> {
             if (!file.isDirectory()) {
                 return false;
             }
-            Set<String> blacklistedNames = getBlacklistedNames();
+
             //odstran domenove aliasy z inych domen
-            if (blacklistedNames.isEmpty() && blacklistedNames.contains(file.getName())) return false;
+            if (blacklistedNames.isEmpty()==false && blacklistedNames.contains(file.getName())) return false;
 
             //toto chceme vzdy
             if ("gallery".equals(file.getName())) return true;

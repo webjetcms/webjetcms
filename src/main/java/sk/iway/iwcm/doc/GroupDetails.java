@@ -838,6 +838,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 		if (urlDirName == null || urlDirName.length()<1)
 		{
 			urlDirName = getNavbarNameNoAparam();
+			if (urlDirName != null && urlDirName.contains("<") && urlDirName.contains(">")) urlDirName = Tools.html2text(Tools.replace(urlDirName, "&#47;", "/"));
 			urlDirName = DB.internationalToEnglish(urlDirName).toLowerCase();
 			urlDirName = DocTools.removeCharsDir(urlDirName, true).toLowerCase();
 
@@ -1123,10 +1124,10 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 	 */
 	public int getMenuType(HttpSession session) {
 
-		if (session != null && session.getAttribute("menuDisabledGroup"+getGroupId())!=null) return GroupDetails.MENU_TYPE_HIDDEN;
+		if (session != null && Tools.sessionGetAttribute(session, "menuDisabledGroup"+getGroupId())!=null) return GroupDetails.MENU_TYPE_HIDDEN;
 
 		if (loggedMenuType < 0 || session == null) return(menuType);
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(session);
 		if (user == null) return(menuType);
 
 		//skontroluj, ci je user v niektorej z tychto skupin

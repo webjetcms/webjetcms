@@ -9,6 +9,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -71,6 +72,7 @@ public class RestaurantMenuMealsEntity {
     @Size(max = 128)
     private String cathegory;
 
+    @Lob
     @Column(name = "description")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

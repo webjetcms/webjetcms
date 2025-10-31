@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -37,14 +38,17 @@ public class FormsEntityBasic {
     @Column(name = "form_name")
     private String formName;
 
+    @Lob
     private String data;
 
+    @Lob
     private String files;
 
     @Column(name = "create_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createDate;
 
+    @Lob
     private String html;
 
     @Column(name = "user_id")
@@ -52,6 +56,7 @@ public class FormsEntityBasic {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
     private UserDetails userDetails;
 
+    @Lob
     private String note;
 
     @Column(name = "doc_id")

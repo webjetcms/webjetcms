@@ -1,5 +1,15 @@
 package sk.iway.iwcm.system.jpa;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.Predicate;
+
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.internal.jpa.querydef.CompoundExpressionImpl;
@@ -9,27 +19,22 @@ import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.ReportQuery;
 import org.eclipse.persistence.queries.ReportQueryResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.jpa.repository.JpaContext;
+import org.springframework.stereotype.Component;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.utils.Pair;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.criteria.Predicate;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *  JpaTools.java - podporne nastroje pre JPA
@@ -42,8 +47,12 @@ import java.util.List;
  *@created      Date: 14.4.2010 15:33:13
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
+@Component
 public class JpaTools
 {
+	@Autowired
+    private JpaContext jpaContext;
+
 	/**
 	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
 	 *
@@ -586,5 +595,24 @@ public class JpaTools
 		} catch (Exception e) {
 			Logger.error(e);
 		}
+	}
+
+	/**
+     * Return JpaEntityManager for given class.
+     * @param clazz
+     * @return
+     */
+    private JpaEntityManager getSpringEntityManagerImpl(Class<?> clazz) {
+        return (JpaEntityManager) jpaContext.getEntityManagerByManagedType(clazz);
+    }
+
+	/**
+     * Return JpaEntityManager for given class.
+     * @param clazz
+     * @return
+     */
+	public static JpaEntityManager getSpringEntityManager(Class<?> clazz) {
+		JpaTools jpaTools = Tools.getSpringBean("jpaTools", JpaTools.class);
+		return jpaTools.getSpringEntityManagerImpl(clazz);
 	}
 }

@@ -30,6 +30,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -39,6 +40,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.jsp.JspWriter;
 import jakarta.servlet.jsp.PageContext;
 import javax.swing.*;
@@ -2890,6 +2892,15 @@ public class Tools
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");
 		if (text.contains("|*")) text = Tools.replace(text, "|*", ">");
 		if (text.contains("&amp;#47;")) text = Tools.replace(text, "&amp;#47;", "&#47;");
+		if (text.contains("&lt;&#47;") || text.contains("<&#47;")) {
+			//enable HTML mode
+			text = Tools.replace(text, "&lt;&#47;", "</");
+			text = Tools.replace(text, "<&#47;", "</");
+			text = Tools.replace(text, "&lt;", "<");
+			text = Tools.replace(text, "&gt;", ">");
+
+			text = AllowSafeHtmlAttributeConverter.sanitize(text);
+		}
 
 		return  text;
 	}
@@ -3264,5 +3275,38 @@ public class Tools
 
 		Matcher m = pattern.matcher(source);
 		return m.replaceAll(newStr);
+	}
+
+	/*
+	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @param value
+	 */
+	public static void sessionSetAttribute(HttpSession session, String name, Object value) {
+		if (session == null) return;
+		try {
+			session.setAttribute(name, value);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionSetAttribute() - session is invalid, attribute " + name + " is not set");
+			//session is already invalid
+		}
+	}
+
+	/**
+	 * Safely get session attribute, if session is invalid, it will not throw IllegalStateException
+	 * @param session
+	 * @param name
+	 * @return
+	 */
+	public static Object sessionGetAttribute(HttpSession session, String name) {
+		if (session == null) return null;
+		try {
+			return session.getAttribute(name);
+		} catch (IllegalStateException ex) {
+			Logger.error(Tools.class, "sessionGetAttribute() - session is invalid, attribute " + name + " is not get");
+			//session is already invalid
+			return null;
+		}
 	}
 }

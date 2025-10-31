@@ -1,26 +1,36 @@
 package sk.iway.iwcm.system.datatable.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import lombok.Getter;
-import lombok.Setter;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DataTableColumnType;
-import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
-
-import jakarta.persistence.Transient;
-import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+import jakarta.persistence.Lob;
+import jakarta.persistence.Transient;
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.rest.AiService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -59,6 +69,15 @@ public class DataTableColumn {
     private Boolean orderable;
     private String orderProperty;
 
+    private List<DataTableAi> ai = null;
+
+    //https://editor.datatables.net/reference/option/fields.entityDecode
+    private Boolean entityDecode = null;
+
+    public DataTableColumn() {
+        //default constructor
+    }
+
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -71,6 +90,7 @@ public class DataTableColumn {
         if (requestAttributes==null) return;
 
         HttpServletRequest request = requestAttributes.getRequest();
+        Identity user = UsersDB.getCurrentUser(request);
         Prop prop = Prop.getInstance(request);
 
         setPropertiesFromFieldType(field);
@@ -79,6 +99,10 @@ public class DataTableColumn {
 
         setFinalProperties(field);
         setCellNotEditable(field);
+        addEditIcon(field);
+
+        //we need this to be last because it uses this.className, this.renderType etc
+        setAiPropertiesFromField(controller, field, prop, user);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -152,6 +176,8 @@ public class DataTableColumn {
                 if (titleKey.equals(title)) {
                     if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
                         title = prop.getText("datatables.id.js");
+                    } else if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ROW_REORDER) {
+                        title = prop.getText("datatables.rowReorder.js");
                     } else {
                         title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
                     }
@@ -258,12 +284,18 @@ public class DataTableColumn {
             editor.setDef(defaultValue);
         }
 
-        boolean[] _orderable = annotation.orderable();
-        if (_orderable.length > 0) {
-            this.orderable = _orderable[0];
-        } else if (Boolean.FALSE.equals(this.filter)) {
-            //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+        if((Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL) && field.isAnnotationPresent(Lob.class)) {
+            // By default, fields with annotation @Lob MUST NOT BE SORTED on Oracle and MsSql DBs
+            // Why? @Lob represents text/ntext fields, and ordering of these fields is not supported on mentioned DBs
             this.orderable = false;
+        } else {
+            boolean[] _orderable = annotation.orderable();
+            if (_orderable.length > 0) {
+                this.orderable = _orderable[0];
+            } else if (Boolean.FALSE.equals(this.filter)) {
+                //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+                this.orderable = false;
+            }
         }
 
         if (Tools.isNotEmpty(annotation.orderProperty())) {
@@ -294,6 +326,13 @@ public class DataTableColumn {
 
         if (editor.isEmpty()) {
             this.editor = null;
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void setAiPropertiesFromField(Class controller, Field field, Prop prop, Identity user) {
+        if (user != null && user.isEnabledItem("cmp_ai_button")) {
+            ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
         }
     }
 
@@ -523,6 +562,9 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("wysiwyg");
+            //disable decode of &lt; &gt; etc, because WYSIWYG editor works directly with HTML
+            //https://editor.datatables.net/reference/option/fields.entityDecode
+            entityDecode = Boolean.FALSE;
         }
 
         if (dataTableColumnType == DataTableColumnType.JSTREE) {
@@ -620,6 +662,24 @@ public class DataTableColumn {
             }
             editor.setType("imageRadio");
         }
+
+        if (dataTableColumnType == DataTableColumnType.ROW_REORDER) {
+            renderFormat = "dt-format-row-reorder";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            HashMap<String, String> attrs = new HashMap<>();
+            attrs.put("type", "number");
+            editor.setAttr(attrs);
+        }
+
+        if (dataTableColumnType == DataTableColumnType.ICON) {
+            renderFormat = "dt-format-icon";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("icon");
+        }
     }
 
     private void setFinalProperties(Field field) {
@@ -662,6 +722,22 @@ public class DataTableColumn {
 
         if (notEditable) {
             addClassName("cell-not-editable");
+        }
+    }
+
+    /**
+     * If className contains "dt-row-edit" set also renderFormatLinkTemplate and renderFormatPrefix
+     * @param field
+     */
+    private void addEditIcon(Field field) {
+        if (className != null && className.contains("dt-row-edit")) {
+            // ak je nastavene className pre editaciu, pridaj aj ikonu
+            if (Tools.isEmpty(renderFormatLinkTemplate)) {
+                renderFormatLinkTemplate = "javascript:;";
+            }
+            if (Tools.isEmpty(renderFormatPrefix)) {
+                renderFormatPrefix = "<i class=\"ti ti-pencil\"></i> ";
+            }
         }
     }
 

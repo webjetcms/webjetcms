@@ -17,7 +17,7 @@ body.modal-open {
         text-overflow: ellipsis;
         font-size: 18px;
         font-weight: 500;
-        margin-right: 80px;
+        margin-right: 110px; //because there are buttons on the right side such as maximize, close, etc
         //space for possible input elements in title
         padding-top: 2px;
         padding-bottom: 2px;
@@ -132,6 +132,14 @@ body.modal-open {
                 }
             }
         }
+        .DTE_Field_Type_icon {
+            .input-group {
+                span.icon-preview {
+                    width: 2.5rem;
+                    display: inline-block;
+                }
+            }
+        }
         .form-group.row.DTE_Field_Type_wysiwyg {
             margin-top: 0px;
             margin-bottom: 0px;
@@ -165,6 +173,19 @@ body.modal-open {
                 white-space: nowrap;
                 @include show-scrollbar;
             }
+
+            &.height-md textarea {
+                height: 11rem;
+            }
+
+            &.height-lg textarea {
+                height: 20rem;
+            }
+
+            &.height-xl textarea {
+                height: 30rem;
+            }
+
             &.wrap textarea {
                 white-space: pre-wrap;
             }
@@ -235,6 +256,7 @@ body.modal-open {
                     background-size: cover;
                     background-position: center;
                     width: 41px;
+                    cursor: zoom-in;
                     i {
                         display: none;
                     }

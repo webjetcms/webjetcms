@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="webjet8" default="compile" >
+<project name="webjetcms" default="compile" >
 
     <!-- pred spustenim compile je potrebne spustit:
         ant updatezip
@@ -27,13 +27,6 @@
     </classpath>
   </taskdef>
 
-  <taskdef classname="lombok.delombok.ant.Tasks$Delombok" classpath="./lombok/lombok-1.18.34.jar" name="delombok" />
-
-  <!-- Migrate javax.* to jakarta.*
-  https://github.com/apache/tomcat-jakartaee-migration/blob/main/README.md
-  -->
-  <taskdef name="javax2jakarta" classname="org.apache.tomcat.jakartaee.MigrationTask" classpath="./jakartaee-migration/jakartaee-migration-1.0.9-shaded.jar"/>
-
   <target name="cleanup">
     <delete dir="${root}/WebContent/WEB-INF/generated-sources" />
     <delete dir="${root}/WebContent/WEB-INF/classes" />
@@ -48,38 +41,6 @@
     <delete dir="${root}/resources-saved" />
     <mkdir dir="${root}/resources-saved" />
 
-    <!-- skopiruj nase src -->
-    <copy todir="${root}/src-utf8/" overwrite="true">
-      <fileset dir="${root}/../../src/webjet8/java">
-          <include name="**/*"/>
-      </fileset>
-      <fileset dir="${root}/../../src/main/java">
-          <include name="**/*"/>
-      </fileset>
-      <fileset dir="${root}/../../src/main/aspectj">
-        <include name="**/*"/>
-      </fileset>
-    </copy>
-
-    <javax2jakarta
-      src="${root}/src-utf8/"
-      dest="${root}/src-utf8-jakarta/"
-      profile="tomcat"
-    />
-
-    <replace dir="${root}/src-utf8-jakarta/" token="javax.persistence." value="jakarta.persistence."/>
-    <replace dir="${root}/src-utf8-jakarta/" token="javax.xml.bind." value="jakarta.xml.bind."/>
-    <replace dir="${root}/src-utf8-jakarta/" token="freemarker.ext.servlet." value="freemarker.ext.jakarta.servlet."/>
-    <replace dir="${root}/src-utf8-jakarta/" token="org.springframework.web.multipart.commons.CommonsMultipartFile" value="org.springframework.web.multipart.MultipartFile"/>
-    <replace dir="${root}/src-utf8-jakarta/" token="CommonsMultipartFile" value="MultipartFile"/>
-    <replace dir="${root}/src-utf8-jakarta/" token="org.springframework.web.multipart.commons.CommonsMultipartResolver" value="org.springframework.web.multipart.support.StandardServletMultipartResolver"/>
-    <replace dir="${root}/src-utf8-jakarta/" token="CommonsMultipartResolver" value="StandardServletMultipartResolver"/>
-    <replace dir="${root}/src-utf8-jakarta/" token="org.eclipse.persistence.sessions.Record" value="org.eclipse.persistence.sessions.DataRecord"/>
-    <replace dir="${root}/src-utf8-jakarta/" token="public Object profileExecutionOfQuery(DatabaseQuery query, Record row, AbstractSession session)" value="public Object profileExecutionOfQuery(DatabaseQuery query, DataRecord row, AbstractSession session)"/>
-
-    <replace dir="${root}/src-utf8-jakarta/" token="import org.springframework.web.util.NestedServletException;" value=""/>
-    <replace dir="${root}/src-utf8-jakarta/" token="catch (NestedServletException|org.springframework.security.access.AccessDeniedException e)" value="catch (org.springframework.security.access.AccessDeniedException e)"/>
-
     <!-- zachovaj .properties subory z classes adresara -->
     <copy todir="${root}/resources-saved/" overwrite="true">
       <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">
@@ -91,7 +52,7 @@
 
   <target name="delombok" depends="prepareSrc">
 
-    <!--exec executable="./gradlew" dir="../">
+    <exec executable="./gradlew" dir="../">
         <arg value="delombok"/>
     </exec>
 
@@ -105,29 +66,7 @@
       <fileset dir="${root}/../../src/main/aspectj">
           <include name="**/*"/>
       </fileset>
-    </copy-->
-
-    <copy file="lombok.config" todir="${root}"/>
-
-    <delombok verbose="true" encoding="UTF-8" from="${root}/src-utf8-jakarta/" to="${root}/src-delombok/">
-      <classpath>
-        <fileset dir="${root}/WebContent/WEB-INF/lib/" >
-          <include name="*.jar" />
-        </fileset>
-        <fileset dir="./servlet-api" >
-          <include name="*.jar" />
-        </fileset>
-        <fileset dir="./mapstruct" >
-          <include name="*.jar" />
-        </fileset>
-        <fileset dir="./libs" >
-            <include name="*.jar" />
-        </fileset>
-        <fileset dir="./lombok" >
-          <include name="*.jar" />
-      </fileset>
-     </classpath>
-    </delombok>
+    </copy>
 
   </target>
 
@@ -159,6 +98,8 @@
 
      <!--toto uz netreba, parsne si to z jarka mapstruct aj lombok z META-INF/services/javax.annotation.processing.Processor compilerarg line="-processorpath ${root}/WebContent/WEB-INF/lib/mapstruct-processor-1.3.0.Final.jar"/-->
      <compilerarg line="-s ${root}/WebContent/WEB-INF/generated-sources"/>
+
+     <compilerarg value="-parameters"/>
 
      <classpath>
         <fileset dir="${root}/WebContent/WEB-INF/lib/" >
@@ -261,6 +202,8 @@
         debug="true"
         destDir="${root}/WebContent/WEB-INF/classes/"
         >
+
+      <compilerarg value="-parameters"/>
 
       <sourceroots>
         <pathelement location="${root}/src-aspectj/"/>

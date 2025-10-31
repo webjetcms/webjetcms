@@ -3,6 +3,7 @@ package sk.iway.iwcm;
 import sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -40,7 +41,7 @@ public class LogoffServlet extends HttpServlet {
     {
 
         HttpSession session = request.getSession();
-        Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+        Identity user = UsersDB.getCurrentUser(session);
         if (user != null && user.isAdmin())
         {
             sk.iway.iwcm.stat.StatDB.addAdmin(request);

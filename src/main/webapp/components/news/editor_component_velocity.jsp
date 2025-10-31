@@ -3,7 +3,7 @@
 <%@page import="sk.iway.iwcm.PageParams"%>
 <%@page import="sk.iway.iwcm.Tools"%>
 <%@page import="sk.iway.iwcm.components.news.FieldEnum"%>
-<%@page import="sk.iway.iwcm.components.news.NewsTemplateBean.PagingPosition"%>
+<%@page import="sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity.PagingPosition"%>
 <%@page import="java.io.File"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -41,7 +41,8 @@ pageContext.include("/sk/iway/iwcm/components/news/News.action");
 	input[type="radio"], input[type="checkbox"] {margin-top: 2px;}
 	.tab-pane .tab-page {padding-top: 20px;}
 	#pageSize,
-	#truncate {width: auto;}
+	#truncate,
+	#subGroupsDepth {width: auto;}
 	.value,
 	.operationsBox {display: inline-block;}
 	.operationsBox {padding: 0 10px;}
@@ -192,89 +193,6 @@ $(document).ready(function(){
 
 	showOperations();
 
-	$('body').on('click', '.template-edit, .template-duplicate', function(){
-		var el = $(this);
-		var data = {
-			loadTemplate: true,
-			template:  el.closest('.template').data("key")
-		};
-
-		clearModalForm();
-		$.ajax({
-			url: '/components/news/admin_news_templates_ajax_utf-8.jsp',
-			data: data,
-			dataType: 'json',
-			success: function(response) {
-				var template = response.template;
-
-				if (el.hasClass('template-duplicate')) {
-					$('#keyBeforeSave').val("");
-				}
-				else {
-					$('#keyBeforeSave').val(template.key);
-				}
-				/*
-				console.log(el.hasClass('template-duplicate'));
-				console.log($('#keyBeforeSave').val());
-				*/
-
-				$('#keyShort').val(template.keyShort);
-				$('#templateValue').val(template.value);
-				$('#pagingValue').val(template.pagingValue);
-
-				//console.log(template.pagingPosition);
-				if (template.pagingPosition == '<%= PagingPosition.BEFORE_AND_AFTER %>') {
-					$('#pagingPositionPred').prop('checked', true);
-					$('#pagingPositionZa').prop('checked', true);
-				}
-				else if (template.pagingPosition == '<%= PagingPosition.BEFORE %>') {
-					$('#pagingPositionPred').prop('checked', true);
-					$('#pagingPositionZa').prop('checked', false);
-				}
-				else if (template.pagingPosition == '<%= PagingPosition.AFTER %>') {
-					$('#pagingPositionPred').prop('checked', false);
-					$('#pagingPositionZa').prop('checked', true);
-				}
-				else {
-					$('#pagingPositionPred').prop('checked', false);
-					$('#pagingPositionZa').prop('checked', false);
-				}
-
-				$('#keyShort').val(template.keyShort);
-
-				$('#templateModal').modal('show');
-			}
-		});
-	});
-
-	$('body').on('click', '.template-delete', function(){
-		var el = $(this);
-		var data = {
-			deleteTemplate: true,
-			templateUpdate:  el.closest('.template').data("key")
-		};
-
-		if ($('.templates .template.selected').length > 0) {
-			data.template = $('.templates .template.selected').data("key");
-		}
-
-		//console.log(data);
-
-		$.ajax({
-			url: '/components/news/admin_news_templates_ajax_utf-8.jsp',
-			data: data,
-			dataType: 'json',
-			success: function(response) {
-				publishTemplates(response);
-			}
-		});
-	});
-
-	$('body').on('click', '.template-create', function(){
-		clearModalForm();
-		$('#templateModal').modal('show');
-	});
-
 	$('body').on('click', '.template-choose, .template:not(".selected") .image', function(){
 		var templateBox = $(this).closest('.template');
 		$('#template').val(templateBox.data("key"));
@@ -289,46 +207,6 @@ $(document).ready(function(){
 
 		$('#template').val("");
 		templateBox.removeClass('selected');
-	});
-
-	$('#templateModal').on('click', '.template-save', function(){
-		var data = {
-			saveTemplate: true,
-			'templateUpdate.keyBeforeSave': $('#keyBeforeSave').val(),
-			'templateUpdate.keyShort': $('#keyShort').val(),
-			'templateUpdate.value': $('#templateValue').val(),
-			'templateUpdate.pagingValue': $('#pagingValue').val()
-		};
-
-		if ($('.templates .template.selected').length > 0) {
-			data.template = $('.templates .template.selected').data("key");
-		}
-
-		if ($('#pagingPositionPred').is(':checked') && $('#pagingPositionZa').is(':checked')) {
-			data['templateUpdate.pagingPosition'] = '<%= PagingPosition.BEFORE_AND_AFTER %>';
-		}
-		else if ($('#pagingPositionPred').is(':checked')) {
-			data['templateUpdate.pagingPosition'] = '<%= PagingPosition.BEFORE %>';
-		}
-		else if ($('#pagingPositionZa').is(':checked')) {
-			data['templateUpdate.pagingPosition'] = '<%= PagingPosition.AFTER %>';
-		}
-		else {
-			data['templateUpdate.pagingPosition'] = '<%= PagingPosition.NONE %>';
-		}
-
-		//console.log(data.template['templateUpdate']);
-
-		$.ajax({
-			url: '/components/news/admin_news_templates_ajax_utf-8.jsp',
-			type: "post",
-			data: data,
-			dataType: 'json',
-			success: function(response) {
-				publishTemplates(response);
-				$('#templateModal').modal('hide');
-			}
-		});
 	});
 
 	$('body').on('click', '.helpBtn', function(){
@@ -483,56 +361,6 @@ function initContextMenu()
 	});
 
 	$('#templateValue').addClass('context-menu-initialized');
-}
-
-function loadTemplates() {
-	//console.log('loadTemplates');
-
-	var data = {
-		loadTemplates: true
-	}
-
-	$.ajax({
-		url: '/components/news/admin_news_templates_ajax_utf-8.jsp',
-		type: "post",
-		data: data,
-		dataType: 'json',
-		success: function(response) {
-			publishTemplates(response);
-		}
-	});
-}
-
-function publishTemplates(response) {
-
-	$('.templates').empty();
-
-	var html = "";
-	var template = $('.templateTemplate').clone();
-	$.each(response.templates, function(i, v){
-
-		template.find('.keyShort').text(v.keyShort);
-		template.find('.image img').attr('src', v.image);
-		template.find('.template').attr('data-key', v.key);
-
-		if (v.selected) {
-			template.find('.template').addClass('selected');
-		}
-		else {
-			template.find('.template').removeClass('selected');
-		}
-
-		html += template.html();
-	});
-
-	$('.templates').html(html);
-
-	$('.templates .dropdown-toggle').dropdown();
-}
-
-function clearModalForm()
-{
-	$('#templateModal').find("input, textarea").val('');
 }
 
 function setGroupIds()
@@ -785,6 +613,13 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
+					<label for="subGroupsDepth" class="col-sm-3 control-label"><iwcm:text key="components.news.subGroupsDepth"/></label>
+					<div class="col-sm-6">
+						<stripes:text name="subGroupsDepth" id="subGroupsDepth" size="5" maxlength="5" class="form-control" />
+					</div>
+				</div>
+
+				<div class="form-group">
 					<label for="publishType" class="col-sm-3 control-label"><iwcm:text key="components.news.publishtype"/></label>
 					<div class="col-sm-6">
 						<stripes:select name="publishType" id="publishType" class="form-control">
@@ -794,6 +629,17 @@ function escapeHtml(unsafe) {
 							<option <c:if test="${actionBean.publishType eq 'NEXT'}">selected="selected"</c:if> value="next"><iwcm:text key="components.news.PUBLISH_NEXT"/></option>
 							<option <c:if test="${actionBean.publishType eq 'VALID'}">selected="selected"</c:if> value="valid"><iwcm:text key="components.news.PUBLISH_VALID"/></option>
 						</stripes:select>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="docMode" class="col-sm-3 control-label"><iwcm:text key="components.news.doc_mode.title"/></label>
+					<div class="col-sm-6">
+							<stripes:select name="docMode" id="docMode" class="form-control">
+								<option <c:if test="${actionBean.docMode eq 0}">selected="selected"</c:if> value="0"><iwcm:text key="components.news.doc_mode.all"/></option>
+								<option <c:if test="${actionBean.docMode eq 1}">selected="selected"</c:if> value="1"><iwcm:text key="components.news.doc_mode.only"/></option>
+								<option <c:if test="${actionBean.docMode eq 2}">selected="selected"</c:if> value="2"><iwcm:text key="components.news.doc_mode.exclude"/></option>
+							</stripes:select>
 					</div>
 				</div>
 
@@ -878,23 +724,11 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<div class="checkbox">
-							<label>
-								<stripes:checkbox name="removeDefaultDocs" value="true"></stripes:checkbox> <iwcm:text key="components.news.remove_default_docs"/>
-							</label>
-						</div>
+					<label for="contextClasses" class="col-sm-3 control-label"><iwcm:text key="components.news.contextClasses"/></label>
+					<div class="col-sm-6">
+						<stripes:text name="contextClasses" id="contextClasses" size="3" class="form-control"></stripes:text>
 					</div>
 				</div>
-
-				<c:if test="${actionBean.canEdit}">
-					<div class="form-group">
-						<label for="contextClasses" class="col-sm-3 control-label"><iwcm:text key="components.news.contextClasses"/></label>
-						<div class="col-sm-6">
-							<stripes:text name="contextClasses" id="contextClasses" size="3" class="form-control"></stripes:text>
-						</div>
-					</div>
-				</c:if>
 
 				<div class="form-group">
 					<label for="pageSize" class="col-sm-3 control-label"><iwcm:text key="components.news.cacheMinutes"/></label>
@@ -906,45 +740,27 @@ function escapeHtml(unsafe) {
 			</div>
 		</div>
 		<div class="tab-page" id="tabMenu2">
-			<c:if test="${actionBean.canEdit}">
-				<p>
-					<a class="btn btn-primary template-create" href="javascript:;"><iwcm:text key="components.news.new_template" /></a>
-				</p>
-			</c:if>
-
 			<div class="templates">
 
 				<c:forEach var="template" items="${actionBean.templates}">
-						<div class="col-sm-6  template<c:if test="${template.selected}"> selected</c:if>" style="max-width: 420px; " data-key="${template.key}">
+						<div class="col-sm-6  template<c:if test="${actionBean.isSelected(template)}"> selected</c:if>" style="max-width: 420px; " data-key="${template.name}">
 							<div class="image">
-								<img src="${template.image}" class="img-thumbnail img-responsive">
+								<img src="${template.imagePath}" class="img-thumbnail img-responsive">
 							</div>
 							<div class="tools">
 								<div class="btn-group">
 									<button type="button" class="btn btn-primary template-choose"><iwcm:text key="components.news.choose_template" /></button>
 									<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
-									<c:if test="${actionBean.canEdit}">
-										<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											<i class="ti ti-chevron-down"></i>
-											<span class="visually-hidden"><iwcm:text key="components.news.new_template" /></span>
-										</button>
-										<ul class="dropdown-menu">
-											<li><a href="javascript:;" class="template-edit"><iwcm:text key="components.news.edit_template" /></a></li>
-											<li><a href="javascript:;" class="template-duplicate"><iwcm:text key="components.news.duplicate_template" /></a></li>
-											<li role="separator" class="divider"></li>
-											<li><a href="javascript:;" class="template-delete"><iwcm:text key="components.news.delete_template" /></a></li>
-										</ul>
-									</c:if>
 								</div>
 							</div>
 							<p>
-								${template.keyShort}
+								${template.name}
 							</p>
 						</div>
 				</c:forEach>
 			</div>
 
-			<input type="hidden" id="template" name="template" value="${actionBean.template.key}" />
+			<input type="hidden" id="template" name="template" value="${actionBean.template}" />
 
 		</div>
 		<div class="tab-page" id="tabMenu3">
@@ -1114,62 +930,6 @@ function escapeHtml(unsafe) {
 	</div>
 </iwcm:stripForm>
 
-<c:if test="${actionBean.canEdit}">
-	<div id="templateModal" class="modal fade" tabindex="-1" role="dialog">
-		<div class="vertical-alignment-helper">
-			<div class="modal-dialog vertical-align-center">
-				<div class="modal-content" style="width: 762px;">
-					<div class="modal-header">
-						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title"><iwcm:text key="components.news.template" /></h4>
-					</div>
-					<div class="modal-body">
-						<div class="form-horizontal">
-						  <div class="form-group">
-							<label for="key" class="col-12 control-label"><iwcm:text key="components.news.template_title" /></label>
-							<div class="col-12">
-							  <input type="text" class="form-control" id="keyShort" name="template.keyShort" id="title" placeholder="<iwcm:text key="components.news.template_title" />">
-								  <input type="hidden" id="keyBeforeSave" name="template.keyBeforeSave" />
-							</div>
-						  </div>
-						  <div class="form-group">
-							<label for="value" class="col-12 control-label"><iwcm:text key="components.news.template_html" /></label>
-							<div class="col-12">
-							  <textarea class="form-control" wrap="off" id="templateValue" name="template.value" rows="10" placeholder="<iwcm:text key="components.news.template_html" />"></textarea>
-							</div>
-						  </div>
-						  <div class="form-group">
-							<label for="pagingValue" class="col-12 control-label"><iwcm:text key="components.news.template_paging_html" /></label>
-							<div class="col-12">
-							  <textarea class="form-control" wrap="off" id="pagingValue" name="template.pagingValue" rows="4" placeholder="<iwcm:text key="components.news.template_paging_html" />"></textarea>
-							</div>
-						  </div>
-
-						  <div class="form-group">
-							<label for="pagingValue" class="col-12 control-label"><iwcm:text key="components.news.template_paging_position" /></label>
-							<div class="col-12">
-							  	<label class="checkbox-inline">
-							  		<input type="checkbox" id="pagingPositionPred" name="template.pagingPosition" value="before"> <iwcm:text key="components.news.template_paging_position_before" />
-								</label>
-								<br/>
-								<label class="checkbox-inline">
-									<input type="checkbox" id="pagingPositionZa" name="template.pagingPosition" value="after"> <iwcm:text key="components.news.template_paging_position_after" />
-								</label>
-							</div>
-						  </div>
-
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-bs-dismiss="modal"><iwcm:text key="javascript.datepicker.closeText" /></button>
-						<button type="button" class="btn btn-primary template-save"><iwcm:text key="admin.useredit.categories.save" /></button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</c:if>
-
 <div class="templateTemplate">
 		<div class="col-sm-6 template" style="max-width: 420px; ">
 			<div class="image">
@@ -1179,20 +939,6 @@ function escapeHtml(unsafe) {
 				<div class="btn-group">
 					<button type="button" class="btn btn-primary template-choose"><iwcm:text key="components.news.choose_template" /></button>
 					<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
-					<c:if test="${actionBean.canEdit}">
-						<div class="dropdown">
-							<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-								<i class="ti ti-chevron-down"></i>
-								<span class="visually-hidden"><iwcm:text key="components.news.new_template" /></span>
-							</button>
-							<ul class="dropdown-menu">
-								<li><a href="javascript:;" class="template-edit"><iwcm:text key="components.news.edit_template" /></a></li>
-								<li><a href="javascript:;" class="template-duplicate"><iwcm:text key="components.news.duplicate_template" /></a></li>
-								<li role="separator" class="divider"></li>
-								<li><a href="javascript:;" class="template-delete"><iwcm:text key="components.news.delete_template" /></a></li>
-							</ul>
-						</div>
-					</c:if>
 				</div>
 			</div>
 			<p>

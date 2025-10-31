@@ -1,0 +1,285 @@
+extends ../../partials/layout
+
+block content
+    script(type="text/javascript", src="/components/news/js/bootstrap-contextmenu.js")
+    script(type="text/javascript", src="/components/news/js/jquery.caret.js")
+
+    script.
+
+        var newsTempsDataTable;
+        window.domReady.add(function () {
+            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity')})];
+            let tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity')})];
+
+            newsTempsDataTable = WJ.DataTable({
+                url: "/admin/rest/templates/news-templates",
+                serverSide: true,
+                columns: columns,
+                tabs: tabs,
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+
+            newsTempsDataTable.EDITOR.on('open', function (e, type, action) {
+                //console.log("newsTempsDataTable open");
+                initContextMenu();
+            });
+
+            function initContextMenu() {
+                //console.log("initContextMenu");
+
+                var el = $('#DTE_Field_templateCode');
+                if (el.hasClass('context-menu-initialized')) {
+                    return;
+                }
+
+                //console.log(el);
+
+                $('#datatableInit_modal textarea').contextmenu({
+                    target:'.context-menu',
+                    before: function(e,context) {
+                        var contextMenu = $('.context-menu');
+                        var id = context.prop("id");
+
+                        //console.log("contextMenu = ", contextMenu);
+                        //console.log("id = ", id);
+
+                        contextMenu.find('.dropdown-submenu').hide();
+                        contextMenu.find('.velocity').show();
+
+                        if (id == "DTE_Field_templateCode") {
+                            contextMenu.find('.group').show();
+                            contextMenu.find('.doc').show();
+                        }
+                        else {
+                            contextMenu.find('.paging').show();
+                        }
+                        // execute code before context menu if shown
+                    },
+                    onItem: function(context,e) {
+                        e.stopPropagation();
+
+                        //console.log("ON ITEM");
+
+                        var textarea = context;
+                        var position = textarea.caret();
+                        var content = textarea.val().substring(0, position);
+                        var foreachPosition = content.lastIndexOf('#foreach(');
+                        var item = $(e.target);
+                        var value = item.data('value');
+                        var parent = item.closest('li.dropdown-submenu');
+
+                        if (typeof value == "undefined") {
+                            //One more try
+                            value = item.attr("value");
+
+                            if (typeof value == "undefined") {
+                                return false;
+                            }
+                        }
+
+                        value = value.trim();
+
+                        if ((parent.hasClass('doc') || parent.hasClass('group')) && foreachPosition == -1) {
+                            alert('Musi byt vlozene do foreach');
+                            return false;
+                        }
+
+                        if (!parent.hasClass('velocity') && !parent.hasClass('paging')) {
+                            content = content.substring(foreachPosition + 9);
+                            var cycleValue = content.substring(0, content.indexOf(')'));
+                            var bean = $.trim(cycleValue.split('in')[0]);
+
+                            if (parent.hasClass('group')) {
+                                value = bean + ".group." + value;
+                            }
+                            else if (value == 'link') {
+                                value = '$context.link(' + bean +')';
+                            }
+                            else {
+                                value = bean + "." + value;
+                            }
+                        }
+
+                        if (parent.hasClass('paging')) {
+                            if (value == "page.link" && foreachPosition == -1) {
+                                alert('Musi byt vlozene do foreach');
+                                return false;
+                            }
+
+                            if (value == "page.link") {
+                                content = content.substring(foreachPosition + 9);
+                                var cycleValue = content.substring(0, content.indexOf(')'));
+                                var bean = $.trim(cycleValue.split('in')[0]);
+
+                                value = bean + ".link";
+                            }
+                            else if (value.indexOf("#") != 0) {
+                                value = '$' + value;
+                            }
+                        }
+
+                        textarea.caret(value);
+
+                        this.closemenu();
+                        return true;
+                    }
+                });
+
+                $('#DTE_Field_templateCode').addClass('context-menu-initialized');
+
+                $(".context-menu").insertAfter("#datatableInit_modal");
+            }
+        });
+
+    style.
+        .context-menu .dropdown-menu li > a {
+            font-weight: 300;
+            line-height: 18px;
+            color: black !important;
+        }
+
+        .context-menu .dropdown-menu li > a:hover {
+            background-color: #F3F3F6 !important;
+        }
+
+        .context-menu .dropdown-submenu {
+            position: relative;
+        }
+
+        .context-menu .dropdown-submenu > .dropdown-menu {
+            top: 5px;
+            left: 100%;
+            margin-top: -6px;
+            margin-left: -1px;
+        }
+
+        .context-menu .dropdown-submenu > a:after {
+            font-family: "tabler-icons-filled" !important;
+            position: absolute;
+            display: inline-block;
+            font-size: 14px;
+            right: 7px;
+            top: 7px;
+            font-family: "tabler-icons";
+            height: auto;
+            content: "\ea61";
+        }
+
+        .context-menu .dropdown-submenu:hover > .dropdown-menu {
+            display: block;
+        }
+
+        .context-menu .dropdown-submenu.pull-left {
+            float: none;
+        }
+
+        .context-menu .dropdown-submenu.pull-left > .dropdown-menu {
+            left: -100%;
+            margin-left: 10px;
+        }
+
+        .context-menu .dropup .dropdown-submenu > .dropdown-menu {
+            top: auto;
+            bottom: 0;
+            margin-top: 0;
+            margin-bottom: -2px;
+        }
+
+        .context-menu .modal-content {
+            /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+            width: inherit;
+            height: inherit;
+            /* To center horizontally */
+            margin: 0 auto;
+            pointer-events: all;
+        }
+
+        /* Additional context-menu styles */
+        .context-menu .dropdown-submenu .dropdown-menu {
+            max-height: 300px;
+            overflow: auto;
+            background: #fff;
+        }
+
+        .context-menu .dropdown-menu {
+            font-size: 12px;
+            padding: 5px;
+        }
+
+        .context-menu .dropdown-menu li > a {
+            padding: 2px;
+            display: inline-block;
+            white-space: normal;
+            width: 100%;
+        }
+
+        .context-menu .dropdown-menu li ul li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .context-menu .dropdown-menu li ul li:last-child {
+            border-bottom: 0px solid #eee;
+        }
+
+        .context-menu .dropdown-submenu > a:after {
+            top: 0px;
+        }
+
+        .context-menu .dropdown-submenu .dropdown-menu {
+            width: 300px;
+            overflow: auto;
+        }
+
+        .context-menu.open > ul.dropdown-menu {
+            display: block;
+        }
+        div.DTE_Field_Name_templateCode label, div.DTE_Field_Name_pagingCode label { display: none; }
+        div.DTE_Field_Name_pagingCode .textarea-code { height: 377px; }
+        div.DTE_Field_Type_textarea .col-sm-7 { width: 99%; }
+        div.DTE_Field_Type_textarea .textarea-code { width: 100%; }
+
+    <table class="datatableInit table"></table>
+
+    <div id="context-menu" class="context-menu">
+        <ul class="dropdown-menu" role="menu">
+
+            <li class="dropdown-submenu velocity">
+                <a tabindex="-1" href="javascript:;">[[\#{components.news.cycles}]]</a>
+                <ul class="dropdown-menu">
+                    <li data-th-each="velocityProperty : ${velocityProperties}">
+                        <a href="javascript:;" data-th-value="${velocityProperty.value}" data-th-text="${velocityProperty.title + '-' + velocityProperty.description}"></a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="dropdown-submenu doc">
+                <a tabindex="-1" href="javascript:;">[[\#{components.news.properties_web_page}]]</a>
+                <ul class="dropdown-menu">
+                    <li data-th-each="docDetail : ${docDetailsProperties}">
+                        <a href="javascript:;" data-th-value="${docDetail.value}" data-th-text="${docDetail.title + '-' + docDetail.description}"></a>
+                    </li>
+                </ul>
+            </li>
+
+
+            <li class="dropdown-submenu group">
+                <a tabindex="-1" href="javascript:;">[[\#{components.news.properties_directory}]]</a>
+                <ul class="dropdown-menu">
+                    <li data-th-each="groupDetail : ${groupDetailsProperties}">
+                        <a href="javascript:;" data-th-value="${groupDetail.value}" data-th-text="${groupDetail.title + '-' + groupDetail.description}"></a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="dropdown-submenu paging">
+                <a tabindex="-1" href="javascript:;">[[\#{components.news.paging}]]</a>
+                <ul class="dropdown-menu">
+                    <li data-th-each="pagingProperty : ${pagingProperties}">
+                        <a href="javascript:;" data-th-value="${pagingProperty.value}" data-th-text="${pagingProperty.title + '-' + pagingProperty.description}"></a>
+                    </li>
+                </ul>
+            </li>
+
+        </ul>
+    </div>

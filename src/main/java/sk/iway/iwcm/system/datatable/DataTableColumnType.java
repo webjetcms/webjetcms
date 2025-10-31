@@ -138,4 +138,14 @@ public enum DataTableColumnType {
      * Radio buttons with images
      */
     IMAGE_RADIO,
+
+    /**
+     * Row reordering type, used for drag and drop reordering of rows in datatable
+     */
+    ROW_REORDER,
+
+    /**
+     * Tabler icons renderer
+     */
+    ICON,
 }

@@ -448,3 +448,17 @@ Scenario("extfilter - select BUG 57657-8", ({ I, DT }) => {
     I.see("Druhá s.r.o.", ".datatableInit tbody tr td");
     I.see("Česká firma", ".datatableInit tbody tr td");
 });
+
+Scenario("BUF: filter table with startsWith and endsWith", ({ I, DT }) => {
+    I.amOnPage("/apps/contact/admin/");
+    DT.waitForLoader();
+    var tdSelector = "#dataTable td.dt-row-edit a";
+    I.see("InterWay, a. s.", tdSelector);
+    I.see("Tretia firma a. s.", tdSelector);
+
+    DT.filterStartsWith("name", "Inter");
+    DT.filterEndsWith("vatid", "8294");
+
+    I.see("InterWay, a. s.", tdSelector);
+    I.dontSee("Tretia firma a. s.", tdSelector);
+});

@@ -64,7 +64,7 @@ public class ProductListRestController extends WebpagesDatatable {
             AddingStatus status = ProductListService.addProductGroup(getUser(), customData, editorFacade);
 
             if(status == AddingStatus.SUCCESS)
-                addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText("apps.product-list.add_new_group.success"), NotifyBean.NotifyType.SUCCESS, 60000) );
+                addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText("apps.product-list.add_new_group.success"), NotifyBean.NotifyType.SUCCESS, 5000) );
             else if(status == AddingStatus.ALREADY_EXIST)
                 addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText("apps.product-list.add_new_group.already_added"), NotifyBean.NotifyType.ERROR, 60000) );
             else

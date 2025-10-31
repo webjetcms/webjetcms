@@ -116,6 +116,17 @@ public class LayoutService
                     css.append(".noperms-ver-pro { display: none !important; }\n");
                     javascript.append("nopermsJavascript[\"ver-pro\"]=true;\n");
                 }
+
+                //ve need to verify this modules because they are used in FE components
+                //and if user has no perms for them, they should not be visible in admin
+                String[] modulesToCheck = {"cmp_ai_tools", "cmp_ai_stats", "cmp_ai_button"};
+                for (String modKey : modulesToCheck) {
+                    if (user.isEnabledItem(modKey) == false) {
+                        String modName = Tools.replace(modKey, ".", "_");
+                        css.append(".noperms-").append(modName).append(" { display: none !important; }\n");
+                        javascript.append("nopermsJavascript[\"").append(modName).append("\"]=true;\n");
+                    }
+                }
             } catch (Exception ex) {
                 Logger.error(LayoutService.class, ex);
             }

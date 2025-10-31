@@ -20,8 +20,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.commons.lang.StringUtils;
-
 import net.sourceforge.stripes.controller.StripesConstants;
 import net.sourceforge.stripes.util.CryptoUtil;
 import sk.iway.iwcm.Adminlog;
@@ -191,7 +189,7 @@ public class ShowDoc extends HttpServlet {
         }
 
         request.setAttribute("doc_id", doc.getDocId());
-        request.setAttribute("doc_title", doc.getTitle());
+        request.setAttribute("doc_title", Tools.convertToHtmlTags(doc.getTitle()));
         request.setAttribute("doc_title_original", doc.getTitle());
         if (Constants.getBoolean("docTitleIncludePath"))
         {
@@ -264,48 +262,7 @@ public class ShowDoc extends HttpServlet {
         request.setAttribute("field_t", doc.getFieldT());
 
         //set navbar
-        String navbar = doc.getNavbar();
-        String navbar2;
-        if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-        {
-            navbar2 = groupsDB.getNavbarRDF(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-        {
-            navbar2 = groupsDB.getNavbarSchema(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        else
-        {
-            navbar2 = groupsDB.getNavbar(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        if (navbar2.length() > 2)
-        {
-            navbar = navbar2;
-            //ak to nie je default doc pre grupu tak sprav linku
-            if (doc.getDocId() != group.getDefaultDocId())
-            {
-                if (doc.getNavbar().length() > 2)
-                {
-                    if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")) && navbar.contains("</div>"))
-                    {
-                        navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+doc.getNavbar()+"</span></div>";
-                    }
-                    else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-                    {
-                        int counter = StringUtils.countMatches(navbar, "<li") + 1;
-                        String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
-                        navbar = navbar.substring(0, navbar.length() - 5);
-                        navbar = navbar + " <li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
-                        navbar += "\n</ol>";
-                    }
-                    else
-                    {
-                        navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
-                    }
-                }
-            }
-        }
-        request.setAttribute("navbar", navbar);
+        //it's done in NavbarService
     }
 
     public static void setRequestData(GroupDetails group, GroupsDB groupsDB, HttpServletRequest request)
@@ -437,7 +394,7 @@ private static String combineCss(String cssStyle)
         }
 
         //over licenciu
-        if (session.getAttribute("license_checked") == null)
+        if (Tools.sessionGetAttribute(session, "license_checked") == null)
         {
             if (!InitServlet.verify(request))
             {
@@ -445,9 +402,9 @@ private static String combineCss(String cssStyle)
                 return;
             }
         }
-        session.setAttribute("license_checked", "true");
+        Tools.sessionSetAttribute(session, "license_checked", "true");
 
-        Identity user = (Identity) session.getAttribute(Constants.USER_KEY);
+        Identity user = UsersDB.getCurrentUser(session);
         if (user == null)
         {
             user = new Identity();
@@ -455,9 +412,9 @@ private static String combineCss(String cssStyle)
 
         try
         {
-            if (session.getAttribute("setCookie") != null)
+            if (Tools.sessionGetAttribute(session, "setCookie") != null)
             {
-                Cookie myCookie = (Cookie) session.getAttribute("setCookie");
+                Cookie myCookie = (Cookie) Tools.sessionGetAttribute(session, "setCookie");
                 Logger.println(this,"setting cookie: " + myCookie.getName());
                 Tools.addCookie(myCookie, response,request);
 
@@ -665,7 +622,7 @@ private static String combineCss(String cssStyle)
         }
         catch (Exception ex)
         {
-            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message")+" 1");
+            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message")+" 1", request);
             request.setAttribute("err_msg", prop.getText("admin.showdoc_default_error_message"));
             request.getRequestDispatcher("error").forward(request,response);
             return;
@@ -683,9 +640,9 @@ private static String combineCss(String cssStyle)
         int group_id = -1;
         try
         {
-            if (session.getAttribute(Constants.SESSION_GROUP_ID) != null)
+            if (Tools.sessionGetAttribute(session, Constants.SESSION_GROUP_ID) != null)
             {
-                group_id = Integer.parseInt((String) session.getAttribute(Constants.SESSION_GROUP_ID));
+                group_id = Integer.parseInt((String) Tools.sessionGetAttribute(session, Constants.SESSION_GROUP_ID));
             }
         }
         catch (Exception ex)
@@ -1030,7 +987,7 @@ private static String combineCss(String cssStyle)
         //pozri PathFilter.java
         if (request.getParameter("dontUpdateLastDocId")==null)
         {
-            session.setAttribute("last_doc_id", doc_id);
+            Tools.sessionSetAttribute(session, "last_doc_id", doc_id);
         }
 
         //NOVA STATISTIKA
@@ -1170,7 +1127,7 @@ private static String combineCss(String cssStyle)
 
         if (temp == null)
         {
-            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message.template_error"));
+            StatDB.addError(request.getRequestURI()+"?"+request.getQueryString(), prop.getText("admin.showdoc_error_message.template_error"), request);
             request.setAttribute("err_msg", prop.getText("admin.showdoc_default_error_message"));
             //request.setAttribute("err_msg", "Požadovaný dokument neexistuje - template error");
             Adminlog.add(Adminlog.TYPE_RUNTIME_ERROR, "Missing template for page: "+doc.getDocId()+", required template id: "+doc.getTempId(), doc.getDocId(), doc.getTempId());
@@ -1210,7 +1167,7 @@ private static String combineCss(String cssStyle)
         {
             try
             {
-                Integer iTempId = (Integer)session.getAttribute("last_temp_id");
+                Integer iTempId = (Integer)Tools.sessionGetAttribute(session, "last_temp_id");
                 if (iTempId!=null)
                 {
                     TemplateDetails temp2 = tempDB.getTemplate(iTempId);
@@ -1238,7 +1195,7 @@ private static String combineCss(String cssStyle)
             //popup okno si nepamatame...
             if (!temp.getTempName().startsWith("popup"))
             {
-                session.setAttribute("last_temp_id", temp.getTempId());
+                Tools.sessionSetAttribute(session, "last_temp_id", temp.getTempId());
             }
         }
 
@@ -1503,7 +1460,7 @@ private static String combineCss(String cssStyle)
 
             f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath("/templates/")), forward, bd);
             if (!f.exists()) {
-                StatDB.addError(request.getRequestURI() + "?" + request.getQueryString(), prop.getText("admin.showdoc_error_message.template") + " " + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
+                StatDB.addError(request.getRequestURI() + "?" + request.getQueryString(), prop.getText("admin.showdoc_error_message.template") + " " + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!", request);
                 Logger.error(this, prop.getText("admin.showdoc_error_message.template") + " /templates/" + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
                 //sablona neexistuje, asi som na testovacom serveri u jeeffa...
 
@@ -1606,19 +1563,7 @@ private static String combineCss(String cssStyle)
         try
         {
             HttpSession session = request.getSession();
-            Identity user = null;
-            try
-            {
-                //ziskaj meno lognuteho usera
-                if (session.getAttribute(Constants.USER_KEY) != null)
-                {
-                    user = (Identity) session.getAttribute(Constants.USER_KEY);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.error(ShowDoc.class, ex);
-            }
+            Identity user = UsersDB.getCurrentUser(session);
 
             // ------------ HEADER
             String text = (String) request.getAttribute("doc_header");

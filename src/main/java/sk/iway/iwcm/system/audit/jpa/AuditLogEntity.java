@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Size;
@@ -70,12 +71,12 @@ public class AuditLogEntity {
 		this.userFullName = userFullName;
 	}
 
-	@Size(max = 1000)
+	@Lob
 	@Column(name = "description")
 	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {
 					//disabled nedame, z UX hladiska je lepsie, ked tam viem dat kurzor a selectovat text z napr. SQL chyb @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-					@DataTableColumnEditorAttr(key = "class", value = "textarea-code") }) })
+					@DataTableColumnEditorAttr(key = "class", value = "textarea-code ai-off") }) })
 	private String description;
 
 	@Column(name = "sub_id1")

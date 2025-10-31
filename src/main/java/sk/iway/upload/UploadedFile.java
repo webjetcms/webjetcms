@@ -98,8 +98,8 @@ public class UploadedFile
 
 		try {
 			diskFileItem.delete();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			//ignore
 		}
 
 	}

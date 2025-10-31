@@ -7,6 +7,7 @@ import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import ch.qos.logback.core.CoreConstants;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -62,11 +63,7 @@ public class InMemoryLoggingEvent implements Serializable {
     })
     private String mdcPropertyMap;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab="description", visible = false, editor = {
-            @DataTableColumnEditor(attr = {
-                    @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
-            })
-    })
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab="description", visible = false, className = "textarea-code ai-off")
     private String stackTrace = "";
 
     private String message;
@@ -76,7 +73,7 @@ public class InMemoryLoggingEvent implements Serializable {
 
     public InMemoryLoggingEvent(ILoggingEvent eventObject) {
         this.message = eventObject.getMessage();
-        this.formattedMessage = eventObject.getFormattedMessage();
+        this.formattedMessage = Logger.unwrapAnsiColors(eventObject.getFormattedMessage());
         this.loggerName = eventObject.getLoggerName();
         this.level = eventObject.getLevel();
         this.mdcPropertyMap = eventObject.getMDCPropertyMap() != null ? eventObject.getMDCPropertyMap().entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n")) : null;

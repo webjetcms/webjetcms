@@ -4,35 +4,29 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('video', ({ I, DT, DTE, Document }) => {
-    I.amOnPage("/apps/video/");
-    DT.waitForLoader();
-    Document.screenshot("/redactor/apps/video/video.png");
+Scenario('video app screens', ({ I, DT, Document, Apps }) => {
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    Apps.insertApp('Video', '#components-video-title', null, false);
 
-    I.jstreeClick("Aplikácie");
-    I.wait(1);
-    I.jstreeClick("Video");
-    I.click('//a[contains(.,"Video") and @href="javascript:;"]');
-    DTE.waitForEditor();
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
+    I.switchTo('#editorComponent');
 
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-    I.wait(2);
-
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
-    I.waitForElement("iframe.wj_component", 10);
-
-    I.click("iframe.wj_component");
-
-    I.wait(1);
-    Document.screenshot("/redactor/apps/video/editor-parameters.png");
-    I.switchTo();
-    I.switchTo(".cke_dialog_ui_iframe");
-    I.switchTo("#editorComponent");
-    I.click(".choose.Button.button.green");
     Document.screenshot("/redactor/apps/video/editor-source.png");
 
 
+    I.clickCss(".image_radio_item > label[for=DTE_Field_field_0]");
+    Document.screenshot("/redactor/apps/video/editor-youtube.png");
 
+    I.clickCss(".image_radio_item > label[for=DTE_Field_field_1]");
+    Document.screenshot("/redactor/apps/video/editor-vimeo.png");
+
+    I.clickCss(".image_radio_item > label[for=DTE_Field_field_2]");
+    Document.screenshot("/redactor/apps/video/editor-facebook.png");
+
+    I.clickCss(".image_radio_item > label[for=DTE_Field_field_3]");
+    Document.screenshot("/redactor/apps/video/editor-video.png");
+
+    I.amOnPage("/apps/video/");
+    DT.waitForLoader();
+    Document.screenshot("/redactor/apps/video/video.png");
 });

@@ -82,7 +82,7 @@ public class LogonUserDetailsRestController extends DatatableRestControllerV2<Lo
         return items;
     }
 
-    @RequestMapping(value="/user-name", params={"userId"}, produces = "text/plain;charset=UTF-8")
+    @RequestMapping(value="/user-name/", params={"userId"}, produces = "text/plain;charset=UTF-8")
     @ResponseBody
     public String getUserName(@RequestParam("userId") int userId) {
 

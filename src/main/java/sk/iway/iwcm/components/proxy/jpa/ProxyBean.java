@@ -6,6 +6,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -44,6 +45,7 @@ public class ProxyBean extends ActiveRecordRepository {
     @NotBlank
     private String name;
 
+    @Lob
     @Column(name = "local_url")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

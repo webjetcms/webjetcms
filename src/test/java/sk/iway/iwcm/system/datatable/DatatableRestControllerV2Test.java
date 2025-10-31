@@ -28,7 +28,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.junit.jupiter.api.BeforeAll;
 

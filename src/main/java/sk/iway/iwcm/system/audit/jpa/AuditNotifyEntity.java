@@ -6,6 +6,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
@@ -40,7 +41,7 @@ public class AuditNotifyEntity {
 					@DataTableColumnEditor(type = "select") })
 	private Integer adminlogType;
 
-	@Size(max = 255)
+	@Lob
 	@Column(name = "text")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA)
 	private String text;

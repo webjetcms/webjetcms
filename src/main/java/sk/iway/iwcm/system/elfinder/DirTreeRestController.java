@@ -18,7 +18,9 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /**
  * REST rozhranie pre zobrazenie stromovej struktury v type pola json
@@ -31,6 +33,17 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
     @Override
     protected void tree(Map<String, Object> result, JsTreeMoveItem item) {
+
+        // /images/gallery -> /images/{domainAlias}/gallery
+        String imagesGalleryRoot = Constants.getString("imagesRootDir")+"/"+Constants.getString("galleryDirName");
+        if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled")) {
+            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+            if (Tools.isNotEmpty(domainAlias)) {
+                if (imagesGalleryRoot.equals(item.getId())) item.setId(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
+                item.setRootFolder(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));
+            }
+        }
+
         String parentPath = item.getId();
         if ("-1".equals(parentPath)) parentPath = "/";
 
@@ -76,7 +89,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
             //Prepare parents only if we want local root childs
             if(loadParents) {
-                prepareParents(parentPath, items);
+                prepareParents(parentPath, items, item.isHideRootParents());
             }
         }
 
@@ -90,7 +103,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param treeRootPath
      * @param items
      */
-    private void prepareParents(String treeRootPath, List<DirTreeItem> items) {
+    private void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
         //Check if we even need to prepare parents
         if(items == null || items.size() == 0) return;
 
@@ -109,9 +122,13 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             newItem.getState().setOpened(false);
             newItem.getState().setDisabled(true);
             newItem.setParent(nextParent.getVirtualParent());
-            newItem.setIcon("ti ti-folder-x");
 
-            if("/".equals(nextParent.getVirtualPath())) {
+            if(hideRootParents == true && treeRootPath.equals(nextParent.getVirtualPath())) {
+                // Root for us
+                newItem.setParent("#");
+                items.add(0, newItem);
+                break;
+            } else if("/".equals(nextParent.getVirtualPath())) {
                 //Root
                 newItem.setParent("#");
                 newItem.setText(getProp().getText("stat_settings.group_id"));

@@ -9,6 +9,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Max;
@@ -130,6 +131,7 @@ public class UserGroupsEntity {
     })
     private List<UserDetailsEntity> usersList;
 
+    @Lob
     @Column(name = "user_group_comment")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

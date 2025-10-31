@@ -186,3 +186,73 @@ Scenario('custom-fields-list-reset @singlethread', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     DT.resetTable();
 });
+
+Scenario('custom-fields advanced fields Groups / Docs', ({ I, DT, DTE }) => {
+    openFieldsTabForPage(I, DT, DTE, "134906");
+
+    I.say("Check pre set values");
+    checkLabelAndValue(I, "A", "Výber adresára stránok - A", "/Jet portal 4");
+    checkLabelAndValue(I, "B", "Výber adresára stránok s mazaním - B", "/Jet portal 4/Úvodná stránka");
+    checkLabelAndValue(I, "C", "Výber stránky - C", "/Jet portal 4/Jet portal 4 - testovacia stranka");
+    checkLabelAndValue(I, "D", "Výber stránky s mazaním - D", "/Jet portal 4/Zo sveta financií/Trhy sú naďalej vydesené");
+
+    I.say("Change values");
+    setJsTree(I, "A", null, "English");
+    I.clickCss("#DTE_Field_fieldB button.btn-vue-jstree-item-remove");
+    setJsTree(I, "C", ["Newsletter"], "Testovaci newsletter");
+    I.clickCss("#DTE_Field_fieldD button.btn-vue-jstree-item-remove");
+    DTE.save();
+
+    openFieldsTabForPage(I, DT, DTE, "134906");
+
+    I.say("Check chnaged values");
+    checkLabelAndValue(I, "A", "Výber adresára stránok - A", "/English");
+    checkLabelAndValue(I, "B", "Výber adresára stránok s mazaním - B", "");
+    checkLabelAndValue(I, "C", "Výber stránky - C", "/Newsletter/Testovaci newsletter");
+    checkLabelAndValue(I, "D", "Výber stránky s mazaním - D", "");
+});
+
+Scenario('custom-fields advanced set default values', ({ I, DT, DTE }) => {
+    openFieldsTabForPage(I, DT, DTE, "134906");
+
+    setJsTree(I, "A", null, "Jet portal 4");
+    setJsTree(I, "B", ["Jet portal 4"], "Úvodná stránka");
+    setJsTree(I, "C", ["Jet portal 4"], "Jet portal 4 - testovacia stranka");
+    setJsTree(I, "D", ["Jet portal 4", "Zo sveta financií"], "Trhy sú naďalej vydesené");
+
+    DTE.save();
+
+    //BUG: if you open and then save page without changes, the values are changed to JSON string, not ID
+    openFieldsTabForPage(I, DT, DTE, "134906");
+    DTE.save();
+
+    I.amOnPage("/showdoc.do?docid=134906");
+    I.waitForText("Field A:1:", 5, "p.field-a");
+    I.waitForText("Field B:23:", 5, "p.field-b");
+    I.waitForText("Field C:141:", 5, "p.field-c");
+    I.waitForText("Field D:14:", 5, "p.field-d");
+});
+
+function openFieldsTabForPage(I, DT, DTE, id) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + id);
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    DT.waitForLoader();
+}
+
+function setJsTree(I, alphabet, toOpen, toSelect) {
+    I.click( locate("#DTE_Field_field" + alphabet + " button.btn-vue-jstree-item-edit") );
+    I.waitForVisible("#jsTree");
+    if(toOpen != null && Array.isArray(toOpen) == true) {
+        for(let i = 0; i < toOpen.length; i++) {
+            I.click(locate('#jsTree .jstree-node.jstree-closed').withText(toOpen[i]).find('.jstree-icon.jstree-ocl'));
+        }
+    }
+    I.click(locate("#jsTree .jstree-anchor").withText(toSelect));
+    I.waitForInvisible("#jsTree");
+}
+
+function checkLabelAndValue(I, alphabet, label, value) {
+    I.seeElement( locate(".DTE_Field_Name_field" + alphabet + " label").withText(label) );
+    I.seeElement("#DTE_Field_field" + alphabet + " > section > div > div > div > div > input[value='" + value + "']");
+}

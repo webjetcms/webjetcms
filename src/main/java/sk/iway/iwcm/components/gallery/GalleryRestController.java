@@ -15,9 +15,11 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadService;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -26,6 +28,7 @@ import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -34,6 +37,8 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -47,12 +52,14 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
     private final GalleryRepository repository;
     private final PerexGroupsRepository perexGroupsRepository;
+    private final GalleryDimensionRepository gdr;
 
     @Autowired
-    public GalleryRestController(GalleryRepository repository, PerexGroupsRepository perexGroupsRepository, HttpServletRequest request) {
+    public GalleryRestController(GalleryRepository repository, PerexGroupsRepository perexGroupsRepository, GalleryDimensionRepository gdr, HttpServletRequest request) {
         super(repository);
         this.repository = repository;
         this.perexGroupsRepository = perexGroupsRepository;
+        this.gdr = gdr;
     }
 
     @Override
@@ -79,6 +86,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                     entity.setUploadDatetime(new Date());
                     entity.setDomainId(CloudToolsForCore.getDomainId());
                 }
+                processFromEntity(entity, ProcessItemAction.EDIT);
             }
 
             if(entity.getId() == null) entity.setId(Long.valueOf(-1));
@@ -113,7 +121,8 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     @Override
     public GalleryEntity processToEntity(GalleryEntity entity, ProcessItemAction action) {
         if(entity != null) {
-            GalleryEditorFields gef = new GalleryEditorFields();
+            GalleryEditorFields gef = entity.getEditorFields();
+            if(gef == null) gef = new GalleryEditorFields();
             gef.toGalleryEntity(entity);
         }
         return entity;
@@ -149,6 +158,14 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         }
         if (entity.getImageName().contains("/") || entity.getImageName().contains("\\") || FileBrowserTools.hasForbiddenSymbol(entity.getImageName())) {
             errors.rejectValue("errorField.imageName", "403", Prop.getInstance().getText("checkform.title.safeChars"));
+        }
+        // For gallery only
+        if(isImageEditor() == false) {
+            // DirSimpleGallery aka image path MUST be set
+            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || GalleryDB.isBasePathCorrect(entity.getEditorFields().getImagePath()) == false) {
+                // Check if DirSimpleGallery starts with /images/gallery
+                errors.rejectValue("errorField.editorFields.imagePath", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
+            }
         }
     }
 
@@ -193,14 +210,20 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     public GalleryEntity insertItem(GalleryEntity entity) {
 
         boolean isImageEditor = isImageEditor();
-        if(isImageEditor && entity.getId() > 0) {
-            // ITS update
-            return editItem(entity, entity.getId());
+
+        // Image editor do not have permission to change imagePath via dirSimpleGallery
+        if(isImageEditor) {
+            entity.getEditorFields().setImagePath(entity.getImagePath());
+
+            if(entity.getId() > 0) {
+                // ITS update
+                return editItem(entity, entity.getId());
+            }
         }
 
         //ak sa vola insert a ma nastavenu cestu k obrazku, tak sa jedna o funkciu duplikovania, obrazok musime najskor skopirovat
-        if (!isImageEditor && Tools.isNotEmpty(entity.getImageName())) {
-            String originalUrl = GalleryDB.getImagePathOriginal(entity.getImagePath()+"/"+entity.getImageName());
+        if (isImageEditor == false && Tools.isNotEmpty(entity.getImageName())) {
+            String originalUrl = GalleryDB.getImagePathOriginal(entity.getImagePath() + "/" + entity.getImageName());
 
             String name = entity.getDescriptionShortSk();
             if (Tools.isEmpty(name)) name = entity.getDescriptionShortCz();
@@ -217,14 +240,15 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                 name = DocTools.removeCharsDir(name, true).toLowerCase();
             }
 
-            if (FileTools.isFile(entity.getImagePath()+"/"+name)) {
+            String newPath = entity.getEditorFields().getImagePath();
+            if (FileTools.isFile(newPath + "/" + name)) {
                 //subor uz existuje, musime zmenit nazov
                 int dot = name.lastIndexOf(".");
                 if (dot > 0) {
                     for (int i=1; i<100; i++) {
 
                         String newNameTest = name.substring(0, dot) + i + name.substring(dot);
-                        if (FileTools.isFile(entity.getImagePath()+"/"+newNameTest)==false) {
+                        if (FileTools.isFile(newPath + "/" + newNameTest) == false) {
                             name = newNameTest;
                             break;
                         }
@@ -234,36 +258,39 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             }
 
             entity.setImageName(name);
-            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(entity.getImagePath()+"/"+name)));
+            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(newPath + "/" + name)));
         }
 
         entity.setId(null);
         GalleryEntity saved = super.insertItem(entity);
 
         //resize robime az po save, inak by nam to spravilo druhy DB zaznam
-        if(!isImageEditor) {
-            GalleryDB.resizePicture(Tools.getRealPath(entity.getImagePath()+"/"+entity.getImageName()), entity.getImagePath());
+        if(isImageEditor == false) {
+            GalleryDB.resizePicture(Tools.getRealPath(saved.getImagePath()+"/"+saved.getImageName()), saved.getImagePath());
+
+            //
+            checkAndCreateGallery(saved.getImagePath());
         }
 
         if (isImageEditor) {
             String name = getRequest().getParameter("name");
             String dir = getRequest().getParameter("dir");
             if (Tools.isNotEmpty(dir) && Tools.isNotEmpty(name)) {
-                //obrazok bol premenovany, je potrebne presunut na file systeme
+
                 GalleryEntity original = new GalleryEntity();
                 original.setImagePath(dir);
                 original.setImageName(name);
-                if (original != null && original.getImageName()!=null && original.getImageName().equals(saved.getImageName())==false) {
-                    //obrazok bol premenovany, je potrebne presunut na file systeme
-                    FileTools.moveFile(original.getImagePath()+"/"+original.getImageName(), saved.getImagePath()+"/"+saved.getImageName());
 
+                if (original.getImageName().equals(saved.getImageName()) == false || original.getImagePath().equals(saved.getImagePath()) == false) {
+                    // Obrazok bol premenovany ALEBO presunuty, je potrebne presunut na file systeme
+                    FileTools.moveFile(original.getImagePath()+"/"+original.getImageName(), saved.getImagePath()+"/"+saved.getImageName());
                     if (FileTools.isFile(original.getImagePath()+"/o_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/o_"+original.getImageName(), saved.getImagePath()+"/o_"+saved.getImageName());
                     if (FileTools.isFile(original.getImagePath()+"/s_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
                 }
             }
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override
@@ -271,20 +298,23 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         GalleryEntity original = getOne(id);
         GalleryEntity saved = super.editItem(entity, id);
 
-        if (original != null && original.getImageName()!=null && original.getImageName().equals(saved.getImageName())==false) {
-            //obrazok bol premenovany, je potrebne presunut na file systeme
+        if (original != null && (original.getImageName().equals(saved.getImageName()) == false || original.getImagePath().equals(saved.getImagePath()) == false)) {
+            // Obrazok bol premenovany ALEBO presunuty, je potrebne presunut na file systeme
             FileTools.moveFile(original.getImagePath()+"/"+original.getImageName(), saved.getImagePath()+"/"+saved.getImageName());
-
             if (FileTools.isFile(original.getImagePath()+"/o_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/o_"+original.getImageName(), saved.getImagePath()+"/o_"+saved.getImageName());
             if (FileTools.isFile(original.getImagePath()+"/s_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
+
+            checkAndCreateGallery(saved.getImagePath());
+
+            setForceReload(true);
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     private void setLastModified(String path, long lastModified) {
         IwcmFile image = new IwcmFile(Tools.getRealPath(path));
-        if (image != null && image.exists()) image.setLastModified(lastModified);
+        if (image.exists()) image.setLastModified(lastModified);
     }
 
     @Override
@@ -298,5 +328,81 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
     private boolean isImageEditor() {
         return Tools.getBooleanValue(getRequest().getParameter("isImageEditor"), false);
+    }
+
+    /**
+     * Check if dimension on given destination imagePath exist. If not, found last existing parent and use entity to create whole imagePath dir by dir, so moved image will be in configured dimension.
+     * @param destPath
+     */
+    private void checkAndCreateGallery(String destPath) {
+        if(Tools.isEmpty(destPath) || GalleryDB.isBasePathCorrect(destPath) == false) return;
+
+        // Sanitize path
+        destPath = DocTools.removeCharsDir(destPath, true).toLowerCase();
+
+        StringBuilder rootPath = new StringBuilder(getBaseGalleryPath());
+        int domainId = CloudToolsForCore.getDomainId();
+        String author = getUser().getFullName();
+
+        //Check if path exist
+        GalleryDimension destDimension = gdr.findFirstByPathAndDomainId(destPath, domainId).orElse(null);
+        if(destDimension == null) {
+            //Dimension do not exist, find first existing parent path
+
+            //remove prefix and get subfolders of dest path
+            String restOfPath = destPath.replaceFirst("^" + getBaseGalleryPath(), "");
+            if(restOfPath.startsWith("/")) restOfPath = restOfPath.substring(1);
+            String[] subFolders = restOfPath.split("/");
+
+            // Get root parent
+            GalleryDimension lastExistingParent = gdr.findFirstByPathAndDomainId(rootPath.toString(), domainId).orElse(null);
+            if(lastExistingParent == null) {
+                Logger.error(GalleryRestController.class, "Cannot create new dimension sub folder, because root folder was not found for domain: " + domainId);
+                return;
+            }
+
+            boolean found = false;
+            for(String subFolder : subFolders) {
+                if(Tools.isEmpty(subFolder)) continue;
+
+                rootPath.append("/").append(subFolder);
+
+                if(found == false) {
+                    GalleryDimension dimension = gdr.findFirstByPathAndDomainId(rootPath.toString(), CloudToolsForCore.getDomainId()).orElse(null);
+                    if(dimension != null) {
+                        lastExistingParent = dimension;
+                        continue;
+                    } else {
+                        found = true;
+                        //From this point they need to be created
+                    }
+                }
+
+                // Prepare and save new dimension
+                gdr.save( getDeepCopy(lastExistingParent, subFolder, rootPath.toString(), author, domainId) );
+            }
+        }
+    }
+
+    private GalleryDimension getDeepCopy(GalleryDimension source, String name, String rootPath, String author, int domainId) {
+        GalleryDimension newDimension = new GalleryDimension();
+
+        NullAwareBeanUtils.copyProperties(source, newDimension);
+        newDimension.setId(null); // Set ID to null, so it will be saved as new dimension
+
+        // Custom settings
+        newDimension.setName(name);
+        newDimension.setAuthor(author);
+        newDimension.setPath(rootPath);
+        newDimension.setDomainId(domainId);
+        newDimension.setDate(new Date());
+
+        return newDimension;
+    }
+
+    private String getBaseGalleryPath() {
+        String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) return Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+        else return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
     }
 }

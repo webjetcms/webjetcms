@@ -728,14 +728,14 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     I.dontSeeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     //test otvorenim priamo editora
-    I.amOnPage("/admin/v9/webpages/web-pages-list?groupid=23");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=23");
     DT.waitForLoader();
     I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");
     I.dontSeeElement("div.DTE_Field_Name_domainName");
     I.dontSeeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list?groupid=1");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
     DT.waitForLoader();
     I.clickCss("button.buttons-edit", container);
     DTE.waitForEditor("groups-datatable");

@@ -506,6 +506,11 @@ static {
 	replaces.add(new OptionDto("int oldId = fab.getReferenceId();", "int oldId = fab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
 	replaces.add(new OptionDto("oldId = referenceFab.getReferenceId();", "oldId = referenceFab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
 
+	//news templates
+	replaces.add(new OptionDto("sk.iway.iwcm.components.news.NewsTemplateBean", "sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity", null));
+
+	//404.jsp
+	replaces.add("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp");
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -672,6 +677,13 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				//REPLACE double with BigDecimal when needed
 				content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
 
+				hasChange = true;
+			}
+
+			if("news.jsp".equals(f.getName()) && url.contains("app-impress_slideshow")) {
+				// replace old <p> tag with <div> tag, because we insert html conde in new version
+				content = Tools.replaceRegex(content, "<p([\\S\\s]+subheadingColor)", "<div$1", false);
+				content = Tools.replaceRegex(content, "(subheadingColor[\\S\\s]+?)</p>", "$1</div>", false);
 				hasChange = true;
 			}
 

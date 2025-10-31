@@ -160,7 +160,7 @@ public class CSRF
 		}
 
 		@SuppressWarnings("unchecked")
-		List<String> tokenList = (List<String>)session.getAttribute(SESSION_KEY);
+		List<String> tokenList = (List<String>)Tools.sessionGetAttribute(session, SESSION_KEY);
 		if (tokenList == null)
 		{
 			RequestBean.addError("CSRF list in session is empty");
@@ -200,11 +200,11 @@ public class CSRF
 	private static void setTokenToSession(HttpSession session, String token)
 	{
 		@SuppressWarnings("unchecked")
-		List<String> tokenList = (List<String>)session.getAttribute(SESSION_KEY);
+		List<String> tokenList = (List<String>)Tools.sessionGetAttribute(session, SESSION_KEY);
 		if (tokenList == null)
 		{
 			tokenList = new ArrayList<String>();
-			session.setAttribute(SESSION_KEY, tokenList);
+			Tools.sessionSetAttribute(session, SESSION_KEY, tokenList);
 		}
 
 		tokenList.add(token);

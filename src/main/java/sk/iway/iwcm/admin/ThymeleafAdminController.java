@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.layout.MenuService;
@@ -76,7 +77,7 @@ public class ThymeleafAdminController {
       // @TODO: nepotrebujeme sem nejaku kontrolu URL parametrov?
       String forward = "admin/v9/dist/views/" + page + "/" + subpage;
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf forward=" + forward);
 
       removePermissionFromCurrentUser(request);
       fireEvent(page, subpage, model, redirectAttributes, request);
@@ -98,7 +99,7 @@ public class ThymeleafAdminController {
          final RedirectAttributes redirectAttributes,
          final HttpServletRequest request) {
 
-         Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
+         //Logger.debug(ThymeleafAdminController.class, "post loaded admin: {}", page);
 
          return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);
    }
@@ -114,7 +115,6 @@ public class ThymeleafAdminController {
     * @return String
     */
    @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
    public ModelAndView appHandler(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
@@ -138,7 +138,7 @@ public class ThymeleafAdminController {
       }
       model.addAttribute("appIncludePath", appIncludePath);
 
-      Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
+      //Logger.debug(ThymeleafAdminController.class, "Thymeleaf APP forward=" + forward + " appIncludePath=" + appIncludePath);
 
       //check if there is index.js file to include as script element
       String jsFilePath = "/apps/"+app+"/admin/"+app+".js";
@@ -159,14 +159,13 @@ public class ThymeleafAdminController {
    }
 
    @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
    public ModelAndView appHandlerPost(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
            final ModelMap model,
            final RedirectAttributes redirectAttributes,
            final HttpServletRequest request) {
-      Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
+      //Logger.debug(ThymeleafAdminController.class, "post loaded: {}", app);
 
       return appHandler(app, subpage, model, redirectAttributes, request);
    }

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -112,5 +112,39 @@ class ToolsTest extends BaseWebjetTest {
         assertEquals(null, serverName);
     }
 
+    @Test
+    void testConvertToHtmlTags_basicReplacements() {
+        assertEquals("<div>", Tools.convertToHtmlTags("*|div|*"));
+        assertEquals("</div>", Tools.convertToHtmlTags("*||div|*"));
+        assertEquals("<span>", Tools.convertToHtmlTags("*|span|*"));
+        assertEquals("</span>", Tools.convertToHtmlTags("*||span|*"));
+    }
+
+    @Test
+    void testConvertToHtmlTags_ampHash47Replacement() {
+        assertEquals("Janko&#47;Ferko", Tools.convertToHtmlTags("Janko&amp;#47;Ferko"));
+        assertEquals("<div>&#47;</div>", Tools.convertToHtmlTags("*|div|*&amp;#47;*||div|*"));
+    }
+
+    @Test
+    void testConvertToHtmlTags_htmlModeReplacements() {
+        assertEquals("", Tools.convertToHtmlTags("&lt;&#47;div&gt;").trim()); //no opening tag, SafeHtmlConverter will return empty string
+        assertEquals("&lt;div&gt;", Tools.convertToHtmlTags("&lt;div&gt;")); //no closing tag, do not convert
+        assertEquals("&gt;", Tools.convertToHtmlTags("&gt;"));
+        assertEquals("<div></div>", Tools.convertToHtmlTags("&lt;div&gt;&lt;&#47;div&gt;"));
+    }
+
+    @Test
+    void testConvertToHtmlTags_multipleReplacements() {
+        String input = "*|div|*Some text*||div|*";
+        String expected = "<div>Some text</div>";
+        assertEquals(expected, Tools.convertToHtmlTags(input));
+    }
+
+    @Test
+    void testConvertToHtmlTags_noReplacement() {
+        String input = "plain text";
+        assertEquals("plain text", Tools.convertToHtmlTags(input));
+    }
 
 }

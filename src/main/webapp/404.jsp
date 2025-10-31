@@ -8,7 +8,15 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page import="sk.iway.iwcm.components.export.ExportDatBean"%><%@page import="sk.iway.iwcm.components.export.ExportDatDB"
 %><%@ page import="sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails,sk.iway.iwcm.i18n.Prop" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@page import="sk.iway.iwcm.system.UrlRedirectBean"
-%><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@page import="sk.iway.iwcm.io.IwcmFile"%><%
+%><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@page import="sk.iway.iwcm.io.IwcmFile"%><%!
+public void safeForward(jakarta.servlet.jsp.PageContext pageContext, String forward) throws java.io.IOException, jakarta.servlet.ServletException {
+	try {
+		pageContext.forward(forward);
+	} catch (IllegalStateException ex) {
+		//java.lang.IllegalStateException: setAttribute: Session [xxx] has already been invalidated
+	}
+}
+%><%
 
 //otestuj ci existuje nahrada za tuto stranku
 String forward = "/404-"+Constants.getInstallName()+".jsp";
@@ -18,14 +26,14 @@ if(Tools.isNotEmpty(Constants.getString("logInstallName")))
 	java.io.File fForward = new java.io.File(sk.iway.iwcm.Tools.getRealPath(forward));
 	if (fForward.exists())
 	{
-		pageContext.forward(forward);
+		safeForward(pageContext, forward);
 		return;
 	}
 }
 java.io.File fForward = new java.io.File(sk.iway.iwcm.Tools.getRealPath(forward));
 if (fForward.exists())
 {
-	pageContext.forward(forward);
+	safeForward(pageContext, forward);
 	return;
 }
 
@@ -117,7 +125,7 @@ if ("/sitemap.xml".equals(path) || "/google-sitemap.jsp".equals(path))
 	response.setContentType("text/xml; charset=utf-8");
 	response.setStatus(HttpServletResponse.SC_OK);
 	String customPage = sk.iway.iwcm.tags.WriteTag.getCustomPage("/components/sitemap/google-sitemap.jsp", request);
-	pageContext.forward(customPage);
+	safeForward(pageContext, customPage);
 	return;
 }
 
@@ -219,11 +227,9 @@ if(null != exportDatBean){
 	response.setStatus(HttpServletResponse.SC_OK);
 	urlExportDat = "/components/export/"+format+".jsp";
 	String customPage = sk.iway.iwcm.tags.WriteTag.getCustomPage(urlExportDat, request);
-	pageContext.forward(customPage);
+	safeForward(pageContext, customPage);
 	return;
 }
-
-
 
 UrlRedirectBean redirectBean = null;
 
@@ -294,7 +300,7 @@ if (referer != null)
 }
 
 //zapis do logu
-StatDB.addError(statPath, referer);
+StatDB.addError(statPath, referer, request);
 
 if ("/components/gdpr/jscripts/jquery.cookie.js".equals(path)) {
 	//Bezpecnost - odstranena stara verzia jquery.cookie.js v aplikacii GDPR, nahradena verziou v _common adresari.
@@ -307,7 +313,7 @@ if (path.endsWith(".gif") || path.endsWith(".jpg") || path.endsWith(".png") || p
 {
 	Logger.warn("404.jsp", "404 ("+Constants.getInstallName()+"): " + path+"?"+request.getQueryString());
 	//posli rovno chybu 404 do prehliadaca
-   return;
+   	return;
 }
 else if (PathFilter.checkWebAccess(request, path)==true)
 {
@@ -333,7 +339,6 @@ else if (PathFilter.checkWebAccess(request, path)==true)
 					//System.out.println("404.jsp: forwarding "+url404+" = "+docId+" ip="+Tools.getRemoteIP(request));
 					if (ContextFilter.isRunning(request)) {
 						//response.sendRedirect(request.getContextPath()+url404);
-						//pageContext.forward("/showdoc.do?docid="+docId);
 						ContextRequestWrapper contextRequest = new ContextRequestWrapper(request);
 						ContextResponseWrapper wrapper = new ContextResponseWrapper(response, request);
 
@@ -341,7 +346,7 @@ else if (PathFilter.checkWebAccess(request, path)==true)
 
 						ContextFilter.doFilterAddContextPathImpl(contextRequest, response, path, wrapper, true);
 					} else {
-						pageContext.forward("/showdoc.do?docid=" + docId);
+						safeForward(pageContext, "/showdoc.do?docid=" + docId);
 					}
 					return;
 				}
@@ -351,6 +356,8 @@ else if (PathFilter.checkWebAccess(request, path)==true)
 			if (start != -1) testPath = testPath.substring(0, start);
 			else break;
 		}
+	} catch (IllegalStateException ex) {
+		//java.lang.IllegalStateException: setAttribute: Session [xxx] has already been invalidated
 	}
 	catch (Exception ex)
 	{
