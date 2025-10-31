@@ -33,6 +33,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     pageContext.setAttribute("subtitle", subtitle);
 
     pageContext.setAttribute("lng", lng);
+
+    request.setAttribute("isOAuth2Enabled", Tools.isNotEmpty(Constants.getString("oauth2_clients")));
 %><!DOCTYPE html>
 <html>
 <head>
@@ -169,6 +171,13 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
                         <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
                     </div>
+                    <c:if test="${isOAuth2Enabled}">
+                        <c:forEach var="url" items="${urls}">
+                            <div class="form-group">
+                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="window.location.href='${url.value}'"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
+                            </div>
+                        </c:forEach>
+                    </c:if>
                 </div>
             </form:form>
 
