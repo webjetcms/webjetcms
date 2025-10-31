@@ -242,6 +242,9 @@ public class AdminLogonController {
         }
 
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
+            // Nastav session atribút pre OAuth2 admin login
+            session.setAttribute("oauth2_admin_login", true);
+
             Iterable<ClientRegistration> clientRegistrations = null;
             ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
             if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {

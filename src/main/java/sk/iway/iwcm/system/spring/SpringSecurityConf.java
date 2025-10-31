@@ -51,8 +51,7 @@ public class SpringSecurityConf {
 			http.oauth2Login(oauth2 -> {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
 				oauth2.authorizedClientService(authorizedClientService());
-				oauth2.successHandler(new OAuth2SuccessHandler());
-				oauth2.loginPage("/admin/logon");
+				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
 			});
 		}
 
