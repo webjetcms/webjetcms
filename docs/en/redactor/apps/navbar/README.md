@@ -48,21 +48,9 @@ import sk.iway.iwcm.doc.NavbarInterface;
 public class CustomNavbar implements NavbarInterface {
     
     @Override
-    public String getNavbarRDF(int groupId, int docId, HttpServletRequest request) {
-        // Custom implementation for RDF format
-        return "<div class=\"custom-rdf\">...</div>";
-    }
-
-    @Override
-    public String getNavbarSchema(int groupId, int docId, HttpServletRequest request) {
-        // Custom implementation for Schema.org format
-        return "<ol class=\"custom-schema\">...</ol>";
-    }
-
-    @Override
     public String getNavbar(int groupId, int docId, HttpServletRequest request) {
-        // Custom implementation for standard format
-        return "Custom navigation...";
+        // Custom navigation bar implementation
+        return "<nav>Custom navigation for group " + groupId + "</nav>";
     }
 }
 ```
@@ -76,6 +64,14 @@ navbarDefaultType=com.example.custom.CustomNavbar
 ```
 
 This configuration is set in **Settings > Configuration** in the WebJET administration.
+
+### Standard Implementations
+
+WebJET includes three standard implementations:
+
+- **NavbarStandard** - standard text navigation (value `normal` or empty)
+- **NavbarRDF** - navigation in RDF format (value `rdf`)
+- **NavbarSchemaOrg** - navigation in Schema.org format (value `schema.org`)
 
 ### Notes
 

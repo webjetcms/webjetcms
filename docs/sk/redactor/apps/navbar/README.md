@@ -50,21 +50,9 @@ import sk.iway.iwcm.doc.NavbarInterface;
 public class CustomNavbar implements NavbarInterface {
     
     @Override
-    public String getNavbarRDF(int groupId, int docId, HttpServletRequest request) {
-        // Vlastná implementácia pre RDF formát
-        return "<div class=\"custom-rdf\">...</div>";
-    }
-
-    @Override
-    public String getNavbarSchema(int groupId, int docId, HttpServletRequest request) {
-        // Vlastná implementácia pre Schema.org formát
-        return "<ol class=\"custom-schema\">...</ol>";
-    }
-
-    @Override
     public String getNavbar(int groupId, int docId, HttpServletRequest request) {
-        // Vlastná implementácia pre štandardný formát
-        return "Vlastná navigácia...";
+        // Vlastná implementácia navigačnej lišty
+        return "<nav>Vlastná navigácia pre skupinu " + groupId + "</nav>";
     }
 }
 ```
@@ -78,6 +66,14 @@ navbarDefaultType=com.example.custom.CustomNavbar
 ```
 
 Táto konfigurácia sa nastavuje v **Nastavenia > Konfigurácia** v administrácii WebJET.
+
+### Štandardné implementácie
+
+WebJET obsahuje tri štandardné implementácie:
+
+- **NavbarStandard** - štandardná textová navigácia (hodnota `normal` alebo prázdna)
+- **NavbarRDF** - navigácia vo formáte RDF (hodnota `rdf`)
+- **NavbarSchemaOrg** - navigácia vo formáte Schema.org (hodnota `schema.org`)
 
 ### Poznámky
 

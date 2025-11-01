@@ -10,25 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 public interface NavbarInterface {
 
     /**
-     * Generates navbar in RDF format
-     * @param groupId - ID of the directory/group
-     * @param docId - ID of current web page
-     * @param request - HTTP request
-     * @return HTML code for breadcrumb navigation in RDF format
-     */
-    String getNavbarRDF(int groupId, int docId, HttpServletRequest request);
-
-    /**
-     * Generates navbar in schema.org format
-     * @param groupId - ID of the directory/group
-     * @param docId - ID of current web page
-     * @param request - HTTP request
-     * @return HTML code for breadcrumb navigation in schema.org format
-     */
-    String getNavbarSchema(int groupId, int docId, HttpServletRequest request);
-
-    /**
-     * Generates navbar in standard format
+     * Generates navbar (breadcrumb navigation)
      * @param groupId - ID of the directory/group
      * @param docId - ID of current web page
      * @param request - HTTP request
