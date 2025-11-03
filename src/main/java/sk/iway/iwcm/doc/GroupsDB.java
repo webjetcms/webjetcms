@@ -3482,12 +3482,25 @@ public class GroupsDB extends DB
 		if(gd != null && gd.isInternal()==false && gd.getMenuType()!=GroupDetails.MENU_TYPE_HIDDEN && gd.getFullPath()!=null && gd.getFullPath().indexOf("/System")==-1 && gd.getParentGroupId()>0)
 		{
 			DocDetails docDetails = DocDB.getInstance().getDoc(gd.getDefaultDocId());
-			if(docDetails != null && (docDetails.getTitle() != null && !gd.getGroupName().equals(docDetails.getTitle())))
+			String groupTitle = null;
+			if (docDetails != null)
+			{
+				groupTitle = docDetails.getTitle();
+				//in group title / are replaced with &#47; because of path separator issues
+				groupTitle = Tools.replace(groupTitle, "/", "&#47;");
+			}
+
+			if(docDetails != null && (groupTitle != null && !gd.getGroupName().equals(groupTitle)))
 			{
 				Logger.debug(DocDB.class, "Renaming document: "+docDetails.getDocId()+" to name :"+gd.getGroupName());
-				docDetails.setTitle(gd.getGroupName());
-				docDetails.setNavbar(gd.getGroupName());
+				groupTitle = gd.getGroupName();
+				groupTitle = Tools.replace(groupTitle, "&#47;", "/");
+				docDetails.setTitle(groupTitle);
+				docDetails.setNavbar(groupTitle);
 				DocDB.saveDoc(docDetails);
+
+				RequestBean.setAttribute("forceReloadTree", Boolean.TRUE);
+
 				return true;
 			}
 			return false;

@@ -18,6 +18,7 @@
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
 
 ## Názov *String*
+
 Hľadá text vo voliteľnom poli R :carousel_horse: `getFieldR()` (SEO titulok), ak je pole prázdne, tak použije názov webovej stránky :carousel_horse: `getTitle()`.
 
 ```java
@@ -29,6 +30,8 @@ Použité v :ghost:<code>head.jsp</code>
 ```html
 <meta property="og:title" content="${ninja.page.seoTitle}" />
 ```
+
+Pri volaní `seoTitle` je odstránený prípadný HTML kód z titulku stránky, ak potrebujete titulok vrátane HTML kódu môžete použiť `${ninja.page.seoTitleHtml}`.
 
 ## Popis *String*
 

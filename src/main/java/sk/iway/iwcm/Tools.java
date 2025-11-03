@@ -2894,6 +2894,8 @@ public class Tools
 	 */
 	public static String convertToHtmlTags(String text){
 
+		//notice: &#47; is / and this is replaced to avoid problems with jstree path separator
+
 		if (text.contains("*||")) text = Tools.replace(text, "*||", "</");
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");
 		if (text.contains("|*")) text = Tools.replace(text, "|*", ">");
