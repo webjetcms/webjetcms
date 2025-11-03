@@ -2682,22 +2682,15 @@ public class PathFilter implements Filter
 				if (blockedPaths == null)
 				{
 					String blockedPathsConfig = Constants.getString("pathFilterBlockedPaths");
-					if (Tools.isEmpty(blockedPathsConfig)) {
-						//default values for backward compatibility
-						blockedPathsConfig = ".DS_Store,debug.,config.properties";
-					}
 					String[] tokens = Tools.getTokens(blockedPathsConfig, ",", true);
 					blockedPaths = tokens == null ? new String[0] : tokens;
 				}
 			}
 		}
 
-		if (blockedPaths.length > 0)
+		for (String blockedPath : blockedPaths)
 		{
-			for (int i=0; i<blockedPaths.length; i++)
-			{
-				if (path.contains(blockedPaths[i])) return true;
-			}
+			if (path.contains(blockedPath)) return true;
 		}
 
 		return false;
