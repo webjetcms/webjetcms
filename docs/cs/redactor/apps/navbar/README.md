@@ -46,12 +46,17 @@ import javax.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.doc.NavbarInterface;
 
 public class CustomNavbar implements NavbarInterface {
-    
+
     @Override
     public String getNavbar(int groupId, int docId, HttpServletRequest request) {
-        // Vlastní implementace navigační lišty
-        return "<nav>Vlastní navigace pro skupinu " + groupId + "</nav>";
+        return "Custom navbar for group " + groupId + " doc " + docId;
     }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails docDetails, String navbar, HttpServletRequest request) {
+        return navbar + ", Custom navbar for non-default doc " + docDetails.getDocId();
+    }
+
 }
 ```
 

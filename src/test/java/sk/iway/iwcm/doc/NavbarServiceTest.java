@@ -5,6 +5,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.aceintegration.CustomNavbar;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +29,10 @@ class NavbarServiceTest extends BaseWebjetTest {
     void testCustomNavbarImplementation() {
         CustomNavbar customNavbar = new CustomNavbar();
         MockHttpServletRequest request = new MockHttpServletRequest();
+
+        SetCharacterEncodingFilter.registerDataContext(request);
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        rb.setDomain(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"));
 
         // Test standard format
         String standardNavbar = customNavbar.getNavbar(10, 20, request);
