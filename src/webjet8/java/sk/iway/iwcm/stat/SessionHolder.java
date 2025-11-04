@@ -143,9 +143,11 @@ public class SessionHolder
 		if (lastURL != null && lastURL.startsWith("/admin/multiplefileupload.do"))
 			return true;
 
+		boolean newSession = false;
 		SessionDetails det = get(sessionId);
 		if (det == null) {
 			cleanup();
+			newSession= true;
 
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
@@ -201,8 +203,13 @@ public class SessionHolder
 
 		// ziskaj IP a remoteHost
 		det.setLastActivity(Tools.getNow());
+		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
+		if(newSession == true && det.isAdmin() == true) {
+			// After new session was added (logon for example) - refresh session stat data
+			SessionClusterHandler.main(null);
+		}
 		return true;
 	}
 
@@ -412,5 +419,29 @@ public class SessionHolder
 				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId +" uid="+sd.getLoggedUserId());
 			}
 		}
+	}
+
+	public void invalidateSessionOnNodes(String invalidateSessionId) {
+		if(Tools.isEmpty(invalidateSessionId) == true) return;
+
+		//Try find session on this cluster, so we dont need to refresh
+		if(invalidateSession(invalidateSessionId) == true) return;
+
+		//Session is probably another cluster, call cluster refresh
+		ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder-" + invalidateSessionId, 0L);
+	}
+
+	public boolean invalidateSession(String sessionId) {
+		if(Tools.isEmpty(sessionId) == true) return false;
+
+		SessionDetails sd = get(sessionId);
+		if(sd != null) {
+			sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
+			Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
+			//Refresh data
+			SessionClusterHandler.main(null);
+			return true;
+		}
+		return false;
 	}
 }

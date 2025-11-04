@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.tags.CombineTag;
@@ -232,6 +233,12 @@ public class ClusterRefresher extends TimerTask
 				long timestamp = Tools.getLongValue(className.substring(className.indexOf('-')+1), Tools.getNow());
 				//zmen version tag
 				CombineTag.setVersion(timestamp);
+			}
+			else if (className.startsWith("sk.iway.iwcm.stat.SessionHolder-")) {
+				//If sessionId is set, we want do invalid only this sessionId
+				String sessionId = className.substring(className.indexOf('-') + 1);
+				sessionId = sessionId.substring(0, sessionId.length() - 2); //Remove postfix -0
+				SessionHolder.getInstance().invalidateSession(sessionId);
 			}
 			else
 			{

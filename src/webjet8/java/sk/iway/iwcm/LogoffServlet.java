@@ -1,5 +1,6 @@
 package sk.iway.iwcm;
 
+import sk.iway.iwcm.stat.SessionClusterHandler;
 import sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UserDetails;
@@ -107,6 +108,9 @@ public class LogoffServlet extends HttpServlet {
                 cache.removeUserAllUserObjects(user);
             }
         }
+
+        // After logoff - refresh session stat data
+		SessionClusterHandler.main(null);
 
         // Forward control to the specified success URI
         if (request.getParameter("forwardDocId")!=null)

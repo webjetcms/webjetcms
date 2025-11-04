@@ -9,12 +9,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.monitoring.jpa.MonitoringActualBean;
 import sk.iway.iwcm.components.monitoring.jpa.MonitoringEntity;
 import sk.iway.iwcm.components.monitoring.jpa.MonitoringRepository;
+import sk.iway.iwcm.stat.SessionClusterHandler;
 import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
@@ -95,5 +104,25 @@ public class MonitoringRestController extends DatatableRestControllerV2<Monitori
     public MonitoringActualBean getActualValues() {
         MonitoringActualBean actual = new MonitoringActualBean();
         return actual;
+    }
+
+    @RequestMapping("/sessions")
+    public ArrayNode getUserSessionAllNodes() {
+        return SessionClusterHandler.getUserSessionsAllNodes(getUser().getUserId());
+    }
+
+    @PostMapping("/removeSession")
+    public void removeSession(@RequestParam("sessionId") String sessionId) {
+        sk.iway.iwcm.stat.SessionHolder.getInstance().invalidateSessionOnNodes(sessionId);
+    }
+
+    @GetMapping("/currentSession")
+    public String getCurrentSession() {
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null) {
+            String currentSessionId = rb.getSessionId();
+            if(Tools.isNotEmpty(currentSessionId)) return currentSessionId;
+        }
+        return null;
     }
 }

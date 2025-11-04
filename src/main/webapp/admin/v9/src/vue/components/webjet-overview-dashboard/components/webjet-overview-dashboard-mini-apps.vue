@@ -3,6 +3,7 @@
         <webjet-overview-dashboard-mini-app-users
             v-bind:overviewadmins="overviewadmins"
         ></webjet-overview-dashboard-mini-app-users>
+        <webjet-overview-dashboard-mini-app-active-sessions></webjet-overview-dashboard-mini-app-active-sessions>
         <webjet-overview-dashboard-mini-app-todo
             v-bind:overviewtodo="overviewtodo"
             style="display: none"
@@ -20,13 +21,15 @@ import WebjetOverviewDashboardMiniAppUsers from "../mini-apps/webjet-overview-da
 import WebjetOverviewDashboardMiniAppTodo from "../mini-apps/webjet-overview-dashboard-mini-app-todo";
 import WebjetOverviewDashboardMiniAppBookmark from "../mini-apps/webjet-overview-dashboard-mini-app-bookmark";
 import WebjetOverviewDashboardMiniAppFeedback from "../mini-apps/webjet-overview-dashboard-mini-app-feedback";
+import WebjetOverviewDashboardMiniAppActiveSessions from "../mini-apps/webjet-overview-dashboard-mini-app-active-sessions";
 export default {
   name: 'webjet-overview-dashboard-mini-apps',
   components: {
     WebjetOverviewDashboardMiniAppFeedback,
     WebjetOverviewDashboardMiniAppBookmark,
     WebjetOverviewDashboardMiniAppTodo,
-    WebjetOverviewDashboardMiniAppUsers
+    WebjetOverviewDashboardMiniAppUsers,
+    WebjetOverviewDashboardMiniAppActiveSessions
   },
   props: ['overviewadmins', 'overviewtodo'],
 
