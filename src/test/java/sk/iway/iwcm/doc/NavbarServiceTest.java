@@ -52,7 +52,9 @@ class NavbarServiceTest extends BaseWebjetTest {
         Constants.setString("navbarDefaultType", "normal");
         serviceNavbar = navbarService.getNavbar(docDetails, request);
         //doc/group doesnt exist so navbar should be just doc title
-        assertEquals("<a href='/lta-href=39amp4739gtjet-portalltamp47agt/'>Jet portal 4</a>", serviceNavbar);
+        String expected = "<a href='/sk/'>Slovensky</a>"; //github database
+        if (serviceNavbar.contains("portalltamp47agt")) expected = "<a href='/lta-href=39amp4739gtjet-portalltamp47agt/'>Jet portal 4</a>"; //demo database
+        assertEquals(expected, serviceNavbar);
     }
 
     @Test
