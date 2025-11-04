@@ -87,7 +87,7 @@ Scenario('zobrazenie navbaru - HTML escaping', ({ I, DTE, Document }) => {
     I.seeInSource("<li class=\"open\"><a href=\"/test-stavov/testhtml-nazve/\">"+unescapedName+"</a></li>");
 });
 
-Scenario('custom navbar @current', ({ I, DTE, Document }) => {
+Scenario('custom navbar', ({ I, DTE, Document }) => {
     Document.setConfigValue("navbarDefaultType", "sk.iway.aceintegration.CustomNavbar");
 
     I.amOnPage("/test-stavov/testhtml-nazve/html-subpage.html");
