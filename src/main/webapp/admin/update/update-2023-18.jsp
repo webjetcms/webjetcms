@@ -530,7 +530,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	{
 		if (f.isDirectory())
 		{
-			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) return;
+			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) continue;
 			checkDir(url+f.getName()+"/", saveFile, compileFile, out, request, response);
 		}
 		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html") || f.getName().endsWith(".java"))
@@ -541,7 +541,8 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			if ("/admin/update/update-2023-18.jsp".equals(fullUrl)) continue;
 			if ("/admin/update/ldap-conn-test.jsp".equals(fullUrl)) continue;
 
-			System.out.println(fullUrl);
+			//System.out.println(fullUrl);
+			Logger.debug(sk.iway.iwcm.system.UpdateDatabase.class, "Processing file: " + fullUrl);
 			out.println(Tools.escapeHtml(fullUrl));
 			out.flush();
 
