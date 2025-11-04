@@ -10,6 +10,8 @@
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 
+	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+
 	int itemId = Tools.getIntValue(request.getParameter("basketItemId"), -1);
 	if (itemId == -1)
 		return;
@@ -53,7 +55,7 @@
 				<span id='basketSmallPrice'>
 					<iwcm:text key="components.basket.total_price"/>:
 					<span class="cena">
-						<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+						<iway:curr currency="<%=displayCurrency%>">
 							<%=EshopService.getTotalLocalPriceVat(items,request)%>
 						</iway:curr>
 					</span>
@@ -132,7 +134,7 @@ function recalculateTotal()
 		<table border="0" cellspacing="0" cellpadding="2" width="100%">
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.price"/>:</td>
-				<td width="70%" nowrap><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+				<td width="70%" nowrap><iway:curr currency="<%=displayCurrency%>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 				<td valign="top" rowspan=2 align="right">
 					<input type="submit" id="bSubmit" name="bSubmit" value="<iwcm:text key="components.basket.addbasket_popup.add"/>">
 					<input type="hidden" name="basketItemId" value="<%=itemId%>" />
@@ -165,7 +167,7 @@ function recalculateTotal()
 			</tr>
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.all"/>:</td>
-				<td id="tdTotal" colspan=2><b><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></b></td>
+				<td id="tdTotal" colspan=2><b><iway:curr currency="<%=displayCurrency%>"><%=good.getLocalPriceVat(request) %></iway:curr></b></td>
 			</tr>
 		</table>
 		</form>

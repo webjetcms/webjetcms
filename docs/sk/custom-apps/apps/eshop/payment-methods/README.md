@@ -10,7 +10,7 @@ Pre pridanie nového spôsobu platby musíme vytvoriť Servis napr. ako [GoPaySe
 
 ```java
 @Service
-@PaymentMethod(
+@SupportMethod(
     nameKey = "apps.eshop.payments.go_pay",
     fieldMap = {
         @PaymentFieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
@@ -30,21 +30,21 @@ public class GoPayService extends BasePaymentMethod {
 
 **Každý takýto Service reprezentujúci platbu musí spĺňať nasledujúce podmienky**:
 
-- Povinná ```PaymentMethod``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob platby.
+- Povinná ```SupportMethod``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob platby.
 - Povinné dedenie triedy ```BasePaymentMethod```, ktorá definuje povinné metódy k implementácií ako aj poskytuje podpornú logiku.
 
 Každý takto vytvorený Servis je následne získaný v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže ak bol nový spôsob platby vytvorený korektne, automatický sa zobrazí v tabuľke a má všetku potrebnú logiku.
 
-## Anotácia ```PaymentMethod```
+## Anotácia ```SupportMethod```
 
 Anotácia poskytuje parametre pre nastavenie:
 
 - ```nameKey```, prekladový kľúč pre nastavenie názvu spôsobu platby.
-- ```fieldMap```, pre nastavenie jednotlivých voliteľných polí, ktoré sa zobrazia v editore pomocou anotácie ```@PaymentFieldMapAttr```. Každé pole je reprezentované svojou anotáciou.
+- ```fieldMap```, pre nastavenie jednotlivých voliteľných polí, ktoré sa zobrazia v editore pomocou anotácie ```@FieldMapAttr```. Každé pole je reprezentované svojou anotáciou.
 
-### ```PaymentFieldMapAttr```
+### ```FieldMapAttr```
 
-Interface [`PaymentFieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java) umožňuje zadefinovanie voliteľného poľa pre spôsob platby.
+Interface [`FieldMapAttr`](../../../../../../src/main/java/sk/iway/iwcm/components/basket/support/FieldMapAttr.java) umožňuje zadefinovanie voliteľného poľa pre spôsob platby.
 
 Dostupné parametre k nastaveniu sú:
 

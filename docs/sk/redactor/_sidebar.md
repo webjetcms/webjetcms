@@ -68,6 +68,7 @@
     - [Zoznam produktov](/redactor/apps/eshop/product-list/README.md)
     - [Nastavenie aplikácie](/redactor/apps/basket/README.md)
     - [Spôsoby platby](/redactor/apps/eshop/payment-methods/README.md)
+    - [Spôsoby doručenia](/redactor/apps/eshop/delivery-methods/README.md)
   - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dát](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)

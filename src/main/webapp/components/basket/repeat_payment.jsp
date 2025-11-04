@@ -30,7 +30,7 @@
 String paymentMethod = invoice.getPaymentMethod();
 Prop prop = Prop.getInstance(request);
 
-if ( PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, prop) ) {
+if ( PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, request, prop) ) {
 	String destination = Tools.getStringValue(request.getParameter("destination"), null);
 
   	//Supported payment method

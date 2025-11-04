@@ -1,5 +1,7 @@
 Feature('apps.basket.product-list');
 
+const SL = require("./SL");
+
 let subcategory = "section.md-subcategory-selector > ul > li > a";
 
 Before(({ login }) => {
@@ -64,7 +66,7 @@ Scenario('Eshop CHECK subcategory-selector AND product-list', async ({I, Documen
 
 Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => {
 
-    await changeDomain(I, Document, "/apps/basket/admin/product-list/");
+    await changeDomain(I, Document, SL.PRODUCTS_ADMIN);
 
     I.seeElement(locate(".nav-link.active").withText("Zoznam produktov"));
 
@@ -91,7 +93,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
 
 Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
 
-    await changeDomain(I, Document, "/apps/basket/admin/product-list/");
+    await changeDomain(I, Document, SL.PRODUCTS_ADMIN);
 
     let random = I.getRandomText();
 
@@ -164,6 +166,35 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
 
     I.waitForInvisible(newGroupA, 10);
     I.waitForInvisible(newGroupB, 10);
+});
+
+Scenario('Product list currency select', ({I, Document}) => {
+    I.amOnPage(SL.PRODUCTS_ADMIN);
+    Document.switchDomain("demo.webjetcms.sk");
+
+    Document.setConfigValue("supportedCurrencies", "eur,usd");
+    I.amOnPage(SL.PRODUCTS_ADMIN);
+    I.say("Check currency options");
+        SL.validateCurrencyOptions(I, ["eur", "usd"], ["czk", "gbp"]);
+
+    Document.setConfigValue("supportedCurrencies", "eur,czk,usd,gbp");
+    I.amOnPage(SL.PRODUCTS_ADMIN);
+    I.say("Check currency options");
+        SL.validateCurrencyOptions(I, ["eur", "usd", "czk", "gbp"], []);
+});
+
+Scenario('Product list currency convertion', ({I, DT}) => {
+    I.amOnPage(SL.PRODUCTS_ADMIN);
+
+    SL.selectCurrency(I, "eur");
+    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "12,30", "10,00", "23"]);
+    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "8,61", "7,00", "23"]);
+    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "30,75", "25", "23"]);
+
+    SL.selectCurrency(I, "czk");
+    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "298,03", "242,30", "23"]);
+    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "208,62", "169,61", "23"]);
+    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "745,07", "605,75", "23"]);
 });
 
 Scenario('Logout to refresh selected domain', ({I}) => {

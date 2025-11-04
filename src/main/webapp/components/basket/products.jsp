@@ -5,6 +5,8 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -39,8 +41,9 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 
-	PageParams pageParams = new PageParams(request);
+	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
 
+	PageParams pageParams = new PageParams(request);
 
 	String basketOrder = Tools.getStringValue(request.getParameter("basketAct"), "");
 	boolean isbasketOrder = basketOrder.equals("orderform") || "saveorder".equals(request.getParameter("act"));
@@ -316,11 +319,11 @@ $(document).ready(function(){
 				</a>
 				<%-- NASLEDUJUCE ZOBRAZENIE CENY A KOSIKA MA VYZNAM IBA AK MA PRODUKT NENULOVU CENU --%>
 				<%
-				if (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0)
+				if (doc.getLocalPrice(request).abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0)
 				{%>
 					<div class="priceDiv">
 						<a class="cart addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" href="javascript:void(0)"><img alt="" src="/components/basket/img/kosik.png" class="cart" /></a>
-						<span class="cena"><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></span>
+						<span class="cena"><iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr></span>
 					</div><%
 				}%>
 			</div>
