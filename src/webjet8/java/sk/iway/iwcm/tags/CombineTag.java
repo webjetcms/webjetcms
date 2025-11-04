@@ -238,6 +238,7 @@ public final class CombineTag extends BodyTagSupport
 
 	private String removeCrLf(String set)
 	{
+		if (set != null) set = set.trim();
 		String newSet = Tools.replace(set, "\n", ",");
 		newSet = Tools.replace(newSet, "\r", "");
 		newSet = Tools.replace(newSet, " ", "");
