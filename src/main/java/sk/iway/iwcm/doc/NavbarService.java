@@ -15,19 +15,13 @@ import org.apache.commons.lang.StringUtils;
 public class NavbarService {
 
     public String getNavbar(DocDetails doc, HttpServletRequest request) {
-		GroupsDB groupsDB = GroupsDB.getInstance();
-		DocDB docDB = DocDB.getInstance();
 
-        String navbar = doc.getNavbar();
         String navbar2;
         String navbarDefaultType = Constants.getString("navbarDefaultType");
-        
-        //najskor zisti ako je na tom adresar
-        GroupDetails group = groupsDB.getGroup(doc.getGroupId());
-        
+
         // Get appropriate navbar implementation
         NavbarInterface navbarImpl = getNavbarImplementation(navbarDefaultType);
-        
+
         if (navbarImpl != null)
         {
             navbar2 = navbarImpl.getNavbar(doc.getGroupId(), doc.getDocId(), request);
@@ -38,33 +32,45 @@ public class NavbarService {
             navbarImpl = new NavbarStandard();
             navbar2 = navbarImpl.getNavbar(doc.getGroupId(), doc.getDocId(), request);
         }
-        
+
+        String navbar;
         if (navbar2.length() > 2)
         {
             navbar = navbar2;
-            //ak to nie je default doc pre grupu tak sprav linku
-            if (doc.getDocId() != group.getDefaultDocId() && doc.isShowInNavbar(request))
-            {
-                if (doc.getNavbar().length() > 2)
+            try {
+                GroupsDB groupsDB = GroupsDB.getInstance();
+                DocDB docDB = DocDB.getInstance();
+                //najskor zisti ako je na tom adresar
+                GroupDetails group = groupsDB.getGroup(doc.getGroupId());
+
+                //ak to nie je default doc pre grupu tak sprav linku
+                if (group != null && doc.getDocId() != group.getDefaultDocId() && doc.isShowInNavbar(request))
                 {
-                    if ("rdf".equalsIgnoreCase(navbarDefaultType) && navbar.indexOf("</div>")!=-1)
+                    if (doc.getNavbar().length() > 2)
                     {
-                        navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+Tools.convertToHtmlTags(doc.getNavbar())+"</span></div>";
-                    }
-                    else if ("schema.org".equalsIgnoreCase(navbarDefaultType))
-                    {
-                        int counter = StringUtils.countMatches(navbar, "<li") + 1;
-                        String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
-                        navbar = navbar.substring(0, navbar.length() - 5);
-                        navbar = navbar + "	<li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
-                        navbar += "\n</ol>";
-                    }
-                    else
-                    {
-                        navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
+                        if ("rdf".equalsIgnoreCase(navbarDefaultType) && navbar.indexOf("</div>")!=-1)
+                        {
+                            navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+Tools.convertToHtmlTags(doc.getNavbar())+"</span></div>";
+                        }
+                        else if ("schema.org".equalsIgnoreCase(navbarDefaultType))
+                        {
+                            int counter = StringUtils.countMatches(navbar, "<li") + 1;
+                            String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
+                            navbar = navbar.substring(0, navbar.length() - 5);
+                            navbar = navbar + "	<li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
+                            navbar += "\n</ol>";
+                        }
+                        else
+                        {
+                            navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
+                        }
                     }
                 }
+            } catch (Exception e) {
+                Logger.error(NavbarService.class, "Error while generating navbar", e);
             }
+        } else {
+            navbar = doc.getNavbar();
         }
 
         return navbar;
@@ -79,15 +85,15 @@ public class NavbarService {
 		if (Tools.isEmpty(navbarDefaultType) || "normal".equalsIgnoreCase(navbarDefaultType)) {
 			return new NavbarStandard();
 		}
-		
+
 		if ("rdf".equalsIgnoreCase(navbarDefaultType)) {
 			return new NavbarRDF();
 		}
-		
+
 		if ("schema.org".equalsIgnoreCase(navbarDefaultType)) {
 			return new NavbarSchemaOrg();
 		}
-		
+
 		// Try to load custom implementation
 		try {
 			Class<?> clazz = Class.forName(navbarDefaultType);
@@ -101,7 +107,7 @@ public class NavbarService {
 		} catch (Exception e) {
 			Logger.error(NavbarService.class, "Error while initializing custom navbar implementation: " + navbarDefaultType, e);
 		}
-		
+
 		return null;
 	}
 }
