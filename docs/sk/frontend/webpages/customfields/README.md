@@ -184,15 +184,17 @@ Prepojenie na číselník je cez typ `enumeration_X` kde X je ID typu číselní
 
 Je možné špecifikovať, ktoré vlastnosti z číselníka sa použijú pre label a hodnotu výberového poľa:
 
-- `editor.field_x.type=enumeration_2_string1_string2` - label bude z `string1`, hodnota z `string2`
+- `editor.field_x.type=enumeration_2_string1_id` - label bude z `string1`, hodnota z `id`
 - `editor.field_x.type=enumeration_2_string2_string3` - label bude z `string2`, hodnota z `string3`
-- `editor.field_x.type=enumeration_2_string1_string3_null` - label bude z `string1`, hodnota z `string3`, s možnosťou prázdnej hodnoty
+- `editor.field_x.type=enumeration_2_string1_id_null` - label bude z `string1`, hodnota z `id`, s možnosťou prázdnej hodnoty
 
 Môžete použiť ktorúkoľvek vlastnosť z číselníka:
+
 - `string1` až `string12` - textové polia
 - `decimal1` až `decimal4` - číselné polia
 - `boolean1` až `boolean4` - boolovské polia
 - `date1` až `date4` - dátumové polia
+- `id` - identifikátor záznamu v číselníku
 
 ### Unikátny identifikátor
 
