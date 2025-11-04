@@ -51,26 +51,25 @@ public class BaseEditorFieldsEnumerationTest {
         enumData.setString2("my_value");
         enumData.setString3("extra_data");
 
+        BeanWrapper beanWrapper = new BeanWrapperImpl(enumData);
+
         // Test label and value from same property (string1)
-        BeanWrapper bw1 = new BeanWrapperImpl(enumData);
-        String label1 = bw1.getPropertyValue("string1").toString();
-        String value1 = bw1.getPropertyValue("string1").toString();
+        String label1 = beanWrapper.getPropertyValue("string1").toString();
+        String value1 = beanWrapper.getPropertyValue("string1").toString();
         FieldValue fv1 = new FieldValue(label1, value1);
         assertEquals("My Label", fv1.getLabel());
         assertEquals("My Label", fv1.getValue());
 
         // Test label from string1, value from string2
-        BeanWrapper bw2 = new BeanWrapperImpl(enumData);
-        String label2 = bw2.getPropertyValue("string1").toString();
-        String value2 = bw2.getPropertyValue("string2").toString();
+        String label2 = beanWrapper.getPropertyValue("string1").toString();
+        String value2 = beanWrapper.getPropertyValue("string2").toString();
         FieldValue fv2 = new FieldValue(label2, value2);
         assertEquals("My Label", fv2.getLabel());
         assertEquals("my_value", fv2.getValue());
 
         // Test label from string1, value from string3
-        BeanWrapper bw3 = new BeanWrapperImpl(enumData);
-        String label3 = bw3.getPropertyValue("string1").toString();
-        String value3 = bw3.getPropertyValue("string3").toString();
+        String label3 = beanWrapper.getPropertyValue("string1").toString();
+        String value3 = beanWrapper.getPropertyValue("string3").toString();
         FieldValue fv3 = new FieldValue(label3, value3);
         assertEquals("My Label", fv3.getLabel());
         assertEquals("extra_data", fv3.getValue());
