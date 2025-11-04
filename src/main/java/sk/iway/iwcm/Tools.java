@@ -1042,6 +1042,18 @@ public class Tools
 	}
 
 	/**
+	 * Get parameter value from request. If value is null, return empty string.
+	 * Value is filtered for XSS.
+	 * @param request
+	 * @param name
+	 * @return
+	 */
+	public static String getParameterNotNull(HttpServletRequest request, String name) {
+		String value = getParameter(request, name);
+		return (value != null) ? value : "";
+	}
+
+	/**
 	 * Ziska string hodnotu z request objektu podla mena, ak neexistuje alebo je prazdne vrati defaultValue
 	 * @param request
 	 * @param name
