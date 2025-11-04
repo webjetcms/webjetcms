@@ -57,7 +57,7 @@ public class SessionClusterHandler {
 
     private static List<SessionDetails> convertToList(String content, int userId) {
         List<SessionDetails> userSessions = new ArrayList<>();
-        if(Tools.isEmpty(content) == true || userId < 1) return userSessions;
+        if(Tools.isEmpty(content) || userId < 1) return userSessions;
 
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -82,7 +82,7 @@ public class SessionClusterHandler {
         ArrayNode data = mapper.createArrayNode();
 
         for(SessionDetails session : SessionHolder.getInstance().getList()) {
-            if(session.isAdmin() == true)
+            if(session.isAdmin())
                 data.add( mapper.valueToTree(session) );
         }
 

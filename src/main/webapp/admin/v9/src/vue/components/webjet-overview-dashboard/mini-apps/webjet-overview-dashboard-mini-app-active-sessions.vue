@@ -56,39 +56,78 @@ export default {
     this.getSessions();
   },
   methods: {
-    setCurrentSession() {
-        // Load current session with basic error handling
-        $.ajax({
-            type: 'GET',
-            url: '/admin/rest/monitoring/currentSession',
-            // Removed undefined this.feedback from payload
-            success: (result) => {
-                this.currentSession = result;
-            },
-            error: (error) => {
-                console.log("Error loading current session", error);
+    async setCurrentSession() {
+        // Load current session using Fetch API with async/await
+        try {
+            const response = await fetch('/admin/rest/monitoring/currentSession', {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-CSRF-Token": window.csrfToken
+                }
+            });
+
+            if (!response.ok) {
+                console.log(`ERR HTTP ${response.status} ${response.statusText}`);
             }
-        });
+
+            const result = await response.text();
+            this.currentSession = result;
+        } catch (error) {
+            console.log('Error loading current session', error);
+        }
     },
-    getSessions() {
+
+    async getSessions() {
         // Prevent parallel loads
         if (this.isLoading) return;
         this.isLoading = true;
 
-        $.getJSON("/admin/rest/monitoring/sessions", (data) => {
-            // Ensure we always clear loading flag
-            this.isLoading = false;
+        try {
+            const response = await fetch("/admin/rest/monitoring/sessions", {
+                method: 'GET',
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-CSRF-Token": window.csrfToken
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
             this.sessions = data;
-        }).fail(() => {
-            // Error path: reset loading so user can retry
+        } catch (error) {
+            console.log('Error loading session list', error);
+        } finally {
             this.isLoading = false;
-        });
+        }
     },
 
-    removeSession(sessionId) {
-        $.post("/admin/rest/monitoring/removeSession", { sessionId: sessionId }, () => {
+    async removeSession(sessionId) {
+        try {
+            const params = new URLSearchParams();
+            params.append('sessionId', sessionId);
+
+            const response = await fetch("/admin/rest/monitoring/removeSession", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+                    "X-CSRF-Token": window.csrfToken
+                },
+                body: params.toString()
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Refresh session list after removal
             this.getSessions();
-        });
+        } catch (error) {
+            console.log("Error removing session", error);
+        }
     },
 
     formatSessionTooltip(session) {
@@ -96,8 +135,6 @@ export default {
         const parts = [];
 
         let logonTime = session.logonTime ? new Date(session.logonTime).toUTCString() : null;
-        let lastActivity = session.lastActivity ? new Date(session.lastActivity).toUTCString() : null;
-
         if (session.loggedUserName) parts.push(this.$WJ.translate("admin.welcome.active_sessions.loggedUserName.js") + "\n\t" + session.loggedUserName);
         if (session.remoteAddr) parts.push(this.$WJ.translate("admin.welcome.active_sessions.remoteAddr.js") + "\n\t" + session.remoteAddr);
         if (session.logonTime) parts.push(this.$WJ.translate("admin.welcome.active_sessions.logonTime.js") + "\n\t" + logonTime);

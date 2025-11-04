@@ -235,7 +235,7 @@ public class ClusterRefresher extends TimerTask
 				CombineTag.setVersion(timestamp);
 			}
 			else if (className.startsWith("sk.iway.iwcm.stat.SessionHolder-")) {
-				//If sessionId is set, we want do invalid only this sessionId
+				//If sessionId is set, we want to invalidate this sessionId
 				String sessionId = className.substring(className.indexOf('-') + 1);
 				sessionId = sessionId.substring(0, sessionId.length() - 2); //Remove postfix -0
 				SessionHolder.getInstance().invalidateSession(sessionId);

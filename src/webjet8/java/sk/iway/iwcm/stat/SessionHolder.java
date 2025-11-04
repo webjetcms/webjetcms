@@ -147,7 +147,7 @@ public class SessionHolder
 		SessionDetails det = get(sessionId);
 		if (det == null) {
 			cleanup();
-			newSession= true;
+			newSession = true;
 
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
@@ -432,7 +432,8 @@ public class SessionHolder
 	}
 
 	public boolean invalidateSession(String sessionId) {
-		if(Tools.isEmpty(sessionId) == true) return false;
+		// Check if sessionId is empty and return false if so
+		if(Tools.isEmpty(sessionId)) return false;
 
 		SessionDetails sd = get(sessionId);
 		if(sd != null) {
