@@ -46,7 +46,7 @@ if (Tools.getRequestParameter(request, "sync")!=null)
 	<script type="text/javascript">
 	<!--
 	//window.alert("Sync dir: ${syncDir}");
-	window.location.href='/components/sync/sync_dir.jsp?localGroupId=<%=Tools.getParameterNotNull(request, "localGroupId")%>&remoteGroupId=<%=Tools.getParameterNotNull(request, "remoteGroupId")%>"&syncDir=${syncDir}&compareBy=${compareBy}&btnLoadData=btnLoadData';
+	window.location.href='/components/sync/sync_dir.jsp?localGroupId=<%=Tools.getParameterNotNull(request, "localGroupId")%>&remoteGroupId=<%=Tools.getParameterNotNull(request, "remoteGroupId")%>&syncDir=${syncDir}&compareBy=${compareBy}&btnLoadData=btnLoadData';
 	//-->
 	</script>
 	<%
