@@ -7,6 +7,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -141,7 +144,21 @@ public class BaseEditorFields {
                             type = type.replace("_null", "");
                         }
 
-                        int enumerationId = Tools.getIntValue(type.substring(type.indexOf("_") + 1), 0);
+                        // Parse type: enumeration_ID or enumeration_ID_labelProperty_valueProperty
+                        String[] parts = type.split("_");
+                        int enumerationId = 0;
+                        String labelProperty = "string1";
+                        String valueProperty = "string1";
+                        
+                        if (parts.length >= 2) {
+                            enumerationId = Tools.getIntValue(parts[1], 0);
+                        }
+                        if (parts.length >= 4) {
+                            // enumeration_ID_labelProperty_valueProperty format
+                            labelProperty = parts[2];
+                            valueProperty = parts[3];
+                        }
+
                         if (enumerationId > 0) {
                             List<EnumerationDataBean> enumerationDataList = EnumerationDataDB.getEnumerationDataByType(enumerationId);
                             if (enumerationDataList != null) {
@@ -149,7 +166,20 @@ public class BaseEditorFields {
                                     fieldValues.add(new FieldValue("", ""));
                                 }
                                 for (EnumerationDataBean enumData : enumerationDataList) {
-                                    fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));
+                                    try {
+                                        BeanWrapper beanWrapper = new BeanWrapperImpl(enumData);
+                                        Object labelValue = beanWrapper.getPropertyValue(labelProperty);
+                                        Object valueValue = beanWrapper.getPropertyValue(valueProperty);
+                                        
+                                        String enumLabel = labelValue != null ? labelValue.toString() : "";
+                                        String enumValue = valueValue != null ? valueValue.toString() : "";
+                                        
+                                        fieldValues.add(new FieldValue(enumLabel, enumValue));
+                                    } catch (Exception e) {
+                                        Logger.error(BaseEditorFields.class, "Error reading enumeration properties: " + labelProperty + ", " + valueProperty, e);
+                                        // Fallback to default behavior
+                                        fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));
+                                    }
                                 }
                             }
                         }
