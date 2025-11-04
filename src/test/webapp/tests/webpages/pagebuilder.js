@@ -176,16 +176,7 @@ Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
     DTE.cancel();
 });
 
-Scenario('check toolbar elements', ({I, DTE, Document}) => {
-    //reset PB settings
-    //Document.resetPageBuilderMode();
-
-    //stranka s PB
-    I.resizeWindow(1280, 960);
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
-    DTE.waitForEditor();
-    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
-
+function openStyleModal(I, colSelector=".col-3") {
     I.waitForElement("div.exit-inline-editor", 10);
     I.seeElement("div.exit-inline-editor");
     I.seeElement("#trEditor div.wysiwyg");
@@ -202,16 +193,38 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.waitForElement("#wjInline-docdata.pb-wrapper", 10);
     I.say("Click on col toolbar");
     I.seeElementInDOM("section:nth-child(1) aside.pb-toolbar");
-    I.forceClick({css: "section:nth-child(1) .container .row .col-3:nth-child(1) aside.pb-toolbar"});
-    I.seeElement("section:nth-child(1) .container .row .col-3:nth-child(1) aside.pb-highlighter__top");
+    I.forceClick({css: "section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-toolbar"});
+    I.seeElement("section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-highlighter__top");
 
     //
     I.say("Open style modal");
     I.forceClick({css: "aside.pb-is-toolbar-active span.pb-toolbar-button__style"});
     I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
+}
 
+function closeStyleModal(I) {
     I.forceClick({css: "#wjInline-docdata.pb-is-modal-open div.pb-modal .pb-modal__footer .pb-modal__footer__button-close"});
     I.dontSeeElement("#wjInline-docdata div.pb-modal");
+}
+
+function saveStyleModal(I) {
+    I.forceClick({css: "#wjInline-docdata.pb-is-modal-open div.pb-modal .pb-modal__footer .pb-modal__footer__button-save"});
+    I.dontSeeElement("#wjInline-docdata div.pb-modal");
+}
+
+
+Scenario('check toolbar elements', ({I, DTE, Document}) => {
+    //reset PB settings
+    //Document.resetPageBuilderMode();
+
+    //stranka s PB
+    I.resizeWindow(1280, 960);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
+
+    openStyleModal(I);
+    closeStyleModal(I);
 
     //
     I.say("check styleCombo options");
@@ -363,4 +376,66 @@ Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({
 
     DTE.cancel();
 
+});
+
+function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
+    I.closeOtherTabs();
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    openStyleModal(I, colSelector);
+
+    var color = "0, 116, 217";
+    var columnSelector = "column-content";
+    //
+    if (isCustom) {
+        color = "255, 0, 0";
+        columnSelector = "osk-content";
+        I.say("Check CUSTOM color swatches");
+        I.seeElement({css: '.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]'});
+        I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
+        I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
+        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
+    } else {
+        I.say("Check DEFAULT color picker");
+        I.seeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
+        I.seeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
+        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
+        I.pressKey('Enter');
+    }
+
+    var textToCheck = "div."+columnSelector+"{background-color:rgba("+color+", 1);}";
+
+    saveStyleModal(I);
+
+    //
+    I.say("Check HTML code for applied style");
+    I.switchTo();
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+    I.seeInSource(textToCheck);
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    //
+    I.say("Check mode switching");
+    Apps.switchEditor('html');
+
+    I.seeElement(locate(".CodeMirror span.cm-qualifier").withText(columnSelector));
+    I.seeElement(locate(".CodeMirror span.cm-property").withText("background-color"));
+
+    //split colors and check values
+    var colors = color.split(", ");
+    colors.forEach(function(c, index){
+        I.seeElement(locate(".CodeMirror span.cm-number").withText(c));
+    });
+}
+
+Scenario("custom PB settings", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    checkStyleModal(150095, ".col-md-12", true, I, DTE, Apps);
+    checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
 });

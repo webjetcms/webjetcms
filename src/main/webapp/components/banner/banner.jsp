@@ -80,7 +80,7 @@ div.jumbotron-has-video-fullscreen:before {
 				}
 
 				if(videoParam != null) {
-					htmlCode += "	<iframe id=\"video\" src=\"//www.youtube.com/embed/" + videoParam + "?enablejsapi=1&amp;html5=1&amp;mute=1&amp;showinfo=0&autoplay=1\" frameborder=\"0\" allowfullscreen=\"\" class=\"video\" data-gtm-yt-inspected-2=\"true\"></iframe>";
+					htmlCode += "	<iframe id=\"video\" src=\"//www.youtube.com/embed/" + videoParam + "?enablejsapi=1&amp;html5=1&amp;mute=1&amp;showinfo=0&autoplay=1\" frameborder=\"0\" allowfullscreen=\"\" class=\"video\" data-gtm-yt-inspected-2=\"true\" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 				}
 			}
 		} else if(link.endsWith(".mp4")) {

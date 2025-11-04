@@ -58,8 +58,8 @@ String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -
 <link href="/templates/aceintegration/jet/assets/fontawesome/css/solid.css" rel="stylesheet" type="text/css">
 
 <iwcm:combine type="js" set="">
-    ${ninja.temp.basePathJs}plugins/jquery.min.js
-    ${ninja.temp.basePathJs}plugins/jquery.cookie.js
+    /components/_common/javascript/jquery.min.js
+    /components/_common/javascript/jquery.cookie.js
     ${ninja.temp.basePathJs}plugins/modernizr-custom.js
     ${ninja.temp.basePathJs}plugins/bootstrap.bundle.min.js
     ${ninja.temp.basePathJs}global-functions.min.js
