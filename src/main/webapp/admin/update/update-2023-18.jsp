@@ -542,7 +542,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			if ("/admin/update/ldap-conn-test.jsp".equals(fullUrl)) continue;
 
 			//System.out.println(fullUrl);
-			Logger.debug("Processing file: " + fullUrl);
+			Logger.debug(sk.iway.iwcm.system.UpdateDatabase.class, "Processing file: " + fullUrl);
 			out.println(Tools.escapeHtml(fullUrl));
 			out.flush();
 
