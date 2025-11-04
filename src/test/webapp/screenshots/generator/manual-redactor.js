@@ -584,6 +584,13 @@ Scenario('welcome', ({ I, Document }) => {
     I.wait(2);
     Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
 
+    I.amOnPage("/admin/v9/");
+    I.waitForElement(".overview-logged.active-sessions");
+    I.resizeWindow(1920, 1080);
+    Document.screenshotElement(".overview-logged.active-sessions", "/redactor/admin/sessions.png");
+
+    I.moveCursorTo("div.overview-logged.active-sessions > div.overview-logged__content > ul > li > span:nth-child(2)")
+    Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
 });
 
 Scenario('webpages-temp-edit-btn', ({ I, DTE, Document }) => {

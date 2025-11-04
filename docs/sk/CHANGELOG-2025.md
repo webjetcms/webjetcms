@@ -32,6 +32,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](admin/settings/response-header/editor.png)
 
+- Pridaná mini aplikácia [Moje aktívne prihlásenia](redactor/admin/welcome.md#moje-aktívne-prihlásenia) na úvodnej obrazovke administrácie, ktorá zobrazuje všetky aktívne prihlásenia do administrácie pod vaším používateľským kontom a možnosť ich ukončenia (#58125).
+
+![](redactor/admin/sessions.png)
+
 ### Dokumentácia
 
 - Aktualizované všetky fotky obrazovky v českej verzii dokumentácie (#58113).

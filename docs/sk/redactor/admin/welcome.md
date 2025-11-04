@@ -18,7 +18,7 @@ Upozornenie: zoznam záložiek sa ukladá v prehliadači, ak používate viacero
     <iframe width="560" height="315" src="https://www.youtube.com/embed/G5Ts04jSMX8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-# Spätná väzba
+## Spätná väzba
 
 Kliknutím na tlačidlo Zaslať spätnú väzbu môžete nám, programátorom, zaslať vašu spätnú väzbu k používaniu WebJET CMS. Pripomienka sa odošle po vyplnení formuláru emailom.
 
@@ -31,3 +31,15 @@ V dialógovom okne môžete zadať text vašej pripomienky, komentár, alebo poc
 ![](feedback-modal.png)
 
 Ak zvolíte možnosť Zaslať anonymne nebude do odoslaného emailu zadané vaše meno a emailová adresa ako meno a email odosielateľa.
+
+## Moje aktívne prihlásenia
+
+Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Všetky aktivity sú rozdelené do skupín podľa cluster-a. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-home fs-6"></i>.
+
+![](sessions.png)
+
+Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
+
+![](sessions-tooltip.png)
+
+Kliknutím na ikonu <i class="ti ti-trash fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho cluster-a, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom clustri, prihlásenie bude ukončené po synchronizácii medzi clustermi (záleží na nastavení Vášho WebJET CMS).
