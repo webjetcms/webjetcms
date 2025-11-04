@@ -28,6 +28,13 @@ public class Page {
     }
 
     public String getSeoTitle() {
+        String seoTitle = getSeoTitleHtml();
+        //also remove HTML if present in title
+        seoTitle = Tools.html2text(seoTitle);
+        return seoTitle;
+    }
+
+    public String getSeoTitleHtml() {
         String seoTitle = "";
         if(doc != null) {
             seoTitle = doc.getFieldR();
