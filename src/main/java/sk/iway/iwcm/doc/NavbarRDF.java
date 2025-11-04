@@ -97,4 +97,10 @@ public class NavbarRDF implements NavbarInterface {
         htmlCode = "<div class=\"breadcrumbrdf\" xmlns:v=\"http://rdf.data-vocabulary.org/#\">" + htmlCode + "</div>";
         return (htmlCode);
     }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails doc, String navbarHtml, HttpServletRequest request) {
+        navbarHtml = navbarHtml.substring(0, navbarHtml.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+Tools.convertToHtmlTags(doc.getNavbar())+"</span></div>";
+        return navbarHtml;
+    }
 }

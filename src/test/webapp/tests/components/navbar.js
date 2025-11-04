@@ -87,11 +87,11 @@ Scenario('zobrazenie navbaru - HTML escaping', ({ I, DTE, Document }) => {
     I.seeInSource("<li class=\"open\"><a href=\"/test-stavov/testhtml-nazve/\">"+unescapedName+"</a></li>");
 });
 
-Scenario('custom navbar', ({ I, DTE, Document }) => {
+Scenario('custom navbar @current', ({ I, DTE, Document }) => {
     Document.setConfigValue("navbarDefaultType", "sk.iway.aceintegration.CustomNavbar");
 
     I.amOnPage("/test-stavov/testhtml-nazve/html-subpage.html");
-    I.waitForText("Custom navbar for group 97708 doc 131101", 10, "div.navbar-test");
+    I.waitForText("Custom navbar for group 97708 doc 131101, Custom navbar for non-default doc 131101", 10, "div.navbar-test");
 
     Document.setConfigValue("navbarDefaultType", "normal");
 });

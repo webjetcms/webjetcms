@@ -5,6 +5,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 
@@ -151,5 +153,17 @@ public class NavbarSchemaOrg implements NavbarInterface {
 
         htmlCode = "\n<ol itemscope itemtype=\"http://schema.org/BreadcrumbList\">" + htmlCode+ "\n</ol>";
         return (htmlCode);
+    }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails doc, String navbar, HttpServletRequest request) {
+        DocDB docDB = DocDB.getInstance();
+        // Implement custom logic for non-default document navbar
+        int counter = StringUtils.countMatches(navbar, "<li") + 1;
+        String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
+        navbar = navbar.substring(0, navbar.length() - 5);
+        navbar = navbar + "	<li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
+        navbar += "\n</ol>";
+        return navbar;
     }
 }

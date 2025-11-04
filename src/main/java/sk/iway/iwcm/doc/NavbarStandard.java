@@ -89,4 +89,10 @@ public class NavbarStandard implements NavbarInterface {
         path = Tools.convertToHtmlTags(path);
         return (path);
     }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails doc, String navbar, HttpServletRequest request) {
+        navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
+        return navbar;
+    }
 }

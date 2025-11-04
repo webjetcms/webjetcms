@@ -51,9 +51,14 @@ public class CustomNavbar implements NavbarInterface {
 
     @Override
     public String getNavbar(int groupId, int docId, HttpServletRequest request) {
-        // Vlastná implementácia navigačnej lišty
-        return "<nav>Vlastná navigácia pre skupinu " + groupId + "</nav>";
+        return "Custom navbar for group " + groupId + " doc " + docId;
     }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails docDetails, String navbar, HttpServletRequest request) {
+        return navbar + ", Custom navbar for non-default doc " + docDetails.getDocId();
+    }
+
 }
 ```
 

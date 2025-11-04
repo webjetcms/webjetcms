@@ -13,4 +13,10 @@ public class CustomNavbar implements NavbarInterface {
     public String getNavbar(int groupId, int docId, HttpServletRequest request) {
         return "Custom navbar for group " + groupId + " doc " + docId;
     }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails docDetails, String navbar, HttpServletRequest request) {
+        return navbar + ", Custom navbar for non-default doc " + docDetails.getDocId();
+    }
+
 }

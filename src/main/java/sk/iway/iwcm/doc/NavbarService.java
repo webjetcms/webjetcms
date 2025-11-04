@@ -6,8 +6,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Service for generating navbar (breadcrumb navigation)
  * Dispatches to appropriate implementation based on navbarDefaultType configuration
@@ -39,7 +37,6 @@ public class NavbarService {
             navbar = navbar2;
             try {
                 GroupsDB groupsDB = GroupsDB.getInstance();
-                DocDB docDB = DocDB.getInstance();
                 //najskor zisti ako je na tom adresar
                 GroupDetails group = groupsDB.getGroup(doc.getGroupId());
 
@@ -48,22 +45,7 @@ public class NavbarService {
                 {
                     if (doc.getNavbar().length() > 2)
                     {
-                        if ("rdf".equalsIgnoreCase(navbarDefaultType) && navbar.indexOf("</div>")!=-1)
-                        {
-                            navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+Tools.convertToHtmlTags(doc.getNavbar())+"</span></div>";
-                        }
-                        else if ("schema.org".equalsIgnoreCase(navbarDefaultType))
-                        {
-                            int counter = StringUtils.countMatches(navbar, "<li") + 1;
-                            String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
-                            navbar = navbar.substring(0, navbar.length() - 5);
-                            navbar = navbar + "	<li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
-                            navbar += "\n</ol>";
-                        }
-                        else
-                        {
-                            navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
-                        }
+                        navbar = navbarImpl.getNavbarForNonDefaultDoc(doc, navbar, request);
                     }
                 }
             } catch (Exception e) {
