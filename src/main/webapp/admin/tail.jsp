@@ -49,9 +49,9 @@
 
 		<p>
 			<input type="hidden" type="text" name="iframed" value="${iframed}"/>
-			<label> <iwcm:text key="admin.tail.exp"/> <input type="text" name="exp" value="${param.exp}"/></label>
-			<iwcm:text key="admin.tail.lines_before"/> <input type="text" name="linesBefore"  value="${param.linesBefore}"/>
-			<iwcm:text key="admin.tail.lines_after"/> <input type="text" name="linesAfter" value="${param.linesAfter}" />
+			<label> <iwcm:text key="admin.tail.exp"/> <input type="text" name="exp" value="<%=Tools.getParameterNotNull(request, "exp")%>"/></label>
+			<iwcm:text key="admin.tail.lines_before"/> <input type="text" name="linesBefore"  value="<%=Tools.getParameterNotNull(request, "linesBefore")%>"/>
+			<iwcm:text key="admin.tail.lines_after"/> <input type="text" name="linesAfter" value="<%=Tools.getParameterNotNull(request, "linesAfter")%>" />
 			<input type="submit"  name="grep" class="button100" value='<iwcm:text key="admin.tail.grep"/>'/>
 			<input type="hidden" name="file" value="${filePath}" />
 		</p>
