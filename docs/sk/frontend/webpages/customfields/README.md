@@ -175,7 +175,7 @@ Pre výber existujúcej stránky (jej `docId`) je možné použiť typ `docsIn_G
 
 ![](webpages-enumeration.png)
 
-Prepojenie na číselník je cez typ `enumeration_X` kde X je ID typu číselníka. Ako hodnota a label sa predvolene nastaví `string1` vlastnosť z číselníka:
+Prepojenie na číselník je cez typ `enumeration_X` kde X je ID typu číselníka. Ako hodnota a label sa predvolene nastaví `string1` hodnota z číselníka:
 
 - `editor.field_x.type=enumeration_2` - zobrazí ako výberové pole možnosti z typu číselníka 2, hodnota aj label budú z `string1`
 - `editor.field_x.type=enumeration_2_null` - pridaním `_null` na koniec typu je možné vybrať aj prázdnu možnosť
