@@ -82,7 +82,7 @@ public class SessionClusterHandler {
         ArrayNode data = mapper.createArrayNode();
 
         for(SessionDetails session : SessionHolder.getInstance().getList()) {
-            if(session.isAdmin())
+            if(session.isAdmin() && SessionHolder.INVALIDATE_SESSION_ADDR.equals(session.getRemoteAddr()) == false)
                 data.add( mapper.valueToTree(session) );
         }
 

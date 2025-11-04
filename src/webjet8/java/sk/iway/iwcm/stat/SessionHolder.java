@@ -48,7 +48,7 @@ public class SessionHolder
    public static final String SESSION_HOLDER = "iwcm_session_holder";
 	private Map<String, SessionDetails> data = Collections.synchronizedMap(new Hashtable<String, SessionDetails>());
 
-	private static final String INVALIDATE_SESSION_ADDR = "INVALIDATE";
+	protected static final String INVALIDATE_SESSION_ADDR = "INVALIDATE";
 
 	/**
 	 * Takyto konstruktor sa normalne nesmie pouzivat!
