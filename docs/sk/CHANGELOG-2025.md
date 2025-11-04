@@ -9,6 +9,8 @@
 > Opravná verzia pôvodnej verzie 2025.0.
 
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
+- Bezpečnosť - opravená možná zraniteľnosť v synchronizácii stránok (#55193-7).
+- Bannerový systém - opravené zobrazenie YouTube video banneru (#55193-7).
 - Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
 - Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
 - Webové stránky - PageBuilder - opravený jazyk používateľského rozhrania na jazyk prihláseného používateľa (nie jazyk web stránky) (#58133).

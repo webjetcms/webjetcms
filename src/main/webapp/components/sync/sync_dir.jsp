@@ -125,8 +125,8 @@ function setRequestParam(prefix) {
 <stripes:useActionBean var="actionBean" beanclass="sk.iway.iwcm.stripes.SyncDirAction"/>
 
 <iwcm:stripForm id="syncForm" action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.stripes.SyncDirAction" method="post" style="display:none;">
-	<input type="hidden" name="syncDir" value="${param.syncDir}" />
-	<input type="hidden" name="compareBy" value="${param.compareBy}" />
+	<input type="hidden" name="syncDir" value="<%=Tools.getParameterNotNull(request, "syncDir")%>" />
+	<input type="hidden" name="compareBy" value="<%=Tools.getParameterNotNull(request, "compareBy")%>" />
 	<table border="0" style="<%if (showForm==false) out.print("display: none;");	%>">
 		<tr>
 			<td><iwcm:text key="components.syncDir.localGroupId"/></td>

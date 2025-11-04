@@ -46,7 +46,7 @@ if (Tools.getRequestParameter(request, "sync")!=null)
 	<script type="text/javascript">
 	<!--
 	//window.alert("Sync dir: ${syncDir}");
-	window.location.href='/components/sync/sync_dir.jsp?localGroupId=${param.localGroupId}&remoteGroupId=${param.remoteGroupId}&syncDir=${syncDir}&compareBy=${compareBy}&btnLoadData=btnLoadData';
+	window.location.href='/components/sync/sync_dir.jsp?localGroupId=<%=Tools.getParameterNotNull(request, "localGroupId")%>&remoteGroupId=<%=Tools.getParameterNotNull(request, "remoteGroupId")%>"&syncDir=${syncDir}&compareBy=${compareBy}&btnLoadData=btnLoadData';
 	//-->
 	</script>
 	<%
@@ -56,8 +56,8 @@ if (Tools.getRequestParameter(request, "sync")!=null)
 
 	<iwcm:stripForm action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.stripes.SyncArchiveActionBean" id="form" class="row me-3">
 		<stripes:useActionBean var="actionBean" beanclass="sk.iway.iwcm.stripes.SyncArchiveActionBean"/>
-		<input type="hidden" name="localGroupId" value="${param.localGroupId}" />
-		<input type="hidden" name="remoteGroupId" value="${param.remoteGroupId}" />
+		<input type="hidden" name="localGroupId" value="<%=Tools.getParameterNotNull(request, "localGroupId")%>" />
+		<input type="hidden" name="remoteGroupId" value="<%=Tools.getParameterNotNull(request, "remoteGroupId")%>" />
 
 		<div class="mb-3">
 			<label class="form-label"><iwcm:text key="components.syncDir.archive_file"/></label>
