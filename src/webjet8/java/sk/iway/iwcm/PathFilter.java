@@ -329,27 +329,27 @@ public class PathFilter implements Filter
 			}
 
 			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws)
-         if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
-         {
-            boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
-            if (swaggerEnabled)
-            {
-               //testni, ci je povoleny aj pre neadmina
-               if (Constants.getBoolean("swaggerRequireAdmin"))
-               {
-                  Identity user = UsersDB.getCurrentUser(req);
-                  if (user==null || user.isAdmin()==false) swaggerEnabled = false;
-               }
-            }
+			if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
+			{
+				boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
+				if (swaggerEnabled)
+				{
+				//testni, ci je povoleny aj pre neadmina
+				if (Constants.getBoolean("swaggerRequireAdmin"))
+				{
+					Identity user = UsersDB.getCurrentUser(req);
+					if (user==null || user.isAdmin()==false) swaggerEnabled = false;
+				}
+				}
 
-            if (swaggerEnabled==false)
-            {
-               Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
-               res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-               forwardSafely("/404.jsp", req, res);
-					return;
-            }
-         }
+				if (swaggerEnabled==false)
+				{
+				Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				forwardSafely("/404.jsp", req, res);
+						return;
+				}
+			}
 
 			//check for blocked file/directory metadata
 			if (isPathBlocked(path))
@@ -2607,8 +2607,7 @@ public class PathFilter implements Filter
 		cacheStaticContentSuffixes = null;
 	}
 
-	public static void resetBlockedPaths()
-	{
+	public static void resetBlockedPaths() {
 		blockedPaths = null;
 	}
 
@@ -2673,25 +2672,19 @@ public class PathFilter implements Filter
 	 * @return true if path should be blocked
 	 */
 	private static boolean isPathBlocked(String path) {
-		if (path == null || path.length() < 1) return false;
+		if (Tools.isEmpty(path)) return false;
 
-		if (blockedPaths == null)
-		{
+		if (blockedPaths == null) {
 			synchronized(PathFilter.class) //NOSONAR
 			{
-				if (blockedPaths == null)
-				{
-					String blockedPathsConfig = Constants.getString("pathFilterBlockedPaths");
-					String[] tokens = Tools.getTokens(blockedPathsConfig, ",", true);
-					blockedPaths = tokens == null ? new String[0] : tokens;
+				if (blockedPaths == null) {
+					blockedPaths = Constants.getArray("pathFilterBlockedPaths");
 				}
 			}
 		}
 
 		for (String blockedPath : blockedPaths)
-		{
 			if (path.contains(blockedPath)) return true;
-		}
 
 		return false;
 	}
