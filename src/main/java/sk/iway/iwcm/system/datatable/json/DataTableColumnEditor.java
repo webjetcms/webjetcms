@@ -14,6 +14,7 @@ import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableOptionMethod;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -126,6 +127,39 @@ public class DataTableColumnEditor {
         if (Tools.isNotEmpty(wireFormat)) {
             this.wireFormat = wireFormat;
         }
+
+        DataTableOptionMethod[] optionMethods = editor[0].optionMethods();
+        if(optionMethods.length > 0) {
+            if (this.options == null) {
+                this.options = new ArrayList<>();
+            }
+
+            for(DataTableOptionMethod optionMethod : optionMethods) {
+                //moznost zadat options ako volanie API metody
+                //@DataTableOptionMethod(className = "sk.iway.basecms.contact.ContactRestController",methodName = "getCountries",labelProperty = "label",valueProperty = "value")
+                if(Tools.isEmpty(optionMethod.className()) || Tools.isEmpty(optionMethod.methodName())) continue;
+
+                String labelProperty = Tools.isEmpty(optionMethod.labelProperty()) ? "label" : optionMethod.labelProperty();
+                String valueProperty = Tools.isEmpty(optionMethod.valueProperty()) ? "value" : optionMethod.valueProperty();
+
+                try {
+                    Class<?> clazz = Class.forName(optionMethod.className());
+                    Method method = clazz.getMethod(optionMethod.methodName());
+                    Object returned = method.invoke(null);
+                    if (returned instanceof List) {
+                        @SuppressWarnings("rawtypes")
+                        List list = (List)returned;
+
+                        addOptions(list, labelProperty, valueProperty);
+                    }
+
+                    continue;
+                } catch (Exception ex) {
+                    Logger.error(DataTableColumnEditor.class, ex);
+                }
+            }
+        }
+
 
         DataTableColumnEditorAttr[] options = editor[0].options();
         if (options.length > 0) {
