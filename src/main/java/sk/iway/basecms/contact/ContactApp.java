@@ -1,11 +1,14 @@
 package sk.iway.basecms.contact;
 
+import java.util.Map;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.apache.commons.fileupload2.core.FileItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -142,6 +145,9 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
+        //you can process multipart file using request.getAttribute("MultipartWrapper.files")
+        entity.setDocument(((Map<String,FileItem>)request.getAttribute("MultipartWrapper.files")).get("document"));
+
         if (!result.hasErrors()) {
             contactRepository.save(entity);
             return "redirect:" + PathFilter.getOrigPath(request);

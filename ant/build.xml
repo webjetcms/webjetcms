@@ -39,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.40.1-jakarta" />
+        <property name="artifact.version" value="2025.0-jakarta-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -50,6 +50,22 @@
         <echo message="Artifact type: ${artifact.type}"/>
         <echo message="Artifact dir: ${artifact.dir}"/>
         <echo message="Artifact pom: ${artifact.pom}"/>
+
+        <!-- list ${root}/../../src/main/webapp/WEB-INF/build.properties to confirm version update -->
+        <echo message="-----------------------------------------------"/>
+        <echo message="VERIFY major.number, minor.number, patch.number"/>
+        <echo message="-----------------------------------------------"/>
+        <exec executable="cat">
+            <arg value="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
+        </exec>
+        <echo message="-----------------------------------------------"/>
+
+        <sleep seconds="20"/>
+    </target>
+
+    <target name="waitForConfirm">
+        <!-- Wait for user confirmation -->
+        <input message="Skontrolujte verziu artefaktu (${artifact.version}). Stlačte Enter pre pokračovanie alebo Ctrl+C pre ukončenie..." />
     </target>
 
     <defaultexcludes add="**/prepros-6.config"/>
@@ -450,7 +466,7 @@
 
     </target>
 
-    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
+    <target name="deployGithub" depends="define-artifact-properties,waitForConfirm,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
         <exec executable="mvn">
             <arg value="-e"/>
             <arg value="-X"/>
@@ -562,7 +578,7 @@
         </exec>
     </target>
 
-    <target name="deployMavenCentral" depends="define-artifact-properties,prepareAllJars,generateSignatures" description="Generate ZIP file uploadable to maven central with all artifacts, POM and signatures">
+    <target name="deployMavenCentral" depends="define-artifact-properties,waitForConfirm,prepareAllJars,generateSignatures" description="Generate ZIP file uploadable to maven central with all artifacts, POM and signatures">
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.zip" />
 
         <zip destfile="${artifact.dir}/${artifact.name}-${artifact.version}.zip">

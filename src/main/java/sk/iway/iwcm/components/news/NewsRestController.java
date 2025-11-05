@@ -99,21 +99,18 @@ public class NewsRestController extends WebpagesDatatable {
         if (Tools.isNotEmpty(include) && include.startsWith("!INCLUDE(")) {
             PageParams pp = new PageParams(include);
             int[] groupIds = Tools.getTokensInt(pp.getValue("groupIds", null), ",+");
-            String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
-            StringBuilder includeIds = new StringBuilder();
-            StringBuilder includeIdsNames = new StringBuilder();
-            for (int groupId : groupIds) {
-                if (includeIds.isEmpty()==false) includeIds.append(",");
-                includeIds.append(""+groupId).append(append);
 
+            //basket/blog use expandGroupIds parameter
+            String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
+            //news has alsoSubGroups parameter
+            if (pp.getBooleanValue("alsoSubGroups", false)) append = "*";
+
+            for (int groupId : groupIds) {
                 GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
                 if (group != null) {
-                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(", ");
-                    includeIdsNames.append(group.getFullPath()).append(append);
+                    list.add(new LabelValue(group.getFullPath()+append, String.valueOf(groupId)+append));
                 }
             }
-            ids = includeIds.toString();
-            list.add(new LabelValue(includeIdsNames.toString(), ids));
         } else {
             GroupsDB groupsDB = GroupsDB.getInstance();
             String currentDomain = DocDB.getDomain(request);

@@ -35,6 +35,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -70,13 +71,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			tab = "basic",
 			editor = {
 					@DataTableColumnEditor(attr = {
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String title;
 
 	@Column(name = "navbar")
@@ -88,13 +88,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			editor = {
 					@DataTableColumnEditor(attr = {
 							@DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String navbar;
 
 	@Column(name = "virtual_path")
@@ -105,7 +104,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			visible = false,
 			className = "DTE_Field_Has_Checkbox"
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String virtualPath = "";
 
 	@Column(name = "editor_virtual_path ")
@@ -174,7 +173,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 					)
 			}
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String externalLink = "";
 
 	@Column(name = "available")
@@ -689,7 +688,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		},
 		renderFormat = "dt-format-image"
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String perexImage = "";
 
 	@Transient
@@ -757,7 +756,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//Must be change from Transient to Column, because we need save this method
 	// @Size(max = 255)
 	@Column(name = "file_name")
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String fileName;
 
 	@Transient

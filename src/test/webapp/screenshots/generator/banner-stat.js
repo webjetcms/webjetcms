@@ -5,13 +5,13 @@ Before(({ I, login }) => {
 });
 
 Scenario('banner-stat a banner-detail', ({I, Document}) => {
-    I.amOnPage("/apps/banner/admin/banner-stat");
+    I.amOnPage("/apps/banner/admin/banner-stat/");
 
     I.click("div.md-breadcrumb input.dt-filter-from-dayDate");
 
     switch (I.getConfLng()) {
         case "sk":
-        case "cs": 
+        case "cs":
             I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "01.05.2022");
             break;
         case "en":
@@ -20,7 +20,6 @@ Scenario('banner-stat a banner-detail', ({I, Document}) => {
         default:
             throw new Error("Unknown language: " + I.getConfLng());
     }
-    
 
     I.clickCss("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
     I.wait(2);

@@ -43,10 +43,13 @@ public class SearchRestController extends WebpagesDatatable {
     @Override
     public Page<DocDetails> getAllItems(Pageable pageable) {
         GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
+        //set groupId=-1 to ignore groupId filtering of templates/options
+        options.setGroupId(-1);
 
         //Do not test perms for groupId, it's test later
         DatatablePageImpl<DocDetails> pageImpl = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new DocDetails(), pageable));
-        WebpagesService.addOptions(pageImpl, options);
+
+        WebpagesService.addOptions(pageImpl, options, true);
         return pageImpl;
     }
 

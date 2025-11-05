@@ -70,6 +70,8 @@ public class ShowDoc extends HttpServlet {
      */
     public static String ACTUAL_USER_HASH = null;
 
+    private NavbarService navbarService = new NavbarService();
+
     /**
      * Skontroluje, ci parametre neobsahuju naznaky XSS, ak ano,
      * vrati redirect na URL bez skodlivych parametrov
@@ -1285,6 +1287,49 @@ private static String combineCss(String cssStyle)
         } else if (doc.getRightMenuDocId()==-2) {
             request.setAttribute("doc_right_menu", "");
         }
+
+        //tempFieldADocId
+        if (doc.getTempFieldADocId() > 0) {
+            DocDetails dd_menu = docDB.getDoc(doc.getTempFieldADocId());
+            if (dd_menu != null) {
+                request.setAttribute("template_object_a", dd_menu.getData());
+            }
+        } else if (doc.getTempFieldADocId() == -2) {
+            request.setAttribute("template_object_a", "");
+        }
+
+        //tempFieldBDocId
+        if (doc.getTempFieldBDocId() > 0) {
+            DocDetails dd_menu = docDB.getDoc(doc.getTempFieldBDocId());
+            if (dd_menu != null) {
+                request.setAttribute("template_object_b", dd_menu.getData());
+            }
+        } else if (doc.getTempFieldBDocId() == -2) {
+            request.setAttribute("template_object_b", "");
+        }
+
+        //tempFieldCDocId
+        if (doc.getTempFieldCDocId() > 0) {
+            DocDetails dd_menu = docDB.getDoc(doc.getTempFieldCDocId());
+            if (dd_menu != null) {
+                request.setAttribute("template_object_c", dd_menu.getData());
+            }
+        } else if (doc.getTempFieldCDocId() == -2) {
+            request.setAttribute("template_object_c", "");
+        }
+
+        //tempFieldDDocId
+        if (doc.getTempFieldDDocId() > 0) {
+            DocDetails dd_menu = docDB.getDoc(doc.getTempFieldDDocId());
+            if (dd_menu != null) {
+                request.setAttribute("template_object_d", dd_menu.getData());
+            }
+        } else if (doc.getTempFieldDDocId() == -2) {
+            request.setAttribute("template_object_d", "");
+        }
+
+        //Set navbar
+        request.setAttribute("navbar", navbarService.getNavbar(doc, request));
 
         //firni event
         showDocBean.setDoc(doc);
