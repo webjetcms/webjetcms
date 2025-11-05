@@ -247,10 +247,10 @@ dependencies {
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
-    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-spec
-    implementation 'org.apache.taglibs:taglibs-standard-spec:1.2.5'
-    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-impl
-    runtimeOnly 'org.apache.taglibs:taglibs-standard-impl:1.2.5'
+    // https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.2'
+    // https://mvnrepository.com/artifact/org.glassfish.web/jakarta.servlet.jsp.jstl
+    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
 
     implementation("sk.iway:wjdaisydiff:1.1-SNAPSHOT-shaded")
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
