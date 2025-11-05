@@ -75,3 +75,7 @@ Scenario('custom-fields', async({ I, Document }) => {
 ```
 
 kde pre pole A aj pole B v editore je nastavené odsadenie z hora a dola. Pre pole B je nastavené väčšie odsadenie z dola, keďže na snímku chceme mať zobrazené aj výberové pole a jeho hodnoty.
+
+## Porovnanie obrázkov
+
+Často GIT označí obrázok za zmenený, aj keď vyzerá na pohľad rovnako. Môžete spustiť skript [rm-same-images.sh](../../../../src/test/webapp/rm-same-images.sh), ktorý pomocou nástroja ImageMagick porovná nový a pôvodný obrázok. Ak je rozdiel menší ako 1% tak obrrázok vráti do pôvodného stavu. V priečinku `/build/images-diff` sú vytvorené obrázky so zvýraznením zmien.

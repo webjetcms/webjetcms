@@ -457,3 +457,37 @@ Kompletná ukážka HTML kódu web stránky s ukážkovými sekciami:
     </div>
 </section>
 ```
+
+## Podporný JavaScript kód
+
+Ak potrebujete vlastný podporný JavaScript súbor (viď vyššie spomínaný `pagesupport.js`), môžete vytvoriť súbor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, ktorý ak existuje načíta sa po súbore `pagesupport.js`. Môžete tak doplniť vlastné funkcie, alebo upraviť štandardné existujúce funkcie z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
+
+Môžete aj upraviť niektoré nastavenia, ako napríklad zoznam farieb, alebo upraviť CSS selektory:
+
+```JavaScript
+window.pbCustomOptions = function(options) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        //custom code to modify options on page builder init
+        console.log("pbCustomOptions called, options=", options, "href=", window.location.href);
+        options.color_swatches = [
+            "#ff0000",
+            "#00ff00",
+            "#0000ff",
+            "#ffff00",
+            "#00ffff",
+        ];
+        //disable any color picker, only swatches will be available
+        options.color_picker = false;
+    }
+};
+
+window.pbCustomSettings = function(me) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        //custom code to run on page builder init
+        console.log("pbCustomSettings called, me=", me);
+
+        //redefine grid column content selector
+        me.grid.column_content = "div.osk-content";
+    }
+};
+```

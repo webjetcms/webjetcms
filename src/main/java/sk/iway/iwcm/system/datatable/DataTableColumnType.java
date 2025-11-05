@@ -25,6 +25,11 @@ public enum DataTableColumnType {
      * Typ pola TEXTAREA
      */
     TEXTAREA,
+
+    /**
+     * Typ pola TEXTAREA s automatickým zalamovaním riadkov pre dlhý text
+     */
+    TEXTAREA_WRAP,
     /**
      * Typ pola DATE
      */

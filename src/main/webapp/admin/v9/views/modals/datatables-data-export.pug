@@ -9,7 +9,12 @@ include ../pug/mixins
                         <h5 class="modal-title ui-draggable-handle"> [[\#{components.datatables-data-export.Nastavenia_exportu}]]</h5>
                     </div>
                     <div class="col-sm-8">
-                        <div id="pills-export-basic-tab" style="display: none;"></div>
+                        <div class="md-tabs">
+                            <ul class="nav" id="pills-exportData" role="tablist">
+                                <li class="nav-item" role="presentation"><a class="nav-link active" id="pills-export-basic-tab" href="#pills-export-basic" data-bs-target="#pills-export-basic" aria-controls="pills-export-basic" aria-selected="true" data-bs-toggle="tab" role="presentation">[[\#{datatable.tab.basic}]]</a></li>
+                                <li class="nav-item" role="presentation"><a class="nav-link" id="pills-export-advanced-tab" href="#pills-export-advanced" data-bs-target="#pills-export-advanced" aria-controls="pills-export-advanced" aria-selected="false" data-bs-toggle="tab" role="presentation" tabindex="-1">[[\#{datatable.tab.advanced}]]</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

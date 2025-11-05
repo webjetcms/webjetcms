@@ -237,3 +237,14 @@ Scenario('reset DB', async({ I, DT, DTE, Document }) => {
     I.say("Spusti nazad standard DB");
     pause();
 });
+
+Scenario('picture element', async({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=149928");
+    DTE.waitForEditor();
+    I.wait(5);
+    I.switchTo(".cke_wysiwyg_frame");
+    I.clickCss("picture");
+    I.wait(2);
+    Document.screenshot("/frontend/setup/picture-element.png");
+    I.switchTo();
+});
