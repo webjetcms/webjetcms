@@ -458,14 +458,15 @@ public class NewsActionBean extends WebJETActionBean
 
 	private void addGroups()
 	{
+		List<Integer> defaultDocs = new ArrayList<>();
+
 		if (groupIds == null && doc != null) {
 			GroupDetails group = doc.getGroup();
 			groupIds = new int[] {
-					group.getGroupId()
+				group.getGroupId()
 			};
+			defaultDocs.add(group.getDefaultDocId());
 		}
-
-		List<Integer> defaultDocs = new ArrayList<>();
 
 		if (groupIds != null)
 		{
@@ -474,10 +475,12 @@ public class NewsActionBean extends WebJETActionBean
 			for (Integer groupId : groupIds)
 			{
 				groupIdsExpanded.add(groupId);
+				GroupDetails group = gdb.getGroup(groupId);
+				if (group != null) defaultDocs.add(group.getDefaultDocId());
 				if (alsoSubGroups)
 				{
 					//All subgroups
-					if(subGroupsDepth < 1) { 
+					if(subGroupsDepth < 1) {
 						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());
@@ -498,9 +501,11 @@ public class NewsActionBean extends WebJETActionBean
 
 		//Tricky part, if we want only "defaultDocs" and there are no "defaultDocs" we must add un existing docId, so the query will return nothing
 		if(docMode == 1) {
-			defaultDocs.add(-666);
+			//ONLY default docs
+			if (defaultDocs.isEmpty()) defaultDocs.add(-666);
 			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.DOC_ID, defaultDocs));
-		} else if(!defaultDocs.isEmpty() && docMode == 2) {
+		} else if(defaultDocs.isEmpty()==false && docMode == 2) {
+			//EXCLUDE default docs
 			newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, defaultDocs));
 		}
 	}
