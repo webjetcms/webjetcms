@@ -312,7 +312,7 @@ Scenario("logout", ({ I }) => {
     I.logout();
 });
 
-function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
+function verifyDocMode(docMode, subGroupsDepth, I, Apps, checkNewsMain = false) {
 
     let option = "";
     if(docMode === 0) { option = "Zobraziť všetky stránky vrátane hlavných stránok priečinkov"; }
@@ -329,6 +329,7 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
     I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
 
+    const newsMainPerex = "Novinky main page perex";
     const newsPage = "Novinka 2025-01";
     const newsPageSubfolderLevel2 = "Novinka 2025Q2-01";
     const mainFolder = "2025 folder";
@@ -338,14 +339,17 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
         //all pages include main
         I.waitForText(newsPage, 10, "h3 a");
         I.see(mainFolder, "p");
+        if (checkNewsMain) I.see(newsMainPerex, "p");
     } else if (docMode == 1) {
         //only main pages
         I.waitForText(mainFolder, 10, "p");
         I.dontSee(newsPage, "h3 a");
+        if (checkNewsMain) I.see(newsMainPerex, "p");
     } else if (docMode == 2) {
         //no main pages
         I.waitForText(newsPage, 10, "h3 a");
         I.dontSee(mainFolder, "p");
+        if (checkNewsMain) I.dontSee(newsMainPerex, "p");
     }
 
     //test subGroupsDepth
@@ -386,6 +390,19 @@ Scenario("docMode and subGroupsDepth", ({ I, Apps }) => {
     verifyDocMode(1, -1, I, Apps);
     //no main pages
     verifyDocMode(2, -1, I, Apps);
+});
+
+Scenario("BUG: news from other folders and docMode", ({ I, Apps }) => {
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150415");
+
+    //all pages include main
+    verifyDocMode(0, -1, I, Apps, true);
+    verifyDocMode(0, 1, I, Apps, true);
+    //only main pages
+    verifyDocMode(1, -1, I, Apps, true);
+    //no main pages
+    verifyDocMode(2, -1, I, Apps, true);
 });
 
 Scenario("logout2", ({ I }) => {
