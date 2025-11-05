@@ -342,7 +342,7 @@ public class ProductListService {
 
     public static List<LabelValue> getListOfSupportedCurrencies() {
         List<String> supportedCurrencies = Arrays.asList( Constants.getString("supportedCurrencies").split(",") );
-        Collections.sort(supportedCurrencies);
+        //you want it in order set in constants, not alphabetically Collections.sort(supportedCurrencies);
 
         List<LabelValue> groupsList = new ArrayList<>();
         for (String curr: supportedCurrencies)

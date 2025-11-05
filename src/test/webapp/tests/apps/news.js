@@ -49,7 +49,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
 
     I.clickCss("#pills-dt-component-datatable-filter-tab");
         addFilter(I, "AUTHOR_ID", "<=", "666");
-        addFilter(I, "DATE_CREATED", "=", "01.10.2025");
+        addFilter(I, "DATE_CREATED", "=", "05.05.2025");
         addFilter(I, "DATA", "Končí na", 'Kokos, "je", king"');
         addFilter(I, "AVAILABLE", "=", "false");
 
@@ -80,7 +80,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     Apps.switchEditor('html');
     I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
     I.see("filter[AUTHORID_le]=666,");
-    I.see("filter[DATECREATED_eq]=&quot;2025-10-01&quot;,");
+    I.see("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
     I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 
@@ -110,7 +110,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
 
     I.clickCss("#pills-dt-component-datatable-filter-tab");
         checkFilter(I, 1, "AUTHOR_ID", "<=", "666");
-        checkFilter(I, 2, "DATE_CREATED", "=", "2025-10-01");
+        checkFilter(I, 2, "DATE_CREATED", "=", "2025-05-05");
         checkFilter(I, 3, "DATA", "Končí na", 'Kokos, "je", king"');
         checkFilter(I, 4, "AVAILABLE", "false", null);
 
@@ -146,7 +146,7 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     Apps.switchEditor('html');
     I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
     I.dontSee("filter[AUTHORID_le]=666,");
-    I.dontSee("filter[DATECREATED_eq]=&quot;2025-10-01&quot;,");
+    I.dontSee("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
     I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 });
