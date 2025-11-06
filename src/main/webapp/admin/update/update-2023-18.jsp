@@ -511,6 +511,9 @@ static {
 
 	//404.jsp
 	replaces.add(new OptionDto("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp"));
+
+	//commons.lang. v2 to v3
+	replaces.add(new OptionDto("org.apache.commons.lang.", "org.apache.commons.lang3.", ".jsp,.java"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
