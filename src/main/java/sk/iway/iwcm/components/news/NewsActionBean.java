@@ -436,13 +436,14 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 	private void addGroups()
 	{
+		List<Integer> defaultDocs = new ArrayList<>();
+
 		if (groupIds == null && doc != null) {
 			GroupDetails group = doc.getGroup();
 			groupIds = new ArrayList<>();
 			groupIds.add(group);
+			defaultDocs.add(group.getDefaultDocId());
 		}
-
-		List<Integer> defaultDocs = new ArrayList<>();
 
 		if (groupIds != null)
 		{
@@ -451,6 +452,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 			for (GroupDetails group : groupIds)
 			{
 				groupIdsExpanded.add(group.getGroupId());
+				defaultDocs.add(group.getDefaultDocId());
 				if (alsoSubGroups)
 				{
 					//All subgroups
@@ -475,9 +477,11 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 		//Tricky part, if we want only "defaultDocs" and there are no "defaultDocs" we must add un existing docId, so the query will return nothing
 		if(docMode == 1) {
-			defaultDocs.add(-666);
+			//ONLY default docs
+			if (defaultDocs.isEmpty()) defaultDocs.add(-666);
 			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.DOC_ID, defaultDocs));
-		} else if(!defaultDocs.isEmpty() && docMode == 2) {
+		} else if(defaultDocs.isEmpty()==false && docMode == 2) {
+			//EXCLUDE default docs
 			newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, defaultDocs));
 		}
 	}

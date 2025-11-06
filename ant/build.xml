@@ -59,11 +59,9 @@
             <arg value="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
         </exec>
         <echo message="-----------------------------------------------"/>
-
-        <sleep seconds="20"/>
     </target>
 
-    <target name="waitForConfirm">
+    <target name="waitForConfirm" depends="define-artifact-properties">
         <!-- Wait for user confirmation -->
         <input message="Skontrolujte verziu artefaktu (${artifact.version}). Stlačte Enter pre pokračovanie alebo Ctrl+C pre ukončenie..." />
     </target>
@@ -466,7 +464,7 @@
 
     </target>
 
-    <target name="deployGithub" depends="define-artifact-properties,waitForConfirm,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
+    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
         <exec executable="mvn">
             <arg value="-e"/>
             <arg value="-X"/>
