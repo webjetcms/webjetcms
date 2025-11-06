@@ -3,7 +3,7 @@ package sk.iway.iwcm.stripes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.apache.struts.util.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;

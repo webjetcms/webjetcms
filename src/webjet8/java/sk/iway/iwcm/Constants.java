@@ -1,6 +1,6 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;

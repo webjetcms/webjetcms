@@ -513,6 +513,18 @@ static {
 	replaces.add(new OptionDto("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp"));
 
 	//commons.lang. v2 to v3
+	replaces.add(new OptionDto("org.apache.commons.lang.StringEscapeUtils", "org.apache.commons.text.StringEscapeUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.WordUtils", "org.apache.commons.text.WordUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.math.IntRange", "org.apache.commons.lang3.IntegerRange", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.math.Range", "org.apache.commons.lang3.Range", ".jsp,.java"));
+	replaces.add(new OptionDto("StringEscapeUtils.escapeXml(", "StringEscapeUtils.escapeXml10(", ".jsp,.java"));
+	replaces.add(new OptionDto("StringEscapeUtils.unescapeHtml(", "StringEscapeUtils.unescapeHtml4(", ".jsp,.java"));
+	replaces.add(new OptionDto("StringUtils.chomp(", "org.apache.commons.lang3.Strings.CS.removeEnd(", ".jsp,.java"));
+	replaces.add(new OptionDto("RandomStringUtils.randomAlphanumeric(", "RandomStringUtils.secure().nextAlphabetic(", ".jsp,.java"));
+	replaces.add(new OptionDto("Range pagingFilter = new IntRange(", "IntegerRange pagingFilter = IntegerRange.of(", ".jsp,.java"));
+	replaces.add(new OptionDto("if (pagingFilter.containsInteger(", "if (pagingFilter.contains(", ".jsp,.java"));
+	replaces.add(new OptionDto("new IntRange(", "IntegerRange.of(", ".jsp,.java"));
+
 	replaces.add(new OptionDto("org.apache.commons.lang.", "org.apache.commons.lang3.", ".jsp,.java"));
 	replaces.add(new OptionDto("RandomStringUtils.random(", "RandomStringUtils.secure().next(", ".jsp,.java"));
 }
@@ -896,6 +908,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	<div style="white-space: pre"><%
 		if ("java".equals(subdir)) {
 			checkDir("/../java/", saveFile, false, out, request, response);
+			checkDir("/../../webjet8/", saveFile, false, out, request, response);
 			checkDir("/../java-update/", saveFile, false, out, request, response);
 		} else {
 			if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
