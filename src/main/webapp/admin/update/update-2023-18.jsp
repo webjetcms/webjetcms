@@ -514,6 +514,7 @@ static {
 
 	//commons.lang. v2 to v3
 	replaces.add(new OptionDto("org.apache.commons.lang.", "org.apache.commons.lang3.", ".jsp,.java"));
+	replaces.add(new OptionDto("RandomStringUtils.random(", "RandomStringUtils.secure().next(", ".jsp,.java"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -692,6 +693,17 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			}
 
 			if (fullUrl.endsWith("FileArchivatorBean.java")) {
+				//verify duplicity of public void setReferenceId(Long referenceId)
+				int i1 = content.indexOf("public void setReferenceId(Long referenceId)");
+				if (i1 > 0) {
+					int i2 = content.indexOf("public void setReferenceId(Long referenceId)", i1+1);
+					if (i2 > i1) {
+						//revert second one to public void setReferenceId(int referenceId)
+						content = content.substring(0, i2) + "public void setReferenceId(int referenceId)" + content.substring(i2 + "public void setReferenceId(Long referenceId)".length());
+						hasChange = true;
+					}
+				}
+
 				if (content.contains("public void setReferenceId(int referenceId)")==false) {
 					int lastBracket = content.lastIndexOf("}");
 					if (lastBracket > 0) {

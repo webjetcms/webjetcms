@@ -176,7 +176,7 @@ public class AdminUploadServlet extends HttpServlet
                 IwcmOutputStream fos = null;
                 FileInputStream fis;
                 byte[] fileBytes;
-                String random = RandomStringUtils.random(15, true, true);
+                String random = RandomStringUtils.secure().next(15, true, true);
                 boolean destinationFileExists = false;
                 try
                 {

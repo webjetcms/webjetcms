@@ -39,7 +39,7 @@ public class ExcelImportService extends AbstractExcelImportService<ContactEntity
 
             //vygeneruj nahodne telefonne cislo pre prvy riadok
             if (row.getRowNum() == 1 && "phone".equals(columnName)) {
-                cell.setCellValue("+421 90" + RandomStringUtils.random(1, false, true) + " " + RandomStringUtils.random(3, false, true) + " " + RandomStringUtils.random(3, false, true));
+                cell.setCellValue("+421 90" + RandomStringUtils.secure().next(1, false, true) + " " + RandomStringUtils.secure().next(3, false, true) + " " + RandomStringUtils.secure().next(3, false, true));
             }
 
             //uprav format PSC, Excel sa nam to snazi dat ako cislo
