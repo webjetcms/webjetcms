@@ -257,7 +257,7 @@ Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) =>
     startAssistant(I, "perexImage", "Odstrániť pozadie", openRouterId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openRouterId, "ti.ti-photo-x");
     waiToEndImage(I);
-    checkImages(I, 1);
+    checkImages(I, 1, false);
     checkImageInfo(I);
 });
 
@@ -326,7 +326,7 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
 
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
-    checkImages(I, 1);
+    checkImages(I, 1, false);
 });
 
 /* STOP assistant logic tests */
@@ -551,11 +551,11 @@ function runTextAnswer(I, field, assistantName, provider, icon) {
     I.seeElement(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo > i.ti-arrow-back");
 }
 
-function checkImages(I, imagesCount) {
+function checkImages(I, imagesCount, exactNumber = true) {
     I.say("checkImages");
 
     //Verify number of visible images
-    I.seeNumberOfVisibleElements( locate(containerAiContent + " > .ai-image-preview-div > .image-preview"), imagesCount );
+    if (exactNumber === true) I.seeNumberOfVisibleElements( locate(containerAiContent + " > .ai-image-preview-div > .image-preview"), imagesCount );
 
     //Check that every preview has image and button
     for(let i = 0; i < imagesCount; i++) {

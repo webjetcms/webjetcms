@@ -73,11 +73,11 @@ Scenario('Test admin product list', ({ I, DT}) => {
     DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "8,61", "7,00"]);
     DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "30,75", "25,00"]);
     I.clickCss("button[data-id=currencySelect]");
-    I.waitForElement(locate("a[role=option]").withText("skk"));
-    I.click(locate("a[role=option]").withText("skk"));
-    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "370,55", "301,26"]);
-    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "259,38", "210,88"]);
-    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "926,37", "753,15"]);
+    I.waitForElement(locate("a[role=option]").withText("czk"));
+    I.click(locate("a[role=option]").withText("czk"));
+    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "299,51", "243,50"]);
+    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "209,65", "170,45"]);
+    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "748,76", "608,75"]);
 });
 
 Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', async ({Document, I, DT, DTE }) => {

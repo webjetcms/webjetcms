@@ -452,8 +452,10 @@ Iné zmeny:
 - Bannerový systém - opravené zobrazenie YouTube video banneru (#55193-7).
 - Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
 - Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
+- Novinky - opravené vylúčenie hlavných stránok pre zadaný koreňový priečinok (#57657-15).
 - Webové stránky - PageBuilder - opravený jazyk používateľského rozhrania na jazyk prihláseného používateľa (nie jazyk web stránky) (#58133).
 - Webové stránky - upravená možnosť vkladania HTML kódu do názvu priečinka a web stránky. Do názvu web stránky povolené vkladanie bezpečného HTML kódu (`AllowSafeHtmlAttributeConverter`) bez jeho úpravy, funguje tak v navigačnej lište, novinkách a podobne. Pre volanie `${ninja.page.seoTitle}` je vrátená hodnota s odstráneným HTML kódom, keďže sa predpokladá vloženie do `title` značky. Ak potrebujete získať titulok aj s HTML kódom môžete použiť volanie `${ninja.page.seoTitleHtml}`. Pri priečinku je nahradený znak `/` za entitu `&#47;`, keďže znak `/` sa používa na oddelenie jednotlivých priečinkov (#54273-75).
+- Webové stránky - opravené zobrazenie režimu PageBuilder nastaveného priamo v šablóne stránky (#57657-15).
 
 ## 2025.0.40
 
