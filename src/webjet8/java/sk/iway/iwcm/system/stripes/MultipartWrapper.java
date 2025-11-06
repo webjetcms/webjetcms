@@ -426,7 +426,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public byte[] get() {
+		public byte[] get() throws IOException {
 			return item.get();
 		}
 
@@ -436,7 +436,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public String getString() {
+		public String getString() throws IOException {
 			return item.getString();
 		}
 
