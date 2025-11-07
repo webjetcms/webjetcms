@@ -1,6 +1,5 @@
 <%@page import="java.util.Map"%>
 <%@page import="java.util.HashMap"%>
-<%@page import="org.apache.commons.lang.StringUtils"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="sk.iway.iwcm.tags.JSEscapeTag"%>
 <%@page import="sk.iway.tags.CurrencyTag"%>

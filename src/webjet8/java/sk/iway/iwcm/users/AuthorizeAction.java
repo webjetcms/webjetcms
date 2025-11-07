@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -302,7 +302,7 @@ public class AuthorizeAction
 				if (uform.getFieldE().startsWith(RegUserAction.REQUIRE_AUTHORIZATION_AFTER_VERIFICATION) || Constants.getBoolean("authorizeRegeneratePassword"))
 				{
 					//vygeneruje nahodne heslo o dlzke 5 znakov, ak nevyhovuje bezpecnostnej politike, po prihlaseni sa vynuti zmena hesla
-					password = RandomStringUtils.randomAlphanumeric(5);
+					password = RandomStringUtils.secure().nextAlphanumeric(5);
 					//nakolko tu nemam normaenho usera ale len nejaky form, ziskam si ho znova ako trulko
 					UserDetails u = UsersDB.getUser(user_id);
 					if (u!=null)

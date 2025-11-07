@@ -37,7 +37,6 @@ DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 GroupsDB groupsDB = GroupsDB.getInstance();
 String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -1, "fieldA");
 
-    InlineEditor.setEditingMode(InlineEditor.EditingMode.pageBuilder, request);
 %>
 
 <c:choose>

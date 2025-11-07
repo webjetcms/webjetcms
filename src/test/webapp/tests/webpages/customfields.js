@@ -256,3 +256,38 @@ function checkLabelAndValue(I, alphabet, label, value) {
     I.seeElement( locate(".DTE_Field_Name_field" + alphabet + " label").withText(label) );
     I.seeElement("#DTE_Field_field" + alphabet + " > section > div > div > div > div > input[value='" + value + "']");
 }
+
+function setEnumerationMapping(I, DT, DTE, mapping) {
+    I.amOnPage("/admin/v9/settings/translation-keys/");
+    DT.filterEquals("key", "temp-3.editor.field_h.type");
+    I.click("temp-3.editor.field_h.type", "#datatableInit_wrapper");
+    DTE.waitForEditor();
+    DTE.fillField("fieldA", mapping);
+    DTE.save();
+}
+
+function setCustomFields(I, DT, DTE) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
+    DTE.waitForEditor();
+    I.wait(2);
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    I.wait(2);
+    DTE.selectOption("fieldH", "Galanta");
+    DTE.save();
+}
+
+Scenario('enumeration-mapping', ({ I, DT, DTE }) => {
+    setEnumerationMapping(I, DT, DTE, "enumeration_2");
+    setCustomFields(I, DT, DTE);
+    I.amOnPage("/novy-adresar-01/volitelne-polia/");
+    I.waitForText("A:Hodnota A", 5, "p.field_a");
+    I.waitForText("H:Galanta", 5, "p.field_h");
+
+    setEnumerationMapping(I, DT, DTE, "enumeration_2_string1_id");
+    setCustomFields(I, DT, DTE);
+    I.amOnPage("/novy-adresar-01/volitelne-polia/");
+    I.waitForText("A:Hodnota A", 5, "p.field_a");
+    I.waitForText("H:13", 5, "p.field_h");
+
+    setEnumerationMapping(I, DT, DTE, "enumeration_2");
+});

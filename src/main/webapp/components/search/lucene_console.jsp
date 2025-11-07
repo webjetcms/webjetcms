@@ -20,8 +20,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ include file="/admin/layout_top.jsp" %>
 <%=Tools.insertJQuery(request) %>
 <%
-StopWatch watch = new StopWatch();
-watch.start();
+long watch = Tools.getNow();
 String indexedNane = Tools.getRequestParameter(request, "indexed");
 Indexed indexed = null;
 boolean index = Tools.getRequestParameter(request, "index") != null;
@@ -89,7 +88,6 @@ else
 	}
 }
 %>
-<%@page import="org.apache.commons.lang.time.StopWatch"%>
 <form action="<%=PathFilter.getOrigPath(request)%>" method="post">
 	<p>
 	<label>Miesto</label>
@@ -171,5 +169,5 @@ function changeIndexed(){
 }
 //-->
 </script>
-Elapsed time:<%=watch.getTime()%> ms
+Elapsed time:<%=(Tools.getNow() - watch)%> ms
 <%@ include file="/admin/layout_bottom.jsp" %>
