@@ -43,10 +43,10 @@ import sk.iway.iwcm.common.SearchTools;
 /**
  * spravne nazvy atributy podla hlavicky tabulky a odstrani anchory z exportu
  *
- * 
+ *
  */
 public class XmlExport implements TextExportView {
-   
+
 
 /**
      * TableModel to render.
@@ -95,9 +95,9 @@ public class XmlExport implements TextExportView {
      */
     protected String getCellStart(String columnName) {
         if (Tools.isEmpty(columnName)) columnName="column";
-        
+
         columnName = DocTools.removeChars(columnName, false);
-        
+
         return "<" + columnName.replace('\n', '-') + ">"; //$NON-NLS-1$
     }
 
@@ -106,9 +106,9 @@ public class XmlExport implements TextExportView {
      */
     protected String getCellEnd(String columnName) {
         if (Tools.isEmpty(columnName)) columnName="column";
-        
+
         columnName = DocTools.removeChars(columnName, false);
-        
+
         return "</" + columnName.replace('\n', '-') + ">\n"; //$NON-NLS-1$
     }
 
@@ -166,8 +166,8 @@ public class XmlExport implements TextExportView {
      * @see TextExportView#doExport(java.io.Writer)
      */
     @Override
-    public void doExport(Writer out) throws IOException, JspException {
-        
+    public void doExport(Writer out, String characterEncoding) throws IOException, JspException {
+
 
 final String DOCUMENT_START = getDocumentStart();
         final String DOCUMENT_END = getDocumentEnd();
@@ -257,7 +257,6 @@ if (ALWAYS_APPEND_CELL_END || columnIterator.hasNext()) {
     private void buildHeaders()
     {
         headerTitles.clear();
-        @SuppressWarnings("unchecked")
         Iterator<HeaderCell> iterator = this.model.getHeaderCellList().iterator();
 
 while (iterator.hasNext())

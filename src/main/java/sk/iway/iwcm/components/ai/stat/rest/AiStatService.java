@@ -87,7 +87,7 @@ public class AiStatService {
             .forEach(entity -> mappedValues.merge(
                 entity.getAssistantId(),
                 entity.getUsedTokens() != null ? entity.getUsedTokens() : 0,
-                Integer::sum
+                (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue)
             ));
 
         return doShit(mappedValues, assistantsRepo, prop);

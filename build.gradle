@@ -165,7 +165,9 @@ dependencies {
     //implementation("commons-validator:commons-validator:1.3.1") //used in struts, not required anymore
     implementation("sk.iway:wjcron4j:2.2.5-SNAPSHOT")
     //implementation("taglibs:datetime:1.0.1") //taglib datetime:
-    implementation("sk.iway:wjdisplaytag:1.2-SNAPSHOT")
+
+    // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
+    implementation("com.github.hazendaz:displaytag:2.9.0")
 
     implementation("org.eclipse.persistence:eclipselink:2.7.+")
 
