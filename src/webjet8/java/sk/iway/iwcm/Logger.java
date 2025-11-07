@@ -37,7 +37,7 @@ public class Logger
 	public static final Level INFO = Level.INFO;
 	public static final Level DEBUG = Level.DEBUG;
 	public static final Level TRACE = Level.TRACE;
-	//logback doesnt have ALL as slf4j, so we map it to TRACE
+	//logback doesnt have ALL as log4j, so we map it to TRACE
 	public static final Level ALL = Level.TRACE;
 
 	private static String installName = "webjet";

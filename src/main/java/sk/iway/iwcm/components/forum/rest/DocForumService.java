@@ -711,7 +711,7 @@ public class DocForumService {
 			else
 				childForums.addAll( docForumRepository.getDocForumListDesc(docId, parentIds, deletedA||deletedB, confirmedA||confirmedB, domainId) );
 
-			//It must be DocForumEntity List
+			//It must be ForumBean List
 			unsorted.addAll( childForums );
 
 			DocForumEntity parentForum = getForumBean(parentId, true);

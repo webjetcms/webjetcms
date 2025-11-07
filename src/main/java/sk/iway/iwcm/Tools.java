@@ -758,6 +758,9 @@ public class Tools
 
 	public static String join(String[] array, String glue)
 	{
+		if (array == null) {
+            return null;
+        }
 		StringBuilder result = new StringBuilder();
 		for(int i = 0; i < array.length; i++)
 		{

@@ -524,7 +524,6 @@ static {
 	replaces.add(new OptionDto("Range pagingFilter = new IntRange(", "IntegerRange pagingFilter = IntegerRange.of(", ".jsp,.java"));
 	replaces.add(new OptionDto("if (pagingFilter.containsInteger(", "if (pagingFilter.contains(", ".jsp,.java"));
 	replaces.add(new OptionDto("new IntRange(", "IntegerRange.of(", ".jsp,.java"));
-
 	replaces.add(new OptionDto("org.apache.commons.lang.", "org.apache.commons.lang3.", ".jsp,.java"));
 	replaces.add(new OptionDto("RandomStringUtils.random(", "RandomStringUtils.secure().next(", ".jsp,.java"));
 }

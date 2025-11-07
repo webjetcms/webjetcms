@@ -87,7 +87,7 @@ public class AiStatService {
             .forEach(entity -> mappedValues.merge(
                 entity.getAssistantId(),
                 entity.getUsedTokens() != null ? entity.getUsedTokens() : 0,
-                (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue)
+                (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue) //Integer::sum gives VSCode java warning even when merge has Null checks
             ));
 
         return doShit(mappedValues, assistantsRepo, prop);

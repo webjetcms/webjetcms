@@ -1,6 +1,5 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang3.StringUtils;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -123,7 +122,7 @@ public class Constants {
 	}
 
 	public static String mods(String... mod) {
-		return StringUtils.join(mod, ";");
+		return Tools.join(mod, ";");
 	}
 
 	public static void clearValues() {

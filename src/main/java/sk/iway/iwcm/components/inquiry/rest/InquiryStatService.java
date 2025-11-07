@@ -157,6 +157,7 @@ public class InquiryStatService {
         // Count answers
         Map<Long, Integer> countOfAnswers = new HashMap<>();
         for (InquiryUsersVoteEntity vote : page.getContent()) {
+            //Integer::sum gives VSCode java warning even when merge has Null checks
             countOfAnswers.merge(vote.getAnswerId(), 1, (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue));
         }
 
