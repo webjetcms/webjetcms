@@ -28,9 +28,8 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Transformer;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.DateTools;
@@ -1096,25 +1095,19 @@ public class LuceneSearchAction
 		}
 
 		final boolean reverse = order_var.equals("DESC");
-		@SuppressWarnings({"unchecked", "rawtypes"})
-		Collection<SortField> sortFields = CollectionUtils.collect(sort, new Transformer()
-		{
-			@Override
-			public Object transform(Object obj)
+		Collection<SortField> sortFields = CollectionUtils.collect(sort, obj -> {
+			String field = (String) obj;
+			if ("sort_priority".equals(field))
 			{
-				String field = (String) obj;
-				if ("sort_priority".equals(field))
-				{
-					return new SortField(field,SortField.INT,reverse);
-				}
-				else if ("score".equals(field))
-				{
-					return SortField.FIELD_SCORE;
-				}
-				return new SortField(field,SortField.STRING,reverse);
+				return new SortField(field, SortField.INT, reverse);
 			}
+			else if ("score".equals(field))
+			{
+				return SortField.FIELD_SCORE;
+			}
+			return new SortField(field, SortField.STRING, reverse);
 		});
-		sortFields.add(new SortField(null,SortField.SCORE,false));
+		sortFields.add(new SortField(null, SortField.SCORE, false));
 
 		return new Sort(sortFields.toArray(new SortField[sortFields.size()]));
 	}

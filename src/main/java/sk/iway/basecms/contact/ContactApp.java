@@ -144,6 +144,7 @@ public class ContactApp extends WebjetComponentAbstract {
      * @param request
      * @return
      */
+    @SuppressWarnings("unchecked")
     public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
         //you can process multipart file using request.getAttribute("MultipartWrapper.files")
         entity.setDocument(((Map<String,FileItem>)request.getAttribute("MultipartWrapper.files")).get("document"));

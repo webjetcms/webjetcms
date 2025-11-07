@@ -18,8 +18,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Predicate;
-import org.apache.commons.collections4.Transformer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericField;
@@ -80,35 +78,21 @@ public class Documents extends Indexed
 		this.language = language;
 		final GroupsDB gdb = GroupsDB.getInstance();
 		final String defaultLanguage = Constants.getString("defaultLanguage");
-		Collection<String> newPaths = CollectionUtils.collect(GroupsDB.getRootGroups(), new Transformer<GroupDetails, String>()
-		{
-			@Override
-			public String transform(GroupDetails gd)
-			{
-				if ("system".equals(DB.internationalToEnglish(gd.getGroupName().toLowerCase())))
-					return null;
-
-				TemplateDetails template = TemplatesDB.getInstance().getTemplate(gd.getTempId());
-				String tempLng = defaultLanguage;
-				if (template != null) tempLng = template.getLng();
-				if (Tools.isEmpty(tempLng)) tempLng = "sk";
-
-				if (language.equals(tempLng))
-					return gdb.getGroupNamePath(gd.getGroupId());
-
+		Collection<String> newPaths = CollectionUtils.collect(GroupsDB.getRootGroups(), gd -> {
+			if ("system".equals(DB.internationalToEnglish(gd.getGroupName().toLowerCase())))
 				return null;
-			}
+
+			TemplateDetails template = TemplatesDB.getInstance().getTemplate(gd.getTempId());
+			String tempLng = defaultLanguage;
+			if (template != null) tempLng = template.getLng();
+			if (Tools.isEmpty(tempLng)) tempLng = "sk";
+
+			if (language.equals(tempLng))
+				return gdb.getGroupNamePath(gd.getGroupId());
+
+			return null;
 		});
-		this.paths = CollectionUtils.select(newPaths, new Predicate<String>()
-		{
-			@Override
-			public boolean evaluate(String path)
-			{
-				if (path != null)
-					return true;
-				return false;
-			}
-		});
+		this.paths = CollectionUtils.select(newPaths, path -> path != null);
 	}
 
 	public static String parseHeadings(String html) {

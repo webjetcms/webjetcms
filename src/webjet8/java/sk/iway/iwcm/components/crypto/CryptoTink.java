@@ -66,7 +66,7 @@ public class CryptoTink implements Crypto {
     public String encrypt(String plainData, String publicKey) throws Exception {
         KeysetHandle publicKeyHandle = this.loadPublicKeyBase64(publicKey);
         if (publicKeyHandle == null) return "";
-        HybridEncrypt hybridEncrypt = publicKeyHandle.getPrimitive(HybridEncrypt.class);
+        HybridEncrypt hybridEncrypt = publicKeyHandle.getPrimitive(RegistryConfiguration.get(), HybridEncrypt.class);
         byte[] encryptedData = hybridEncrypt.encrypt(plainData.getBytes(), this.getContextInfo().getBytes());
 
         return new String(Base64.getEncoder().encode(encryptedData));
@@ -76,7 +76,7 @@ public class CryptoTink implements Crypto {
     public String decrypt(String encryptedData, String privateKey) throws Exception {
         KeysetHandle privateKeyHandle = this.loadPrivateKeyBase64(privateKey);
         if (privateKeyHandle == null) return "";
-        HybridDecrypt hybridDecrypt = privateKeyHandle.getPrimitive(HybridDecrypt.class);
+        HybridDecrypt hybridDecrypt = privateKeyHandle.getPrimitive(RegistryConfiguration.get(), HybridDecrypt.class);
 
         return new String(hybridDecrypt.decrypt(Base64.getDecoder().decode(encryptedData.getBytes()), this.getContextInfo().getBytes()));
     }
