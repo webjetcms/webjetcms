@@ -431,7 +431,7 @@ public class SessionHolder
 
 		if(foundInvalid && Constants.getBoolean("sessionSingleLogon") == true) {
 			//propagate to cluster - invalidate sessions for this user ID on other nodes
-			ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder", (long) userId);
+			ClusterDB.addRefresh("SessionHolder.keepOnlySession-"+userId+"-"+currentSessionId);
 		}
 	}
 
@@ -439,35 +439,9 @@ public class SessionHolder
 	 * Invalidate sessions for userId from cluster refresh
 	 * @param userId - user ID whose sessions should be invalidated
 	 */
-	public static void refresh(long userId)
+	public static void keepOnlySession(long userId, String sessionId)
 	{
 		SessionHolder sh = SessionHolder.getInstance();
-
-		//Try get currentSession
-		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		if (rb != null && rb.getUserId() > 0) {
-			invalidateOtherUserSessions((int)userId, rb.getSessionId(), sh.data);
-			return;
-		}
-
-		// Find last session by last logon time
-		String lastSession = "";
-		long lastLogonTime = -1L;
-		for (Map.Entry<String, SessionDetails> entry : sh.data.entrySet()) {
-			SessionDetails sd = entry.getValue();
-			if(sd == null) continue;
-
-			if(sd.getLoggedUserId() == userId && sd.getLogonTime() > lastLogonTime) lastSession = entry.getKey();
-		}
-
-		invalidateOtherUserSessions((int)userId, lastSession, sh.data);
-	}
-
-	/**
-	 * Get data map for testing purposes
-	 * @return data map
-	 */
-	protected java.util.Map<String, SessionDetails> getDataMap() {
-		return data;
+		invalidateOtherUserSessions((int)userId, sessionId, sh.data);
 	}
 }

@@ -34,6 +34,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ### Bezpečnosť
 
+- Pridaná podpora pre povolenie iba jedného aktívneho prihlásenia na jedného používateľa. Režim zapnete nastavením konfiguračnej premennej `sessionSingleLogon` na hodnotu `true`. Pri novom prihlásení sa zruší predchádzajúca aktívna `session` (#58121).
 - Odstránená nepodporovaná knižnica [commons-lang](https://mvnrepository.com/artifact/commons-lang/commons-lang), nahradená novou knižnicou [commons-lang3](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3), v `update-2023-18.jsp` je aktualizačný skript pre úpravu zdrojových kódov (#58153).
 
 ### Iné menšie zmeny
@@ -43,10 +44,6 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Konfigurácia - upravený spôsob zmazania konfiguračnej premennej. Po vymazaní sa automatický nastaví pôvodná hodnota z `Constants`, aby bola rovnaká ako bude po reštarte servera. V pôvodnom riešení sa premenná len zmazala, ale jej hodnota zostala interne nastavená do reštartu servera (#57849).
 
 ![](admin/settings/response-header/editor.png)
-
-### Bezpečnosť
-
-- Pridaná podpora pre povolenie iba jednej aktívnej `session` na jedného používateľa pomocou konfiguračnej premennej `sessionSingleLogon`. Pri novom prihlásení sa zruší predchádzajúca aktívna `session` (#58121).
 
 ### Dokumentácia
 
