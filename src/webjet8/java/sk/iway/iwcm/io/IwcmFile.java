@@ -14,7 +14,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;

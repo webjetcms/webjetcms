@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -97,7 +97,7 @@ public interface DataTablesInterface {
             //String name = entry.getKey();
             FileItem item = entry.getValue();
 
-            String randomName = RandomStringUtils.random(10, true, true);
+            String randomName = RandomStringUtils.secure().next(10, true, true);
             if (canUpload(item))
             {
                 String ext = FileTools.getFileExtension(item.getName());

@@ -14,9 +14,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.IntRange;
-import org.apache.commons.lang.math.Range;
+import org.apache.commons.lang3.IntegerRange;
+import org.apache.commons.lang3.Strings;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
@@ -67,7 +66,7 @@ public class DocFacade
 			sql.append(group.getGroupId()).append(',');
 		}
 
-		sql = new StringBuilder(StringUtils.chomp(sql.toString(), ",")).append(')');
+		sql = new StringBuilder(Strings.CS.removeEnd(sql.toString(), ",")).append(')');
 		if (options.get("where_sql") != null)
 			sql.append(' ').append(options.get("where_sql").toString()).append(' ');
 
@@ -122,10 +121,10 @@ public class DocFacade
 			db_conn = DBPool.getConnection();
 			ps = db_conn.prepareStatement(sql.toString());
 			rs = ps.executeQuery();
-			Range pagingFilter = new IntRange(currentPage*pageSize + 1, (currentPage+1)*pageSize);
+			IntegerRange pagingFilter = IntegerRange.of(currentPage*pageSize + 1, (currentPage+1)*pageSize);
 			while (rs.next())
 			{
-				if (pagingFilter.containsInteger(++allDocumentsCount))
+				if (pagingFilter.contains(++allDocumentsCount))
 					documents.add(DocDB.getDocDetails(rs, true, true));
 			}
 			rs.close();

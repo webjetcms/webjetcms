@@ -1,6 +1,6 @@
 package sk.iway.iwcm.common;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.outerj.daisy.diff.HtmlCleaner;
 import org.outerj.daisy.diff.XslFilter;
 import org.outerj.daisy.diff.html.HTMLDiffer;
@@ -168,7 +168,7 @@ public class DocTools {
 
         String valueLC = value.toLowerCase();
         //nahrad ascii entity typu JaVaS&#99;RiPt:alert(142277,334213762);
-        String value2LC = StringEscapeUtils.unescapeHtml(value).toLowerCase();
+        String value2LC = StringEscapeUtils.unescapeHtml4(value).toLowerCase();
         value2LC = Tools.replace(value2LC, "\t", "");
         value2LC = Tools.replace(value2LC, "\r", "");
         value2LC = Tools.replace(value2LC, "\n", "");
