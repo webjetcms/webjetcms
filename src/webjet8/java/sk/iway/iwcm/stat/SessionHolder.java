@@ -444,4 +444,12 @@ public class SessionHolder
 		SessionHolder sh = SessionHolder.getInstance();
 		invalidateOtherUserSessions((int)userId, sessionId, sh.data);
 	}
+
+	/**
+	 * Get data map for testing purposes
+	 * @return data map
+	 */
+	protected java.util.Map<String, SessionDetails> getDataMap() {
+		return data;
+	}
 }

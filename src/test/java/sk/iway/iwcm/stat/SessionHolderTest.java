@@ -65,7 +65,7 @@ class SessionHolderTest extends BaseWebjetTest {
 
 
         // Call refresh for user 123
-        SessionHolder.refresh(123);
+        SessionHolder.keepOnlySession(123, "session3");
 
         // Verify that only sessions for user 123 are marked for invalidation
         assertEquals(INVALIDATE_SESSION_ADDR, session1.getRemoteAddr());
@@ -98,7 +98,7 @@ class SessionHolderTest extends BaseWebjetTest {
         sessionHolder.getDataMap().put("session2", session2);
 
         // Call refresh for user that doesn't exist
-        SessionHolder.refresh(999);
+        SessionHolder.keepOnlySession(999, "session1");
 
         // Verify no sessions are invalidated
         assertNotEquals(INVALIDATE_SESSION_ADDR, session1.getRemoteAddr());

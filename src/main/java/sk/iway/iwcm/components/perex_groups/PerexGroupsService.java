@@ -235,18 +235,7 @@ public class PerexGroupsService {
 
             if (!found) {
                 // FIX - sivan, fix aby bolo mozne pri edite perexGroups pridat availableGroups
-                if(InitServlet.isTypeCloud() == false) {
-                    if (entity.getEditorFields() != null) {
-                        List<GroupDetails> availableGroupsList = entity.getEditorFields().getAvailableGroups();
-                        if(availableGroupsList != null && availableGroupsList.size() > 0) {
-                            for(GroupDetails group : availableGroupsList) {
-                                entity.addAvailableGroup(group.getGroupId());
-                            }
-                        }
-                    }
-                } else {
-                    entity.setAvailableGroups(availableGroups);
-                }
+                entity.setAvailableGroups(availableGroups);
                 saved = perexGroupsRepository.save(entity);
                 docDB.getPerexGroups(true);
             } else {

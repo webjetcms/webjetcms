@@ -45,6 +45,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](admin/settings/response-header/editor.png)
 
+### Oprava chýb
+
+- Značky - opravené duplikovanie priečinka v Zobraziť pre pri uložení značky (#58121).
+
 ### Dokumentácia
 
 - Aktualizované všetky fotky obrazovky v českej verzii dokumentácie (#58113).
