@@ -302,7 +302,7 @@ public class AuthorizeAction
 				if (uform.getFieldE().startsWith(RegUserAction.REQUIRE_AUTHORIZATION_AFTER_VERIFICATION) || Constants.getBoolean("authorizeRegeneratePassword"))
 				{
 					//vygeneruje nahodne heslo o dlzke 5 znakov, ak nevyhovuje bezpecnostnej politike, po prihlaseni sa vynuti zmena hesla
-					password = RandomStringUtils.secure().nextAlphabetic(5);
+					password = RandomStringUtils.secure().nextAlphanumeric(5);
 					//nakolko tu nemam normaenho usera ale len nejaky form, ziskam si ho znova ako trulko
 					UserDetails u = UsersDB.getUser(user_id);
 					if (u!=null)

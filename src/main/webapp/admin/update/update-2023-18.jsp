@@ -520,7 +520,7 @@ static {
 	replaces.add(new OptionDto("StringEscapeUtils.escapeXml(", "StringEscapeUtils.escapeXml10(", ".jsp,.java"));
 	replaces.add(new OptionDto("StringEscapeUtils.unescapeHtml(", "StringEscapeUtils.unescapeHtml4(", ".jsp,.java"));
 	replaces.add(new OptionDto("StringUtils.chomp(", "org.apache.commons.lang3.Strings.CS.removeEnd(", ".jsp,.java"));
-	replaces.add(new OptionDto("RandomStringUtils.randomAlphanumeric(", "RandomStringUtils.secure().nextAlphabetic(", ".jsp,.java"));
+	replaces.add(new OptionDto("RandomStringUtils.randomAlphanumeric(", "RandomStringUtils.secure().nextAlphanumeric(", ".jsp,.java"));
 	replaces.add(new OptionDto("Range pagingFilter = new IntRange(", "IntegerRange pagingFilter = IntegerRange.of(", ".jsp,.java"));
 	replaces.add(new OptionDto("if (pagingFilter.containsInteger(", "if (pagingFilter.contains(", ".jsp,.java"));
 	replaces.add(new OptionDto("new IntRange(", "IntegerRange.of(", ".jsp,.java"));
