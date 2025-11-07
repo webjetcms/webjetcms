@@ -2484,7 +2484,7 @@
                 </void>
                 <void property="pgsql">
                     <string>
-                        ALTER TABLE form_attributes DROP CONSTRAINT constraint { RESTRICT | CASCADE }
+                        ALTER TABLE form_attributes DROP CONSTRAINT constraint [RESTRICT | CASCADE];
                         CREATE SEQUENCE S_form_attributes START WITH 1;
                         ALTER TABLE form_attributes ADD id INT DEFAULT NEXTVAL('S_form_attributes') NOT NULL;
                     </string>

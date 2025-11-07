@@ -152,8 +152,6 @@ public class DataTableColumnEditor {
 
                         addOptions(list, labelProperty, valueProperty);
                     }
-
-                    continue;
                 } catch (Exception ex) {
                     Logger.error(DataTableColumnEditor.class, ex);
                 }

@@ -80,11 +80,9 @@ public class FormSimpleApp extends WebjetComponentAbstract {
     private Boolean rowView;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title = "components.formsimple.textBefore")
-    @Email
     private String attribute_emailTextBefore;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title = "components.formsimple.textAfter")
-    @Email
     private String attribute_emailTextAfter;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "editor.form.force_text_plain")
