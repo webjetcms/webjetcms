@@ -7,8 +7,8 @@
 set -e
 
 echo "WARNING: CHECK VERSION IN build.xml"
-
 date
+ant waitForConfirm
 
 #./mount-license.sh
 

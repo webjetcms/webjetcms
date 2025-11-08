@@ -59,11 +59,9 @@
             <arg value="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
         </exec>
         <echo message="-----------------------------------------------"/>
-
-        <sleep seconds="20"/>
     </target>
 
-    <target name="waitForConfirm">
+    <target name="waitForConfirm" depends="define-artifact-properties">
         <!-- Wait for user confirmation -->
         <input message="Skontrolujte verziu artefaktu (${artifact.version}). Stlačte Enter pre pokračovanie alebo Ctrl+C pre ukončenie..." />
     </target>
@@ -261,8 +259,16 @@
         <unzip dest="${root}/libs">
             <fileset dir="${outdir}WEB-INF/lib/">
                 <include name="wj*.jar"/>
+                <include name="stripes-*.jar"/>
+                <include name="displaytag-*.jar"/>
             </fileset>
         </unzip>
+        <copy todir="${root}/libs" overwrite="true">
+            <fileset dir="${root}/WebContent/WEB-INF/classes">
+                <include name="net/**"/>
+                <include name="org/displaytag/**"/>
+            </fileset>
+        </copy>
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
             <zipfileset dir="${root}/libs">
                 <include name="**/*"/>
@@ -458,7 +464,7 @@
 
     </target>
 
-    <target name="deployGithub" depends="define-artifact-properties,waitForConfirm,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
+    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
         <exec executable="mvn">
             <arg value="-e"/>
             <arg value="-X"/>
