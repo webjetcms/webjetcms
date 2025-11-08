@@ -129,8 +129,7 @@ public class SessionHolder
    	public boolean set(String sessionId, String lastURL, HttpServletRequest request) {
 		// lebo iframe a cookie toho potom vygeneruje kopec
 		if (lastURL != null && (lastURL.indexOf("/admin/mem.jsp") != -1 || lastURL.indexOf("/admin/refresher.jsp") != -1
-				|| lastURL.indexOf("/admin/divpopup-blank.jsp") != -1 || lastURL.indexOf("/admin/FCKeditor") != -1
-				|| lastURL.indexOf("/admin/rest/refresher") != -1))
+				|| lastURL.indexOf("/admin/divpopup-blank.jsp") != -1 || lastURL.indexOf("/admin/FCKeditor") != -1))
 			return true;
 
 		// aby bolo mozne grafy tlacit do PDF, normalne by nam nastal session stealing
@@ -144,6 +143,17 @@ public class SessionHolder
 			return true;
 
 		SessionDetails det = get(sessionId);
+
+		if (lastURL != null && lastURL.indexOf("/admin/rest/refresher") != -1 && det != null) {
+			//invalidate if needed
+			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
+				request.getSession().invalidate();
+				return false;
+			}
+			//do not throw other errors because refresher is called in background
+			return true;
+		}
+
 		if (det == null) {
 			cleanup();
 
@@ -152,6 +162,12 @@ public class SessionHolder
 			det.setRemoteAddr(Tools.getRemoteIP(request));
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
+
+			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
+				Logger.debug(SessionHolder.class, "Session invalidated for userId=" + det.getLoggedUserId() + " userName="+ det.getLoggedUserName() + " sessionId=" + sessionId);
+				request.getSession().invalidate();
+				return false;
+			}
 
 			if (Constants.getBoolean("sessionStealingCheck") == true
 					&& det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {
@@ -174,11 +190,6 @@ public class SessionHolder
 					return false;
 				}
 			}
-
-			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
-				request.getSession().invalidate();
-				return false;
-			}
 		}
 		det.setLastURL(lastURL);
 		det.setDomainId(CloudToolsForCore.getDomainId());
@@ -192,9 +203,7 @@ public class SessionHolder
 				det.setLoggedUserName(user.getFullName());
 
 				// Handle single logon - invalidate other sessions for the same user
-				if (Constants.getBoolean("sessionSingleLogon") == true) {
-					invalidateOtherUserSessions(user.getUserId(), sessionId);
-				}
+				invalidateOtherUserSessions(user.getUserId(), sessionId, data);
 			}
 		} else {
 			if (det.getLoggedUserId() > 0) {
@@ -402,15 +411,18 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
-		invalidateOtherUserSessions(userId, rb.getSessionId());
-	}
-
-	public void invalidateOtherUserSessions(int userId, String currentSessionId) {
-		invalidateOtherUserSessions(userId, currentSessionId, data);
+		invalidateOtherUserSessions(userId, rb.getSessionId(), data);
 	}
 
 	private static void invalidateOtherUserSessions(int userId, String currentSessionId, Map<String, SessionDetails> data) {
-		boolean foundInvalid = false;
+
+		if (Constants.getBoolean("sessionSingleLogon") != true) return;
+
+		//propagate to cluster - invalidate sessions for this user ID on other nodes
+		String baseName = "SessionHolder.keepOnlySession-"+userId+"-";
+		//we need to delete old records, because they will be executed first, and this should be last/only one in queue
+		ClusterDB.deleteStartsWith(baseName);
+		ClusterDB.addRefresh(baseName+currentSessionId);
 
 		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
 		{
@@ -424,14 +436,8 @@ public class SessionHolder
 			{
 				//destroy session
 				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
-				foundInvalid = true;
 				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			}
-		}
-
-		if(foundInvalid && Constants.getBoolean("sessionSingleLogon") == true) {
-			//propagate to cluster - invalidate sessions for this user ID on other nodes
-			ClusterDB.addRefresh("SessionHolder.keepOnlySession-"+userId+"-"+currentSessionId);
 		}
 	}
 
