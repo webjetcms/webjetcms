@@ -3,6 +3,7 @@ package sk.iway.iwcm.stat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +35,8 @@ class SessionHolderTest extends BaseWebjetTest {
 
     @Test
     void testRefreshMethodInvalidatesUserSessions() {
+        Constants.setBoolean("sessionSingleLogon", true);
+
         // Get the singleton instance instead of creating a new one
         SessionHolder sessionHolder = SessionHolder.getInstance();
 

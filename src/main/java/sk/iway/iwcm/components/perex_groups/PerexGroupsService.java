@@ -146,7 +146,7 @@ public class PerexGroupsService {
                 //filter available groups from only current domain
 
                 if(Tools.isEmpty(availableGroups)) {
-                    availableGroups = CloudToolsForCore.getDomainId() + "";
+                    availableGroups = String.valueOf(CloudToolsForCore.getDomainId());
                 } else {
                     Logger.debug(PerexGroupsService.class, " Removing availableGroups [ "+availableGroups+" ] from other domains");
                     GroupDetails gd = null;
@@ -234,7 +234,6 @@ public class PerexGroupsService {
             //Logger.println(this,"UPDATE: " +groupName+ "  " +groupId);
 
             if (!found) {
-                // FIX - sivan, fix aby bolo mozne pri edite perexGroups pridat availableGroups
                 entity.setAvailableGroups(availableGroups);
                 saved = perexGroupsRepository.save(entity);
                 docDB.getPerexGroups(true);

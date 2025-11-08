@@ -203,7 +203,7 @@ public class SessionHolder
 				det.setLoggedUserName(user.getFullName());
 
 				// Handle single logon - invalidate other sessions for the same user
-				invalidateOtherUserSessions(user.getUserId(), sessionId, data);
+				keepOnlySession(user.getUserId(), sessionId, data);
 			}
 		} else {
 			if (det.getLoggedUserId() > 0) {
@@ -411,10 +411,27 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
-		invalidateOtherUserSessions(userId, rb.getSessionId(), data);
+		keepOnlySession(userId, rb.getSessionId(), data);
 	}
 
-	private static void invalidateOtherUserSessions(int userId, String currentSessionId, Map<String, SessionDetails> data) {
+	/**
+	 * Invalidate sessions for userId, called from ClusterRefresher
+	 * @param userId - user ID whose sessions should be invalidated
+	 */
+	public static void keepOnlySession(long userId, String sessionId)
+	{
+		SessionHolder sh = SessionHolder.getInstance();
+		keepOnlySession((int)userId, sessionId, sh.data);
+	}
+
+	/**
+	 * Invalidate other sessions for userId from data map, also handles cluster propagation
+	 * REQUIRES: sessionSingleLogon=true
+	 * @param userId
+	 * @param currentSessionId
+	 * @param data
+	 */
+	private static void keepOnlySession(int userId, String currentSessionId, Map<String, SessionDetails> data) {
 
 		if (Constants.getBoolean("sessionSingleLogon") != true) return;
 
@@ -439,16 +456,6 @@ public class SessionHolder
 				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			}
 		}
-	}
-
-	/**
-	 * Invalidate sessions for userId from cluster refresh
-	 * @param userId - user ID whose sessions should be invalidated
-	 */
-	public static void keepOnlySession(long userId, String sessionId)
-	{
-		SessionHolder sh = SessionHolder.getInstance();
-		invalidateOtherUserSessions((int)userId, sessionId, sh.data);
 	}
 
 	/**
