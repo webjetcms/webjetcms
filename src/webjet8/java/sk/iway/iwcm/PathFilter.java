@@ -2674,17 +2674,24 @@ public class PathFilter implements Filter
 	private static boolean isPathBlocked(String path) {
 		if (Tools.isEmpty(path)) return false;
 
-		if (blockedPaths == null) {
-			synchronized(PathFilter.class) //NOSONAR
-			{
-				if (blockedPaths == null) {
-					blockedPaths = Constants.getArray("pathFilterBlockedPaths");
+		try {
+			if (blockedPaths == null) {
+				synchronized(PathFilter.class) //NOSONAR
+				{
+					if (blockedPaths == null) {
+						blockedPaths = Constants.getArray("pathFilterBlockedPaths");
+					}
 				}
 			}
-		}
 
-		for (String blockedPath : blockedPaths)
-			if (path.contains(blockedPath)) return true;
+			for (String blockedPath : blockedPaths) {
+				if (path.contains(blockedPath)) {
+					return true;
+				}
+			}
+		} catch (Exception ex) {
+			//failsafe to concurent modification exception, just to be sure
+		}
 
 		return false;
 	}
