@@ -94,6 +94,23 @@ public class ClusterDB
 		}
 	}
 
+	/**
+	 * Delete data from cluster_refresher table where class_name starts with given string
+	 * It is usseful when we want to remove old refresh requests for the same object
+	 * @param className
+	 */
+	public static void deleteStartsWith(String className) {
+		try
+		{
+			SimpleQuery query = new SimpleQuery();
+			query.execute("DELETE FROM cluster_refresher WHERE class_name LIKE ?", className + "%");
+		}
+		catch (Exception ex)
+		{
+			sk.iway.iwcm.Logger.error(ex);
+		}
+	}
+
 	public static void addRefreshClusterMonitoring(String nodeName, Class<?> clas) {
 		//Before refresh delete all data's
 
