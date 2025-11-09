@@ -37,11 +37,11 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
     * @see LocaleResolver#resolveLocale(HttpServletRequest)
     */
    @Override
-   public Locale resolveLocale(HttpServletRequest request)
+   public Locale resolveLocale(PageContext pageContext)
    {
-       Locale userLocale = request.getLocale();
+       Locale userLocale = pageContext.getRequest().getLocale();
 
-       String lng = getLng(null, request);
+       String lng = getLng(null, (HttpServletRequest)pageContext.getRequest());
        if (Tools.isNotEmpty(lng))
        {
       	 if ("cz".equals(lng)) lng = "cs";

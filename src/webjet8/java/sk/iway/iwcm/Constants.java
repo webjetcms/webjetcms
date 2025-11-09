@@ -1,6 +1,5 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -123,7 +122,7 @@ public class Constants {
 	}
 
 	public static String mods(String... mod) {
-		return StringUtils.join(mod, ";");
+		return Tools.join(mod, ";");
 	}
 
 	public static void clearValues() {
@@ -200,6 +199,8 @@ public class Constants {
 				"true || false - ak je nastavené na true bude sa vykonávať kontrola práv na zaheslované stránky aj administrátorom (štandardne sa nekontroluje, administrátor má prístup ku všetkým stránkam)");
 		setBoolean("adminRequireSSL", false, MOD_SECURITY,
 				"ak je nastavené na true a na serveri je nastavené SSL pre prístup do admin časti bude vyžadovaný httpS protokol");
+		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn", MOD_SECURITY,
+				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db a podobne");
 
 		// server pre aktualizaciu WebJETu
 		setString("updateRemoteServer", "http://license.interway.sk");

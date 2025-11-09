@@ -1,6 +1,6 @@
 package sk.iway.iwcm.i18n;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto;
 import sk.iway.iwcm.database.ComplexQuery;

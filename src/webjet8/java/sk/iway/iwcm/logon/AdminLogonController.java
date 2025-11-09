@@ -490,7 +490,7 @@ public class AdminLogonController {
             }
 
             // Google Authenticator
-            //String token = RandomStringUtils.random(4, false, true);
+            //String token = RandomStringUtils.secure().next(4, false, true);
             //sendToken(mobileDevice, token);
             session.setAttribute("adminUser_waitingForToken", user);
             session.removeAttribute(Constants.USER_KEY);

@@ -46,18 +46,20 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
     });
 });
 
-Scenario('verify all domains selection for available groups', ({I, DT, DTE}) => {
+Scenario('verify only current domain selection for available groups', ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/webpages/perex/");
-    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.dontSee(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see("/Newsletter", "#perexDataTable td.dt-style-json");
     DT.filterContains("perexGroupName", "PerexWithGroup_");
-    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.dontSee(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see("/Newsletter", "#perexDataTable td.dt-style-json");
     I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
     I.click("PerexWithGroup_B");
     DTE.waitForEditor("perexDataTable");
     I.click("button.btn-vue-jstree-add");
     I.waitForElement("#jsTree");
-    I.waitForText(I.getDefaultDomainName(), 5, "#jsTree a.jstree-anchor");
-    I.waitForText("mirroring.tau27.iway.sk", 5, "#jsTree a.jstree-anchor");
+    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.dontSee("mirroring.tau27.iway.sk", "#jsTree a.jstree-anchor");
     I.click("a.close-custom-modal");
     DTE.cancel();
 });
@@ -463,4 +465,26 @@ Scenario('Verify domain_id groups', ({ I, DT, Document }) => {
 
 Scenario('Verify domain_id groups-logout', ({ I }) => {
     I.logout();
+});
+
+Scenario("BUG: duplicate available groups in perex group on save", async ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/perex/");
+
+    var perexGroupName = "PerexWithGroup_A";
+
+    DT.filterContains("perexGroupName", perexGroupName);
+    I.click(perexGroupName);
+    DTE.waitForEditor("perexDataTable");
+    I.click("button.btn-vue-jstree-add");
+    I.waitForElement("#jsTree");
+    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.click("a.close-custom-modal");
+    DTE.save();
+
+    //verify no duplicates
+    I.click(perexGroupName);
+    DTE.waitForEditor("perexDataTable");
+    var rows = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-availableGroups div.dt-tree-container div.form-group button.btn-vue-jstree-item-edit");
+    I.assertEqual(rows, 1, "Expected 1 available group, but found " + rows);
+
 });

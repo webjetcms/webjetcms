@@ -239,6 +239,17 @@ public class ClusterRefresher extends TimerTask
 				String sessionId = className.substring(className.indexOf('-') + 1);
 				sessionId = sessionId.substring(0, sessionId.length() - 2); //Remove postfix -0
 				SessionHolder.getInstance().invalidateSession(sessionId);
+			else if (className.startsWith("SessionHolder.keepOnlySession-")) {
+				//je to ciastkovy update objektu SessionHolder na udrzanie len jednej session pre daneho usera
+				String params = className.substring(className.indexOf('-')+1);
+				int separatorIndex = params.indexOf('-');
+				if (separatorIndex > 0) {
+					int userId = Tools.getIntValue(params.substring(0, separatorIndex), -1);
+					String sessionId = params.substring(separatorIndex+1);
+					if (userId > 0 && Tools.isNotEmpty(sessionId)) {
+						sk.iway.iwcm.stat.SessionHolder.keepOnlySession(userId, sessionId);
+					}
+				}
 			}
 			else
 			{

@@ -175,9 +175,26 @@ Pre výber existujúcej stránky (jej `docId`) je možné použiť typ `docsIn_G
 
 ![](webpages-enumeration.png)
 
-Prepojenie na číselník je cez typ `enumeration_X` kde X je ID typu číselníka. Ako hodnota sa nastaví ID záznamu z číselníka:
+Prepojenie na číselník je cez typ `enumeration_X` kde X je ID typu číselníka. Ako hodnota a label sa predvolene nastaví `string1` hodnota z číselníka:
 
-- `editor.field_x.type=enumeration_2` - zobrazí ako výberové pole možnosti z typu číselníka 2
+- `editor.field_x.type=enumeration_2` - zobrazí ako výberové pole možnosti z typu číselníka 2, hodnota aj label budú z `string1`
+- `editor.field_x.type=enumeration_2_null` - pridaním `_null` na koniec typu je možné vybrať aj prázdnu možnosť
+
+#### Vlastné stĺpce pre label a hodnotu
+
+Je možné špecifikovať, ktoré vlastnosti z číselníka sa použijú pre label a hodnotu výberového poľa:
+
+- `editor.field_x.type=enumeration_2_string1_id` - label bude z `string1`, hodnota z `id`
+- `editor.field_x.type=enumeration_2_string2_string3` - label bude z `string2`, hodnota z `string3`
+- `editor.field_x.type=enumeration_2_string1_id_null` - label bude z `string1`, hodnota z `id`, s možnosťou prázdnej hodnoty
+
+Môžete použiť ktorúkoľvek vlastnosť z číselníka:
+
+- `string1` až `string12` - textové polia
+- `decimal1` až `decimal4` - číselné polia
+- `boolean1` až `boolean4` - boolovské polia
+- `date1` až `date4` - dátumové polia
+- `id` - identifikátor záznamu v číselníku
 
 ### Unikátny identifikátor
 
