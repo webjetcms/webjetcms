@@ -1,5 +1,6 @@
 package sk.iway.iwcm.stat;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Getter;
@@ -23,14 +24,20 @@ import java.util.Date;
 public class SessionDetails
 {
 	private String sessionId;
+	@JsonIgnore
 	private int lastDocId=-1;
+	@JsonIgnore
 	private String lastURL = "";
 	private String remoteAddr;
 	private long logonTime;
+	@JsonIgnore
 	private long lastActivity;
+	@JsonIgnore
 	private String loggedUserName = null;
 	private int loggedUserId = -1;
+	@JsonIgnore
 	private boolean admin = false;
+	@JsonIgnore
 	private int domainId;
 	private String domainName;
 
@@ -38,6 +45,7 @@ public class SessionDetails
 		return lastActivity;
 	}
 
+	@JsonIgnore
 	public Date getLastActivityAsDate() {
 		return new Date(lastActivity);
 	}
@@ -50,6 +58,7 @@ public class SessionDetails
 		return logonTime;
 	}
 
+	@JsonIgnore
 	public Date getLogonTimeAsDate() {
 		return new Date(logonTime);
 	}

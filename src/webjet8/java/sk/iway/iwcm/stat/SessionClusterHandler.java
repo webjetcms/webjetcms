@@ -20,6 +20,10 @@ import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 
+/**
+ * Handles session data across cluster nodes, storing and retrieving session information
+ * from the database to facilitate session management in a clustered environment.
+ */
 public class SessionClusterHandler {
 
     private static final String INSERT = "INSERT INTO cluster_monitoring(node, type, content, created_at) VALUES(?, ?, ?, ?)";
@@ -62,7 +66,7 @@ public class SessionClusterHandler {
         try {
             ObjectMapper mapper = new ObjectMapper();
             for(SessionDetails session : mapper.readValue(content, new TypeReference<List<SessionDetails>>() {})) {
-                if(session.isAdmin() && session.getLoggedUserId() == userId)
+                if(session.getLoggedUserId() == userId)
                     userSessions.add(session);
             }
         } catch (JsonProcessingException e) {

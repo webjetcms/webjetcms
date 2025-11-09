@@ -10,8 +10,9 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.github.cliftonlabs.json_simple.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -92,11 +93,12 @@ public class DashboardListener {
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
 
-            JsonObject sessionInfo = new JsonObject();
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode sessionInfo = mapper.createObjectNode();
             try {
                 sessionInfo.put("currentSessionId", request.getSession().getId());
                 ArrayNode userSessions = SessionClusterHandler.getUserSessionsAllNodes(user.getUserId());
-                sessionInfo.put("userSessions", userSessions);
+                sessionInfo.set("userSessions", userSessions);
             } catch (Exception ex) {
                 Logger.error(DashboardListener.class, "Error while getting session info for dashboard", ex);
             }

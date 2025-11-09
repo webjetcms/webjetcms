@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
@@ -523,7 +524,9 @@ public class AdminLogonController {
 
     @PostMapping("/rest/removeSession")
     @PreAuthorize("@WebjetSecurityService.isAdmin()")
-    public void removeSession(@RequestParam("sessionId") String sessionId) {
+    @ResponseBody
+    public String removeSession(@RequestParam("sessionId") String sessionId) {
         sk.iway.iwcm.stat.SessionHolder.getInstance().invalidateSession(sessionId);
+        return "{success: true}";
     }
 }

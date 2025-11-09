@@ -2,16 +2,15 @@
     <div :class="'overview-logged active-sessions'">
         <div class="overview-logged__head">
             <div class="overview-logged__head__icon">
-                <i class="ti ti-list-details fs-4"></i>
+                <i class="ti ti-browser fs-4"></i>
             </div>
             <span> {{ this.$WJ.translate('admin.welcome.active_sessions.title.js') }}</span>
         </div>
 
         <div class="overview-logged__content">
             <ul v-for="(sessionCluster, index) in sessions" :key="index">
-                <li class="cluster-name">{{ sessionCluster.cluster }}</li>
+                <li class="cluster-name">{{ this.$WJ.translate('admin.welcome.active_sessions.server.js') }}: {{ sessionCluster.cluster }}</li>
                 <li v-for="(session, index) in sessionCluster.userSessions" :key="index">
-                    <!-- Added native tooltip with session parameters -->
                     <span v-tooltip:top="{title : formatSessionTooltip(session), class: 'session-tooltip'}" class="active-session-entry">
                         {{ session.domainName }} ( {{ session.remoteAddr }} )
                     </span>
@@ -46,7 +45,7 @@ export default {
   },
   created() {
     // Fetch as early as possible (before DOM mount)
-    //console.log("sessions=", JSON.stringify(this.$props));
+    //console.log("sessions=", this.$props.overviewcurrentsessions);
     if (typeof this.$props.overviewcurrentsessions !== 'object' || this.$props.overviewcurrentsessions === null) {
         console.log("Invalid overviewcurrentsessions prop:", this.$props.overviewcurrentsessions);
         return;
