@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.cliftonlabs.json_simple.JsonObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -29,6 +31,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.SessionClusterHandler;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
@@ -88,6 +91,18 @@ public class DashboardListener {
             }
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
+
+            JsonObject sessionInfo = new JsonObject();
+            try {
+                sessionInfo.put("currentSessionId", request.getSession().getId());
+                ArrayNode userSessions = SessionClusterHandler.getUserSessionsAllNodes(user.getUserId());
+                sessionInfo.put("userSessions", userSessions);
+            } catch (Exception ex) {
+                Logger.error(DashboardListener.class, "Error while getting session info for dashboard", ex);
+            }
+            model.addAttribute("overviewCurrentSessions", JsonTools.objectToJSON(sessionInfo));
+
+            dt.diff("After currentSessions");
 
             int size = Constants.getInt("dashboardRecentSize");
 

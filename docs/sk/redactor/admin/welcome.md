@@ -42,4 +42,4 @@ Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
 
 ![](sessions-tooltip.png)
 
-Kliknutím na ikonu <i class="ti ti-trash fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho cluster-a, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom clustri, prihlásenie bude ukončené po synchronizácii medzi clustermi (záleží na nastavení Vášho WebJET CMS).
+Kliknutím na ikonu <i class="ti ti-trash fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).

@@ -3,7 +3,9 @@
         <webjet-overview-dashboard-mini-app-users
             v-bind:overviewadmins="overviewadmins"
         ></webjet-overview-dashboard-mini-app-users>
-        <webjet-overview-dashboard-mini-app-active-sessions></webjet-overview-dashboard-mini-app-active-sessions>
+        <webjet-overview-dashboard-mini-app-active-sessions
+            v-bind:overviewcurrentsessions="overviewcurrentsessions"
+        ></webjet-overview-dashboard-mini-app-active-sessions>
         <webjet-overview-dashboard-mini-app-todo
             v-bind:overviewtodo="overviewtodo"
             style="display: none"
@@ -31,7 +33,7 @@ export default {
     WebjetOverviewDashboardMiniAppUsers,
     WebjetOverviewDashboardMiniAppActiveSessions
   },
-  props: ['overviewadmins', 'overviewtodo'],
+  props: ['overviewadmins', 'overviewtodo', 'overviewcurrentsessions'],
 
 }
 </script>

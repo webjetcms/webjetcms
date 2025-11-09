@@ -205,7 +205,7 @@ public class SessionHolder
 				det.setLoggedUserName(user.getFullName());
 
 				// Handle single logon - invalidate other sessions for the same user
-				keepOnlySession(user.getUserId(), sessionId, data);
+				keepOnlySession(user.getUserId(), sessionId);
 			}
 		} else {
 			if (det.getLoggedUserId() > 0) {
@@ -221,7 +221,7 @@ public class SessionHolder
 		data.put(sessionId, det);
 
 		if(newSession == true && det.isAdmin() == true) {
-			// After new session was added (logon for example) - refresh session stat data
+			// After new session was added (logon for example) - update session stat data
 			SessionClusterHandler.main(null);
 		}
 		return true;
@@ -418,17 +418,7 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
-		keepOnlySession(userId, rb.getSessionId(), data);
-	}
-
-	/**
-	 * Invalidate sessions for userId, called from ClusterRefresher
-	 * @param userId - user ID whose sessions should be invalidated
-	 */
-	public static void keepOnlySession(long userId, String sessionId)
-	{
-		SessionHolder sh = SessionHolder.getInstance();
-		keepOnlySession((int)userId, sessionId, sh.data);
+		keepOnlySession(userId, rb.getSessionId());
 	}
 
 	/**
@@ -436,9 +426,8 @@ public class SessionHolder
 	 * REQUIRES: sessionSingleLogon=true
 	 * @param userId
 	 * @param currentSessionId
-	 * @param data
 	 */
-	private static void keepOnlySession(int userId, String currentSessionId, Map<String, SessionDetails> data) {
+	public void keepOnlySession(int userId, String currentSessionId) {
 
 		if (Constants.getBoolean("sessionSingleLogon") != true) return;
 
@@ -465,19 +454,12 @@ public class SessionHolder
 		}
 	}
 
-	public void invalidateSessionOnNodes(String invalidateSessionId) {
-		if(Tools.isEmpty(invalidateSessionId) == true) return;
-
-		//Try find session on this cluster, so we dont need to refresh
-		if(invalidateSession(invalidateSessionId) == true) return;
-
-		//Session is probably another cluster, call cluster refresh
-		ClusterDB.addRefresh("sk.iway.iwcm.stat.SessionHolder-" + invalidateSessionId, 0L);
-	}
-
 	public boolean invalidateSession(String sessionId) {
 		// Check if sessionId is empty and return false if so
 		if(Tools.isEmpty(sessionId)) return false;
+
+		//Session can be on another cluster node, call cluster refresh
+		ClusterDB.addRefresh("SessionHolder.invalidateSession-" + sessionId);
 
 		SessionDetails sd = get(sessionId);
 		if(sd != null) {
@@ -489,7 +471,7 @@ public class SessionHolder
 		}
 		return false;
 	}
-}
+
 	/**
 	 * Get data map for testing purposes
 	 * @return data map

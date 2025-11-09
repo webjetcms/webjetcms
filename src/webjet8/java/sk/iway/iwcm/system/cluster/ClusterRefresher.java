@@ -234,12 +234,11 @@ public class ClusterRefresher extends TimerTask
 				//zmen version tag
 				CombineTag.setVersion(timestamp);
 			}
-			else if (className.startsWith("sk.iway.iwcm.stat.SessionHolder-")) {
+			else if (className.startsWith("SessionHolder.invalidateSession-")) {
 				//If sessionId is set, we want to invalidate this sessionId
 				String sessionId = className.substring(className.indexOf('-') + 1);
-				sessionId = sessionId.substring(0, sessionId.length() - 2); //Remove postfix -0
 				SessionHolder.getInstance().invalidateSession(sessionId);
-			else if (className.startsWith("SessionHolder.keepOnlySession-")) {
+			} else if (className.startsWith("SessionHolder.keepOnlySession-")) {
 				//je to ciastkovy update objektu SessionHolder na udrzanie len jednej session pre daneho usera
 				String params = className.substring(className.indexOf('-')+1);
 				int separatorIndex = params.indexOf('-');
@@ -247,7 +246,7 @@ public class ClusterRefresher extends TimerTask
 					int userId = Tools.getIntValue(params.substring(0, separatorIndex), -1);
 					String sessionId = params.substring(separatorIndex+1);
 					if (userId > 0 && Tools.isNotEmpty(sessionId)) {
-						sk.iway.iwcm.stat.SessionHolder.keepOnlySession(userId, sessionId);
+						SessionHolder.getInstance().keepOnlySession(userId, sessionId);
 					}
 				}
 			}
