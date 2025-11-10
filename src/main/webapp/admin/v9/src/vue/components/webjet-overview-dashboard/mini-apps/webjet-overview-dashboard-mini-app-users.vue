@@ -37,10 +37,13 @@
             v-for="(user, index) in allUsers ? users : usersComputed"
             :key="index"
         >
-          <a :href="user.link" :title="user.fullName">
+          <a :href="user.link">
             <img v-if="user.photo" :src="`/thumb${user.photo}?w=30&h=30&ip=5`" alt="">
             <span v-else class="no-photo ti ti-user fs-3"></span>
-            <span class="name" v-text="user.fullName"></span>
+            <a class="name" v-text="user.fullName" :href="`mailto:${user.email}`"></a>
+          </a>
+          <a class="float-end btn btn-sm" :href="`mailto:${user.email}`" style="padding-top: 0px;padding-right: 0px;" v-tooltip:left="$WJ.translate('admin.welcome.logins.sendEmail.js')">
+              <i class="ti ti-mail fs-6"></i>
           </a>
         </li>
         <li class="show-more" v-if="!allUsers">
@@ -90,6 +93,7 @@ export default {
     }
   },
   created() {
+    console.log("overviewadmins=", this.$props.overviewadmins);
     // Fetch as early as possible (before DOM mount)
     //console.log("sessions=", this.$props.overviewcurrentsessions);
     if (typeof this.$props.overviewcurrentsessions !== 'object' || this.$props.overviewcurrentsessions === null) {

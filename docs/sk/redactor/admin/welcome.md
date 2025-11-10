@@ -22,6 +22,7 @@ Poznámka: údaje sa aktualizujú po prihlásení používateľa. Môžete nasta
 
 Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", zobrazí sa aj zoznam všetkých prihlásených administrátorov. Máte tak prehľad, koľko používateľov aktuálne pracuje v administrácii.
 
+Kliknutím na ikonu <i class="ti ti-mail fs-6"></i> môžete danému administrátorovi odoslať email.
 
 ## Záložky
 
