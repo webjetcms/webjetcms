@@ -459,6 +459,12 @@ public class SessionHolder
 		}
 	}
 
+	/**
+	 * Invalidate session by userId and sessionId, also handles cluster propagation
+	 * @param userId
+	 * @param sessionId
+	 * @return
+	 */
 	public boolean invalidateSession(int userId, String sessionId) {
 		// Check if sessionId is empty and return false if so
 		if(Tools.isEmpty(sessionId)) return false;

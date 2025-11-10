@@ -52,8 +52,6 @@
       </ul>
     </div>
 
-
-
   </div>
 </template>
 
