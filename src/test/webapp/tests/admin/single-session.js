@@ -1,5 +1,7 @@
 Feature("apps.user.single-session");
 
+var logoffLocator = "#toast-container-logoff";
+
 Before(({ login }) => {
     login('admin');
 });
@@ -11,7 +13,6 @@ Before(({ login }) => {
  */
 function checkMultiUserLogon(I, sessionSingleLogon=false, secondUserName="tester2") {
     var introText = "Vitajte, Tester2 Playwright2";
-    var logoffLocator = "#toast-container-logoff";
 
     session('first user', () => {
         I.amOnPage("/admin/v9/");
@@ -67,4 +68,34 @@ Scenario("overenie single session @singlethread", async ({ I, Document }) => {
 
 Scenario("reset settings @singlethread", async ({ I, Document }) => {
     Document.setConfigValue("sessionSingleLogon", false);
+});
+
+Scenario("active session list on dashboard @singlethread", async ({ I, Document }) => {
+
+    var introText = "Vitajte, Tester_L2 Playwright";
+    session('first user', () => {
+        I.amOnPage("/admin/v9/");
+        I.relogin("tester3");
+        I.see(introText, ".overview__dashboard__title h2");
+    });
+
+    session('second user', () => {
+        I.relogin("tester3");
+        I.amOnPage("/admin/v9/");
+        I.see(introText, ".overview__dashboard__title h2");
+
+        //logout first user session
+        I.click(locate("#webjet-overview-dashboard div.overview-logged__sessions ul li button"));
+    });
+
+    session('first user', () => {
+        I.waitForElement(logoffLocator, 30);
+        I.logout();
+    });
+
+    session('second user', () => {
+        I.dontSeeElement(logoffLocator);
+        I.logout();
+    });
+
 });

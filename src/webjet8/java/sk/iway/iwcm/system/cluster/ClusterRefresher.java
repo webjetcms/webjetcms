@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.tags.CombineTag;
@@ -232,8 +233,7 @@ public class ClusterRefresher extends TimerTask
 				long timestamp = Tools.getLongValue(className.substring(className.indexOf('-')+1), Tools.getNow());
 				//zmen version tag
 				CombineTag.setVersion(timestamp);
-			}
-			else if (className.startsWith("SessionHolder.keepOnlySession-")) {
+			} else if (className.startsWith("SessionHolder.keepOnlySession-") || className.startsWith("SessionHolder.invalidateSession-")) {
 				//je to ciastkovy update objektu SessionHolder na udrzanie len jednej session pre daneho usera
 				String params = className.substring(className.indexOf('-')+1);
 				int separatorIndex = params.indexOf('-');
@@ -241,7 +241,8 @@ public class ClusterRefresher extends TimerTask
 					int userId = Tools.getIntValue(params.substring(0, separatorIndex), -1);
 					String sessionId = params.substring(separatorIndex+1);
 					if (userId > 0 && Tools.isNotEmpty(sessionId)) {
-						sk.iway.iwcm.stat.SessionHolder.keepOnlySession(userId, sessionId);
+						if (className.contains("keepOnlySession")) SessionHolder.getInstance().keepOnlySession(userId, sessionId);
+						else SessionHolder.getInstance().invalidateSession(userId, sessionId);
 					}
 				}
 			}

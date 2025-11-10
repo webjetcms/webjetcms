@@ -17,6 +17,7 @@
         <webjet-overview-dashboard-mini-apps
           v-bind:overviewtodo="overviewtodo"
           v-bind:overviewadmins="overviewadmins"
+          v-bind:overviewcurrentsessions="overviewcurrentsessions"
         ></webjet-overview-dashboard-mini-apps>
         <webjet-overview-dashboard-news></webjet-overview-dashboard-news>
       </div>
@@ -34,7 +35,7 @@ import WebjetOverviewDashboardMiniAppBookmarkModal from "./mini-apps/webjet-over
 
 export default {
     name: 'webjet-overview-dashboard',
-    props: ['overviewUser', 'overviewbackdata', 'overviewadmins', 'overviewrecentpages', 'overviewchangedpages', 'overviewadminlog', 'overviewtodo'],
+    props: ['overviewUser', 'overviewbackdata', 'overviewadmins', 'overviewrecentpages', 'overviewchangedpages', 'overviewadminlog', 'overviewtodo', 'overviewcurrentsessions'],
     components: {
       WebjetOverviewDashboardMiniAppBookmarkModal,
         'webjet-overview-dashboard-infobox': WebjetOverviewDashboardInfobox,
