@@ -37,12 +37,12 @@
             v-for="(user, index) in allUsers ? users : usersComputed"
             :key="index"
         >
-          <a :href="user.link">
+          <span>
             <img v-if="user.photo" :src="`/thumb${user.photo}?w=30&h=30&ip=5`" alt="">
             <span v-else class="no-photo ti ti-user fs-3"></span>
             <a class="name" v-text="user.fullName" :href="`mailto:${user.email}`"></a>
-          </a>
-          <a class="float-end btn btn-sm" :href="`mailto:${user.email}`" style="padding-top: 0px;padding-right: 0px;" v-tooltip:left="$WJ.translate('admin.welcome.logins.sendEmail.js')">
+          </span>
+          <a class="float-end btn btn-sm" :href="`mailto:${user.email}`" style="padding: 0px;" v-tooltip:left="$WJ.translate('admin.welcome.logins.sendEmail.js')">
               <i class="ti ti-mail fs-6"></i>
           </a>
         </li>
