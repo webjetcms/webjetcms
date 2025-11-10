@@ -457,15 +457,15 @@ public class SessionHolder
 		}
 	}
 
-	public boolean invalidateSession(String sessionId) {
+	public boolean invalidateSession(int userId, String sessionId) {
 		// Check if sessionId is empty and return false if so
 		if(Tools.isEmpty(sessionId)) return false;
 
 		//Session can be on another cluster node, call cluster refresh
-		ClusterDB.addRefresh("SessionHolder.invalidateSession-" + sessionId);
+		ClusterDB.addRefresh("SessionHolder.invalidateSession-" + userId + "-" + sessionId);
 
 		SessionDetails sd = get(sessionId);
-		if(sd != null) {
+		if(sd != null && sd.getLoggedUserId() == userId) {
 			sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
 			Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			//Refresh data

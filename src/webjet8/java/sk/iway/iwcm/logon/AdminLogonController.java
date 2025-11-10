@@ -525,8 +525,12 @@ public class AdminLogonController {
     @PostMapping("/rest/removeSession")
     @PreAuthorize("@WebjetSecurityService.isAdmin()")
     @ResponseBody
-    public String removeSession(@RequestParam("sessionId") String sessionId) {
-        sk.iway.iwcm.stat.SessionHolder.getInstance().invalidateSession(sessionId);
-        return "{success: true}";
+    public String removeSession(@RequestParam("sessionId") String sessionId, HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request);
+        boolean success = false;
+        if (user != null) {
+            success = sk.iway.iwcm.stat.SessionHolder.getInstance().invalidateSession(user.getUserId(), sessionId);
+        }
+        return "{success: "+success+"}";
     }
 }
