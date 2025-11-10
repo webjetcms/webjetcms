@@ -1,5 +1,17 @@
 # Úvodná obrazovka
 
+## Moje aktívne prihlásenia
+
+Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-current fs-6"></i>.
+
+![](sessions.png)
+
+Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
+
+![](sessions-tooltip.png)
+
+Kliknutím na ikonu <i class="ti ti-logout fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).
+
 ## Záložky
 
 Do mini aplikácie záložky si môžete pridať odkazy na často používané sekcie v administrácii. Po prihlásení tak nemusíte hľadať danú sekciu v menu, ale priamo kliknete na odkaz v záložkách.
@@ -31,15 +43,3 @@ V dialógovom okne môžete zadať text vašej pripomienky, komentár, alebo poc
 ![](feedback-modal.png)
 
 Ak zvolíte možnosť Zaslať anonymne nebude do odoslaného emailu zadané vaše meno a emailová adresa ako meno a email odosielateľa.
-
-## Moje aktívne prihlásenia
-
-Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Všetky aktivity sú rozdelené do skupín podľa cluster-a. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-home fs-6"></i>.
-
-![](sessions.png)
-
-Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
-
-![](sessions-tooltip.png)
-
-Kliknutím na ikonu <i class="ti ti-trash fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).
