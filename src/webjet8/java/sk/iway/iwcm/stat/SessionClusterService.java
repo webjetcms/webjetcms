@@ -14,8 +14,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.welcome.DashboardListener;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -82,6 +84,32 @@ public class SessionClusterService {
 
         return userSessions;
     }
+
+    /**
+     * Returns session information for the given user in JSON format, used in dashboard app
+     * @param currentSessionId
+     * @param userId
+     * @return
+     */
+    public static String getSessionInfo(String currentSessionId, int userId) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode sessionInfo = mapper.createObjectNode();
+            try {
+                sessionInfo.put("currentSessionId", currentSessionId);
+                ArrayNode userSessions = SessionClusterService.getUserSessionsAllNodes(userId);
+                sessionInfo.set("userSessions", userSessions);
+            } catch (Exception ex) {
+                Logger.error(DashboardListener.class, "Error while getting session info for dashboard", ex);
+            }
+            return JsonTools.objectToJSON(sessionInfo);
+        } catch (JsonProcessingException e) {
+
+        }
+        //failsafe
+        return "{currentSessionId: \"" + currentSessionId + "\", userSessions: [] }";
+    }
+
 
     /**
      * Update session data in the database for the current node

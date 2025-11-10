@@ -49,20 +49,23 @@ export default {
         console.log("Invalid overviewcurrentsessions prop:", this.$props.overviewcurrentsessions);
         return;
     }
-    this.currentSession = this.$props.overviewcurrentsessions.currentSessionId;
-    this.sessions = this.$props.overviewcurrentsessions.userSessions;
+    try {
+        this.currentSession = this.$props.overviewcurrentsessions.currentSessionId;
+        this.sessions = this.$props.overviewcurrentsessions.userSessions;
 
-    //tricky part - we need to sort sessions by session.logonTime desc within all sessionCluster, value of sessionCluster doesn't really matter for users
-    //so first we need to convert it to flat list with added sessionCluster.cluster property and then sort it
-    this.allSessions = [];
-    for (let sessionCluster of this.sessions) {
-        for (let session of sessionCluster.userSessions) {
-            session.cluster = sessionCluster.cluster;
-            this.allSessions.push(session);
+        //tricky part - we need to sort sessions by session.logonTime desc within all sessionCluster, value of sessionCluster doesn't really matter for users
+        //so first we need to convert it to flat list with added sessionCluster.cluster property and then sort it
+        this.allSessions = [];
+        for (let sessionCluster of this.sessions) {
+            for (let session of sessionCluster.userSessions) {
+                session.cluster = sessionCluster.cluster;
+                this.allSessions.push(session);
+            }
         }
+        this.allSessions.sort((a, b) => b.logonTime - a.logonTime);
+    } catch (error) {
+        console.log("Error processing overviewcurrentsessions:", error);
     }
-    console.log("allSessions before sort=", this.allSessions);
-    this.allSessions.sort((a, b) => b.logonTime - a.logonTime);
   },
   methods: {
     async removeSession(sessionId) {

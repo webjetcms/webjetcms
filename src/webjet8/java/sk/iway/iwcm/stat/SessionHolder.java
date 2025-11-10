@@ -263,14 +263,16 @@ public class SessionHolder
     */
    public void remove(String sessionId)
    {
-   	SessionDetails ses = get(sessionId);
-   	if (ses != null)
-   	{
-   		ses = null;
-   	}
-      data.remove(sessionId);
+		SessionDetails ses = get(sessionId);
+		if (ses != null)
+		{
+			ses = null;
+		}
+		data.remove(sessionId);
 
-      cleanup();
+		cleanup();
+
+		SessionClusterService.updateSessionData();
    }
 
    /**
