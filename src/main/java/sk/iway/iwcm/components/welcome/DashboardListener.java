@@ -81,6 +81,8 @@ public class DashboardListener {
                         UserDetails u = UsersDB.getUser(session.getLoggedUserId());
                         if (u != null) {
                             UserDto admin = new UserDto(u);
+                            //clear admin settings to reduce data size
+                            admin.setAdminSettings(null);
                             admins.add(admin);
                             allreadyAddedUserIds.add(userId);
                         }

@@ -93,7 +93,6 @@ export default {
     }
   },
   created() {
-    console.log("overviewadmins=", this.$props.overviewadmins);
     // Fetch as early as possible (before DOM mount)
     //console.log("sessions=", this.$props.overviewcurrentsessions);
     if (typeof this.$props.overviewcurrentsessions !== 'object' || this.$props.overviewcurrentsessions === null) {
