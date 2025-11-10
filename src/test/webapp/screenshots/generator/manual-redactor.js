@@ -584,13 +584,53 @@ Scenario('welcome', ({ I, Document }) => {
     I.wait(2);
     Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
 
+});
+
+Scenario ("welcome - sessions", ({ I, Document }) => {
+
+    //open multiple sessions
+    session('first user', () => {
+        I.relogin("tester3");
+        I.wait(5);
+    });
+
+    session('second user', () => {
+        I.relogin("tester3");
+        I.wait(9);
+    });
+
+    I.relogin("tester3");
     I.amOnPage("/admin/v9/");
     I.waitForElement(".overview-logged.active-sessions");
+
+    //since change browser to firefox in session block doestn work, change text in UI to Firefox using executeScript
+    I.executeScript(function() {
+        let el = $('div.overview-logged.active-sessions ul li:nth-child(2) .active-session-entry');
+        let value = el.text();
+        //value is like 11:06:25 (Chrome 142, 127.0.0.1) replace chrome with version to Firefox 144
+        value = value.replace(/(Chrome )\d+/, 'Firefox 144');
+        el.text(value);
+    });
+
     I.resizeWindow(1920, 1080);
     Document.screenshotElement(".overview-logged.active-sessions", "/redactor/admin/sessions.png");
 
-    I.moveCursorTo("div.overview-logged.active-sessions > div.overview-logged__content > ul > li > span:nth-child(2)")
+    I.moveCursorTo("div.overview-logged.active-sessions > div.overview-logged__content > ul > li");
     Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
+
+    session('first user', () => {
+        I.logout();
+    });
+    session('second user', () => {
+        I.logout();
+    });
+
+    I.switchTo();
+    I.logout();
+});
+
+Scenario("logout", ({ I, Document }) => {
+    I.logout();
 });
 
 Scenario('webpages-temp-edit-btn', ({ I, DTE, Document }) => {

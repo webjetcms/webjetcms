@@ -126,7 +126,7 @@ export default {
 .overview-logged__content {
     .active-session-entry {
         display: inline-block;
-        max-width: 208px;
+        max-width: 90%;
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
