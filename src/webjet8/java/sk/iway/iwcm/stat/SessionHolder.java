@@ -225,7 +225,7 @@ public class SessionHolder
 
 		if(newSession == true && det.isAdmin() == true) {
 			// After new session was added (logon for example) - update session stat data
-			SessionClusterHandler.main(null);
+			SessionClusterService.updateSessionData();
 		}
 		return true;
 	}
@@ -469,7 +469,7 @@ public class SessionHolder
 			sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
 			Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			//Refresh data
-			SessionClusterHandler.main(null);
+			SessionClusterService.updateSessionData();
 			return true;
 		}
 		return false;

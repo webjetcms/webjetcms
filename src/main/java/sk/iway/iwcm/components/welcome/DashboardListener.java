@@ -32,7 +32,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.stat.SessionClusterHandler;
+import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
@@ -97,7 +97,7 @@ public class DashboardListener {
             ObjectNode sessionInfo = mapper.createObjectNode();
             try {
                 sessionInfo.put("currentSessionId", request.getSession().getId());
-                ArrayNode userSessions = SessionClusterHandler.getUserSessionsAllNodes(user.getUserId());
+                ArrayNode userSessions = SessionClusterService.getUserSessionsAllNodes(user.getUserId());
                 sessionInfo.set("userSessions", userSessions);
             } catch (Exception ex) {
                 Logger.error(DashboardListener.class, "Error while getting session info for dashboard", ex);

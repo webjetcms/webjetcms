@@ -12,6 +12,8 @@ Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
 
 Kliknutím na ikonu <i class="ti ti-logout fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).
 
+Poznámka: údaje sa aktualizujú po prihlásení používateľa. Môžete nastaviť nový záznam do [úlohy na pozadí](../../admin/settings/cronjob/README.md) na častejšiu aktualizáciu údajov, kde ako názov úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`.
+
 ## Záložky
 
 Do mini aplikácie záložky si môžete pridať odkazy na často používané sekcie v administrácii. Po prihlásení tak nemusíte hľadať danú sekciu v menu, ale priamo kliknete na odkaz v záložkách.
