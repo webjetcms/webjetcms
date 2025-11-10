@@ -162,6 +162,9 @@ public class SessionHolder
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
 			det.setRemoteAddr(Tools.getRemoteIP(request));
+			BrowserDetector bd = BrowserDetector.getInstance(request);
+			if (bd != null) det.setBrowserName(bd.getBrowserName()+" "+bd.getBrowserVersionShort());
+			else det.setBrowserName("Unknown");
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
 

@@ -19,7 +19,8 @@
             :key="index"
         >
           <a :href="user.link" :title="user.fullName">
-            <img :src="user.photo" alt="">
+            <img v-if="user.photo" :src="user.photo" alt="">
+            <span v-else class="no-photo ti ti-user fs-3"></span>
             <span class="name" v-text="user.fullName"></span>
           </a>
         </li>

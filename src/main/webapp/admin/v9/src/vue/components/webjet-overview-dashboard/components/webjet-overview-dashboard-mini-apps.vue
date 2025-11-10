@@ -124,7 +124,7 @@ export default {
                     margin-left: 0px;
                 }
 
-                img {
+                img, span.no-photo {
                     border-radius: 50%;
                     width: 40px;
                     position: absolute;
@@ -132,6 +132,10 @@ export default {
                     top: 0;
                     bottom: 0;
                     margin: auto;
+                }
+                span.no-photo {
+                    left: 5px;
+                    top: 6px;
                 }
                 &.show-more {
                     a {
