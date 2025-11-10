@@ -2,10 +2,8 @@
     <div>
         <webjet-overview-dashboard-mini-app-users
             v-bind:overviewadmins="overviewadmins"
-        ></webjet-overview-dashboard-mini-app-users>
-        <webjet-overview-dashboard-mini-app-active-sessions
             v-bind:overviewcurrentsessions="overviewcurrentsessions"
-        ></webjet-overview-dashboard-mini-app-active-sessions>
+        ></webjet-overview-dashboard-mini-app-users>
         <webjet-overview-dashboard-mini-app-todo
             v-bind:overviewtodo="overviewtodo"
             style="display: none"
@@ -23,15 +21,13 @@ import WebjetOverviewDashboardMiniAppUsers from "../mini-apps/webjet-overview-da
 import WebjetOverviewDashboardMiniAppTodo from "../mini-apps/webjet-overview-dashboard-mini-app-todo";
 import WebjetOverviewDashboardMiniAppBookmark from "../mini-apps/webjet-overview-dashboard-mini-app-bookmark";
 import WebjetOverviewDashboardMiniAppFeedback from "../mini-apps/webjet-overview-dashboard-mini-app-feedback";
-import WebjetOverviewDashboardMiniAppActiveSessions from "../mini-apps/webjet-overview-dashboard-mini-app-active-sessions";
 export default {
   name: 'webjet-overview-dashboard-mini-apps',
   components: {
     WebjetOverviewDashboardMiniAppFeedback,
     WebjetOverviewDashboardMiniAppBookmark,
     WebjetOverviewDashboardMiniAppTodo,
-    WebjetOverviewDashboardMiniAppUsers,
-    WebjetOverviewDashboardMiniAppActiveSessions
+    WebjetOverviewDashboardMiniAppUsers
   },
   props: ['overviewadmins', 'overviewtodo', 'overviewcurrentsessions'],
 
@@ -106,7 +102,7 @@ export default {
 
             li {
                 font-size: 14px;
-                padding-left: 50px;
+                padding-left: 40px;
                 position: relative;
                 min-height: 40px;
                 padding-top: 10px;
@@ -126,15 +122,18 @@ export default {
 
                 img, span.no-photo {
                     border-radius: 50%;
-                    width: 40px;
+                    width: 30px;
                     position: absolute;
                     left: 0;
                     top: 0;
                     bottom: 0;
                     margin: auto;
                 }
+                img {
+                    height: 30px;
+                }
                 span.no-photo {
-                    left: 5px;
+                    left: 0px;
                     top: 6px;
                 }
                 &.show-more {

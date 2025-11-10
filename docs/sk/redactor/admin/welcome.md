@@ -1,8 +1,12 @@
 # Úvodná obrazovka
 
-## Moje aktívne prihlásenia
+## Prihlásenia
 
-Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-current fs-6"></i>.
+Zobrazuje zoznam vašich prihlásení (ak je povolené prihlásenie na viacerých zariadeniach naraz) a zoznam prihlásených administrátorov.
+
+### Moje aktívne prihlásenia
+
+Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-current-location fs-6"></i>.
 
 ![](sessions.png)
 
@@ -13,6 +17,11 @@ Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
 Kliknutím na ikonu <i class="ti ti-logout fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).
 
 Poznámka: údaje sa aktualizujú po prihlásení používateľa. Môžete nastaviť nový záznam do [úlohy na pozadí](../../admin/settings/cronjob/README.md) na častejšiu aktualizáciu údajov, kde ako názov úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`.
+
+### Prihlásení administrátori
+
+Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", zobrazí sa aj zoznam všetkých prihlásených administrátorov. Máte tak prehľad, koľko používateľov aktuálne pracuje v administrácii.
+
 
 ## Záložky
 

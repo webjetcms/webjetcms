@@ -87,10 +87,9 @@ public class DashboardListener {
                     }
                 }
             }
+            //data for webjet-overview-dashboard-mini-app-users.vue
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
-
-            //data for webjet-overview-dashboard-mini-app-active-sessions.vue
             model.addAttribute("overviewCurrentSessions", SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId()));
             dt.diff("After currentSessions");
 

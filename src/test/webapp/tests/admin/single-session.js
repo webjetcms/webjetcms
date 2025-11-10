@@ -85,7 +85,7 @@ Scenario("active session list on dashboard @singlethread", async ({ I, Document 
         I.see(introText, ".overview__dashboard__title h2");
 
         //logout first user session
-        I.click(locate("#webjet-overview-dashboard div.active-sessions li button"));
+        I.click(locate("#webjet-overview-dashboard div.overview-logged__sessions ul li button"));
     });
 
     session('first user', () => {
