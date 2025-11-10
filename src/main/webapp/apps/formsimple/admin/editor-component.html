@@ -68,7 +68,11 @@
         defaulParams.forEach(function(param) {
             param = param.trim();
             if(param.startsWith("editorData=")) {
-                include += ", " + param;
+                if(param.split("=")[1] !== "") {
+                    include += ", " + param;
+                } else {
+                    include += ", editorData=JTVCJTVE";
+                }
             }
         });
         include += ")!";

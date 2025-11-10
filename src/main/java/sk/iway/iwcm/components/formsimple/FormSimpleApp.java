@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,8 @@ import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.formsimple.FormSimpleItem.FieldsNames;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
@@ -35,6 +36,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 @WebjetComponent("sk.iway.iwcm.components.formsimple.FormSimpleApp")
 @WebjetAppStore(
@@ -42,7 +45,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
     descKey = "components.formsimple.desc",
     itemKey = "formsimple",
     imagePath = "ti ti-forms",
-    galleryImages = "/components/simpleform/",
+    galleryImages = "/components/formsimple/screenshot-1.jpg,/components/formsimple/screenshot-2.jpg,/components/formsimple/screenshot-3.jpg,/components/formsimple/screenshot-4.jpg",
     componentPath = "/components/formsimple/form.jsp",
     customHtml = "/apps/formsimple/admin/editor-component.html"
 )
@@ -165,20 +168,46 @@ public class FormSimpleApp extends WebjetComponentAbstract {
             formName = matcher.find() ? matcher.group(1) : null;
         }
 
+        //Set formAttributes into params
         if(Tools.isNotEmpty(formName)) {
-
             StringBuilder sb = new StringBuilder();
             for(FormAttributesEntity attribute : formAttributesRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
                 sb.append(", ").append(ATTRIBUTE_PREFIX).append(attribute.getParamName());
                 sb.append("=\"").append(attribute.getValue()).append("\"");
             }
 
-            //
             String newParams = componentRequest.getParameters().replaceFirst("editorData=", sb.toString() + ", editorData=");
             componentRequest.setParameters(newParams);
         }
 
+        //Set defautl values into params, when creating new app
+        if(isNewApp(componentRequest)) {
+            this.attribute_forceTextPlain = true;
+            this.attribute_addTechInfo = true;
+            this.attribute_forwardType = "addParams";
+
+            UserDetails currentUser =  UsersDB.getCurrentUser(request);
+            if(currentUser != null) this.attribute_recipients = currentUser.getEmail();
+            else this.attribute_recipients = "web.spam@interway.sk";
+
+            if(componentRequest.getDocId() < 1) {
+                // New page, set default value
+                String defaultFormName = Prop.getInstance(request).getText("components.formsimple.title") + " " + Tools.getNow();
+                this.formName = defaultFormName;
+                this.attribute_subject = defaultFormName;
+            } else {
+                // Page do exist, use values from page
+                DocDetails doc = DocDB.getInstance().getDoc(componentRequest.getDocId());
+                this.formName = doc.getTitle();
+                this.attribute_subject = doc.getTitle();
+            }
+        }
+
         super.initAppEditor(componentRequest, request);
+    }
+
+    private boolean isNewApp(ComponentRequest componentRequest) {
+        return Tools.isEmpty(componentRequest.getParameters()) && Tools.isEmpty(componentRequest.getOriginalComponentName());
     }
 
     public static List<OptionDto> getFiledTypeVisibility() {
