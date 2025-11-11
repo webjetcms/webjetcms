@@ -73,6 +73,8 @@
             profile="tomcat"
         />
 
+        <echo message="-----> replacing javax.* with jakarta.* in files"/>
+
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.persistence." value="jakarta.persistence."/>
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.activation." value="jakarta.activation."/>
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.xml.bind." value="jakarta.xml.bind."/>
@@ -136,7 +138,7 @@
 
     <target name="migrate" depends="transform">
 
-        <echo message="syncing files to ${jakartaDir}"/>
+        <echo message="-----> syncing files to ${jakartaDir}"/>
 
         <!-- skopiruj SRC do JAKARTA verzie -->
         <sync todir="${jakartaDir}/src/main/java/" overwrite="true">
