@@ -135,6 +135,9 @@
     </target>
 
     <target name="migrate" depends="transform">
+
+        <echo message="syncing files to ${jakartaDir}"/>
+
         <!-- skopiruj SRC do JAKARTA verzie -->
         <sync todir="${jakartaDir}/src/main/java/" overwrite="true">
             <fileset dir="${tempDir}/src-utf8-jakarta/main/java/">
