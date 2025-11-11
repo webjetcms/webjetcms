@@ -29,6 +29,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
@@ -80,14 +81,19 @@ public class DashboardListener {
                         UserDetails u = UsersDB.getUser(session.getLoggedUserId());
                         if (u != null) {
                             UserDto admin = new UserDto(u);
+                            //clear admin settings to reduce data size
+                            admin.setAdminSettings(null);
                             admins.add(admin);
                             allreadyAddedUserIds.add(userId);
                         }
                     }
                 }
             }
+            //data for webjet-overview-dashboard-mini-app-users.vue
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
+            model.addAttribute("overviewCurrentSessions", SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId()));
+            dt.diff("After currentSessions");
 
             int size = Constants.getInt("dashboardRecentSize");
 

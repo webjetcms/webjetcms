@@ -49,7 +49,7 @@ public class InquiryStatService {
         }
         public void incrementValue() { this.value++; }
     }
-    
+
     public static void getTableData(Map<String, String> params, List<Predicate> predicates, Root<InquiryUsersVoteEntity> root, CriteriaBuilder builder) {
         long questionId = -1L;
         long userId = -3L;
@@ -92,7 +92,7 @@ public class InquiryStatService {
             if(answerId > -1) {
                 predicates.add(builder.equal(root.get(ANSWER_ID), answerId));
             }
-            
+
             if(userId == -3) {
                 //Do nothing - all users
             } else if(userId == -2) {
@@ -157,7 +157,8 @@ public class InquiryStatService {
         // Count answers
         Map<Long, Integer> countOfAnswers = new HashMap<>();
         for (InquiryUsersVoteEntity vote : page.getContent()) {
-            countOfAnswers.merge(vote.getAnswerId(), 1, Integer::sum);
+            //Integer::sum gives VSCode java warning even when merge has Null checks
+            countOfAnswers.merge(vote.getAnswerId(), 1, (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue));
         }
 
         //Prepare chart data
@@ -218,9 +219,9 @@ public class InquiryStatService {
 
     public static void saveInquiryUserVote(InquiryUsersVoteEntity vote) {
         InquiryUsersVoteRepository iuvr = Tools.getSpringBean("inquiryUsersVoteRepository", InquiryUsersVoteRepository.class);
-        
+
         if(vote == null) return;
-        
+
         if(vote.getDomainId() == null)
             vote.setDomainId(CloudToolsForCore.getDomainId());
 

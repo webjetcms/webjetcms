@@ -586,6 +586,60 @@ Scenario('welcome', ({ I, Document }) => {
 
 });
 
+Scenario ("welcome - logins", ({ I, Document }) => {
+
+    //open multiple sessions
+    session('first user', () => {
+        I.relogin("tester3");
+        I.wait(5);
+    });
+
+    session('second user', () => {
+        I.relogin("tester3");
+        I.wait(9);
+    });
+
+    session('segal user', () => {
+        I.relogin("stevensegal");
+    });
+
+    I.relogin("tester3");
+    I.amOnPage("/admin/v9/");
+    I.waitForElement("div.overview-logged__sessions");
+
+    //since change browser to firefox in session block doestn work, change text in UI to Firefox using executeScript
+    I.executeScript(function() {
+        let el = $('div.overview-logged__sessions > ul > li:nth-child(3) .active-session-entry');
+        let value = el.text();
+        //value is like 11:06:25 (Chrome 142, 127.0.0.1) replace chrome with version to Firefox 144
+        value = value.replace(/(Chrome )\d+/, 'Firefox 144');
+        el.text(value);
+    });
+
+    I.resizeWindow(1920, 1080);
+    Document.screenshotElement("div.overview-logged.users", "/redactor/admin/sessions.png");
+
+    I.moveCursorTo("div.overview-logged__sessions > ul > li:nth-child(2)");
+    Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
+
+    session('first user', () => {
+        I.logout();
+    });
+    session('second user', () => {
+        I.logout();
+    });
+    session('segal user', () => {
+        I.logout();
+    });
+
+    I.switchTo();
+    I.logout();
+});
+
+Scenario("logout", ({ I, Document }) => {
+    I.logout();
+});
+
 Scenario('webpages-temp-edit-btn', ({ I, DTE, Document }) => {
     //screenshot ikon editacie Hlavicky/Paticky vo web stranke
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=7611");

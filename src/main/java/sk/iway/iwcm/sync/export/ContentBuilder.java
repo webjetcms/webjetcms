@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;

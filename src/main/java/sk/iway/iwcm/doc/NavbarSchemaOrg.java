@@ -5,7 +5,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;

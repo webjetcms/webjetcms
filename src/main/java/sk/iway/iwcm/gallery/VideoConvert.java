@@ -16,7 +16,7 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;

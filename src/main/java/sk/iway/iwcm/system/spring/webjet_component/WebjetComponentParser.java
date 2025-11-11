@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -138,7 +138,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             }
 
             // unescape pretoze html kod moze obsahovat &quote;
-            String unescapedGroup = StringEscapeUtils.unescapeHtml(group);
+            String unescapedGroup = StringEscapeUtils.unescapeHtml4(group);
 
             if (components.containsKey(group)) {
                 continue;

@@ -238,6 +238,9 @@ public class PerexGroupsEntity implements Serializable {
     public void addAvailableGroup(int availableGroupId) {
         if(Tools.isEmpty(availableGroups)) availableGroups = "" + availableGroupId;
         else {
+            //prevent duplicates
+            if ((","+availableGroups+",").contains(","+availableGroupId+",")) return;
+
             if(availableGroups.endsWith(",")) availableGroups += availableGroupId;
             else availableGroups += "," + availableGroupId;
         }

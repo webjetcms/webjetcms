@@ -14,7 +14,7 @@ import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.PageContext;
 import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
 
 import net.sourceforge.stripes.exception.SourcePageNotFoundException;
