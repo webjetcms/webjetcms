@@ -1733,7 +1733,7 @@ export class DatatablesCkEditor {
 					}
 				}
 			} catch (error) {
-				console.error("Error getting data from pageBuilderIframe:", error);
+				//console.error("Error getting data from pageBuilderIframe:", error);
 			}
 		}
 		//console.log("getData, htmlCode=", htmlCode);

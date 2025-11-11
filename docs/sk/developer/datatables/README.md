@@ -97,7 +97,7 @@ script.
 
 ```javascript
     WJ.DataTable( {
-        Options
+        options
     });
 ```
 
@@ -144,6 +144,7 @@ Minimálna konfigurácia:
 - ```autoHeight {boolean}``` - predvolene tabuľka počíta svoju výšku aby maximálne využila priestor okna. Nastavením na hodnotu ```false``` bude mať tabuľka výšku podľa obsahu (počtu riadkov).
 - ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
 - ```updateEditorAfterSave {boolean}``` - nastavením na ```true``` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
+- `onClose(TABLE, EDITOR, e)` - funkcia, volaná pri kliknutí na tlačidlo Zrušiť alebo zatvorenie editora. Parametre: `TABLE` - inštancia datatabuľky, `EDITOR` - inštancia editora, `e` - event objekt. Ak vráti `false` okno sa nezatvorí. Používa sa napríklad vo `web-pages-datatable.js` pre kontrolu zmien v editore pred zatvorením.
 
 ```javascript
 let columns = [

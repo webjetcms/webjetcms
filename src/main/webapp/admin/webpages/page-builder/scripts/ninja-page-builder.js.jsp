@@ -2842,6 +2842,10 @@
                 me.user_style.current_element.attr(me.user_style.attr_name, me.user_style.unique_selector());
             }
         },
+        clear_current_element_style_id: function () {
+            var me = this;
+            me.user_style.current_element.removeAttr(me.user_style.attr_name);
+        },
 
         /*==================================================================
         /*====================|> CLOSE MODAL
@@ -2945,8 +2949,8 @@
                 }
 
                 style['box-shadow-color'] = box_shadow[0];
-                style['box-shadow-vertical'] = box_shadow[1].replace('px','');
-                style['box-shadow-horizontal'] = box_shadow[2].replace('px','');
+                style['box-shadow-horizontal'] = box_shadow[1].replace('px','');
+                style['box-shadow-vertical'] = box_shadow[2].replace('px','');
                 style['box-shadow-blur'] = box_shadow[3].replace('px','');
                 style['box-shadow-spread'] = box_shadow[4].replace('px','');
             }
@@ -3069,7 +3073,7 @@
             }
 
             var style_id = me.get_current_element_style_id(),
-                style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{';
+                style = "";
 
             //console.log("Creating style, id=", style_id, " styles=", styles);
 
@@ -3144,20 +3148,29 @@
 
             });
 
-            style += '}';
-
-            //replace default values
-            style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
+            if (style != "") {
+                //replace default values
+                style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
+                //wrap style into proper selector
+                style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{' + style + "}";
+            }
 
             //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             var styleElement = $('style[style-id="'+style_id+'"]');
-            if(styleElement.length < 1) {
-                $('<style style-id="'+style_id+'">')
-                    .html(style)
-                    .appendTo(me.$wrapper);
+            if (style==="") {
+                me.clear_current_element_style_id();
+                if(styleElement.length > 0) {
+                    styleElement.unbind().off().remove();
+                }
             } else {
-                styleElement.html(style);
+                if(styleElement.length < 1) {
+                    $('<style style-id="'+style_id+'">')
+                        .html(style)
+                        .appendTo(me.$wrapper);
+                } else {
+                    styleElement.html(style);
+                }
             }
         },
 
