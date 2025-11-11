@@ -1,5 +1,6 @@
 export function typeWysiwyg() {
 
+    var DIRTY_CHECK_DELAY_MS = 5000;
     function getThisField(conf) {
         return conf.EDITOR.field(conf.data);
     }
@@ -220,7 +221,7 @@ export function typeWysiwyg() {
             {
                 var now = new Date().getTime();
                 var timeDiff = now - conf.editorLastResetDirty;
-                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < 5000))
+                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
                 {
                     return false;
                 }
@@ -240,7 +241,7 @@ export function typeWysiwyg() {
             setTimeout(() => {
                 conf.dirtyDataOriginal = getThisField(conf).get(conf);
                 //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
-            }, 5000);
+            }, DIRTY_CHECK_DELAY_MS);
         }
 
     }

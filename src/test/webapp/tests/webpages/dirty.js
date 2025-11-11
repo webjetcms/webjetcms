@@ -40,7 +40,7 @@ function checkDirty(docId, expectedDirtyState, isPagebuilder, I, DTE) {
         DTE.waitForEditor();
 
         //
-        I.say("Cgecking for dirty - accpeting popup - editor should close");
+        I.say("Checking for dirty - accpeting popup - editor should close");
         I.amAcceptingPopups();
         I.click(cancelLocator);
         DTE.waitForModalClose();
