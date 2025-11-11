@@ -290,3 +290,9 @@ Môžu nastať prípady, keď budete potrebovať pri písaní napísať aj znaky
 Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzora. Špeciálne znaky sa vkladajú ako text, takže nemajú žiadne ďalšie nastavenia.
 
 !> Upozornenie: ikona pre vkladanie špeciálnych znakov môže byť v niektorých prípadoch zmenená na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pre vkladanie [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázkov.
+
+## Detekcia zmeny obsahu stránky
+
+Editor stránok obsahuje mechanizmus, ktorý detekuje zmeny obsahu stránky. Keď kliknete na tlačidlo Zrušiť na zatvorenie okna a zároveň boli vykonané zmeny v obsahu stránky, zobrazí sa vám dialógové okno s upozornením, že neboli uložené zmeny. Kliknutím na OK okno zatvoríte bez uloženia zmien, kliknutím na Zrušiť sa vrátite späť do editora stránky.
+
+Po otvorení stránky v editore sa po 5 sekundách získa aktuálny obsah stránky (aby sa stihli načítať všetky skripty a náhľady aplikácii) a tento sa následne porovnáva s aktuálnym obsahom pri kliknutí na tlačidlo Zrušiť. Čiže správna detekcia funguje po 5 sekundách od otvorenia stránky v editore.

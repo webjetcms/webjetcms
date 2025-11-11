@@ -54,6 +54,19 @@ export class WebPagesDatatable {
             ],
             newPageTitleKey: defaultTitleKey,
             showPageTitleKey: "history.showPage",
+            onClose: function(TABLE, EDITOR, e) {
+                try {
+                    var isDirty = EDITOR.field("data").isDirty();
+                    //console.log("isDirty=", isDirty);
+                    if (isDirty && window.confirm(WJ.translate('editor.confirmExitMessage'))==false) {
+                        //do not close dialog
+                        return false;
+                    }
+                } catch (err) {
+                    console.log("Error checking CKEditor dirty state:", err);
+                }
+                return true;
+            }
         }, options);
         //console.log("WebPagesDatatable.options=", this.options);
 
