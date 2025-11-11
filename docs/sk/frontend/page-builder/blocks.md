@@ -138,6 +138,8 @@ Element ```UL``` je potrebné označiť CSS triedou ```pb-autotabs```. JavaScrip
 
 Samotné karty nie sú teda editovateľné, generujú sa automaticky. Editovateľný je len obsah ```tab``` kontajneru. Všimnite si, že v ukážkovom kóde UL element neobsahuje žiadne ```LI taby```, tie sa vygenerujú automaticky. V HTML kóde zostanú následne vygenerované a aj sa korektne uložia. Na stránke zostane zobrazená karta tak, ako bola zobrazený počas editácie (je na to potrebné myslieť).
 
+Atribúty ID jednotlivých kariet sú generované automaticky podľa názvu karty. Ak potrebujete použiť špecifický názov je možné v HTML kóde nastaviť hodnotu `data-title` na `.tab-pane` elemente.
+
 Všimnite si použitie CSS triedy ```pb-not-container``` na hlavnom kontajner elemente. To zabezpečí, že tento element nebude označený ako kontajner a za kontajnery budú považované až jednotlivé karty. Každá karta používa CSS triedu ```pb-custom-container```, čo zabezpečí zobrazenie červeného rámu/nástrojovej lišty kontajnera.
 
 Pri zvolení možnosti presunutia tabu (v nástrojovej lište kontajnera) sa automaticky zobrazia všetky karty, aby bolo možné ľahko označiť kartu, kde sa má presunúť. To je zabezpečené CSS štýlom Page Builder.
