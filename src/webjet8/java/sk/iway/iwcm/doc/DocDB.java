@@ -5679,7 +5679,8 @@ public class DocDB extends DB
 			if (grDetails.getUrlDirName().startsWith("/")==false)
 			{
 				String urlDirName = sk.iway.iwcm.DB.internationalToEnglish(newTitle).toLowerCase();
-				urlDirName = DocTools.removeCharsDir(urlDirName, true).toLowerCase();
+				urlDirName = DocTools.removeChars(urlDirName, true); //remove / in page title
+				urlDirName = DocTools.removeCharsDir(urlDirName, true); //remove spojky
 				grDetails.setUrlDirName(urlDirName);
 			}
 			GroupsDB.getInstance().setGroup(grDetails);

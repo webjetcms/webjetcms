@@ -231,7 +231,7 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps, checkNewsMain = false) 
     I.switchTo();
 }
 
-Scenario("docMode and subGroupsDepth @current", ({ I, DT, DTE, Apps }) => {
+Scenario("docMode and subGroupsDepth", ({ I, DT, DTE, Apps }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=146543");
 
@@ -244,7 +244,7 @@ Scenario("docMode and subGroupsDepth @current", ({ I, DT, DTE, Apps }) => {
     verifyDocMode(2, -1, I, Apps);
 });
 
-Scenario("BUG: news from other folders and docMode @current", ({ I, DT, DTE, Apps }) => {
+Scenario("BUG: news from other folders and docMode", ({ I, DT, DTE, Apps }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150415");
 

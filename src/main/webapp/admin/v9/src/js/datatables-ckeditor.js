@@ -1323,7 +1323,7 @@ export class DatatablesCkEditor {
 							var element = this.getSelectedElement();
 
 							var onclick = onclickAjax;
-							var typeSelectedIndex = document.getElementById(this.getContentElement("info", "type")._.inputId).selectedIndex;
+							var typeSelectedIndex = this.getContentElement("info", "type").getInputElement().$.selectedIndex;
 							if (typeSelectedIndex==3)
 							{
 								onclick = onclickPrint;
