@@ -7,7 +7,6 @@
 <%@
 		taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<%@page import="org.apache.commons.lang.time.DateUtils"%>
 <%@page import="sk.iway.iwcm.PathFilter"%>
 <%@page import="java.util.regex.Pattern"%>
 <%@page import="sk.iway.iwcm.Tools"%>
@@ -105,12 +104,9 @@
 
 				for (File f:files)
 				{
-					//if (f.length()>0 && DateUtils.isSameDay(new Date(f.lastModified()),now))
-					{
 		%>
 		<li> <a href="/admin/tail.jsp?file=<%=Tools.escapeHtml(f.getAbsolutePath())%>"><%=Tools.escapeHtml(f.getName() + " (" + FileTools.getFormatFileSize(f.length(),false ) + ", " + Tools.formatDateTimeSeconds(f.lastModified())) %>) </a></li>
 		<%
-					}
 				}
 			}
 		%>

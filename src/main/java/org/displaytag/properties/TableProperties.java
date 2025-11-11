@@ -21,8 +21,8 @@
  */
 package org.displaytag.properties;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.jsp.PageContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.PageContext;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +39,7 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.displaytag.Messages;
 import org.displaytag.decorator.DecoratorFactory;
 import org.displaytag.decorator.DefaultDecoratorFactory;
@@ -532,6 +533,7 @@ public final class TableProperties implements Cloneable {
 
             if (className != null) {
                 try {
+                    @SuppressWarnings("unchecked")
                     final Class<LocaleResolver> classProperty = (Class<LocaleResolver>) ReflectHelper
                             .classForName(className);
                     TableProperties.localeResolver = classProperty.getDeclaredConstructor().newInstance();
@@ -1009,7 +1011,7 @@ public final class TableProperties implements Cloneable {
      */
     public boolean getAddPagingBannerTop() {
         final String placement = this.getProperty(TableProperties.PROPERTY_STRING_BANNER_PLACEMENT);
-        return StringUtils.equals("top", placement) || StringUtils.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
+        return Strings.CS.equals("top", placement) || Strings.CS.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -1019,7 +1021,7 @@ public final class TableProperties implements Cloneable {
      */
     public boolean getAddPagingBannerBottom() {
         final String placement = this.getProperty(TableProperties.PROPERTY_STRING_BANNER_PLACEMENT);
-        return StringUtils.equals("bottom", placement) || StringUtils.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
+        return Strings.CS.equals("bottom", placement) || Strings.CS.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -1029,7 +1031,7 @@ public final class TableProperties implements Cloneable {
      */
     public boolean getAddExportBannerTop() {
         final String placement = this.getProperty(TableProperties.PROPERTY_STRING_EXPORTBANNER_PLACEMENT);
-        return StringUtils.equals("top", placement) || StringUtils.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
+        return Strings.CS.equals("top", placement) || Strings.CS.equals("both", placement); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -1040,7 +1042,7 @@ public final class TableProperties implements Cloneable {
     public boolean getAddExportBannerBottom() {
         final String placement = this.getProperty(TableProperties.PROPERTY_STRING_EXPORTBANNER_PLACEMENT);
         // no value specified puts it on th bottom too to ensure proper backward compatibility
-        return !StringUtils.equals("top", placement); //$NON-NLS-1$
+        return !Strings.CS.equals("top", placement); //$NON-NLS-1$
     }
 
     /**
@@ -1267,12 +1269,14 @@ public final class TableProperties implements Cloneable {
      *
      * @see I18nResourceProvider
      */
+    @SuppressWarnings("unused")
     public I18nResourceProvider geResourceProvider() {
         final String className = "sk.iway.iwcm.system.DisplayTagLocaleResolver"; //this.getProperty(TableProperties.PROPERTY_CLASS_LOCALEPROVIDER);
 
         if (TableProperties.resourceProvider == null) {
             if (className != null) {
                 try {
+                    @SuppressWarnings("unchecked")
                     final Class<I18nResourceProvider> classProperty = (Class<I18nResourceProvider>) ReflectHelper
                             .classForName(className);
                     TableProperties.resourceProvider = classProperty.getDeclaredConstructor().newInstance();
@@ -1442,6 +1446,7 @@ public final class TableProperties implements Cloneable {
         final String className = getProperty(lng); //this.getProperty(TableProperties.PROPERTY_DEFAULT_COMPARATOR);
         if (className != null) {
             try {
+                @SuppressWarnings("unchecked")
                 final Class<Comparator<Object>> classProperty = (Class<Comparator<Object>>) ReflectHelper
                         .classForName(className);
                 return classProperty.getDeclaredConstructor().newInstance();

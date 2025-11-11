@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -176,7 +176,7 @@ public class AdminUploadServlet extends HttpServlet
                 IwcmOutputStream fos = null;
                 FileInputStream fis;
                 byte[] fileBytes;
-                String random = RandomStringUtils.random(15, true, true);
+                String random = RandomStringUtils.secure().next(15, true, true);
                 boolean destinationFileExists = false;
                 try
                 {

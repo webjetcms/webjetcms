@@ -8,9 +8,9 @@ import java.util.List;
 
 import javax.servlet.jsp.JspException;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.displaytag.export.ExportView;
 import org.displaytag.export.TextExportView;
 import org.displaytag.model.Column;
@@ -159,7 +159,7 @@ public class XmlExport implements TextExportView {
    			text=text.substring(0,text.length()-6);
 			text = SearchTools.htmlToPlain(text);
 		}
-            return StringEscapeUtils.escapeXml(text.trim());
+            return StringEscapeUtils.escapeXml10(text.trim());
     }
 
 /**
@@ -257,7 +257,6 @@ if (ALWAYS_APPEND_CELL_END || columnIterator.hasNext()) {
     private void buildHeaders()
     {
         headerTitles.clear();
-        @SuppressWarnings("unchecked")
         Iterator<HeaderCell> iterator = this.model.getHeaderCellList().iterator();
 
 while (iterator.hasNext())

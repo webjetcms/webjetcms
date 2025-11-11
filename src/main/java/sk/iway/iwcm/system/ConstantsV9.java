@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name");
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -165,6 +165,7 @@ public class ConstantsV9 {
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
 		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
+		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 	}
 

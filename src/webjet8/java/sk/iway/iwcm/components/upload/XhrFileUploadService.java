@@ -1,7 +1,7 @@
 package sk.iway.iwcm.components.upload;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -92,7 +92,7 @@ public class XhrFileUploadService {
             String fileKey;
             PartialUploadHolder holder = (PartialUploadHolder) session.getAttribute("partialUploadFile-" + name);
             if (holder == null || chunk == 0) {
-                fileKey = RandomStringUtils.random(15, true, true);
+                fileKey = RandomStringUtils.secure().next(15, true, true);
                 holder = new PartialUploadHolder(chunks, name, fileKey);
 
                 session.setAttribute("partialUploadFile-" + name, holder);

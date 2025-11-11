@@ -21,8 +21,8 @@
  */
 package org.displaytag.filter;
 
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.displaytag.tags.TableTag;
 import org.displaytag.tags.TableTagParameters;
 import org.slf4j.Logger;
@@ -82,6 +83,7 @@ public final class ExportDelegate {
         // response (this is the signal from table tag that it is going to write exported data)
         ExportDelegate.log.debug("Filter operating in buffered mode. ");
 
+        @SuppressWarnings("unchecked")
         final Map<String, Object> bean = (Map<String, Object>) request
                 .getAttribute(TableTag.FILTER_CONTENT_OVERRIDE_BODY);
 
@@ -125,7 +127,7 @@ public final class ExportDelegate {
             characterEncoding = StringUtils.substringAfter(wrappedContentType, "charset=");
         }
 
-        if (characterEncoding != null && !StringUtils.contains(contentType, "charset") && pageContent instanceof String) //$NON-NLS-1$
+        if (characterEncoding != null && !Strings.CS.contains(contentType, "charset") && pageContent instanceof String) //$NON-NLS-1$
         {
             contentType += "; charset=" + characterEncoding; //$NON-NLS-1$
         }

@@ -48,7 +48,7 @@ public class SessionHolder
    public static final String SESSION_HOLDER = "iwcm_session_holder";
 	private Map<String, SessionDetails> data = Collections.synchronizedMap(new Hashtable<String, SessionDetails>());
 
-	private static final String INVALIDATE_SESSION_ADDR = "INVALIDATE";
+	protected static final String INVALIDATE_SESSION_ADDR = "INVALIDATE";
 
 	/**
 	 * Takyto konstruktor sa normalne nesmie pouzivat!
@@ -129,8 +129,7 @@ public class SessionHolder
    	public boolean set(String sessionId, String lastURL, HttpServletRequest request) {
 		// lebo iframe a cookie toho potom vygeneruje kopec
 		if (lastURL != null && (lastURL.indexOf("/admin/mem.jsp") != -1 || lastURL.indexOf("/admin/refresher.jsp") != -1
-				|| lastURL.indexOf("/admin/divpopup-blank.jsp") != -1 || lastURL.indexOf("/admin/FCKeditor") != -1
-				|| lastURL.indexOf("/admin/rest/refresher") != -1))
+				|| lastURL.indexOf("/admin/divpopup-blank.jsp") != -1 || lastURL.indexOf("/admin/FCKeditor") != -1))
 			return true;
 
 		// aby bolo mozne grafy tlacit do PDF, normalne by nam nastal session stealing
@@ -143,15 +142,37 @@ public class SessionHolder
 		if (lastURL != null && lastURL.startsWith("/admin/multiplefileupload.do"))
 			return true;
 
+		boolean newSession = false;
 		SessionDetails det = get(sessionId);
+
+		if (lastURL != null && lastURL.indexOf("/admin/rest/refresher") != -1 && det != null) {
+			//invalidate if needed
+			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
+				request.getSession().invalidate();
+				return false;
+			}
+			//do not throw other errors because refresher is called in background
+			return true;
+		}
+
 		if (det == null) {
 			cleanup();
+			newSession = true;
 
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
 			det.setRemoteAddr(Tools.getRemoteIP(request));
+			BrowserDetector bd = BrowserDetector.getInstance(request);
+			if (bd != null) det.setBrowserName(bd.getBrowserName()+" "+bd.getBrowserVersionShort());
+			else det.setBrowserName("Unknown");
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
+
+			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
+				Logger.debug(SessionHolder.class, "Session invalidated for userId=" + det.getLoggedUserId() + " userName="+ det.getLoggedUserName() + " sessionId=" + sessionId);
+				request.getSession().invalidate();
+				return false;
+			}
 
 			if (Constants.getBoolean("sessionStealingCheck") == true
 					&& det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {
@@ -174,11 +195,6 @@ public class SessionHolder
 					return false;
 				}
 			}
-
-			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {
-				request.getSession().invalidate();
-				return false;
-			}
 		}
 		det.setLastURL(lastURL);
 		det.setDomainId(CloudToolsForCore.getDomainId());
@@ -190,6 +206,9 @@ public class SessionHolder
 				det.setLoggedUserId(user.getUserId());
 				det.setAdmin(user.isAdmin());
 				det.setLoggedUserName(user.getFullName());
+
+				// Handle single logon - invalidate other sessions for the same user
+				keepOnlySession(user.getUserId(), sessionId);
 			}
 		} else {
 			if (det.getLoggedUserId() > 0) {
@@ -201,8 +220,13 @@ public class SessionHolder
 
 		// ziskaj IP a remoteHost
 		det.setLastActivity(Tools.getNow());
+		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
+		if(newSession == true && det.isAdmin() == true) {
+			// After new session was added (logon for example) - update session stat data
+			SessionClusterService.updateSessionData();
+		}
 		return true;
 	}
 
@@ -239,14 +263,16 @@ public class SessionHolder
     */
    public void remove(String sessionId)
    {
-   	SessionDetails ses = get(sessionId);
-   	if (ses != null)
-   	{
-   		ses = null;
-   	}
-      data.remove(sessionId);
+		SessionDetails ses = get(sessionId);
+		if (ses != null)
+		{
+			ses = null;
+		}
+		data.remove(sessionId);
 
-      cleanup();
+		cleanup();
+
+		SessionClusterService.updateSessionData();
    }
 
    /**
@@ -397,20 +423,71 @@ public class SessionHolder
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null || rb.getUserId()<1) return;
 
+		keepOnlySession(userId, rb.getSessionId());
+	}
+
+	/**
+	 * Invalidate other sessions for userId from data map, also handles cluster propagation
+	 * REQUIRES: sessionSingleLogon=true
+	 * @param userId
+	 * @param currentSessionId
+	 */
+	public void keepOnlySession(int userId, String currentSessionId) {
+
+		if (Constants.getBoolean("sessionSingleLogon") != true) return;
+
+		//propagate to cluster - invalidate sessions for this user ID on other nodes
+		String baseName = "SessionHolder.keepOnlySession-"+userId+"-";
+		//we need to delete old records, because they will be executed first, and this should be last/only one in queue
+		ClusterDB.deleteStartsWith(baseName);
+		ClusterDB.addRefresh(baseName+currentSessionId);
+
 		for (Map.Entry<String, SessionDetails> entry : data.entrySet())
 		{
 			String sessionId = entry.getKey();
-			if (Tools.isEmpty(sessionId)) continue;
+			if (Tools.isEmpty(sessionId) || sessionId.equals(currentSessionId)) continue;
 
 			SessionDetails sd = entry.getValue();
 			if (sd == null) continue;
 
-			if (sd.getLoggedUserId() == userId && sessionId.equals(rb.getSessionId())==false)
+			if (sd.getLoggedUserId() == userId)
 			{
 				//destroy session
 				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
-				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId +" uid="+sd.getLoggedUserId());
+				Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
 			}
 		}
+	}
+
+	/**
+	 * Invalidate session by userId and sessionId, also handles cluster propagation
+	 * @param userId
+	 * @param sessionId
+	 * @return
+	 */
+	public boolean invalidateSession(int userId, String sessionId) {
+		// Check if sessionId is empty and return false if so
+		if(Tools.isEmpty(sessionId)) return false;
+
+		//Session can be on another cluster node, call cluster refresh
+		ClusterDB.addRefresh("SessionHolder.invalidateSession-" + userId + "-" + sessionId);
+
+		SessionDetails sd = get(sessionId);
+		if(sd != null && sd.getLoggedUserId() == userId) {
+			sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);
+			Logger.debug(SessionHolder.class, "Invalidating session: " + sessionId + " uid=" + sd.getLoggedUserId());
+			//Refresh data
+			SessionClusterService.updateSessionData();
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Get data map for testing purposes
+	 * @return data map
+	 */
+	protected java.util.Map<String, SessionDetails> getDataMap() {
+		return data;
 	}
 }

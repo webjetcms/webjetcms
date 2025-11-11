@@ -1,14 +1,11 @@
 package sk.iway.basecms.contact;
 
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.commons.fileupload.FileItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -27,6 +24,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.stripes.MultipartWrapper;
 
 /**
  * <p>Príkladová trieda pre komponentu - http://docs.webjetcms.sk/v2022/#/custom-apps/spring-mvc/</p>
@@ -146,7 +144,7 @@ public class ContactApp extends WebjetComponentAbstract {
      */
     public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
         //you can process multipart file using request.getAttribute("MultipartWrapper.files")
-        entity.setDocument(((Map<String,FileItem>)request.getAttribute("MultipartWrapper.files")).get("document"));
+        entity.setDocument(MultipartWrapper.getFileStoredInRequest("document", request));
 
         if (!result.hasErrors()) {
             contactRepository.save(entity);

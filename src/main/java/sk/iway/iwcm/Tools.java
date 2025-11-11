@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
@@ -758,6 +758,9 @@ public class Tools
 
 	public static String join(String[] array, String glue)
 	{
+		if (array == null) {
+            return null;
+        }
 		StringBuilder result = new StringBuilder();
 		for(int i = 0; i < array.length; i++)
 		{

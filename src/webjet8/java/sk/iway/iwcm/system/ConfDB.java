@@ -355,6 +355,7 @@ public class ConfDB
 			else if ("logLevels".equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));
 			else if ("cacheStaticContentSeconds".equals(name) || "cacheStaticContentSuffixes".equals(name)) PathFilter.resetCacheStaticContentSeconds();
 			else if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
+			else if ("pathFilterBlockedPaths".equals(name)) PathFilter.resetBlockedPaths();
 			else if ("constantsAliasSearch".equals(name)) Constants.setConstantsAliasSearch("true".equals(value));
 			else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
 			else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
