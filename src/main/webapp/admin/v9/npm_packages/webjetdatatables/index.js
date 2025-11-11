@@ -892,8 +892,9 @@ export const dataTableInit = options => {
                 ),
                 close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-x"></i>')
             }
+            dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {
-                dte.close('icon');
+                //we are using handler down below dte.close('icon');
             });
             dte._bootstrapDisplay = {
                 dom: dom,
@@ -922,7 +923,7 @@ export const dataTableInit = options => {
                 .attr('title', dte.i18n.close)
                 .off('click.dte-bs5')
                 .on('click.dte-bs5', function () {
-                    dte.close('icon');
+                    //we are using handler down below dte.close('icon');
                 })
                 .appendTo($('div.modal-header', append));
 
@@ -1761,6 +1762,7 @@ export const dataTableInit = options => {
                                     var allowClose = DATA.onClose(TABLE, EDITOR, e);
                                     if (allowClose === false) {
                                         //console.log("Close prevented by onClose callback");
+                                        e.preventDefault();
                                         return;
                                     }
                                 }
