@@ -20,6 +20,7 @@ import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.formsimple.FormSimpleItem.FieldsNames;
 import sk.iway.iwcm.doc.DocDB;
@@ -171,7 +172,10 @@ public class FormSimpleApp extends WebjetComponentAbstract {
         //Set formAttributes into params
         if(Tools.isNotEmpty(formName)) {
             StringBuilder sb = new StringBuilder();
-            for(FormAttributesEntity attribute : formAttributesRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+
+            // formName is sanitazed
+            // app include contains original text like "Formulár ľahko" BUT attribues have value "formular-lahko"
+            for(FormAttributesEntity attribute : formAttributesRepository.findAllByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId())) {
                 sb.append(", ").append(ATTRIBUTE_PREFIX).append(attribute.getParamName());
                 sb.append("=\"").append(attribute.getValue()).append("\"");
             }
@@ -187,8 +191,8 @@ public class FormSimpleApp extends WebjetComponentAbstract {
             this.attribute_forwardType = "addParams";
 
             UserDetails currentUser =  UsersDB.getCurrentUser(request);
-            if(currentUser != null) this.attribute_recipients = currentUser.getEmail();
-            else this.attribute_recipients = "web.spam@interway.sk";
+            if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) this.attribute_recipients = currentUser.getEmail();
+            else this.attribute_recipients = "web.spam@interway.sk"; // Just in case ...
 
             if(componentRequest.getDocId() < 1) {
                 // New page, set default value

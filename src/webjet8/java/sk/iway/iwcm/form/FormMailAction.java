@@ -485,17 +485,12 @@ public class FormMailAction extends HttpServlet
 				}
 			}
 			iLastDocIdMail = iLastDocId;
+
 			//aby sme pre mail mohli specifikovat inu stranku ako to co sa zobrazuje
-			if (request.getParameter("useFormMailDocId")!=null)
-			{
-				if ("none".equals(request.getParameter("useFormMailDocId")))
-				{
-					iLastDocIdMail = null;
-				}
-				else
-				{
-					iLastDocIdMail = Integer.valueOf(Tools.getIntValue(request.getParameter("useFormMailDocId"), -1));
-				}
+			if (Tools.isEmpty(request.getParameter("useFormMailDocId")) || "none".equals(request.getParameter("useFormMailDocId"))) {
+				iLastDocIdMail = null;
+			} else {
+				iLastDocIdMail = Integer.valueOf(Tools.getIntValue(request.getParameter("useFormMailDocId"), -1));
 			}
 			Logger.debug(FormMailAction.class, "iLastDocId="+iLastDocId);
 		}

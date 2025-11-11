@@ -689,30 +689,33 @@ Scenario('jstree-search', ({ I, Document }) => {
     Document.screenshotElement("div.tree-col", "/redactor/webpages/jstree-search-result.png", 1360, 400);
 });
 
-Scenario('formsimple', ({ I, DTE, Document }) => {
+Scenario('formsimple', ({ I, DT, DTE, Apps, Document }) => {
     let confLng = I.getConfLng();
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=26180");
-    DTE.waitForEditor();
-    I.wait(5);
 
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    DT.addContext("simpleformItems", "#datatableFieldDTE_Field_editorData_wrapper");
 
-    I.click("iframe.wj_component");
-
+    Apps.openAppEditor('26180');
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-basic.png");
 
-    I.switchTo();
-    I.wait(2);
-    I.switchTo(".cke_dialog_ui_iframe");
-    I.wait(2);
-    I.switchTo("#editorComponent");
-    I.wait(2);
-    I.clickCss("#tabLink2");
+    I.clickCss("#pills-dt-component-datatable-advanced-tab");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-advanced.png");
 
-    I.clickCss("#tabLink3");
+    I.clickCss("#pills-dt-component-datatable-items-tab");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items.png");
 
+    I.click(locate("tr").withAttr({ id: "1" }));
+    I.click(DT.btn.simpleformItems_edit_button);
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_1.png");
+    DTE.save("datatableFieldDTE_Field_editorData");
+
+
+    I.click(locate("tr").withAttr({ id: "5" }));
+    I.click(DT.btn.simpleformItems_edit_button);
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_2.png");
+    DTE.save("datatableFieldDTE_Field_editorData");
+
+
+    I.switchTo();
     I.switchTo();
 
     //aby na screenshote nebolo meno usera

@@ -16,6 +16,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 
 @RestController
 @RequestMapping("/apps/simpleform")
@@ -31,6 +32,10 @@ public class FormAttributesController {
     public void saveFormAttributes(@RequestBody FormSimpleApp formSimple) {
         String formName = formSimple.getFormName();
         if(Tools.isEmpty(formName)) return;
+
+        // formName MUST be sanitaze !! - its used only for atributes
+        // app include still contains original text like "Formulár ľahko" BUT attribues have value "formular-lahko"
+        formName = DocTools.removeChars(formName, true);
 
         List<FormAttributesEntity> data = formAttributesRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
 
@@ -78,6 +83,7 @@ public class FormAttributesController {
             } else if(fieldType == DocDetailsDto.class) {
                 DocDetailsDto page = (DocDetailsDto) value;
                 if(page != null) entity.setValue(String.valueOf(page.getDocId()));
+                else entity.setValue(null); // We setting value null, so we know its empty value (or else -1 will be saved in DB)
             }
         } catch(Exception e) {
             Logger.error(FormAttributesController.class, "Unable to get and process value of field: " + sanitazedFieldName);
