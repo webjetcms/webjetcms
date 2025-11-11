@@ -264,9 +264,11 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
     DTE.waitForEditor();
     DTE.fillField("fieldA", mapping);
     DTE.save();
+    DT.waitForLoader();
 }
 
-function setCustomFields(I, DT, DTE) {
+function setCustomFields(I, DTE) {
+    I.wait(10); //wait for prop reload
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
     DTE.waitForEditor();
     I.wait(2);
@@ -278,13 +280,13 @@ function setCustomFields(I, DT, DTE) {
 
 Scenario('enumeration-mapping', ({ I, DT, DTE }) => {
     setEnumerationMapping(I, DT, DTE, "enumeration_2");
-    setCustomFields(I, DT, DTE);
+    setCustomFields(I, DTE);
     I.amOnPage("/novy-adresar-01/volitelne-polia/");
     I.waitForText("A:Hodnota A", 5, "p.field_a");
     I.waitForText("H:Galanta", 5, "p.field_h");
 
     setEnumerationMapping(I, DT, DTE, "enumeration_2_string1_id");
-    setCustomFields(I, DT, DTE);
+    setCustomFields(I, DTE);
     I.amOnPage("/novy-adresar-01/volitelne-polia/");
     I.waitForText("A:Hodnota A", 5, "p.field_a");
     I.waitForText("H:13", 5, "p.field_h");
