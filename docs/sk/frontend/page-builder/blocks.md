@@ -484,12 +484,37 @@ window.pbCustomOptions = function(options) {
 };
 
 window.pbCustomSettings = function(me) {
-    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
-        //custom code to run on page builder init
-        console.log("pbCustomSettings called, me=", me);
+    //redefine grid column content selector
+    me.grid.section_default_class = 'section';
+    me.grid.row = 'div.grid, div[class*="pb-grid"]';
+    me.grid.row_default_class = 'grid';
+    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
+    me.grid.column_default_class = 'grid__col grid__col--12';
 
-        //redefine grid column content selector
-        me.grid.column_content = "div.osk-content";
-    }
+    me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
 };
+
+window.pbScreenSizePrefix = function(me) {
+    var screenSize =  $(window).width();
+    var colPrefix = me.column.valid_prefixes[0];
+    if (screenSize >= 1240) colPrefix = me.column.valid_prefixes[4];
+    else if (screenSize >= 992) colPrefix = me.column.valid_prefixes[3];
+    else if (screenSize >= 768) colPrefix = me.column.valid_prefixes[2];
+    else if (screenSize >= 480) colPrefix = me.column.valid_prefixes[1];
+
+    //console.log("pbScreenSizePrefix, screenSize=", screenSize, "colPrefix=", colPrefix);
+
+    return colPrefix;
+}
+
+window.pbGetWindowSize = function(name) {
+    var maxWidth = "";
+    if ('tablet'==name) {
+        maxWidth = "768px";
+    } else if ('phone'==name) {
+        maxWidth = "479px";
+    }
+    //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
+    return maxWidth;
+}
 ```
