@@ -11,24 +11,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableOptionMethod;
 @Setter
 public class FormSimpleItem {
 
-    public static enum FieldsNames {
-        REQUIRED("required"),
-        LABEL("label"),
-        VALUE("value"),
-        PLACEHOLDER("placeholder"),
-        TOOLTIP("tooltip");
-
-        private final String fieldName;
-
-        FieldsNames(String fieldName) {
-            this.fieldName = fieldName;
-        }
-
-        public String value() {
-            return fieldName;
-        }
-    }
-
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", editor = {
         @DataTableColumnEditor(
             optionMethods = {

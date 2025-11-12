@@ -30,26 +30,16 @@
                         const value = innerTable.EDITOR.field("fieldType").val();
                         let fieldOption = getFieldOption(value);
 
-                        if("ALL" == fieldOption) {
-                            fields.forEach(function(fieldName) {
-                                innerTable.EDITOR.field(fieldName).show();
-                            });
-                        } else if("NONE" == fieldOption) {
-                            fields.forEach(function(fieldName) {
+                        var hideFields = fieldOption.split(",");
+                        fields.forEach(function(fieldName) {
+                            if(hideFields.includes(fieldName)) {
                                 innerTable.EDITOR.field(fieldName).hide();
                                 innerTable.EDITOR.field(fieldName).val("");
-                            });
-                        } else {
-                            var showFields = fieldOption.split(",");
-                            fields.forEach(function(fieldName) {
-                                if(showFields.includes(fieldName)) {
-                                    innerTable.EDITOR.field(fieldName).show();
-                                } else {
-                                    innerTable.EDITOR.field(fieldName).hide();
-                                    innerTable.EDITOR.field(fieldName).val("");
-                                }
-                            });
-                        }
+                            } else {
+                                innerTable.EDITOR.field(fieldName).show();
+                            }
+                        });
+
                     });
                 });
             }

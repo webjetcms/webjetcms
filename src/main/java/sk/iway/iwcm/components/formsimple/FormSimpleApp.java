@@ -1,11 +1,10 @@
 package sk.iway.iwcm.components.formsimple;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
@@ -22,7 +21,6 @@ import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
-import sk.iway.iwcm.components.formsimple.FormSimpleItem.FieldsNames;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
@@ -61,7 +59,8 @@ import sk.iway.iwcm.users.UsersDB;
 public class FormSimpleApp extends WebjetComponentAbstract {
 
     @JsonIgnore
-    private static final String ITEM_KEY = "components.formsimple.label.";
+    private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
+    private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
 
     @JsonIgnore
     public static final String ATTRIBUTE_PREFIX = "attribute_";
@@ -153,7 +152,7 @@ public class FormSimpleApp extends WebjetComponentAbstract {
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-        options.put("optionsTypeVisibility", getFiledTypeVisibility());
+        options.put("optionsTypeVisibility", getFiledTypeVisibility(request));
         return options;
     }
 
@@ -214,73 +213,27 @@ public class FormSimpleApp extends WebjetComponentAbstract {
         return Tools.isEmpty(componentRequest.getParameters()) && Tools.isEmpty(componentRequest.getOriginalComponentName());
     }
 
-    public static List<OptionDto> getFiledTypeVisibility() {
+    public static List<OptionDto> getFiledTypeVisibility(HttpServletRequest request) {
+
+        Prop prop = Prop.getInstance(request);
+        Map<String,String> formsimpleFields = prop.getTextStartingWith(ITEM_KEY_HIDE_FIELDS_PREFIX);
+
         List<OptionDto> options = new ArrayList<>();
-        options.add(new OptionDto("ALL", "adresa", ""));
-        options.add(new OptionDto("NONE", "captcha", ""));
-        options.add(new OptionDto("ALL", "email", ""));
-        options.add(getFieldOption("wysiwyg", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.VALUE, FieldsNames.TOOLTIP));
-        options.add(new OptionDto("NONE", "medzera", ""));
-        options.add(new OptionDto("ALL", "meno", ""));
-        options.add(new OptionDto("ALL", "menoPriezvisko", ""));
-        options.add(getFieldOption("multiupload_documents", FieldsNames.LABEL, FieldsNames.TOOLTIP));
-        options.add(getFieldOption("multiupload_images", FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
-        options.add(getFieldOption("multiupload", FieldsNames.LABEL, FieldsNames.TOOLTIP));
-        options.add(getFieldOption("novy-riadok", FieldsNames.VALUE));
-        options.add(getFieldOption("odoslat", FieldsNames.LABEL));
-        options.add(getFieldOption("popiska", FieldsNames.LABEL, FieldsNames.TOOLTIP));
-        options.add(new OptionDto("ALL", "poznamka", ""));
-        options.add(new OptionDto("ALL", "priezvisko", ""));
-        options.add(getFieldOption("prazdny-stlpec", FieldsNames.VALUE));
-        options.add(getFieldOption("radiogroup", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
-        options.add(getFieldOption("checkboxgroup", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
-        options.add(getFieldOption("suhlasPodmienky", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
-        options.add(new OptionDto("ALL", "telefon", ""));
-        options.add(getFieldOption("radio", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
-        options.add(new OptionDto("ALL", "select", ""));
-        options.add(getFieldOption("checkbox", FieldsNames.REQUIRED, FieldsNames.LABEL, FieldsNames.TOOLTIP, FieldsNames.VALUE));
+        for(Entry<String, String> entry : formsimpleFields.entrySet())
+            options.add(new OptionDto(entry.getValue(), entry.getKey().substring(ITEM_KEY_HIDE_FIELDS_PREFIX.length()), ""));
+
         return options;
     }
-
-
-    // Build OptionDto from visibility type (fieldType) and one or more field names
-    private static OptionDto getFieldOption(String fieldType, FieldsNames... fieldNames) {
-        // Join enum names by comma to create the key (adjust delimiter if needed)
-        String joinedFieldNames = Arrays.stream(fieldNames)
-            .map(FieldsNames::value)
-            .collect(Collectors.joining(","));
-        return new OptionDto(joinedFieldNames, fieldType, "");
-    }
-
 
     //Called by @DataTableOptionMethod in FormSimpleItem, for field fieldType
     public static List<LabelValue> getFieldTypes() {
         Prop prop = Prop.getInstance();
 
         List<LabelValue> options = new ArrayList<>();
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "adresa"), "adresa"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "captcha"), "captcha"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "email"), "email"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "wysiwyg"), "wysiwyg"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "medzera"), "medzera"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "meno"), "meno"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "menoPriezvisko"), "menoPriezvisko"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "multiupload_documents"), "multiupload_documents"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "multiupload_images"), "multiupload_images"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "multiupload"), "multiupload"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "novy-riadok"), "novy-riadok"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "odoslat"), "odoslat"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "popiska"), "popiska"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "poznamka"), "poznamka"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "priezvisko"), "priezvisko"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "prazdny-stlpec"), "prazdny-stlpec"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "radiogroup"), "radiogroup"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "checkboxgroup"), "checkboxgroup"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "suhlasPodmienky"), "suhlasPodmienky"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "telefon"), "telefon"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "radio"), "radio"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "select"), "select"));
-        options.add(new LabelValue(prop.getText(ITEM_KEY + "checkbox"), "checkbox"));
+        Map<String,String> formsimpleFields = prop.getTextStartingWith(ITEM_KEY_LABEL_PREFIX);
+
+        for(Entry<String, String> entry : formsimpleFields.entrySet())
+            options.add(new LabelValue(entry.getValue(), entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length())));
 
         return options;
     }
