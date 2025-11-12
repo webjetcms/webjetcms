@@ -482,7 +482,7 @@
             });
 
             $.each(me.column.valid_prefixes, function(index, class_name) {
-                for (var i = me.column.min_size; i < me.column.max_size+1; i++) {
+                for (let i = me.column.min_size; i < me.column.max_size+1; i++) {
                     me.column.valid_classes.push(class_name+i);
                 }
             });
@@ -1180,7 +1180,7 @@
             var column = this.get_parent_grid_element($(el)),
                 actual_size = this.get_actual_column_size(column);
 
-            new_size = actual_size + (size);
+            var new_size = actual_size + (size);
             if ("auto" === actual_size) {
                 if (size > 0) {
                     new_size = 1;
@@ -1219,7 +1219,7 @@
             if (screenSizeText.length > 4) {
                 screenSizeText = screenSizeText.slice(-4);
             }
-            if (screenSizeText != "") {
+            if (screenSizeText !== "") {
                 screenSizeText = " [" + screenSizeText + "]";
             }
 
