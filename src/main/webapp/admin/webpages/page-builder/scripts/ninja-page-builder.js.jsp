@@ -42,6 +42,18 @@
                 window.pbCustomSettings(this);
             }
 
+            this.set_settings_after();
+
+            //inject section if there is no section in HTML
+            let html = $(this.element).html();
+            if (html.indexOf("<section")==-1)
+            {
+                //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
+                if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
+                html = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'"><div class="'+this.grid.column_default_class+'">'+html+'</div></div></div></section>';
+                $(this.element).html(html);
+            }
+
             this.setTemplateData();
             this.mark_grid_elements();
             this.create_modal();
@@ -286,10 +298,6 @@
             // <%-- TAG Classes --%>
             me.tagc = {};
 
-            $.each(me.tag, function(key, val) {
-                me.tagc[key]= '.'+val;
-            });
-
             me.state = {
                 is_styling_column:              prefix+'is-styling-column',
                 is_styling_container:           prefix+'is-styling-container',
@@ -325,18 +333,15 @@
 
             me.statec = {};
 
-            $.each(me.state, function(key, val) {
-                if(key === 'is_moving_type') {
-                    return;
-                }
-                me.statec[key]= '.'+val;
-            });
-
             me.grid = me.options.grid || {
                 section:                        'section:not(.pb-not-section)',
+                section_default_class:          '',
                 container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
+                container_default_class:        'container',
                 row:                            'div.row',
+                row_default_class:              'row',
                 column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
+                column_default_class:           'col col-md-12',
                 column_content:                 'div.column-content'
             };
 
@@ -347,18 +352,6 @@
                 valid_classes:                  [],
                 attr_prefix:                    'data-'+prefix
             };
-
-            $.each(me.column.valid_prefixes, function(index, class_name) {
-                for (var i = me.column.min_size; i < me.column.max_size+1; i++) {
-                    me.column.valid_classes.push(class_name+i);
-                }
-            });
-            //pridaj aj pb-col a pb-col-auto
-            me.column.valid_classes.push("pb-col");
-            me.column.valid_classes.push("pb-col-auto");
-            me.column.valid_prefixes.push("pb-col");
-            //console.log("me.column.valid_classes=", me.column.valid_classes);
-            //console.log("valid_prefixes=", me.column.valid_prefixes);
 
             me.user_style = {
                 counter: function(){
@@ -451,17 +444,6 @@
                                     "textKey": "column",
                                     "groups": [
                                         // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>',        'content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.2",    "textKey": '<span class="pb-col-2">2</span>',        'content': '<div class="col-md-2 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.3",    'textKey': '<span class="pb-col-3">3</span>',        'content': '<div class="col-md-3 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.4",    'textKey': '<span class="pb-col-4">4</span>',        'content': '<div class="col-md-4 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.5",    'textKey': '<span class="pb-col-5">5</span>',        'content': '<div class="col-md-5 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.6",    'textKey': '<span class="pb-col-6">6</span>',        'content': '<div class="col-md-6 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.7",    'textKey': '<span class="pb-col-7">7</span>',        'content': '<div class="col-md-7 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.8",    'textKey': '<span class="pb-col-8">8</span>',        'content': '<div class="col-md-8 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.9",    'textKey': '<span class="pb-col-9">9</span>',        'content': '<div class="col-md-9 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.10",   'textKey': '<span class="pb-col-10">10</span>',      'content': '<div class="col-md-10 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.11",   'textKey': '<span class="pb-col-11">11</span>',      'content': '<div class="col-md-11 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.12",   'textKey': '<span class="pb-col-12">12</span>',      'content': '<div class="col-md-12 '+me.state.is_special_helper+'"></div>'}--%>
                                     ]
                                 },
                                 {
@@ -469,13 +451,6 @@
                                     "textKey": "container",
                                     "groups": [
                                         // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'}--%>
                                     ]
                                 },
                                 {
@@ -483,19 +458,40 @@
                                     "textKey": "section",
                                     "groups": [
                                         // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'}--%>
                                     ]
                                 }
                             ];
             me.template.library = [];
             me.template.favorite = [];
 
+        },
+
+        set_settings_after: function() {
+            var me = this,
+                prefix = me.options.prefix+'-';
+
+            $.each(me.tag, function(key, val) {
+                me.tagc[key]= '.'+val;
+            });
+
+            $.each(me.state, function(key, val) {
+                if(key === 'is_moving_type') {
+                    return;
+                }
+                me.statec[key]= '.'+val;
+            });
+
+            $.each(me.column.valid_prefixes, function(index, class_name) {
+                for (var i = me.column.min_size; i < me.column.max_size+1; i++) {
+                    me.column.valid_classes.push(class_name+i);
+                }
+            });
+            //pridaj aj pb-col a pb-col-auto
+            me.column.valid_classes.push(prefix+"col");
+            me.column.valid_classes.push(prefix+"col-auto");
+            me.column.valid_prefixes.push(prefix+"col");
+            //console.log("me.column.valid_classes=", me.column.valid_classes);
+            //console.log("valid_prefixes=", me.column.valid_prefixes);
         },
 
         setTemplateData: function(){
@@ -556,7 +552,7 @@
                 return {
                     id: "id"+parentId+"."+id,
                     textKey: '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>',
-                    content: '<div class="col-md-'+v+' '+me.state.is_special_helper+'">Text</div>'
+                    content: '<div class="'+me.column.valid_prefixes[0]+v+' '+me.state.is_special_helper+'">Text</div>'
                 }
             }
             function getContainers(parentId,options){
@@ -569,18 +565,15 @@
             function getContainer(parentId,id,vals)
             {
                 // <%--//div.container alebo div.containerInner podla konfiguracie--%>
-                var containerClass = me.grid.container;
-                var dot = containerClass.indexOf(".");
-                if (dot!=-1) containerClass = containerClass.substring(dot+1);
-                if (containerClass.indexOf(" ")!=-1) containerClass = "container";
+                var containerClass = me.grid.container_default_class;
 
                 var textKey = '',
-                    content = '<div class="'+containerClass+'"><div class="row '+me.state.is_special_helper+'">';
+                    content = '<div class="'+containerClass+'"><div class="'+me.grid.row_default_class+' '+me.state.is_special_helper+'">';
                 $.each(vals,function(i,v){
                     var pb_col_size = (v/me.options.max_col_size)*12;
                     textKey += '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>';
                 });
-                $.each(vals,function(i,v){ content += '<div class="col-md-'+v+'">Text</div>'; });
+                $.each(vals,function(i,v){ content += '<div class="'+me.column.valid_prefixes[0]+v+'">Text</div>'; });
                 content += '</div></div>';
 
                 return {
@@ -592,7 +585,7 @@
             function getSections(parentId,options){
                 var containers = getContainers(parentId,options);
                 $.each(containers,function(i,v){
-                    v.content = '<section>'+v.content+'</section>';
+                    v.content = '<section class="'+me.grid.section_default_class+'">'+v.content+'</section>';
                 });
                 return containers;
             }
@@ -771,7 +764,6 @@
             if (column_sizes.length < 1) {
                 return;
             }
-
 
             $(column).addClass(me.tags.column);
 
@@ -1121,7 +1113,13 @@
         /*=================================================================*/
 
         get_actual_screen_size:function () {
-            var colPrefix = 'col-xl-';
+
+            if (typeof window.pbScreenSizePrefix === "function") {
+                //console.log("Using custom pbScreenSizePrefix function");
+                return window.pbScreenSizePrefix(this);
+            }
+
+            var colPrefix = this.column.valid_prefixes[4];
 
             var screenSize =  $(window).width();
 
@@ -1136,8 +1134,8 @@
             // <%--else if (screenSize < 1200) colPrefix = "col-lg-";--%>
             // <%--*/--%>
             // <%--//standardne pouzivame len col- a col-md            --%>
-            if (screenSize < 768) colPrefix = "col-";
-            else if (screenSize < 1200) colPrefix = "col-md-";
+            if (screenSize < 768) colPrefix = this.column.valid_prefixes[0];
+            else if (screenSize < 1200) colPrefix = this.column.valid_prefixes[2];
 
             // <%--console.log("get_actual_screen_size: ", screenSize, "colPrefix: ", colPrefix);--%>
 
@@ -1147,11 +1145,15 @@
         },
 
         get_actual_column_size: function(column) {
-            var size = parseInt( $(column).attr(this.column.attr_prefix+this.get_actual_screen_size()) );
+            var value = $(column).attr(this.column.attr_prefix+this.get_actual_screen_size());
+            if ("auto"===value) {
+                return value;
+            }
+            var size = parseInt( value );
             //console.log("size=", size);
             //nema zadanu velkost pre dany breakpoint, nacitaj default bez prefixu
-            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+"col-") );
-            //console.log("size=", size)
+            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+this.column.valid_prefixes[0]) );
+            if (Number.isNaN(size)) size = this.column.max_size;
             return size;
         },
 
@@ -1176,17 +1178,21 @@
         change_column_size: function (el,size) {
 
             var column = this.get_parent_grid_element($(el)),
-                actual_size = this.get_actual_column_size(column),
-                new_size = actual_size + (size);
+                actual_size = this.get_actual_column_size(column);
 
-            //console.log("change_column_size, column=", column, "new_size=", new_size);
-
-            if(new_size > this.options.max_col_size) {
-                new_size = this.options.max_col_size;
+            new_size = actual_size + (size);
+            if ("auto" === actual_size) {
+                if (size > 0) {
+                    new_size = 1;
+                } else if (size < 0) {
+                    new_size = this.options.max_col_size;
+                } else {
+                    new_size = actual_size;
+                }
             }
 
-            if(new_size < 1) {
-                new_size = 1;
+            if(new_size > this.options.max_col_size || new_size < 1) {
+                new_size = "auto";
             }
 
             $(column)
@@ -1194,7 +1200,30 @@
                 .removeClass(this.get_actual_screen_size() + actual_size)
                 .addClass(this.get_actual_screen_size() + new_size);
 
-            $(column).find(this.tagc.size_changer_number).html(new_size);
+            var screenSizeText = this.get_actual_screen_size();
+            try {
+                //remove valid_prefixes[0] from screenSizeText
+                if (screenSizeText === this.column.valid_prefixes[0]) {
+                    screenSizeText = "";
+                } else {
+                    screenSizeText = screenSizeText.substring(this.column.valid_prefixes[0].length);
+                }
+                //if ends with - remove it
+                if (screenSizeText.endsWith("-")) {
+                    screenSizeText = screenSizeText.slice(0, -1);
+                }
+            } catch (e) {
+                console.error("Error processing screenSizeText:", e);
+            }
+            //if its longer than 4 characters, shorten it to LAST 4 characters
+            if (screenSizeText.length > 4) {
+                screenSizeText = screenSizeText.slice(-4);
+            }
+            if (screenSizeText != "") {
+                screenSizeText = " [" + screenSizeText + "]";
+            }
+
+            $(column).find(this.tagc.size_changer_number).html(new_size+screenSizeText.toUpperCase());
         },
 
         listen_for_shift_key: function(e) {
@@ -1581,19 +1610,19 @@
             if($(parent).children(this.tagc.column).length < 1) {
                 size = this.options.max_col_size;
             }
-            return '<div class="col-md-' + size + '"></div>';
+            return '<div class="'+me.column.valid_prefixes[0] + size + '"></div>';
         },
 
         make_new_row: function () {
-            return '<div class="row"></div>';
+            return '<div class="'+this.grid.row_default_class+'"></div>';
         },
 
         make_new_container: function () {
-            return '<div class="container"></div>';
+            return '<div class="'+this.grid.container_default_class+'"></div>';
         },
 
         make_new_section: function () {
-            return '<section class=""></section>';
+            return '<section class="'+this.grid.section_default_class+'"></section>';
         },
 
         /*==================================================================
