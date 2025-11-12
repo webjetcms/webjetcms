@@ -488,7 +488,7 @@ Scenario("BUG: duplicate available groups in perex group on save", async ({ I, D
     I.assertEqual(rows, 1, "Expected 1 available group, but found " + rows);
 });
 
-Scenario("Feature: peerxGroup with same names are distinquised by id perexGroupName", ({ I, DTE }) => {
+Scenario("Feature: perexGroups with same names are distinquised by id perexGroupName", ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150903");
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-perex-tab");

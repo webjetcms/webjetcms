@@ -4866,6 +4866,11 @@ public class DocDB extends DB
 		return (ret);
 	}
 
+	/**
+	 * Check for duplicate perex group names and fix their display names for options.
+	 * @param perexGroups
+	 * @return
+	 */
 	public static List<PerexGroupBean> fixPerexNameForOptions(List<PerexGroupBean> perexGroups) {
 		Map<String, Integer> nameCount = new HashMap<>();
 
@@ -4898,6 +4903,11 @@ public class DocDB extends DB
 		return perexGroups;
 	}
 
+	/**
+	 * Normalize perex group name for comparison. Remove accents and convert to lower case.
+	 * @param perexGroupName
+	 * @return normalized perex group name, never null
+	 */
 	private static String normalizePerexName(String perexGroupName) {
 		if(perexGroupName == null) return "";
 		perexGroupName = StringUtils.stripAccents(perexGroupName);

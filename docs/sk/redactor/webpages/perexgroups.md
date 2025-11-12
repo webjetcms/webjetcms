@@ -42,7 +42,7 @@ Značky sa štandardne zobrazujú ako zaškrtávacie polia, ak je ale definovan�
 
 ### Duplicita názvov značiek
 
-V prípade, že vytvoríte viac značiek s rovnakou jazykovou mutáciou názvu, v editore web stránky sa pri výbere značky zobrazí ich **ID** a **Názov skupiny**  pre rozlíšenie. Ak zančká má iba **Názov skupiny** alebo jazyková mutácia je rovnkaá ako **Názov skupiny**, naviac sa zobrazí iba **ID**.
+V prípade, že vytvoríte viac značiek s rovnakou jazykovou mutáciou názvu, v editore web stránky sa pri výbere značky zobrazí ich **ID** a **Názov skupiny** pre rozlíšenie. Ak značka má iba **Názov skupiny** alebo jazyková mutácia je rovnaká ako **Názov skupiny**, naviac sa zobrazí iba **ID**.
 
 ![](perex-duplicity-values.png)
 

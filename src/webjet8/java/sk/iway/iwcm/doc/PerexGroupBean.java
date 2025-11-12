@@ -32,7 +32,7 @@ public class PerexGroupBean
 
    /**
 	* Return original perexGroupName. Not language variation
-	* @return
+	* @return String - perexGroupName
     */
    	public String getBasicPerexGroupName() {
 	   return perexGroupName;
