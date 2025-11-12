@@ -28,7 +28,6 @@ function getFieldValue(value, action, fieldType) {
         value = value.replaceAll(/&gt;/gi, ">");
         return value;
     } else if(fieldType === "textarea") {
-        console.log(value, action, fieldType);
         return value
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
