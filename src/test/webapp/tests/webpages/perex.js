@@ -486,5 +486,29 @@ Scenario("BUG: duplicate available groups in perex group on save", async ({ I, D
     DTE.waitForEditor("perexDataTable");
     var rows = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-availableGroups div.dt-tree-container div.form-group button.btn-vue-jstree-item-edit");
     I.assertEqual(rows, 1, "Expected 1 available group, but found " + rows);
-
 });
+
+Scenario("Feature: peerxGroup with same names are distinquised by id perexGroupName", ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150903");
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.waitForVisible(".DTE_Field_Name_perexGroups");
+
+    within(".DTE_Field_Name_perexGroups", () => {
+        I.say("Z_Duplicity-Unique show no id NOR perexGroupName, because returned string is unique");
+        checkPerex(I, 1968, "Z_Duplicity-Unique");
+
+        I.say("Z_DUPLICITY show only id, because lng text and perexGroupName are same, so not logic to add it");
+        checkPerex(I, 1969, "Z_DUPLICITY (1969)");
+
+        I.say("Z_Duplicity-a show id AND perexGroupName, because this values are different, so for better distinquise.");
+        checkPerex(I, 1970, "Z_Dupľičity (1970:Z_Duplicity-A)");
+
+        I.say("Z_Duplicity-a same as Z_Duplicity-b");
+        checkPerex(I, 1971, "Z_Duplicity (1971:Z_Duplicity-b)");
+    });
+});
+
+function checkPerex(I, id, name) {
+    I.seeElement( locate( locate("div.custom-control.form-switch").withChild( locate("input.form-check-input[value='" + id + "']") ).find( locate("label.form-check-label").withText(name) ) ) );
+}

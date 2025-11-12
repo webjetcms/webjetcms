@@ -40,6 +40,14 @@ Značky sa štandardne zobrazujú ako zaškrtávacie polia, ak je ale definovan�
 
 !> **Upozornenie:** názov značky (perex skupiny) sa mení v závislosti od zvoleného jazyka. Ak takáto jazyková mutácia existuje, zobrazí sa. Ak nie, zobrazí sa hodnota z poľa **Názov skupiny**.
 
+### Duplicita názvov značiek
+
+V prípade, že vytvoríte viac značiek s rovnakou jazykovou mutáciou názvu, v editore web stránky sa pri výbere značky zobrazí ich **ID** a **Názov skupiny**  pre rozlíšenie. Ak zančká má iba **Názov skupiny** alebo jazyková mutácia je rovnkaá ako **Názov skupiny**, naviac sa zobrazí iba **ID**.
+
+![](perex-duplicity-values.png)
+
+!> **Upozornenie:** hodnoty sa porovnávajú bez vplyvu diakritiky a veľkých/malých písmen
+
 ### Použitie
 
 Značky môžete použiť napríklad v zozname noviniek. Ukážka šablóny noviniek, ktorá zobrazí meno perex skupiny danej novinky a podľa ID skupiny nastaví CSS štýl `color-ID` pre nastavenie farby perex skupiny. Automaticky podľa jazyka stránky použije jazykovú variantu značky (ak je definovaná):

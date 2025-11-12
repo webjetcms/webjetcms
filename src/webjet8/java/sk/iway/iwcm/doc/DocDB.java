@@ -3,6 +3,7 @@ package sk.iway.iwcm.doc;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
@@ -4802,9 +4803,7 @@ public class DocDB extends DB
 	 */
 	public List<PerexGroupBean> getPerexGroups(int groupId, boolean recursive)
 	{
-		int[] groupIds = new int[1];
-		groupIds[0] = groupId;
-		return getPerexGroups(groupIds, recursive);
+		return getPerexGroups(new int[]{groupId}, recursive);
 	}
 
 	/**
@@ -4865,6 +4864,44 @@ public class DocDB extends DB
 		ret.sort((o1, o2) -> collator.compare(o1.getPerexGroupName().toLowerCase(), o2.getPerexGroupName().toLowerCase()));
 
 		return (ret);
+	}
+
+	public static List<PerexGroupBean> fixPerexNameForOptions(List<PerexGroupBean> perexGroups) {
+		Map<String, Integer> nameCount = new HashMap<>();
+
+		for(PerexGroupBean perexGroup : perexGroups) {
+			String normalized = normalizePerexName( perexGroup.getPerexGroupName() );
+			if(nameCount.containsKey(normalized)) nameCount.put(normalized, nameCount.get(normalized) + 1);
+			else nameCount.put(normalized, 1);
+		}
+
+		String lng = null;
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if(rb != null) lng = rb.getLng();
+
+		for(PerexGroupBean perexGroup : perexGroups) {
+			String normalized = normalizePerexName( perexGroup.getPerexGroupName() );
+			if(nameCount.get(normalized) == 1) continue;
+
+			String optionName = "";
+			if(normalized.equals( normalizePerexName(perexGroup.getBasicPerexGroupName()) ))
+				optionName = perexGroup.getPerexGroupName() + " (" + perexGroup.getPerexGroupId() + ")";
+			else
+				optionName = perexGroup.getPerexGroupName() + " (" + perexGroup.getPerexGroupId() + ":" + perexGroup.getBasicPerexGroupName() + ")";
+
+			if(Tools.isEmpty(lng))
+				perexGroup.setPerexGroupName(optionName);
+			else
+				perexGroup.setPerexGroupName(lng, optionName);
+		}
+
+		return perexGroups;
+	}
+
+	private static String normalizePerexName(String perexGroupName) {
+		if(perexGroupName == null) return "";
+		perexGroupName = StringUtils.stripAccents(perexGroupName);
+		return perexGroupName.toLowerCase();
 	}
 
 	/**

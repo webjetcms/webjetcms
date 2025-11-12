@@ -484,7 +484,7 @@ public class WebpagesService {
 	 */
 	public List<PerexGroupBean> getPerexGroups(boolean recursive) {
 		List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(groupId, recursive);
-		return perexGroups;
+		return DocDB.fixPerexNameForOptions(perexGroups);
 	}
 
 	/**
