@@ -26,6 +26,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/news/editor-dialog.png)
 
+- [Formulár ľahko](redactor/apps/formsimple/README.md)
+
+![](redactor/apps/formsimple/editor-dialog-items.png)
+
 ### Presmerovania
 
 - Pridané možnosť ukončiť platnosť presmerovania v stanovenom čase a možnosť zadať poznámku s informáciou na čo presmerovanie slúži. Presmerovania, ktoré už nie sú časovo platné sa zobrazia červenou farbou (#58105).
