@@ -479,7 +479,7 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Vrati zoznam PerexGroupBean objektov
+	 * Vrati zoznam perex groups ako OptionDto pre DT
 	 * @param recursive - ak je nastavene na true vrati aj PerexGroupBean z podadresarov
 	 * @return
 	 */

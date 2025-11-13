@@ -3540,7 +3540,9 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Return perexGroups as OptionDto with fixed name duplicity
+	 * Return perexGroups as OptionDto with fixed name duplicity with ID and nameOriginal
+	 * Z_DUPLICITY (1969)
+	 * Z_Duplicity (1971:Z_Duplicity-b)
 	 * @return
 	 */
 	public List<OptionDto> getPerexGroupOptions()
