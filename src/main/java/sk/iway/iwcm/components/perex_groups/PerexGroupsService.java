@@ -23,6 +23,7 @@ public class PerexGroupsService {
 
     /**
      * Get all perex groups via repo
+     * DO NOT USE IN CODE instead use DocDB.getPerexGroups() method which caches the data
      * @return
      */
     public static List<PerexGroupsEntity> getPerexGroups() {
