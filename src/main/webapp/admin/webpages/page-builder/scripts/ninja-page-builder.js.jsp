@@ -44,6 +44,12 @@
 
             this.set_settings_after();
 
+            var me = this;
+            window.webjethtmlboxDialogCommand = function(editor) {
+                console.log("webjethtmlboxDialogCommand called, editor=", editor);
+                me.show_library_tab(null);
+            }
+
             //inject section if there is no section in HTML
             let html = $(this.element).html();
             if (html.indexOf("<section")==-1)
@@ -177,6 +183,7 @@
                 row:                            prefix+'row',
                 column:                         prefix+'column',
                 column_content:                 prefix+'column__content',
+                content:                        prefix+'content',
 
                 editable_section:               'pb-section',
                 editable_container:             'pb-container',
@@ -263,10 +270,11 @@
                 library_column:                 prefix+'library--column',
                 library_container:              prefix+'library--container',
                 library_section:                prefix+'library--section',
+                library_content:                prefix+'library--content',
 
                 library_header:                 prefix+'library__header',
                 library_header_title:           prefix+'library__header__title',
-                library_content:                prefix+'library__content',
+                library_content_container:      prefix+'library__content',
                 library_footer:                 prefix+'library__footer',
                 library_footer_button:          prefix+'library__footer__button',
 
@@ -1635,7 +1643,7 @@
 
             var library  = '<div class="'+this.tag.library+'">';
             library += '<div class="'+this.tag.library_header+'"><div class="'+this.tag.library_header_title+'"><iwcm:text key="pagebuilder.create_library.insert"/></div>'+this.create_library_tab_menu()+'</div>';
-            library += '<div class="'+this.tag.library_content+'">'+this.create_library_tab_content()+'</div>';
+            library += '<div class="'+this.tag.library_content_container+'">'+this.create_library_tab_content()+'</div>';
             library += '<div class="'+this.tag.library_footer+'">'+ this.build_button(this.tag.library_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
             library += '</div>';
 
@@ -1671,6 +1679,8 @@
 
         // <%--// otvara taby basic/library/favorite--%>
         show_library_tab: function (el) {
+            console.log("show_library_tab, el=", el);
+
             this.clicked_button = $(el);
 
             var me = this,
@@ -1680,6 +1690,7 @@
             $(me.tagc.library).removeClass(me.tag.library_column);
             $(me.tagc.library).removeClass(me.tag.library_container);
             $(me.tagc.library).removeClass(me.tag.library_section);
+            $(me.tagc.library).removeClass(me.tag.library_content);
 
             $('.library-tab-link').removeClass('active');
             $('.library-tab-link').first().addClass('active');
@@ -1699,6 +1710,10 @@
 
             if($(parent).hasClass(me.tag.container)) {
                 $(me.tagc.library).addClass(me.tag.library_container);
+            }
+
+            if (el == null) {
+                $(me.tagc.library).addClass(me.tag.library_content);
             }
 
             if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
@@ -2018,6 +2033,7 @@
                 else if($(parent).hasClass(me.tag.row)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.container)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.section)) parentTag = "section";
+                else if($(parent).hasClass(me.tag.content)) parentTag = "content";
 
                 //ak sa klikne na emptybutton musime posunut uroven parenta vyssie
                 var emptyClick = me.clicked_button.hasClass(me.tag.empty_placeholder_button);
@@ -2032,13 +2048,30 @@
                     else if(parentTag=="container") parentTag = "column";
                     else if (parentTag=="section") parentTag = "container";
                 }
-                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button);
 
-                if(parentTag != null) {
+                console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
+
+                if (parentTag == null) parentTag = "content";
+
+                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
+                console.log("html=", html);
+
+                if ("conten" === parentTag) {
+                    //content block vkladame priamo do wrappera
+                    //insert content into CKEditor
+                    var oEditor = window.getCkEditorInstance();
+                    if (html.indexOf("<span") == 0) {
+                        oEditor.insertHtml(html)
+                    } else if (html.indexOf("!INCLUDE")!=-1) {
+                        oEditor.wjInsertUpdateComponent(data);
+                    } else {
+                        oEditor.wjInsertHtml(html)
+                    }
+                }
+                else if(parentTag != null) {
                         var clicked_button = me.clicked_button;
 
-                        var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
-                        //console.log("html=", html);
+
 
                         //ak vkladam tab-pane tak ho fyzicky potrebujem vlozit do div.tab-content (ak existuje)
                         if (html.indexOf("<div class=\"tab-pane")==0) {
@@ -2175,7 +2208,7 @@
         create_library_content_template: function(type) {
             var content = '';
 
-            var libraryMainGroups = ['section', 'container', 'column'];
+            var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
             libraryMainGroups.forEach(function (group, index) {
