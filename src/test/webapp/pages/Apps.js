@@ -184,6 +184,16 @@ module.exports = {
     },
 
     /**
+     * Click on the Cancel button in the Editor App dialog to discard app settings changes
+     */
+    cancel() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_cancel");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
      * Save DT editor without closing it
      */
     save() {

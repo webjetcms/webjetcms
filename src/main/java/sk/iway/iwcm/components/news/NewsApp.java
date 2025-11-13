@@ -23,7 +23,6 @@ import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
-import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
@@ -190,11 +189,7 @@ public class NewsApp extends WebjetComponentAbstract  {
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-        List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups();
-        List<OptionDto> perexGroupOptions = new ArrayList<>();
-        for (PerexGroupBean pg : perexGroups) {
-            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), ""+pg.getPerexGroupId(), null));
-        }
+        List<OptionDto> perexGroupOptions = DocDB.getInstance().getPerexGroupOptions();
         options.put("perexGroup", perexGroupOptions);
         options.put("perexGroupNot", perexGroupOptions);
 
