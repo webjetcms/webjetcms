@@ -13,7 +13,20 @@ export function typeStaticText() {
                 type: 'text'
             }, conf.attr || {} ) );
 
-            conf._input.html(WJ.parseMarkdown(conf._input.attr("data-value")));
+            var allowsHtml = false;
+            const classNamesStr = conf.className;
+            if(classNamesStr) {
+                const classNamesArr = classNamesStr.split(" ");
+                for(let i = 0; i < classNamesArr.length; i++) {
+                    if("allow-html" === classNamesArr[i]) allowsHtml = true;
+                }
+            }
+
+            if(allowsHtml === true) {
+                conf._input.html(conf._input.attr("data-value"));
+            } else {
+                conf._input.html(WJ.parseMarkdown(conf._input.attr("data-value")));
+            }
 
             return conf._input[0];
         },

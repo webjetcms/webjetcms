@@ -27,6 +27,13 @@ function getFieldValue(value, action, fieldType) {
         value = value.replaceAll(/&lt;/gi, "<");
         value = value.replaceAll(/&gt;/gi, ">");
         return value;
+    } else if(fieldType === "textarea") {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     } else {
         value = value.replace(/"/gi, "&quot;");
         if(action === "create") return getEmptyStringFieldValue();
