@@ -61,6 +61,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyButton;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -482,9 +483,9 @@ public class WebpagesService {
 	 * @param recursive - ak je nastavene na true vrati aj PerexGroupBean z podadresarov
 	 * @return
 	 */
-	public List<PerexGroupBean> getPerexGroups(boolean recursive) {
+	public List<OptionDto> getPerexGroups(boolean recursive) {
 		List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(groupId, recursive);
-		return DocDB.fixPerexNameForOptions(perexGroups);
+		return DocDB.fixPerexNameDuplicityForOptions(perexGroups);
 	}
 
 	/**
@@ -948,7 +949,7 @@ public class WebpagesService {
 		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), TITLE, DOC_ID, false);
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", USER_GROUP_ID, false);
-        pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "perexGroupName", "perexGroupId", false);
+        pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "label", "value", false);
 
 		//optiony pre ikonu
 		pageImpl.addOptions("editorFields.statusIcons", getStatusIconOptions(options, prop), "label", "value", false);

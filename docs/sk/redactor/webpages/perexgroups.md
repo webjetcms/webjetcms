@@ -13,6 +13,7 @@ Editor pre vytvorenie značiek je jednoduchý a obsahuje iba 2 karty.
 ### Karta Základné
 
 Karta obsahuje nasledujúce polia:
+
 - **Názov skupiny**, unikátny názov značky, je povinný.
 - **Zobraziť pre**, nastavenie obmedzenia zobrazenia značiek len pre určité adresáre web stránok.
 
