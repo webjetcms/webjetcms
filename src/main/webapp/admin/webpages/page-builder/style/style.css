@@ -774,6 +774,9 @@
   background-position: center;
   background-size: auto 13px;
 }
+.pb-size-changer__number {
+  width: 60px;
+}
 .pb-size-changer__down, .pb-size-changer__up {
   text-indent: -2000px;
 }

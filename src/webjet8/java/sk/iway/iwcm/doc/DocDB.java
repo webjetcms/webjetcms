@@ -19,6 +19,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
@@ -3538,6 +3539,16 @@ public class DocDB extends DB
 		return(getPerexGroups(false));
 	}
 
+	/**
+	 * Return perexGroups as OptionDto with fixed name duplicity with ID and nameOriginal
+	 * Z_DUPLICITY (1969)
+	 * Z_Duplicity (1971:Z_Duplicity-b)
+	 * @return
+	 */
+	public List<OptionDto> getPerexGroupOptions()
+	{
+		return( fixPerexNameDuplicityForOptions(getPerexGroups(false)));
+	}
 
 	/**
 	 *  Vrati List s nazvami perex skupin
@@ -4802,9 +4813,7 @@ public class DocDB extends DB
 	 */
 	public List<PerexGroupBean> getPerexGroups(int groupId, boolean recursive)
 	{
-		int[] groupIds = new int[1];
-		groupIds[0] = groupId;
-		return getPerexGroups(groupIds, recursive);
+		return getPerexGroups(new int[]{groupId}, recursive);
 	}
 
 	/**
@@ -6337,4 +6346,49 @@ public class DocDB extends DB
 		return sqlFields.toString();
 	}
 
+	/**
+	 * Check for duplicate perex group names and fix their display names for options:
+	 * Z_DUPLICITY (1969)
+	 * Z_Duplicity (1971:Z_Duplicity-b)
+	 * @param perexGroups
+	 * @return
+	 */
+	public static List<OptionDto> fixPerexNameDuplicityForOptions(List<PerexGroupBean> perexGroups) {
+		Map<String, Integer> nameCount = new HashMap<>();
+
+		for(PerexGroupBean perexGroup : perexGroups) {
+			String normalized = normalizePerexName( perexGroup.getPerexGroupName() );
+			if(nameCount.containsKey(normalized)) nameCount.put(normalized, nameCount.get(normalized) + 1);
+			else nameCount.put(normalized, 1);
+		}
+
+		List<OptionDto> options = new ArrayList<>();
+		for(PerexGroupBean perexGroup : perexGroups) {
+			String optionName = perexGroup.getPerexGroupName();
+			String normalized = normalizePerexName( optionName );
+			if(nameCount.get(normalized) > 1) {
+				//name is duplicated, need to add ID and basic name
+				if(normalized.equals( normalizePerexName(perexGroup.getBasicPerexGroupName()) )) {
+					optionName = perexGroup.getPerexGroupName() + " (" + perexGroup.getPerexGroupId() + ")";
+				} else {
+					optionName = perexGroup.getPerexGroupName() + " (" + perexGroup.getPerexGroupId() + ":" + perexGroup.getBasicPerexGroupName() + ")";
+				}
+			}
+
+			options.add( new OptionDto(optionName, String.valueOf(perexGroup.getPerexGroupId()), null) );
+		}
+
+		return options;
+	}
+
+	/**
+	 * Normalize perex group name for comparison. Remove accents and convert to lower case.
+	 * @param perexGroupName
+	 * @return normalized perex group name, never null
+	 */
+	private static String normalizePerexName(String perexGroupName) {
+		if(perexGroupName == null) return "";
+		perexGroupName = DB.internationalToEnglish(perexGroupName);
+		return perexGroupName.toLowerCase();
+	}
 }

@@ -26,6 +26,9 @@
         background-position: center;
         background-size: auto ($size-changer-size/2);
     }
+    &__number {
+        width: 60px;
+    }
 
     &__down,
     &__up {
