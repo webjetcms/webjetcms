@@ -2,9 +2,9 @@ package sk.iway.iwcm.system;
 
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.Tag;
 
 import org.displaytag.localization.I18nResourceProvider;
 import org.displaytag.localization.LocaleResolver;

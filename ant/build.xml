@@ -10,7 +10,7 @@
     </description>
 
     <!-- set global properties for this build -->
-    <property name="projectname" value="webjetcms"/>
+    <property name="projectname" value="webjetcms_jakarta"/>
 
     <property name="root" value="build/updatezip" />
     <property name="outdir" value="${root}/WebContent/"/>
@@ -39,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.0-SNAPSHOT" />
+        <property name="artifact.version" value="2025.0-jakarta-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -266,7 +266,7 @@
         <copy todir="${root}/libs" overwrite="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
                 <include name="net/**"/>
-                <include name="org/displaytag/**"/>
+                <include name="org/**"/>
             </fileset>
         </copy>
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
