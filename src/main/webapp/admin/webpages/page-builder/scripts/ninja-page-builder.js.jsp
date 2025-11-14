@@ -46,7 +46,7 @@
 
             var me = this;
             window.webjethtmlboxDialogCommand = function(editor) {
-                console.log("webjethtmlboxDialogCommand called, editor=", editor);
+                //console.log("webjethtmlboxDialogCommand called, editor=", editor);
                 me.show_library_tab(null);
             }
 
@@ -451,21 +451,38 @@
                                     "id": "1",
                                     "textKey": "column",
                                     "groups": [
-                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>',        'content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
+                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>','content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "2",
                                     "textKey": "container",
                                     "groups": [
-                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
+                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "3",
                                     "textKey": "section",
                                     "groups": [
-                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
+                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
+                                    ]
+                                },
+                                {
+                                    "id": "4",
+                                    "textKey": "content",
+                                    "groups": [
+                                        { id: "id4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
+                                        { id: "id4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
+                                        { id: "id4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
+                                        { id: "id4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
+                                        { id: "id4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
+                                        { id: "id4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
+                                        { id: "id4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
+                                        { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
+                                        { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
+                                        { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" }
                                     ]
                                 }
                             ];
@@ -544,6 +561,11 @@
                     textKey: v,
                     groups: groups
                 });
+            });
+            ret.push({
+                id: 4,
+                textKey: "content",
+                groups: me.template.basic[3].groups
             });
             me.template.basic = ret;
 
@@ -1637,6 +1659,17 @@
         /*====================|> CREATE LIBRARY
         /*=================================================================*/
 
+        insert_content_into_ckeditor_at_cursor: function(html) {
+            var oEditor = window.getCkEditorInstance();
+            if (html.indexOf("<span") == 0) {
+                oEditor.insertHtml(html)
+            } else if (html.indexOf("!INCLUDE")!=-1) {
+                oEditor.wjInsertUpdateComponent(html);
+            } else {
+                oEditor.wjInsertHtml(html)
+            }
+        },
+
         create_library: function () {
 
             var me = this;
@@ -1679,7 +1712,7 @@
 
         // <%--// otvara taby basic/library/favorite--%>
         show_library_tab: function (el) {
-            console.log("show_library_tab, el=", el);
+            //console.log("show_library_tab, el=", el);
 
             this.clicked_button = $(el);
 
@@ -1692,11 +1725,11 @@
             $(me.tagc.library).removeClass(me.tag.library_section);
             $(me.tagc.library).removeClass(me.tag.library_content);
 
-            $('.library-tab-link').removeClass('active');
-            $('.library-tab-link').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-link').removeClass('active');
+            $(me.tagc.library + ' .library-tab-link:nth-child(2)').addClass('active');
 
-            $('.library-tab-item').removeClass('active');
-            $('.library-tab-item').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-item').removeClass('active');
+            $(me.tagc.library + ' .library-tab-item:nth-child(2)').addClass('active');
 
             //console.log("show_library_tab, parent=", $(parent), "css=", $(parent).attr("class"), "el=", this.clicked_button, "isEmptyPlaceholderButton=", isEmptyPlaceholderButton);
 
@@ -1714,6 +1747,10 @@
 
             if (el == null) {
                 $(me.tagc.library).addClass(me.tag.library_content);
+                //hide favourites tab - there is no way to add content to favourites from CKEditor
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').hide();
+            } else {
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
             }
 
             if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
@@ -1754,8 +1791,8 @@
                 content_03 = me.create_library_content_template('favorite');
 
             var tab = '<div class="library-tab-content">';
-            tab += '<div class="library-tab-item library-tab-item--basic active" data-tab-id="01">'+content_01+'</div>';
-            tab += '<div class="library-tab-item library-tab-item--library" data-tab-id="02">'+content_02+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--basic" data-tab-id="01">'+content_01+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--library active" data-tab-id="02">'+content_02+'</div>';
             tab += '<div class="library-tab-item library-tab-item--favorite '+me.tag.library_favorites+'" data-tab-id="03">'+content_03+'</div>';
             tab += '</div>';
 
@@ -1783,9 +1820,18 @@
                     return;
                 }
 
-                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty);
+                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
-                if($(parent).hasClass(me.tag.column)) {
+                if (parent == null) {
+                    //its content element, insert into CkEditor
+                    var columns = me.get_json_object_by_attribute(me.template[template_type],'textKey','content');
+                    var groups = me.get_json_object_by_attribute(columns.groups,'id',id);
+
+                    //console.log("Inserting content into CKEditor:", content, "groups=", groups);
+                    var html = groups.content;
+                    me.insert_content_into_ckeditor_at_cursor(html);
+
+                } else if($(parent).hasClass(me.tag.column)) {
                     if(empty) {
                         alert('error 1: column empty. Please contact web administrator');
                         return;
@@ -1963,13 +2009,15 @@
                     me.mark_section(insert_content);
                 }
 
-                me.set_toolbar_visible(insert_content);
-                $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
+                if (parent != null) {
+                    me.set_toolbar_visible(insert_content);
+                    $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
 
-                me.newElement = $(insert_content);
-                me.options.onNewElementAdded();
-                me.changedElement = $(insert_content);
-                me.options.onGridChanged();
+                    me.newElement = $(insert_content);
+                    me.options.onNewElementAdded();
+                    me.changedElement = $(insert_content);
+                    me.options.onGridChanged();
+                }
 
                 me.hide_library();
 
@@ -2049,29 +2097,19 @@
                     else if (parentTag=="section") parentTag = "container";
                 }
 
-                console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
-
                 if (parentTag == null) parentTag = "content";
+                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
 
                 var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
-                console.log("html=", html);
+                //console.log("html=", html);
 
-                if ("conten" === parentTag) {
-                    //content block vkladame priamo do wrappera
-                    //insert content into CKEditor
-                    var oEditor = window.getCkEditorInstance();
-                    if (html.indexOf("<span") == 0) {
-                        oEditor.insertHtml(html)
-                    } else if (html.indexOf("!INCLUDE")!=-1) {
-                        oEditor.wjInsertUpdateComponent(data);
-                    } else {
-                        oEditor.wjInsertHtml(html)
-                    }
+                if ("content" === parentTag) {
+                    //insert content block into CKEditor
+                    html = html.trim();
+                    me.insert_content_into_ckeditor_at_cursor(html);
                 }
                 else if(parentTag != null) {
                         var clicked_button = me.clicked_button;
-
-
 
                         //ak vkladam tab-pane tak ho fyzicky potrebujem vlozit do div.tab-content (ak existuje)
                         if (html.indexOf("<div class=\"tab-pane")==0) {

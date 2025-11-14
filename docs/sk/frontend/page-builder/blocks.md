@@ -7,6 +7,7 @@ V koreňovom adresári pre bloky môžete mať nasledovné pod adresáre:
 - ```section``` - pre bloky sekcií (modré označenie v Page Builderi)
 - ```container``` - pre kontajnery (červené označenie v Page Builderi)
 - ```column``` - pre stĺpce (zelené označenie v Page Builderi)
+- ```content``` - pre vkladané rôzne texty, tlačidlá a podobne. Vkladajú sa pomocou ikony Bloky a žltej čiary, ktorá sa zobrazuje medzi blokmi.
 
 V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov ako ďalšie pod adresáre**, napr. ```Contact, Features```. Až v týchto pod adresároch vytvárate jednotlivé HTML bloky. Príkladom je teda adresárová štruktúra:
 
@@ -34,6 +35,11 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - left.jpg
     - right.html
     - right.jpg
+- content
+  - Buttons
+    - standard.html
+    - big.jpg
+    - contactus.html
 ```
 
 ## Nastavenie šírky stĺpcov
@@ -464,7 +470,7 @@ Kompletná ukážka HTML kódu web stránky s ukážkovými sekciami:
 
 Ak potrebujete vlastný podporný JavaScript súbor (viď vyššie spomínaný `pagesupport.js`), môžete vytvoriť súbor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, ktorý ak existuje načíta sa po súbore `pagesupport.js`. Môžete tak doplniť vlastné funkcie, alebo upraviť štandardné existujúce funkcie z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-Môžete aj upraviť niektoré nastavenia, ako napríklad zoznam farieb, alebo upraviť CSS selektory:
+Môžete aj upraviť niektoré nastavenia, ako napríklad zoznam farieb, upraviť CSS selektory, nastaviť šírku pre rôzne zariadenia a podobne. Nasledujúci kód je len ukážkový, vložte ho do súboru `pagesupport-custom.js`:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
