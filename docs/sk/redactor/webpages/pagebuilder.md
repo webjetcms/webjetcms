@@ -58,3 +58,7 @@ Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nás
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+## Rozdelenie stĺpca
+
+Funkciu Rozdeliť stĺpec vyvoláte pomocou kliknutia na `+` v žltej lište a zvolením možnosti Blok. Následne v karte Základné zvolíte možnosť Rozdeliť stĺpec. Funkcia umožňuje rýchle rozdelenie stĺpca bez nutnosti vkladať nový stĺpec a presúvať obsah. Umožní vám vkladať nové komplexné bloky napr. do dlhého textového stĺpca.

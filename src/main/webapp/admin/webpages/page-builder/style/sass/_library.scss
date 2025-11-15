@@ -331,7 +331,8 @@
     &--column .library-template-block--column,
     &--row .library-template-block--column,
     &--container .library-template-block--container,
-    &--section .library-template-block--section {
+    &--section .library-template-block--section,
+    &--content .library-template-block--content {
         display: block !important;
     }
 
@@ -350,7 +351,8 @@
     &--column.show-group .library-template-block--column,
     &--row.show-group .library-template-block--row,
     &--container.show-group .library-template-block--container,
-    &--section.show-group .library-template-block--section {
+    &--section.show-group .library-template-block--section,
+    &--section.show-group .library-template-block--content {
         .library-full-width-item {
             display: block !important;
         }

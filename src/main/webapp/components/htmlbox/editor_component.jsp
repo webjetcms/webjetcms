@@ -81,7 +81,7 @@
                 {
                     htmlCode = previewWindow.document.getElementById("_iframeHtmlData").value;
                 }
-					 //console.log("Inserting HTML code=", htmlCode);
+				//console.log("Inserting HTML code=", htmlCode);
                 insertHtml(htmlCode);
                 return true ;
 			}else {
@@ -145,11 +145,12 @@
 			oEditor.ckeditor.insertHtml(data);
         } else if (typeof oEditor.ckeditor != "undefined" && typeof oEditor.ckeditor.wjInsertHtml != "undefined") {
 			//console.log("Inserting WJ HTML");
-			if (data.indexOf("!INCLUDE") == 0) oEditor.ckeditor.wjInsertUpdateComponent(data);
-			else oEditor.ckeditor.wjInsertHtml(data);
+			//if (data.indexOf("!INCLUDE") == 0) oEditor.ckeditor.wjInsertUpdateComponent(data);
+			//else oEditor.ckeditor.wjInsertHtml(data);
+			oEditor.FCK.InsertHtml(data);
 		}
 		else {
-			//consoleo.log("Inserting FCK HTML");
+			//console.log("Inserting FCK HTML");
 			oEditor.FCK.InsertHtml(data);
 		}
 
@@ -186,6 +187,7 @@
 	}
 	function editDoc()
 	{
+		if (document.textForm.docid.value == "") return;
 		previewWindow.location.href="/admin/v9/webpages/web-pages-list/?showOnlyEditor=true&showEditorFooterPrimary=true&docid="+document.textForm.docid.value;
 	}
 
@@ -226,7 +228,10 @@
 					<span style="padding-right: 1em;"><label><input type="radio" name="insertType" value="dynamic" id="insertType" /> <iwcm:text key="components.htmlbox.insertType.dynamic"/></label></span>
 
 					<iwcm:text key="components.popup.docid"/>:
-					<input type="text" name="docid" value="<%=pageParams.getValue("docid", "") %>" size="5" onblur="previewDocId();"/>
+					<input type="text" name="docid" value="<%
+						String docIdValue = pageParams.getValue("docid", "");
+						if ("-2".equals(docIdValue)) docIdValue = ""; //special value for Page Builder content block
+						out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(docIdValue)); %>" size="5" onblur="previewDocId();"/>
 					<input type="button" value="<iwcm:text key='components.tips.select'/>" name="bSelDoc" onClick='popupFromDialog("/admin/user_adddoc.jsp", 450, 340);' class="btn green" />
 					<input type="button" value="<iwcm:text key='button.edit'/>" name="bEditDoc" onClick='editDoc();' class="btn yellow" />
 	         	</span>
@@ -289,7 +294,7 @@
 		</div>
 	</div>
 </div>
-<% if (pageParams.getIntValue("docid", -1) > 0) { %>
+<% if (pageParams.getIntValue("docid", -1) > 0 || pageParams.getIntValue("docid", -1) == -2) { %>
 	<script type="text/javascript">
 		editDoc();
 		$('#DSselector').hide();
@@ -297,9 +302,7 @@
 		document.textForm.field.value="otherDocId";
 		$(document.textForm.insertType[1]).click();
 	</script>
-<%  } %>
-
-<% if ((docList == null || docList.size()<3 ) && listPriecinkov.size()<1) { %>
+<%  } else if ((docList == null || docList.size()<3 ) && listPriecinkov.size()<1) { %>
 	<script type="text/javascript">
 		$("#tabLink2").click();
 	</script>
