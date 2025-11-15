@@ -1,6 +1,8 @@
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
+<%@ page import="sk.iway.iwcm.doc.TemplateDetails" %>
+<%@
 		taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 		taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 		taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
@@ -11,6 +13,12 @@
 		taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
 	//vygeneruje pole pre zadanie textu z captcha obrazku
+
+
+	TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
+	if(temp != null && temp.isDisableSpamProtection()){
+		return;
+	}
 
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
