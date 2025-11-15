@@ -482,7 +482,8 @@
                                         { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
                                         { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
                                         { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
-                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" }
+                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
+                                        { id: "id4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
                                 }
                             ];
@@ -1666,7 +1667,44 @@
             } else if (html.indexOf("!INCLUDE")!=-1) {
                 oEditor.wjInsertUpdateComponent(html);
             } else {
-                oEditor.wjInsertHtml(html)
+                oEditor.wjInsertHtml(html);
+            }
+
+            if (html.indexOf("pb-split-column-placeholder")!=-1) {
+                var splitElement = $(".pb-split-column-placeholder").first();
+                if (splitElement.length>0) {
+                    var grid_element = this.get_parent_grid_element(splitElement);
+                    var columnHtmlCode = $(grid_element).prop('outerHTML');
+
+                    //we must wrap it into section because otherwise cleanup will not remove necessary classes
+                    columnHtmlCode = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'">'+columnHtmlCode+'</div></div></section>';
+
+                    var clone = $(columnHtmlCode);
+                    this.clearEditorAttributes(clone);
+
+                    var cleanHtml = clone.find(this.grid.column).prop("outerHTML");
+                    $(cleanHtml).insertAfter(grid_element);
+
+                    //iterate over elements in splitElement parent and delete all after+including splitElement
+                    var elementsToRemove = splitElement.nextAll().addBack();
+                    elementsToRemove.remove();
+
+                    //find news inserted column
+                    var newElement = $(grid_element).next();
+                    newElement.prop("outerHTML", clone.find("."+this.grid.column_default_class).prop("outerHTML"));
+
+                    //iterate over elements in newElement, find .pb-split-column-placeholder and remove all elements before it + itself
+                    var splitPlaceholder = newElement.find(".pb-split-column-placeholder");
+                    if (splitPlaceholder.length>0) {
+                        var elementsToRemoveBefore = splitPlaceholder.prevAll().addBack();
+                        elementsToRemoveBefore.remove();
+                    }
+
+                    //mark PB and call ckeditor init
+                    this.mark_column(newElement);
+                    this.options.onGridChanged();
+                }
+
             }
         },
 
