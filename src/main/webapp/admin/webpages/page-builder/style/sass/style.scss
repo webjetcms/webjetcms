@@ -14,6 +14,7 @@ $nice-black: #1f2022;
 $dark-60: #686F83;
 
 $sidebar-bg: #353944;
+$sidebar-bg-g: #4D5262;
 $sidebar-active-bg: #23262E;
 
 /* Page Builder variables */
@@ -21,10 +22,13 @@ $sidebar-active-bg: #23262E;
 $prefix: "pb";
 
 $color-gray: #8a8e93;
-$color-column: #1ccd5a;
+$color-column: #00A186; //Green50
+$color-column-g: #00BE9F;
 $color-row: transparent;
-$color-container: #fe1a69;
-$color-section: #2bb6f9;
+$color-container: #F64D91; //Rose50
+$color-container-g: #FB81AA;
+$color-section: #6486FF; //Blue50
+$color-section-g: #8FA3FF;
 $color-wrapper: #ccc;
 
 $minimum-index: 100000;

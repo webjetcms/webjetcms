@@ -5,10 +5,16 @@
     width: $toolbar-size;
     height: $toolbar-size;
     z-index: $toolbar-index;
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAA0CAYAAADIZmusAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUQwNTMzQjZGNkZFMTFFOEE2OENFN0FCRDlFNEIxMkUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUQwNTMzQjdGNkZFMTFFOEE2OENFN0FCRDlFNEIxMkUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5RDA1MzNCNEY2RkUxMUU4QTY4Q0U3QUJEOUU0QjEyRSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5RDA1MzNCNUY2RkUxMUU4QTY4Q0U3QUJEOUU0QjEyRSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtofDBgAAAIBSURBVHja7FrtbcMgECVWB/AI7gbuBE036AjOBPEI2SDyBGkmaDZIO4GzgbNBvAE9VCxRi88D5BrxpEt+AAfPlxyPwxtKKQmECqwBewUrwWpFvxvYCPYN9gF2DzH5JiCRK9jWccwX2FuIyQuSCDKRTCQTwROpLH2wlDsgMhbhYwbuwzbFy8HSr8Qa+osHWKvpM9BwGLhP2VwtXwtV9dGRENGDbXl7CXal8XDlcxA+Zy/p05iI1AJzGT4N7aHw4HPp2mtx7fOdvddIi/8GJnVeZH/2w4pIEL7Ww1xrlTx7lCvLukx8PrPvKSLtCklMAWiniKw1Gn+iUvDNaK0kpqg0LCIxM9XIs8v054z1wG4k0j5wmud5YZ86xZiQKHZOLHoFARmhoPPKtIwPidKCBBGkTh9AAbRzicIcHz2c1g4kxMhgcRQfnMx5hXRKkIZ5eNXcT6FIZ67oPDJOh0y5xoOVK5G7Z20KM96KCGYhi/vIxQfE2T6qj0IhK1wXUXmScB0/xiDCsPcgghk76qooSWyISUiUZERjEjI+mYPVE3ycIxIpkTVhV5yTKj6Mnup1abC1j8kV6NYalW7a5ZMsYjPsDFrrgtRimJ/MxdC+M91YJXHRs/TV23vIqzexmmIj/hpP3aS7O7ReU34XJcUzeyaSiaRMJGTWYiWdhiz0KuCPAAMAP+gbLNjis/AAAAAASUVORK5CYII='); /*url("/admin/webpages/page-builder/images/toolbar.png");*/
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: auto $toolbar-icon-size;
+    > span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAA0CAYAAADIZmusAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUQwNTMzQjZGNkZFMTFFOEE2OENFN0FCRDlFNEIxMkUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUQwNTMzQjdGNkZFMTFFOEE2OENFN0FCRDlFNEIxMkUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5RDA1MzNCNEY2RkUxMUU4QTY4Q0U3QUJEOUU0QjEyRSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5RDA1MzNCNUY2RkUxMUU4QTY4Q0U3QUJEOUU0QjEyRSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtofDBgAAAIBSURBVHja7FrtbcMgECVWB/AI7gbuBE036AjOBPEI2SDyBGkmaDZIO4GzgbNBvAE9VCxRi88D5BrxpEt+AAfPlxyPwxtKKQmECqwBewUrwWpFvxvYCPYN9gF2DzH5JiCRK9jWccwX2FuIyQuSCDKRTCQTwROpLH2wlDsgMhbhYwbuwzbFy8HSr8Qa+osHWKvpM9BwGLhP2VwtXwtV9dGRENGDbXl7CXal8XDlcxA+Zy/p05iI1AJzGT4N7aHw4HPp2mtx7fOdvddIi/8GJnVeZH/2w4pIEL7Ww1xrlTx7lCvLukx8PrPvKSLtCklMAWiniKw1Gn+iUvDNaK0kpqg0LCIxM9XIs8v054z1wG4k0j5wmud5YZ86xZiQKHZOLHoFARmhoPPKtIwPidKCBBGkTh9AAbRzicIcHz2c1g4kxMhgcRQfnMx5hXRKkIZ5eNXcT6FIZ67oPDJOh0y5xoOVK5G7Z20KM96KCGYhi/vIxQfE2T6qj0IhK1wXUXmScB0/xiDCsPcgghk76qooSWyISUiUZERjEjI+mYPVE3ycIxIpkTVhV5yTKj6Mnup1abC1j8kV6NYalW7a5ZMsYjPsDFrrgtRimJ/MxdC+M91YJXHRs/TV23vIqzexmmIj/hpP3aS7O7ReU34XJcUzeyaSiaRMJGTWYiWdhiz0KuCPAAMAP+gbLNjis/AAAAAASUVORK5CYII='); /*url("/admin/webpages/page-builder/images/toolbar.png");*/
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto $toolbar-icon-size;
+        pointer-events: none;
+    }
     border-top-left-radius: $toolbar-radius;
     border-top-right-radius: $toolbar-radius;
     transition: all 0.3s ease-in-out;
@@ -21,7 +27,9 @@
     }
 
     &.#{$prefix}-is-toolbar-active {
-        background-image: url("/admin/webpages/page-builder/images/close.png");
+        > span {
+            background-image: url("/admin/webpages/page-builder/images/close.png");
+        }
     }
 
     &__content {
@@ -36,7 +44,7 @@
         white-space: nowrap;
         word-break: keep-all;
         border-radius: $toolbar-content-radius;
-        background-color: $toolbar-content-color;
+        background: linear-gradient(to top, $sidebar-bg, $sidebar-bg-g);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         transform: scale(0.8);
 
@@ -83,7 +91,7 @@
             }
 
             &:hover {
-                background-color: $primary;
+                background-color:  $sidebar-active-bg;
             }
         }
     }
@@ -93,11 +101,12 @@
     > .#{$prefix}-toolbar {
         left: 50%;
         margin-left: -($toolbar-size/2);
-        background-color: $color-column;
+
+        background: linear-gradient(to top, $color-column, $color-column-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-column,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
@@ -110,11 +119,11 @@
 .#{$prefix}-container {
     > .#{$prefix}-toolbar {
         right: 0;
-        background-color: $color-container;
+        background: linear-gradient(to top, $color-container, $color-container-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-container,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
@@ -126,26 +135,15 @@
 .#{$prefix}-section {
     > .#{$prefix}-toolbar {
         left: 0;
-        background-color: $color-section;
+        background: linear-gradient(to top, $color-section, $color-section-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-section,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
             left: 0;
-        }
-
-        &:before {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100px;
-            height: 100px;
-            //jeeff: neviem naco je toto, neslo kvoli tomu kliknut do col, zakomentovane width: 100px;
-            //height: 100px;
         }
     }
 }

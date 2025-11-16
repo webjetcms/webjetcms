@@ -1136,7 +1136,10 @@
             if(typeof content === 'undefined') {
                 content = '';
             }
-            return '<aside class="'+class_name+'">'+content+'</aside>';
+            var iconSpan = "";
+            //console.log("build_aside, class_name=", class_name);
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
+            return '<aside class="'+class_name+'">'+iconSpan+content+'</aside>';
         },
 
         /*==================================================================
