@@ -31,6 +31,9 @@ $color-section: #6486FF; //Blue50
 $color-section-g: #8FA3FF;
 $color-wrapper: #ccc;
 
+$color-magicline: #F6BE3F; //Yellow30
+$color-magicline-g: #F9D76E; //Yellow10
+
 $minimum-index: 100000;
 
 $highlighter-size: 2px;
@@ -88,6 +91,7 @@ $notify-index: $minimum-index + 3000;
 @import "modal";
 @import "notify";
 @import "library";
+@import "magicline";
 
 .#{$prefix}-column { padding:0; }
 .#{$prefix}-column__content {
