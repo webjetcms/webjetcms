@@ -1524,7 +1524,7 @@ public class Constants {
 				"Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe). Prejavy sa az po restarte wj.");
 
 		setString("editorMagiclineElements",
-				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1",
+				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1, pre: 1, hr: 1, address: 1, article: 1, aside: 1, footer: 1, nav: 1",
 				MOD_EDITOR, "Zoznam elementov pre ktore sa zobrazuje magicline v editore");
 
 		setBoolean("usersBigList", false, MOD_PERFORMANCE,
