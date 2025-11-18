@@ -78,18 +78,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function initializePageBuilder() {
         let pageDiv = $("#wjInline-docdata");
-        let html = pageDiv.html();
 
         $("body").addClass("is-edit-mode");
-
-        //inject section if there is no section in HTML
-        if (html.indexOf("<section")==-1)
-        {
-            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
-            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
-            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
-            pageDiv.html(html);
-        }
 
         pageDiv.data('ckEditorInitialized','true');
         pageDiv.ninjaPageBuilder({

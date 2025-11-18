@@ -96,6 +96,19 @@ $pagesAll
 //celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
 $totalPages
 
+//custom paging
+<ul class="pagination justify-content-center">
+     #foreach($page in $pages)
+     <li class="pagination__item">
+         <a href="$page.url"
+            class="pagination__link btn btn--square#if($page.actual) pagination__link--active#end"
+            aria-label="Strana $page.label">
+            $page.label
+         </a>
+     </li>
+     #end
+</ul>
+
 //podmienene zobrazenie ak je zadany perex obrazok
 #if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
 ```

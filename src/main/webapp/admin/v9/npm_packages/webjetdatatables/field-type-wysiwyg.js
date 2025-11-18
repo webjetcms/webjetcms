@@ -160,6 +160,16 @@ export function typeWysiwyg() {
                 } else if ('phone'==size) {
                     maxWidth = "576px";
                 }
+
+                //console.log("iframeElement=", iframeElement[0].contentWindow);
+                try {
+                    if (iframeElement.length > 0 && iframeElement[0].contentWindow && typeof iframeElement[0].contentWindow.pbGetWindowSize === "function") {
+                        maxWidth = iframeElement[0].contentWindow.pbGetWindowSize(size);
+                    }
+                } catch (e) {
+                    console.error("pbSetWindowSize error:", e);
+                }
+
                 //console.log("Setting width: ", maxWidth);
                 iframeElement.css("max-width", maxWidth);
             }

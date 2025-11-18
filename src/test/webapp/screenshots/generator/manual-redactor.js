@@ -227,6 +227,14 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
 
     I.amOnPage("/zo-sveta-financii/?NO_WJTOOLBAR=true");
     Document.screenshot("/redactor/webpages/perex-groups-news.png");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150903");
+    DTE.waitForEditor();
+    I.resizeWindow(800, 450);
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.waitForVisible(".DTE_Field_Name_perexGroups");
+    I.scrollTo("div.DTE_Field_Name_perexGroups");
+    Document.screenshotElement(".DTE.DTE_Action_Edit.modal-content", "/redactor/webpages/perex-duplicity-values.png");
 });
 
 Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
