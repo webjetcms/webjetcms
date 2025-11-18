@@ -924,6 +924,9 @@ export const dataTableInit = options => {
                 .off('click.dte-bs5')
                 .on('click.dte-bs5', function () {
                     //we are using handler down below dte.close('icon');
+                    WJ.dispatchEvent('WJ.DTE.close', {
+                        dte: dte
+                    });
                 })
                 .appendTo($('div.modal-header', append));
 
