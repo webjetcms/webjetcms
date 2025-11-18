@@ -5,12 +5,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -70,11 +72,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 updateExistingUserFromOAuth2(oauth2User, userDetails);
             }
 
-            // Aplikuj práva z OAuth2 iba pre Keycloak
-            if (isKeycloakProvider(oauth2User)) {
+            // Aplikuj práva z OAuth2 iba pre nakonfigurovaných providerov
+            String providerId = getProviderId(authentication);
+            if (shouldSyncPermissions(providerId)) {
+                Logger.info(OAuth2SuccessHandler.class, "Applying OAuth2 permissions for provider: " + providerId);
                 applyOAuth2Permissions(oauth2User, userDetails);
             } else {
-                Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization and admin privileges for non-Keycloak provider for user: " + userDetails.getEmail());
+                Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization for provider '" + providerId + "' (not configured in oauth2_clientsWithPermissions)");
             }
 
             Identity identity = new Identity(userDetails);
@@ -144,15 +148,38 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     }
 
     /**
-     * Zisťuje či je OAuth2 provider Keycloak
+     * Získa ID OAuth2 providera z autentifikácie
      */
-    private boolean isKeycloakProvider(OAuth2User oauth2User) {
-        // Keycloak má špecifické atribúty ako realm_access alebo resource_access
-        boolean hasKeycloakAttributes = oauth2User.getAttribute(REALM_ACCESS_ATTRIBUTE) != null ||
-                                       oauth2User.getAttribute(RESOURCE_ACCESS_ATTRIBUTE) != null;
+    private String getProviderId(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
+            String providerId = oauth2Token.getAuthorizedClientRegistrationId();
+            Logger.debug(OAuth2SuccessHandler.class, "Detected OAuth2 provider ID: " + providerId);
+            return providerId;
+        }
+        Logger.debug(OAuth2SuccessHandler.class, "Could not detect OAuth2 provider ID from authentication");
+        return null;
+    }
 
-        Logger.debug(OAuth2SuccessHandler.class, "Checking if provider is Keycloak - hasKeycloakAttributes: " + hasKeycloakAttributes);
-        return hasKeycloakAttributes;
+    /**
+     * Zisťuje či má daný provider nakonfigurované synchronizovať práva
+     */
+    private boolean shouldSyncPermissions(String providerId) {
+        if (providerId == null) {
+            return false;
+        }
+
+        String configuredProviders = Constants.getString("oauth2_clientsWithPermissions");
+        if (Tools.isEmpty(configuredProviders)) {
+            Logger.debug(OAuth2SuccessHandler.class, "No providers configured for permission synchronization (oauth2_clientsWithPermissions is empty)");
+            return false;
+        }
+
+        List<String> providers = List.of(Tools.getTokens(configuredProviders, ","));
+        boolean shouldSync = providers.contains(providerId);
+
+        Logger.debug(OAuth2SuccessHandler.class, "Provider '" + providerId + "' shouldSyncPermissions: " + shouldSync + " (configured: " + configuredProviders + ")");
+        return shouldSync;
     }
 
     /**

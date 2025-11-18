@@ -14,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import sk.iway.iwcm.Constants;
@@ -164,9 +165,10 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testCreateNewUserFromKeycloakWithAdminGroup() throws IOException {
-        // Nastavenie admin skupiny v konštantách
+        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv v konštantách
         try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
             constantsMock.when(() -> Constants.getString("NTLMAdminGroupName")).thenReturn("WebJETAdminGroup");
+            constantsMock.when(() -> Constants.getString("oauth2_providersWithPermissions")).thenReturn("keycloak");
 
             // Príprava Keycloak OAuth2 používateľa s admin skupinou
             Map<String, Object> attributes = createKeycloakOAuth2Attributes(
@@ -182,7 +184,7 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 attributes,
                 "email"
             );
-            when(authentication.getPrincipal()).thenReturn(oauth2User);
+            OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
 
             try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
                  MockedStatic<UserGroupsDB> userGroupsDBMock = mockStatic(UserGroupsDB.class);
@@ -211,10 +213,10 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 usersDBMock.when(() -> UsersDB.saveUser(userCaptor.capture())).thenReturn(true);
 
                 authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
-                    .thenReturn(authentication);
+                    .thenReturn(oauth2AuthToken);
 
                 // Spustenie testu
-                handler.onAuthenticationSuccess(request, response, authentication);
+                handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
 
                 // Overenie vytvorenia používateľa
                 List<UserDetails> capturedUsers = userCaptor.getAllValues();
@@ -246,9 +248,10 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testCreateNewUserFromKeycloakWithoutAdminGroup() throws IOException {
-        // Nastavenie admin skupiny v konštantách
+        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv v konštantách
         try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
             constantsMock.when(() -> Constants.getString("NTLMAdminGroupName")).thenReturn("WebJETAdminGroup");
+            constantsMock.when(() -> Constants.getString("oauth2_clientsWithPermissions")).thenReturn("keycloak");
 
             // Príprava Keycloak OAuth2 používateľa BEZ admin skupiny
             Map<String, Object> attributes = createKeycloakOAuth2Attributes(
@@ -264,7 +267,7 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 attributes,
                 "email"
             );
-            when(authentication.getPrincipal()).thenReturn(oauth2User);
+            OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
 
             try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
                  MockedStatic<UserGroupsDB> userGroupsDBMock = mockStatic(UserGroupsDB.class);
@@ -293,10 +296,10 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 usersDBMock.when(() -> UsersDB.saveUser(userCaptor.capture())).thenReturn(true);
 
                 authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
-                    .thenReturn(authentication);
+                    .thenReturn(oauth2AuthToken);
 
                 // Spustenie testu
-                handler.onAuthenticationSuccess(request, response, authentication);
+                handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
 
                 // Overenie vytvorenia používateľa
                 List<UserDetails> capturedUsers = userCaptor.getAllValues();
@@ -329,6 +332,9 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testUpdateExistingUserFromKeycloak() throws IOException {
+        // Nastavenie poskytovateľov so synchronizáciou práv
+        Constants.setString("oauth2_clientsWithPermissions", "keycloak");
+
         // Príprava Keycloak OAuth2 používateľa s rolami
         Map<String, Object> attributes = createKeycloakOAuth2Attributes(
             "keycloak@example.com",
@@ -344,7 +350,7 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
         );
 
         OAuth2User oauth2User = new DefaultOAuth2User(authorities, attributes, "email");
-        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
 
         // Mock existujúceho používateľa
         UserDetails existingUser = createTestUser("keycloak@example.com", "Keycloak", "User");
@@ -384,10 +390,10 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 .thenReturn(List.of());
 
             authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
-                .thenReturn(authentication);
+                .thenReturn(oauth2AuthToken);
 
             // Spustenie testu
-            handler.onAuthenticationSuccess(request, response, authentication);
+            handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
 
             // Overenie
             verify(response).sendRedirect("/admin/");
@@ -606,5 +612,16 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
         user.setAuthorized(true);
         user.setAdmin(true);
         return user;
+    }
+
+    /**
+     * Vytvorí OAuth2AuthenticationToken pre testovanie
+     */
+    private OAuth2AuthenticationToken createOAuth2AuthenticationToken(OAuth2User oauth2User, String registrationId) {
+        return new OAuth2AuthenticationToken(
+            oauth2User,
+            oauth2User.getAuthorities(),
+            registrationId
+        );
     }
 }

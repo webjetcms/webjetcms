@@ -128,16 +128,30 @@ Pre existujúcich používateľov sa aktualizujú:
 - Meno a priezvisko (ak sa zmenili)
 - Skupinové priradenia (iba pre Keycloak)
 
-## Synchronizácia skupín (Keycloak)
+## Synchronizácia skupín
 
-OAuth2SuccessHandler obsahuje špecializovanú logiku pre synchronizáciu skupín z Keycloak providera.
+OAuth2SuccessHandler obsahuje špecializovanú logiku pre synchronizáciu skupín z nakonfigurovaných OAuth2 providerov.
 
-### Detekcia Keycloak providera
+### Konfigurácia synchronizácie práv
+
+Aby sa synchronizovali skupiny a práva z OAuth2 providera, je potrebné nastaviť konfiguračnú premennú:
+
+```properties
+oauth2_clientsWithPermissions=keycloak,okta
+```
+
+Táto premenná definuje zoznam providerov (oddelený čiarkami), pre ktorých sa má vykonávať synchronizácia skupín a práv. Pre ostatných providerov (napr. Google, Facebook) sa synchronizácia nevykonáva.
+
+### Detekcia providera
 
 ```java
-private boolean isKeycloakProvider(OAuth2User oauth2User) {
-    return oauth2User.getAttribute("realm_access") != null ||
-           oauth2User.getAttribute("resource_access") != null;
+private boolean shouldSyncPermissions(String providerId) {
+    String configuredProviders = Constants.getString("oauth2_clientsWithPermissions");
+    if (Tools.isEmpty(configuredProviders)) {
+        return false;
+    }
+    List<String> providers = List.of(Tools.getTokens(configuredProviders, ","));
+    return providers.contains(providerId);
 }
 ```
 
@@ -189,7 +203,7 @@ for (PermissionGroupBean group : newPermissionGroups) {
 
 ### Automatické nastavenie admin práv
 
-Pre Keycloak providera sa admin práva nastavujú automaticky na základe konfiguračnej premennej:
+Pre nakonfigurovaných OAuth2 providerov (definovaných v `oauth2_clientsWithPermissions`) sa admin práva nastavujú automaticky na základe konfiguračnej premennej:
 
 ```properties
 NTLMAdminGroupName=admin
@@ -210,7 +224,7 @@ if (userDetails.isAdmin() != isAdmin) {
 
 ### Obmedzenia OAuth2 procesov
 
-1. **Iba pre Keycloak** - Synchronizácia skupín a admin práv funguje iba pre Keycloak provider
+1. **Konfigurovateľná synchronizácia** - Synchronizácia skupín a admin práv funguje iba pre OAuth2 providerov nakonfigurovaných v `oauth2_clientsWithPermissions`
 2. **Email validácia** - Každý používateľ musí mať validný email atribút
 3. **Jedinečnosť emailu** - Email musí byť jedinečný v systéme
 
@@ -274,7 +288,7 @@ Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
 
 1. **Chýbajúci email** - OAuth2 provider nevracia email atribút
 2. **Neplatná konfigurácia** - Chybné OAuth2 endpoint URL
-3. **Skupiny sa nesynchronizujú** - Provider nie je Keycloak alebo chybné názvy skupín
+3. **Skupiny sa nesynchronizujú** - Provider nie je nakonfigurovaný v `oauth2_clientsWithPermissions` alebo chybné názvy skupín
 4. **Redirect URI** - Nesprávne nastavený redirect URI u poskytovateľa
 
 ## Príklady konfigurácie
@@ -291,6 +305,7 @@ Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
 
 ```properties
 oauth2_clients=keycloak
+oauth2_clientsWithPermissions=keycloak
 oauth2_keycloakClientId=webjet-client
 oauth2_keycloakClientSecret=generated-secret-from-keycloak
 oauth2_keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/auth
@@ -327,9 +342,10 @@ Hlavné metódy:
 - `onAuthenticationSuccess()` - Hlavný entry point po úspešnej autentifikácii
 - `createNewUserFromOAuth2()` - Vytvorenie nového používateľa
 - `updateExistingUserFromOAuth2()` - Aktualizácia existujúceho používateľa
-- `applyOAuth2Permissions()` - Aplikovanie práv z OAuth2 (iba Keycloak)
+- `applyOAuth2Permissions()` - Aplikovanie práv z OAuth2 (iba pre nakonfigurovaných providerov)
 - `extractGroupsFromOAuth2()` - Extrakcia skupín z OAuth2 atribútov
-- `isKeycloakProvider()` - Detekcia Keycloak providera
+- `getProviderId()` - Zistenie ID OAuth2 providera
+- `shouldSyncPermissions()` - Kontrola, či má provider nakonfigurovanú synchronizáciu práv
 
 ### SpringSecurityConf
 

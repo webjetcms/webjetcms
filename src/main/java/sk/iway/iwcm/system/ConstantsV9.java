@@ -128,6 +128,7 @@ public class ConstantsV9 {
 
 		// OAuth2 konfiguračné premenné
 		Constants.setString("oauth2_clients", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
+		Constants.setString("oauth2_clientsWithPermissions", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
 
 		// Google OAuth2
 		Constants.setString("oauth2_googleClientId", "", Constants.MOD_SECURITY, "Google OAuth2 Client ID");
