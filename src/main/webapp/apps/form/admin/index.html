@@ -1,5 +1,8 @@
 <script data-th-inline="javascript">
     window.formRestUrl = "/admin/rest/forms-list";
+
+    console.log("Form admin index loaded");
+
 </script>
 
 <div id="forms-list-app">
@@ -33,6 +36,9 @@
     }
 
     window.domReady.add(function () {
+        // !! hide form steps tab link !! - show only in form detail view
+        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
+
         //const name = window.location.hash.split('/').pop() || null;
         //if (name) document.getElementById('pills-form-detail-tab').innerHTML = name;
 

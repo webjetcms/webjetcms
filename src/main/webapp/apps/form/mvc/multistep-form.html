@@ -1,0 +1,178 @@
+<link rel="stylesheet" type="text/css" href="/components/_common/cleditor/jquery.cleditor.css" />
+<script type="text/javascript" src="/components/_common/javascript/jquery.browser.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
+
+<div class="multistep-form-app">
+    <!-- Dynamic step content will be injected here -->
+    <div id="multistepStepContent"></div>
+</div>
+
+<script th:inline="javascript">
+    let stepPath = /*[[${stepPath}]]*/ "";
+    let formName = /*[[${formName}]]*/ "";
+    let stepId = /*[[${stepId}]]*/ "";
+
+    console.log("Multistep form initialized:", stepPath, formName, stepId);
+    // Load step HTML from REST endpoint and inject
+    function loadStep(formName, stepId) {
+        if(!formName || !stepId) {
+            console.warn("Missing formName or stepId; skipping load.");
+            return;
+        }
+        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
+        fetch(url, {
+            method: 'GET',
+            headers: { 'Accept': 'text/html' }
+        })
+            .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+            .then(html => {
+                const target = document.getElementById('multistepStepContent');
+                if(target) target.innerHTML = html;
+            })
+            .catch(err => {
+                console.warn('Failed to load step:', err);
+                const target = document.getElementById('multistepStepContent');
+                if(target) target.innerHTML = '<div class="alert alert-danger">Chyba pri načítaní kroku.</div>';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStep(formName, stepId);
+    });
+
+</script>
+
+<script th:inline="javascript">
+    //CLEDITOR init
+    $.cleditor.messages = []
+    $.cleditor.messages['selection_required'] = /*[[#{components.cleditor.messages.selection_required}]]*/ "";
+    $.cleditor.messages['cutcopypaste'] = /*[[#{components.cleditor.messages.cutcopypaste_disabled_by_browser}]]*/ "";
+    $.cleditor.messages['urlenter'] = /*[[#{components.cleditor.messages.urlenter}]]*/ "";
+    $.cleditor.messages['submit'] = /*[[#{components.cleditor.messages.submit}]]*/ "";
+    $.cleditor.messages['pastetext'] = /*[[#{components.cleditor.messages.pastetext}]]*/ "";
+
+    $.cleditor.title = []
+    $.cleditor.title['bold'] = /*[[#{components.cleditor.title.bold}]]*/ "";
+
+    $(document).ready(function() {
+			window.setTimeout(function() {
+           $("textarea.formsimple-wysiwyg").cleditor({
+              width      : "100%",
+              controls   : "bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext",
+              bodyStyle  : "font: 11px  Arial, Helvetica, sans-serif;"
+           });
+        }, 1000);
+	});
+</script>
+
+<style>
+    div.form-group {
+        border: 1px solid;
+        margin: 5px;
+        padding: 5px;
+    }
+
+    div.form-group > label > p {
+        padding: 0px;
+    }
+</style>
+
+
+    <!-- <div data-th-if="${saveMsg!=null}" class="alert alert-success">
+        <span data-th-text="${saveMsg}">After save message</span>
+    </div>
+
+    <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${entity}" method="post">
+        <div class="container">
+            <div class="row">
+                <h2 th:text="heading"></h2>
+            </div>
+            <div class="row">
+                <h4 th:text="sub-heading" class="col-11"></h4>
+                <p id="infoText" class="col-1"></p>
+            </div>
+        </div>
+
+        <div th:each="item : ${stepItems}" data-iwcm-write="item"></div>
+
+        <input type="hidden" id="stepId" data-th-field="*{stepId}" />
+
+        <button type="submit" class="btn btn-primary" name="saveForm" hidden>Submit</button>
+        <button type="button" class="btn btn-primary" data-th-text="#{components.reservation.reservation_app.save_button}" onclick="kokos()">Submit</button>
+    </form> -->
+
+
+<!--
+
+<script th:inline="javascript">
+
+    let currentStepCnt = /*[[${currentStepCnt}]]*/ "";
+    let allStepsCnt = /*[[${allStepsCnt}]]*/ "";
+    $("#infoText").html(currentStepCnt + " z " + allStepsCnt);
+
+    function kokos() {
+        if(validateClEditors()) {
+            $("button.btn-primary[name='saveForm']").click();
+        }
+    }
+
+    function validateClEditors () {
+        //Validate presence of jQuery and form
+        if (typeof $ === 'undefined') { return true; }
+        if (typeof $.fn.cleditor !== 'function') { console.warn("CLEditor plugin missing"); return true; }
+
+        var $form = $('#reservationForm');
+        if ($form.length == 0) { return true; }
+
+        var $textareas = $form.find('textarea.formsimple-wysiwyg');
+        if ($textareas.length == 0) { return true; }
+
+        let areAllValid = true;
+        $textareas.each(function () {
+            try {
+                var $this = $(this);
+                var isRequired = $this.hasClass("required") === true;
+
+                var editors = $this.cleditor();
+                if (!editors || editors.length == 0) { return; }
+
+                var editor = editors[0];
+                var bodyHtml = "";
+                if (editor && editor.doc && editor.doc.body) {
+                    bodyHtml = $(editor.doc.body).html() || "";
+                }
+
+                //Normalize content (remove trivial placeholders)
+                var value = bodyHtml
+                    .replace(/<br\s*\/?>/gi, '')
+                    .replace(/&nbsp;/gi, ' ')
+                    .trim();
+
+                var $parent = $this.closest('.form-group');
+                if ($parent.length == 0) { return; }
+
+                var $error = $parent.find("div.cs-error");
+                if ($error.length == 0) {
+                    //Create error container if missing
+                    $error = $('<div class="cs-error"></div>').appendTo($parent);
+                }
+
+                if (isRequired === true && value.length == 0) {
+                    var name = $this.attr("data-name") || "";
+                    var title = $this.attr("title") || "";
+                    $error.text(name + (name && title ? " - " : "") + title);
+                    areAllValid = false;
+                } else {
+                    $error.text("");
+                }
+            } catch (e) {
+                console.warn("Validation error in kokos():", e);
+            }
+        });
+        return areAllValid;
+    }
+
+</script>
+
+ -->

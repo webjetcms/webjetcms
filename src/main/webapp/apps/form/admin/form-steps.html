@@ -1,0 +1,47 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
+    let url = "/admin/rest/form-steps";
+</script>
+
+<script type="text/javascript">
+    var formStepsDataTable;
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+
+    WJ.breadcrumb({
+        id: "fomSteps",
+        tabs: [
+            {
+                url: '/apps/form/admin/#/detail/' + urlFormName,
+                title: urlFormName,
+                active: false
+            },
+            {
+                url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
+                title: '[[#{components.form_items.step_title}]]',
+                active: true
+            },
+            {
+                url: '/apps/form/admin/form-items/?formName=' + urlFormName,
+                title: '[[#{components.form_items.items_title}]]',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+
+        formStepsDataTable = WJ.DataTable({
+            url: WJ.urlUpdateParam(url, "formName", urlFormName),
+            serverSide: true,
+            columns: columns,
+            id: "formStepsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+    });
+</script>
+
+<table id="formStepsDataTable" class="datatableInit table"></table>

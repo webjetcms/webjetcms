@@ -2382,6 +2382,7 @@
                 </void>
             </object>
         </void>
+
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>lbalat</string></void>
@@ -2446,6 +2447,180 @@
                 <void property="pgsql"><string>ALTER TABLE response_headers ALTER COLUMN header_value TYPE TEXT</string></void>
             </object>
         </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>13.11.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_steps</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            step_name VARCHAR(255) NOT NULL,
+                            step_sub_name VARCHAR(255),
+                            sort_priority INT NOT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            step_name NVARCHAR(255) NOT NULL,
+                            step_sub_name NVARCHAR(255),
+                            sort_priority INT NOT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR(255) NOT NULL,
+                            step_name NVARCHAR(255) NOT NULL,
+                            step_sub_name NVARCHAR(255),
+                            sort_priority INTEGER NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_steps START WITH 1;
+                        CREATE TRIGGER T_form_steps BEFORE INSERT ON form_steps
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_steps.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_steps START WITH 1;
+                        CREATE TABLE form_steps (
+                            id INT DEFAULT NEXTVAL('S_form_steps') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            step_name VARCHAR(255) NOT NULL,
+                            step_sub_name VARCHAR(255),
+                            sort_priority INT NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>12.11.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_items</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            field_type VARCHAR(255) NOT NULL,
+
+                            required tinyint(1) NULL,
+
+                            label VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            placeholder VARCHAR(255) NOT NULL,
+                            tooltip VARCHAR(255) NOT NULL,
+
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            field_type NVARCHAR(255) NOT NULL,
+
+                            required BIT NULL,
+
+                            label NVARCHAR(255) NOT NULL,
+                            value NVARCHAR(255) NOT NULL,
+                            placeholder NVARCHAR(255) NOT NULL,
+                            tooltip NVARCHAR(255) NOT NULL,
+
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR(255) NOT NULL,
+                            field_type NVARCHAR(255) NOT NULL,
+
+                            required SMALLINT NULL,
+
+                            label NVARCHAR(255) NOT NULL,
+                            value NVARCHAR(255) NOT NULL,
+                            placeholder NVARCHAR(255) NOT NULL,
+                            tooltip NVARCHAR(255) NOT NULL,
+
+                            step_id INTEGER NOT NULL,
+                            sort_priority INTEGER NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_items START WITH 1;
+                        CREATE TRIGGER T_form_items BEFORE INSERT ON form_items
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_items.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_items START WITH 1;
+                        CREATE TABLE form_items (
+                            id INT DEFAULT NEXTVAL('S_form_items') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            field_type VARCHAR(255) NOT NULL,
+
+                            required tinyint(1) default NULL,
+
+                            label VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            placeholder VARCHAR(255) NOT NULL,
+                            tooltip VARCHAR(255) NOT NULL,
+
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+
 
     </object>
 </java>

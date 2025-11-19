@@ -1,0 +1,22 @@
+package sk.iway.iwcm.components.multistep_form.jpa;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
+
+@Repository
+public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, Long> {
+    List<FormStepEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
+
+    List<FormStepEntity> findAllByFormNameAndDomainIdOrderBySortPriorityAsc(String formName, Integer domainId);
+
+    @Query("SELECT DISTINCT fse.formName FROM FormStepEntity fse WHERE fse.domainId = :domainId")
+    public List<String> getMultistepFormNames(@Param("domainId") Integer domainId);
+
+    Optional<FormStepEntity> findByFormNameAndId(String formName, Long stepId);
+}

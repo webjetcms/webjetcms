@@ -146,7 +146,9 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.carouselslider",
     "sk.iway.iwcm.components.ai.rest",
     "sk.iway.iwcm.components.ai.providers",
-    "sk.iway.iwcm.components.ai.stat.rest"
+    "sk.iway.iwcm.components.ai.stat.rest",
+    "sk.iway.iwcm.components.multistep_form",
+    "sk.iway.iwcm.components.upload"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

@@ -1,5 +1,9 @@
 package sk.iway.iwcm.components.forms;
 
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,12 +17,19 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
+import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.form.FormAttributeDB;
 import sk.iway.iwcm.form.FormMailAction;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -552,5 +563,277 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         out.flush();
         out.close();
         return null;
+    }
+
+    public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop)
+    {
+       html = Tools.replace(html, "${formname}", formName);
+       html = Tools.replace(html, "${savedb}", formName);
+       html = Tools.replace(html, "${recipients}", recipients);
+
+       if (item != null)
+       {
+          try
+          {
+              String fieldType = "unknown";
+              //System.out.println("---------------------------- item="+item);
+              if (item != null) fieldType = item.getString("fieldType");
+
+            String label = Tools.getStringValue(item.getString("label"), "");
+            label = StringEscapeUtils.unescapeHtml4(label);
+
+              boolean required = false;
+              try {
+                 required = "true".equals(item.getString("required"));
+              } catch (Exception ex) {
+                 try {
+                  required = item.getBoolean("required");
+                 }
+                 catch (Exception ex2) {
+
+                 }
+              }
+
+              String value = "";
+              if (item.has("value"))
+              {
+                  value = Tools.getStringValue(item.getString("value"), "");
+              }
+
+              String placeholder = "";
+              if (item.has("placeholder"))
+              {
+                  placeholder = Tools.getStringValue(item.getString("placeholder"), "");
+                  if (Tools.isNotEmpty(placeholder))
+                  {
+                     placeholder = ResponseUtils.filter(placeholder);
+
+                     //ak je zadany placeholder a nebol zadany label, tak label schovat
+                     if (Tools.isEmpty(Tools.getStringValue(item.getString("labelOriginal"), "")))
+                     {
+                        if (isEmailRender==false) html = Tools.replace(html, "<label ", "<label class=\"d-none\" ");
+
+                        //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat
+                        label = placeholder;
+                        if (required)
+                        {
+                           if (Tools.isNotEmpty(requiredLabelAdd))
+                           {
+                              placeholder += requiredLabelAdd;
+                           }
+                        }
+                     }
+                  }
+              }
+
+              String tooltip = "";
+              if (item.has("tooltip"))
+              {
+                  tooltip = Tools.getStringValue(item.getString("tooltip"), "");
+                  tooltip = StringEscapeUtils.unescapeHtml4(tooltip);
+                  if (Tools.isNotEmpty(tooltip))
+                  {
+                     tooltip = ResponseUtils.filter(tooltip);
+                     tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
+                  }
+              }
+
+              String labelSanitized = Jsoup.parse(label).text();
+              String id = DocTools.removeChars(label, true);
+              String classes = "";
+              if (required)
+              {
+                 classes="required ";
+                 if (Tools.isNotEmpty(requiredLabelAdd))
+                 {
+                    //ak label konci na : pridaj required text pred dvojbodku
+                    if (label.endsWith(":")) label = label.substring(0, label.lastIndexOf(":")) + requiredLabelAdd + ":";
+                    else label += requiredLabelAdd;
+                 }
+              }
+
+              if (isEmailRender) tooltip = "";
+
+              //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
+
+              //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
+              String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
+              String firstTimeHeading = prop.getText(firstTimeHeadingKey);
+              //System.out.println("firstTimeHeadingKey="+firstTimeHeadingKey+" firstTimeHeading="+firstTimeHeading);
+              if (Tools.isNotEmpty(firstTimeHeading) && firstTimeHeading.equals(firstTimeHeadingKey)==false && firstTimeHeadingSet.contains(label)==false)
+              {
+                  firstTimeHeadingSet.add(label);
+                  html = firstTimeHeading+html;
+              }
+
+              //iterable - pre skupinu poli
+              int iterableSize = 0;
+              if (html.contains("${iterable}") && Tools.isNotEmpty(value))
+              {
+                 StringBuilder iterable = new StringBuilder();
+                 String iterableKey = "components.formsimple.iterable."+fieldType;
+                 String iterableCode = prop.getText(iterableKey);
+                 if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey)==false)
+                 {
+                    String delimiter = " ";
+                    if (value.contains("|")) delimiter = "|";
+                    else if (value.contains(",")) delimiter = ",";
+
+                    String[] values = Tools.getTokens(value, delimiter, true);
+                    int counter = 0;
+                    iterableSize = values.length;
+                    for (String token : values)
+                    {
+                       String valueLabel = token;
+                       String code = iterableCode;
+
+                       int separator = token.indexOf(":");
+                       if (code.contains("${value-label}") && separator>0) {
+                           valueLabel = token.substring(0, separator);
+                           token = token.substring(separator+1);
+                       }
+
+                       code = Tools.replace(code, "${value}", token);
+                       code = Tools.replace(code, "${value-label}", valueLabel);
+                       code = Tools.replace(code, "${counter}", String.valueOf(counter));
+
+                       iterable.append(code).append("\n");
+                       counter++;
+                    }
+                 }
+                 html = Tools.replace(html, "${iterable}", iterable.toString());
+              }
+
+              html = Tools.replace(html, "${id}", id);
+              html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label+":" : label);
+              html = Tools.replace(html, "${labelSanitized}", labelSanitized);
+              html = Tools.replace(html, "${value}", value);
+              html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
+              html = Tools.replace(html, "${placeholder}", placeholder);
+              html = Tools.replace(html, "${classes}", classes);
+              html = Tools.replace(html, "${tooltip}", tooltip);
+
+              StringBuilder csError = new StringBuilder();
+              csError.append("<div class=\"help-block cs-error cs-error-").append(id);
+              if (iterableSize > 0)
+              {
+                 for (int counter = 0; counter < iterableSize; counter++)
+                 {
+                    csError.append(" cs-error-").append(id).append("-").append(counter);
+                 }
+              }
+              csError.append("\"></div>");
+              html = Tools.replace(html, "${cs-error}", csError.toString());
+
+              //zamena za hodnoty z ciselnika vo forme {enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}
+              StringBuilder sb = null;
+              List<EnumerationDataBean> options;
+              String[] tokens;
+              int typeId;
+              int i = 0;
+              int startInd = html.indexOf("{enumeration-options");
+              int endInd;
+              if(html.contains("{enumeration-options"))
+              {
+                 while(startInd != -1 && i++ < 100)
+                 {
+                    endInd = html.indexOf("}", startInd);
+                    if(endInd != -1)
+                    {
+                       String enumOptions = html.substring(startInd, endInd+1);
+                       tokens = Tools.getTokens(html.substring(startInd+1, endInd), "|");
+                       if(tokens != null && tokens.length == 4)
+                       {
+                          typeId = Tools.getIntValue(tokens[1],0);
+                          //ziskam data na zaklade ID_CISELNIKA
+                          options = EnumerationDataDB.getEnumerationDataByType(typeId);
+                          if(options != null && options.size() > 0)
+                          {
+                             //ak zadame ze value ma byt enumeration_data_id, staci ak zadame v texte "id"
+                             if("id".equalsIgnoreCase(tokens[2])) tokens[2] = "enumerationDataId";
+                             if("id".equalsIgnoreCase(tokens[3])) tokens[3] = "enumerationDataId";
+                             EnumerationTypeBean currentType = EnumerationTypeDB.getEnumerationById(typeId);
+                             if(currentType != null && currentType.getEnumerationTypeId() > 0)
+                             {
+                                //zamena alternativneho nazvu stlpca hodnoty za DB nazov
+                                if (tokens[2].equalsIgnoreCase(currentType.getString1Name()))
+                                   tokens[2] = "string1";
+                                else if (tokens[2].equalsIgnoreCase(currentType.getString2Name()))
+                                   tokens[2] = "string2";
+                                else if (tokens[2].equalsIgnoreCase(currentType.getString3Name()))
+                                   tokens[2] = "string3";
+                                else if (tokens[2].equalsIgnoreCase(currentType.getDecimal1Name()))
+                                   tokens[2] = "decimal1";
+                                else if (tokens[2].equalsIgnoreCase(currentType.getDecimal2Name()))
+                                   tokens[2] = "decimal2";
+                                else if (tokens[2].equalsIgnoreCase(currentType.getDecimal3Name()))
+                                   tokens[2] = "decimal3";
+                                //zamena alternativneho nazvu stlpca label za DB nazov
+                                if (tokens[3].equalsIgnoreCase(currentType.getString1Name()))
+                                   tokens[3] = "string1";
+                                else if (tokens[3].equalsIgnoreCase(currentType.getString2Name()))
+                                   tokens[3] = "string2";
+                                else if (tokens[3].equalsIgnoreCase(currentType.getString3Name()))
+                                   tokens[3] = "string3";
+                                else if (tokens[3].equalsIgnoreCase(currentType.getDecimal1Name()))
+                                   tokens[3] = "decimal1";
+                                else if (tokens[3].equalsIgnoreCase(currentType.getDecimal2Name()))
+                                   tokens[3] = "decimal2";
+                                else if (tokens[3].equalsIgnoreCase(currentType.getDecimal3Name()))
+                                   tokens[3] = "decimal3";
+                             }
+                             for(EnumerationDataBean option : options)
+                             {
+                                if(BeanUtils.getProperty(option, tokens[3]) != null) //value moze byt teoreticky prazdne, label nie
+                                {
+                                   if(sb == null) sb = new StringBuilder();
+                                   sb.append("<option").append(" value=\"").append(BeanUtils.getProperty(option, tokens[2])).append("\">").append(BeanUtils.getProperty(option, tokens[3])).append("</option>");
+                                }
+                             }
+                             if(sb != null)
+                             {
+                                html = html.replace(enumOptions, sb.toString());
+                                sb = null;
+                             }
+                          }
+                       }
+                       startInd = html.indexOf("{enumeration-options", endInd+1);
+                    }
+                    else //nenasiel som uz nikde
+                    {
+                       startInd = -1;
+                    }
+                 }
+              }
+          }
+          catch (Exception ex)
+          {
+              sk.iway.iwcm.Logger.error(ex);
+          }
+       }
+
+       //System.out.println("html="+html);
+       if (rowView && html.startsWith("</div")==false) {
+          //ak to nie je ukoncovaci tag, obal to do div.col
+          html = "<div class=\"col\">"+html+"</div>";
+       }
+
+       return html;
+    }
+
+    public static final String getFieldHtml(FormItemEntity fie, Prop prop) {
+        if(Tools.isEmpty(fie.getFieldType())) return "";
+
+        String input = prop.getText("components.formsimple.input." + fie.getFieldType());
+        String requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
+
+        JSONObject json = new JSONObject(fie);
+        json.put("labelOriginal", json.getString("label"));
+        if (Tools.isEmpty(json.getString("label"))) {
+            String label = prop.getText("components.formsimple.label." + fie.getFieldType());
+            json.put("label", label);
+        }
+
+        return FormsService.replaceFields(input, fie.getFormName(), "", json, requiredLabelAdd, false, false, new HashSet<String>(), prop);
     }
 }
