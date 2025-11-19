@@ -230,13 +230,61 @@ if (userDetails.isAdmin() != isAdmin) {
 
 ### Error handling
 
-OAuth2SuccessHandler obsahuje rozsiahle error handling s presmerovaním na chybové stránky:
+OAuth2SuccessHandler obsahuje rozsiahle error handling s ukladaním chýb do session a presmerovaním na logon stránku:
 
 ```java
-// Chyby sa presmerujú na logon stránku s error parametrom
-response.sendRedirect("/admin/logon.jsp?error=oauth2_email_not_found");
-response.sendRedirect("/admin/logon.jsp?error=user_create_failed");
-response.sendRedirect("/admin/logon.jsp?error=oauth2_exception");
+// Pomocná metóda pre spracovanie OAuth2 chýb
+private void handleOAuth2Error(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
+    HttpSession session = request.getSession();
+    session.setAttribute("oauth2_logon_error", errorCode);
+    response.sendRedirect("/admin/logon/");
+}
+
+// Chyby sa uložia do session a používateľ je presmerovaný na logon stránku
+handleOAuth2Error(request, response, "oauth2_email_not_found");
+handleOAuth2Error(request, response, "oauth2_user_create_failed");
+handleOAuth2Error(request, response, "oauth2_exception");
+handleOAuth2Error(request, response, "accessDenied");
+```
+
+### Spracovanie chýb v AdminLogonController
+
+AdminLogonController číta chyby zo session a zobrazuje príslušné chybové hlášky:
+
+```java
+// Spracuj OAuth2 chyby zo session
+String oauth2LogonError = (String)session.getAttribute("oauth2_logon_error");
+if (oauth2LogonError != null) {
+    Prop prop = Prop.getInstance(request);
+    String errorMessage = switch (oauth2LogonError) {
+        case "accessDenied" -> prop.getText("logon.err.noadmin");
+        case "oauth2_email_not_found" -> prop.getText("logon.err.oauth2_email_not_found");
+        case "oauth2_user_create_failed" -> prop.getText("logon.err.oauth2_user_create_failed");
+        case "oauth2_exception" -> prop.getText("logon.err.oauth2_exception");
+        default -> prop.getText("logon.err.oauth2_unknown");
+    };
+    model.addAttribute("errors", errorMessage);
+    session.removeAttribute("oauth2_logon_error"); // Odstránenie po zobrazení
+}
+```
+
+**Typy chýb:**
+
+- `oauth2_email_not_found` - OAuth2 provider nevrátil email atribút
+- `oauth2_user_create_failed` - Zlyhalo vytvorenie nového používateľa v databáze
+- `oauth2_exception` - Všeobecná chyba počas OAuth2 procesu
+- `accessDenied` - Používateľ nemá admin práva po synchronizácii práv
+
+### Prekladové kľúče
+
+Pre správne zobrazenie chybových hlášok je potrebné mať definované nasledujúce prekladové kľúče v `text.properties` súboroch:
+
+```properties
+logon.err.noadmin=Zadaný používateľ nie je administrátor systému
+logon.err.oauth2_email_not_found=OAuth2 prihlásenie zlyhalo: email sa nepodarilo získať
+logon.err.oauth2_user_create_failed=OAuth2 prihlásenie zlyhalo: nepodarilo sa vytvoriť používateľa
+logon.err.oauth2_exception=OAuth2 prihlásenie zlyhalo: vyskytla sa neočakávaná chyba
+logon.err.oauth2_unknown=OAuth2 prihlásenie zlyhalo: neznáma chyba
 ```
 
 ## Logon stránka
@@ -333,7 +381,7 @@ oauth2_googleClientId=your-google-client-id.apps.googleusercontent.com
 oauth2_googleClientSecret=your-google-client-secret
 ```
 
-## API referencia
+### API referencia
 
 ### OAuth2SuccessHandler
 
@@ -346,6 +394,7 @@ Hlavné metódy:
 - `extractGroupsFromOAuth2()` - Extrakcia skupín z OAuth2 atribútov
 - `getProviderId()` - Zistenie ID OAuth2 providera
 - `shouldSyncPermissions()` - Kontrola, či má provider nakonfigurovanú synchronizáciu práv
+- `handleOAuth2Error()` - Pomocná metóda pre spracovanie OAuth2 chýb cez session
 
 ### SpringSecurityConf
 

@@ -234,6 +234,21 @@ public class AdminLogonController {
 
         LogonTools.saveAfterLogonRedirect(request);
 
+        // Spracuj OAuth2 chyby zo session
+        String oauth2LogonError = (String)session.getAttribute("oauth2_logon_error");
+        if (oauth2LogonError != null) {
+            Prop prop = Prop.getInstance(request);
+            String errorMessage = switch (oauth2LogonError) {
+                case "accessDenied" -> prop.getText("logon.err.noadmin");
+                case "oauth2_email_not_found" -> prop.getText("logon.err.oauth2_email_not_found");
+                case "oauth2_user_create_failed" -> prop.getText("logon.err.oauth2_user_create_failed");
+                case "oauth2_exception" -> prop.getText("logon.err.oauth2_exception");
+                default -> prop.getText("logon.err.oauth2_unknown");
+            };
+            model.addAttribute("errors", errorMessage);
+            session.removeAttribute("oauth2_logon_error");
+        }
+
         if(request.getParameter("loginName") != null)
         {
             String loginName = request.getParameter("loginName");

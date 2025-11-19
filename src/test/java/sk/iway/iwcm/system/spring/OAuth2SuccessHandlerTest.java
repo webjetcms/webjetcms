@@ -156,7 +156,9 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
             // Nový používateľ cez non-Keycloak provider NEMÁ automaticky admin práva
             assertFalse(capturedUser.isAdmin());
 
-            verify(response).sendRedirect("/admin/");
+            // Používateľ nemá admin práva, preto sa presmeruje na logon
+            verify(session).setAttribute("oauth2_logon_error", "accessDenied");
+            verify(response).sendRedirect("/admin/logon/");
         }
     }
 
@@ -165,81 +167,79 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testCreateNewUserFromKeycloakWithAdminGroup() throws IOException {
-        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv v konštantách
-        try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
-            constantsMock.when(() -> Constants.getString("NTLMAdminGroupName")).thenReturn("WebJETAdminGroup");
-            constantsMock.when(() -> Constants.getString("oauth2_providersWithPermissions")).thenReturn("keycloak");
+        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv
+        Constants.setString("NTLMAdminGroupName", "WebJETAdminGroup");
+        Constants.setString("oauth2_clientsWithPermissions", "keycloak");
 
-            // Príprava Keycloak OAuth2 používateľa s admin skupinou
-            Map<String, Object> attributes = createKeycloakOAuth2Attributes(
-                "admin@example.com",
-                "Admin",
-                "User",
-                List.of("test_role"),
-                List.of("WebJETAdminGroup", "normal-group")
-            );
+        // Príprava Keycloak OAuth2 používateľa s admin skupinou
+        Map<String, Object> attributes = createKeycloakOAuth2Attributes(
+            "admin@example.com",
+            "Admin",
+            "User",
+            List.of("test_role"),
+            List.of("WebJETAdminGroup", "normal-group")
+        );
 
-            OAuth2User oauth2User = new DefaultOAuth2User(
-                List.of(new SimpleGrantedAuthority("ROLE_USER")),
-                attributes,
-                "email"
-            );
-            OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
+        OAuth2User oauth2User = new DefaultOAuth2User(
+            List.of(new SimpleGrantedAuthority("ROLE_USER")),
+            attributes,
+            "email"
+        );
+        OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
 
-            try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
-                 MockedStatic<UserGroupsDB> userGroupsDBMock = mockStatic(UserGroupsDB.class);
-                 MockedStatic<PermissionGroupDB> permGroupDBMock = mockStatic(PermissionGroupDB.class);
-                 MockedStatic<LogonTools> logonToolsMock = mockStatic(LogonTools.class);
-                 MockedStatic<WebjetAuthentificationProvider> authProviderMock = mockStatic(WebjetAuthentificationProvider.class)) {
+        try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
+             MockedStatic<UserGroupsDB> userGroupsDBMock = mockStatic(UserGroupsDB.class);
+             MockedStatic<PermissionGroupDB> permGroupDBMock = mockStatic(PermissionGroupDB.class);
+             MockedStatic<LogonTools> logonToolsMock = mockStatic(LogonTools.class);
+             MockedStatic<WebjetAuthentificationProvider> authProviderMock = mockStatic(WebjetAuthentificationProvider.class)) {
 
-                // Používateľ neexistuje
-                usersDBMock.when(() -> UsersDB.getUserByEmail("admin@example.com", 1)).thenReturn(null);
+            // Používateľ neexistuje
+            usersDBMock.when(() -> UsersDB.getUserByEmail("admin@example.com", 1)).thenReturn(null);
 
-                // Mock skupín
-                UserGroupDetails adminGroup = new UserGroupDetails();
-                adminGroup.setUserGroupId(1);
-                adminGroup.setUserGroupName("WebJETAdminGroup");
+            // Mock skupín
+            UserGroupDetails adminGroup = new UserGroupDetails();
+            adminGroup.setUserGroupId(1);
+            adminGroup.setUserGroupName("WebJETAdminGroup");
 
-                userGroupsDBMock.when(UserGroupsDB::getInstance).thenReturn(mock(UserGroupsDB.class));
-                userGroupsDBMock.when(() -> UserGroupsDB.getInstance().getUserGroups())
-                    .thenReturn(List.of(adminGroup));
-                permGroupDBMock.when(() -> PermissionGroupDB.getPermissionGroups(null))
-                    .thenReturn(List.of());
-                userGroupsDBMock.when(() -> UserGroupsDB.getPermissionGroupsFor(anyInt()))
-                    .thenReturn(List.of());
+            userGroupsDBMock.when(UserGroupsDB::getInstance).thenReturn(mock(UserGroupsDB.class));
+            userGroupsDBMock.when(() -> UserGroupsDB.getInstance().getUserGroups())
+                .thenReturn(List.of(adminGroup));
+            permGroupDBMock.when(() -> PermissionGroupDB.getPermissionGroups(null))
+                .thenReturn(List.of());
+            userGroupsDBMock.when(() -> UserGroupsDB.getPermissionGroupsFor(anyInt()))
+                .thenReturn(List.of());
 
-                // Zachytenie volania na vytvorenie používateľa
-                ArgumentCaptor<UserDetails> userCaptor = ArgumentCaptor.forClass(UserDetails.class);
-                usersDBMock.when(() -> UsersDB.saveUser(userCaptor.capture())).thenReturn(true);
+            // Zachytenie volania na vytvorenie používateľa
+            ArgumentCaptor<UserDetails> userCaptor = ArgumentCaptor.forClass(UserDetails.class);
+            usersDBMock.when(() -> UsersDB.saveUser(userCaptor.capture())).thenReturn(true);
 
-                authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
-                    .thenReturn(oauth2AuthToken);
+            authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
+                .thenReturn(oauth2AuthToken);
 
-                // Spustenie testu
-                handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
+            // Spustenie testu
+            handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
 
-                // Overenie vytvorenia používateľa
-                List<UserDetails> capturedUsers = userCaptor.getAllValues();
-                assertTrue(capturedUsers.size() >= 1, "At least one user save call should have been made");
+            // Overenie vytvorenia používateľa
+            List<UserDetails> capturedUsers = userCaptor.getAllValues();
+            assertTrue(capturedUsers.size() >= 1, "At least one user save call should have been made");
 
-                UserDetails newUser = capturedUsers.get(0); // Prvé volanie - vytvorenie používateľa
-                assertEquals("admin@example.com", newUser.getEmail());
-                assertEquals("Admin", newUser.getFirstName());
-                assertEquals("User", newUser.getLastName());
-                assertEquals("admin", newUser.getLogin());
-                assertTrue(newUser.isAuthorized());
-                // Pre Keycloak s admin skupinou má admin práva po aplikovaní práv
-                if (capturedUsers.size() > 1) {
-                    // Ak bolo viac volaní, posledné volanie má admin práva
-                    UserDetails updatedUser = capturedUsers.get(capturedUsers.size() - 1);
-                    assertTrue(updatedUser.isAdmin()); // Admin práva nastavené na základe skupiny
-                } else {
-                    // Ak bolo len jedno volanie, admin práva sú už nastavené
-                    assertTrue(newUser.isAdmin()); // Admin práva nastavené na základe skupiny
-                }
-
-                verify(response).sendRedirect("/admin/");
+            UserDetails newUser = capturedUsers.get(0); // Prvé volanie - vytvorenie používateľa
+            assertEquals("admin@example.com", newUser.getEmail());
+            assertEquals("Admin", newUser.getFirstName());
+            assertEquals("User", newUser.getLastName());
+            assertEquals("admin", newUser.getLogin());
+            assertTrue(newUser.isAuthorized());
+            // Pre Keycloak s admin skupinou má admin práva po aplikovaní práv
+            if (capturedUsers.size() > 1) {
+                // Ak bolo viac volaní, posledné volanie má admin práva
+                UserDetails updatedUser = capturedUsers.get(capturedUsers.size() - 1);
+                assertTrue(updatedUser.isAdmin()); // Admin práva nastavené na základe skupiny
+            } else {
+                // Ak bolo len jedno volanie, admin práva sú už nastavené
+                assertTrue(newUser.isAdmin()); // Admin práva nastavené na základe skupiny
             }
+
+            verify(response).sendRedirect("/admin/");
         }
     }
 
@@ -248,10 +248,9 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testCreateNewUserFromKeycloakWithoutAdminGroup() throws IOException {
-        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv v konštantách
-        try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
-            constantsMock.when(() -> Constants.getString("NTLMAdminGroupName")).thenReturn("WebJETAdminGroup");
-            constantsMock.when(() -> Constants.getString("oauth2_clientsWithPermissions")).thenReturn("keycloak");
+        // Nastavenie admin skupiny a poskytovateľov so synchronizáciou práv
+        Constants.setString("NTLMAdminGroupName", "WebJETAdminGroup");
+        Constants.setString("oauth2_clientsWithPermissions", "keycloak");
 
             // Príprava Keycloak OAuth2 používateľa BEZ admin skupiny
             Map<String, Object> attributes = createKeycloakOAuth2Attributes(
@@ -322,8 +321,116 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
                 }
                 assertFalse(hasAdmin, "User should not have admin privileges without admin group");
 
-                verify(response).sendRedirect("/admin/");
-            }
+                // Používateľ nemá admin práva, redirect na logon
+                verify(session).setAttribute("oauth2_logon_error", "accessDenied");
+                verify(response).sendRedirect("/admin/logon/");
+        }
+    }
+
+    /**
+     * Test error handlingu - chýbajúci email
+     */
+    @Test
+    void testErrorHandlingMissingEmail() throws IOException {
+        // Príprava OAuth2 používateľa BEZ emailu
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("given_name", "John");
+        attributes.put("family_name", "Doe");
+        attributes.put("sub", "user-without-email");
+        // EMAIL CHÝBA!
+
+        OAuth2User oauth2User = new DefaultOAuth2User(
+            List.of(new SimpleGrantedAuthority("ROLE_USER")),
+            attributes,
+            "sub"
+        );
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+
+        // Spustenie testu
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        // Overenie
+        verify(session).setAttribute("oauth2_logon_error", "oauth2_email_not_found");
+        verify(response).sendRedirect("/admin/logon/");
+    }
+
+    /**
+     * Test error handlingu - zlyhanie vytvorenia používateľa
+     */
+    @Test
+    void testErrorHandlingUserCreationFailed() throws IOException {
+        // Príprava OAuth2 používateľa
+        Map<String, Object> attributes = createGoogleOAuth2Attributes("newuser@example.com", "Jane", "Smith");
+        OAuth2User oauth2User = new DefaultOAuth2User(
+            List.of(new SimpleGrantedAuthority("ROLE_USER")),
+            attributes,
+            "email"
+        );
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+
+        try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class)) {
+            // Používateľ neexistuje
+            usersDBMock.when(() -> UsersDB.getUserByEmail("newuser@example.com", 1)).thenReturn(null);
+            // Vytvorenie používateľa ZLYHÁ
+            usersDBMock.when(() -> UsersDB.saveUser(any(UserDetails.class))).thenReturn(false);
+
+            // Spustenie testu
+            handler.onAuthenticationSuccess(request, response, authentication);
+
+            // Overenie
+            verify(session).setAttribute("oauth2_logon_error", "oauth2_user_create_failed");
+            verify(response).sendRedirect("/admin/logon/");
+        }
+    }
+
+    /**
+     * Test error handlingu - používateľ nemá admin práva
+     */
+    @Test
+    void testErrorHandlingAccessDenied() throws IOException {
+        // Nastavenie poskytovateľov so synchronizáciou práv
+        Constants.setString("oauth2_clientsWithPermissions", "keycloak");
+        Constants.setString("NTLMAdminGroupName", "admin");
+
+            // Príprava Keycloak OAuth2 používateľa BEZ admin skupiny
+            Map<String, Object> attributes = createKeycloakOAuth2Attributes(
+                "user@example.com",
+                "Regular",
+                "User",
+                List.of("user"),
+                List.of("normal-group") // NEMÁ admin skupinu
+            );
+
+            OAuth2User oauth2User = new DefaultOAuth2User(
+                List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                attributes,
+                "email"
+            );
+            OAuth2AuthenticationToken oauth2AuthToken = createOAuth2AuthenticationToken(oauth2User, "keycloak");
+
+            try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
+                 MockedStatic<UserGroupsDB> userGroupsDBMock = mockStatic(UserGroupsDB.class);
+                 MockedStatic<PermissionGroupDB> permGroupDBMock = mockStatic(PermissionGroupDB.class)) {
+
+                // Mock existujúceho používateľa BEZ admin práv
+                UserDetails existingUser = createTestUser("user@example.com", "Regular", "User");
+                existingUser.setUserId(1);
+                existingUser.setAdmin(false); // NEMÁ admin práva
+
+                usersDBMock.when(() -> UsersDB.getUserByEmail("user@example.com", 1)).thenReturn(existingUser);
+                usersDBMock.when(() -> UsersDB.saveUser(any(UserDetails.class))).thenReturn(true);
+
+                userGroupsDBMock.when(UserGroupsDB::getInstance).thenReturn(mock(UserGroupsDB.class));
+                userGroupsDBMock.when(() -> UserGroupsDB.getInstance().getUserGroups()).thenReturn(List.of());
+                permGroupDBMock.when(() -> PermissionGroupDB.getPermissionGroups(null)).thenReturn(List.of());
+                userGroupsDBMock.when(() -> UserGroupsDB.getPermissionGroupsFor(anyInt())).thenReturn(List.of());
+
+                // Spustenie testu
+                handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
+
+            // Overenie
+            verify(session).setAttribute("oauth2_logon_error", "accessDenied");
+            verify(response).sendRedirect("/admin/logon/");
         }
     }
 
@@ -332,16 +439,17 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
      */
     @Test
     void testUpdateExistingUserFromKeycloak() throws IOException {
-        // Nastavenie poskytovateľov so synchronizáciou práv
+        // Nastavenie poskytovateľov so synchronizáciou práv a admin skupiny
         Constants.setString("oauth2_clientsWithPermissions", "keycloak");
+        Constants.setString("NTLMAdminGroupName", "admin");  // Nastavenie admin skupiny
 
-        // Príprava Keycloak OAuth2 používateľa s rolami
+        // Príprava Keycloak OAuth2 používateľa s rolami vrátane admin skupiny
         Map<String, Object> attributes = createKeycloakOAuth2Attributes(
             "keycloak@example.com",
             "Keycloak",
             "User",
             List.of("admin", "editor"),
-            List.of("webjet-admin", "content-editors")
+            List.of("admin", "webjet-admin", "content-editors")  // Pridaná admin skupina
         );
 
         Collection<GrantedAuthority> authorities = List.of(
@@ -434,7 +542,8 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
         handler.onAuthenticationSuccess(request, response, authentication);
 
         // Overenie presmerovanie na chybovú stránku
-        verify(response).sendRedirect("/admin/logon.jsp?error=oauth2_email_not_found");
+        verify(session).setAttribute("oauth2_logon_error", "oauth2_email_not_found");
+        verify(response).sendRedirect("/admin/logon/");
     }
 
     /**
@@ -461,7 +570,8 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
             handler.onAuthenticationSuccess(request, response, authentication);
 
             // Overenie presmerovanie na chybovú stránku
-            verify(response).sendRedirect("/admin/logon.jsp?error=user_create_failed");
+            verify(session).setAttribute("oauth2_logon_error", "oauth2_user_create_failed");
+            verify(response).sendRedirect("/admin/logon/");
         }
     }
 
@@ -477,7 +587,8 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
         handler.onAuthenticationSuccess(request, response, authentication);
 
         // Overenie presmerovanie na chybovú stránku
-        verify(response).sendRedirect("/admin/logon.jsp?error=oauth2_exception");
+        verify(session).setAttribute("oauth2_logon_error", "oauth2_exception");
+        verify(response).sendRedirect("/admin/logon/");
     }
 
     /**

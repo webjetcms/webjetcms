@@ -53,7 +53,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             if (email == null) {
                 Logger.error(OAuth2SuccessHandler.class, "OAuth2 email not found");
-                response.sendRedirect("/admin/logon.jsp?error=oauth2_email_not_found");
+                handleOAuth2Error(request, response, "oauth2_email_not_found");
                 return;
             }
 
@@ -63,7 +63,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 userDetails = createNewUserFromOAuth2(oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2SuccessHandler.class, "Failed to create user for email: " + email);
-                    response.sendRedirect("/admin/logon.jsp?error=user_create_failed");
+                    handleOAuth2Error(request, response, "oauth2_user_create_failed");
                     return;
                 }
                 Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
@@ -81,6 +81,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization for provider '" + providerId + "' (not configured in oauth2_clientsWithPermissions)");
             }
 
+            // Skontroluj či má používateľ admin práva
+            if (!userDetails.isAdmin()) {
+                Logger.warn(OAuth2SuccessHandler.class, "User " + userDetails.getEmail() + " does not have admin rights after OAuth2 synchronization");
+                HttpSession session = request.getSession();
+                session.setAttribute("oauth2_logon_error", "accessDenied");
+                response.sendRedirect("/admin/logon/");
+                return;
+            }
+
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
             HttpSession session = request.getSession();
@@ -90,7 +99,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect("/admin/");
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, ex);
-            response.sendRedirect("/admin/logon.jsp?error=oauth2_exception");
+            handleOAuth2Error(request, response, "oauth2_exception");
         }
     }
 
@@ -450,5 +459,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         }
 
         return result;
+    }
+
+    /**
+     * Pomocná metóda na spracovanie OAuth2 chyby - nastaví chybu do session a vykoná redirect
+     */
+    private void handleOAuth2Error(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
+        HttpSession session = request.getSession();
+        session.setAttribute("oauth2_logon_error", errorCode);
+        response.sendRedirect("/admin/logon/");
     }
 }

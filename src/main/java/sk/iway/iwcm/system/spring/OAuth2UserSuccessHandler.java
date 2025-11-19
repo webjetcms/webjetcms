@@ -68,7 +68,7 @@ public class OAuth2UserSuccessHandler implements AuthenticationSuccessHandler {
                 userDetails = createNewUserFromOAuth2(oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2UserSuccessHandler.class, "Failed to create user for email: " + email);
-                    handleError(request, response, "user_create_failed");
+                    handleError(request, response, "oauth2_user_create_failed");
                     return;
                 }
                 Logger.info(OAuth2UserSuccessHandler.class, "Created new user for email: " + email);
