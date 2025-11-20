@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -9,8 +8,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.text.StringEscapeUtils;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.forms.FormsService;
+import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -42,12 +42,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
     private final FormItemsRepository formItemsRepository;
     private final FormStepsRepository formStepsRepository;
+    private final RegExpRepository regExpRepository;
 
     @Autowired
-    public FormItemsRestController(FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository) {
+    public FormItemsRestController(FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, RegExpRepository regExpRepository) {
         super(formItemsRepository);
         this.formItemsRepository = formItemsRepository;
         this.formStepsRepository = formStepsRepository;
+        this.regExpRepository = regExpRepository;
     }
 
     @Override
@@ -55,22 +57,23 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         DatatablePageImpl<FormItemEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new FormItemEntity(), pageable));
 
         //
-        // Integer lastStep = null;
-        // boolean even = false;
-        // for(FormItemEntity item : page.getContent()) {
-        //     if(lastStep == null) lastStep = item.getStepId();
-        //     else if(lastStep != item.getStepId()) {
-        //         lastStep = item.getStepId();
-        //         even = !even;
-        //     }
+        Integer lastStep = null;
+        boolean even = false;
+        for(FormItemEntity item : page.getContent()) {
+            if(lastStep == null) lastStep = item.getStepId();
+            else if(lastStep != item.getStepId()) {
+                lastStep = item.getStepId();
+                even = !even;
+            }
 
-        //     if(even) item.setRowClass("even-step");
-        //     else item.setRowClass("odd-step");
-        // }
+            if(even) item.setRowClass("even-step");
+            else item.setRowClass("odd-step");
+        }
 
         page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", MultistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), formStepsRepository), "label", "value", false);
+        page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
 
         return page;
     }
@@ -107,7 +110,6 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormItemEntity> target, Identity user, Errors errors, Long id, FormItemEntity entity) {
-        // TODO Auto-generated method stub
         super.validateEditor(request, target, user, errors, id, entity);
 
         if(Tools.isEmpty(entity.getFormName()))
@@ -128,13 +130,56 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             if(stepId != -1) entity.setStepId(stepId);
         } else entity = formItemsRepository.getById(id);
 
+        entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
+
         return entity;
     }
 
     @Override
     public void beforeSave(FormItemEntity entity) {
+        if("captcha".equalsIgnoreCase(entity.getFieldType()))
+            entity.setRequired(true); //captcha is allways required
 
-        super.beforeSave(entity);
+        StringBuilder sb = new StringBuilder("");
+        for(Integer regexId : entity.getRegexValidationArr()) sb.append(regexId).append("+");
+        entity.setRegexValidation(sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "");
+
+
+        //Prepare itemFormId - if insert
+        if(entity.getId() == null || entity.getId() < 1) {
+            String itemFormId = DocTools.removeChars(entity.getFieldType(), true);
+
+            // Generate unique itemFormId with numeric postfix.
+            // Collect existing itemFormIds for this form/field type.
+            List<String> existingIds = formItemsRepository.getItemFormIds(entity.getFormName(), entity.getFieldType(), CloudToolsForCore.getDomainId());
+
+            String prefix = itemFormId + "-";
+            int biggestPostfix = 0;
+
+            // Determine highest numeric postfix used so far for the given prefix.
+            for (String existing : existingIds) {
+                if (existing != null && existing.startsWith(prefix)) {
+                    int lastDash = existing.lastIndexOf('-');
+                    if (lastDash > -1 && lastDash + 1 < existing.length()) {
+                        String numberPart = existing.substring(lastDash + 1);
+                        int num = Tools.getIntValue(numberPart, -1);
+                        if (num > biggestPostfix) biggestPostfix = num;
+                    }
+                }
+            }
+
+            // Next available postfix.
+            int nextPostfix = biggestPostfix + 1;
+            String candidate = prefix + nextPostfix;
+
+            // Safety loop if duplicates somehow appear in the loaded list.
+            while (existingIds.contains(candidate)) {
+                nextPostfix++;
+                candidate = prefix + nextPostfix;
+            }
+
+            entity.setItemFormId(candidate);
+        }
     }
 
     @GetMapping("/field-preview")

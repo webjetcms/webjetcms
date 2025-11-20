@@ -2538,6 +2538,9 @@
                             placeholder VARCHAR(255) NOT NULL,
                             tooltip VARCHAR(255) NOT NULL,
 
+                            regex_validation VARCHAR(255) NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+
                             step_id INT NOT NULL,
                             sort_priority INT NOT NULL,
                             domain_id INT(11) DEFAULT 1 NOT NULL
@@ -2558,6 +2561,9 @@
                             placeholder NVARCHAR(255) NOT NULL,
                             tooltip NVARCHAR(255) NOT NULL,
 
+                            regex_validation NVARCHAR(255) NULL,
+                            item_form_id NVARCHAR(255) NOT NULL,
+
                             step_id INT NOT NULL,
                             sort_priority INT NOT NULL,
                             domain_id int DEFAULT 1 NOT NULL
@@ -2577,6 +2583,9 @@
                             value NVARCHAR(255) NOT NULL,
                             placeholder NVARCHAR(255) NOT NULL,
                             tooltip NVARCHAR(255) NOT NULL,
+
+                            regex_validation NVARCHAR(255) NULL,
+                            item_form_id NVARCHAR(255) NOT NULL,
 
                             step_id INTEGER NOT NULL,
                             sort_priority INTEGER NOT NULL,
@@ -2611,6 +2620,9 @@
                             placeholder VARCHAR(255) NOT NULL,
                             tooltip VARCHAR(255) NOT NULL,
 
+                            regex_validation VARCHAR(255) NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+
                             step_id INT NOT NULL,
                             sort_priority INT NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
@@ -2619,8 +2631,6 @@
                 </void>
             </object>
         </void>
-
-
 
     </object>
 </java>

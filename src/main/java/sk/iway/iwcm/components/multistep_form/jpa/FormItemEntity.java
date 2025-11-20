@@ -7,12 +7,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
@@ -22,7 +24,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
-public class FormItemEntity  {
+public class FormItemEntity extends BaseEditorFields {
 
     @Id
     @Column(name = "id")
@@ -67,6 +69,16 @@ public class FormItemEntity  {
     @Column(name = "sort_priority")
     @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", tab = "main")
     private Integer sortPriority;
+
+    @Column(name = "regex_validation")
+    private String regexValidation;
+
+    @Column(name = "item_form_id")
+    private String itemFormId;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "", hidden = true, tab = "main")
+    private transient Integer[] regexValidationArr;
 
     @Column(name = "domain_id")
     private Integer domainId;

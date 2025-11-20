@@ -19,4 +19,7 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
     public List<String> getMultistepFormNames(@Param("domainId") Integer domainId);
 
     Optional<FormStepEntity> findByFormNameAndId(String formName, Long stepId);
+
+    @Query("SELECT COUNT(fse.id) FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.id = :id AND fse.domainId = :domainId")
+    public int validationStepCount(@Param("formName") String formName, @Param("id") Long id, @Param("domainId") Integer domainId);
 }

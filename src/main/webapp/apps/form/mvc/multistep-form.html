@@ -4,44 +4,22 @@
 <script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
 
 <div class="multistep-form-app">
+
+    <div class="alert alert-success" style="display:none;">
+        <p data-th-text="#{multistep_form.form_save_succ}"></p>
+    </div>
+
+    <div class="alert alert-danger" style="display:none;">
+        <p data-th-text="#{multistep_form.step_saving_err}"></p>
+        <ul style="margin: 0px;">
+
+        </ul>
+    </div>
+
     <!-- Dynamic step content will be injected here -->
-    <div id="multistepStepContent"></div>
+    <div id="multistepStepContent">
+    </div>
 </div>
-
-<script th:inline="javascript">
-    let stepPath = /*[[${stepPath}]]*/ "";
-    let formName = /*[[${formName}]]*/ "";
-    let stepId = /*[[${stepId}]]*/ "";
-
-    console.log("Multistep form initialized:", stepPath, formName, stepId);
-    // Load step HTML from REST endpoint and inject
-    function loadStep(formName, stepId) {
-        if(!formName || !stepId) {
-            console.warn("Missing formName or stepId; skipping load.");
-            return;
-        }
-        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
-        fetch(url, {
-            method: 'GET',
-            headers: { 'Accept': 'text/html' }
-        })
-            .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
-            .then(html => {
-                const target = document.getElementById('multistepStepContent');
-                if(target) target.innerHTML = html;
-            })
-            .catch(err => {
-                console.warn('Failed to load step:', err);
-                const target = document.getElementById('multistepStepContent');
-                if(target) target.innerHTML = '<div class="alert alert-danger">Chyba pri načítaní kroku.</div>';
-            });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        loadStep(formName, stepId);
-    });
-
-</script>
 
 <script th:inline="javascript">
     //CLEDITOR init
@@ -54,16 +32,155 @@
 
     $.cleditor.title = []
     $.cleditor.title['bold'] = /*[[#{components.cleditor.title.bold}]]*/ "";
+</script>
 
-    $(document).ready(function() {
-			window.setTimeout(function() {
-           $("textarea.formsimple-wysiwyg").cleditor({
-              width      : "100%",
-              controls   : "bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext",
-              bodyStyle  : "font: 11px  Arial, Helvetica, sans-serif;"
-           });
-        }, 1000);
-	});
+<script th:inline="javascript">
+    let stepPath = /*[[${stepPath}]]*/ "";
+    let formName = /*[[${formName}]]*/ "";
+    let stepId = /*[[${stepId}]]*/ "";
+
+    // Load step HTML from REST endpoint and inject
+    function loadStep(formName, stepId) {
+        if(!formName || !stepId) {
+            console.warn("Missing formName or stepId; skipping load.");
+            return;
+        }
+        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
+        fetch(url, {
+            method: 'GET',
+            headers: { 'Accept': 'text/html,application/json' }
+        })
+            .then(async r => {
+                if(!r.ok) {
+                    const raw = await r.text();
+                    let message = 'Chyba pri načítaní kroku.';
+                    try {
+                        let parsed;
+                        try { parsed = JSON.parse(raw); } catch(_) { parsed = {raw}; }
+                        await showGlobalErr(parsed);
+                    } catch(e) { /* not JSON */ }
+                }
+                return r.text();
+            })
+            .then(html => {
+                // !! DO NOT use document ... because html contain's js/css that must be executed/loaded
+                $("#multistepStepContent").html(html);
+                $("#multistepStepContent > form").append(`<button type="submit" class="btn btn-primary" name="saveForm">Submit</button>`);
+
+                // Handle submit event
+                document.querySelector("#multistepStepContent > form").addEventListener("submit", async function (event) { await doValidationAndSave(event); });
+
+                // INIT wysiwyg aka cleditor
+                window.setTimeout(function() {
+                    $("textarea.formsimple-wysiwyg").cleditor({
+                        width      : "100%",
+                        controls   : "bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext",
+                        bodyStyle  : "font: 11px  Arial, Helvetica, sans-serif;"
+                    });
+                }, 100);
+            })
+            .catch(err => {
+                console.warn('Failed to load step:', err);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStep(formName, stepId);
+    });
+
+    async function doValidationAndSave(event) {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const url = form.action;
+
+        const result = {};
+        form.querySelectorAll("input, textarea, select").forEach(el => {
+            if (!el.name) return;
+
+            // Determine value (skip unchecked radios/checkboxes)
+            if (el.type === "checkbox" || el.type === "radio") {
+            if (!el.checked) return;
+            }
+            const value = el.value;
+
+            // If name already exists, ensure array and push
+            if (Object.prototype.hasOwnProperty.call(result, el.name)) {
+            if (Array.isArray(result[el.name])) {
+                result[el.name].push(value);
+            } else {
+                result[el.name] = [ result[el.name], value ];
+            }
+            } else {
+            result[el.name] = value;
+            }
+        });
+
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(result)
+            });
+
+            const text = await resp.text();
+            let parsed;
+            try { parsed = JSON.parse(text); } catch(_) { parsed = {raw:text}; }
+            if (!resp.ok) {
+                await showGlobalErr(parsed);
+            } else {
+                await postSaveAction(parsed);
+            }
+        } catch(err) {
+            console.error('Network/JS error submitting form', err);
+        }
+    }
+
+    async function showGlobalErr(response) {
+        const message = response.message || "Unknown error occurred.";
+        $("div.alert.alert-danger").show();
+        $("div.alert.alert-danger > ul").html(`<li><span>${message}</span></li>`);
+    }
+
+    async function postSaveAction(response) {
+        //Clean all err fields
+        $("div.cs-error").text("");
+
+        const fieldErrors = response.fieldErrors || {};
+        if(fieldErrors && Object.keys(fieldErrors).length > 0) {
+            // There are field errors - display them
+            for(const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
+                const errDiv = $("div.cs-error-" + fieldName);
+                const errorMsgArr = errorMsg.split("\n");
+                errDiv.html("");
+                let html = "<ul style='margin:0px; padding-left: 20px;'>";
+                for(const msg of errorMsgArr) {
+                    html += `<li>${msg}</li>`;
+                }
+                html += "</ul>";
+                errDiv.html(html);
+            }
+        } else {
+            // No field errors - possibly proceed to next step or show success message
+            const formName = response["form-name"];
+            const stepId = response["step-id"];
+            if(formName && stepId) {
+                if(stepId === -1) {
+                    //End of form
+                    $("#multistepStepContent").remove();
+                    $("div.alert.alert-success").show();
+                } else {
+                    // Show another step
+                    $("div.alert.alert-danger").hide();
+                    loadStep(formName, stepId);
+                }
+            }
+        }
+    }
 </script>
 
 <style>
@@ -77,102 +194,3 @@
         padding: 0px;
     }
 </style>
-
-
-    <!-- <div data-th-if="${saveMsg!=null}" class="alert alert-success">
-        <span data-th-text="${saveMsg}">After save message</span>
-    </div>
-
-    <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${entity}" method="post">
-        <div class="container">
-            <div class="row">
-                <h2 th:text="heading"></h2>
-            </div>
-            <div class="row">
-                <h4 th:text="sub-heading" class="col-11"></h4>
-                <p id="infoText" class="col-1"></p>
-            </div>
-        </div>
-
-        <div th:each="item : ${stepItems}" data-iwcm-write="item"></div>
-
-        <input type="hidden" id="stepId" data-th-field="*{stepId}" />
-
-        <button type="submit" class="btn btn-primary" name="saveForm" hidden>Submit</button>
-        <button type="button" class="btn btn-primary" data-th-text="#{components.reservation.reservation_app.save_button}" onclick="kokos()">Submit</button>
-    </form> -->
-
-
-<!--
-
-<script th:inline="javascript">
-
-    let currentStepCnt = /*[[${currentStepCnt}]]*/ "";
-    let allStepsCnt = /*[[${allStepsCnt}]]*/ "";
-    $("#infoText").html(currentStepCnt + " z " + allStepsCnt);
-
-    function kokos() {
-        if(validateClEditors()) {
-            $("button.btn-primary[name='saveForm']").click();
-        }
-    }
-
-    function validateClEditors () {
-        //Validate presence of jQuery and form
-        if (typeof $ === 'undefined') { return true; }
-        if (typeof $.fn.cleditor !== 'function') { console.warn("CLEditor plugin missing"); return true; }
-
-        var $form = $('#reservationForm');
-        if ($form.length == 0) { return true; }
-
-        var $textareas = $form.find('textarea.formsimple-wysiwyg');
-        if ($textareas.length == 0) { return true; }
-
-        let areAllValid = true;
-        $textareas.each(function () {
-            try {
-                var $this = $(this);
-                var isRequired = $this.hasClass("required") === true;
-
-                var editors = $this.cleditor();
-                if (!editors || editors.length == 0) { return; }
-
-                var editor = editors[0];
-                var bodyHtml = "";
-                if (editor && editor.doc && editor.doc.body) {
-                    bodyHtml = $(editor.doc.body).html() || "";
-                }
-
-                //Normalize content (remove trivial placeholders)
-                var value = bodyHtml
-                    .replace(/<br\s*\/?>/gi, '')
-                    .replace(/&nbsp;/gi, ' ')
-                    .trim();
-
-                var $parent = $this.closest('.form-group');
-                if ($parent.length == 0) { return; }
-
-                var $error = $parent.find("div.cs-error");
-                if ($error.length == 0) {
-                    //Create error container if missing
-                    $error = $('<div class="cs-error"></div>').appendTo($parent);
-                }
-
-                if (isRequired === true && value.length == 0) {
-                    var name = $this.attr("data-name") || "";
-                    var title = $this.attr("title") || "";
-                    $error.text(name + (name && title ? " - " : "") + title);
-                    areAllValid = false;
-                } else {
-                    $error.text("");
-                }
-            } catch (e) {
-                console.warn("Validation error in kokos():", e);
-            }
-        });
-        return areAllValid;
-    }
-
-</script>
-
- -->
