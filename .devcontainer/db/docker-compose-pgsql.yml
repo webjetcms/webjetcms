@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: postgres:16
+    #https://x.com/TheLaranox/status/1991065175760282047
+    image: postgres:18.1-trixie
     container_name: webjetcms-pgsql
     environment:
       POSTGRES_DB: "webjetcms_autotest_web"
