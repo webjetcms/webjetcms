@@ -711,14 +711,12 @@ Scenario('formsimple', ({ I, DT, DTE, Apps, Document }) => {
     I.clickCss("#pills-dt-component-datatable-items-tab");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items.png");
 
-    I.click(locate("tr").withAttr({ id: "1" }));
-    I.click(DT.btn.simpleformItems_edit_button);
+    I.click("Poznámka", "#datatableFieldDTE_Field_editorData");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_1.png");
     DTE.save("datatableFieldDTE_Field_editorData");
 
 
-    I.click(locate("tr").withAttr({ id: "5" }));
-    I.click(DT.btn.simpleformItems_edit_button);
+    I.click("Odoslať", "#datatableFieldDTE_Field_editorData");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_2.png");
     DTE.save("datatableFieldDTE_Field_editorData");
 
