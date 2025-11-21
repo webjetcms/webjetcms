@@ -28,7 +28,7 @@ Po zvolení možnosti Riadkové zobrazenie sa polia môžu zobrazovať v riadku 
 
 Záložka pokročilé obsahuje pokročilé nastavenia nastavenia, ktoré nie sú povinné.
 
-- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať šifrovací kľúč.
+- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
 - **Príjemca kópie emailu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
 - **Neviditeľní príjemcovia** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
 - **Predmet emailu** - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.

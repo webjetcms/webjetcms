@@ -14,6 +14,32 @@
         return "";
     }
 
+    window.datatableLocalJsonUpdate = function(val, conf) {
+        //console.log("updating json data, val=", val);
+        //add value to every row if missing
+        for (let i=0; i<val.length; i++) {
+            if (typeof val[i]['fieldType'] === "undefined") {
+                val[i]['fieldType'] = "";
+            }
+            if (typeof val[i]['required'] === "undefined") {
+                val[i]['required'] = "false";
+            }
+            if (typeof val[i]['label'] === "undefined") {
+                val[i]['label'] = "";
+            }
+            if (typeof val[i]['value'] === "undefined") {
+                val[i]['value'] = "";
+            }
+            if (typeof val[i]['placeholder'] === "undefined") {
+                val[i]['placeholder'] = "";
+            }
+            if (typeof val[i]['tooltip'] === "undefined") {
+                val[i]['tooltip'] = "";
+            }
+        }
+        return val;
+    };
+
     async function appAfterInit(response, datatable) {
         //Set visibility options
         visibilityOptions = response.options.optionsTypeVisibility;

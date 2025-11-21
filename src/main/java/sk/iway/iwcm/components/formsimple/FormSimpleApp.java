@@ -185,24 +185,22 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
         //Set defautl values into params, when creating new app
         if(isNewApp(componentRequest)) {
-            this.attribute_forceTextPlain = true;
+            this.attribute_forceTextPlain = false;
             this.attribute_addTechInfo = true;
-            this.attribute_forwardType = "addParams";
+            this.attribute_forwardType = "";
 
             UserDetails currentUser =  UsersDB.getCurrentUser(request);
             if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) this.attribute_recipients = currentUser.getEmail();
-            else this.attribute_recipients = "web.spam@interway.sk"; // Just in case ...
+            else this.attribute_recipients = "";
 
             if(componentRequest.getDocId() < 1) {
                 // New page, set default value
-                String defaultFormName = Prop.getInstance(request).getText("components.formsimple.title") + " " + Tools.getNow();
+                String defaultFormName = Prop.getInstance(request).getText("components.formsimple.title") + " " + Tools.formatDate(Tools.getNow());
                 this.formName = defaultFormName;
-                this.attribute_subject = defaultFormName;
             } else {
                 // Page do exist, use values from page
                 DocDetails doc = DocDB.getInstance().getDoc(componentRequest.getDocId());
                 this.formName = doc.getTitle();
-                this.attribute_subject = doc.getTitle();
             }
         }
 
@@ -234,6 +232,9 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
         for(Entry<String, String> entry : formsimpleFields.entrySet())
             options.add(new LabelValue(entry.getValue(), entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length())));
+
+        //sort options by label
+        options.sort((o1, o2) -> o1.getLabel().compareToIgnoreCase(o2.getLabel()));
 
         return options;
     }
