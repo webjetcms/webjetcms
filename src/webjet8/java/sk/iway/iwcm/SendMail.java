@@ -1163,6 +1163,11 @@ public class SendMail
 			}
 			props.setProperty("mail.smtp.auth", "true");
 
+            String smtpMechanism = Constants.getString("smtpAuthMechanism");
+            if (Tools.isNotEmpty(smtpMechanism)) {
+                props.put("mail.smtp.auth.mechanisms", smtpMechanism);
+            }
+
 			//ziskanie getDefaultInstance nam na Exchange vracalo chybu INFO: java.lang.SecurityException: Access to default session denied
 			ms = Session.getInstance(props, new WJAuthenticator());
 		}
