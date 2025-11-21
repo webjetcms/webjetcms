@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 
 @RestController
-@RequestMapping("/apps/simpleform")
+@RequestMapping("/admin/rest/apps/simpleform")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_form')")
 public class FormAttributesController {
 
     private final FormAttributesRepository formAttributesRepository;
@@ -42,7 +44,7 @@ public class FormAttributesController {
         List<FormAttributesEntity> toSave = new ArrayList<>();
         for (Field field : formSimple.getClass().getDeclaredFields()) {
             if (field.getName().startsWith(FormSimpleApp.ATTRIBUTE_PREFIX)) {
-                toSave.add( handleAttribute(formSimple, field, data) );
+                toSave.add( handleAttribute(formSimple, formName, field, data) );
             }
         }
 
@@ -60,13 +62,13 @@ public class FormAttributesController {
         }
     }
 
-    private FormAttributesEntity handleAttribute(FormSimpleApp formSimple, Field attrFiled, List<FormAttributesEntity> attributes) {
+    private FormAttributesEntity handleAttribute(FormSimpleApp formSimple, String formName, Field attrFiled, List<FormAttributesEntity> attributes) {
         String fieldName = attrFiled.getName();
         String sanitazedFieldName = fieldName.substring(FormSimpleApp.ATTRIBUTE_PREFIX.length());
         Class<?> fieldType = attrFiled.getType();
         String getterName = "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
 
-        FormAttributesEntity entity = new FormAttributesEntity(null, formSimple.getFormName(), sanitazedFieldName, CloudToolsForCore.getDomainId());
+        FormAttributesEntity entity = new FormAttributesEntity(null, formName, sanitazedFieldName, CloudToolsForCore.getDomainId());
         for(FormAttributesEntity attr : attributes) {
             if(sanitazedFieldName.equals(attr.getParamName())) {
                 entity = attr;
