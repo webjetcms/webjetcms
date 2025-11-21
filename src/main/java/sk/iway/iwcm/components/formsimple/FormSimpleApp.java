@@ -116,9 +116,9 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType=DataTableColumnType.SELECT, tab="advanced", title="editor.form.forward_type", editor = {
         @DataTableColumnEditor(options = {
-                @DataTableColumnEditorAttr(key = "", value = ""),
-                @DataTableColumnEditorAttr(key = "forward", value = "forward"),
-                @DataTableColumnEditorAttr(key = "addParams", value = "addParams")
+                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.default", value = ""),
+                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.forward", value = "forward"),
+                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.addParams", value = "addParams")
         })
     })
     private String attribute_forwardType;

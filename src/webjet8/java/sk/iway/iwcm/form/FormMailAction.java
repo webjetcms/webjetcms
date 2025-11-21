@@ -495,6 +495,7 @@ public class FormMailAction extends HttpServlet
 				else
 				{
 					iLastDocIdMail = Integer.valueOf(Tools.getIntValue(request.getParameter("useFormMailDocId"), -1));
+					if (iLastDocIdMail.intValue() == -1) iLastDocIdMail = iLastDocId;
 				}
 			}
 			Logger.debug(FormMailAction.class, "iLastDocId="+iLastDocId);

@@ -84,7 +84,7 @@ public class FormAttributesController {
                 entity.setValue( value == null ? "" : String.valueOf(value) );
             } else if(fieldType == DocDetailsDto.class) {
                 DocDetailsDto page = (DocDetailsDto) value;
-                if(page != null) entity.setValue(String.valueOf(page.getDocId()));
+                if(page != null && page.getDocId() > 0) entity.setValue(String.valueOf(page.getDocId()));
                 else entity.setValue(null); // We setting value null, so we know its empty value (or else -1 will be saved in DB)
             }
         } catch(Exception e) {
