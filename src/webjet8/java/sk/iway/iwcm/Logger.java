@@ -37,7 +37,8 @@ public class Logger
 	public static final Level INFO = Level.INFO;
 	public static final Level DEBUG = Level.DEBUG;
 	public static final Level TRACE = Level.TRACE;
-	public static final Level ALL = Level.ALL;
+	//logback doesnt have ALL as log4j, so we map it to TRACE
+	public static final Level ALL = Level.TRACE;
 
 	private static String installName = "webjet";
 
@@ -178,7 +179,7 @@ public class Logger
 				&& logger.isInfoEnabled()
 				&& logger.isWarnEnabled()
 				&& logger.isErrorEnabled()) {
-			return Level.ALL;
+			return Level.TRACE;
 		}
 
 		if (logger.isTraceEnabled()) {
@@ -704,5 +705,20 @@ public class Logger
 
 	private static String getAnsiColorCodeReset() {
 		return "\u001B[0m";
+	}
+
+	/**
+	 * Removes ANSI color codes from the given message.
+	 * @param message
+	 * @return
+	 */
+	public static String unwrapAnsiColors(String message) {
+		if (message == null) {
+			return null;
+		}
+		if (loggerUseAnsiColors == null || loggerUseAnsiColors.booleanValue() == false) {
+			return message;
+		}
+		return message.replaceAll("\u001B\\[[;\\d]*m", "");
 	}
 }

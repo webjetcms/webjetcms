@@ -1,5 +1,29 @@
 # Úvodná obrazovka
 
+## Prihlásenia
+
+Zobrazuje zoznam vašich prihlásení (ak je povolené prihlásenie na viacerých zariadeniach naraz) a zoznam prihlásených administrátorov.
+
+### Moje aktívne prihlásenia
+
+Mini aplikácia **Moje aktívne prihlásenia** zobrazuje zoznam všetkých aktívnych prihlásení do administrácie WebJET CMS pod Vaším používateľským kontom. Vaše aktuálne prihlásenie je označené ikonou <i class="ti ti-current-location fs-6"></i>.
+
+![](sessions.png)
+
+Jednotlivé prihlásenia majú tooltip, ktorý zobrazí ďalšie informácie.
+
+![](sessions-tooltip.png)
+
+Kliknutím na ikonu <i class="ti ti-logout fs-6"></i> môžete ukončiť dané prihlásenie. Ak je to v rámci Vášho aktuálneho uzla clustra, prihlásenie bude okamžite ukončené. Ak je to prihlásenie v inom uzli, prihlásenie bude ukončené po synchronizácii medzi uzlami clustra (typicky do minúty).
+
+Poznámka: údaje sa aktualizujú po prihlásení používateľa. Môžete nastaviť nový záznam do [úlohy na pozadí](../../admin/settings/cronjob/README.md) na častejšiu aktualizáciu údajov, kde ako názov úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`.
+
+### Prihlásení administrátori
+
+Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", zobrazí sa aj zoznam všetkých prihlásených administrátorov. Máte tak prehľad, koľko používateľov aktuálne pracuje v administrácii.
+
+Kliknutím na ikonu <i class="ti ti-mail fs-6"></i> môžete danému administrátorovi odoslať email.
+
 ## Záložky
 
 Do mini aplikácie záložky si môžete pridať odkazy na často používané sekcie v administrácii. Po prihlásení tak nemusíte hľadať danú sekciu v menu, ale priamo kliknete na odkaz v záložkách.
@@ -18,7 +42,7 @@ Upozornenie: zoznam záložiek sa ukladá v prehliadači, ak používate viacero
     <iframe width="560" height="315" src="https://www.youtube.com/embed/G5Ts04jSMX8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-# Spätná väzba
+## Spätná väzba
 
 Kliknutím na tlačidlo Zaslať spätnú väzbu môžete nám, programátorom, zaslať vašu spätnú väzbu k používaniu WebJET CMS. Pripomienka sa odošle po vyplnení formuláru emailom.
 

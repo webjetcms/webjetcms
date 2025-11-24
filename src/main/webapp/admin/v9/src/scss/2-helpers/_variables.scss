@@ -1,10 +1,6 @@
 @charset "UTF-8";
 
-$wjTest : "martinko";
-
-
-
-$wj-install-name : "webjet8";
+$wj-install-name : "webjet";
 $wj-template-name : "ninja-starter-kit";
 $wj-assets : "/templates/#{$wj-install-name}/#{$wj-template-name}/assets/";
 $wj-images : "#{$wj-assets}images/";
@@ -24,17 +20,33 @@ $c-selection-bg: DodgerBlue;
 $base-font-family: 'Asap', sans-serif;
 $secondary-font-family: 'Asap', sans-serif;
 
-//WIDTH
-//$w-element-name:1px;
+//redefine BS CSS variables with our colors
+//WARNING: update also final CSS in webjet2021.css after you add some new variable
+:root {
+  //colors
+  --bs-body-color: #{$secondary};
+  --bs-danger: #{$danger};
+  --bs-warning: #{$warning};
 
-//HEIGHT
-//$h-element-name:1px;
+  --bs-btn-active-bg: #{$primary};
+  --bs-btn-active-border-color: #{$primary};
 
-//PADDING
-//$p-element-name:1px;
-
-//MARGIN
-//$m-element-name:1px;
-
-//Z-INDEX
-//$z-element-name: 1;
+  --wj-primary: #{$primary};
+  --wj-primary-hover: #{$primary-hover};
+  --wj-secondary: #{$secondary};
+  --wj-nice-gray: #{$nice-gray};
+  --wj-nice-gray-100: #{$nice-gray-100};
+  --wj-nice-gray-200: #{$nice-gray-200};
+  --wj-nice-gray-300: #{$nice-gray-300};
+  --wj-dark-20: #{$nice-gray-100};
+  --wj-dark-50: #{$nice-gray-300};
+  --wj-dark-60: #{$dark-60};
+  --wj-yellow-60: #{$yellow-60};
+  --wj-green-60: #{$green-60};
+  --wj-red-60: #{$red-60};
+  --wj-ai-color: #{$ai-color};
+  --wj-ai-color-dark: #{$ai-color-dark};
+  --wj-ai-color-hover: #{$ai-color-hover};
+  //borders
+  --wj-border-radius: #{$border-radius};
+}

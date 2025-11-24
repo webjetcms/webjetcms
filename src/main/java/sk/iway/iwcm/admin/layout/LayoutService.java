@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.AdminPropRestController;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -58,6 +59,21 @@ public class LayoutService
         layout.setCsrfToken(CSRF.getCsrfToken(request.getSession(), true));
         layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));
         setNopermsCss();
+
+        String suffix = "";
+        if (user!=null && "tester".equals(user.getLogin()) && "adminScript".equals(request.getParameter("act"))) {
+            //to properly test script insert in e2e we need this hack
+            suffix = "-test";
+        }
+
+        //check for custom CSS file
+        String customAdminCss = WriteTagToolsForCore.getCustomPageAdmin("/admin/style"+suffix+".css", request);
+        layout.setCustomAdminCss(customAdminCss);
+
+        //check for custom JS file
+        String customAdminJavascript = WriteTagToolsForCore.getCustomPageAdmin("/admin/script"+suffix+".js", request);
+        layout.setCustomAdminJavascript(customAdminJavascript);
+
         return this;
     }
 
@@ -99,6 +115,17 @@ public class LayoutService
                 } else if ("P".equals(Constants.getString("wjVersion"))) {
                     css.append(".noperms-ver-pro { display: none !important; }\n");
                     javascript.append("nopermsJavascript[\"ver-pro\"]=true;\n");
+                }
+
+                //ve need to verify this modules because they are used in FE components
+                //and if user has no perms for them, they should not be visible in admin
+                String[] modulesToCheck = {"cmp_ai_tools", "cmp_ai_stats", "cmp_ai_button"};
+                for (String modKey : modulesToCheck) {
+                    if (user.isEnabledItem(modKey) == false) {
+                        String modName = Tools.replace(modKey, ".", "_");
+                        css.append(".noperms-").append(modName).append(" { display: none !important; }\n");
+                        javascript.append("nopermsJavascript[\"").append(modName).append("\"]=true;\n");
+                    }
                 }
             } catch (Exception ex) {
                 Logger.error(LayoutService.class, ex);

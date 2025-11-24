@@ -1,11 +1,9 @@
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Constants,sk.iway.iwcm.DBPool,sk.iway.iwcm.Identity, sk.iway.iwcm.Tools, sk.iway.iwcm.doc.DocDB, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.users.UserDetails, sk.iway.iwcm.users.UsersDB" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <iwcm:checkLogon admin="true"/>
 
@@ -101,19 +99,19 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 					</span>
 				</c:when>
 				<c:otherwise>
-					<logic:present name="wrongApproveId">
+					<iwcm:present name="wrongApproveId">
 						<span class="error"><img src="/admin/images/warning.gif" align="absmiddle"/> <iwcm:text key="approve.allready_approved"/>.</span>
-					</logic:present>
+					</iwcm:present>
 
-					<logic:notPresent name="wrongApproveId">
+					<iwcm:notPresent name="wrongApproveId">
 						<form action="approve.do" method="post">
 							<table border="0" align="left">
 								<tr>
 									<td rowspan="2" valign="top"><font color="red"><iway:request name="message"/></font></td>
-									<logic:notPresent name="user">
+									<iwcm:notPresent name="user">
 										<td><iwcm:text key="user.Name"/></td>
 										<td><iwcm:text key="user.password"/></td>
-									</logic:notPresent>
+									</iwcm:notPresent>
 									<td rowspan="2" valign="bottom">
 										<input type="hidden" name="historyid" value="<%=Tools.getRequestParameter(request, "historyid")%>">
 									</td>
@@ -123,10 +121,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 									<td>&nbsp;</td>
 								</tr>
 								<tr>
-									<logic:notPresent name="user">
+									<iwcm:notPresent name="user">
 										<td valign="bottom"><input type="text" name="username" size=10 class="input"></td>
 										<td valign="bottom"><input type="password" name="password" size=10 class="input"></td>
-									</logic:notPresent>
+									</iwcm:notPresent>
 									<td>&nbsp;</td>
 									<td>
 										<input type="submit" name="schval" value="<iwcm:text key="approve.page.approve"/>" class="btn green">
@@ -134,9 +132,9 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 									</td>
 								</tr>
 							</table>
-							<%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
+							<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 						</form>
-					</logic:notPresent>
+					</iwcm:notPresent>
 				</c:otherwise>
 			</c:choose>
 

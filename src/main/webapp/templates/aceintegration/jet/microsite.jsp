@@ -2,9 +2,6 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="ninja" scope="request" type="sk.iway.iwcm.doc.ninja.Ninja"/>
 <!doctype html>
@@ -16,9 +13,15 @@
 
 		<iwcm:insertScript position="after-body"/>
 
-		<div class="header container">
-			<h1><iwcm:write name="perex_data"/></h1>
+		<div class="header container" <c:if test="${not empty perex_image}">style="background-image: url('<iwcm:write name="perex_image"/>');"></c:if>>
+			<c:if test="${not empty perex_data}">
+				<h1><iwcm:write name="perex_data"/></h1>
+			</c:if>
+			<c:if test="${empty perex_data}">
+				<h1><iwcm:write name="doc_title"/></h1>
+			</c:if>
 		</div>
+
 		<iwcm:write name="doc_data"/>
 
 		<footer class="ly-footer" id="blindBlock-footer">

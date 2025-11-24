@@ -109,6 +109,12 @@ CKEDITOR.editorConfig = function( config )
 	<% } %>
 	config.magicline_color="#F7CA18";
 	config.magicline_triggers = { <%=Constants.getString("editorMagiclineElements")%> };
+	config.magicline_id="";
+	config.magicline_plusIcon='+';
+	if (window.location.href.indexOf("inline")!=-1) {
+		config.magicline_id="pb-wjmagicline";
+		config.magicline_plusIcon='<span class="pb-wjmagicline-plusicon"></span>';
+	}
 	config.bodyId = "WebJETEditorBody";
 	if (window.location.href.indexOf("inline")!=-1)
 	{
@@ -137,6 +143,13 @@ CKEDITOR.editorConfig = function( config )
 		}
 		else if( Constants.getBoolean("gridEditorEnabled") || InlineEditor.EditingMode.gridEditor.toString().equals(Tools.getRequestParameter(request, "inlineMode")) ) toolbar += ",{ name: 'Layout', items: ['GridEditor','layout-desktop',';','layout-tablet','layout-mobile']}";
 
+		toolbar += ",{ name: 'AI', items: ['Aibutton']}";
+
+		if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints")) && toolbar.contains("WebjetPicture")==false)
+		{
+			toolbar = Tools.replace(toolbar, "'Link'", "'Link' , 'WebjetPicture'");
+		}
+
 		out.print(toolbar);
 		%>
 	];
@@ -151,4 +164,8 @@ CKEDITOR.editorConfig = function( config )
 
 	//quicktable
 	config.qtWidth = "100%";
+
+	<% if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints"))) { %>
+		config.pictureDialogBreakpoints = <%=Constants.getString("ckeditor_pictureDialogBreakpoints")%>;
+	<% } %>
 }

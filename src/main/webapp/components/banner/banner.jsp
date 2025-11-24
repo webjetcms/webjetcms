@@ -1,4 +1,4 @@
-<%@page import="java.util.List"%><%@page import="org.apache.struts.util.ResponseUtils"%><%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.system.multidomain.MultiDomainFilter"%><%@page import="sk.iway.iwcm.tags.JSEscapeTag"%><%@page import="java.io.File"%><%
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.system.multidomain.MultiDomainFilter"%><%@page import="sk.iway.iwcm.tags.JSEscapeTag"%><%@page import="java.io.File"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="
 sk.iway.iwcm.*,
@@ -80,7 +80,7 @@ div.jumbotron-has-video-fullscreen:before {
 				}
 
 				if(videoParam != null) {
-					htmlCode += "	<iframe id=\"video\" src=\"//www.youtube.com/embed/" + videoParam + "?enablejsapi=1&amp;html5=1&amp;mute=1&amp;showinfo=0&autoplay=1\" frameborder=\"0\" allowfullscreen=\"\" class=\"video\" data-gtm-yt-inspected-2=\"true\"></iframe>";
+					htmlCode += "	<iframe id=\"video\" src=\"//www.youtube.com/embed/" + videoParam + "?enablejsapi=1&amp;html5=1&amp;mute=1&amp;showinfo=0&autoplay=1\" frameborder=\"0\" allowfullscreen=\"\" class=\"video\" data-gtm-yt-inspected-2=\"true\" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 				}
 			}
 		} else if(link.endsWith(".mp4")) {
@@ -97,7 +97,7 @@ try
 {
 
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
-	String url = (String)request.getAttribute("path_filter_orig_path");
+	String url = PathFilter.getOrigPath(request);
 	if (Tools.isNotEmpty(paramPageParams))
 	{
 		paramPageParams = Tools.replace(paramPageParams, "|", "=");
@@ -444,7 +444,7 @@ try
 		out.println("<head>");
 		if (refreshRate != 0)
 		{
-			url = (String)request.getAttribute("path_filter_orig_path");
+			url = PathFilter.getOrigPath(request);
 			//out.println("<META HTTP-EQUIV=Refresh CONTENT='" +refreshRate+ "; URL="+url+"'>");
 			out.println("<META HTTP-EQUIV=Refresh CONTENT='" +refreshRate+ "'>");
 		}

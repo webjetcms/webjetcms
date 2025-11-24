@@ -367,7 +367,7 @@ Before(({login}) => {
 });
 
 Scenario('zoznam fotografii', ({I}) => {
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     I.click("test");
     I.see("koala.jpg");
 });
@@ -463,7 +463,7 @@ Pokud se vám testy chovají rozdílně v prohlížeči Firefox nebo Chromium je
 
 ```javascript
 if (Browser.isChromium()) {
-  I.amOnPage("/admin/v9/apps/insert-script#/");
+  I.amOnPage("/admin/v9/apps/insert-script/");
   ...
 }
 
@@ -608,7 +608,7 @@ var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
 
 Before(({ I, login }) => {
      login('admin');
-     I.amOnPage('/admin/v9/webpages/web-pages-list#/');
+     I.amOnPage('/admin/v9/webpages/web-pages-list/');
 
      if (typeof auto_name=="undefined") {
           var randomNumber = I.getRandomText();
@@ -713,6 +713,18 @@ Chcete-li plošně změnit hesla v testovací databázi použijte:
 
 ```sql
 UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
+```
+
+V databázi pro penetrační testy je třeba uživatelům zakázat menu položku pro editaci administrátorů, použijte následující SQL:
+
+```sql
+INSERT INTO `user_disabled_items` (`user_id`, `item_name`)
+VALUES
+	(18, 'users.edit_admins'),
+    (18, 'conf.show_all_variables'),
+    (1827, 'users.edit_admins'),
+    (1827, 'conf.show_all_variables');
+UPDATE _conf_ SET value='' WHERE name='adminEnableIPs';
 ```
 
 ## Testování REST služeb

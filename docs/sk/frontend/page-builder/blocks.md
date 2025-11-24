@@ -7,6 +7,7 @@ V koreňovom adresári pre bloky môžete mať nasledovné pod adresáre:
 - ```section``` - pre bloky sekcií (modré označenie v Page Builderi)
 - ```container``` - pre kontajnery (červené označenie v Page Builderi)
 - ```column``` - pre stĺpce (zelené označenie v Page Builderi)
+- ```content``` - pre vkladané rôzne texty, tlačidlá a podobne. Vkladajú sa pomocou ikony Bloky a žltej čiary, ktorá sa zobrazuje medzi blokmi.
 
 V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov ako ďalšie pod adresáre**, napr. ```Contact, Features```. Až v týchto pod adresároch vytvárate jednotlivé HTML bloky. Príkladom je teda adresárová štruktúra:
 
@@ -34,6 +35,11 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - left.jpg
     - right.html
     - right.jpg
+- content
+  - Buttons
+    - standard.html
+    - big.jpg
+    - contactus.html
 ```
 
 ## Nastavenie šírky stĺpcov
@@ -59,28 +65,28 @@ Správne nastavenie bloku obsahuje prednastavené všetky šírky, napr. `col-12
     <div class="row">
       <div class="col-12 col-md-6 col-xl-3 text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Etiam orci</h3>
         <p>Suspendisse interdum dolor justo, ac venenatis massa suscipit nec. Vivamus dictum malesuada mollis.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Aenean </h3>
         <p>Aliquam elementum ut ante vitae dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Maecenas</h3>
         <p>Sed sollicitudin eros quis leo imperdiet, id congue lorem ornare. Suspendisse eleifend at ante id ultrices.</p>
       </div>
       <div class="col-12 col-md-6 col-xl-3  text-center">
         <p class="text-center">
-          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+          <img src="/thumb/images/zo-sveta-financii/foto-1.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
         </p>
         <h3>Suspendisse</h3>
         <p>Nullam ornare, magna in ultrices mattis, lectus neque mollis libero, vitae varius mauris metus a risus.</p>
@@ -124,9 +130,11 @@ Odporúčame bloky generovať pomocou [PugJS](https://pugjs.org).
 
 ## CSS triedy pre obrázok
 
-Ak má obrázok nastavenú CSS triedu ```fixedSize-w-h-ip``` je automaticky po zmene adresy obrázka nastavený zadaný rozmer ```w``` a ```h```, ak je zadaný aj posledný údaj ```ip``` nastaví sa aj [bod záujmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). Napr. CSS trieda ```fixedSize-160-160-5``` automaticky generuje obrázok rozmeru 160 x 160 bodov s nastaveným bodom záujmu 5. Triedu odporúčame nastaviť na všetky ilustračné obrázky, pri ktorých je dôležitý ich rozmer.
+Ak má obrázok nastavenú CSS triedu ```fixedSize-w-h-ip``` je automaticky po zmene adresy obrázka nastavený zadaný rozmer ```w``` a ```h```, ak je zadaný aj posledný údaj ```ip``` nastaví sa aj [bod záujmu](../../frontend/thumb-servlet/README.md). Napr. CSS trieda ```fixedSize-160-160-5``` automaticky generuje obrázok rozmeru 160 x 160 bodov s nastaveným bodom záujmu 5. Triedu odporúčame nastaviť na všetky ilustračné obrázky, pri ktorých je dôležitý ich rozmer.
 
 Pri kliknutí na obrázok s CSS triedou ```fixedSize/w-100/autoimg``` sa ihneď otvorí okno vlastností obrázku pre jeho jednoduchú výmenu. Redaktor tak nemusí kliknúť na obrázok a následne v nástrojovej lište na ikonu zmeny obrázka.
+
+Ak obrázok obsahuje v URL adrese výraz `placeholder` alebo `stock` neotvorí sa dialógové okno výberu obrázka do priečinka s týmto obrázkom, ale do priečinka Média tejto stránky. Používateľ tak môže ľahko nahrať nový obrázok.
 
 ## Podpora kariet
 
@@ -135,6 +143,8 @@ Pre pohodlnú editáciu kariet (```tabs```) je podporované ich automatické gen
 Element ```UL``` je potrebné označiť CSS triedou ```pb-autotabs```. JavaScript kód v súbore ```/admin/webpages/page-builder/scripts/pagesupport.js``` zabezpečí generovanie kariet po pridaní elementu / každých 5 sekúnd. Meno karty berie z ```title``` atribútu kontajnera, alebo z elementu s CSS triedou ```pb-tab-title``` (čo je pohodlnejšie na editáciu).
 
 Samotné karty nie sú teda editovateľné, generujú sa automaticky. Editovateľný je len obsah ```tab``` kontajneru. Všimnite si, že v ukážkovom kóde UL element neobsahuje žiadne ```LI taby```, tie sa vygenerujú automaticky. V HTML kóde zostanú následne vygenerované a aj sa korektne uložia. Na stránke zostane zobrazená karta tak, ako bola zobrazený počas editácie (je na to potrebné myslieť).
+
+Atribúty ID jednotlivých kariet sú generované automaticky podľa názvu karty. Ak potrebujete použiť špecifický názov je možné v HTML kóde nastaviť hodnotu `data-title` na `.tab-pane` elemente.
 
 Všimnite si použitie CSS triedy ```pb-not-container``` na hlavnom kontajner elemente. To zabezpečí, že tento element nebude označený ako kontajner a za kontajnery budú považované až jednotlivé karty. Každá karta používa CSS triedu ```pb-custom-container```, čo zabezpečí zobrazenie červeného rámu/nástrojovej lišty kontajnera.
 
@@ -454,4 +464,63 @@ Kompletná ukážka HTML kódu web stránky s ukážkovými sekciami:
         </div>
     </div>
 </section>
+```
+
+## Podporný JavaScript kód
+
+Ak potrebujete vlastný podporný JavaScript súbor (viď vyššie spomínaný `pagesupport.js`), môžete vytvoriť súbor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, ktorý ak existuje načíta sa po súbore `pagesupport.js`. Môžete tak doplniť vlastné funkcie, alebo upraviť štandardné existujúce funkcie z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
+
+Môžete aj upraviť niektoré nastavenia, ako napríklad zoznam farieb, upraviť CSS selektory, nastaviť šírku pre rôzne zariadenia a podobne. Nasledujúci kód je len ukážkový, vložte ho do súboru `pagesupport-custom.js`:
+
+```JavaScript
+window.pbCustomOptions = function(options) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        //custom code to modify options on page builder init
+        console.log("pbCustomOptions called, options=", options, "href=", window.location.href);
+        options.color_swatches = [
+            "#ff0000",
+            "#00ff00",
+            "#0000ff",
+            "#ffff00",
+            "#00ffff",
+        ];
+        //disable any color picker, only swatches will be available
+        options.color_picker = false;
+    }
+};
+
+window.pbCustomSettings = function(me) {
+    //redefine grid column content selector
+    me.grid.section_default_class = 'section';
+    me.grid.row = 'div.grid, div[class*="pb-grid"]';
+    me.grid.row_default_class = 'grid';
+    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
+    me.grid.column_default_class = 'grid__col grid__col--12';
+
+    me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
+};
+
+window.pbScreenSizePrefix = function(me) {
+    var screenSize =  $(window).width();
+    var colPrefix = me.column.valid_prefixes[0];
+    if (screenSize >= 1240) colPrefix = me.column.valid_prefixes[4];
+    else if (screenSize >= 992) colPrefix = me.column.valid_prefixes[3];
+    else if (screenSize >= 768) colPrefix = me.column.valid_prefixes[2];
+    else if (screenSize >= 480) colPrefix = me.column.valid_prefixes[1];
+
+    //console.log("pbScreenSizePrefix, screenSize=", screenSize, "colPrefix=", colPrefix);
+
+    return colPrefix;
+}
+
+window.pbGetWindowSize = function(name) {
+    var maxWidth = "";
+    if ('tablet'==name) {
+        maxWidth = "768px";
+    } else if ('phone'==name) {
+        maxWidth = "479px";
+    }
+    //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
+    return maxWidth;
+}
 ```

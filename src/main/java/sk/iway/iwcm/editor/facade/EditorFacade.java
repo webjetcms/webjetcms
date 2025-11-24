@@ -175,7 +175,7 @@ public class EditorFacade {
 		String domain = GroupsDB.getInstance().getDomain(entity.getGroupId());
 		int actualDocId = DocDB.getDocIdFromURL(virtualPath, domain);
 		if (actualDocId>0) {
-			editorService.addNotify(new NotifyBean("components.abtesting.dialog_title", editorService.getProp().getText("editor.save_as_abtest.notify.exists", entity.getTitle(), String.valueOf(entity.getId()), String.valueOf(actualDocId)), NotifyType.INFO, 5000));
+			editorService.addNotify(new NotifyBean(editorService.getProp().getText("components.abtesting.dialog_title"), editorService.getProp().getText("editor.save_as_abtest.notify.exists", entity.getTitle(), String.valueOf(entity.getId()), String.valueOf(actualDocId)), NotifyType.ERROR, 5000));
 			return null;
 		}
 
@@ -275,6 +275,10 @@ public class EditorFacade {
         else doc = getDocForEditor(-1, -1, group.getGroupId());
 
         if (Tools.isEmpty(title)) title = group.getGroupName();
+
+		//replace &#47; back to / - this is special char because in folders we use / to split levels
+		//but in title we want to have normal /
+		title = Tools.replace(title, "&#47;", "/");
 
         doc.setTitle(title);
         doc.setNavbar(title);

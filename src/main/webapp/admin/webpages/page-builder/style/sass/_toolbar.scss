@@ -1,17 +1,23 @@
 .#{$prefix}-toolbar {
-    display: none;
+    opacity: 0;
     position: absolute;
     bottom: 100%;
     width: $toolbar-size;
     height: $toolbar-size;
     z-index: $toolbar-index;
-    background-image: url("../images/toolbar.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: auto $toolbar-icon-size;
+    > span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: $icon-settings;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto $toolbar-icon-size;
+        pointer-events: none;
+    }
     border-top-left-radius: $toolbar-radius;
     border-top-right-radius: $toolbar-radius;
-    transition: background-color 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
 
     box-shadow: 0 -2px 25px 2px rgba(50, 50, 50, 0.25);
 
@@ -21,7 +27,9 @@
     }
 
     &.#{$prefix}-is-toolbar-active {
-        background-image: url("../images/close.png");
+        > span {
+            background-image: $icon-close;
+        }
     }
 
     &__content {
@@ -36,7 +44,7 @@
         white-space: nowrap;
         word-break: keep-all;
         border-radius: $toolbar-content-radius;
-        background-color: $toolbar-content-color;
+        background: linear-gradient(to top, $sidebar-bg, $sidebar-bg-g);
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         transform: scale(0.8);
 
@@ -52,13 +60,26 @@
             background-position: center;
             background-size: auto $toolbar-content-button-image-size;
             transition: background-color 0.3s ease-in-out;
+            color: white;
 
-            &__style {      background-image: url("../images/style.png"); }
-            &__resize {     background-image: url("../images/resize.png"); }
-            &__remove {     background-image: url("../images/remove.png"); }
-            &__move {       background-image: url("../images/move.png"); }
-            &__duplicate {  background-image: url("../images/duplicate.png"); }
-            &__add_to_favorites {  background-image: url("../images/add_to_favorites.png"); }
+            &__style {
+                background-image: $icon-style;
+            }
+            &__resize {
+                background-image: $icon-resize;
+            }
+            &__move {
+                background-image: $icon-move;
+            }
+            &__duplicate {
+                background-image: $icon-duplicate;
+            }
+            &__add_to_favorites {
+                background-image: $icon-add-to-favorites;
+            }
+            &__remove {
+                background-image: $icon-remove;
+            }
 
             &:first-child {
                 border-top-left-radius: $toolbar-content-radius;
@@ -71,7 +92,7 @@
             }
 
             &:hover {
-                background-color: darken($toolbar-content-color,15%);
+                background-color:  $sidebar-active-bg;
             }
         }
     }
@@ -81,11 +102,12 @@
     > .#{$prefix}-toolbar {
         left: 50%;
         margin-left: -($toolbar-size/2);
-        background-color: $color-column;
+
+        background: linear-gradient(to top, $color-column, $color-column-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-column,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
@@ -98,11 +120,11 @@
 .#{$prefix}-container {
     > .#{$prefix}-toolbar {
         right: 0;
-        background-color: $color-container;
+        background: linear-gradient(to top, $color-container, $color-container-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-container,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
@@ -114,24 +136,15 @@
 .#{$prefix}-section {
     > .#{$prefix}-toolbar {
         left: 0;
-        background-color: $color-section;
+        background: linear-gradient(to top, $color-section, $color-section-g);
 
         &.#{$prefix}-is-toolbar-active,
         &:hover {
-            background-color: darken($color-section,15%);
+            filter: brightness(1.1);
         }
 
         .#{$prefix}-toolbar__content {
             left: 0;
-        }
-
-        &:before {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 0;
-            //jeeff: neviem naco je toto, neslo kvoli tomu kliknut do col, zakomentovane width: 100px;
-            //height: 100px;
         }
     }
 }
@@ -143,14 +156,19 @@
             &.#{$prefix}-has-toolbar-active > .#{$prefix}-toolbar,
             &:hover > .#{$prefix}-toolbar {
                 display: block;
+                opacity: 1;
             }
         }
     }
 
     &.#{$prefix}-has-child-toolbar-active {
+        .#{$prefix}-toolbar {
+            display: none;
+        }
         .#{$prefix}-grid-element.#{$prefix}-has-toolbar-active {
             > .#{$prefix}-toolbar  {
                 display: block;
+                opacity: 1;
                 .#{$prefix}-toolbar__content {
                     opacity: 1;
                     visibility: visible;

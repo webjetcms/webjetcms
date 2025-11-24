@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;

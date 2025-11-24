@@ -33,6 +33,7 @@ public class QuestionsAnswersEntity implements Serializable{
     @DataTableColumn(inputType = DataTableColumnType.ID, tab="basic")
     private Long id;
 
+	@Lob
 	@Column(name = "question")
 	@NotBlank
     @DataTableColumn(
@@ -107,8 +108,6 @@ public class QuestionsAnswersEntity implements Serializable{
     )
 	private String fromEmail;
 
-
-
 	@Column(name = "to_name")
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXT,
@@ -127,6 +126,7 @@ public class QuestionsAnswersEntity implements Serializable{
     )
 	private String toEmail;
 
+	@Lob
 	@Column(name = "answer_to_email")
 	@DataTableColumn(
         inputType = DataTableColumnType.QUILL,
@@ -154,6 +154,7 @@ public class QuestionsAnswersEntity implements Serializable{
     )
 	private Boolean publishOnWeb;
 
+	@Lob
     @Column(name = "answer")
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,

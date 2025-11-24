@@ -11,7 +11,7 @@ Before(({ I, login }) => {
 
 Scenario('Nastavenie tabulky', async ({ I, Browser, Document }) => {
     if (Browser.isChromium()) {
-        I.amOnPage("/admin/v9/apps/insert-script#/");
+        I.amOnPage("/admin/v9/apps/insert-script/");
 
         //zobrazenie modalneho okna NASTAVENIA - je schovane pod dataTables
         I.clickCss(".buttons-settings");
@@ -420,4 +420,65 @@ Scenario("verify DT title prefix", ({ I, DT, DTE }) => {
     I.waitForText("Zmazať", 10, footerSelector);
     I.seeElement(footerSelector + " i.ti-trash");
     DTE.cancel();
+});
+
+function selectExtfilter(value, I, DT) {
+    I.clickCss("div.dt-extfilter-country button.dropdown-toggle");
+    I.click(locate('div.dropdown-menu.show .dropdown-item').withText(value));
+    I.clickCss("div.dt-extfilter-country button.dt-filtrujem-country");
+
+    DT.waitForLoader();
+}
+
+Scenario("extfilter - select BUG 57657-8", ({ I, DT }) => {
+    I.amOnPage("/apps/contact/admin/");
+    DT.waitForLoader();
+    I.see("InterWay, a. s.", ".datatableInit tbody tr td");
+    I.see("Druhá s.r.o.", ".datatableInit tbody tr td");
+    I.see("Česká firma", ".datatableInit tbody tr td");
+    selectExtfilter("Česká republika", I, DT);
+    I.dontSee("InterWay, a. s.", ".datatableInit tbody tr td");
+    I.see("Česká firma", ".datatableInit tbody tr td");
+
+    I.say("Reseting filter");
+    I.clickCss("#dt-filter-labels-link-country");
+    DT.waitForLoader();
+
+    I.see("InterWay, a. s.", ".datatableInit tbody tr td");
+    I.see("Druhá s.r.o.", ".datatableInit tbody tr td");
+    I.see("Česká firma", ".datatableInit tbody tr td");
+});
+
+Scenario("BUF: filter table with startsWith and endsWith", ({ I, DT }) => {
+    I.amOnPage("/apps/contact/admin/");
+    DT.waitForLoader();
+    var tdSelector = "#dataTable td.dt-row-edit a";
+    I.see("InterWay, a. s.", tdSelector);
+    I.see("Tretia firma a. s.", tdSelector);
+
+    DT.filterStartsWith("name", "Inter");
+    DT.filterEndsWith("vatid", "8294");
+
+    I.see("InterWay, a. s.", tdSelector);
+    I.dontSee("Tretia firma a. s.", tdSelector);
+});
+
+Scenario("BUG: DT export advanced tab", ({ I, DT }) => {
+    //serverSide=false
+    I.amOnPage("/admin/v9/webpages/perex/");
+    DT.waitForLoader();
+    I.click("button.btn-export-dialog");
+    I.waitForElement("#datatableExportModal");
+    I.seeElement("#pills-export-basic-tab");
+    I.dontSeeElement("#pills-export-advanced-tab");
+
+    //serverSide=true
+    I.amOnPage("/admin/v9/settings/redirect/");
+    DT.waitForLoader();
+    I.click("button.btn-export-dialog");
+    I.waitForElement("#datatableExportModal");
+    I.seeElement("#pills-export-basic-tab");
+    I.seeElement("#pills-export-advanced-tab");
+    I.clickCss("#pills-export-advanced-tab");
+    I.see("Aktuálne vyfiltrované dáta", "#datatablesExportWhichData");
 });

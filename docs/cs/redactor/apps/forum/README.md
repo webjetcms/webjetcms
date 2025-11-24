@@ -46,9 +46,11 @@ Návštěvník tedy může vytvořit nové téma a následně do tématu se při
 
 ![](forum-list-board.png)
 
-Nastavení aplikace se skládá ze dvou karet **Parametry aplikace** a **Seznam diskusí**.
+Nastavení aplikace se skládá ze dvou karet **Parametry aplikace**, **Skupiny** a **Seznam diskusí**.
 
 ![](message-board.png)
+
+!>**Upozornění:** aplikace diskuse ve formátu **Nástěnka diskusí** (nebo **Message Board**) se musí vložit již do vytvořené stránky.
 
 ### Karta - Parametry aplikace
 
@@ -66,6 +68,25 @@ Karta parametry aplikace obsahuje několik dodatečných parametrů:
 
 !>**Upozornění:** pokud chcete, aby vždy autor stránky s diskusí dostával notifikaci, můžete nastavit konfigurační proměnnou `forumAlwaysNotifyPageAuthor` na hodnotu `true`.
 
-### Seznam diskusí
+### Karta - Skupiny
+
+Karta **Skupiny** se zobrazuje pouze v případě zvolení komponenty **vícetémová diskuse (Message Board)**. Nabízí možnost zadefinovat strukturu vícetémové diskuse pomocí skupin a podskupin.
+
+Přednastavená struktura (pokud ve složce není jiná diskuse) je:
+
+```txt
+Skupina1
+ podskupina1
+Skupina2
+ podskupina1
+ podskupina2
+ podskupina3
+```
+
+!>**Upozornění:** podskupiny musí začínat mezerou.
+
+Samozřejmě tuto strukturu můžete změnit. Po uložení se automaticky potřebná struktura vytvoří ve složce stránky, do které byla aplikace vložena.
+
+### Karta - Seznam diskusí
 
 Karta seznam diskusí je vnořená stránka se seznamem všech diskusí (Diskusní fórum i Nástěnka diskusí). O seznamu diskusí se dozvíte více zde [Seznam diskusí](forum-list.md).

@@ -3,10 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 //stranka pre includnutie noviniek
 String lng = PageLng.getUserLng(request);
@@ -130,15 +126,15 @@ int counter=0;
 
 <% if (paging) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="news_pages">
 			<iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <% }
 
@@ -146,8 +142,8 @@ boolean hasPerex;
 boolean hasLink;
 %>
 
-<logic:notEmpty name="novinky">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:notEmpty name="novinky">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<%
 			if (Tools.isNotEmpty(doc.getPublishStartString())) {
 
@@ -158,13 +154,13 @@ boolean hasLink;
 				counter++;
 		%>
 			<% if ("left".equals(image)) { %>
-				<logic:notEmpty name="doc" property="perexImage">
+				<iwcm:notEmpty name="doc" property="perexImage">
 				<div class="news_img_left">
 						<%= "<a href='"+docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)+"'>" %>
 						<img src="<%= doc.getPerexImageSmall()%>" alt="" />
 						</a>
 				</div>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 			<% } %>
 
 			<div class="news_text">
@@ -228,9 +224,9 @@ boolean hasLink;
 
 			<% if ("right".equals(image)) { %>
 				<div class="news_img_right">
-					<logic:notEmpty name="doc" property="perexImage">
+					<iwcm:notEmpty name="doc" property="perexImage">
 						<img src="<jsp:getProperty name="doc" property="perexImage"/>" alt="" />
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 				</div>
 			<% } %>
 
@@ -243,12 +239,12 @@ boolean hasLink;
 
 				}
 			%>
-	</logic:iterate>
+	</iwcm:iterate>
 	<%
 		//ukonci posledny DIV
 		if (maxCols>1 && counter!=0) out.println("<div class='clearer'>&nbsp;</div></div>");
 
 	%>
 
-</logic:notEmpty>
+</iwcm:notEmpty>
 </div>

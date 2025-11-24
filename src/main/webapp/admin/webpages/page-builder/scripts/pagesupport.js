@@ -27,17 +27,11 @@ $(document).ready(function () {
 function pbAutotabs() {
     if ($("body").hasClass("is-view-mode")) return;
     $("ul.pb-autotabs").each(function (index) {
-        var id = $(this).attr("id");
-        //if (typeof id == "undefined" || id.indexOf("autotabs-")!=-1) {
-        id = "autotabs-" + index;
-        $(this).attr("id", id);
-        //}
-        pbGenerateTabs(id);
+        pbGenerateTabs($(this), index);
     });
 }
 
-function pbGenerateTabs(tabNavId) {
-    var tabNav = $("#" + tabNavId);
+function pbGenerateTabs(tabNav, tabNavId) {
     //console.log("tabNav=", tabNav);
     tabNav.html("");
     var tabPanes = tabNav.parent().find(".tab-pane");
@@ -48,22 +42,26 @@ function pbGenerateTabs(tabNavId) {
         var title = $(this).attr("title");
         if (typeof title == "undefined" || title == "" || title == null) {
             title = $(this).find("div.pb-tab-title h3,div.pb-tab-title p").text();
-            //console.log("title 1=", title);
         }
-        var id = $(this).attr("id");
+        if (typeof title == "undefined" || title == null || title == "") title = "Tab " + index;
 
-        //if (typeof id == "undefined" || id == "" || id == null || id.indexOf(tabNavId)==0) {
-        id = tabNavId + "-" + index;
+        var id = "autotabs-" + tabNavId + "-" + index;
+        //use existing ID if set, or generate from title
+        var dataTitle = $(this).attr("data-title");
+        if (typeof dataTitle != "undefined" && dataTitle != null && dataTitle != "" ) {
+            id = window.parent.WJ.fixFileName(dataTitle);
+        } else {
+            id = window.parent.WJ.fixFileName(title);
+        }
         $(this).attr("id", id);
-        //}
 
-        if (typeof title == "undefined" || title == "" || title == null) title = "Tab " + index;
+        //console.log("Generating tab id=", id, "title=", title, "dataTitle=", dataTitle);
 
         var tabHtmlCode = "<li class=\"nav-item";
         if ($(this).hasClass("active") && isOneActive == false) tabHtmlCode += " active";
         tabHtmlCode += "\"><a class=\"nav-link";
         if ($(this).hasClass("active") && isOneActive == false) tabHtmlCode += " active show";
-        tabHtmlCode += "\" data-toggle=\"tab\" role=\"tab\" href=\"#" + id + "\">" + title + "</a></li>";
+        tabHtmlCode += "\" data-toggle=\"tab\" data-bs-toggle=\"tab\" role=\"tab\" href=\"#" + id + "\">" + title + "</a></li>";
 
         if ($(this).hasClass("active")) {
             if (isOneActive == false) isOneActive = true;
@@ -103,7 +101,10 @@ function pbGenerateAccordion(accordionId) {
         var collapseId = "collapse-" + id;
 
         header.attr("id", id);
-        header.find(".accordionLink").attr("data-target", "#" + collapseId);
+        var btn = header.find(".accordion-button, .accordionLink");
+        btn.attr("data-target", "#" + collapseId);
+        btn.attr("data-bs-target", "#" + collapseId);
+        btn.attr("aria-controls", "#" + collapseId);
 
         var collapse = card.find("div.collapse");
         collapse.attr("id", collapseId);

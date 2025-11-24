@@ -37,7 +37,8 @@ public class ResponseHeaderEntity {
     @Column(name = "url")
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
-        title="apps.response-header.url"
+        title="apps.response-header.url",
+        ai = false
     )
     @NotEmpty
     @Size(max = 255)
@@ -54,11 +55,10 @@ public class ResponseHeaderEntity {
 
     @Column(name = "header_value")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXT,
+        inputType = DataTableColumnType.TEXTAREA_WRAP,
         title="apps.response-header.header_value"
     )
     @NotEmpty
-    @Size(max = 255)
     private String headerValue;
 
     @Column(name = "change_date")
@@ -66,13 +66,13 @@ public class ResponseHeaderEntity {
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="apps.response-header.change_date",
-        hiddenEditor = true
+        disabled = true
     )
     private Date changeDate;
 
     @Column(name = "note")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
+        inputType = DataTableColumnType.TEXT,
         title="apps.response-header.note"
     )
     @Size(max = 255)

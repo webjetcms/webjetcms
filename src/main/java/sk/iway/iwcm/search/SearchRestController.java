@@ -23,7 +23,6 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.SpecSearch;
 
 /**
  * SearchRestController is responsible for handling search requests related to
@@ -44,18 +43,19 @@ public class SearchRestController extends WebpagesDatatable {
     @Override
     public Page<DocDetails> getAllItems(Pageable pageable) {
         GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
+        //set groupId=-1 to ignore groupId filtering of templates/options
+        options.setGroupId(-1);
 
         //Do not test perms for groupId, it's test later
         DatatablePageImpl<DocDetails> pageImpl = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new DocDetails(), pageable));
-        WebpagesService.addOptions(pageImpl, options);
+
+        WebpagesService.addOptions(pageImpl, options, true);
         return pageImpl;
     }
 
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
-        SpecSearch<DocDetails> specSearch = new SpecSearch<>();
-        WebpagesService.addBaseSpecSearch(specSearch, params, predicates, root, builder);
-        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
         super.addSpecSearch(params, predicates, root, builder);
+        SearchService.getWebPagesData(params, getUser(), predicates, builder, root);
     }
 }

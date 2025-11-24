@@ -5,22 +5,6 @@
 <script type="text/javascript">
     var productListDataTable;
 
-    WJ.breadcrumb({
-        id: "product-list",
-        tabs: [
-            {
-                url: '/apps/eshop/admin/product-list',
-                title: '[[#{apps.product-list.title}]]',
-                active: true
-            },
-            {
-                url: '#dateRange',
-                title: '{filter}',
-                active: false
-            }
-        ]
-    });
-
     window.domReady.add(function () {
         //Add filter to tab
         $("#pills-dateRange-tab").html("");
@@ -99,8 +83,6 @@
             });
             productListDataTable = wpdInstance.createDatatable();
 
-
-
             if(isPreviewMode() == true) {
                 productListDataTable.hideButtons(["create", "edit", "remove", "celledit", "duplicate", "abtest", "stat"]);
             } else {
@@ -125,19 +107,22 @@
                 productListDataTable.EDITOR.field("fieldH").disable();
                 // productListDataTable.EDITOR.field("fieldI").disable();
             });
+
+            $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupSelect"></select></div><div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label>[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
+
+            //Init select
+            ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", false);
+            ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
+
+            $("#groupSelect").on("change", function() {
+                updateTable();
+            });
+
+            $("#currencySelect").on("change", function() {
+                updateTable();
+            });
         });
 
-        //Init select
-        ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", false);
-        ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
-
-        $("#groupSelect").on("change", function() {
-            updateTable();
-        });
-
-        $("#currencySelect").on("change", function() {
-            updateTable();
-        });
 
         function updateTable() {
             //set table filter params
@@ -195,19 +180,9 @@
     #pills-dt-productListDataTable-template-tab {
         display: none;
     }
+    #currencySelect_wrapper {
+        width: 120px;
+    }
 </style>
-
-<div id="productListDataTable_extfilter">
-    <div class="row datatableInit">
-        <div class="col-auto">
-            <select id="groupSelect">
-            </select>
-        </div>
-        <div class="col-auto">
-            <select id="currencySelect">
-            </select>
-        </div>
-    </div>
-</div>
 
 <table id="productListDataTable" class="datatableInit table"></table>

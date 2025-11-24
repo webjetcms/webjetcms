@@ -3,6 +3,7 @@ package sk.iway.iwcm.io;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -84,6 +85,10 @@ public class IwcmFile
 	public IwcmFile(IwcmFile parent,String child)
 	{
 		this(parent.getAbsolutePath(),child);
+	}
+
+	public IwcmFile(Path path) {
+		this(path.toAbsolutePath().toString());
 	}
 
 	public static IwcmFile fromVirtualPath(String path)

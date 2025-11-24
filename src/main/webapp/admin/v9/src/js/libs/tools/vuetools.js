@@ -46,12 +46,32 @@ export class VueTools {
         vm.directive('tooltip',
             {
                 created (el, binding) {
+                    // Support two binding formats:
+                    // 1) v-tooltip:top="'My title'" (original behavior)
+                    // 2) v-tooltip:top="{ title: 'My title', class: 'my-tooltip-class' }"
+                    //    which allows adding a custom CSS class to the tooltip.
+                    var rawVal = binding.value;
+                    var title = rawVal;
+                    var customClass = null;
+                    if (rawVal && typeof rawVal === 'object') {
+                        // Prefer explicit title, fallback to text, else empty string
+                        title = rawVal.title || rawVal.text || '';
+                        customClass = rawVal.class || rawVal.customClass || null;
+                    }
+
+                    var options = {
+                        title: title,
+                        placement: binding.arg,
+                        trigger: 'hover'
+                    };
+
+                    // Bootstrap 5 supports customClass; if using BS4 you can adjust to a template override.
+                    if (customClass) {
+                        options.customClass = customClass;
+                    }
+
                     $(el)
-                        .tooltip({
-                            title: binding.value,
-                            placement: binding.arg,
-                            trigger: 'hover',
-                        })
+                        .tooltip(options)
                         .on('click', function () {
                             $(el).tooltip('dispose');
                         });

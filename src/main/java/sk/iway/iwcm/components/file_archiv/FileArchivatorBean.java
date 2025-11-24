@@ -18,6 +18,8 @@ import javax.validation.constraints.NotBlank;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Adminlog;
@@ -26,8 +28,6 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.database.ActiveRecordRepository;
-import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -486,7 +486,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	/**
 	 * @deprecated use getFileSizeFormatted() instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "2024-06")
 	public long getFileSizeKB() {
 		if (fileSize == null) return 0;
 		return fileSize / 1024;
@@ -495,7 +495,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	/**
 	 * @deprecated use getFileSizeFormatted() instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "2024-06")
 	public double getFileSizeMB() {
 		if (fileSize == null) return 0;
 		return getFileSizeKB() / 1024d;
@@ -516,12 +516,31 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		else this.referenceId = referenceId;
 	}
 
-	public void setReferenceId(int referenceId) {
-		this.referenceId = Long.valueOf(referenceId);
-	}
-
 	public Integer getOrderId() { return orderId == null ? -1 : orderId; }
 	public Integer getPriority() { return priority == null ? 0 : priority; }
 	public Boolean getShowFile() { return Tools.isTrue(showFile); }
 	public Boolean getIndexFile() { return Tools.isTrue(indexFile); }
+
+	/**
+	 * Vrati id ako int, ak je null, vrati 0
+	 * @return
+	 * @deprecated use getId() instead and convert your API to use Long object
+	 */
+	@Deprecated(forRemoval = true, since = "2024-06")
+	@JsonIgnore
+	public int getIdInt()
+	{
+		if (id == null) return 0;
+		return id.intValue();
+	}
+
+
+    public void setReferenceId(int referenceId) {
+        this.referenceId = Long.valueOf(referenceId);
+    }
+
+    public int getReferenceIdInt() {
+        return referenceId == null ? 0 : referenceId.intValue();
+    }
+
 }

@@ -12,6 +12,7 @@ import java.util.StringTokenizer;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -34,6 +35,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -69,13 +71,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			tab = "basic",
 			editor = {
 					@DataTableColumnEditor(attr = {
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String title;
 
 	@Column(name = "navbar")
@@ -87,13 +88,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			editor = {
 					@DataTableColumnEditor(attr = {
 							@DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String navbar;
 
 	@Column(name = "virtual_path")
@@ -104,7 +104,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			visible = false,
 			className = "DTE_Field_Has_Checkbox"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String virtualPath = "";
 
 	@Column(name = "editor_virtual_path ")
@@ -173,7 +173,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 					)
 			}
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String externalLink = "";
 
 	@Column(name = "available")
@@ -629,9 +629,10 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 
 	//Old DocumentAdvancedFields aka advancedFields
+	@Lob
 	@Column(name = "html_head")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="editor.tab.html_header",
-	tab = "template", visible = false, sortAfter = "tempFieldDDocId"
+		tab = "template", visible = false, sortAfter = "tempFieldDDocId"
 	)
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlHead = "";
@@ -662,6 +663,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	)
 	private Date eventDateDate;
 
+	@Lob
 	@Column(name = "html_data")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = "wrap", title="editor.tab.perex",
 		tab = "perex", visible = false, sortAfter = "eventDateDate"
@@ -686,7 +688,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		},
 		renderFormat = "dt-format-image"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String perexImage = "";
 
 	@Transient
@@ -698,6 +700,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@Transient
 	private String docLink;
 
+	@Lob
 	@Column(name = "data")
 	@DataTableColumn(inputType = DataTableColumnType.WYSIWYG, title="components.news.template_html",
 		hidden = true, tab="content"
@@ -705,6 +708,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String data;
 
+	@JsonIgnore
+	@Lob
 	@Column(name = "data_asc")
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String dataAsc;
@@ -751,7 +756,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//Must be change from Transient to Column, because we need save this method
 	// @Size(max = 255)
 	@Column(name = "file_name")
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String fileName;
 
 	@Transient
@@ -1118,7 +1123,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	{
 		if (navbar == null || navbar.length() < 1)
 		{
-			return (title);
+			String navbarFromTitle = title;
+			if (navbarFromTitle.contains("<") && navbarFromTitle.contains(">")) navbarFromTitle = Tools.html2text(navbarFromTitle);
+			return navbarFromTitle;
 		}
 		else
 		{

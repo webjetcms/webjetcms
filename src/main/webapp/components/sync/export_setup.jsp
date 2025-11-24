@@ -12,9 +12,6 @@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:menu notName="cmp_sync">
 	<%
 		response.sendRedirect("/admin/403.jsp");
@@ -44,7 +41,6 @@ request.setAttribute("dialogDescKey", "components.sync.export-import.desc");
 
 <%@ include file="/admin/layout_top_dialog.jsp" %>
 
-<link rel="stylesheet" type="text/css" href="/css/style.css"/>
 <link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
 
 <style type="text/css" media="screen">

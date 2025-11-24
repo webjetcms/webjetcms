@@ -72,7 +72,7 @@
                 if (typeof(this.$props.attr["data-dt-json-addbutton"])!=undefined) this.addButtonText=this.$props.attr["data-dt-json-addbutton"];
             }
             if (this.click.indexOf("dt-tree-dir-simple")!=-1) {
-                //remove diabled element on input
+                //remove disabled element on input
                 var that = this;
                 setTimeout(function() {
                     window.$("#"+that.idKey).parent().find("div.dt-tree-container .input-group input").removeAttr("disabled");
@@ -153,16 +153,23 @@
                 //zmen hodnotu v textarea, aby sme to videli a firni event, aby sa to dalo pocuvat
                 if (that.click.indexOf("dt-tree-dir-simple")!=-1) {
                         window.$(textInputId).val(that.$root.data[0].virtualPath).change();
-                } else if (that.click.indexOf("dt-tree-groupid-root")!=-1 || that.click.indexOf("dt-tree-groupid")!=-1) {
+                } else if (that.click.indexOf("dt-tree-groupid-root")!=-1 || that.click.indexOf("dt-tree-groupid")!=-1 || that.click.indexOf("dt-tree-pageid")!=-1) {
                     setTimeout(function() {
                         //console.log("input=", textInputId);
                         //console.log("data=", that.$root.data);
+
                         let $element = window.$(textInputId);
-                        let groupId = that.$root.data[0].groupId;
                         let text = that.$root.data[0].fullPath;
 
-                        if (groupId < 1) {
-                            groupId = -1;
+                        let id;
+                        if(that.click.indexOf("dt-tree-pageid")!=-1) {
+                            id = that.$root.data[0].docId;
+                        } else {
+                            id = that.$root.data[0].groupId;
+                        }
+
+                        if (id < 1) {
+                            id = -1;
                             let textEmpty = $element.attr("data-text-empty");
                             if (typeof textEmpty != "undefined" && textEmpty != null) {
                                 text = textEmpty;
@@ -171,7 +178,7 @@
                         }
 
                         $element.attr("data-text", text);
-                        $element.val(groupId);
+                        $element.val(id);
                         $element.trigger("change");
                     }, 100);
                 } else {

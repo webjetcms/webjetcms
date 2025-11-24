@@ -1,19 +1,13 @@
-
+<%@page import="java.util.List"%>
 <%
 	sk.iway.iwcm.Encoding
 			.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,org.apache.struts.util.ResponseUtils"%><%@
+	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.tags.support.ResponseUtils"%><%@
 taglib
 	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
 	uri="/WEB-INF/iway.tld"%><%@
-taglib prefix="bean"
-	uri="/WEB-INF/struts-bean.tld"%><%@
-taglib prefix="html"
-	uri="/WEB-INF/struts-html.tld"%><%@
-taglib prefix="logic"
-	uri="/WEB-INF/struts-logic.tld"%><%@
 taglib prefix="display"
 	uri="/WEB-INF/displaytag.tld"%><%@
 taglib prefix="stripes"
@@ -130,10 +124,10 @@ effects[4] = "data-x=\"4500\" data-z=\"1000\" data-rotate-y=\"45\"";
 	%>
 		<div class="step" data-color="color-<%=counter %>" <% if (counter<effects.length) { out.print(effects[counter-1]); } %>>
 				<div class="jms-content">
-					<h3 style = "color:<%=item.get("headingColor")%>!important; <%=item.get("customStyleHeading") %>"><%=item.get("title")%></h3>
-					<p  style = "color:<%=item.get("subheadingColor")%>!important; <%=item.get("customStyleSubHeading") %>">
+					<h3 style = "color:<%=item.get("headingColor")%>!important; <%=item.get("customStyleHeading")%>"><%=item.get("title")%></h3>
+					<div  style = "color:<%=item.get("subheadingColor")%>!important; <%=item.get("customStyleSubHeading")%>">
 					<%=item.get("subtitle")%>
-					</p>
+					</div>
 					<% if(Tools.isNotEmpty((String)item.get("redirectUrl"))) { %>
 					<a class="jms-link" href="<%=(String)item.get("redirectUrl")%>"> Viac </a>
 					<% } %>

@@ -23,18 +23,22 @@ Before(({ I, DT }) => {
 /**
  * caseA while CONF structureMirroringAutoTranslatorLogin IS SET
  */
-Scenario('Translation use autotranslator', async ({I, DT, DTE}) => {
-    await testTranslation(I, DT, DTE, true);
+Scenario('Translation use autotranslator', async ({I, DT, DTE, Document}) => {
+    await testTranslation(I, DT, DTE, Document, true);
 });
 
 /**
  * caseB while CONF structureMirroringAutoTranslatorLogin IS NOT SET
  */
-Scenario('Translation use available', async ({I, DT, DTE}) => {
-    await testTranslation(I, DT, DTE, false);
+Scenario('Translation use available', async ({I, DT, DTE, Document}) => {
+    await testTranslation(I, DT, DTE, Document, false);
 });
 
-async function testTranslation(I, DT, DTE, useAutotranslator) {
+Scenario('Logout', ({ I }) => {
+    I.logout();
+});
+
+async function testTranslation(I, DT, DTE, Document, useAutotranslator) {
 
     var docTitleSK;
     var docTitleEN;
@@ -64,7 +68,7 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
     }
 
     //Select DOMAIN
-    setDomain(I);
+    Document.switchDomain("mirroring.tau27.iway.sk");
 
     // CREATE NEW DOC IN SK VERSION
     I.say("Creating initial SK version");
@@ -161,14 +165,6 @@ async function deleteDocWithCheck(I, DT, DTE, docNameA, docNameB) {
     I.jstreeClick("preklad_en");
     DT.filterContains("title", docNameB);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
-}
-
-function setDomain(I) {
-    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
-    I.wait(1);
-    I.click(locate('.dropdown-item').withText("mirroring.tau27.iway.sk"));
-    I.waitForElement("#toast-container-webjet", 10);
-    I.clickCss(".toastr-buttons button.btn-primary");
 }
 
 async function setConfValues(I, DT, DTE, autotranslator) {

@@ -60,6 +60,8 @@ src/main/webapp/templates/wa
 src/main/webapp/templates/vesmir
 src/main/webapp/images/gallery/produktova-stranka/zijeme
 src/main/webapp/templates/usti-nad-labem
+src/main/webapp/templates/or*
+src/main/webapp/components/or*
 
 #javadoc je generovany, nema zmysel ho mat v gite
 /docs/developer/javadoc

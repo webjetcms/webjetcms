@@ -18,10 +18,6 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.Transformer;
-import org.apache.lucene.document.Document;
-
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -394,27 +390,26 @@ public class ForumDB
 			// FIX-ME: problem, ked zadam user_id 1 tak mi selectne aj prispevky
 			// s user_id -1 -> problem v indexovani? v indexe je ale spravna
 			// hodnota..
-			results.addAll(CollectionUtils.collect(query.documents(queryString.toString()), new Transformer<Document, ForumSearchBean>()
-			{
-
-				@Override
-				public ForumSearchBean transform(Document doc)
-				{
-					ForumSearchBean fsb = new ForumSearchBean();
-					fsb.setForumId(Tools.getIntValue(doc.getFieldable("forum_id").stringValue(), -1));
-					fsb.setForumName(doc.getFieldable("title").stringValue());
-					fsb.setDocId(Tools.getIntValue(doc.getFieldable("doc_id").stringValue(), -1));
-					fsb.setParentId(Tools.getIntValue(doc.getFieldable("parent_id").stringValue(), -1));
-					fsb.setSubject(doc.getFieldable("subject").stringValue());
-					fsb.setQuestion(doc.getFieldable("question").stringValue());
-					fsb.setAutorFullName(doc.getFieldable("author_name").stringValue());
-					fsb.setAutorEmail(doc.getFieldable("author_email").stringValue());
-					fsb.setFlag(doc.getFieldable("flag").stringValue());
-					fsb.setUserId(Tools.getIntValue(doc.getFieldable("user_id").stringValue(), -1));
-					fsb.setQuestionDate(Tools.formatDateTimeSeconds(LuceneUtils.luceneDateToDate(doc.getFieldable("question_date").stringValue())));
-					return fsb;
-				}
-			}));
+			// Use Java streams to map Lucene Documents to ForumSearchBean objects
+			results.addAll(
+				query.documents(queryString.toString()).stream()
+					.map(doc -> {
+						ForumSearchBean fsb = new ForumSearchBean();
+						fsb.setForumId(Tools.getIntValue(doc.getFieldable("forum_id").stringValue(), -1));
+						fsb.setForumName(doc.getFieldable("title").stringValue());
+						fsb.setDocId(Tools.getIntValue(doc.getFieldable("doc_id").stringValue(), -1));
+						fsb.setParentId(Tools.getIntValue(doc.getFieldable("parent_id").stringValue(), -1));
+						fsb.setSubject(doc.getFieldable("subject").stringValue());
+						fsb.setQuestion(doc.getFieldable("question").stringValue());
+						fsb.setAutorFullName(doc.getFieldable("author_name").stringValue());
+						fsb.setAutorEmail(doc.getFieldable("author_email").stringValue());
+						fsb.setFlag(doc.getFieldable("flag").stringValue());
+						fsb.setUserId(Tools.getIntValue(doc.getFieldable("user_id").stringValue(), -1));
+						fsb.setQuestionDate(Tools.formatDateTimeSeconds(LuceneUtils.luceneDateToDate(doc.getFieldable("question_date").stringValue())));
+						return fsb;
+					})
+					.toList()
+			);
 			Logger.debug(ForumDB.class, "Results: " + results.size());
 		}
 		else

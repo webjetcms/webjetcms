@@ -3,9 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -125,8 +122,8 @@ function setRequestParam(prefix) {
 <stripes:useActionBean var="actionBean" beanclass="sk.iway.iwcm.stripes.SyncDirAction"/>
 
 <iwcm:stripForm id="syncForm" action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.stripes.SyncDirAction" method="post" style="display:none;">
-	<input type="hidden" name="syncDir" value="${param.syncDir}" />
-	<input type="hidden" name="compareBy" value="${param.compareBy}" />
+	<input type="hidden" name="syncDir" value="<%=Tools.getParameterNotNull(request, "syncDir")%>" />
+	<input type="hidden" name="compareBy" value="<%=Tools.getParameterNotNull(request, "compareBy")%>" />
 	<table border="0" style="<%if (showForm==false) out.print("display: none;");	%>">
 		<tr>
 			<td><iwcm:text key="components.syncDir.localGroupId"/></td>
@@ -342,7 +339,7 @@ function setRequestParam(prefix) {
 					%>
 				</td>
 				<td style="text-align: center;"><input type="checkbox" class="group-checkbox" data-id="group_${remoteGroup.groupId}"<%=checked %>/></td>
-				<td><span class="iconFolder">&nbsp;</span> <strong><bean:write name="localPath"/></strong></td>
+				<td><span class="iconFolder">&nbsp;</span> <strong><iwcm:beanWrite name="localPath"/></strong></td>
 			</tr>
 			<c:if test="${!empty actionBean.remoteDocs}">
 				<c:forEach items="${actionBean.remoteDocs}" var="remoteDoc">

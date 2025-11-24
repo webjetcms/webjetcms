@@ -13,34 +13,34 @@ Explanation of the pictograms used:
 
 ## 2025
 
-- [ ] Switch to `Jakarta EE` - change Java packages from `javax.servlet` at `jakarta.servlet`, prepare the migration script.
-- [ ] Switch to Tomcat 11+ application server.
-- [ ] Switch to `Spring` Version 7.
+- [ ] Switch to `Jakarta EE` - change Java packages from `javax.servlet` at `jakarta.servlet`, prepare migration script (#57793).
+- [ ] Switching to Tomcat 11+ application server (#57793).
+- [ ] Switch to `Spring` Version 7 (#57793).
 - [ ] Introduce into the project the obligation to use `SonarLint` and formatting code via `.editorconfig` or `Spotless` - Example https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
-- [ ] Primary use of the GitHub repository for development.
-- [ ] Cancel artifact generation on old `iwmsp.sk` repository, artifacts will only be available through [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
-- [ ] Updating the library `pd4ml` to the new version, individual sites will have to purchase the license separately, it will no longer be provided by WebJET CMS.
+- [x] Primary use of the GitHub repository for development.
+- [x] Cancel artifact generation on old `iwmsp.sk` repository, artifacts will only be available through [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [x] Updating the library `pd4ml` to the new version, individual sites will have to purchase the license separately, it will no longer be provided by WebJET CMS.
 - [ ] Migrating the most used applications to Spring version using Thymeleaf templates.
-- [ ] Cancellation `Apache Struts` framework, replacement `logic:present,logic:iterate,bean:write` either for `JSTL` variant, or the implementation of similar functionality into `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [x] Cancellation `Apache Struts` framework, replacement `logic:present,logic:iterate,bean:write` either for `JSTL` variant, or the implementation of similar functionality into `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Moving JSP files, Java classes and JavaScript libraries of old version 8 to `obsolete` spring archive, which will not be a standard part of WebJET CMS. It can be used on old projects where all customer applications have not yet been updated to `Spring` versions, but without support and updates from WebJET CMS.
 - [ ] Statistics - click map - restore functionality, solve responsiveness problem (separate registration by window width).
-- [ ] Statistics - ability to filter bots for stats of failed pages.
+- [x] Statistics - ability to filter bots for statistics of failed pages (#58053).
 - [ ] Log files - filter by installation name.
 - [ ] `quill` - add the ability to set menu items including colors.
 - [ ] Applications - option to purchase the application for the OpenSource version (#55825).
 - [ ] Option to execute Thymeleaf code in the header/footer and maybe in the body of the web page.
 - [ ] Security - add generation support `nonce` For `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
 - [ ] Forms - add the ability to call a Java class for form validation.
-- [ ] Tags - filter by current domain to be the same as in other sections.
+- [x] Tags - filter by current domain to be the same as in other sections (#57837).
 - [ ] Import users - if no password is entered, generate one (for new users), if no status is sent `available` set to `true`.
 - [ ] In tests, somehow automated to check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` which are incorrect waits without a defined time, will cause automated tests to get stuck.
 - [ ] Add an app to redirect the main page to `/sk/` or `/en/` by browser language.
-- [ ] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants`.
-- [ ] Gallery - when duplicating an image, enable the "Folder" change to allow us to duplicate images to a folder other than the current folder.
+- [ ] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants` (#57849).
+- [x] Gallery - when duplicating an image, enable the "Folder" change to allow us to duplicate images to a folder other than the current folder (#57885).
 - [ ] Bulk email - audit changes in user groups.
 - [x] Archive files - rebuild into data tables (#57317).
 - [ ] Optional fields - add the option to select multiple items to link to the dial.
-- [ ] eCommerce - integration to payment gateway `GoPay` (#56609).
+- [x] E-commerce - integration to the payment gateway `GoPay` (#56609).
 - [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
 - [x] Reservations - new app for all-day reservations (#57389).
@@ -51,7 +51,7 @@ Explanation of the pictograms used:
 - [ ] +Ecommerce - add to email `JSON-LD` Data https://schema.seznam.cz/objednavky/dokumentace/.
 - [ ] +Dial, Blog, News - edit so that the selection of the type of dial or folder for news is on the left, similar to the gallery/web pages. They don't have to be tabs then but all displayed at once.
 - [ ] +Translation Keys - show tree structure of translation keys for better orientation.
-- [ ] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#56665).
 - [ ] +Photobank - add option to set file name before downloading from photobank, automatically set by search term.
 - [ ] +Gallery - if I set the perex image to an image in the gallery, download from the photo library, and rename the image to an existing one in the database (if the file is deleted from the disk) it will be created in `gallery` duplicate record in the table. Additionally, other images are not renamed `o_,s_`. The thing to remember is that theoretically I can rename any, it should detect that I'm in the gallery and rename all versions.
 - [x] +Configuration - add setting option `Hikari` via `poolman.xml/ENV` such as `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
@@ -65,8 +65,18 @@ Explanation of the pictograms used:
 - [ ] +Add the option to move to the parent folder in the Media of this page.
 - [ ] +Configuration - if `cluster` add the option to set the variable only for the current node (do not save it to the database). Originally this was handled by the selection field `applyToAllClusterNodes`.
 - [ ] +Enumerators - add the ability to define a field type for the string as we have in the optional fields.
-- [ ] +Statistics - add the total number of Visits and Visits to the Traffic section for an easy overview of the total traffic for the selected period (the sum of the numbers in the table). It could be added `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html
-- [ ] +Mirror Structure - add delete option `sync_id` values for the selected folder (recursive). In order to easily cancel/reset the synchronization. Also there is a problem that I clone `SK,DE,EN` then we'll shut down `DE` and I just want to have `EN` but the mirroring still applies changes even to the `DE` Folder.
+- [x] +Statistics - add the total number of Views and Visits to the traffic section for an easy overview of the total traffic for the selected period (the sum of the numbers in the table). It could be added `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html (#57929).
+- [x] +Mirror structure - add delete option `sync_id` values for the selected folder (recursive). In order to easily cancel/reset the synchronization. Also, there is a problem that I clone `SK,DE,EN` then we'll shut down `DE` and I just want to have `EN` but the mirroring still applies changes even to the `DE` Folder (#57561).
+- [ ] +Add verification to GitHub tests `autoupdate` for all supported database servers - i.e. initialize an empty database and verify all `autoupdate` and verify that they pass without error. Treat as a separate pipeline.
+- [ ] Gallery - allow to change the path of the gallery (folder) and set everything related to it.
+- [ ] +Configuration - add column group with value `modules` configuration variable (selection field, can have multiple values). Add the option to display also unconfigured variables (i.e. complete list). Create a tool to generate all variables by groups/modules into `md` file in the documentation for an overview of all variables.
+- [ ] +If I have an unsaved page with the title Cleaning and there is already another page with the title Cleaning, the newly uploaded images will be uploaded to the Cleaning folder before saving it `upratovanie`. But when the page is saved, it gets the URL cleaning-2.html and the other images are already uploaded to the folder `upratovanie-2`. It is necessary to edit the code in `getPageUploadSubDir` so that instead of using the page title directly, it tries to get the URL for the new page and then uses that.
+- [ ] +HTTP headers - extend the maximum HTTP header value size to more than 255 characters, for `Content-Security-Policy` it's undersized (#PR83).
+- [x] +Integration of AI tools, helpers, assistants (#57997).
+- [ ] +In profile editing, the API key is not displayed after it is generated, notifications are not transferred to the parent window.
+- [ ] +Forms - modify form protection so that it is not used `document.write`.
+- [ ] +Add the option to set the type `textarea` as in AI assistants and with line numbers, e.g. in scripts or elsewhere where code writing is expected.
+- [ ] +News - move field `contextClasses` from the news app to the news template. Field set as `hidden` to remain functional (can be set somewhere), if empty use the value from the template. So both options must work, maybe combine both values into one list.
 
 ## 2024
 
@@ -242,7 +252,7 @@ Explanation of the pictograms used:
 - [x] add `code coverage` report, e.g. via JaCoCo - https://docs.gradle.org/current/userguide/jacoco\_plugin.html (#54909).
 - [ ] ~~(move to 2023.40) modify messaging between admins from popup to better UI~~
 - [ ] ~~(move to 2023.40) Applications - improve description of each application, update application images.~~
-- [x] Gallery - add physical file name change (including generated s\* and o\* images) after changing the File Name attribute in the editor (#39751-52).
+- [x] Gallery - add physical file name change (including generated `s_` a `o_` images) after changing the File Name attribute in the editor (#39751-52).
 - [x] +Datatabases - remember the number of records per page for each datatable (#39751-50).
 - [ ] +`Command Palette` - add a command palette with integrated search like VS Code - https://trevorsullivan.net/2019/09/18/frictionless-user-experiences-add-a-command-palette-to-your-react-application/
 - [ ] ~~(move to 2023.40) +photo gallery - optimize the amount of data loaded~~

@@ -1,0 +1,17 @@
+services:
+  postgres:
+    #https://x.com/TheLaranox/status/1991065175760282047
+    image: postgres:18.1-trixie
+    container_name: webjetcms-pgsql
+    environment:
+      POSTGRES_DB: "webjetcms_autotest_web"
+      POSTGRES_USER: "webjetcms_autotest_web"
+      POSTGRES_PASSWORD: "${WEBJET_DB_PASS}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "15432:5432"
+    volumes:
+      - webjetcms-pgsqldata:/var/lib/postgresql
+
+volumes:
+  webjetcms-pgsqldata:

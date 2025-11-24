@@ -1,7 +1,6 @@
 package sk.iway.iwcm.common;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.struts.util.ResponseUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.outerj.daisy.diff.HtmlCleaner;
 import org.outerj.daisy.diff.XslFilter;
 import org.outerj.daisy.diff.html.HTMLDiffer;
@@ -22,6 +21,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -168,7 +168,7 @@ public class DocTools {
 
         String valueLC = value.toLowerCase();
         //nahrad ascii entity typu JaVaS&#99;RiPt:alert(142277,334213762);
-        String value2LC = StringEscapeUtils.unescapeHtml(value).toLowerCase();
+        String value2LC = StringEscapeUtils.unescapeHtml4(value).toLowerCase();
         value2LC = Tools.replace(value2LC, "\t", "");
         value2LC = Tools.replace(value2LC, "\r", "");
         value2LC = Tools.replace(value2LC, "\n", "");
@@ -794,7 +794,7 @@ public class DocTools {
         if ("get".equalsIgnoreCase(request.getMethod())==false)
         {
             //pre /components/ adresar a JSP/Stripes subory budem testovat aj pre POST requesty
-            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do")))
+            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do") || path.endsWith(".struts")))
             {
                 //vynimky, pre ktore netreba testovat
 
@@ -822,6 +822,9 @@ public class DocTools {
 
             //prenos include parametra z editor_component.jsp
             if ("include".equals(name) && path.startsWith("/apps/") && path.contains("/admin/")) continue;
+
+            //allow HTML code on /admin/rest/ on param name start with search - to search including special chars, eg. in admin search for specific HTML code
+            if (path.startsWith("/admin/rest/") && name.startsWith("search")) continue;
 
            if (testXssStrictGet(name))
            {

@@ -17,6 +17,10 @@
         this.element = element;
         this._name = pluginName;
 
+        if (typeof window.pbCustomOptions === "function") {
+            window.pbCustomOptions(options);
+        }
+
         this.options = $.extend( {}, this.get_defaults(), options );
         this.generate_default_options();
 
@@ -33,6 +37,29 @@
         init: function () {
             this.build_cache();
             this.set_settings();
+
+            if (typeof window.pbCustomSettings === "function") {
+                window.pbCustomSettings(this);
+            }
+
+            this.set_settings_after();
+
+            var me = this;
+            window.webjethtmlboxDialogCommand = function(editor) {
+                //console.log("webjethtmlboxDialogCommand called, editor=", editor);
+                me.show_library_tab(null);
+            }
+
+            //inject section if there is no section in HTML
+            let html = $(this.element).html();
+            if (html.indexOf("<section")==-1)
+            {
+                //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
+                if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
+                html = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'"><div class="'+this.grid.column_default_class+'">'+html+'</div></div></div></section>';
+                $(this.element).html(html);
+            }
+
             this.setTemplateData();
             this.mark_grid_elements();
             this.create_modal();
@@ -156,6 +183,7 @@
                 row:                            prefix+'row',
                 column:                         prefix+'column',
                 column_content:                 prefix+'column__content',
+                content:                        prefix+'content',
 
                 editable_section:               'pb-section',
                 editable_container:             'pb-container',
@@ -242,10 +270,11 @@
                 library_column:                 prefix+'library--column',
                 library_container:              prefix+'library--container',
                 library_section:                prefix+'library--section',
+                library_content:                prefix+'library--content',
 
                 library_header:                 prefix+'library__header',
                 library_header_title:           prefix+'library__header__title',
-                library_content:                prefix+'library__content',
+                library_content_container:      prefix+'library__content',
                 library_footer:                 prefix+'library__footer',
                 library_footer_button:          prefix+'library__footer__button',
 
@@ -276,10 +305,6 @@
 
             // <%-- TAG Classes --%>
             me.tagc = {};
-
-            $.each(me.tag, function(key, val) {
-                me.tagc[key]= '.'+val;
-            });
 
             me.state = {
                 is_styling_column:              prefix+'is-styling-column',
@@ -316,18 +341,15 @@
 
             me.statec = {};
 
-            $.each(me.state, function(key, val) {
-                if(key === 'is_moving_type') {
-                    return;
-                }
-                me.statec[key]= '.'+val;
-            });
-
             me.grid = me.options.grid || {
                 section:                        'section:not(.pb-not-section)',
+                section_default_class:          '',
                 container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
+                container_default_class:        'container',
                 row:                            'div.row',
+                row_default_class:              'row',
                 column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
+                column_default_class:           'col col-md-12',
                 column_content:                 'div.column-content'
             };
 
@@ -338,18 +360,6 @@
                 valid_classes:                  [],
                 attr_prefix:                    'data-'+prefix
             };
-
-            $.each(me.column.valid_prefixes, function(index, class_name) {
-                for (var i = me.column.min_size; i < me.column.max_size+1; i++) {
-                    me.column.valid_classes.push(class_name+i);
-                }
-            });
-            //pridaj aj pb-col a pb-col-auto
-            me.column.valid_classes.push("pb-col");
-            me.column.valid_classes.push("pb-col-auto");
-            me.column.valid_prefixes.push("pb-col");
-            //console.log("me.column.valid_classes=", me.column.valid_classes);
-            //console.log("valid_prefixes=", me.column.valid_prefixes);
 
             me.user_style = {
                 counter: function(){
@@ -401,9 +411,7 @@
                     'visibility-xl',
 
                     //standardne atributy
-                    'attr-title'
-
-                    /*,
+                    'attr-title',
 
                     'width',
                     'min-width',
@@ -411,7 +419,6 @@
                     'height',
                     'min-height',
                     'max-height'
-                    */
                 ],
                 px_properties: [
                     'margin-top',
@@ -435,7 +442,7 @@
                     'border-bottom-right-radius'
                 ],
                 current_element: null,
-                current_element_old_style: []
+                current_element_old_style: ""
             };
 
             me.template = [];
@@ -444,52 +451,73 @@
                                     "id": "1",
                                     "textKey": "column",
                                     "groups": [
-                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>',        'content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.2",    "textKey": '<span class="pb-col-2">2</span>',        'content': '<div class="col-md-2 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.3",    'textKey': '<span class="pb-col-3">3</span>',        'content': '<div class="col-md-3 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.4",    'textKey': '<span class="pb-col-4">4</span>',        'content': '<div class="col-md-4 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.5",    'textKey': '<span class="pb-col-5">5</span>',        'content': '<div class="col-md-5 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.6",    'textKey': '<span class="pb-col-6">6</span>',        'content': '<div class="col-md-6 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.7",    'textKey': '<span class="pb-col-7">7</span>',        'content': '<div class="col-md-7 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.8",    'textKey': '<span class="pb-col-8">8</span>',        'content': '<div class="col-md-8 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.9",    'textKey': '<span class="pb-col-9">9</span>',        'content': '<div class="col-md-9 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.10",   'textKey': '<span class="pb-col-10">10</span>',      'content': '<div class="col-md-10 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.11",   'textKey': '<span class="pb-col-11">11</span>',      'content': '<div class="col-md-11 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.12",   'textKey': '<span class="pb-col-12">12</span>',      'content': '<div class="col-md-12 '+me.state.is_special_helper+'"></div>'}--%>
+                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>','content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "2",
                                     "textKey": "container",
                                     "groups": [
-                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'}--%>
+                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "3",
                                     "textKey": "section",
                                     "groups": [
-                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'}--%>
+                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
+                                    ]
+                                },
+                                {
+                                    "id": "4",
+                                    "textKey": "content",
+                                    "groups": [
+                                        { id: "id4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
+                                        { id: "id4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
+                                        { id: "id4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
+                                        { id: "id4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
+                                        { id: "id4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
+                                        { id: "id4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
+                                        { id: "id4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
+                                        { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
+                                        { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
+                                        { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
+                                        { id: "id4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
                                 }
                             ];
             me.template.library = [];
             me.template.favorite = [];
 
+        },
+
+        set_settings_after: function() {
+            var me = this,
+                prefix = me.options.prefix+'-';
+
+            $.each(me.tag, function(key, val) {
+                me.tagc[key]= '.'+val;
+            });
+
+            $.each(me.state, function(key, val) {
+                if(key === 'is_moving_type') {
+                    return;
+                }
+                me.statec[key]= '.'+val;
+            });
+
+            $.each(me.column.valid_prefixes, function(index, class_name) {
+                for (let i = me.column.min_size; i < me.column.max_size+1; i++) {
+                    me.column.valid_classes.push(class_name+i);
+                }
+            });
+            //pridaj aj pb-col a pb-col-auto
+            me.column.valid_classes.push(prefix+"col");
+            me.column.valid_classes.push(prefix+"col-auto");
+            me.column.valid_prefixes.push(prefix+"col");
+            //console.log("me.column.valid_classes=", me.column.valid_classes);
+            //console.log("valid_prefixes=", me.column.valid_prefixes);
         },
 
         setTemplateData: function(){
@@ -535,6 +563,11 @@
                     groups: groups
                 });
             });
+            ret.push({
+                id: 4,
+                textKey: "content",
+                groups: me.template.basic[3].groups
+            });
             me.template.basic = ret;
 
             // <%-- nested functions--%>
@@ -550,7 +583,7 @@
                 return {
                     id: "id"+parentId+"."+id,
                     textKey: '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>',
-                    content: '<div class="col-md-'+v+' '+me.state.is_special_helper+'">Text</div>'
+                    content: '<div class="'+me.column.valid_prefixes[0]+v+' '+me.state.is_special_helper+'">Text</div>'
                 }
             }
             function getContainers(parentId,options){
@@ -563,18 +596,15 @@
             function getContainer(parentId,id,vals)
             {
                 // <%--//div.container alebo div.containerInner podla konfiguracie--%>
-                var containerClass = me.grid.container;
-                var dot = containerClass.indexOf(".");
-                if (dot!=-1) containerClass = containerClass.substring(dot+1);
-                if (containerClass.indexOf(" ")!=-1) containerClass = "container";
+                var containerClass = me.grid.container_default_class;
 
                 var textKey = '',
-                    content = '<div class="'+containerClass+'"><div class="row '+me.state.is_special_helper+'">';
+                    content = '<div class="'+containerClass+'"><div class="'+me.grid.row_default_class+' '+me.state.is_special_helper+'">';
                 $.each(vals,function(i,v){
                     var pb_col_size = (v/me.options.max_col_size)*12;
                     textKey += '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>';
                 });
-                $.each(vals,function(i,v){ content += '<div class="col-md-'+v+'">Text</div>'; });
+                $.each(vals,function(i,v){ content += '<div class="'+me.column.valid_prefixes[0]+v+'">Text</div>'; });
                 content += '</div></div>';
 
                 return {
@@ -586,7 +616,7 @@
             function getSections(parentId,options){
                 var containers = getContainers(parentId,options);
                 $.each(containers,function(i,v){
-                    v.content = '<section>'+v.content+'</section>';
+                    v.content = '<section class="'+me.grid.section_default_class+'">'+v.content+'</section>';
                 });
                 return containers;
             }
@@ -636,6 +666,14 @@
 
             this.mark_sections(this.$wrapper);
             // <%--// this.mark_editable_elements(this.$wrapper);--%>
+
+            //check for empty-placeholder and remove it if neccessary
+            var sections = $(this.$wrapper).children(this.grid.section);
+            if(sections.length==0){
+                this.create_empty_placeholder(this.$wrapper);
+            } else {
+                this.remove_empty_placeholder();
+            }
         },
 
         /*==================================================================
@@ -758,7 +796,6 @@
                 return;
             }
 
-
             $(column).addClass(me.tags.column);
 
             if ($(column).hasClass(this.tag.not_editable_element)==false) {
@@ -781,7 +818,14 @@
                     $(column).html("<p>"+html+"</p>");
                 }
 
-                $(column).wrapInner('<div class="column-content '+me.tag.column_content+' '+me.tag.editable_content+'"></div>');
+                //can be in format like "div.column-content", extract just CSS classes
+                var columnContentClass = me.grid.column_content;
+                var dot = columnContentClass.indexOf(".");
+                if (dot!=-1) columnContentClass = columnContentClass.substring(dot+1);
+                //replace multiple . with space
+                columnContentClass = columnContentClass.replace(/\./g, ' ');
+
+                $(column).wrapInner('<div class="'+columnContentClass+' '+me.tag.column_content+' '+me.tag.editable_content+'"></div>');
             } else {
                 // <%--console.log("wrapChildren", column);--%>
                 $(column).children(me.grid.column_content).addClass(me.tag.column_content).addClass(me.tag.editable_content);
@@ -1069,6 +1113,10 @@
             }
         },
 
+        remove_empty_placeholder: function(){
+            this.$wrapper.find(this.tagc.empty_placeholder).remove();
+        },
+
         create_dimmer: function(el){
             $(el).append(this.build_aside(this.tag.dimmer));
         },
@@ -1088,7 +1136,10 @@
             if(typeof content === 'undefined') {
                 content = '';
             }
-            return '<aside class="'+class_name+'">'+content+'</aside>';
+            var iconSpan = "";
+            //console.log("build_aside, class_name=", class_name);
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
+            return '<aside class="'+class_name+'">'+iconSpan+content+'</aside>';
         },
 
         /*==================================================================
@@ -1096,7 +1147,13 @@
         /*=================================================================*/
 
         get_actual_screen_size:function () {
-            var colPrefix = 'col-xl-';
+
+            if (typeof window.pbScreenSizePrefix === "function") {
+                //console.log("Using custom pbScreenSizePrefix function");
+                return window.pbScreenSizePrefix(this);
+            }
+
+            var colPrefix = this.column.valid_prefixes[4];
 
             var screenSize =  $(window).width();
 
@@ -1111,8 +1168,8 @@
             // <%--else if (screenSize < 1200) colPrefix = "col-lg-";--%>
             // <%--*/--%>
             // <%--//standardne pouzivame len col- a col-md            --%>
-            if (screenSize < 768) colPrefix = "col-";
-            else if (screenSize < 1200) colPrefix = "col-md-";
+            if (screenSize < 768) colPrefix = this.column.valid_prefixes[0];
+            else if (screenSize < 1200) colPrefix = this.column.valid_prefixes[2];
 
             // <%--console.log("get_actual_screen_size: ", screenSize, "colPrefix: ", colPrefix);--%>
 
@@ -1122,11 +1179,15 @@
         },
 
         get_actual_column_size: function(column) {
-            var size = parseInt( $(column).attr(this.column.attr_prefix+this.get_actual_screen_size()) );
+            var value = $(column).attr(this.column.attr_prefix+this.get_actual_screen_size());
+            if ("auto"===value) {
+                return value;
+            }
+            var size = parseInt( value );
             //console.log("size=", size);
             //nema zadanu velkost pre dany breakpoint, nacitaj default bez prefixu
-            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+"col-") );
-            //console.log("size=", size)
+            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+this.column.valid_prefixes[0]) );
+            if (Number.isNaN(size)) size = this.column.max_size;
             return size;
         },
 
@@ -1151,17 +1212,21 @@
         change_column_size: function (el,size) {
 
             var column = this.get_parent_grid_element($(el)),
-                actual_size = this.get_actual_column_size(column),
-                new_size = actual_size + (size);
+                actual_size = this.get_actual_column_size(column);
 
-            //console.log("change_column_size, column=", column, "new_size=", new_size);
-
-            if(new_size > this.options.max_col_size) {
-                new_size = this.options.max_col_size;
+            var new_size = actual_size + (size);
+            if ("auto" === actual_size) {
+                if (size > 0) {
+                    new_size = 1;
+                } else if (size < 0) {
+                    new_size = this.options.max_col_size;
+                } else {
+                    new_size = actual_size;
+                }
             }
 
-            if(new_size < 1) {
-                new_size = 1;
+            if(new_size > this.options.max_col_size || new_size < 1) {
+                new_size = "auto";
             }
 
             $(column)
@@ -1169,7 +1234,30 @@
                 .removeClass(this.get_actual_screen_size() + actual_size)
                 .addClass(this.get_actual_screen_size() + new_size);
 
-            $(column).find(this.tagc.size_changer_number).html(new_size);
+            var screenSizeText = this.get_actual_screen_size();
+            try {
+                //remove valid_prefixes[0] from screenSizeText
+                if (screenSizeText === this.column.valid_prefixes[0]) {
+                    screenSizeText = "";
+                } else {
+                    screenSizeText = screenSizeText.substring(this.column.valid_prefixes[0].length);
+                }
+                //if ends with - remove it
+                if (screenSizeText.endsWith("-")) {
+                    screenSizeText = screenSizeText.slice(0, -1);
+                }
+            } catch (e) {
+                console.error("Error processing screenSizeText:", e);
+            }
+            //if its longer than 4 characters, shorten it to LAST 4 characters
+            if (screenSizeText.length > 4) {
+                screenSizeText = screenSizeText.slice(-4);
+            }
+            if (screenSizeText !== "") {
+                screenSizeText = " [" + screenSizeText + "]";
+            }
+
+            $(column).find(this.tagc.size_changer_number).html(new_size+screenSizeText.toUpperCase());
         },
 
         listen_for_shift_key: function(e) {
@@ -1556,24 +1644,72 @@
             if($(parent).children(this.tagc.column).length < 1) {
                 size = this.options.max_col_size;
             }
-            return '<div class="col-md-' + size + '"></div>';
+            return '<div class="'+me.column.valid_prefixes[0] + size + '"></div>';
         },
 
         make_new_row: function () {
-            return '<div class="row"></div>';
+            return '<div class="'+this.grid.row_default_class+'"></div>';
         },
 
         make_new_container: function () {
-            return '<div class="container"></div>';
+            return '<div class="'+this.grid.container_default_class+'"></div>';
         },
 
         make_new_section: function () {
-            return '<section class=""></section>';
+            return '<section class="'+this.grid.section_default_class+'"></section>';
         },
 
         /*==================================================================
         /*====================|> CREATE LIBRARY
         /*=================================================================*/
+
+        insert_content_into_ckeditor_at_cursor: function(html) {
+            var oEditor = window.getCkEditorInstance();
+            if (html.indexOf("<span") == 0) {
+                oEditor.insertHtml(html)
+            } else if (html.indexOf("!INCLUDE")!=-1) {
+                oEditor.wjInsertUpdateComponent(html);
+            } else {
+                oEditor.wjInsertHtml(html);
+            }
+
+            if (html.indexOf("pb-split-column-placeholder")!=-1) {
+                var splitElement = $(".pb-split-column-placeholder").first();
+                if (splitElement.length>0) {
+                    var grid_element = this.get_parent_grid_element(splitElement);
+                    var columnHtmlCode = $(grid_element).prop('outerHTML');
+
+                    //we must wrap it into section because otherwise cleanup will not remove necessary classes
+                    columnHtmlCode = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'">'+columnHtmlCode+'</div></div></section>';
+
+                    var clone = $(columnHtmlCode);
+                    this.clearEditorAttributes(clone);
+
+                    var cleanHtml = clone.find(this.grid.column).prop("outerHTML");
+                    $(cleanHtml).insertAfter(grid_element);
+
+                    //iterate over elements in splitElement parent and delete all after+including splitElement
+                    var elementsToRemove = splitElement.nextAll().addBack();
+                    elementsToRemove.remove();
+
+                    //find news inserted column
+                    var newElement = $(grid_element).next();
+                    newElement.prop("outerHTML", clone.find("."+this.grid.column_default_class).prop("outerHTML"));
+
+                    //iterate over elements in newElement, find .pb-split-column-placeholder and remove all elements before it + itself
+                    var splitPlaceholder = newElement.find(".pb-split-column-placeholder");
+                    if (splitPlaceholder.length>0) {
+                        var elementsToRemoveBefore = splitPlaceholder.prevAll().addBack();
+                        elementsToRemoveBefore.remove();
+                    }
+
+                    //mark PB and call ckeditor init
+                    this.mark_column(newElement);
+                    this.options.onGridChanged();
+                }
+
+            }
+        },
 
         create_library: function () {
 
@@ -1581,7 +1717,7 @@
 
             var library  = '<div class="'+this.tag.library+'">';
             library += '<div class="'+this.tag.library_header+'"><div class="'+this.tag.library_header_title+'"><iwcm:text key="pagebuilder.create_library.insert"/></div>'+this.create_library_tab_menu()+'</div>';
-            library += '<div class="'+this.tag.library_content+'">'+this.create_library_tab_content()+'</div>';
+            library += '<div class="'+this.tag.library_content_container+'">'+this.create_library_tab_content()+'</div>';
             library += '<div class="'+this.tag.library_footer+'">'+ this.build_button(this.tag.library_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
             library += '</div>';
 
@@ -1617,6 +1753,8 @@
 
         // <%--// otvara taby basic/library/favorite--%>
         show_library_tab: function (el) {
+            //console.log("show_library_tab, el=", el);
+
             this.clicked_button = $(el);
 
             var me = this,
@@ -1626,12 +1764,13 @@
             $(me.tagc.library).removeClass(me.tag.library_column);
             $(me.tagc.library).removeClass(me.tag.library_container);
             $(me.tagc.library).removeClass(me.tag.library_section);
+            $(me.tagc.library).removeClass(me.tag.library_content);
 
-            $('.library-tab-link').removeClass('active');
-            $('.library-tab-link').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-link').removeClass('active');
+            $(me.tagc.library + ' .library-tab-link:nth-child(2)').addClass('active');
 
-            $('.library-tab-item').removeClass('active');
-            $('.library-tab-item').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-item').removeClass('active');
+            $(me.tagc.library + ' .library-tab-item:nth-child(2)').addClass('active');
 
             //console.log("show_library_tab, parent=", $(parent), "css=", $(parent).attr("class"), "el=", this.clicked_button, "isEmptyPlaceholderButton=", isEmptyPlaceholderButton);
 
@@ -1645,6 +1784,14 @@
 
             if($(parent).hasClass(me.tag.container)) {
                 $(me.tagc.library).addClass(me.tag.library_container);
+            }
+
+            if (el == null) {
+                $(me.tagc.library).addClass(me.tag.library_content);
+                //hide favourites tab - there is no way to add content to favourites from CKEditor
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').hide();
+            } else {
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
             }
 
             if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
@@ -1685,8 +1832,8 @@
                 content_03 = me.create_library_content_template('favorite');
 
             var tab = '<div class="library-tab-content">';
-            tab += '<div class="library-tab-item library-tab-item--basic active" data-tab-id="01">'+content_01+'</div>';
-            tab += '<div class="library-tab-item library-tab-item--library" data-tab-id="02">'+content_02+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--basic" data-tab-id="01">'+content_01+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--library active" data-tab-id="02">'+content_02+'</div>';
             tab += '<div class="library-tab-item library-tab-item--favorite '+me.tag.library_favorites+'" data-tab-id="03">'+content_03+'</div>';
             tab += '</div>';
 
@@ -1714,9 +1861,18 @@
                     return;
                 }
 
-                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty);
+                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
-                if($(parent).hasClass(me.tag.column)) {
+                if (parent == null) {
+                    //its content element, insert into CkEditor
+                    var columns = me.get_json_object_by_attribute(me.template[template_type],'textKey','content');
+                    var groups = me.get_json_object_by_attribute(columns.groups,'id',id);
+
+                    //console.log("Inserting content into CKEditor:", content, "groups=", groups);
+                    var html = groups.content;
+                    me.insert_content_into_ckeditor_at_cursor(html);
+
+                } else if($(parent).hasClass(me.tag.column)) {
                     if(empty) {
                         alert('error 1: column empty. Please contact web administrator');
                         return;
@@ -1894,13 +2050,15 @@
                     me.mark_section(insert_content);
                 }
 
-                me.set_toolbar_visible(insert_content);
-                $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
+                if (parent != null) {
+                    me.set_toolbar_visible(insert_content);
+                    $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
 
-                me.newElement = $(insert_content);
-                me.options.onNewElementAdded();
-                me.changedElement = $(insert_content);
-                me.options.onGridChanged();
+                    me.newElement = $(insert_content);
+                    me.options.onNewElementAdded();
+                    me.changedElement = $(insert_content);
+                    me.options.onGridChanged();
+                }
 
                 me.hide_library();
 
@@ -1964,6 +2122,7 @@
                 else if($(parent).hasClass(me.tag.row)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.container)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.section)) parentTag = "section";
+                else if($(parent).hasClass(me.tag.content)) parentTag = "content";
 
                 //ak sa klikne na emptybutton musime posunut uroven parenta vyssie
                 var emptyClick = me.clicked_button.hasClass(me.tag.empty_placeholder_button);
@@ -1978,13 +2137,20 @@
                     else if(parentTag=="container") parentTag = "column";
                     else if (parentTag=="section") parentTag = "container";
                 }
-                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button);
 
-                if(parentTag != null) {
+                if (parentTag == null) parentTag = "content";
+                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
+
+                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
+                //console.log("html=", html);
+
+                if ("content" === parentTag) {
+                    //insert content block into CKEditor
+                    html = html.trim();
+                    me.insert_content_into_ckeditor_at_cursor(html);
+                }
+                else if(parentTag != null) {
                         var clicked_button = me.clicked_button;
-
-                        var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
-                        //console.log("html=", html);
 
                         //ak vkladam tab-pane tak ho fyzicky potrebujem vlozit do div.tab-content (ak existuje)
                         if (html.indexOf("<div class=\"tab-pane")==0) {
@@ -2121,7 +2287,7 @@
         create_library_content_template: function(type) {
             var content = '';
 
-            var libraryMainGroups = ['section', 'container', 'column'];
+            var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
             libraryMainGroups.forEach(function (group, index) {
@@ -2193,7 +2359,7 @@
         create_notify: function () {
 
             var notify  = '<div class="'+this.tag.notify+'">';
-            notify += '<div class="'+this.tag.notify_header+'"><iwcm:text key="pagebuilder.helper"/></div>';
+            //notify += '<div class="'+this.tag.notify_header+'"><iwcm:text key="pagebuilder.helper"/></div>';
             notify += '<div class="'+this.tag.notify_content+'"></div>';
             notify += '<div class="'+this.tag.notify_footer+'">'+ this.build_button(this.tag.notify_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
             notify += '</div>';
@@ -2239,6 +2405,14 @@
         /*==================================================================
         /*====================|> CREATE MODAL
         /*=================================================================*/
+
+        /**
+         *
+         * @returns CSS selector prefix to modal form to safely get values from inputs
+         */
+        getModalFormPrefix: function() {
+            return "div." + this.options.prefix + "-modal form[name=" + this.options.prefix + "-form] ";
+        },
 
         create_modal: function () {
             var me = this,
@@ -2317,10 +2491,10 @@
             // <%--  ---------------  TAB 06  --%>
 
             var box_shadow = '<div class="'+me.tag.style_input_group_four_in_row+'">';
-            box_shadow += me.build_input('box-shadow-horizontal', '<iwcm:text key="pagebuilder.modal.box-shadow.horizontal"/>');
-            box_shadow += me.build_input('box-shadow-vertical', '<iwcm:text key="pagebuilder.modal.box-shadow.vertical"/>');
-            box_shadow += me.build_input('box-shadow-blur', '<iwcm:text key="pagebuilder.modal.box-shadow.blur"/>');
-            box_shadow += me.build_input('box-shadow-spread', '<iwcm:text key="pagebuilder.modal.box-shadow.spread"/>');
+            box_shadow += me.build_input_number('box-shadow-horizontal', '<iwcm:text key="pagebuilder.modal.box-shadow.horizontal"/>');
+            box_shadow += me.build_input_number('box-shadow-vertical', '<iwcm:text key="pagebuilder.modal.box-shadow.vertical"/>');
+            box_shadow += me.build_input_number('box-shadow-blur', '<iwcm:text key="pagebuilder.modal.box-shadow.blur"/>');
+            box_shadow += me.build_input_number('box-shadow-spread', '<iwcm:text key="pagebuilder.modal.box-shadow.spread"/>');
             box_shadow += '</div>';
             box_shadow += me.build_input_hidden('box-shadow');
             box_shadow += me.build_input('box-shadow-color','<iwcm:text key="pagebuilder.modal.box-shadow.color"/>');
@@ -2331,9 +2505,9 @@
             var sizes = me.build_input('width','<iwcm:text key="pagebuilder.modal.width"/>');
             sizes += me.build_input('min-width','<iwcm:text key="pagebuilder.modal.width.min"/>');
             sizes += me.build_input('max-width','<iwcm:text key="pagebuilder.modal.width.max"/>');
-            sizes += me.build_input('height','<iwcm:text key="pagebuilder.modal.width"/>');
-            sizes += me.build_input('min-height','<iwcm:text key="pagebuilder.modal.width.min"/>');
-            sizes += me.build_input('max-height','<iwcm:text key="pagebuilder.modal.width.max"/>');
+            sizes += me.build_input('height','<iwcm:text key="pagebuilder.modal.height"/>');
+            sizes += me.build_input('min-height','<iwcm:text key="pagebuilder.modal.height.min"/>');
+            sizes += me.build_input('max-height','<iwcm:text key="pagebuilder.modal.height.max"/>');
 
             content += me.build_input_group(sizes,'07');
 
@@ -2470,23 +2644,30 @@
                     disVal = $dis.val(),
                     $parent = $dis.closest(me.tagc.style_input_group_four_in_row);
                 if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_all).is(':checked')){
-                    $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').val(disVal);
+                    var changed = $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').attr("data-changed");
+                    $parent.find(me.tagc.style_input_group_four_in_row_second+', '+me.tagc.style_input_group_four_in_row_third+', '+me.tagc.style_input_group_four_in_row_fourth).find('input').each(function(i, e) {
+                        $(e).val(disVal);
+                        $(e).attr("data-changed", changed);
+                    });
                 }else {
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_first).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_first_second).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_second+' input').val(disVal);
+                            //set data-changed attribute same as first input
+                            $parent.find(me.tagc.style_input_group_four_in_row_second+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_first+' input').attr("data-changed"));
                         }
                     }
                     if ($dis.closest(me.tagc.style_input_group_four_in_row_third).length > 0) {
                         if($parent.find(me.tagc.style_input_group_four_in_row_checkbox_third_fourth).is(':checked')) {
                             $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').val(disVal);
+                            //set data-changed attribute same as third input
+                            $parent.find(me.tagc.style_input_group_four_in_row_fourth+' input').attr("data-changed", $parent.find(me.tagc.style_input_group_four_in_row_third+' input').attr("data-changed"));
                         }
                     }
                 }
                 //always allow first input
                 //console.log("change2=", $dis, "disVal=", disVal, "parent=", $parent);
                 $parent.find(me.tagc.style_input_group_four_in_row_first).find('input').prop('disabled',false);
-
             });
         },
 
@@ -2526,8 +2707,9 @@
 
         build_input_number: function (prop,label,options) {
             var klass = (options!=undefined && 'class' in options)? options.class:'';
-            var disabled = (options!=undefined && 'disabled' in options)? options.disabled:false;
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number" disabled="'+disabled+'" class="'+this.tag.style_input+'" name="'+prop+'" value="0" /></div>';
+            var disabled = "";
+            if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+' class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -2543,7 +2725,10 @@
             ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" checked="true" disabled="true"/>';
             ret += '</div>';
             $.each(sets,function(i,v){
-                ret += me.build_input_number(v.prop, v.label,{disabled:true,class:[me.tag.style_input_group_four_in_row_first,me.tag.style_input_group_four_in_row_second,me.tag.style_input_group_four_in_row_third,me.tag.style_input_group_four_in_row_fourth][index++]});
+                var disabled = true;
+                //first one is always enabled
+                if (i==0) disabled = false;
+                ret += me.build_input_number(v.prop, v.label,{disabled:disabled,class:[me.tag.style_input_group_four_in_row_first,me.tag.style_input_group_four_in_row_second,me.tag.style_input_group_four_in_row_third,me.tag.style_input_group_four_in_row_fourth][index++]});
             });
             ret += '</div>';
             return ret;
@@ -2559,7 +2744,7 @@
                     '<div class="'+this.tag.style_label+'">'+label+'</div>'+
                     '<div class="input-group">'+
                         '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="input-group-addon" style="min-width: 34px; background-color: #304866;background-size:26px;background-repeat:no-repeat;background-position:center;background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
+                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
                     '</div>'+
                 '</div>';
 
@@ -2584,7 +2769,7 @@
                 html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'">'+label+'</div><div class="radio-group">';
 
             $.each(values, function( key, value ) {
-                id = prop + '-' + value;
+                id = prop + '-' + key;
                 html += '<input type="radio" class="'+me.tag.style_input+'" name="'+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
@@ -2628,6 +2813,9 @@
                     $(this).addClass('active');
                     $('.tab-content .tab-item').removeClass('active');
                     $('.tab-content .tab-item[data-tab-id="'+id+'"]').addClass('active');
+
+                    //select first menu tab
+                    $('.tab-content .tab-item[data-tab-id="'+id+'"] .tab-item-button').first().trigger('click');
                 }
             });
 
@@ -2650,37 +2838,27 @@
         },
 
         set_box_shadow: function(prop) {
-            $('[name="'+prop+'-color"], [name="'+prop+'-horizontal"], [name="'+prop+'-vertical"], [name="'+prop+'-blur"], [name="'+prop+'-spread"]').on('change', function () {
+            var me = this;
+            $(me.getModalFormPrefix() + '[name="'+prop+'-color"], '+me.getModalFormPrefix()+'[name="'+prop+'-horizontal"], '+me.getModalFormPrefix()+'[name="'+prop+'-vertical"], '+me.getModalFormPrefix()+'[name="'+prop+'-blur"], '+me.getModalFormPrefix()+'[name="'+prop+'-spread"]').on('change', function () {
 
-                var color = $('[name="'+prop+'-color"]').val(),
-                    x = $('[name="'+prop+'-horizontal"]').val(),
-                    y = $('[name="'+prop+'-vertical"]').val(),
-                    blur = $('[name="'+prop+'-blur"]').val(),
-                    spread = $('[name="'+prop+'-spread"]').val(),
+                var color = $(me.getModalFormPrefix() + '[name="'+prop+'-color"]').val(),
+                    x = $(me.getModalFormPrefix() + '[name="'+prop+'-horizontal"]').val(),
+                    y = $(me.getModalFormPrefix() + '[name="'+prop+'-vertical"]').val(),
+                    blur = $(me.getModalFormPrefix() + '[name="'+prop+'-blur"]').val(),
+                    spread = $(me.getModalFormPrefix() + '[name="'+prop+'-spread"]').val(),
                     new_val = color + ' '+ x + 'px ' + y + 'px ' + blur + 'px ' + spread + 'px';
 
-                $('[name="'+prop+'"]').val(new_val);
+                $(me.getModalFormPrefix() + '[name="'+prop+'"]').val(new_val);
             });
         },
 
         set_spinner: function (prop,min_val,max_val) {
 
-            $('[name="'+prop+'"]').spinner({
-                min: min_val,
-                max: max_val,
-                spin: function() {
-                    var input = $(this);
-                    setTimeout(function(){
-                        input.change();
-                    },100);
-                }
-            });
-
-            $('[name="'+prop+'"]')
+            $(this.getModalFormPrefix() + '[name="'+prop+'"]')
                 .attr('min', min_val)
                 .attr('max', max_val);
 
-            $('[name="'+prop+'"]').on('keydown', function () {
+            $(this.getModalFormPrefix() + '[name="'+prop+'"]').on('keydown', function () {
                 var input = $(this);
 
                 setTimeout(function(){
@@ -2706,31 +2884,26 @@
 
         set_minicolors: function (element) {
 
-            var input = $('[name="'+element+'"]');
+            var input = $(this.getModalFormPrefix() + '[name="'+element+'"]');
 
-            $(input).minicolors({
+            if (!input.val()) {
+                input.val('rgba(0,0,0,1)');
+            }
+
+            input.minicolors({
                 inline:true,
                 opacity: true,
                 format:'rgb',
-                swatches: [
-                    '#001f3f',
-                    '#0074D9',
-                    '#7FDBFF',
-                    '#39CCCC',
-                    '#3D9970',
-                    '#2ECC40',
-                    '#01FF70',
-                    '#FFDC00',
-                    '#FF851B',
-                    '#FF4136',
-                    '#85144b',
-                    '#F012BE',
-                    '#B10DC9',
-                    '#111111',
-                    '#AAAAAA',
-                    '#DDDDDD'
-                ]
+                defaultValue: 'rgba(0,0,0,1)', // Set default opacity to 1
+                swatches: this.options.color_swatches,
             });
+
+            if (this.options.color_picker === false) {
+                input.parent().addClass("no-color-picker");
+            }
+
+            //initial value
+            input.attr("data-changed", "false");
         },
 
         /*==================================================================
@@ -2760,17 +2933,17 @@
 
             if($(me.user_style.current_element).hasClass(me.tag.section)) {
                 $(me.$wrapper).addClass(me.state.is_styling_section);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
             }
 
             else if($(me.user_style.current_element).hasClass(me.tag.container)) {
                 $(me.$wrapper).addClass(me.state.is_styling_container);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
             }
 
             else if($(me.user_style.current_element).hasClass(me.tag.column)) {
                 $(me.$wrapper).addClass(me.state.is_styling_column);
-                $('.header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
+                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
             }
 
             else {
@@ -2779,8 +2952,10 @@
         },
 
         set_modal_default_state: function(){
-            $('.tab-menu .tab-link').first().click();
-            $('.tab-item .tab-item-button').first().click();
+            $('div.'+this.options.prefix + '-modal .tab-menu .tab-link').first().click();
+            if ($('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().hasClass('active')==false) {
+                $('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().click();
+            }
         },
 
         set_modal_zindex: function(el){
@@ -2807,6 +2982,10 @@
             if(typeof me.get_current_element_style_id() === 'undefined') {
                 me.user_style.current_element.attr(me.user_style.attr_name, me.user_style.unique_selector());
             }
+        },
+        clear_current_element_style_id: function () {
+            var me = this;
+            me.user_style.current_element.removeAttr(me.user_style.attr_name);
         },
 
         /*==================================================================
@@ -2859,9 +3038,11 @@
             if(typeof me.get_current_element_style_id() !== 'undefined') {
                 var style_id = me.get_current_element_style_id();
                 $('style[style-id="'+style_id+'"]').unbind().off().remove();
-            }
 
-            me.set_modal_actual_style(false);
+                //remove styleid attribute
+                me.user_style.current_element.removeAttr(me.user_style.attr_name);
+            }
+            me.clear_after_close_modal();
         },
 
         /*==================================================================
@@ -2877,16 +3058,22 @@
             }
 
             if(set_old) {
-                this.user_style.current_element_old_style = style;
+                var style_id = this.get_current_element_style_id();
+                this.user_style.current_element_old_style = "";
+                var styleElement = $('style[style-id="'+style_id+'"]');
+                if(styleElement.length > 0) {
+                    this.user_style.current_element_old_style = styleElement.html();
+                }
             }
 
             $.each(this.user_style.px_properties, function( index, value ) {
+                if (typeof style[value] === 'undefined' || style[value] === null) return;
                 style[value] = style[value].replace('px','');
             });
 
             if(style['box-shadow'] === 'none') {
 
-                style['box-shadow-color'] = 'rgba(0,0,0,0)';
+                style['box-shadow-color'] = 'rgba(0,0,0,0.5)';
                 style['box-shadow-horizontal'] = 0;
                 style['box-shadow-vertical'] = 0;
                 style['box-shadow-blur'] = 0;
@@ -2903,8 +3090,8 @@
                 }
 
                 style['box-shadow-color'] = box_shadow[0];
-                style['box-shadow-vertical'] = box_shadow[1].replace('px','');
-                style['box-shadow-horizontal'] = box_shadow[2].replace('px','');
+                style['box-shadow-horizontal'] = box_shadow[1].replace('px','');
+                style['box-shadow-vertical'] = box_shadow[2].replace('px','');
                 style['box-shadow-blur'] = box_shadow[3].replace('px','');
                 style['box-shadow-spread'] = box_shadow[4].replace('px','');
             }
@@ -2944,30 +3131,43 @@
             var visibilityCounterTrue = 0;
             $.each(me.user_style.properties, function( index, propertie ) {
 
+                //console.log("get_new_style, processing propertie=", propertie);
+
+                //skip non changed elements
+                let el = $(me.getModalFormPrefix() + '[name="'+propertie+'"]');
+                if (el.first().attr("type") === "radio") {
+                    el = $(me.getModalFormPrefix() + '[name="'+propertie+'"]:checked');
+                }
+
+                if (el.attr("data-changed")!=="true") {
+                    //console.log("get_new_style, propertie=", propertie, " skipped, not changed, value=", el.val(), " el=", el);
+                    return;
+                }
+
                 if (propertie.indexOf('visibility-') === 0) {
-                    new_style[propertie] = $('[name="'+propertie+'"]').is(":checked");
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').is(":checked");
                     if (new_style[propertie] == true) visibilityCounterTrue++;
                 }
                 else if(propertie === 'border-style' || propertie === 'text-align') {
-                    new_style[propertie] = $('[name="'+propertie+'"]:checked').val();
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]:checked').val();
                 } else if (propertie === 'background-image') {
-                    let bgimage = $('[name="'+propertie+'"]').val();
+                    let bgimage = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').val();
                     if (""==bgimage) bgimage = "none";
                     else if (bgimage.indexOf("url(")==-1) bgimage = "url("+bgimage+")";
 
                     new_style[propertie] = bgimage;
                 } else {
-                    new_style[propertie] = $('[name="'+propertie+'"]').val();
+                    new_style[propertie] = $(me.getModalFormPrefix() + '[name="'+propertie+'"]').val();
                 }
 
             });
 
             $.each(this.user_style.px_properties, function( index, propertie ) {
+                if (typeof new_style[propertie] === 'undefined') return;
                 new_style[propertie] += 'px';
             });
 
             //cleanup
-            //TODO: nejako detekovat co sa zmenilo a nedavat tam zbytocne cele CSS
             var new_style_clean = {};
             $.each(new_style, function( name, value ) {
                 //console.log("Iterating, name=", name, " value=", value);
@@ -2978,8 +3178,6 @@
 
                 new_style_clean[name] = value;
             });
-
-            //console.log("get_new_style, new_style=", new_style, " clean=", new_style_clean);
 
             return new_style_clean;
         },
@@ -2992,7 +3190,16 @@
         },
 
         set_old_style: function () {
-            this.create_style_element(this.user_style.current_element_old_style);
+            if (""==this.user_style.current_element_old_style) {
+                this.reset_modal();
+                return;
+            }
+
+            var style_id = this.get_current_element_style_id();
+            var styleElement = $('style[style-id="'+style_id+'"]');
+            if(styleElement.length > 0) {
+                styleElement.html(this.user_style.current_element_old_style);
+            }
         },
 
         create_style_element: function (styles) {
@@ -3003,15 +3210,18 @@
             me.set_current_element_style_id();
 
             if(me.user_style.current_element.hasClass(me.tags.column)) {
-                column_content = '> .column-content';
+                column_content = '> '+me.grid.column_content;
             }
 
             var style_id = me.get_current_element_style_id(),
-                style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{';
+                style = "";
 
             //console.log("Creating style, id=", style_id, " styles=", styles);
 
             $.each(styles, function( prop, value ) {
+
+                //console.log("Processing propertie=", prop, " value=", value);
+                if (typeof value == "undefined") return;
 
                 if(prop.indexOf('attr-')==0) {
                     //jedna sa o standardny HTML atribut
@@ -3079,36 +3289,75 @@
 
             });
 
-            style += '}';
+            if (style != "") {
+                //replace default values
+                style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
+                //wrap style into proper selector
+                style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{' + style + "}";
+            }
 
             //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
-            if($('style[style-id="'+style_id+'"]').length < 1) {
-                $('<style style-id="'+style_id+'">')
-                    .html(style)
-                    .appendTo(me.$wrapper);
+            var styleElement = $('style[style-id="'+style_id+'"]');
+            if (style==="") {
+                me.clear_current_element_style_id();
+                if(styleElement.length > 0) {
+                    styleElement.unbind().off().remove();
+                }
             } else {
-                $('style[style-id="'+style_id+'"]').html(style);
+                if(styleElement.length < 1) {
+                    $('<style style-id="'+style_id+'">')
+                        .html(style)
+                        .appendTo(me.$wrapper);
+                } else {
+                    styleElement.html(style);
+                }
             }
         },
 
+        /**
+         * Sets the actual style values into the modal inputs
+         * @param set_old {boolean} - whether to set also the old style for rollback
+         */
         set_modal_actual_style: function (set_old) {
+
             var me = this,
                 actual_style = me.get_grid_element_style(set_old);
 
+            var styleHtml = "";
+            var style_id = me.user_style.current_element.attr(me.user_style.attr_name);
+            var style_element = $('style[style-id="'+style_id+'"]');
+            if (style_element.length>0) {
+                styleHtml = style_element.html();
+            }
+            //console.log("set_modal_actual_style, styleHtml=", styleHtml);
+
             $.each( actual_style, function( prop, value ) {
+                var input = $(me.getModalFormPrefix() + '[name="'+prop+'"]');
+                //reset changed data value
+                input.attr("data-changed", "false");
+            });
+
+            $.each( actual_style, function( prop, value ) {
+
+                var input = $(me.getModalFormPrefix() + '[name="'+prop+'"]');
 
                 if(prop === 'background-color' || prop === 'border-color' || prop === 'box-shadow-color') {
 
-                    $('[name="'+prop+'"]').minicolors('value', value);
+                    if (styleHtml.indexOf(prop+":")==-1 && "rgba(0, 0, 0, 0)"==value) {
+                        //default transparent, change opacity to 1 for easier color change
+                        value = "rgba(0,0,0,1)";
+                    }
+                    input.minicolors('value', value);
+                    input.attr("data-changed", "false");
 
                 } else if (prop === 'border-style' || prop === 'text-align') {
 
-                    $('[name="'+prop+'"][value="'+value+'"]').prop('checked',true);
+                    $(me.getModalFormPrefix() + '[name="'+prop+'"][value="'+value+'"]').prop('checked',true);
 
                 } else if (prop === 'visibility-xs' || prop === 'visibility-sm' || prop === 'visibility-md' || prop === 'visibility-lg' || prop === 'visibility-xl') {
 
-                    $('[name="'+prop+'"]').prop('checked',value);
+                    input.prop('checked',value);
 
                 } else if(prop === 'background-image') {
 
@@ -3129,12 +3378,24 @@
                         }
                         value = url;
                     }
-                    try { $('[name="'+prop+'"]').val(value).trigger("change"); } catch (e) {}
+                    try {
+                        input.val(value);
+                    } catch (e) {}
 
                 } else {
 
-                    try { $('[name="'+prop+'"]').val(value).trigger("change"); } catch (e) {}
+                    try {
+                        input.val(value);
+                    } catch (e) {}
 
+                }
+
+                //only set changed if value is defined in custom style element
+                if (styleHtml.indexOf(prop+":")>=0) {
+                    //console.log("changed propertie=", prop, "input=", input);
+                    //trigger change to set changed attribute also for 4inputs
+                    input.attr("data-changed", "true");
+                    input.trigger("change");
                 }
 
             });
@@ -3274,7 +3535,15 @@
                 me.save_modal($(this));
             });
 
-            me.$wrapper.on('change', me.tagc.style_input, function() {
+            me.$wrapper.on('change', me.tagc.style_input, function(e) {
+                //set data attribute to detect changes
+                $(e.target).attr("data-changed", "true");
+
+                //if it's box-shadow mark also box-shadow hidden input
+                if (e.target.getAttribute("name").startsWith("box-shadow")) {
+                    $(me.getModalFormPrefix() + '[name="box-shadow"]').attr("data-changed", "true");
+                }
+
                 me.set_new_style();
             });
 
@@ -3483,6 +3752,26 @@
                         parent: parent
                     });
                 },
+                color_swatches: [
+                    '#001f3f',
+                    '#0074D9',
+                    '#7FDBFF',
+                    '#39CCCC',
+                    '#3D9970',
+                    '#2ECC40',
+                    '#01FF70',
+                    '#FFDC00',
+                    '#FF851B',
+                    '#FF4136',
+                    '#85144b',
+                    '#F012BE',
+                    '#B10DC9',
+                    '#111111',
+                    '#AAAAAA',
+                    '#DDDDDD'
+                ],
+                //if false disable any color picker, only swatches will be available
+                color_picker: true,
                 template_basic_containers_sizes: [] // <%-- dopocitava sa automaticky z max_col_size vo funkcii generate_default_options--%>
             };
         },

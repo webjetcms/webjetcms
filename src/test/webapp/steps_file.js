@@ -75,6 +75,29 @@ module.exports = function () {
       //return "15.10.2020 17:40:30";
     },
 
+    /**
+     * Parses a date/time string using moment and returns a Date object.
+     * @param {string} dateTimeStr - The date/time string to parse.
+     * @returns {Date|null} - The parsed Date object, or null if invalid.
+     */
+    parseDateTime(dateTimeStr) {
+      var userLng = "sk";
+      moment.updateLocale(userLng, { invalidDate: "" });
+      moment.locale(userLng);
+      // Try to parse using the same format as formatDateTime
+      var m = moment(dateTimeStr, "L HH:mm:ss", true);
+      if (m.isValid()) {
+        return m.toDate();
+      }
+      // Try parsing without seconds if needed
+      m = moment(dateTimeStr, "L HH:mm", true);
+      if (m.isValid()) {
+        return m.toDate();
+      }
+      // Return null if parsing failed
+      return null;
+    },
+
     wjSetDefaultWindowSize() {
       this.resizeWindow(1280, 760);
     },
@@ -120,6 +143,18 @@ module.exports = function () {
       this.fillField("password", secret(this.getDefaultPassword()));
       this.click("login-submit");
       if (waitForText===true) this.waitForText(helper, 10);
+    },
+
+    amOnPageLng(url) {
+      var lng = this.getConfLng();
+      if (lng != "sk") {
+        if (url.indexOf("?")!=-1) {
+          url += "&language="+lng;
+        } else {
+          url += "?language="+lng;
+        }
+      }
+      this.amOnPage(url);
     },
 
     //vygenerovanie nahodneho retazca
@@ -344,7 +379,7 @@ module.exports = function () {
     },
 
     jstreeReset() {
-      this.click("button.buttons-jstree-settings");
+      this.clickCss("button.buttons-jstree-settings");
       this.waitForElement("#jstreeSettingsModal");
       this.uncheckOption("#jstree-settings-showid");
       this.uncheckOption("#jstree-settings-showorder");
@@ -361,7 +396,7 @@ module.exports = function () {
 
       this.checkOption("#jstree-settings-treeSortOrderAsc");
 
-      this.click("#jstree-settings-submit");
+      this.clickCss("#jstree-settings-submit");
 
       this.jstreeWaitForLoader();
     },
@@ -403,7 +438,7 @@ module.exports = function () {
     },
 
     // vytvorenie korenoveho adresara s dvomi podadresarmi
-    createFolderStructure(randomNumber, alsoSubfolders=true) {
+    createFolderStructure(randomNumber, alsoSubfolders=true, rootGroup=true) {
       //reset DT sorting/columns
       this.dtResetTable("datatableInit");
 
@@ -417,7 +452,7 @@ module.exports = function () {
       this.click(buttons.btn.tree_add_button);
       this.dtWaitForEditor("groups-datatable");
       this.fillField('#DTE_Field_groupName', auto_name);
-      this.groupSetRootParent();
+      if (rootGroup === true) this.groupSetRootParent();
       this.wait(1);
       this.dtEditorSave();
       this.waitForText(auto_name, 20);
@@ -447,10 +482,10 @@ module.exports = function () {
     },
 
     // vymazanie priecinka
-    deleteFolderStructure(randomNumber) {
+    deleteFolderStructure(randomNumber, rootGroup=0) {
       var auto_name = 'name-autotest-' + randomNumber;
       this.say('Zmazanie priecinka name-autotest');
-      this.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+      this.amOnPage('/admin/v9/webpages/web-pages-list/?groupid='+rootGroup);
       this.waitForText('Webové stránky', 10);
       this.click(locate('.jstree-anchor').withText(auto_name));
       this.dtWaitForLoader();
@@ -468,12 +503,13 @@ module.exports = function () {
     },
 
     // ------------ FUNKCIE PRE WEB STRÁNKY ----------------
-    createNewWebPage(randomNumber) {
+    createNewWebPage(randomNumber, disabled=true, perexDates=true, content = '<!-- This is an autotest -->') {
       // premenne
       var auto_webPage = 'webPage-autotest-' + randomNumber;
       // vytvorenie webstranky
       this.say('Pridanie novej web stranky ' + auto_webPage);
       this.waitForElement(buttons.btn.add_button, 10);
+      this.wait(1);
       this.click(buttons.btn.add_button);
       this.dtWaitForEditor();
       this.clickCss('#pills-dt-datatableInit-basic-tab');
@@ -484,19 +520,31 @@ module.exports = function () {
       this.forceClick('#DTE_Field_navbar');
       this.clearField('#DTE_Field_navbar');
       this.fillField('#DTE_Field_navbar', auto_webPage);
-      // vypni zobrazenie web stranky a vyhladanie cez vyhladavace
-      this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-      this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+
+      if (disabled === true) {
+        // vypni zobrazenie web stranky a vyhladanie cez vyhladavace
+        this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
+        this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+      }
+
       // Pridanie textu do obsahu
       this.clickCss('#pills-dt-datatableInit-content-tab');
       this.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+      this.waitForElement("span.cke_toolbox");
+      this.wait(2);
+      this.waitForElement('#trEditor', 10);
       this.clickCss('#trEditor');
-      this.type('<!-- This is an autotest -->');
-      // Nastav datumy v perex tabe
-      this.clickCss('#pills-dt-datatableInit-perex-tab');
-      this.fillField('#DTE_Field_publishStartDate', "01.01.2022 00:00:00");
-      this.fillField('#DTE_Field_publishEndDate', "03.01.2022 00:00:00");
-      this.fillField('#DTE_Field_eventDateDate', "02.01.2022 00:00:00");
+
+      this.type(content);
+
+      if (perexDates) {
+        // Nastav datumy v perex tabe
+        this.clickCss('#pills-dt-datatableInit-perex-tab');
+        this.fillField('#DTE_Field_publishStartDate', "01.01.2022 00:00:00");
+        this.fillField('#DTE_Field_publishEndDate', "03.01.2022 00:00:00");
+        this.fillField('#DTE_Field_eventDateDate', "02.01.2022 00:00:00");
+      }
+
       // Ulozenie
       this.click(locate('#datatableInit_modal').find('button.btn.btn-primary'));
       this.dtEditorWaitForLoader();

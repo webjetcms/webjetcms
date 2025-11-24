@@ -4,7 +4,6 @@ import cvu.html.HTMLTokenizer;
 import cvu.html.TagToken;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.validation.SimpleError;
-import org.apache.struts.util.ResponseUtils;
 import sk.iway.Password;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -25,6 +24,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;
@@ -39,6 +39,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -287,7 +288,7 @@ public class FormMailAction extends HttpServlet
 						{
 							if (restriction!=null)
 							{
-								String filePath = XhrFileUploadServlet.getTempFilePath(fileKey);
+								String filePath = XhrFileUploadServlet.getService().getTempFilePath(fileKey);
 								Logger.debug(FormMailAction.class, "Multiupload, fileKey=" + fileKey + " path=" + filePath);
 								if (filePath != null)
 								{
@@ -301,7 +302,7 @@ public class FormMailAction extends HttpServlet
 									}
 								}
 							}
-							String fileName = XhrFileUploadServlet.getTempFileName(fileKey);
+							String fileName = XhrFileUploadServlet.getService().getTempFileName(fileKey);
 							if (Tools.isNotEmpty(fileName)) {
 								if (fileNames.length()>0) fileNames.append(", ");
 								fileNames.append(fileName);
@@ -494,6 +495,7 @@ public class FormMailAction extends HttpServlet
 				else
 				{
 					iLastDocIdMail = Integer.valueOf(Tools.getIntValue(request.getParameter("useFormMailDocId"), -1));
+					if (iLastDocIdMail.intValue() == -1) iLastDocIdMail = iLastDocId;
 				}
 			}
 			Logger.debug(FormMailAction.class, "iLastDocId="+iLastDocId);
@@ -1343,7 +1345,7 @@ public class FormMailAction extends HttpServlet
 									{
 										for (String param : Tools.getTokens(keys, ";"))
 										{
-											String fileName = XhrFileUploadServlet.moveFile(param, baseDirName + File.separator);
+											String fileName = XhrFileUploadServlet.getService().moveFile(param, baseDirName + File.separator);
 											IwcmFile file = new IwcmFile(dir, fileName);
 											if (file.exists())
 											{

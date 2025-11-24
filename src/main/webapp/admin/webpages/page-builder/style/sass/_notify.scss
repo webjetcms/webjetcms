@@ -1,16 +1,20 @@
 .#{$prefix}-notify {
     display: none;
     position: fixed;
-    top: 15px;
-    right: 15px;
+    top: 100px;
+    right: 10px;
     width: 240px;
     height: auto;
     z-index: $notify-index;
-    background-color: #62697d;
-    background-image: linear-gradient(to right bottom, #62697d, #52586c, #42485c, #33394c, #252a3d);
-    border-radius: 4px;
+    border-radius: $modal-radius;
+    border: 1px solid $modal-boder-color;
     overflow: hidden;
-    box-shadow: 0 0 0px 6px rgba(51, 50, 64, 0.2);
+
+    box-shadow: $modal-box-shadow;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
+
+    background-color: $modal-body-background;
+    backdrop-filter: $modal-body-filter;
 
     &__header {
         padding: 15px;
@@ -23,7 +27,7 @@
     &__content {
         padding: 0 15px;
         overflow: hidden;
-        color: white;
+        color: $toolbar-content-color;
 
         span {
             font-weight: 500;
@@ -33,7 +37,7 @@
     }
 
     &__footer {
-        padding: 15px;
+        padding: 6px;
         overflow: hidden;
         text-align: right;
 
@@ -47,11 +51,13 @@
             font-weight: 600;
             opacity: 0.8;
             text-align: center;
-            border-radius: 30px;
+            border-radius: 6px;
             background-color: white;
             transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            background-color: $nice-gray-100;
         }
-    
+
     }
 
     .#{$prefix}-wrapper.#{$prefix}-is-notify-active & {

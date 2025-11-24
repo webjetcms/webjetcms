@@ -14,19 +14,21 @@ Before(({ I, login }) => {
 
 Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=108022');
+    I.closeOtherTabs();
     var testFileName = autoName + ".jpg";
 
     DTE.waitForEditor();
     I.waitForElement(".cke_wysiwyg_frame.cke_reset");
     I.clickCss('.cke_button__image');
-    I.clickCss('#cke_wjImagePixabay_131');
+    I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
     I.wait(1);
-    I.fillField('#search', 'abcd');
+    I.fillField('#search', 'letters, alphabet, animals, nature, abcd');
     I.wait(1);
     I.click('button[type="submit"]');
     I.waitForElement('.pixabayBox .col-xs-3 a:first-child', 10);
+    I.wait(1);
     I.click('.pixabayBox .col-xs-3 a:first-child');
     DTE.waitForModal('imageModal');
     I.seeInField("#imageWidth", "1280")
@@ -60,9 +62,10 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
 
     DTE.fillField('imageName', testFileName);
     I.clickCss('.DTE_Form_Buttons > button.btn-primary');
-    DTE.waitForLoader();
+
+    //this window will be closed, so we need to switch back to the previous tab
+    I.switchToPreviousTab();
     I.wait(4);
-    I.closeCurrentTab();
 
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
     I.waitForElement('.elfinder-cwd-filename');

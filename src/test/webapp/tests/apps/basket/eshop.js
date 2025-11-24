@@ -31,7 +31,7 @@ Scenario("Nastav sposoby platby", ({ I, DTE }) => {
   I.click(locate("a").withText("Dobierka"));
   DTE.waitForEditor("paymentMethodsDataTable");
   DTE.seeInField("paymentMethodName", "Dobierka");
-  DTE.fillField("fieldA", "1,50");
+  DTE.fillField("fieldA", "1.50");
   DTE.fillField("fieldB", "20");
   I.waitForElement("#DTE_Field_fieldC");
   DTE.fillQuill("fieldC", "Dakujeme za platbu dobierkou");
@@ -46,7 +46,7 @@ Scenario("Nastav sposoby platby", ({ I, DTE }) => {
   DTE.fillField("fieldB", GOPAY_SECRET);
   DTE.fillField("fieldC", GOPAY_API_URL);
   DTE.fillField("fieldD", GOPAY_GO_ID);
-  DTE.fillField("fieldE", "0,4");
+  DTE.fillField("fieldE", "0.4");
   DTE.fillField("fieldF", "8");
   DTE.fillField("fieldG", "Platba GoPay-om");
   I.waitForElement("#DTE_Field_fieldH");
@@ -73,11 +73,11 @@ Scenario('Test admin product list', ({ I, DT}) => {
     DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "8,61", "7,00"]);
     DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "30,75", "25,00"]);
     I.clickCss("button[data-id=currencySelect]");
-    I.waitForElement(locate("a[role=option]").withText("skk"));
-    I.click(locate("a[role=option]").withText("skk"));
-    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "370,55", "301,26"]);
-    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "259,38", "210,88"]);
-    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "926,37", "753,15"]);
+    I.waitForElement(locate("a[role=option]").withText("czk"));
+    I.click(locate("a[role=option]").withText("czk"));
+    DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "299,51", "243,50"]);
+    DT.checkTableRow("productListDataTable", 2, ["", "", "Ponožky", "Tester Playwright", "", "209,65", "170,45"]);
+    DT.checkTableRow("productListDataTable", 3, ["", "", "Džínsy", "Tester Playwright", "", "748,76", "608,75"]);
 });
 
 Scenario('Verify behaviour of config value basketInvoiceSupportedCountries', async ({Document, I, DT, DTE }) => {
@@ -102,6 +102,8 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     const deliveryMethodName = "Kuriér";
     const paymentMethodName = "GoPay";
 
+    SL.clearBasket(I);
+
     //
     I.say("Starting GoPay unsuccessful payment test");
     I.amOnPage(SL.PRODUCTS);
@@ -120,8 +122,8 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.say("Proceeding to payment 1");
     I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
     I.click(locate("button.btn-primary").withText("Zaplatiť"));
-    I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
-    I.clickCss("//div[contains(text(), 'Platobná karta')]");
+    I.waitForText("Platobná karta", 10, "p");
+    I.click(locate("p").withText("Platobná karta"));
 
     await SL.doGoPayCardPayment(I, false);
 
@@ -156,14 +158,17 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.clickCss("#payForOrderBtn");
     I.click(locate("button.btn-primary").withText("Zaplatiť"));
     I.waitForText("Zvoľte platobnú metódu", 10);
-    I.clickCss("//div[contains(text(), 'Bankový prevod')]");
-    I.clickCss("//div[contains(text(), 'Tatra banka')]");
+
+    I.waitForText("Bankový prevod", 10, "p");
+    I.click(locate("p").withText("Bankový prevod"));
+    I.waitForText("Tatra banka", 10, "p");
+    I.click(locate("p").withText("Tatra banka"));
+
     I.clickCss('button[data-cy="bankSubmit"]');
     I.waitForElement("#confirm");
     I.clickCss("#confirm");
     I.waitForText("Platba prebehla úspešne.", 30);
-  }
-);
+});
 
 Scenario("GoPay test", async ({ I, DT, DTE }) => {
   const testerName = "autotest-goPay-" + randomNumber;
@@ -186,8 +191,8 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   I.say("Proceeding to payment 3");
   I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
   I.click(locate("button.btn-primary").withText("Zaplatiť"));
-  I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
-  I.clickCss("//div[contains(text(), 'Platobná karta')]");
+  I.waitForText("Platobná karta", 10, "p");
+  I.click(locate("p").withText("Platobná karta"));
 
   // GoPay payment
   await SL.doGoPayCardPayment(I, true);
@@ -316,7 +321,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click(DT.btn.editorpayment_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
     I.checkOption("#DTE_Field_confirmed_0");
-    const closedDate = getCurrentDate(true).slice(0, 16);;
+    const closedDate = I.parseDateTime(getCurrentDate(true));
 
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
     lineColor = await SL.getFontColor(I, 1,2);
@@ -326,8 +331,14 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click(DT.btn.editorpayment_edit_button);
 
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
-    const actual = (await I.grabValueFrom('#DTE_Field_closedDate')).slice(0, 16);
-    I.assertEqual(closedDate, actual, "Close date was not correct!");
+    const actual = I.parseDateTime(await I.grabValueFrom('#DTE_Field_closedDate'));
+
+    // Calculate absolute difference in milliseconds
+    const diffMs = Math.abs(closedDate - actual);
+    I.say(`Closed date expected: ${closedDate}, actual: ${actual}, diff: ${diffMs} ms`);
+    // Check if difference is within 2 minutes (120,000 ms)
+    I.assertTrue(diffMs <= 120000, `Close date difference was too large! Diff: ${diffMs} ms`);
+
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
@@ -462,7 +473,7 @@ function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, pri
   I.see("Nová (nezaplatená)", 'td[colspan="2"]');
   I.see(testerName, "table.invoiceInnerTable");
   I.see("Playwright", "table.invoiceInnerTable");
-  I.see("Mlýnske Nivy 71", "table.invoiceInnerTable");
+  I.see("Mlynské Nivy 71", "table.invoiceInnerTable");
   I.see("Bratislava", "table.invoiceInnerTable");
   I.see("82105", "table.invoiceInnerTable");
   I.see("Slovensko", "table.invoiceInnerTable");

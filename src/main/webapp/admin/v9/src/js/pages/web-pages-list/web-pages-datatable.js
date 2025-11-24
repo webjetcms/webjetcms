@@ -54,6 +54,19 @@ export class WebPagesDatatable {
             ],
             newPageTitleKey: defaultTitleKey,
             showPageTitleKey: "history.showPage",
+            onClose: function(TABLE, EDITOR, e) {
+                try {
+                    var isDirty = EDITOR.field("data").isDirty();
+                    //console.log("isDirty=", isDirty);
+                    if (isDirty && window.confirm(WJ.translate('editor.confirmExitMessage'))==false) {
+                        //do not close dialog
+                        return false;
+                    }
+                } catch (err) {
+                    console.log("Error checking CKEditor dirty state:", err);
+                }
+                return true;
+            }
         }, options);
         //console.log("WebPagesDatatable.options=", this.options);
 
@@ -95,7 +108,7 @@ export class WebPagesDatatable {
             { id: 'menu', title: WJ.translate('editor.tab.navigation') },
             { id: 'access', title: WJ.translate('editor.tab.permissions') },
             { id: 'perex', title: WJ.translate('editor.tab.public') },
-            { id: 'media', title: WJ.translate('editor.tab.media'), perms: "cmp_media", content: '<div class="mediaContentPlaceholder"><div>' },
+            { id: 'media', title: WJ.translate('editor.tab.media'), content: '<div class="mediaContentPlaceholder"><div>' },
             { id: 'fields', title: WJ.translate('editor.tab.fields') },
             { id: 'attributes', title: WJ.translate('editor.tab.atributes') },
             { id: 'history', title: WJ.translate('editor.tab.history'), content: '<div class="historyContentPlaceholder"><div>' }

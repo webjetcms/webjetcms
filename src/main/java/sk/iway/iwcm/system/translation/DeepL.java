@@ -3,12 +3,10 @@ package sk.iway.iwcm.system.translation;
 import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Random;
 
-import org.apache.http.Consts;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -23,19 +21,16 @@ import sk.iway.iwcm.Tools;
  *
  * vyzaduje nastavenu konf. premennu deepl_auth_key
  */
-public class DeepL {
+public class DeepL extends TranslationEngine {
 
     private static final String CACHE_KEY = "DeepL.translations";
 
-    private static final int MAX_RETRIES = 5;
-    private static final int BASE_DELAY_MS = 1000;
-    private static final Random random = new Random();
-
-    private DeepL() {
-        //utility class
+    public DeepL() {
+        // Constructor for DeepL translation engine
     }
 
-    public static boolean isConfigured() {
+    @Override
+    public boolean isConfigured() {
         return Tools.isNotEmpty(getAuthKey());
     }
 
@@ -44,11 +39,8 @@ public class DeepL {
         return API_KEY;
     }
 
-    public static String translate(String text, String fromLanguage, String toLanguage) {
-
-        if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";
-        if ("cz".equalsIgnoreCase(fromLanguage)) fromLanguage = "cs";
-
+    @Override
+    public String translate(String text, String fromLanguage, String toLanguage) {
         Cache cache = Cache.getInstance();
         @SuppressWarnings("unchecked")
         Map<String, String> translationsCache = (Map<String, String>)cache.getObject(CACHE_KEY);
@@ -66,7 +58,7 @@ public class DeepL {
             if (translatedText!=null) return translatedText;
         }
 
-        String apiUrl = Constants.getString("deepl_api_url");
+        String translationApiUrl = Constants.getString("deepl_api_url");
 
         //DeepL has a problem with nbsp entity
         text = Tools.replace(text, "&nbsp;", " ");
@@ -74,17 +66,11 @@ public class DeepL {
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
             try {
-                String response = Request.Post(apiUrl)
-                    .bodyForm(Form.form()
-                        .add("text", text)
-                        .add("source_lang", fromLanguage.toUpperCase())
-                        .add("target_lang", toLanguage.toUpperCase())
-                        .add("tag_handling", "html")
-                        .build(), Consts.UTF_8)
-                    .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                String response = Request.Post(translationApiUrl)
+                    .setHeader("Content-Type", "application/json; charset=utf-8")
                     .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
+                    .bodyString(getBodyString(text, fromLanguage, toLanguage), ContentType.APPLICATION_JSON)
                     .execute().returnContent().asString(StandardCharsets.UTF_8);
-
 
                 JSONObject json = new JSONObject(response);
                 JSONArray translations = json.getJSONArray("translations");
@@ -93,41 +79,38 @@ public class DeepL {
 
                     if (translationKey != null) translationsCache.put(translationKey, translatedText);
 
-                    if (Tools.isNotEmpty(translatedText)) return translatedText;
+                    if (Tools.isNotEmpty(translatedText)) {
+                        try {
+                            long billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getLong("billed_characters") : 0;
+                            auditBilledCharacters(billedCharacters);
+                        } catch (Exception e) {
+                            Logger.error(DeepL.class, "Error while auditing billed characters", e);
+                        }
+                        return translatedText;
+                    }
                 }
 
                 //Succes, break the while
                 break;
-            } catch (Exception ex1) {
-
-                if(ex1 instanceof HttpResponseException responseException) {
+            } catch (Exception ex) {
+                if(ex instanceof HttpResponseException responseException) {
                     if(responseException.getStatusCode() == 429) {
-                        try {
-                            //Too many requests, slow down
-                            int delay = getExponentialBackoffDelay(attempt);
-                            Logger.debug(DeepL.class, "To many requests error. Attempt number : " + (attempt + 1) + ", waiting for for : " + delay + " ms");
-                            Thread.sleep(delay);
-                        } catch (Exception ex2) {
-                            sk.iway.iwcm.Logger.error(ex2);
-                            break;
-                        }
-                        // Waiting done
-                        Logger.debug(DeepL.class, "Waiting done");
-                        // Increment attempt count
-                        attempt++;
-
-                        if(attempt >= MAX_RETRIES) {
-                            Logger.error(DeepL.class,"Unable to translete '" + apiUrl + "', reached maximum number of attempts");
-                            break;
-                        } else {
-                            // Try again
-                            continue;
-                        }
+                        //too many requests, apply sleep delay
+                        if(applyDelay(attempt)) continue;
+                        else break;
+                    } else if(responseException.getStatusCode() == 456) {
+                        //quota exceeded
+                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', monthly quota of characters exceeded");
+                        return text; //return original text, no translation available
+                    } else if(responseException.getStatusCode() == 500) {
+                        //internal server error
+                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', temporal error in DeepL services");
+                        return text; //return original text, no translation available
                     }
                 }
 
-                Logger.error(DeepL.class,"Unable to connect to '" + apiUrl + "'");
-                Logger.error(DeepL.class, ex1);
+                Logger.error(DeepL.class,"Unable to connect to '" + translationApiUrl + "'");
+                Logger.error(DeepL.class, ex);
                 break;
             }
         }
@@ -135,10 +118,84 @@ public class DeepL {
         return text;
     }
 
-    private static int getExponentialBackoffDelay(int attempt) {
-        int exponentialDelay = BASE_DELAY_MS * (1 << attempt); // 2^attempt * base
-        // Add jitter: +/- 0-1000 ms
-        return exponentialDelay + random.nextInt(1000);
+    private String getBodyString(String text, String fromLanguage, String toLanguage) {
+        String deeplModelType = Constants.getString("deepl_model_type");
+
+        JSONObject json = new JSONObject();
+        json.put("text", new JSONArray().put(text));
+        json.put("source_lang", fromLanguage.toUpperCase());
+        json.put("target_lang", toLanguage.toUpperCase());
+        json.put("tag_handling", "html");
+        json.put("model_type", deeplModelType);
+        json.put("show_billed_characters", Boolean.TRUE);
+        return json.toString();
     }
 
+    @Override
+    public Long numberOfFreeCharacters() {
+        String CACHE_KEY = "DeepL.freeCharacters";
+        Cache cache = Cache.getInstance();
+        Long freeCharacters = (Long) cache.getObject(CACHE_KEY);
+        if (freeCharacters != null) {
+            return freeCharacters; // Return cached value if available
+        }
+
+        String usageApiUrl = Constants.getString("deepl_api_usage_url");
+
+        try {
+            //if it's a relative URL, prepend the base API URL from deepl_api_url
+            if (!usageApiUrl.startsWith("http")) {
+                String baseApiUrl = Constants.getString("deepl_api_url");
+                baseApiUrl = baseApiUrl.substring(0, baseApiUrl.indexOf('/', 10));
+                usageApiUrl = baseApiUrl + usageApiUrl;
+            }
+        } catch (Exception e) {
+            Logger.error(DeepL.class, "Error constructing usage API URL", e);
+            return Long.valueOf(-1); // return -1 to indicate an error
+        }
+
+        int attempt = 0;
+        while (attempt < MAX_RETRIES) {
+            try {
+                String response = Request.Post(usageApiUrl)
+                        .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                        .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
+                        .execute().returnContent().asString(StandardCharsets.UTF_8);
+
+                JSONObject json = new JSONObject(response);
+                Long characterLimit = json.getLong("character_limit");
+                Long characterCount = json.getLong("character_count");
+                if(characterLimit != null && characterCount != null) {
+                    freeCharacters = characterLimit - characterCount;
+
+                    cache.setObjectSeconds(CACHE_KEY, freeCharacters, 60 * 5);
+                    auditRemainingCharacters(characterLimit, characterCount);
+
+                    return freeCharacters; // returns number of free characters
+                } else {
+                    Logger.error(DeepL.class, "Invalid response from DeepL API usage endpoint: " + response);
+                return Long.valueOf(-1);
+                }
+
+            } catch (Exception ex) {
+                if(ex instanceof HttpResponseException responseException) {
+                    if(responseException.getStatusCode() == 429) {
+                        //too many requests, apply sleep delay
+                        if(applyDelay(attempt)) continue;
+                        else break;
+                    }
+                }
+
+                Logger.error(DeepL.class, "Unable to get number of litmit/used characters from DeepL", ex);
+                return Long.valueOf(-1); // return -1 to indicate an error
+            }
+        }
+
+        return Long.valueOf(-1);
+    }
+
+    @Override
+    public String engineName() {
+        return "DeepL";
+    }
 }

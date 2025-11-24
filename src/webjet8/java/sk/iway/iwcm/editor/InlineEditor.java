@@ -14,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
+import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.users.UsersDB;
 
 
@@ -232,7 +233,7 @@ public class InlineEditor
 
 		return (inlineEditingEnabled
 					&& request.getHeader("dmail")==null
-					&& request.getParameter("NO_WJTOOLBAR")==null
+					&& request.getParameter(WriteTag.NO_WJTOOLBAR)==null
 					&& request.getParameter("isDmail")==null
 					&& !isHeatmapEnabled
 					&& request.getAttribute("disableInlineEditing")==null
@@ -269,10 +270,15 @@ public class InlineEditor
             TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
             if (temp != null)
             {
-                if (temp.getTempName().contains("PageBuilder") || temp.getAfterBodyData().contains("PageBuilder"))
+                if (temp.getTempName().contains("PageBuilder") || temp.getAfterBodyData().contains("PageBuilder") || temp.getTempName().contains("PBon"))
                 {
                     mode = EditingMode.pageBuilder;
                 }
+				if (Tools.isNotEmpty(temp.getInlineEditingMode())) {
+					if ("pageBuilder".equals(temp.getInlineEditingMode())) mode = EditingMode.pageBuilder;
+					else if ("gridEditor".equals(temp.getInlineEditingMode())) mode = EditingMode.gridEditor;
+					//else if ("default".equals(temp.getInlineEditingMode())) mode = EditingMode.normal;
+				}
             }
         }
         return mode;

@@ -14,34 +14,34 @@ Vysvetlenie použitých piktogramov:
 
 ## 2025
 
-- [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript.
-- [ ] Prechod na aplikačný server Tomcat 11+.
-- [ ] Prechod na `Spring` verzia 7.
+- [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript (#57793).
+- [ ] Prechod na aplikačný server Tomcat 11+ (#57793).
+- [ ] Prechod na `Spring` verzia 7 (#57793).
 - [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
-- [ ] Primárne používanie GitHub repozitára na vývoj.
-- [ ] Zrušenie generovania artifaktov na starý `iwmsp.sk` repozitár, artefakty budú dostupné už len cez [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
-- [ ] Aktualizácia knižnice `pd4ml` na novú verziu, jednotlivé weby si budú musieť zaobstarať licenciu samostatne, nebude už poskytovaná WebJET CMS.
+- [x] Primárne používanie GitHub repozitára na vývoj.
+- [x] Zrušenie generovania artifaktov na starý `iwmsp.sk` repozitár, artefakty budú dostupné už len cez [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [x] Aktualizácia knižnice `pd4ml` na novú verziu, jednotlivé weby si budú musieť zaobstarať licenciu samostatne, nebude už poskytovaná WebJET CMS.
 - [ ] Prechod najpoužívanejších aplikácii do Spring verzie s využitím Thymeleaf šablón.
-- [ ] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [x] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Presun JSP súborov, Java tried a JavaScript knižníc starej verzie 8 do `obsolete` jar archívu, ktorý nebude štandardnou súčasťou WebJET CMS. Môže byť použitý na starých projektoch, kde zatiaľ nie je vykonaná aktualizácia všetkých zákazníckych aplikácií na `Spring` verzie, ale bez podpory a aktualizácií zo strany WebJET CMS.
 - [ ] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
-- [ ] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok.
+- [x] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok (#58053).
 - [ ] Log súbory - filtrovať podľa mena inštalácie.
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
 - [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
 - [ ] Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
 - [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
 - [ ] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.
-- [ ] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.
+- [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [ ] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
-- [ ] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
-- [ ] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
+- [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
+- [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
 - [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
-- [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
+- [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
 - [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
@@ -52,7 +52,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Elektronický obchod - do emailu pridať `JSON-LD` dáta https://schema.seznam.cz/objednavky/dokumentace/.
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
-- [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#56665).
 - [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
 - [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
 - [x] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
@@ -66,8 +66,21 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Prieskumník - do Média tejto stránky pridať možnosť presunúť sa do rodičovského priečinka.
 - [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach.
-- [ ] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html
-- [ ] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrusšiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok.
+- [x] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
+- [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
+- [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
+- [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
+- [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
+- [ ] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil.
+- [x] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83, #58129).
+- [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
+- [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
+- [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
+- [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
+- [ ] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu.
+- [ ] +Vnorené datatabuľky - nastaviť počet záznamov v režime `auto` podľa veľkosti oblasti vnorenej datatabuľky.
+- [ ] +Funkcia odoslať email neskôr používa `sendMailSaveEmailPath`, ktoré nevie uložiť súbor podľa aktuálnej domény, zamyslieť sa nad riešením. Možno je to tak kvôli tomu, že sa emaily posielajú na pozadí kde doména nemusí byť známa.
+
 
 ## 2024
 
@@ -243,7 +256,7 @@ Vysvetlenie použitých piktogramov:
 - [x] pridať ```code coverage``` report, napr. cez JaCoCo - https://docs.gradle.org/current/userguide/jacoco_plugin.html (#54909).
 - [ ] ~~(presun do 2023.40) upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie~~
 - [ ] ~~(presun do 2023.40) Aplikácie - zlepšiť opis každej aplikácie, aktualizovať obrázky aplikácie.~~
-- [x] Galéria - pridať fyzickú zmenu mena súboru (vrátane vygenerovaných s_ a o_ obrázkov) po zmene atribútu Meno súboru v editore (#39751-52).
+- [x] Galéria - pridať fyzickú zmenu mena súboru (vrátane vygenerovaných `s_` a `o_` obrázkov) po zmene atribútu Meno súboru v editore (#39751-52).
 - [x] +Datatabuľky - zapamätať si počet záznamov na stranu pre každú datatabuľku (#39751-50).
 - [ ] +```Command Palette``` - pridať príkazovú paletu s integrovaným vyhľadávaním podobne ako má VS Code - https://trevorsullivan.net/2019/09/18/frictionless-user-experiences-add-a-command-palette-to-your-react-application/
 - [ ] ~~(presun do 2023.40) +foto galéria - optimalizovať množstvo načítaných dát~~

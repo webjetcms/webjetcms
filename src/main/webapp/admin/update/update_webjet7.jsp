@@ -16,9 +16,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="modUpdate|users.edit_admins"/><%!
@@ -291,7 +288,7 @@ if (Constants.getBoolean("statEnableTablePartitioning")==false)
 		catch (Exception ex)
 		{
 		   if (ex.getMessage()!=null) printLine(log, out, "<span style='color: red;'>ERROR: "+ex.getMessage()+"</span>");
-		   sk.iway.iwcm.Logger.error(ex);
+		   sk.iway.iwcm.Logger.error(null, ex.getMessage());
 		}
 		finally
 		{
@@ -639,7 +636,7 @@ if (Constants.getBoolean("statWebJET7Converted")==false)
 		}
 		catch (Exception ex)
 		{
-		   if (ex.getMessage().contains("does not exist") || ex.getMessage().contains("doesn't exist")) {
+		   if (ex.getMessage().contains("does not exist") || ex.getMessage().contains("doesn't exist") || ex.getMessage().contains("Invalid object name")) {
 			//stat table doesnt exists, it's ok
 		   } else {
 			sk.iway.iwcm.Logger.error(ex);

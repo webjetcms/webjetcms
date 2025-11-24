@@ -8,6 +8,8 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
@@ -16,6 +18,7 @@ import javax.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -29,6 +32,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PEREX_GROUP_UPDATE)
 public class PerexGroupsEntity implements Serializable {
+
+    @PreUpdate
+    @PrePersist
+	public void prePersist() {
+		if(domainId == null || domainId.intValue()<1) domainId = CloudToolsForCore.getDomainId();
+	}
 
     @Id
     @Column(name = "perex_group_id")
@@ -49,9 +58,6 @@ public class PerexGroupsEntity implements Serializable {
     @Size(max = 255)
     @NotBlank
     private String perexGroupName;
-
-    @Column(name = "related_pages")
-    private String relatedPages;
 
     @Size(max = 255)
     @Column(name = "available_groups")
@@ -224,4 +230,19 @@ public class PerexGroupsEntity implements Serializable {
 		tab = "fields"
     )
 	private String fieldF;
+
+    @Column(name="domain_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Integer domainId;
+
+    public void addAvailableGroup(int availableGroupId) {
+        if(Tools.isEmpty(availableGroups)) availableGroups = "" + availableGroupId;
+        else {
+            //prevent duplicates
+            if ((","+availableGroups+",").contains(","+availableGroupId+",")) return;
+
+            if(availableGroups.endsWith(",")) availableGroups += availableGroupId;
+            else availableGroups += "," + availableGroupId;
+        }
+    }
 }

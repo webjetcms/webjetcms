@@ -224,6 +224,11 @@ public class SetupActionsService {
 			if(Tools.isNotEmpty(oldLng)) sForm.setPageLngIndicator(oldLng);
 		}
 
+		String language = request.getParameter("language");
+		if (language != null && language.length() == 2) {
+			sForm.setConf_defaultLanguage(language);
+		}
+
 		setModel(model, sForm, false, false);
 
 		return FORWARD;
@@ -259,9 +264,10 @@ public class SetupActionsService {
 			}
 
 			String userName = setupForm.getDbUsername();
-			String password = setupForm.getDbPassword();
+			String password = getEnvPassword(setupForm.getDbPassword());
 			if (Tools.isEmpty(userName)) userName = null;
 			if (Tools.isEmpty(password)) password = null;
+
 			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
 			con.close();
 			dbConnectOK = true;
@@ -273,18 +279,22 @@ public class SetupActionsService {
 
 			String msg = ex.getMessage();
 
-			if (msg.indexOf("Unknown database ") != -1) {
+			if (msg.contains("Unknown database ") || msg.contains("Cannot open database")) {
 				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
 
 				String origDBName = setupForm.getDbName();
 				setupForm.setDbName("mysql");
+				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("master");
+				else if ("org.postgresql.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("postgres");
 
 				try {
 					if (setupForm.isDbUseSuperuser()) {
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
 					} else {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
 					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
@@ -295,7 +305,7 @@ public class SetupActionsService {
 
 					setupForm.setDbName(origDBName);
 
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					con.close();
 
 					dbConnectOK = true;
@@ -313,10 +323,10 @@ public class SetupActionsService {
 				try {
 					if (setupForm.isDbUseSuperuser()) {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), setupForm.getDbSuperuserPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
 					} else {
 						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
 					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
@@ -327,7 +337,7 @@ public class SetupActionsService {
 
 					setupForm.setDbName(origDBName);
 
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), setupForm.getDbPassword());
+					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					con.close();
 
 					dbConnectOK = true;
@@ -541,5 +551,25 @@ public class SetupActionsService {
 		model.addAttribute("dbErrMsg", conErrMsg);
 		//Separe crate rr message, will be shown if != null
 		model.addAttribute("dbCreateErrMsg", createErrMsg);
+	}
+
+	private static String getEnvPassword(String password) {
+		//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+		if (password != null && password.startsWith("${") && password.endsWith("}")) {
+			String envName = password.substring(2, password.length()-1);
+			String envValue = getSystemProperty(envName);
+			if (Tools.isNotEmpty(envValue)) {
+				password = envValue;
+			}
+		}
+		return password;
+	}
+
+	private static String getSystemProperty(String name) {
+		String value = System.getProperty(name);
+		if (Tools.isNotEmpty(value)) return value;
+		value = System.getenv(name);
+		if (Tools.isNotEmpty(value)) return value;
+		return "";
 	}
 }

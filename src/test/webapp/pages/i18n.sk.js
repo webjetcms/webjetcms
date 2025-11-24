@@ -53,6 +53,27 @@ module.exports = {
             "Top pages":"Top stránky",
             "Delete":"Vymazať",
             "No matching records found":"Nenašli sa žiadne vyhovujúce záznamy",
+            "Delete::2": "Zmazať",
+            "Two-Step Verification": "Dvojstupňové overenie",
+            "Create new image": "Vytvoriť nový obrázok",
+            "Remove background": "Odstrániť pozadie",
+            "AI is working on it...": "AI na tom pracuje...",
+            "Web Designer (PageBuilder)": "Webový dizajnér (PageBuilder)",
+            "Generate summary": "Vytvoriť zhrnutie",
+            "Write new text/article": "Napísať nový text/článok",
+            "Generate": "Generovať",
+            "Improve text": "Vylepšiť text",
+            "Fix grammar": "Opraviť gramatiku",
+            "Browser": "Prehliadač",
+            "Yes": "Áno",
+            "No": "Nie",
+            "Import completed": "Import ukončený",
+            "Money Transfer": "Prevodom",
+            "You need to reload the page to change the domain.": "Pre zmenu domény je potrebné znovu načítať stránku.",
+            "Confirm": "Potvrdiť",
+            "Logon form": "Prihlasovací formulár",
+            "Registration form": "Registračný formulár",
+            "An error occurred while calling AI assistant": "Nastala chyba pri volaní AI asistenta"
         }
     }
 }

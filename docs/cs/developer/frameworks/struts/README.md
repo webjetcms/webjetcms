@@ -1,6 +1,6 @@
 # Přechod ze Struts do Spring
 
-Struts je stará MVC technologie (framework), která s pomocí konfiguračního souboru `struts-config.xml` mapuje příchozí požadavky na `Struts Action` objekty. Ve WebJETu postupně Struts nahrazujeme za Spring MVC/REST.
+Struts je stará MVC technologie (framework), která s pomocí konfiguračního souboru `struts-config.xml` mapuje příchozí požadavky na `Struts Action` objekty. Od WebJET 2025 je struts nahrazen za Spring MVC/REST.
 
 ## Původní mapování pomocí Struts
 
@@ -135,3 +135,7 @@ V případě přesunu požadavku na JSP soubor můžete využít metodu `request
 		request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);
     }
 ```
+
+### JSP značky
+
+Značky jako `<logic:present/iterate/...` nahrazeno za odpovídající `<iwcm:present/iterate/...`, pozor `<bean:write` za `<iwcm:beanWrite`.

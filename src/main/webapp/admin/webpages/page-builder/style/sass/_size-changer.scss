@@ -1,8 +1,8 @@
 .#{$prefix}-size-changer {
     display: none;
     position: absolute;
-    top: $highlighter-size;
-    left: $highlighter-size;
+    top: $highlighter-size*3;
+    left: $highlighter-size*3;
     height: $size-changer-size;
     z-index: $size-changer-index;
     overflow: hidden;
@@ -20,11 +20,14 @@
         overflow: hidden;
         text-align: center;
         font-size: 13px;
-        color: white;
+        color: $color-dark-text;
         font-weight: bold;
         background-repeat: no-repeat;
         background-position: center;
-        background-size: auto ($size-changer-size/2);
+        background-size: auto $toolbar-icon-size;
+    }
+    &__number {
+        width: 60px;
     }
 
     &__down,
@@ -37,11 +40,11 @@
         }
     }
 
-    &__down {   background-image: url("../images/move-left.png"); }
-    &__up {     background-image: url("../images/move-right.png"); }
+    &__down {   background-image: $icon-left; }
+    &__up {     background-image: $icon-right; }
 
     .#{$prefix}-container.#{$prefix}-is-resize-columns & {
         display: block;
     }
-    
+
 }

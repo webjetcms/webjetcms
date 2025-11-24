@@ -1,6 +1,5 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -53,6 +52,7 @@ public class Constants {
 	public static final String MOD_DMAIL = "dmail";
 	public static final String MOD_RESERVATION = "reservation";
 	public static final String MOD_FORMMAIL = "formmail";
+	public static final String MOD_AI_ASSISTANTS = "ai_assistants";
 
 	public static final String MOD_OBSOLETE = "obsolete";
 
@@ -122,7 +122,7 @@ public class Constants {
 	}
 
 	public static String mods(String... mod) {
-		return StringUtils.join(mod, ";");
+		return Tools.join(mod, ";");
 	}
 
 	public static void clearValues() {
@@ -199,6 +199,8 @@ public class Constants {
 				"true || false - ak je nastavené na true bude sa vykonávať kontrola práv na zaheslované stránky aj administrátorom (štandardne sa nekontroluje, administrátor má prístup ku všetkým stránkam)");
 		setBoolean("adminRequireSSL", false, MOD_SECURITY,
 				"ak je nastavené na true a na serveri je nastavené SSL pre prístup do admin časti bude vyžadovaný httpS protokol");
+		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn", MOD_SECURITY,
+				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db a podobne");
 
 		// server pre aktualizaciu WebJETu
 		setString("updateRemoteServer", "http://license.interway.sk");
@@ -234,7 +236,7 @@ public class Constants {
 		setString("currencyFormat", "0.00", MOD_BASKET, "pattern na formatovanie meny");
 
 		// FCK: ak je true zapne sa XHTML mod formatovania HTML
-		setBoolean("editorEnableXHTML", true);
+		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
 		setString("editorFontColors", "", MOD_EDITOR,
 				"umožňuje definovať kódy farieb, ktoré sa zobrazia v popup menu pre výber farby v editore. Kódy sú oddelené čiarkou, napríklad 000000,00ff00,ff0000,0000ff");
 
@@ -619,7 +621,7 @@ public class Constants {
 		// zoznam XSS hodnot pre test filtra
 		// hodnoty <xml|<?xml som zmazal kvoli detekcii pri vkladani
 		setString("xssTestValues",
-				"<script|javascript:|javascript&colon;|onmouse|onload|onerror|onfocus|onblur|onclick|onchange|onselect|ondoubleclick|ondblclick|onkeydown|onkeypress|onkeyup|set-cookie|expression(|&#|<meta|<iframe|<layer|<link|<style|<frame|<base|<object|<embed|<jscript|activexobject|ecmascript|vbscript:|.fromcharcode|x-javascript|@import|alert(|/web-inf/",
+				"<script|javascript:|javascript&colon;|onmouse|onload|onerror|onfocus|onblur|onclick|onchange|onselect|ondoubleclick|ondblclick|onkeydown|onkeypress|onkeyup|set-cookie|expression(|&#|<meta|<iframe|<layer|<link|<style|<frame|<base|<object|<embed|<jscript|activexobject|ecmascript|vbscript:|.fromcharcode|x-javascript|@import|alert(|/web-inf/|onwebkit",
 				MOD_SECURITY, "zoznam testovanych XSS vyrazov");
 
 		setString("webEnableIPs", "", MOD_SECURITY,
@@ -1160,7 +1162,7 @@ public class Constants {
 				"Ak je nastavene na false bude pri vytvarani novej stranky v editore odskrtnuta moznost zobrazovat");
 
 		setString("xssProtectionStrictPostUrlExceptionSystem",
-				"/components/blog/blog,/components/lms/ucitel,/components/gallery/send_card,/components/send_link/send_link,/components/magzilla/,/components/tips/tips_editor,/components/user/change_password,/components/wiki/save,%_autocomplete.jsp,/admin/offline.do",
+				"/components/blog/blog,/components/lms/ucitel,/components/gallery/send_card,/components/send_link/send_link,/components/magzilla/,/components/tips/tips_editor,/components/user/change_password,/components/wiki/save,%_autocomplete.jsp",
 				MOD_SECURITY,
 				"casti URL adries (ich zaciatky) pre ktore sa nepouzije xssProtectionStrict POST, jednotlive URL su oddelene ciarkou");
 		setString("xssProtectionStrictPostUrlException", "", MOD_SECURITY,
@@ -1522,7 +1524,7 @@ public class Constants {
 				"Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe). Prejavy sa az po restarte wj.");
 
 		setString("editorMagiclineElements",
-				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1",
+				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1, pre: 1, hr: 1, address: 1, article: 1, aside: 1, footer: 1, nav: 1",
 				MOD_EDITOR, "Zoznam elementov pre ktore sa zobrazuje magicline v editore");
 
 		setBoolean("usersBigList", false, MOD_PERFORMANCE,
@@ -1545,9 +1547,6 @@ public class Constants {
 		setString("adminLoaderBannedUrls",
 				"/admin/FCKeditor/editor_set_user.jsp|/admin/refresher.jsp|/components/media/get_media.jsp", MOD_EDITOR,
 				"Zoznam URL pre ktore sa nebude zobrazovat loader pri ajax dotazoch");
-
-		setBoolean("adminDualFactorLogonEnabled", false, MOD_SECURITY,
-				"Zapnutie dvoj faktorovej autorizacie cez mobilnu aplikaciu");
 
 		setString("googleMapsApiKey", "", MOD_CONFIG, "Možnosť globálneho nastavenia API kľúču pre Google mapy");
 		setString("canBeShownForUserAgent", "", MOD_CONFIG,

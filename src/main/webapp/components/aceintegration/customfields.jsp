@@ -1,8 +1,11 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="windows-1250"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
 DocDetails doc = (DocDetails)request.getAttribute("docDetails");
+
+if(doc == null) return;
 
 out.print("<p>" + doc.getTempId() + "</p>");
 %>
@@ -11,3 +14,5 @@ out.print("<p>" + doc.getTempId() + "</p>");
 <p><iwcm:text key="temp-3.editor.field_a"/></p>
 <p><iwcm:text key="demojet.editor.field_tempgroup"/></p>
 <p><iwcm:text key='<%="temp-"+doc.getTempId()+".editor.field_a"%>'/></p>
+<p class="field_a">A:<c:out value="${docDetails.fieldA}" /></p>
+<p class="field_h">H:<c:out value="${docDetails.fieldH}" /></p>

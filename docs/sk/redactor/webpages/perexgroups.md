@@ -13,6 +13,7 @@ Editor pre vytvorenie značiek je jednoduchý a obsahuje iba 2 karty.
 ### Karta Základné
 
 Karta obsahuje nasledujúce polia:
+
 - **Názov skupiny**, unikátny názov značky, je povinný.
 - **Zobraziť pre**, nastavenie obmedzenia zobrazenia značiek len pre určité adresáre web stránok.
 
@@ -39,6 +40,14 @@ Značky sa zobrazujú v editore stránok v liste Perex, kde je možné ich jedno
 Značky sa štandardne zobrazujú ako zaškrtávacie polia, ak je ale definovaných viac ako 30 značiek, zobrazia sa z dôvodu prehľadnosti ako viac násobné výberové pole. Hodnota 30 sa dá zmeniť v konf. premennej `perexGroupsRenderAsSelect`.
 
 !> **Upozornenie:** názov značky (perex skupiny) sa mení v závislosti od zvoleného jazyka. Ak takáto jazyková mutácia existuje, zobrazí sa. Ak nie, zobrazí sa hodnota z poľa **Názov skupiny**.
+
+### Duplicita názvov značiek
+
+V prípade, že vytvoríte viac značiek s rovnakou jazykovou mutáciou názvu, v editore web stránky sa pri výbere značky zobrazí ich **ID** a **Názov skupiny** pre rozlíšenie. Ak značka má iba **Názov skupiny** alebo jazyková mutácia je rovnaká ako **Názov skupiny**, naviac sa zobrazí iba **ID**.
+
+![](perex-duplicity-values.png)
+
+!> **Upozornenie:** hodnoty sa porovnávajú bez vplyvu diakritiky a veľkých/malých písmen
 
 ### Použitie
 

@@ -446,6 +446,7 @@ Funkcia obsahuje parametre:
   - ```link``` - predvolene sa do generovaného HTML kódu nevkladajú odkazy, nastavením na ```true``` sa vkladanie odkazov zapne
   - `badge` - nastavením na `true` bude prvé slovo pred znakom pomlčka v ne-číslovanom zozname obalené do `<span class="badge bg-secondary">`
   - `imgSrcPrefix` - URL adresa prefixu pre obrázok (doménové meno) ak sa obrázok číta z inej domény, rovnaký prefix sa použije aj pre odkazy
+  - `removeLastBr` - po nastavení na `true` je odstránená posledná značka `<br />` na konci textu
 
 Príklad použitia:
 
@@ -560,7 +561,7 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 - ```WJ.showHelpWindow(link)``` - Volanie spôsobí zobrazenie okna s pomocníkom. Hodnota otvoreného odkazu sa získa z parametra `link` alebo z `window.helpLink`.
 - ```WJ.changeDomain(select)``` - Vyvolá akciu zmeny zvolenej domény. Používa sa v hlavičke okna pri multidomain inštalácii s externými súbormi. V takomto režime sú k zvolenej doméne viazané súbory ale aj dáta aplikácií (napr. bannery, skripty).
 - ```WJ.translate(key, ...params)``` - Funkcia na [preklad kľúča na text](jstranslate.md).
-- ```WJ.openPopupDialog(url, width, height)``` - Otvorí vyskakovacie okno so zadaným URL a zadanou veľkosťou okna, odporúčame ale využiť [WJ.openIframeModal](#iframe-dialog) ak je to možné
+- ```WJ.openPopupDialog(url, width, height)``` - Otvorí vyskakovacie okno so zadaným URL a zadanou veľkosťou okna, odporúčame ale využiť `WJ.openIframeModal` ak je to možné
 - ```WJ.urlAddPath(url, pathAppend)``` - Pridá do (rest) URL cestu, kontroluje, či v URL nie je ```?param``` - napr. ```WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')``` vznikne ```/admin/rest/tree/list?click=groups```.
 - ```WJ.urlAddParam(url, paramName, paramValue)``` - Pridá do URL parameter. Kontroluje, či v URL už nejaký parameter je, a podľa toho pridá ? alebo &, hodnotu ```paramValue``` zakóduje pomocou ```encodeURIComponent```.
 - ```WJ.urlUpdateParam(url, paramName, paramValue)``` - Aktualizuje zadaný parameter v URL adrese.

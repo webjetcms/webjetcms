@@ -97,14 +97,14 @@ Ak chcete vytvoriť odkaz na dokument/súbor označte si text, ktorý má byť o
 ![](link_dialog.png)
 
 - v prípade ak je dokument **určený len pre aktuálnu web stránku**, je potrebné zvoliť položku “Média tejto stránky” a v nej položku “Súbory”.
-   - Vyhľadáte dokument, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL.
-   - V prípade ak sa v zozname požadovaný dokument nenachádza, funkciou ```drag&drop``` je možné nahrať dokument z vášho počítača
-   - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
+  - Vyhľadáte dokument, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL.
+  - V prípade ak sa v zozname požadovaný dokument nenachádza, funkciou ```drag&drop``` je možné nahrať dokument z vášho počítača
+  - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
 
 - v prípade ak dokument **nie je určený len pre danú stránku** (dokument sa môže nachádzať aj na inej stránke), je potrebné zvoliť položku **Média všetkých stránok** a v nej položku **Súbory**.
-   - Zobrazí sa vám adresárová štruktúra adresárov a súborov na serveri, na ktoré máte povolený prístup.
-   - Vyhľadáte v adresároch požadovaný súbor, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL
-   - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
+  - Zobrazí sa vám adresárová štruktúra adresárov a súborov na serveri, na ktoré máte povolený prístup.
+  - Vyhľadáte v adresároch požadovaný súbor, kliknete naň a odkaz na dokument sa automaticky skopíruje do poľa URL
+  - Potvrdíte OK, čím sa vám na vyznačenom mieste vytvorí odkaz na súbor.
 
 Podľa smernice na prístupnosť web sídla by všetky textové súbory na stiahnutie nachádzajúce sa na web stránkach mali byť uverejňované hlavne vo formáte ```PDF```. Formáty používané aplikáciou ```Word``` a ```Excel``` (```DOC``` a ```XLS```) nie sú vyhovujúce.
 
@@ -138,6 +138,8 @@ Ak chcete zmeniť existujúci obrázok je potrebné najprv raz kliknúť na obr�
 Po kliknutí na ikonku sa vám zobrazí dialógové okno na vloženie obrázka:
 
 ![](image_dialog.png)
+
+Pri prechádzaní cez stromovú štruktúru sú zobrazené len súbory typu obrázok alebo video, ostatné súbory sú filtrované.
 
 ### Karta Obsah
 
@@ -259,6 +261,18 @@ Pri kliknutí na tlačidlo "Vložiť do stránky" sa aplikácia vloží do strá
 
 Ak už je aplikácia vložená v stránke kliknutím do vnútra aplikácie sa vám zobrazí rovnaké okno nastavenia aplikácie. Môžete tak jednoducho upraviť jej existujúce nastavenia.
 
+### Karta zobrazenie
+
+Väčšina aplikácii obsahuje kartu Zobrazenie pre spoločné nastavenia (ak táto možnosť v aplikácii nie je z rôznych dôvodov vypnutá).
+
+![](../../../custom-apps/appstore/common-settings-tab.png)
+
+Karta obsahuje parametre:
+
+- Zobrazenie na zariadeniach, slúžiaci na nastavenie [podmieneného zobrazenia aplikácia](../../../custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) na zariadeniach typu tablet, telefón alebo štandardný počítač. Ak nie je zvolená žiadna možnosť, zobrazí sa aplikácia na všetkých zariadeniach (rovnako ako keď sú zvolené všetky možnosti).
+- Prihlásený používateľ - umožňuje nastaviť zobrazenie aplikácie podľa stavu prihlásenia návštevníka web sídla - zobrazenie vždy, len ak je používateľ prihlásený, alebo ak nie je prihlásený. V editore stránok sa aplikácia zobrazí vždy, ale v náhľade, alebo zobrazení stránky sa zobrazí podľa nastavenej hodnoty.
+- Čas vyrovnávacej pamäte (minúty) - slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti pre jej rýchlejšie zobrazenie. Napríklad zoznam noviniek sa nemení často a ich načítanie je náročné na databázový server, je teda vhodné nastaviť napríklad hodnotu 30. Ak je prihlásený administrátor, vyrovnávacia pamäť sa nepoužije a vždy sa zobrazia aktuálne údaje.
+
 ## Pred pripravené bloky
 
 Editor stránky ponúka možnosť vkladania prednastavených blokov (```HTML``` objektov) na stránku. Napr. tabuľka, text, kontaktný formulár atď. Viete vložiť aj obsah inej stránky do aktuálnej stránky (napr. opakujúci sa formulár).
@@ -276,3 +290,9 @@ Môžu nastať prípady, keď budete potrebovať pri písaní napísať aj znaky
 Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzora. Špeciálne znaky sa vkladajú ako text, takže nemajú žiadne ďalšie nastavenia.
 
 !> Upozornenie: ikona pre vkladanie špeciálnych znakov môže byť v niektorých prípadoch zmenená na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pre vkladanie [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázkov.
+
+## Detekcia zmeny obsahu stránky
+
+Editor stránok obsahuje mechanizmus, ktorý detekuje zmeny obsahu stránky. Keď kliknete na tlačidlo Zrušiť na zatvorenie okna a zároveň boli vykonané zmeny v obsahu stránky, zobrazí sa vám dialógové okno s upozornením, že neboli uložené zmeny. Kliknutím na OK okno zatvoríte bez uloženia zmien, kliknutím na Zrušiť sa vrátite späť do editora stránky.
+
+Po otvorení stránky v editore sa po 5 sekundách získa aktuálny obsah stránky (aby sa stihli načítať všetky skripty a náhľady aplikácii) a tento sa následne porovnáva s aktuálnym obsahom pri kliknutí na tlačidlo Zrušiť. Čiže správna detekcia funguje po 5 sekundách od otvorenia stránky v editore.

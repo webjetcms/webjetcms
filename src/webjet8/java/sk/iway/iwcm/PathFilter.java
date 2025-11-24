@@ -1,7 +1,6 @@
 package sk.iway.iwcm;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.struts.util.TokenProcessor;
 import org.springframework.web.util.NestedServletException;
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
@@ -69,6 +68,8 @@ public class PathFilter implements Filter
 	//pocet sekund cache pre staticky obsah
 	private static int cacheStaticContentSeconds = -1;
 	private static String[] cacheStaticContentSuffixes = null;
+	//blocked paths for file/directory metadata disclosure prevention
+	private static String[] blockedPaths = null;
 
 	private static List<ResponseHeaderBean> responseHeaders;
 
@@ -263,13 +264,14 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && path.startsWith("/showdoc.do") && isFirstPathFilterCall &&
-					req.getParameterMap().size()==1 && req.getParameter("docid")!=null		)
+			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && path.startsWith("/showdoc.do") && isFirstPathFilterCall)
 			{
-				//presmeruj sa na stranku v HTML formate
+				//do this inly if there is only docid and/or language parameter
 				int docId = Tools.getIntValue(req.getParameter("docid"), -1);
-				if (docId > 0)
+				String languageParam = req.getParameter("language");
+				if (docId > 0 && (req.getParameterMap().size() == 1 || (languageParam != null && req.getParameterMap().size() == 2)))
 				{
+					//presmeruj sa na stranku v HTML formate
 					DocDB docDB = DocDB.getInstance();
 					if (InitServlet.isTypeCloud() || (Constants.getBoolean("enableStaticFilesExternalDir") && Constants.getBoolean("multiDomainEnabled")))
 					{
@@ -288,6 +290,7 @@ public class PathFilter implements Filter
 						}
 					}
 					String redirPath = docDB.getDocLink(docId, req);
+					if (languageParam != null) redirPath = Tools.addParameterToUrl(redirPath, "language", languageParam);
 
 					if (redirPath.startsWith("/showdoc.do")==false && Tools.isNotEmpty(redirPath))
 					{
@@ -305,9 +308,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
-				path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
-				req.getRequestURI().indexOf("//")!=-1 || path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1)
+			if (req.getRequestURI().indexOf("//")!=-1 || isPathSafe(path)==false)
 			{
 				if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictGetUrlException")==false)
 				{
@@ -328,29 +329,30 @@ public class PathFilter implements Filter
 			}
 
 			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws)
-         if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
-         {
-            boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
-            if (swaggerEnabled)
-            {
-               //testni, ci je povoleny aj pre neadmina
-               if (Constants.getBoolean("swaggerRequireAdmin"))
-               {
-                  Identity user = UsersDB.getCurrentUser(req);
-                  if (user==null || user.isAdmin()==false) swaggerEnabled = false;
-               }
-            }
+			if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
+			{
+				boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
+				if (swaggerEnabled)
+				{
+				//testni, ci je povoleny aj pre neadmina
+				if (Constants.getBoolean("swaggerRequireAdmin"))
+				{
+					Identity user = UsersDB.getCurrentUser(req);
+					if (user==null || user.isAdmin()==false) swaggerEnabled = false;
+				}
+				}
 
-            if (swaggerEnabled==false)
-            {
-               Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
-               res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-               forwardSafely("/404.jsp", req, res);
-					return;
-            }
-         }
+				if (swaggerEnabled==false)
+				{
+				Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				forwardSafely("/404.jsp", req, res);
+						return;
+				}
+			}
 
-			if (path.contains(".DS_Store") || path.contains("debug.") || path.contains("config.properties"))
+			//check for blocked file/directory metadata
+			if (isPathBlocked(path))
 			{
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				forwardSafely("/404.jsp", req, res);
@@ -447,12 +449,12 @@ public class PathFilter implements Filter
                         else
                         {
                         	//ak nie je user prihlaseny a zacina to na /components a neobsahuje rest, tak posli na 403.jsp kde ho moze redirectnut do admin casti (na logon)
-									if (path.startsWith("/components") && path.contains("rest")==false)
-									{
-										res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-										forwardSafely("/403.jsp", req, res);
-										return;
-									}
+							if (path.startsWith("/components") && path.contains("rest")==false)
+							{
+								res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+								forwardSafely("/403.jsp", req, res);
+								return;
+							}
                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                            return;
                         }
@@ -556,12 +558,16 @@ public class PathFilter implements Filter
 			//kontrola jsessionid v URL, vynimka pre .jsessionid. je pre grpd cookie modul kde sa edituje takyto kluc
 			if (path.toLowerCase().contains("jsessionid") || (req.getQueryString()!=null && req.getQueryString().toLowerCase().contains("jsessionid") && req.getQueryString().toLowerCase().contains(".jsessionid.")==false) || req.isRequestedSessionIdFromURL())
 			{
-				String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
-				Logger.error(PathFilter.class, description);
+				//jsessionid is added to URL by PD4ML, so allow /thumb and /images paths
+				if (path.startsWith("/images/")==false && path.startsWith("/thumb/images/")==false)
+				{
+					String description = "SESSION using jsessionid INVALIDATING, sessionId="+req.getSession().getId()+" req IP="+Tools.getRemoteIP(req);
+					Logger.error(PathFilter.class, description);
 
-				//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
-				req.getSession().invalidate();
-				req.getSession(true);
+					//toto stale hlasi acunetix ovs ako neriesene, toto je pokus o riesenie
+					req.getSession().invalidate();
+					req.getSession(true);
+				}
 
 				String pathFixed = path;
 				int i = pathFixed.toLowerCase().indexOf(";jsessionid");
@@ -623,21 +629,15 @@ public class PathFilter implements Filter
 					}
 				}
 
-				//#37426 CSRF ochrana Struts formularov
-				if (req.getSession().getAttribute("org.apache.struts.action.TOKEN")==null)
+				if ((path.endsWith(".do") || path.endsWith(".struts")) && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
 				{
-					//vygeneruj token, kedze struts u nas konci vygenerujem len jeden token do session
-					TokenProcessor.getInstance().saveToken(req);
-				}
-				else if (path.endsWith(".do") && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
-				{
-				   if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
+				    if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
 					{
 						//validuj token
-						boolean isTokenValid = TokenProcessor.getInstance().isTokenValid(req, false);
+						boolean isTokenValid = CSRF.verifyTokenAndDeleteIt(req);
 						if (isTokenValid == false)
 						{
-						   Logger.info(PathFilter.class, "Struts token not valid, path="+path);
+						    Logger.info(PathFilter.class, "Struts token not valid, path="+path);
 							req.setAttribute("errorText", Prop.getInstance(req).getText("components.csrfError"));
 							forwardSafely("/components/maybeError.jsp", req, res);
 							return;
@@ -1424,7 +1424,7 @@ public class PathFilter implements Filter
 
 		//kontrola pristupu podla povolenych IP adries
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_WEB_ACCESS_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking to access web from session: " + val.booleanValue());
@@ -1432,7 +1432,7 @@ public class PathFilter implements Filter
 		}
 
 		boolean ret = Tools.checkIpAccess(request, "webEnableIPs");
-		session.setAttribute(CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1450,7 +1450,7 @@ public class PathFilter implements Filter
 	private boolean checkDomain(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_DOMAIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_DOMAIN_SESSION_KEY);
 		if (val != null)
 		{
 			//Logger.println(this,"Checking DOMAIN to access web from session: " + val.booleanValue());
@@ -1475,7 +1475,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1661,7 +1661,7 @@ public class PathFilter implements Filter
 	public static boolean checkAdmin(HttpServletRequest request)
 	{
 		HttpSession session = request.getSession();
-		Boolean val = (Boolean) session.getAttribute(CHECK_ADMIN_SESSION_KEY);
+		Boolean val = (Boolean) Tools.sessionGetAttribute(session, CHECK_ADMIN_SESSION_KEY);
 		if (val != null)
 		{
 			return (val.booleanValue());
@@ -1688,7 +1688,7 @@ public class PathFilter implements Filter
 				}
 			}
 		}
-		session.setAttribute(CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
+		Tools.sessionSetAttribute(session, CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));
 		return (ret);
 	}
 
@@ -1983,7 +1983,10 @@ public class PathFilter implements Filter
 
 	public static String getOrigPath(HttpServletRequest request)
 	{
-		return((String)request.getAttribute("path_filter_orig_path"));
+		String origPath = (String)request.getAttribute("path_filter_orig_path");
+		//check for unsafe chars like "'`
+		if (isPathSafe(origPath)) return origPath;
+		return "";
 	}
 
 	/**
@@ -2604,6 +2607,10 @@ public class PathFilter implements Filter
 		cacheStaticContentSuffixes = null;
 	}
 
+	public static void resetBlockedPaths() {
+		blockedPaths = null;
+	}
+
 	//pre WebJET 9 kontrolujeme pri REST volaniach CSRF token
 	private boolean checkCSRFToken(String path, HttpServletRequest request) {
 
@@ -2627,7 +2634,7 @@ public class PathFilter implements Filter
 		}
 
 		//ak path obsahuje vyraz html tak token nie je potrebny
-		if (path.contains("/html") || path.contains("html/")) return true;
+		if (path.contains("/html") || path.contains("html/") || path.contains("/binary") || path.contains("binary/")) return true;
 
 		//pouziva sa pri prihlaseni tokenom, vtedy CSRF nie je posielane
 		if (request.getAttribute("csrfDisabled")!=null) return true;
@@ -2657,5 +2664,46 @@ public class PathFilter implements Filter
 		} catch (Exception ex) {
 			Logger.error(PathFilter.class, ex);
 		}
+	}
+
+	/**
+	 * Check if path contains blocked file or directory metadata
+	 * @param path - the request path
+	 * @return true if path should be blocked
+	 */
+	private static boolean isPathBlocked(String path) {
+		if (Tools.isEmpty(path)) return false;
+
+		try {
+			if (blockedPaths == null) {
+				synchronized(PathFilter.class) //NOSONAR
+				{
+					if (blockedPaths == null) {
+						blockedPaths = Constants.getArray("pathFilterBlockedPaths");
+					}
+				}
+			}
+
+			for (String blockedPath : blockedPaths) {
+				if (path.contains(blockedPath)) {
+					return true;
+				}
+			}
+		} catch (Exception ex) {
+			//failsafe to concurent modification exception, just to be sure
+		}
+
+		return false;
+	}
+
+	private static boolean isPathSafe(String path) {
+		if (path == null || path.length() < 1) return true;
+
+		if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
+			path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
+			path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1
+		) return false;
+
+		return true;
 	}
 }

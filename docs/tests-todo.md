@@ -25,6 +25,8 @@
 - [ ] Titulok - doplniť kontrolu názvu stránky v titulku vo formáte `názov | WebJET CMS`.
 - [ ] Hromadný e-mail - otestovať prihlásenie do hromadného emailu, vrátane `simple` verzie.
 - [ ] `DemoComponent` - doplniť testy na kontrolu koreňových priečinkov pre `docDetailsRootCustomFields,dirSimpleGallery` a doplniť aj iné varianty nastavenia `data-dt-field-root` podľa dokumentácie.
+- [ ] Aplikácie - zobrazenie pre prihláseného/neprihláseného používateľa, v Banner zobrazenie Obsahový banner v náhľade stránky (kontrola nastavenia URL adresy - chybne použilo `/admin/webpages/preview` namiesto URL adresy stránky).
+- [ ] JSON editor - Pôsobivá prezentácia - presun riadka a potom jeho editácia (bug s ID), duplikovanie záznamu (kontrola ID a rowOrder), zmazanie záznamu, duplikovanie (po zduplikovaní dať niečo editovať chybne zostal pôvodný riadok označený aj keď to nebolo vidieť - overit názov a obrázok, nesmie sa zobraziť Upraviť rozdielne hodnoty).
 
 ## PostgreSQL
 
@@ -37,6 +39,8 @@ publicable=
 
 TO_CHAR(
 OFFSET - check limit
+
+CREATE SCHEMA IF NOT EXISTS "webjet_cms";
 
 /usr/local/opt/postgresql@16/bin/pg_dump -h publish.services.npp.int-dev.iway -p 10082 -U postgres -b -c -f wjdump.sql postgres
 

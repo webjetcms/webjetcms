@@ -8,14 +8,13 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.tags.SelectTag;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  Bean popisujuci atribut stranky (vratane definicii)

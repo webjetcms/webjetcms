@@ -1,6 +1,7 @@
 const { I } = inject();
 const DTE = require("./DTE");
 const DT = require("./DT");
+const i18n = require("./i18n");
 /**
  * Functions for interacting with the application
  */
@@ -26,8 +27,9 @@ module.exports = {
     /**
      * Asserts that the parameters in the page match the expected ones.
      * @param {Object} expectedParams - An object of key-value pairs representing expected parameters.
+     * @param {String} expectedPath - Optional expected path to by used in INCLUDE
      */
-    async assertParams(expectedParams) {
+    async assertParams(expectedParams, expectedPath = null) {
         I.say('Parameters testing');
         this.switchEditor('html');
         const inputString = await I.grabTextFrom('.CodeMirror-code');
@@ -47,6 +49,19 @@ module.exports = {
             const actualValue = params[key] !== undefined ? params[key] : '';
             I.assertEqual(actualValue, value, `Assertion failed for ${key}: expected '${value}', got '${actualValue}'`);
         }
+
+        if(expectedPath != null && expectedPath !== '') {
+            I.say("Test expected path " + expectedPath);
+            const match = inputString.match(/\!INCLUDE\(([^,]+),/);
+            I.say(match);
+
+            if (match) {
+                I.assertEqual(match[1], expectedPath, `Assertion failed for expectedPath: expected '${expectedPath}', got '${match[1]}'`);
+            } else {
+                I.assertEqual(null, expectedPath, `Assertion failed for expectedPath: expected '${expectedPath}', got 'null'`);
+            }
+        }
+
         return true;
     },
 
@@ -95,6 +110,11 @@ module.exports = {
         }
         DTE.waitForEditor();
         //I.wait(5);
+
+        this.openCurrentAppEditor(modalId, editIcon);
+    },
+
+    openCurrentAppEditor(modalId = "component-datatable_modal", editIcon = false) {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
@@ -136,6 +156,15 @@ module.exports = {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
 
+        this.openAppForInsert(applicationName, applicationSelector);
+
+        I.switchTo();
+        I.switchTo();
+        if (shouldClickOkButton)
+            I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    openAppForInsert(applicationName, applicationSelector) {
         I.clickCss('#pills-dt-datatableInit-content-tab');
         I.clickCss('.cke_button.cke_button__components.cke_button_off');
         I.switchTo('.cke_dialog_ui_iframe');
@@ -150,16 +179,32 @@ module.exports = {
         I.clickCss(applicationSelector); //I.clickCss('div.menu-app[data-app-action^="sk.iway"]')
         I.waitForInvisible("div.appStore > div.block-header", 30);
         I.wait(1);
-        I.click("Vložiť do stránky"); //I.clickCss('a.buy');
+        I.click(i18n.get("Add to page")); //I.clickCss('a.buy');
         DTE.waitForEditor("component-datatable");
-        I.switchTo();
-        I.switchTo();
-        if (shouldClickOkButton)
-            I.clickCss('.cke_dialog_ui_button_ok');
     },
 
     /**
-     * Save editor without closing it
+     * Click on the OK button in the Editor App dialog to confirm app settings changes
+     */
+    confirm() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_ok");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
+     * Click on the Cancel button in the Editor App dialog to discard app settings changes
+     */
+    cancel() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_cancel");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
+     * Save DT editor without closing it
      */
     save() {
         I.pressKey(['CommandOrControl', 's']);

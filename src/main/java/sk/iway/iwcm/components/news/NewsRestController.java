@@ -99,21 +99,18 @@ public class NewsRestController extends WebpagesDatatable {
         if (Tools.isNotEmpty(include) && include.startsWith("!INCLUDE(")) {
             PageParams pp = new PageParams(include);
             int[] groupIds = Tools.getTokensInt(pp.getValue("groupIds", null), ",+");
-            String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
-            StringBuilder includeIds = new StringBuilder();
-            StringBuilder includeIdsNames = new StringBuilder();
-            for (int groupId : groupIds) {
-                if (includeIds.isEmpty()==false) includeIds.append(",");
-                includeIds.append(""+groupId).append(append);
 
+            //basket/blog use expandGroupIds parameter
+            String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
+            //news has alsoSubGroups parameter
+            if (pp.getBooleanValue("alsoSubGroups", false)) append = "*";
+
+            for (int groupId : groupIds) {
                 GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
                 if (group != null) {
-                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(", ");
-                    includeIdsNames.append(group.getFullPath()).append(append);
+                    list.add(new LabelValue(group.getFullPath()+append, String.valueOf(groupId)+append));
                 }
             }
-            ids = includeIds.toString();
-            list.add(new LabelValue(includeIdsNames.toString(), ids));
         } else {
             GroupsDB groupsDB = GroupsDB.getInstance();
             String currentDomain = DocDB.getDomain(request);
@@ -123,7 +120,8 @@ public class NewsRestController extends WebpagesDatatable {
                 String trashDirName = propSystem.getText("config.trash_dir");
 
                 //we dont have any ids, try to search for NEWS include in all groups
-                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%'");
+                // -------------------------- set by GroupsDB if parent folder doesnt exists
+                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
                 Set<String> duplicityCheck = new HashSet<>();
 
                 for (String data : dataList) {
@@ -159,13 +157,23 @@ public class NewsRestController extends WebpagesDatatable {
                 list.sort((o1, o2) -> o1.getLabel().compareTo(o2.getLabel()));
             } else {
                 //add all groups from ids
-                int[] groupIds = Tools.getTokensInt(ids, ",+");
+                ids = ids.trim();
+                String[] strIds = ids.split("[,+]");
 
-                for (int groupId : groupIds) {
+                for(String strId : strIds) {
+                    boolean withSubfolders = false;
+                    if(strId.endsWith("*")) {
+                        withSubfolders = true;
+                        strId = strId.substring(0, strId.length() - 1);
+                    }
+
+                    int groupId = Tools.getIntValue(strId, -1);
                     GroupDetails group = groupsDB.getGroup(groupId);
                     if (group != null) {
                         if (Constants.getBoolean("multiDomainEnabled") && currentDomain.equals(group.getDomainName())==false) continue;
-                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));
+
+                        if(withSubfolders) list.add(new LabelValue(group.getFullPath(), groupId + "*"));
+                        else list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));
                     }
                 }
             }

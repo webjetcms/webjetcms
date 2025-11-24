@@ -4,7 +4,7 @@ div.webjetToolbar { top: 50px !important; }
 #inlineEditorToolbarTop { background-color: white; margin-top: 0; padding: 0; border-bottom: 1px solid #d4e1ea; }
 
 #inlineEditorToolbarTop,
-#inlineEditorToolbarTopPlaceHolder { height: 123px; transition: height 0.6s ease-in-out; }
+#inlineEditorToolbarTopPlaceHolder { height: 163px; transition: height 0.6s ease-in-out; }
 
 body.is-view-mode #inlineEditorToolbarTop,
 body.is-view-mode #inlineEditorToolbarTopPlaceHolder { height: 31px !important; }

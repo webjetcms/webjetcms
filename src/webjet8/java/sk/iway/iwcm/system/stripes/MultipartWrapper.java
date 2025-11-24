@@ -387,6 +387,21 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
    }
 
    	/**
+	 * Retrieve a FileItem from the request attributes, you need to use ?__setf=1 in URL to store files into request
+	 * @param fieldName
+	 * @param request
+	 * @return
+	 */
+   	public static FileItem getFileStoredInRequest(String fieldName, HttpServletRequest request) {
+		@SuppressWarnings("unchecked")
+		Map<String,FileItem> files = (Map<String,FileItem>)request.getAttribute("MultipartWrapper.files");
+		if (files!=null) {
+			return files.get(fieldName);
+		}
+		return null;
+	}
+
+   	/**
    	 * FileItem so zmenenym nazvom - umoznuje odstranovat celu cestu k suboru
    	 * @author MBO
    	 *

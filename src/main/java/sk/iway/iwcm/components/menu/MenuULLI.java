@@ -6,8 +6,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
@@ -16,6 +14,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 //import sk.iway.iwcm.Logger;
@@ -103,6 +102,11 @@ public class MenuULLI
 		if (request.getAttribute("ulLiMinLiItems") != null)
 		{
 			minLiItems = Tools.getIntValue((String)request.getAttribute("ulLiMinLiItems"), -1);
+		}
+
+		if (rootGroup == 0 && doc != null) {
+			//get root group from doc
+			rootGroup = groupsDB.getRoot(doc.getGroupId());
 		}
 
 		GroupDetails rootGroupDetails = groupsDB.getGroup(rootGroup);

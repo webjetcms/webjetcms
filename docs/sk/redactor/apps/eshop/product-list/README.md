@@ -10,7 +10,10 @@ Dostupne priečinky reprezentujúce kategórie sú usporiadané do tzv. stromu, 
 
 ![](select-options.png)
 
-Prvá možnosť v zozname je vždy hlavná sekcia, ktorá reprezentuje všetky kategórie (všetky produkty budú zobrazené). Pri zvolení kategórie (priečinka) sa zobrazia dáta daného priečinka aj všetkých pod-priečinkov.
+Hodnoty vo výberovom poli sekcie v hlavičke sa generujú:
+
+- automaticky - ak je konf. premenná `basketAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%"` v telách stránok.
+- podľa konf. premennej `basketAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj produkty (web stránky) z pod priečinkov.
 
 ## Pridanie novej kategórie produktov
 
@@ -24,6 +27,7 @@ Nový priečinok pridáme tlačidlom <button class="btn btn-sm btn-outline-secon
 ![](toaster-new-folder.png)
 
 Okno obsahuje aj informáciu o tom, pod aký priečinok sa tento nový vytvorí. Po (ne)vyplnení poľa v okne a potvrdenia tlačidlom <button class="btn btn-primary" type="button">Potvrdiť</button> môžu nastať štyri situácie:
+
 - ak názov novej kategórie nebude zadaný, vytvorenie sa nepodarí a zobrazená bude hláška
 
 ![](toaster-new-folder-A.png)
@@ -62,13 +66,8 @@ V karte **Perex** je dôležité nastavenie:
 
 ### Karta Atribúty
 
-V karte atribúty využijeme výber skupiny telefónu na špecifikácií tovaru. Ako je to viditeľné na obrázku nižšie, pre skupinu `iPhone X` je možné nastavenie farby a pamäťovej varianty zariadenia. Tieto výberové polia sa zobrazujú v elektronickom obchode, pri detaile produktu.
+V karte atribúty využijeme výber skupiny telefónu na špecifikácií tovaru. Ako je to viditeľné na obrázku nižšie, pre skupinu `Monitor` je možné nastavenie výrobcu, uhlopriečky atď. Tieto výberové polia sa zobrazujú v elektronickom obchode, pri detaile produktu.
 
 ![](new-product-attr.png)
 
 Viac o atribútoch sa dočítate v časti [Atribúty stránky](../../../webpages/doc-attributes/README.md).
-
-
-
-
-

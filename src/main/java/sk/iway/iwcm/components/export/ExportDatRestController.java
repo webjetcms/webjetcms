@@ -15,11 +15,11 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
@@ -45,9 +45,9 @@ public class ExportDatRestController extends DatatableRestControllerAvailableGro
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
-        List<PerexGroupBean> perexList = DocDB.getInstance().getPerexGroups(Constants.getInt("rootGroupId"));
+        List<OptionDto> perexList = DocDB.getInstance().getPerexGroupOptions();
 
-        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "perexGroupId", false);
+        page.addOptions("editorFields.perexGroupsIds", perexList, "label", "value", false);
         page.addOptions("format", getFormatOptions(), null, null, false);
 
         return page;

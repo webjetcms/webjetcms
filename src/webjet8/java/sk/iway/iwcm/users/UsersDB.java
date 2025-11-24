@@ -1734,7 +1734,7 @@ public class UsersDB
 	public static Identity getCurrentUser(HttpSession session)
 	{
 		if (session == null) return null;
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = (Identity)Tools.sessionGetAttribute(session, Constants.USER_KEY);
 		return user;
 	}
 

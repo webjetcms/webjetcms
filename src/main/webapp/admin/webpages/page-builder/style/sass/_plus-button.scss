@@ -4,11 +4,17 @@
     width: $plus-button-size;
     height: $plus-button-size;
     z-index: $plus-button-index;
-    background-image: url("../images/plus.png");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: auto $plus-button-icon-size;
-    transition: background-color 0.3s ease-in-out;
+    > span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: $icon-plus;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto $plus-button-icon-size;
+        transition: background-color 0.3s ease-in-out;
+        pointer-events: none;
+    }
 
     &:hover {
         opacity: 1 !important;
@@ -20,21 +26,25 @@
 .#{$prefix}-column > .#{$prefix}-plus-button {
     top: 50%;
     margin-top: -($plus-button-size/2);
-    background-color: $color-column;
+    background: linear-gradient(to left, $color-column, $color-column-g);
+
+    &.#{$prefix}-prepend {
+        background: linear-gradient(to right, $color-column, $color-column-g);
+    }
 
     &:hover {
-        background-color: darken($color-column,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
-        left: $highlighter-size;
+        left: $highlighter-size*3;
         border-top-right-radius: $plus-button-radius;
         border-bottom-right-radius: $plus-button-radius;
         box-shadow: 4px 0 25px 2px rgba(50, 50, 50, 0.25);
     }
 
     &.#{$prefix}-append {
-        right: $highlighter-size;
+        right: $highlighter-size*3;
         border-top-left-radius: $plus-button-radius;
         border-bottom-left-radius: $plus-button-radius;
         box-shadow: -4px 0 25px 2px rgba(50, 50, 50, 0.25);
@@ -42,14 +52,17 @@
 }
 
 .#{$prefix}-container > .#{$prefix}-plus-button {
-    background-color: $color-container;
+    background: linear-gradient(to bottom, $color-container, $color-container-g);
+    &.#{$prefix}-append {
+        background: linear-gradient(to top, $color-container, $color-container-g);
+    }
 
     &:hover {
-        background-color: darken($color-container,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
-        top: $highlighter-size;
+        top: $highlighter-size*2;
         left: 50%;
         margin-left: $highlighter-size;
         border-bottom-right-radius: $plus-button-radius;
@@ -58,7 +71,7 @@
     }
 
     &.#{$prefix}-append {
-        bottom: $highlighter-size;
+        bottom: $highlighter-size*2;
         right: 50%;
         margin-right: $highlighter-size;
         border-top-right-radius: $plus-button-radius;
@@ -68,10 +81,13 @@
 }
 
 .#{$prefix}-section > .#{$prefix}-plus-button {
-    background-color: $color-section;
+    background: linear-gradient(to bottom, $color-section, $color-section-g);
+    &.#{$prefix}-append {
+        background: linear-gradient(to top, $color-section, $color-section-g);
+    }
 
     &:hover {
-        background-color:darken($color-section,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
@@ -100,12 +116,14 @@
         .#{$prefix}-grid-element.#{$prefix}-has-toolbar-active:not(.#{$prefix}-is-resize-columns) {
             > .#{$prefix}-plus-button {
                 display: block;
+                opacity: 1;
             }
         }
 
         .#{$prefix}-container.#{$prefix}-is-resize-columns .#{$prefix}-column {
             > .#{$prefix}-plus-button {
                 display: none;
+                opacity: 0;
             }
         }
     }
@@ -141,11 +159,15 @@
                 z-index: $plus-button-moving-index;
 
                 &.#{$prefix}-prepend {
-                    background-image: url("../images/move-left.png");
+                    span {
+                        background-image: $icon-move-left;
+                    }
                 }
 
                 &.#{$prefix}-append {
-                    background-image: url("../images/move-right.png");
+                    span {
+                        background-image: $icon-move-right;
+                    }
                 }
             }
         }
@@ -178,28 +200,28 @@
         &.#{$prefix}-is-moving-container {
             .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
             .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("../images/move-top.png");
+                background-image: url("/admin/webpages/page-builder/images/move-top.png");
             }
         }
 
         &.#{$prefix}-is-moving-section {
             .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
             .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("../images/move-top.png");
+                background-image: url("/admin/webpages/page-builder/images/move-top.png");
             }
         }
 
         &.#{$prefix}-is-moving-container {
             .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
             .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("../images/move-bottom.png");
+                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
             }
         }
 
         &.#{$prefix}-is-moving-section {
             .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
             .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("../images/move-bottom.png");
+                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
             }
         }
 

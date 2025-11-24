@@ -104,3 +104,11 @@ Ak potrebujete volať statickú metódu môžete použiť `T()` funkciu:
 <p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
 <p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
 ```
+
+## Vloženie aktuálnej verzie
+
+WebJET pri štarte inicializuje hodnotu v `CombineTag.getVersion()` na aktuálny timestamp. Táto hodnota sa zmení aj pri zmazaní všetkých cache objektov. Je možné ju použiť v parametri `?v=` pre načítanie nových verzií súborov po reštarte servera. Pri použití `data-iwcm-combine` je `?v=` parameter pridaný automaticky. Môžete ho ale vložiť aj manuálne:
+
+```html
+<script data-th-src="${'/components/aceintegration/admin/pagesupport-custom.js?v=' + version}"></script>
+```

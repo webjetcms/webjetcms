@@ -7,6 +7,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -22,6 +25,7 @@ import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.IdFullPath;
 
 /**
  * Zakladna trieda pre EditorFields Datatabulky, obsahuje spolocne vlastnosti, primarne nastavenie CSS riadku a ikony
@@ -140,7 +144,21 @@ public class BaseEditorFields {
                             type = type.replace("_null", "");
                         }
 
-                        int enumerationId = Tools.getIntValue(type.substring(type.indexOf("_") + 1), 0);
+                        // Parse type: enumeration_ID or enumeration_ID_labelProperty_valueProperty
+                        String[] parts = type.split("_");
+                        int enumerationId = 0;
+                        String labelProperty = "string1";
+                        String valueProperty = "string1";
+                        
+                        if (parts.length >= 2) {
+                            enumerationId = Tools.getIntValue(parts[1], 0);
+                        }
+                        if (parts.length >= 4) {
+                            // enumeration_ID_labelProperty_valueProperty format
+                            labelProperty = parts[2];
+                            valueProperty = parts[3];
+                        }
+
                         if (enumerationId > 0) {
                             List<EnumerationDataBean> enumerationDataList = EnumerationDataDB.getEnumerationDataByType(enumerationId);
                             if (enumerationDataList != null) {
@@ -148,9 +166,38 @@ public class BaseEditorFields {
                                     fieldValues.add(new FieldValue("", ""));
                                 }
                                 for (EnumerationDataBean enumData : enumerationDataList) {
-                                    fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));
+                                    try {
+                                        BeanWrapper beanWrapper = new BeanWrapperImpl(enumData);
+                                        Object labelValue = beanWrapper.getPropertyValue(labelProperty);
+                                        Object valueValue = beanWrapper.getPropertyValue(valueProperty);
+                                        
+                                        String enumLabel = labelValue != null ? labelValue.toString() : "";
+                                        String enumValue = valueValue != null ? valueValue.toString() : "";
+                                        
+                                        fieldValues.add(new FieldValue(enumLabel, enumValue));
+                                    } catch (Exception e) {
+                                        Logger.error(BaseEditorFields.class, "Error reading enumeration properties: " + labelProperty + ", " + valueProperty, e);
+                                        // Fallback to default behavior
+                                        fieldValues.add(new FieldValue(enumData.getString1(), enumData.getString1()));
+                                    }
                                 }
                             }
+                        }
+                    }
+
+                    // Support nullable of field by setting right className
+                    if(type.startsWith("json_group_")) {
+                        if (type.endsWith("_null")) {
+                            type = type.replace("_null", "");
+                            field.setClassName("dt-tree-groupid-null");
+                        }
+                    }
+
+                    // Support nullable of field by setting right className
+                    if(type.startsWith("json_doc_")) {
+                        if (type.endsWith("_null")) {
+                            type = type.replace("_null", "");
+                            field.setClassName("dt-tree-pageid-null");
                         }
                     }
 
@@ -211,7 +258,29 @@ public class BaseEditorFields {
 
                 field.setKey(Character.toLowerCase(alphabet) + "");
                 field.setLabel(label);
-                field.setValue(value);
+
+                if("json_group".equals(type)) {
+                    int groupId = Tools.getIntValue(value, -1);
+                    if(groupId > 0) {
+                        GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
+                        if(group != null) {
+                            field.setOriginalValue( value );
+                            field.setValue( new IdFullPath(groupId, group.getFullPath()).toString() );
+                        }
+                    }
+                } else if("json_doc".equals(type)) {
+                    int docId = Tools.getIntValue(value, -1);
+                    if(docId > 0) {
+                        DocDetails doc = DocDB.getInstance().getDoc(docId);
+                        if(doc != null) {
+                            field.setOriginalValue( value );
+                            field.setValue( new IdFullPath(docId, doc.getFullPath()).toString() );
+                        }
+                    }
+                } else {
+                    field.setValue(value);
+                }
+
                 if (Tools.isEmpty(field.getType())) field.setType(fieldType.name().toLowerCase());
                 field.setMaxlength(maxlength);
                 field.setWarninglength(warninglength);

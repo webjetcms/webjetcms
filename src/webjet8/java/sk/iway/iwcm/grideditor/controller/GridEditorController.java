@@ -135,14 +135,14 @@ public class GridEditorController {
                 String templateDataDirPath = WriteTagToolsForCore.getCustomPath("/templates/"+tgroup.getDirectory()+"/dist/pagebuilder/", request);
                 if (FileTools.exists(templateDataDirPath))
                 {
-                    Logger.debug(GridEditorController.class, "getDataDirPath, returning "+templateDataDirPath);
+                    //Logger.debug(GridEditorController.class, "getDataDirPath, returning "+templateDataDirPath);
                     return templateDataDirPath;
                 }
                 //ak neexistuje dist, skus priamo pagebuilder adresar v sablone
                 templateDataDirPath = WriteTagToolsForCore.getCustomPath("/templates/"+tgroup.getDirectory()+"/pagebuilder/", request);
                 if (FileTools.exists(templateDataDirPath))
                 {
-                    Logger.debug(GridEditorController.class, "getDataDirPath, returning "+templateDataDirPath);
+                    //Logger.debug(GridEditorController.class, "getDataDirPath, returning "+templateDataDirPath);
                     return templateDataDirPath;
                 }
             }
@@ -150,7 +150,7 @@ public class GridEditorController {
 
         //ak neexistuju pre sablonu pouzi default
         String dataDirPath = WriteTagToolsForCore.getCustomPath("/components/grideditor/data/", request);
-        Logger.debug(GridEditorController.class, "getDataDirPath, returning "+dataDirPath);
+        //Logger.debug(GridEditorController.class, "getDataDirPath, returning "+dataDirPath);
         return dataDirPath;
     }
 
@@ -168,14 +168,14 @@ public class GridEditorController {
             {
                 String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/", request);
                 //tu na rozdiel od citania pripravenych blokov netestujeme, ci adresar existuje, ak nie, tak ho ulozenie vytvori
-                Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+templateFavDirPath);
+                //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+templateFavDirPath);
                 return templateFavDirPath;
             }
         }
 
         //ak neexistuju pre sablonu pouzi default
         String favDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/grideditor/", request);
-        Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+favDirPath);
+        //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+favDirPath);
         return favDirPath;
     }
 
@@ -620,25 +620,25 @@ public class GridEditorController {
      */
     private String getImagePath (String filePath, HttpServletRequest request){
 
-        Logger.debug(GridEditorController.class, "getImagePath, filePath="+filePath);
+        //Logger.debug(GridEditorController.class, "getImagePath, filePath="+filePath);
 
         // AK EXISTUJE JPG
         String path = filePath + ".jpg";
         IwcmFile img = new IwcmFile(Tools.getRealPath(path));
-        Logger.debug(GridEditorController.class, "getImagePath, testing jpg="+img.getAbsolutePath());
+        //Logger.debug(GridEditorController.class, "getImagePath, testing jpg="+img.getAbsolutePath());
         if (img.exists()) return path;
 
         // AK EXISTUJE PNG
         path = filePath + ".png";
         img = new IwcmFile(Tools.getRealPath(path));
-        Logger.debug(GridEditorController.class, "getImagePath, testing png="+img.getAbsolutePath());
+        //Logger.debug(GridEditorController.class, "getImagePath, testing png="+img.getAbsolutePath());
         if (img.exists()) return path;
 
 
         // AK EXISTUJE SVG
         path = filePath + ".svg";
         img = new IwcmFile(Tools.getRealPath(path));
-        Logger.debug(GridEditorController.class, "getImagePath, testing svg="+img.getAbsolutePath());
+        //Logger.debug(GridEditorController.class, "getImagePath, testing svg="+img.getAbsolutePath());
         if (img.exists()) return path;
 
         // AK NEEXISTUJE ANI JEDEN, vrat default obrazok

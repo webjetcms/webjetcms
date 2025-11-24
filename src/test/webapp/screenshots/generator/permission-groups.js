@@ -5,7 +5,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('permission-groups', ({ I, Document }) => {
-    I.amOnPage("/admin/v9/users/permission-groups");
+    I.amOnPage("/admin/v9/users/permission-groups/");
 
     Document.screenshot("/admin/users/permissiongroups-datatable.png", 1280, 700);
 

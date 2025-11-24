@@ -78,7 +78,7 @@ window.domReady.fire();
 
 Přidá do seznamu novou funkci.
 
-**Druhý vstupní argument** určuje pořadí přidávané funkce. Čísluje se od 1. Pokud není zadáno, funkce se přidá na konec seznamu.
+**Druhý vstupní argument** určuje pořadí přidávané funkce. Čísluje se od 1. Pokud není zadáno, funkce se přidá na konec seznamu. Hodnoty pořadí >= 900 se neberou v úvahu, předpokládá se, že ty musí být na vždy konci.
 
 **Třetí vstupní argument** nastaven na TRUE zajistí, že se při existenci funkce na dané pozici (`orderId`), na sílu přepíše funkce a předešlá se přidá na nejbližší volné místo.
 

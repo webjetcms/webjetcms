@@ -1,0 +1,7 @@
+FROM postgres:18.1-trixie
+
+# Set locale and encoding
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+EXPOSE 5432

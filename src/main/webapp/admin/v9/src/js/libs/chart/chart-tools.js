@@ -22,14 +22,15 @@ export const DateType = {
  * Object (chart form) representing LINE type chart
  */
 export class LineChartForm {
-    constructor(yAxeNames, xAxeName, chartTitle,
-        chartDivId, chartData, dateType) {
+    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
         this.yAxeNames = yAxeNames;
         this.xAxeName = xAxeName;
         this.chartTitle = chartTitle;
         this.chartDivId = chartDivId;
         this.chartData = chartData;
         this.dateType = dateType;
+        this.legendTransformationFn = legendTransformationFn;
+        this.hideEmpty = hideEmpty;
         this.chart = undefined;
     }
 }
@@ -53,14 +54,14 @@ export class BarChartForm {
  * Object (chart form) representing PIE type chart
  */
 export class PieChartForm {
-    constructor(yAxeName, xAxeName, chartTitle,
-        chartDivId, chartData, labelKey) {
+    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null) {
         this.yAxeName = yAxeName;
         this.xAxeName = xAxeName;
         this.chartTitle = chartTitle;
         this.chartDivId = chartDivId;
         this.chartData = chartData;
         this.labelKey = labelKey;
+        this.labelTransformationFn = labelTransformationFn;
         this.chart = undefined;
         this.chartLegend = undefined;
     }
@@ -122,11 +123,18 @@ export function setVisibility(selectedOption) {
  * Return daterange:timestamp-timestamp from top search bar
  */
 export function getDateRange(defaultRangeDaysValue) {
+    return getDateRangeWithName("dayDate", defaultRangeDaysValue);
+}
+
+/**
+ * Return daterange:timestamp-timestamp from top search bar
+ */
+export function getDateRangeWithName(name, defaultRangeDaysValue) {
     var daterange = "";
 
-    var from = $("div.md-breadcrumb .dt-filter-from-dayDate").val();
+    var from = $("div.md-breadcrumb .dt-filter-from-" + name).val();
     if (typeof from == "undefined") from = '';
-    var to = $("div.md-breadcrumb .dt-filter-to-dayDate").val();
+    var to = $("div.md-breadcrumb .dt-filter-to-" + name).val();
     if (typeof to == "undefined") to = '';
 
     if(from == '' && to == '') {
@@ -521,7 +529,7 @@ async function createLineChart(root, chartForm) {
             panY: false,
             wheelX: "none",
             wheelY: "none",
-            height: am5.percent(95)
+            height: chartForm.chartData.size > 8 ? am5.percent(90) : am5.percent(95)
         })
     );
 
@@ -620,10 +628,36 @@ async function createLineChart(root, chartForm) {
             });
             tooltip.label.setAll({
                 fill: am5.color("#FFFFFF"),
-                textAlign: "middle",
+                textAlign: "center",
                 textValign: "middle"
             });
             series.set("tooltip", tooltip);
+
+            if(chartForm.hideEmpty === true && chartForm.chartData.size > 8) {
+                // keeps updates light
+                series.set("snapTooltip", true);
+
+                let zeroX = new Set();
+                series.events.on("datavalidated", () => {
+                    zeroX = new Set(
+                        series.dataItems
+                        .filter(di => (di.get("valueY") ?? 0) === 0)
+                        .map(di => di.get("valueX"))
+                    );
+                });
+
+                tooltip.adapters.add("visible", (visible, t) => {
+                    const di = t.dataItem;
+                    if (!di) return false;
+                    return !zeroX.has(di.get("valueX")); // hide if in zero set
+                });
+            }
+
+            if(chartForm.legendTransformationFn != null) {
+                series.adapters.add("legendLabelText", (text, target) => {
+                    return chartForm.legendTransformationFn(seriesName);
+                });
+            }
 
             //Add data to series
             series.data.setAll(dataSetData);
@@ -654,16 +688,28 @@ async function createLineChart(root, chartForm) {
     });
     chart.set("scrollbarY", scrollbarY);
 
-    // Add legend
-    var legend = chart.children.push(
-        am5.Legend.new(root, {
-            centerX: am5.percent(50),
-            y: am5.percent(103),
-            x: am5.percent(50),
-            layout: root.horizontalLayout,
-            useDefaultMarker: true
+    const legendWrapper = chart.children.push(
+        am5.Container.new(root, {
+            width: am5.percent(100),
+            height: 60,
+            maskContent: true, // clip overflowing items so scrollbar works
+            layout: root.verticalLayout,
+            y: am5.percent(101)
         })
     );
+
+    // Add a vertical scrollbar to the wrapper
+    legendWrapper.set("verticalScrollbar", am5.Scrollbar.new(root, {
+        orientation: "vertical"
+    }));
+
+    // Add legend
+    var legend = legendWrapper.children.push(am5.Legend.new(root, {
+        layout: root.gridLayout,
+        useDefaultMarker: true,
+        centerX: am5.p50,
+        x: am5.p50
+    }));
 
     //So legend wont show actual value when we point on graph (for this purpose we have tooltip)
     legend.valueLabels.template.set("forceHidden", true);
@@ -772,7 +818,7 @@ async function createBarChart(root, chartForm) {
     })
     tooltip.label.setAll({
         fill: am5.color("#FFFFFF"),
-        textAlign: "middle",
+        textAlign: "center",
         textValign: "middle"
     });
     series.set("tooltip", tooltip);
@@ -838,6 +884,17 @@ async function createPieChart(root, chartForm) {
     //Format labels
     series.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
 
+    if(chartForm.labelTransformationFn != null) {
+        series.labels.template.adapters.add("text", (text, target) => {
+            const dataItem = target.dataItem;
+            if (dataItem) {
+                let newCategory = chartForm.labelTransformationFn(dataItem.dataContext.label);
+                return text.replace("{category}", newCategory);
+            }
+            return text;
+        });
+    }
+
     //We are setting data in series only if data length is more than 0, or error occur
     if(chartForm.chartData != undefined && chartForm.chartData.length > 0)
         series.data.setAll(chartForm.chartData);
@@ -851,7 +908,7 @@ async function createPieChart(root, chartForm) {
     legend.data.setAll(series.dataItems);
 
     //!! Set ticks color
-    //If zou dont know (like me), TICKS are that stupid lines that connect pie slice with label
+    //If you dont know (like me), TICKS are that stupid lines that connect pie slices with label
     series.ticks.template.setAll({
         fill: am5.color("#FFFFFF"),
         fillOpacity: 1,
@@ -862,11 +919,11 @@ async function createPieChart(root, chartForm) {
     });
 
     //
-    setPieSumLabel(chartForm)
+    setPieSumLabel(chartForm);
 
     //Create and format tooltip
     var tooltip = am5.Tooltip.new(root, {
-        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName + "})",
+        labelText: "{valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName + "})",
         autoTextColor: false
     });
     tooltip.label.setAll({

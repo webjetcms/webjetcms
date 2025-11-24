@@ -17,6 +17,17 @@ const WJ = (() => {
                 translated = replaceTranslateParameter(translated, params[i-1], i);
             }
         }
+
+        //remove unused params
+        if (translated.indexOf("{")!=-1 || translated.indexOf("}")!=-1) {
+            for (var i=1; i<= 30; i++) {
+                //components.ai_assistants.unknownError.js=Nastala chyba pri volaní AI asistenta {1}.
+                translated = translated.replaceAll(" {"+i+"}.", ".");
+                //components.ai_assistants.editor.loading.js=AI už na tom pracuje... {1}
+                translated = translated.replaceAll("{"+i+"}", "");
+            }
+        }
+
         return translated;
     }
 
@@ -244,6 +255,17 @@ const WJ = (() => {
         }
     }
 
+    /**
+     * Show a toast notification
+     * @param {*} type - type of notification (success, info, warning, error)
+     * @param {*} title - title of the notification
+     * @param {*} text - text of the notification
+     * @param {*} timeOut - timeout in ms
+     * @param {*} buttons - custom buttons for the notification
+     * @param {*} appendToExisting - whether to append to existing notifications
+     * @param {*} containerId - ID of the container to append the notification to
+     * @returns
+     */
     function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null) {
 
         if (typeof containerId === "undefined" || containerId === null) containerId = 'toast-container-webjet';
@@ -523,7 +545,7 @@ const WJ = (() => {
      */
     function openElFinder(options) {
         /** @type {string} */
-        let url = '/admin/v9/files/dialog';
+        let url = '/admin/v9/files/dialog/';
         //if (options.link !== undefined && options.link !== null && options.link !== '')
         if (!!options.link) {
             url = urlAddParam(url, 'link', options.link);
@@ -637,6 +659,10 @@ const WJ = (() => {
         fileName = fileName.replace(/&/gi, "");
         fileName = internationalToEnglish(fileName);
         fileName = removeChars(fileName);
+        //remove last dash or underscore
+        if (fileName.length > 1 && (fileName.endsWith("-") || fileName.endsWith("_"))) {
+            fileName = fileName.substring(0, fileName.length - 1);
+        }
         return fileName.toLowerCase();
     }
 
@@ -985,6 +1011,9 @@ const WJ = (() => {
      * @param {*} markdownText - nepovoluje HTML kod, striktne iba zakladne markdown znacky
      * @param {*} options
      *  - link {boolean} - ak je true, povolene su aj HTML linky
+     *  - badge {boolean} - ak je true, povolene su aj badge
+     *  - imgSrcPrefix {string} - URL prefix (domenove meno) pre obrazky
+     *  - removeLastBr {boolean} - ak je true, odstrani sa posledny <br />
      * @returns
      */
     function parseMarkdown(markdownText, options) {
@@ -993,6 +1022,9 @@ const WJ = (() => {
         //nepovolujeme ine ako markdown znacky
         htmlText = htmlText.replace(/</gi, "&amp;lt;")
             .replace(/>/gi, "&amp;gt;");
+
+        //return back ->
+        htmlText = htmlText.replace(/-&amp;gt;/gi, "-&gt;")
 
         //console.log(htmlText);
 
@@ -1046,7 +1078,10 @@ const WJ = (() => {
         if (typeof options != "undefined") {
             if (true === options.link) {
                 htmlText = htmlText.replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-                                   .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+                                   .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+                //external links fix
+                htmlText = htmlText.replace(/<a href="(http[^\"]+)"/g, '<a href="$1" target="_blank"');
             }
 
             //badge span
@@ -1059,15 +1094,24 @@ const WJ = (() => {
                 htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='" + options.imgSrcPrefix + "$2' class='img-fluid' loading='lazy'/>")
                                    .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "#/$3' target='_blank'>$2</a>")
             }
+
+            if (true === options.removeLastBr) {
+                htmlText = htmlText.replace(/<br \/>$/, '');
+            }
         }
 
-        //This is for cases where [](link) link isn't for our documentatio but for some web page (so do it without our prefix)
+        //This is for cases where [](link) link isn't for our documentation but for some web page (so do it without our prefix)
         //OR in case that options are not set at all
         htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' class='img-fluid' loading='lazy'/>")
                             .replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
                             .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
         //console.log(htmlText);
+
+        //return back &amp;lt; to &lt; and gt;
+        htmlText = htmlText.replace(/&amp;lt;/gi, "&lt;")
+            .replace(/&amp;gt;/gi, "&gt;")
+            .replace(/&amp;quot;/gi, "&quot;");
 
         return htmlText.trim()
     }
@@ -1076,25 +1120,26 @@ const WJ = (() => {
      * Inicializuje tooltip na zadanom element
      * @param {jQuery element} $element
      */
-    function initTooltip($element) {
+    function initTooltip($element, customClass = null) {
         $element.each(function (key, el) {
             var $el = $(el);
             var tooltipText = $el.attr("title");
+
+            var conf = {
+                placement: 'top',
+                trigger: 'hover'
+            };
+            if (customClass != null) conf.customClass = customClass;
+
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
-                tooltipText = WJ.parseMarkdown(tooltipText);
+                tooltipText = WJ.parseMarkdown(tooltipText, {"removeLastBr": true});
                 //console.log("Tooltiptext parsed=", tooltipText);
                 $el.attr("title", tooltipText);
-                $el.tooltip({
-                    placement: 'top',
-                    trigger: 'hover',
-                    html: true
-                });
+                conf.html = true;
+                $el.tooltip(conf);
             } else {
-                $el.tooltip({
-                    placement: 'top',
-                    trigger: 'hover'
-                });
+                $el.tooltip(conf);
             }
         });
     }
@@ -1250,7 +1295,7 @@ const WJ = (() => {
             return translate(key);
         },
         openPopupDialog: (url, width, height) => {
-            openPopupDialog(url, width, height);
+            return openPopupDialog(url, width, height);
         },
         notify: (type, title, text, timeOut, buttons, appendToExisting=false, conatinerId=null) => {
             return toastNotify(type, title, text, timeOut, buttons, appendToExisting, conatinerId)
@@ -1398,8 +1443,8 @@ const WJ = (() => {
         parseMarkdown: (markdownText, options) => {
             return parseMarkdown(markdownText, options);
         },
-        initTooltip: ($el) => {
-            return initTooltip($el);
+        initTooltip: ($el, customClass = null) => {
+            return initTooltip($el, customClass);
         },
         getAdminSetting: (key) => {
             return getAdminSetting(key);
@@ -1474,7 +1519,7 @@ window.openImageDialogWindow = function(formName, fieldName, requestedImageDir) 
     openElFinderDialogWindow(formName, fieldName, requestedImageDir);
 }
 window.openElFinderDialogWindow = function(form, elementName, requestedImageDir) {
-	var url = '/admin/v9/files/dialog';
+	var url = '/admin/v9/files/dialog/';
     //console.log("openElFinderDialogWindow, form=", form, "elementName=", elementName);
 
 	if (form != null && elementName != null) {

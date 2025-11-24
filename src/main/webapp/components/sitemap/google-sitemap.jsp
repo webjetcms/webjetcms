@@ -6,10 +6,7 @@
 		import="java.text.SimpleDateFormat" %><%@ page
 		import="java.util.*" %><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%!
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%!
 
 private void addPagesFromGroup(int rootGroupId, int level, List<DocDetails> pages, GroupsDB groupsDB, DocDB docDB, HttpServletRequest request)
 {
@@ -104,7 +101,7 @@ request.setAttribute("pages", pages);
 Adminlog.add(Adminlog.TYPE_SE_SITEMAP, "Generovana sitemap: rootGroupId="+rootGroupId+" UA="+request.getHeader("User-Agent")+" IP="+Tools.getRemoteIP(request)+" host="+Tools.getRemoteHost(request), -1, -1);
 %><?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<logic:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails"><%
+<iwcm:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails"><%
 	String url = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
 	if (url.startsWith("http")==false) url = Tools.getBaseHref(request) + url;
 
@@ -129,5 +126,5 @@ Adminlog.add(Adminlog.TYPE_SE_SITEMAP, "Generovana sitemap: rootGroupId="+rootGr
       <lastmod><%=sdf.format(new Date(doc.getDateCreated()))%></lastmod>
       <priority><%=df.format(priority).replace(',', '.')%></priority>
    </url>
-</logic:iterate>
+</iwcm:iterate>
 </urlset>

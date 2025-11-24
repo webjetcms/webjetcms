@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Constants;
@@ -43,6 +42,7 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 public class UpdateService {
@@ -391,6 +391,8 @@ public class UpdateService {
 
 		if ("eshop".equals(moduleKey)) moduleKey = "basket";
 		if ("news-calendar".equals(moduleKey)) moduleKey = "calendar";
+
+		if ("file-archive".equals(moduleKey)) moduleKey = "file_archiv";
 
 		//test if module is available
 		if (modules.get("cmp_"+directoryName) != null || modules.get("cmp_"+Tools.replace(directoryName, "-", "_")) != null ||

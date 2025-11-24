@@ -220,29 +220,16 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
     DT.resetTable("galleryTable");
     DT.waitForLoader();
 
-    var position = 4;
-    if (Browser.isFirefox()) {
-        I.dragAndDrop(
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
-            {
-                force: true,
-                sourcePosition: {x: 10, y: 10},
-                targetPosition: { x: 10, y: 10 }
-            }
-        );
-        position = 5;
-    } else {
-        I.dragAndDrop(
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imagePath",
-            {
-                force: true,
-                sourcePosition: {x: 10, y: 10},
-                targetPosition: { x: 10, y: 10 }
-            }
-        );
-    }
+    var position = 3;
+    I.dragAndDrop(
+        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
+        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
+        {
+            force: true,
+            sourcePosition: {x: 10, y: 10},
+            targetPosition: { x: 10, y: 10 }
+        }
+    );
     I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
 
     //
@@ -777,16 +764,14 @@ Scenario('Gallery - image editor delete', async ({I, DT, DTE }) => {
     I.clickCss("button.btn-gallery-size-table");
     DT.waitForLoader();
 
-    DT.filterContains("imagePath", "/images/gallery/test/editor");
+    //check we are in correct folder
+    I.see("turtle.png", "#galleryTable td.dt-row-edit div.datatable-column-width");
+
     DT.filterContains("imageName", "autotest-");
 
     let rows = await I.getTotalRows();
     if(rows > 0) {
-        I.clickCss("button.dt-filter-id");
-        I.click(DT.btn.gallery_delete_button);
-        I.waitForElement("div.DTE_Action_Remove");
-        I.click("Zmazať", "div.DTE_Action_Remove");
-        I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
+        doRemove(I, DT);
     }
 
     I.clickCss("button.btn-gallery-size-s");
@@ -868,7 +853,7 @@ Scenario('logout', ({ I }) => {
 
 Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, DT, DTE }) => {
     var nameOfImage = 'koala.jpg';
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
 
     I.jstreeWaitForLoader();
@@ -959,4 +944,123 @@ Scenario('Gallery - filtering', ({ I }) => {
     I.seeElement(locate('.jstree-anchor').withText('test'));
     I.seeElement(locate('.jstree-anchor').withText('test-vela-foto'));
     I.seeElement(locate('.jstree-anchor').withText('user'));
+});
+
+const dirA = "/images/gallery/test/pathtesta";
+const dirB = "/images/gallery/test/pathtestb";
+const imageId = "2332";
+
+Scenario('Gallery - Feature - change image path during edit/duplicate to relocate it', ({ I, DT, DTE }) => {
+    const duplicateName = "autotest-duplicate-image-" + randomNumber;
+
+    I.say("First try change image path during edit");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirA + "&id=" + imageId);
+        DTE.waitForEditor("galleryTable");
+        checkAndChangePath(I, DTE, dirA, dirB);
+
+    I.say("Check change of location");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirA + "&id=" + imageId);
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirB + "&id=" + imageId);
+        DTE.waitForEditor("galleryTable");
+        I.clickCss("#pills-dt-galleryTable-metadata-tab");
+        I.waitForVisible(".DTE_Field_Name_editorFields\\.imagePath", 10);
+        I.seeInField(locate("#editorAppDTE_Field_editorFields-imagePath").find("input"), dirB);
+        DTE.cancel();
+
+    I.say("Perfrom duplicate and change path");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirB);
+        I.clickCss("button.btn-gallery-size-table");
+        DT.waitForLoader();
+
+        DT.filterId("id", imageId);
+        I.clickCss("td.sorting_1");
+        I.click(DT.btn.gallery_duplicate_button);
+        DTE.waitForEditor("galleryTable");
+
+        I.fillField("#DTE_Field_descriptionShortSk", duplicateName);
+        checkAndChangePath(I, DTE, dirB, dirA);
+
+    I.say("Check duplicate image");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirA);
+        I.clickCss("button.btn-gallery-size-table");
+        DT.waitForLoader();
+
+        DT.filterEquals("imageName", duplicateName + ".png");
+        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+        I.see(duplicateName);
+        doRemove(I, DT);
+});
+
+Scenario('Gallery - revert image location for test', async ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirB);
+    I.clickCss("button.btn-gallery-size-table");
+    DT.waitForLoader();
+
+    DT.filterId("id", imageId);
+    let rows = await I.getTotalRows();
+    if(rows > 0) {
+        I.say("Found image, relocate it from " + dirB + " to " + dirA);
+        I.clickCss("td.sorting_1");
+        I.click(DT.btn.gallery_edit_button);
+        DTE.waitForEditor("galleryTable");
+        checkAndChangePath(I, DTE, dirB, dirA);
+    }
+});
+
+function checkAndChangePath(I, DTE, oldPath, newPath) {
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+    I.waitForVisible(".DTE_Field_Name_editorFields\\.imagePath", 10);
+    I.seeInField(locate("#editorAppDTE_Field_editorFields-imagePath").find("input"), oldPath);
+    I.fillField(locate("#editorAppDTE_Field_editorFields-imagePath").find("input"), newPath);
+    DTE.save();
+}
+
+function doRemove(I, DT) {
+    I.clickCss("button.dt-filter-id");
+    I.click(DT.btn.gallery_delete_button);
+    I.waitForElement("div.DTE_Action_Remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
+}
+
+Scenario('Gallery - Feature - automatically create galleryDimension by saved imagePath', ({ I, DT, DTE }) => {
+    const realPath = "/images/gallery/test";
+    const genParentPath = "autotest-generated-parent-" + randomNumber;
+    const genChildPath = "autotest-generated-child-" + randomNumber;
+    const moveImageId = 2342; // image id to move
+
+    I.say("Move image to new (non existing) folder");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + realPath + "&id=" + moveImageId);
+        DTE.waitForEditor("galleryTable");
+        checkAndChangePath(I, DTE, realPath, realPath + "/" + genParentPath + "/" + genChildPath);
+
+    I.say("Check that image was moved to new folder");
+        I.amOnPage("/admin/v9/apps/gallery/?dir=" + realPath + "/" + genParentPath + "/" + genChildPath);
+        I.clickCss("button.btn-gallery-size-table");
+        DT.waitForLoader();
+
+        DT.filterId("id", moveImageId);
+        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+
+    I.say("Check that galleryDimension's were created - by icon");
+        I.seeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genParentPath));
+        I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genChildPath));
+
+    I.say("Move image back to original folder");
+        I.clickCss("td.sorting_1");
+        I.click(DT.btn.gallery_edit_button);
+        DTE.waitForEditor("galleryTable");
+        checkAndChangePath(I, DTE, realPath + "/" + genParentPath + "/" + genChildPath, realPath);
+
+    I.say("Remove test fodlers");
+        I.jstreeClick(genParentPath);
+        I.click(DT.btn.tree_delete_button);
+        DT.waitForLoader();
+        I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
+        I.see(genParentPath, "div.DTE_Action_Remove .DTE_Body_Content");
+        I.click('Zmazať', "div.DTE_Action_Remove .DTE_Form_Buttons");
+
+    I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genParentPath));
 });

@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -24,7 +25,6 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /**
  *  UrlRedirectBean.java
@@ -66,14 +66,8 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title ="components.redirect.admin_list.datum_vlozenia",
-		sortAfter = "publishDate",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
-                }
-            )
-        }
+		sortAfter = "validTo",
+        disabled = true
     )
 	Date insertDate;
 
@@ -121,7 +115,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title = "components.redirect.admin_list.publish_date",
+        title = "components.banner.dateFrom",
 		sortAfter = "domainName",
         editor = {
             @DataTableColumnEditor(
@@ -130,6 +124,27 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
         }
     )
 	Date publishDate;
+
+	@Column(name="valid_to")
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = "components.banner.dateTo",
+		editor = {
+            @DataTableColumnEditor(
+				message="components.redirect.publishEndDateNote"
+			)
+        }
+    )
+	Date validTo;
+
+	@Lob
+	@Column(name="description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = "groupedit.comment"
+    )
+	String description;
 
 	public Long getUrlRedirectId() {
 		return urlRedirectId;
@@ -212,5 +227,21 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@JsonIgnore
 	public String getPublishTime() {
 		return Tools.formatTime(this.getPublishDate());
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Date getValidTo() {
+		return validTo;
+	}
+
+	public void setValidTo(Date validTo) {
+		this.validTo = validTo;
 	}
 }

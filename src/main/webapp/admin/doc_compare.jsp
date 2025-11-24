@@ -3,9 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@page import="sk.iway.iwcm.Tools"%>
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
@@ -88,38 +85,40 @@ String framesetSize = "*,*";
         if (doc != null)
         {
             DocDetails history = docDB.getDoc(docId, historyId, false);
-            //out.println(doc.getDateCreated()+" vs " + history.getDateCreated());
-            long abs = Math.abs(doc.getDateCreated() - history.getDateCreated());
-            if (abs < (1000))
-            {
-                request.setAttribute("historyEqualsDoc", "1");
-                framesetSize = "*";
-            }
+			if (history != null) {
+				//out.println(doc.getDateCreated()+" vs " + history.getDateCreated());
+				long abs = Math.abs(doc.getDateCreated() - history.getDateCreated());
+				if (abs < (1000))
+				{
+					request.setAttribute("historyEqualsDoc", "1");
+					framesetSize = "*";
+				}
+			}
         }
     }
 %>
 
-<logic:present name="isApprove">
+<iwcm:present name="isApprove">
 	<frameset rows="*,100" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
-</logic:present>
+</iwcm:present>
 
 	<frameset cols="<%=framesetSize%>" onload="setupScroll()">
-        <logic:empty name="historyEqualsDoc">
+        <iwcm:empty name="historyEqualsDoc">
 		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
 		    <frame name="leftTop" src="/admin/doc_compare_top.jsp?textKey=editor.compare.actual_version&docid=<%=docId %>&historyid=<%=historyId %>&actual=true<%=onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
 			 <frame name="left" id="left"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&NO_WJTOOLBAR=true<%=onlyBody%>">
 		</frameset>
-        </logic:empty>
+        </iwcm:empty>
 		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1"  border="1" frameborder="1" framespacing="0">
 			<frame name="rightTop" src="/admin/doc_compare_top.jsp?textKey=<%=rightFrameKey %>&docid=<%=docId %>&historyid=<%=historyId+onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
 			<frame name="right"  id="right"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&historyid=<%=historyId%>&NO_WJTOOLBAR=true<%=onlyBody%>">
 		</frameset>
 	</frameset>
 
-<logic:present name="isApprove">
+<iwcm:present name="isApprove">
 		<frame name="approveFormId"  id="approveFormId" src="/admin/approve_form.jsp?historyid=<%=Tools.getRequestParameter(request, "historyid")%>" scrolling="no" >
 	</frameset>
-</logic:present>
+</iwcm:present>
 
 
 <noframes><body bgcolor="#FFFFFF" text="#000000">

@@ -434,6 +434,7 @@ Funkce obsahuje parametry:
   - `link` - ve výchozím nastavení se do generovaného HTML kódu nevkládají odkazy, nastavením na `true` se vkládání odkazů zapne
   - `badge` - nastavením na `true` bude první slovo před znakem pomlčka v ne-číslovaném seznamu obalené do `<span class="badge bg-secondary">`
   - `imgSrcPrefix` - URL adresa prefixu pro obrázek (doménové jméno) pokud se obrázek čte z jiné domény, stejný prefix se použije i pro odkazy
+  - `removeLastBr` - po nastavení na `true` je odstraněna poslední značka `<br>` na konci textu
 
 Příklad použití:
 
@@ -547,7 +548,7 @@ Pokud potřebujete skrýt během nahrávání určitý blok můžete mu nastavit
 - `WJ.showHelpWindow(link)` - Volání způsobí zobrazení okna s pomocníkem. Hodnota otevřeného odkazu se získá z parametru `link` nebo z `window.helpLink`.
 - `WJ.changeDomain(select)` - Vyvolá akci změny zvolené domény. Používá se v hlavičce okna při multidomain instalaci s externími soubory. V takovém režimu jsou ke zvolené doméně vázány soubory ale i data aplikací (např. bannery, skripty).
 - `WJ.translate(key, ...params)` - Funkce na [překlad klíče na text](jstranslate.md).
-- `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadaným URL a zadanou velikostí okna, doporučujeme ale využít [WJ.openIframeModal](#iframe-dialog) pokud je to možné
+- `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadaným URL a zadanou velikostí okna, doporučujeme ale využít `WJ.openIframeModal` pokud je to možné
 - `WJ.urlAddPath(url, pathAppend)` - Přidá do (rest) URL cestu, kontroluje, zda v URL není `?param` - Např. `WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')` vznikne `/admin/rest/tree/list?click=groups`.
 - `WJ.urlAddParam(url, paramName, paramValue)` - Přidá do URL parametr. Kontroluje, zda v URL už nějaký parametr je, a podle toho přidá ? nebo &, hodnotu `paramValue` zakóduje pomocí `encodeURIComponent`.
 - `WJ.urlUpdateParam(url, paramName, paramValue)` - Aktualizuje zadaný parametr v URL adrese.

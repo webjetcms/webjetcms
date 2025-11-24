@@ -1,7 +1,6 @@
 package sk.iway.iwcm.doc;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.struts.util.ResponseUtils;
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -18,6 +17,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
 import javax.servlet.http.HttpServletRequest;
@@ -3481,12 +3481,25 @@ public class GroupsDB extends DB
 		if(gd != null && gd.isInternal()==false && gd.getMenuType()!=GroupDetails.MENU_TYPE_HIDDEN && gd.getFullPath()!=null && gd.getFullPath().indexOf("/System")==-1 && gd.getParentGroupId()>0)
 		{
 			DocDetails docDetails = DocDB.getInstance().getDoc(gd.getDefaultDocId());
-			if(docDetails != null && (docDetails.getTitle() != null && !gd.getGroupName().equals(docDetails.getTitle())))
+			String groupTitle = null;
+			if (docDetails != null)
+			{
+				groupTitle = docDetails.getTitle();
+				//in group title / are replaced with &#47; because of path separator issues
+				groupTitle = Tools.replace(groupTitle, "/", "&#47;");
+			}
+
+			if(docDetails != null && (groupTitle != null && !gd.getGroupName().equals(groupTitle)))
 			{
 				Logger.debug(DocDB.class, "Renaming document: "+docDetails.getDocId()+" to name :"+gd.getGroupName());
-				docDetails.setTitle(gd.getGroupName());
-				docDetails.setNavbar(gd.getGroupName());
+				groupTitle = gd.getGroupName();
+				groupTitle = Tools.replace(groupTitle, "&#47;", "/");
+				docDetails.setTitle(groupTitle);
+				docDetails.setNavbar(groupTitle);
 				DocDB.saveDoc(docDetails);
+
+				RequestBean.setAttribute("forceReloadTree", Boolean.TRUE);
+
 				return true;
 			}
 			return false;

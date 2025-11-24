@@ -157,7 +157,7 @@ public class DBPool
 							//riesene kvoli ING kde public node ma iny pripojovaci retazec
 							if (Tools.isNotEmpty(systemIwcmDBName) && systemIwcmDBName.equals(dbname))
 							{
-								Logger.println(DBPool.class, "Changing dbname from "+dbname+" to iwcm");
+								Logger.println(DBPool.class, "Changing dbname from "+dbname+" to iwcm, systemIwcmDBName="+systemIwcmDBName);
 								dbname = "iwcm";
 							}
 
@@ -175,6 +175,16 @@ public class DBPool
 							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, "connectionTimeout"), removeAbandonedTimeout);
 
 							Logger.println(this,"DATA SET from XML ["+dbname+"], maxActive="+maxActive);
+
+							//if password is in form ${WEBJET_DB_PASS} try to get it using getSystemProperty
+							if (password != null && password.startsWith("${") && password.endsWith("}")) {
+								String envName = password.substring(2, password.length()-1);
+								String envValue = getSystemProperty(envName);
+								if (Tools.isNotEmpty(envValue)) {
+									password = envValue;
+									Logger.println(this,"Using environment variable "+envName+" for password");
+								}
+							}
 
 							/**
 							 * ak su premenne pre db nastavene ako parametre jvm/env, pouzi tie

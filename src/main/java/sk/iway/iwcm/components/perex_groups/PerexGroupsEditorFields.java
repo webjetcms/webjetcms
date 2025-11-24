@@ -18,7 +18,7 @@ public class PerexGroupsEditorFields extends BaseEditorFields {
 
     public PerexGroupsEditorFields(){}
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array-alldomains")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array")
     private List<GroupDetails> availableGroups;
 
     public void fromPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {
@@ -26,10 +26,10 @@ public class PerexGroupsEditorFields extends BaseEditorFields {
         String availableGroupsString = perexGroupOriginal.getAvailableGroups();
         if(availableGroupsString != null && !availableGroupsString.isEmpty()) {
             GroupsDB groupsDB = GroupsDB.getInstance();
-            String availableGroupsIdArray[] = availableGroupsString.split(",");
+            int[] availableGroupsIdArray = Tools.getTokensInt(availableGroupsString, ",+.");
 
             for(int i = 0; i < availableGroupsIdArray.length; i++) {
-                GroupDetails tmp = groupsDB.getGroup(Integer.parseInt(availableGroupsIdArray[i]));
+                GroupDetails tmp = groupsDB.getGroup(availableGroupsIdArray[i]);
                 if (tmp != null) availableGroups.add(tmp);
             }
             perexGroupOriginal.setEditorFields(this);
@@ -43,8 +43,13 @@ public class PerexGroupsEditorFields extends BaseEditorFields {
         //loop MediaGroupEditorFileds.availableGroups, get every group id and join them using "," as separator
         for(int i = 0; i < this.availableGroups.size(); i++) {
             if (this.availableGroups.get(i)==null) continue;
+
+            //prevent duplicates
+            int availableGroupId = this.availableGroups.get(i).getGroupId();
+            if ((","+newGroupIds+",").contains(","+availableGroupId+",")) continue;
+
             if (Tools.isNotEmpty(newGroupIds)) newGroupIds += ",";
-            newGroupIds += this.availableGroups.get(i).getGroupId();
+            newGroupIds += availableGroupId;
         }
         perexGroupOriginal.setAvailableGroups(newGroupIds);
     }

@@ -10,8 +10,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.struts.util.RequestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
@@ -233,7 +234,9 @@ public class EshopService {
 
 		try {
 			invoice = new BasketInvoiceEntity();
-			RequestUtils.populate(invoice, request);
+
+			BeanWrapperImpl wrapper = new BeanWrapperImpl(invoice);
+			wrapper.setPropertyValues(new MutablePropertyValues(request.getParameterMap()), true, true);
 
 			long browserId = EshopService.getBrowserId(request);
 			int userId = Tools.getUserId(request);

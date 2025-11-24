@@ -207,6 +207,7 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
     I.fillField("#DTE_Field_firstName", userName);
     I.fillField("#DTE_Field_lastName", "kokos");
     I.fillField("#DTE_Field_editorFields-login", userName);
+    I.fillField("#DTE_Field_editorFields-login", userName); //sometimes it fill it wrong
     I.fillField("#DTE_Field_email", tempMailAddress);
     I.fillField("#DTE_Field_password", "password" + randomText);
 
@@ -251,21 +252,21 @@ async function prepareRegistrationForm(I, DTE, registrationType) {
     I.switchTo("iframe.cke_dialog_ui_iframe");
     I.waitForElement("#editorComponent", 5);
     I.switchTo("#editorComponent");
-    I.waitForElement("input[name=requireEmailVerification]", 5);
+    I.waitForElement("#DTE_Field_requireEmailVerification_0", 5);
 
     if(registrationType == RegistrationType.One) {
         //NE Vyžadovať potvrdenie e-mailovej adresy
-        I.uncheckOption("input[name=requireEmailVerification]");
+        I.uncheckOption("#DTE_Field_requireEmailVerification_0");
     } else {
         //Vyžadovať potvrdenie e-mailovej adresy
-        I.checkOption("input[name=requireEmailVerification]");
+        I.checkOption("#DTE_Field_requireEmailVerification_0");
     }
 
     //Select wanted user groups
-    if(registrationType == RegistrationType.One) await selectUserGroups(I, [529]);
-    else if(registrationType == RegistrationType.Two) await selectUserGroups(I, [532]);
-    else if(registrationType == RegistrationType.Three) await selectUserGroups(I, [2, 4, 5]);
-    else if(registrationType == RegistrationType.Four) await selectUserGroups(I, []);
+    if(registrationType == RegistrationType.One) await DTE.selectOptionMulti("groupIds", ["noApprove_allowUserEdit_1"]);
+    else if(registrationType == RegistrationType.Two) await DTE.selectOptionMulti("groupIds", ["noApprove_allowUserEdit_2"]);
+    else if(registrationType == RegistrationType.Three) await DTE.selectOptionMulti("groupIds", ["Obchodní partneri", "Bankári", "Newsletter"]);
+    else if(registrationType == RegistrationType.Four) await DTE.selectOptionMulti("groupIds", []);
 
     //
     await save(I, DTE);
@@ -298,23 +299,6 @@ async function openRegisterForm(I, DTE) {
     I.wait(1);
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
-
-}
-async function selectUserGroups(I, wantedGroupIds) {
-    const userGroupsSelector = locate("#div_1 > form > div:nth-child(1) > div:nth-child(1)").withText("Používateľské skupiny:");
-
-    let numOfElements = await I.grabNumberOfVisibleElements(userGroupsSelector.find("div > label > input"));
-    I.say("numOfElements=" + numOfElements);
-    for(let i = 1; i <= numOfElements; i++) {
-
-        let inputLocator = userGroupsSelector.find("div > label > input").at(i);
-        let userGroupId = await I.grabValueFrom(inputLocator);
-
-        if(wantedGroupIds.includes(Number(userGroupId)))
-            I.checkOption(inputLocator);
-        else
-            I.uncheckOption(inputLocator);
-    }
 
 }
 

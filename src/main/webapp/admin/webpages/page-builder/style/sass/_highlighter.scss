@@ -1,5 +1,5 @@
 .#{$prefix}-highlighter {
-    display: none;
+    opacity: 0; transition: all 0.3s ease-in-out;
     position: absolute;
 
     &::after {
@@ -7,7 +7,6 @@
         position: absolute;
         visibility: hidden;
         opacity: 0;
-        border-radius: 4px;
         transition: all 0.6s ease-in-out;
     }
 
@@ -22,7 +21,7 @@
             right: 50%;
         }
     }
-    
+
     &__top {
         top: 0;
         &::after {
@@ -30,7 +29,7 @@
             top: 0;
         }
     }
-    
+
     &__bottom {
         bottom: 0;
         &::after {
@@ -38,7 +37,7 @@
             top: -3px;
         }
     }
-    
+
     &__left,
     &__right {
         width: $highlighter-size;
@@ -50,7 +49,7 @@
             top: 50%;
         }
     }
-    
+
     &__left {
         left: 0;
         &::after {
@@ -58,7 +57,7 @@
             right: -3px;
         }
     }
-    
+
     &__right {
         right: 0;
         &::after {
@@ -71,25 +70,25 @@
         z-index: $highlighter-index + 2;
         background-color: $color-column;
         &::after {
-            background-color: darken($color-column,15%);
+            background-color: $color-column;
             //background-color: orange;
         }
     }
-    
+
     .#{$prefix}-container > & {
         z-index: $highlighter-index + 1;
         background-color: $color-container;
         &::after {
-            background-color: darken($color-container,15%);
+            background-color: $color-container;
             //background-color: orange;
         }
     }
-    
+
     .#{$prefix}-section > & {
         z-index: $highlighter-index;
         background-color: $color-section;
         &::after {
-            background-color: darken($color-section,15%);
+            background-color: $color-section;
             //background-color: orange;
         }
     }
@@ -102,8 +101,8 @@
     &::after {
         visibility: visible;
         opacity: 1;
-        top:10%;
-        bottom:10%;
+        top:0;
+        bottom:0;
         //left:0;
         //right:0;
         animation: eye_catcher_vertical 1s ease-in-out infinite;
@@ -120,11 +119,19 @@
         opacity: 1;
         //top:0;
         //bottom:0;
-        left:10%;
-        right:10%;
+        left:0;
+        right:0;
         animation: eye_catcher_horizontal 1s ease-in-out infinite;
     }
 }
+
+.#{$prefix}-container.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
+.#{$prefix}-section.som-hover-append:hover > .#{$prefix}-highlighter__bottom {
+    &::after {
+        animation: eye_catcher_horizontal_bottom 1s ease-in-out infinite;
+    }
+}
+
 
 /*==================================================================
 /*====================|> HOVER ON GRID ELEMENT
@@ -136,6 +143,7 @@
         &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
         &:hover > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
     }
 
@@ -144,6 +152,7 @@
         &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
         &.#{$prefix}-container.#{$prefix}-is-resize-columns .#{$prefix}-column > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
     }
 
@@ -161,7 +170,7 @@
                 left: 0;
                 right: 0;
                 background-color: black;
-                opacity: 0.5;
+                opacity: 0.3;
             }
         }
         &.#{$prefix}-is-moving-column .#{$prefix}-container > .#{$prefix}-highlighter,
@@ -170,6 +179,7 @@
         &.#{$prefix}-is-moving-container .#{$prefix}-container > .#{$prefix}-highlighter,
         &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
 
         &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-highlighter {
@@ -192,24 +202,39 @@
 
 @keyframes eye_catcher_horizontal {
     0% {
-        transform: scale(1,1);
+        height: 3px;
     }
     50% {
-        transform: scale(1.2,1);
+        height: 6px;
     }
     100% {
-        transform: scale(1,1);
+        height: 3px;
+    }
+}
+
+@keyframes eye_catcher_horizontal_bottom {
+    0% {
+        height: 1px;
+        top: -1px;
+    }
+    50% {
+        height: 4px;
+        top: -4px;
+    }
+    100% {
+        height: 1px;
+        top: -1px;
     }
 }
 
 @keyframes eye_catcher_vertical {
     0% {
-        transform: scale(1, 1);
+        width: 3px;
     }
     50% {
-        transform: scale(1,1.2);
+        width: 6px;
     }
     100% {
-        transform: scale(1,1);
+        width: 3px;
     }
 }

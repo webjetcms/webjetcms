@@ -7,14 +7,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-
-import org.apache.struts.util.ResponseUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 @Entity
 @Table(name = "_properties_")
@@ -42,6 +42,7 @@ public class TranslationKeyEntity {
     private String key;
 
     //Field is not showed but used to get translation key value from DB
+    @Lob
     @Column(name = "prop_value")
     private String value;
 
@@ -300,27 +301,34 @@ public class TranslationKeyEntity {
     }
 
     public String getOriginalValue(char a) {
-        switch (a) {
-            case 'A':
-                return originalValueA;
-            case 'B':
-                return originalValueB;
-            case 'C':
-                return originalValueC;
-            case 'D':
-                return originalValueD;
-            case 'E':
-                return originalValueE;
-            case 'F':
-                return originalValueF;
-            case 'G':
-                return originalValueG;
-            case 'H':
-                return originalValueH;
-            case 'I':
-                return originalValueI;
-            case 'J':
-                return originalValueJ;
+        // Return the original value for the given field letter (A-J), case-insensitive.
+        switch (Character.toUpperCase(a)) {
+            case 'A': return originalValueA;
+            case 'B': return originalValueB;
+            case 'C': return originalValueC;
+            case 'D': return originalValueD;
+            case 'E': return originalValueE;
+            case 'F': return originalValueF;
+            case 'G': return originalValueG;
+            case 'H': return originalValueH;
+            case 'I': return originalValueI;
+            case 'J': return originalValueJ;
+            default: return null;
+        }
+    }
+
+    public String getFieldValue(char a) {
+        switch (Character.toUpperCase(a)) {
+            case 'A': return fieldA;
+            case 'B': return fieldB;
+            case 'C': return fieldC;
+            case 'D': return fieldD;
+            case 'E': return fieldE;
+            case 'F': return fieldF;
+            case 'G': return fieldG;
+            case 'H': return fieldH;
+            case 'I': return fieldI;
+            case 'J': return fieldJ;
             default: return null;
         }
     }

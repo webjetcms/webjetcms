@@ -31,6 +31,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
@@ -40,6 +41,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -55,6 +57,7 @@ import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
+import sk.iway.iwcm.update.DomainIdUpdateService;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -106,6 +109,7 @@ public class UpdateDatabase
 		disabledItemsConfigRights();
 
 		updateStatViewsColumns();
+		updateStatErrorColumns();
 
 		updateStopwords();
 
@@ -127,6 +131,14 @@ public class UpdateDatabase
 	public static void updateWithSpringInitialized() {
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
+
+		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+			DomainIdUpdateService.updateExportDatDomainId();
+			DomainIdUpdateService.updatePerexGroupDomainId();
+		}
+
+		UpdateDatabaseService.setNewsTemplates();
+
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
 
@@ -265,8 +277,11 @@ public class UpdateDatabase
 	 * Automaticka aktualizacia databazy na zaklade XML suboru
 	 */
 	@SuppressWarnings("resource")
-	private static void autoUpdateDatabase(IwcmFile f, String dbName) throws IOException
+	private static void autoUpdateDatabase(String url, String dbName) throws IOException
 	{
+		IwcmFile f = new IwcmFile(Tools.getRealPath(url));
+		if (f.exists()==false || f.canRead()==false) return;
+
 		Logger.println(UpdateDatabase.class,"--> updating from file: " + f.getName());
 		InputStream is = new IwcmInputStream(f);
 		is = SyncDirAction.checkXmlForAttack(is);
@@ -294,22 +309,13 @@ public class UpdateDatabase
 	{
 		try
 		{
-			IwcmFile f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate.xml"));
-			autoUpdateDatabase(f, "iwcm");
-
-			f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate-"+Constants.getInstallName()+".xml"));
-			if (f.exists())
-			{
-				autoUpdateDatabase(f, "iwcm");
-			}
-
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate.xml", "iwcm");
 			//update pre webjet9 a dalsie podla skinu
-			f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate-"+Constants.getString("defaultSkin")+".xml"));
-			if (f.exists())
-			{
-				autoUpdateDatabase(f, "iwcm");
-			}
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate-"+Constants.getString("defaultSkin")+".xml", "iwcm");
 
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate-"+Constants.getInstallName()+".xml", "iwcm");
+
+			//check for autoupdate-INSTALL_NAME-DBNAME.xml
 			IwcmFile dir = new IwcmFile(Tools.getRealPath("/WEB-INF/sql"));
 			if (dir.isDirectory())
 			{
@@ -318,7 +324,7 @@ public class UpdateDatabase
 				int i;
 				for (i=0; i<size; i++)
 				{
-					f = files[i];
+					IwcmFile f = files[i];
 					if (f.isFile() && f.getName().startsWith("autoupdate-"+Constants.getInstallName()))
 					{
 						int start = ("autoupdate-"+Constants.getInstallName()).length() + 1;
@@ -329,7 +335,7 @@ public class UpdateDatabase
 						String dbName = f.getName().substring(start, end).trim();
 
 						Logger.println(UpdateDatabase.class,"--> updating from file: " + f.getName() + " database: " + dbName);
-						autoUpdateDatabase(f, dbName);
+						autoUpdateDatabase("/WEB-INF/sql/"+f.getName(), dbName);
 					}
 				}
 			}
@@ -341,7 +347,7 @@ public class UpdateDatabase
 	}
 
 	private static Set<String> allreadyExecutedUpdates = null;
-	private static boolean isAllreadyUpdated(String note)
+	public static boolean isAllreadyUpdated(String note)
 	{
 		if (allreadyExecutedUpdates==null)
 		{
@@ -354,7 +360,7 @@ public class UpdateDatabase
 		return false;
 	}
 
-	private static void saveSuccessUpdate(String note)
+	public static void saveSuccessUpdate(String note)
 	{
 		String sqlUpdate = "INSERT INTO "+ConfDB.DB_TABLE_NAME+" (create_date, note) VALUES (?, ?)";
 		new SimpleQuery().execute(sqlUpdate, new Timestamp(Tools.getNow()), note);
@@ -435,6 +441,27 @@ public class UpdateDatabase
 
 								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);
 
+								if (constrainKey==null) {
+									constrainSql = """
+											SELECT kc.name AS constraint_name,
+												t.name  AS table_name,
+												STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
+											FROM sys.key_constraints kc
+											JOIN sys.tables t          ON kc.parent_object_id = t.object_id
+											JOIN sys.indexes i         ON kc.unique_index_id = i.index_id AND i.object_id = t.object_id
+											JOIN sys.index_columns ic  ON ic.object_id = t.object_id AND ic.index_id = i.index_id
+											JOIN sys.columns c         ON c.object_id = t.object_id AND c.column_id = ic.column_id
+											WHERE kc.type = 'UQ'
+											AND t.name = N'%s'
+											AND SCHEMA_NAME(t.schema_id) = N'dbo'
+											GROUP BY kc.name, t.name
+											ORDER BY constraint_name;
+											""".formatted(tableName);
+									constrainKey = new SimpleQuery(dbName).forString(constrainSql);
+								}
+
+								if (constrainKey==null) continue;
+
 								String replaceText = sql.substring(i, sql.indexOf("}", i)+1);
 								sql = Tools.replace(sql, replaceText, constrainKey);
 							}
@@ -453,10 +480,34 @@ public class UpdateDatabase
 								sql = Tools.replace(sql, "ENGINE=MyISAM", "ENGINE="+defaultEngine);
 								sql = Tools.replace(sql, "engine=MyISAM", "ENGINE="+defaultEngine);
 							}
+
+							if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_MSSQL) {
+								//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
+								sql = Tools.replace(sql, "\\'", "''");
+								sql = Tools.replace(sql, "\\\"", "\"");
+								//mariadb has \\" in instructions like <img src=\\"/components/...
+								sql = Tools.replace(sql, "\\\\\"", "\\\"");
+
+								if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+									//convert literal backslash-n to real newline character
+								sql = Tools.replace(sql, "\\n", "\n");
+								} else {
+									sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
+								}
+							}
+
 							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] "+sql);
 							counter++;
 
+							if (db_conn.isClosed()) {
+								db_conn = DBPool.getConnection(dbName);
+							}
+
 							sta = db_conn.createStatement();
+							if (Constants.DB_TYPE == Constants.DB_MSSQL && sql.indexOf('{') != -1) {
+                                // Disable JDBC escape processing to prevent treating {placeholders} as JDBC escapes
+                                try { sta.setEscapeProcessing(false); } catch (SQLException ignore) {}
+                            }
 							sta.execute(sql);
 							sta.close();
 
@@ -2331,7 +2382,8 @@ public class UpdateDatabase
 
 			int pageSize = 100;
 			int pageNumber = 0;
-			int failsafe = 0;
+			int pageFailsafe = 0;
+			int counter = 1;
 			Page<BasketInvoiceEntity> page;
 			do {
 				page = bir.findAll(PageRequest.of(pageNumber, pageSize));
@@ -2339,6 +2391,8 @@ public class UpdateDatabase
 				dt.diffInfo("[page "+pageNumber+"/"+page.getTotalPages()+"], rows="+items.size());
 				// calculate itemQty, priceNotVat, priceVat
 				for (BasketInvoiceEntity invoice : items) {
+					Logger.info(UpdateDatabase.class, "Processing invoice ID: " + invoice.getId()+" "+(counter++)+"/"+page.getTotalElements());
+
 					Integer itemsCount = 0;
 					BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
 					BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
@@ -2352,15 +2406,25 @@ public class UpdateDatabase
 					}
 
 					//Set and save invoice
-					invoice.setItemQty(itemsCount);
+					/*invoice.setItemQty(itemsCount);
 					invoice.setPriceToPayNoVat(totalPrice);
 					invoice.setPriceToPayVat(totalPriceVat);
 					invoice.setBalanceToPay( totalPriceVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ) );
 
-					bir.save(invoice);
+					bir.save(invoice);*/
+
+					//this is faster and will not spam audit log
+					String sql = "UPDATE basket_invoice SET balance_to_pay = ?, item_qty = ?, price_no_vat = ?, price_vat = ? WHERE (basket_invoice_id = ?)";
+					DB.execute(sql,
+							totalPriceVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ),
+							itemsCount,
+							totalPrice,
+							totalPriceVat,
+							invoice.getId()
+					);
 				}
 				pageNumber++;
-			} while (!page.isLast() && failsafe++ < 5000);
+			} while (!page.isLast() && pageFailsafe++ < 500);
 
 			dt.diffInfo("DONE");
 
@@ -2368,5 +2432,73 @@ public class UpdateDatabase
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
+	}
+
+	/**
+	 * Add browser_ua_id into stat_error* tables
+	 */
+	public static void updateStatErrorColumns()
+	{
+		String note = "16.09.2025 [sivan] pridanie stlpca browser_ua_id do stat_error";
+		if (Constants.getBoolean("updateDisableFixBrowserId") || isAllreadyUpdated(note)) return;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, 1);
+		long to = cal.getTimeInMillis();
+		cal.set(Calendar.YEAR, 2000);
+		cal.set(Calendar.DATE, 1);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		long from = cal.getTimeInMillis();
+
+		String[] suffixes = StatNewDB.getTableSuffix(from, to);
+		StringBuilder sql = null;
+		for (int s=0; s<suffixes.length; s++)
+		{
+			try
+			{
+				Logger.println(UpdateDatabase.class, "Updating stat_error columns "+(s+1)+"/"+suffixes.length+" "+suffixes[s]);
+
+				db_conn = DBPool.getConnection();
+
+				sql = new StringBuilder("ALTER TABLE stat_error");
+				sql.append(suffixes[s]);
+				sql.append(' ');
+				sql.append("ADD browser_ua_id INT NOT NULL DEFAULT 0");
+
+				ps = db_conn.prepareStatement(sql.toString());
+				ps.execute();
+				ps.close();
+				db_conn.close();
+				ps = null;
+				db_conn = null;
+			}
+			catch (Exception ex)
+			{
+				if (ex.getMessage().indexOf("exist")==-1 && ex.getMessage().indexOf("duplicate")==-1)
+				{
+					Logger.error(UpdateDatabase.class, "Error updating stat_error"+suffixes[s]+" - "+sql+" - "+ex.getMessage());
+					//sk.iway.iwcm.Logger.error(ex);
+				}
+			}
+			finally
+			{
+				try
+				{
+					if (ps != null)
+						ps.close();
+					if (db_conn != null)
+						db_conn.close();
+				}
+				catch (Exception ex2)
+				{
+				}
+			}
+		}
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
 	}
 }

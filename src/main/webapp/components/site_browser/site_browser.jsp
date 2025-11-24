@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*, java.util.*, sk.iway.iwcm.*, sk.iway.iwcm.filebrowser.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%!
 
 public String capitalize(String path)
@@ -116,11 +113,11 @@ request.setAttribute("fileList", fileList);
 	</div>
 </div>
 
-<logic:present name="valid" >
+<iwcm:present name="valid" >
 	<script type="text/javascript">
 			window.alert("<iwcm:text key="fbrowse.alert_message"/>");
 	</script>
-</logic:present>
+</iwcm:present>
 
 <script type="text/javascript">
 		function noPopup()
@@ -153,7 +150,7 @@ request.setAttribute("fileList", fileList);
 			</tr>
 		</thead>
 		<tbody>
-		<logic:iterate id="dir" name="dirList" type="sk.iway.iwcm.filebrowser.FileDirBean">
+		<iwcm:iterate id="dir" name="dirList" type="sk.iway.iwcm.filebrowser.FileDirBean">
 			<tr>
 				<td class="fN" >
 					<a href="<%=BrowseAction.getDirLink(pageDocID, dir, request)%>" data-protected="<%=dir.isDirProtected()%>" class="siteBrowserClick folder"><jsp:getProperty name="dir" property="icon"/></a>
@@ -164,9 +161,9 @@ request.setAttribute("fileList", fileList);
 				</td>
 				<td class="fD">&nbsp;</td>
 			</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 
-		<logic:iterate id="file" name="fileList" type="sk.iway.iwcm.filebrowser.FileDirBean">
+		<iwcm:iterate id="file" name="fileList" type="sk.iway.iwcm.filebrowser.FileDirBean">
 			<tr>
 				<td class="fN" >
 					<a href="<%if(request.getAttribute("correctDir")!=null && request.getAttribute("correctDir").toString().length()>1) out.println(request.getAttribute("correctDir"));%>/<jsp:getProperty name="file" property="name"/>" <%if (Tools.isNotEmpty(target)) out.print(" target='"+target+"'");%> class="icon"><%--<img src="<jsp:getProperty name="file" property="icon"/>" alt="<jsp:getProperty name="file" property="name"/>" class="icon" />--%></a>
@@ -179,7 +176,7 @@ request.setAttribute("fileList", fileList);
 					<jsp:getProperty name="file" property="lastModified"/>
 				</td>
 			</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 		</tbody>
 	</table>
 </div>

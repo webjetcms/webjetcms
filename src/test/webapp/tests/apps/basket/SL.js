@@ -2,13 +2,19 @@ module.exports = {
 
     PRODUCTS : "/apps/elektronicky-obchod/produkty/",
     ORDERS: "/apps/elektronicky-obchod/objednavky/",
-    METHODS: "/apps/eshop/admin/payment-methods/",
+    METHODS: "/apps/basket/admin/payment-methods/",
     BASKET: "/apps/elektronicky-obchod/kosik/",
     BASKET_ADMIN: "/apps/basket/admin/",
     PRODUCTS_ADMIN: "/apps/basket/admin/product-list/",
 
     red: 'rgb(255, 75, 88)',
     black: 'rgb(19, 21, 27)',
+
+    clearBasket(I) {
+        I.amOnPage(this.PRODUCTS+"?act=deleteall");
+        I.amOnPage(this.PRODUCTS);
+        I.dontSeeElement(".basketSmallBox")
+    },
 
     addToBasket(I, productName){
         I.say(`Adding ${productName} to the basket`);
@@ -38,8 +44,8 @@ module.exports = {
         I.fillField('#contactLastNameId', 'Playwright');
         I.clearField('#contactEmailId');
         I.fillField('#contactEmailId', 'webjetbasket@fexpost.com');
-        I.fillField('#contactStreetId', "Mlýnske Nivy 71");
-        I.fillField("#contactCompanyId", "Interway a.s.");
+        I.fillField('#contactStreetId', "Mlynské Nivy 71");
+        I.fillField("#contactCompanyId", "InterWay, a. s.");
         I.fillField("#contactPhoneId", "0912345678")
         I.fillField('#contactCityId', 'Bratislava');
         I.fillField('#contactZipId', '82105');

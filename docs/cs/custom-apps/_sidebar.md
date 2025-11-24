@@ -1,6 +1,7 @@
  <div class="sidebar-section">Programování zákaznických aplikací</div>
 
 - [:point\_left: Zpět na Úvod](/?back)
+
 - Spring
   - [Konfigurace Spring](/custom-apps/spring-config/)
   - [Autorizace tokenem](/custom-apps/spring/api-auth.md)
@@ -8,10 +9,12 @@
   - [Rozšíření Spring DATA repozitářů WebJET CMS](/custom-apps/spring/repository-extend.md)
   - [Veřejné služby](/custom-apps/spring/public-services.md)
 - Aplikace
+  - [Přizpůsobení administrace](/custom-apps/apps/customize-admin.md)
   - [Položka v menu admin části](/custom-apps/admin-menu-item/)
   - [Seznam web stránek/novinek](/custom-apps/news/)
   - [Uživatelé](/custom-apps/apps/user/README.md)
   - [Konfigurace](/custom-apps/config/README.md)
+  - [AI - přidání nového poskytovatele](/custom-apps/apps/ai/assistants/README.md)
   - Elektronický obchod
     - [Způsoby platby](/custom-apps/apps/eshop/payment-methods/README.md)
 - Spring MVC

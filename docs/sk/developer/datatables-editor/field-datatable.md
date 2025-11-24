@@ -13,7 +13,8 @@ Anotácia sa používa ako ```DataTableColumnType.DATATABLE```, pričom je potre
 - ```data-dt-field-dt-url``` - URL adresa REST služby, môže obsahovať makrá pre vloženie hodnoty z rodičovského editora, napr.: ```/admin/rest/audit/notify?docid={docId}&groupId={groupId}```
 - ```data-dt-field-dt-columns``` - meno triedy (vrátane packages) z ktorej sa použije [definícia stĺpcov datatabuľky](datatable-columns.md), napr. ```sk.iway.iwcm.system.audit.AuditNotifyEntity```
 - `data-dt-field-dt-columns-customize` - meno JavaScript funkcie, ktorá môže byť použitá na úpravu `columns` objektu, napr. `removeEditorFields`. Funkcia musí byť dostupná priamo vo `windows` objekte, ako parameter dostane `columns` objekt a očakáva sa, že ho vráti upravený. Príklad `function removeEditorFields(columns) { return columsn; }`.
-- `data-dt-field-dt-tabs` - zoznam kariet pre editor v JSON formáte. Všetky názvy aj hodnoty JSON objektu je potrebné obaliť do `'`, preklady sú nahradené automaticky. Príklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
+- `data-dt-field-dt-tabs` - zoznam kariet pre editor v JSON formáte. Všetky názvy aj hodnoty JSON objektu je potrebné obaliť do `'`, preklady sú nahradené automaticky. Príklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. Ak nie je zadané, automaticky sa získa podľa anotácie `@DataTableTabs` zadanej triedy.
+- `data-dt-field-dt-localJson` - aktivuje režim, ktorý pracuje s lokálnym JSON objektom. Používa sa primárne pre aplikácie vo web stránke pre evidenciu položiek aplikácie (napr. položky slide show), ktoré sa naviac automaticky kóduju do reťazca vhodného do `PageParams` objektu a sú kódovanom v `Base64`. Ak existuje funkcia `window.datatableLocalJsonUpdate = function(val, conf)` zavolá sa na voliteľnú úpravu dát.
 
 Kompletný príklad anotácie:
 
@@ -51,6 +52,49 @@ Vytvorená datatabuľka sa sprístupní ako:
 - ```window``` objekt s názvom ```datatableInnerTable_fieldName``` - objekt je možné použiť pre automatizované testovanie alebo iné JavaScript operácie.
 
 Po vytvorení vnorenej datatabuľky je vyvolaná udalosť ```WJ.DTE.innerTableInitialized``` kde v objekte ```event.detail.conf``` je prenesená konfigurácia.
+
+## Lokálne JSON dáta
+
+Aktivuje režim práce s lokálnymi JSON dátami. Dáta sú získané priamo z hodnoty poľa, ktoré môže byť typu `String` pri ktorom sa vykoná volanie `JSON.parse`.
+
+Pre parametre aplikácie vo web stránke sa výsledok kóduje do `Base64` aby nedošlo k poškodeniu JSON objektu. Zároveň sa aktivuje rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop`.
+
+V aplikácii tak bude možné upravovať zoznam položiek, meniť ich poradie atď. bez použitia a definovania REST služby. Výsledok sa uloží nazad do JSON objektu a zakóduje cez `Base64`. Pri inicializácii sa doplní stĺpec `ID` a `rowOrder`. Využíva sa atribút `DATA.src` objektu `datatables` pre priame nastavenie dát pre tabuľku.
+
+Automaticky sa aktivuje aj funkcia pre možnosť zmeny poradia riadkov pomocou funkcie `Drag&Drop`. Z dôvodu konfliktov pri presune riadkov a ich rôzneho usporiadania je vypnutá možnosť usporiadať zoznam podľa ľubovoľného stĺpca, zoznam sa usporadúva automaticky podľa poradia usporiadania. Pre režim JSON editor sa tento stĺpec automaticky pridá - všimnite si, že trieda `ImpressSlideshowItem` v príklade nižšie neobsahuje ani `ID` ani `rowOrder` stĺpec, keďže technicky pre zobrazenie dát nie sú potrebné. Pridajú sa automaticky. Ak potrebujete stĺpec manuálne zobraziť, použite anotáciu `DataTableColumnType.ROW_REORDER`.
+
+Príklad použitia:
+
+```java
+public class ImpressSlideshowApp extends WebjetComponentAbstract{
+    ...
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
+}
+
+public class ImpressSlideshowItem {
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        className = "image",
+        title = "editor.perex.image",
+        renderFormat = "dt-format-image-notext"
+    )
+    private String image;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="dt-row-edit", title = "components.app-cookiebar.cookiebar_title")
+    private String title;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.subtitle")
+    private String subtitle;
+
+    ...
+}
+```
 
 ## Poznámky k implementácii
 

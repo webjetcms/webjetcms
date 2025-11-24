@@ -52,10 +52,12 @@ public class ABTesting
 			//In case, user agent is crawler, we will always return variant A
 			variant = "a";
 		} else {
-
 			if ("true".equals(request.getAttribute("ABTestingPrefferVariantUrl"))) {
 				//if we are in AB testing variant URL, we will not use cookie
 				variant = getVariantFromUrl(path);
+			} else if (Constants.getBoolean("ABTestingForLoggedUser")) {
+				if (user == null) variant = "a";
+				else variant = "b";
 			} else {
 				variant = Tools.getCookieValue(request.getCookies(), Constants.getString("ABTestingCookieName"), null);
 			}
@@ -69,6 +71,11 @@ public class ABTesting
 				//response.addCookie(cookie);
 				Tools.addCookie(cookie, response, request);
 			}
+		}
+
+		if (variant != null && variant.length() > 1) {
+			//if variant is longer than 1 character, it is not valid, possible XSS through cookie
+			variant = "a";
 		}
 
 		//Set variant into request - used in Ninja

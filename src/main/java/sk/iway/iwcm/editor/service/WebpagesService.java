@@ -61,6 +61,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyButton;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -76,7 +77,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class WebpagesService {
 
-    private int groupId;
+    protected int groupId;
     private Prop prop;
 	private GroupDetails localSystemGroup;
 
@@ -478,13 +479,13 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Vrati zoznam PerexGroupBean objektov
+	 * Vrati zoznam perex groups ako OptionDto pre DT
 	 * @param recursive - ak je nastavene na true vrati aj PerexGroupBean z podadresarov
 	 * @return
 	 */
-	public List<PerexGroupBean> getPerexGroups(boolean recursive) {
+	public List<OptionDto> getPerexGroups(boolean recursive) {
 		List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(groupId, recursive);
-		return perexGroups;
+		return DocDB.fixPerexNameDuplicityForOptions(perexGroups);
 	}
 
 	/**
@@ -928,8 +929,19 @@ public class WebpagesService {
 	 * @param options - options object
 	 */
 	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options) {
+		addOptions(pageImpl, options, false);
+	}
+
+	/**
+	 * Add options to DatatablePage object
+	 * @param pageImpl - current response Page object
+	 * @param options - options object
+	 * @param forceGroupId - if true, force options.groupId to WebpagesService even if it's < 1
+	 */
+	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options, boolean forceGroupId) {
 		Prop prop = Prop.getInstance(options.getRequest());
         WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
+		if (forceGroupId) ws.groupId = options.getGroupId();
 
 		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
         pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), TITLE, DOC_ID, false);
@@ -937,7 +949,7 @@ public class WebpagesService {
 		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), TITLE, DOC_ID, false);
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", USER_GROUP_ID, false);
-        pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "perexGroupName", "perexGroupId", false);
+        pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "label", "value", false);
 
 		//optiony pre ikonu
 		pageImpl.addOptions("editorFields.statusIcons", getStatusIconOptions(options, prop), "label", "value", false);

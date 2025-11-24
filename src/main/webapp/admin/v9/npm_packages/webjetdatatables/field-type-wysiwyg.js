@@ -1,4 +1,10 @@
 export function typeWysiwyg() {
+
+    var DIRTY_CHECK_DELAY_MS = 5000;
+    function getThisField(conf) {
+        return conf.EDITOR.field(conf.data);
+    }
+
     return {
         create: function ( conf ) {
 
@@ -15,6 +21,7 @@ export function typeWysiwyg() {
 
             //console.log("Creating WYSIWYG field, conf=", conf, "datatable=", conf.datatable, "editor=", this);
             let EDITOR = this;
+            conf.EDITOR = EDITOR;
             var id = $.fn.dataTable.Editor.safeId( conf.id );
             conf._id = id;
 
@@ -135,7 +142,7 @@ export function typeWysiwyg() {
             window.switchEditorType = function(select, e) {
                 //console.log("Switch editor type to:", select.value, "conf=", conf.wjeditor, "e=", e);
                 let editorType = select.value;
-                conf.wjeditor.switchEditingMode(editorType);
+                conf.wjeditor.switchEditingMode(editorType, true);
                 window.editorTypeForced = editorType;
                 if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
             }
@@ -153,6 +160,16 @@ export function typeWysiwyg() {
                 } else if ('phone'==size) {
                     maxWidth = "576px";
                 }
+
+                //console.log("iframeElement=", iframeElement[0].contentWindow);
+                try {
+                    if (iframeElement.length > 0 && iframeElement[0].contentWindow && typeof iframeElement[0].contentWindow.pbGetWindowSize === "function") {
+                        maxWidth = iframeElement[0].contentWindow.pbGetWindowSize(size);
+                    }
+                } catch (e) {
+                    console.error("pbSetWindowSize error:", e);
+                }
+
                 //console.log("Setting width: ", maxWidth);
                 iframeElement.css("max-width", maxWidth);
             }
@@ -164,15 +181,37 @@ export function typeWysiwyg() {
             if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
                 var htmlCode = conf.wjeditor.getData();
                 //console.log("WYSIWYG get, htmlCode=", htmlCode);
+                //set htmlCode to input element, because it can be PageBuilder instance
                 conf._input.val(htmlCode);
+            }
+            try {
+                //fix for acunetix long texts which loads too long/ha too many JS errors, and acunetix will timeout scanning
+                if (window.currentUser.login.indexOf("tester")==0) {
+                    let val = conf._input.val();
+                    if (val != null && val.length > 32000) {
+                        if (val.indexOf("<ScRiPt")!==-1 || val.indexOf("<zzz")!==-1|| val.indexOf("DBMS_PIPE")!==-1) {
+                            val = val.substring(0, 16000);
+                            console.log("shrinking val to length=", val.length);
+                            conf._input.val(val);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
             }
             //console.log("WYSIWYG get, conf=", conf, "returning=", conf._input.val());
             return conf._input.val();
         },
 
         set: function ( conf, val ) {
-            //console.log("WYSIWYG set, val=", val, "conf=", conf);
+            //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
+            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+                conf.wjeditor.setData(val);
+            }
             conf._input.val(val);
+
+            // reset dirty status
+            getThisField(conf).resetDirty(conf);
         },
 
         enable: function ( conf ) {
@@ -185,6 +224,35 @@ export function typeWysiwyg() {
 
         canReturnSubmit: function ( conf, node ) {
             return false;
+        },
+
+        isDirty: function ( conf ) {
+            try
+            {
+                var now = new Date().getTime();
+                var timeDiff = now - conf.editorLastResetDirty;
+                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
+                {
+                    return false;
+                }
+                var currentData = getThisField(conf).get(conf);
+                if (currentData != conf.dirtyDataOriginal) {
+                    //console.log("isDirty check, currentData=", currentData, "dirtyDataOriginal=", conf.dirtyDataOriginal);
+                    return true;
+                }
+            }
+            catch (e) {  }
+            return false;
+        },
+
+        resetDirty: function ( conf ) {
+            conf.editorLastResetDirty = new Date().getTime();
+            //get current data to compare
+            setTimeout(() => {
+                conf.dirtyDataOriginal = getThisField(conf).get(conf);
+                //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
+            }, DIRTY_CHECK_DELAY_MS);
         }
+
     }
 }

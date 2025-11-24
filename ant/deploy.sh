@@ -7,8 +7,8 @@
 set -e
 
 echo "WARNING: CHECK VERSION IN build.xml"
-
 date
+ant waitForConfirm
 
 #./mount-license.sh
 
@@ -27,8 +27,8 @@ ant -Dcompress=true createUpdateZipJar
 ant rsyncToLicenseServer
 ant deployGithub
 
-#GITHUB: just run ant deployStaging
-#then close repo and deploy it
+#MavenCentral: just run ant deployMavenCentral
+#then deploy it manually on https://central.sonatype.com/publishing/deployments
 
 cd ..
 

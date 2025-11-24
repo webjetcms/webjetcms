@@ -10,7 +10,9 @@ Dostupné složky reprezentující kategorie jsou uspořádány do tzn. stromu, 
 
 ![](select-options.png)
 
-První možnost v seznamu je vždy hlavní sekce, která reprezentuje všechny kategorie (všechny produkty budou zobrazeny). Při zvolení kategorie (složka) se zobrazí data dané složky i všech podsložek.
+Hodnoty ve výběrovém poli sekce v hlavičce se generují:
+- automaticky - je-li konf. proměnná `basketAdminGroupIds` nastavena na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `%!INCLUDE(/components/eshop/%", "%!INCLUDE(/components/basket/%", "%product-list.jsp%", "%products.jsp%"` v tělech stránek.
+- podle konf. proměnné `basketAdminGroupIds`, kde je možné zadat čárkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načtou se při výběru i produkty (web stránky) z pod složek.
 
 ## Přidání nové kategorie produktů
 
@@ -60,7 +62,7 @@ V kartě **Perex** je důležité nastavení:
 
 ### Karta Atributy
 
-V kartě atributy využijeme výběr skupiny telefonu na specifikaci zboží. Jak je to patrné na obrázku níže, pro skupinu `iPhone X` je možné nastavení barvy a paměťové varianty zařízení. Tato výběrová pole se zobrazují v elektronickém obchodě, u detailu produktu.
+V kartě atributy využijeme výběr skupiny telefonu na specifikaci zboží. Jak je to patrné na obrázku níže, pro skupinu `Monitor` je možné nastavení výrobce, úhlopříčky atp. Tato výběrová pole se zobrazují v elektronickém obchodě, u detailu produktu.
 
 ![](new-product-attr.png)
 

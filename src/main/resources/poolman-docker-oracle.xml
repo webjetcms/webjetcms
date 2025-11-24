@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman><management-mode>local</management-mode>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <jndiName>jndi-iwcm</jndiName>
+        <driver>oracle.jdbc.OracleDriver</driver>
+
+        <url>jdbc:oracle:thin:@host.docker.internal:11521/XEPDB1</url>
+
+        <username>webjetcms_autotest_web</username>
+        <password>${WEBJET_DB_PASS}</password>
+
+        <initialConnections>0</initialConnections>
+        <minimumSize>0</minimumSize>
+        <maximumSize>60</maximumSize>
+    </datasource>
+</poolman>

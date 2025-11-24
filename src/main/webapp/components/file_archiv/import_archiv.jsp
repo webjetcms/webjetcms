@@ -22,9 +22,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
 <iwcm:checkLogon admin="true" perms="menuFileArchivImportFiles"/>
@@ -136,7 +133,7 @@
         return null;
     }
 
-    public static Long prepareAndSaveBean(FileArchivatorBean farchBean, String tmpArchivPath, String dirUnpack, String fileArchivAllowExt, StringBuilder suffixes, List<String> writtenFiles, List<String> overwrittenFiles, Identity user, HttpServletRequest request, FileArchiveRepository far) {
+    public static Long prepareAndSaveBean(FileArchivatorBean farchBean, String tmpArchivPath, String dirUnpack, String fileArchivAllowExt, StringBuilder suffixes, List<String> writtenFiles, List<String> overwrittenFiles, Identity user, HttpServletRequest request, FileArchiveRepository far, JspWriter out) throws IOException {
         farchBean.setUserId((int) user.getUserId());
         //nastvime univerzalne aby bolo mozne editovat z lubovolnej domeny
 
@@ -176,7 +173,13 @@
         //Get id of same file from DB, if exist, use this id
         Long toId = (long)-1;
         if(far != null) {
-            toId = FileArchiveService.getId(farchBean.getFilePath(), farchBean.getFileName(), far);
+            try {
+                toId = FileArchiveService.getId(farchBean.getFilePath(), farchBean.getFileName(), far);
+            } catch (org.springframework.dao.IncorrectResultSizeDataAccessException e) {
+                Logger.error(null, "Duplicate file in DB: "+farchBean.getFilePath()+farchBean.getFileName());
+                out.println("<br/>Duplicate file in DB: "+farchBean.getFilePath()+farchBean.getFileName()+", skipping<br/>");
+                return null;
+            }
 
             if(toId.longValue() > 0) {
                 farchBean.setId(toId);
@@ -246,7 +249,7 @@
         for(FileArchivatorBean farchBean : fileArchivBeans) {
             if(farchBean.getReferenceId() < 1) {
                 Long oldId = farchBean.getId();
-                Long newId = prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far);
+                Long newId = prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far, out);
                 if(newId != null && newId > 0) replacedIds.put(oldId, new Pair<Long, Integer>(newId, farchBean.getGlobalId()) );
             }
         }
@@ -255,7 +258,7 @@
         for(FileArchivatorBean farchBean : fileArchivBeans) {
             if(farchBean.getReferenceId() > 0) {
                 Long oldReferenceId = farchBean.getReferenceId();
-                prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far);
+                prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far, out);
 
                 //Update reference id if found
                 Pair<Long, Integer> pairValues = replacedIds.get(oldReferenceId);
@@ -337,7 +340,7 @@
             <iwcm:stripForm name="saveFileForm" id="saveFileForm_ID" action="<%=PathFilter.getOrigPathUpload(request)%>" method="post" beanclass="sk.iway.iwcm.system.ConfImportAction">
                 <div style="width: 400px; height: 400px;">
 
-                    <input type="submit" style="float: right;" class="button" id="saveFileForm" name="saveFile" value="Načítať" onclick="showLoadingMsg()">
+                    <input type="submit" style="float: right;" class="button" id="saveFileForm" name="saveFile" value="<iwcm:text key='groupslist.load_tree'/>" onclick="showLoadingMsg()">
                     <div style="overflow: hidden; padding-right: .5em;">
                         <stripes:file name="xmlFile"  id="xmlFile"  />
                     </div>
@@ -376,14 +379,14 @@
         Logger.debug(null,"import_archiv.jsp Nasli sme "+uploadDuplicates.size()+" duplikátov z "+fileArchivBeans.size()+" súborov");
         request.setAttribute("uploadDuplicates",uploadDuplicates);
         %>
-        <logic:empty name="uploadDuplicates">
+        <iwcm:empty name="uploadDuplicates">
             <script type="text/javascript">
                 $(document).ready(function(){
                     $('#btnPokracovatImport').click();
                 });
 
             </script>
-        </logic:empty>
+        </iwcm:empty>
         <form name="archiv_import" method="post">
             <h2><iwcm:text key="components.file_archiv.import_archiv.niektore_z_importovanych_suborov_sa_uz_v_archive_nachadzaju_vyberte_ci_sa_maju_nahradit_"/></h2>
             <display:table name="uploadDuplicates" id="fab" class="sort_table table table-hover table-wj dataTable no-footer">

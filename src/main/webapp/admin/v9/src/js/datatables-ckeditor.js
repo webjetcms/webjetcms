@@ -261,7 +261,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image?stop_resizing=true" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/?stop_resizing=true" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -505,7 +505,7 @@ export class DatatablesCkEditor {
 						{
 							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
-							iframeElement.setAttribute("src", "/admin/v9/files/wj_link?stop_resizing=true");
+							iframeElement.setAttribute("src", "/admin/v9/files/wj_link/?stop_resizing=true");
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
 							iframeElement.setStyle("width", 800+"px");
@@ -1323,7 +1323,7 @@ export class DatatablesCkEditor {
 							var element = this.getSelectedElement();
 
 							var onclick = onclickAjax;
-							var typeSelectedIndex = document.getElementById(this.getContentElement("info", "type")._.inputId).selectedIndex;
+							var typeSelectedIndex = this.getContentElement("info", "type").getInputElement().$.selectedIndex;
 							if (typeSelectedIndex==3)
 							{
 								onclick = onclickPrint;
@@ -1552,6 +1552,7 @@ export class DatatablesCkEditor {
 						e.data.dataValue = e.editor.getData(true);
 					}
 					var data = e.data.dataValue;
+					if (data == null) data = "";
 					data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
 					data = data.replace(/<article><article>/gi, '<article>');
 					data = data.replace(/<\/article><\/article>/gi, '</article>');
@@ -1710,29 +1711,108 @@ export class DatatablesCkEditor {
 
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
+		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
 		this.ckEditorInstance.setData(data);
 	}
 
-	getData(data) {
+	getData() {
 		//console.log("getData, data=", data, "this=", this);
 		let htmlCode = this.ckEditorInstance.getData();
 		if ("pageBuilder"===this.editingMode) {
 			//ziskaj HTML kod z iframe elementu
 			let fieldId = this.options.fieldid;
 			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
-
-			let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
-			//console.log("saveData=", saveData);
-			//ziskaj data pre element doc_data
-			for (let i=0; i<saveData.editable.length; i++) {
-				let inlineData = saveData.editable[i];
-				if ("doc_data"===inlineData.wjAppField) {
-					htmlCode = inlineData.data;
+			try {
+				let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
+				//console.log("saveData=", saveData);
+				//ziskaj data pre element doc_data
+				for (let i=0; i<saveData.editable.length; i++) {
+					let inlineData = saveData.editable[i];
+					if ("doc_data"===inlineData.wjAppField) {
+						htmlCode = inlineData.data;
+					}
 				}
+			} catch (error) {
+				//console.error("Error getting data from pageBuilderIframe:", error);
 			}
 		}
 		//console.log("getData, htmlCode=", htmlCode);
 		return htmlCode;
+	}
+
+	pbInsertContent(html, mode=null, final=false) {
+		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
+
+		//if we are appending content we must wait for final version, otherwise we would append content multiple times
+		if ("append" === mode && final===false) return;
+
+		if (html.indexOf("<section")==-1)
+        {
+            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
+            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
+            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
+        }
+
+		//let options = self.EDITOR.field(aiCol.to).s.opts;
+		let fieldId = this.options.fieldid;
+		let pbIframe = $("#"+fieldId+"-pageBuilderIframe")[0].contentWindow;
+		pbIframe.$("[data-wjapp='pageBuilder']").each(function(index) {
+			if ("doc_data" != $(this).data("wjappfield")) return;
+
+			const $container = $(this);
+
+			if ("replace" === mode || "edit" === mode) {
+				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
+				$container.children('section').remove();
+				//remove all custom styles
+				$container.children('style').remove();
+			}
+			const $lastSection = $container.children('section').last();
+			if ($lastSection.length > 0) {
+				$lastSection.after(html);
+			} else {
+				// if there are no sections yet, just prepend to container
+				$container.prepend(html);
+			}
+			//scroll window to bottom
+			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
+		});
+		//reinitialize pb blocks
+		if (final===true) {
+			this.markPbElements();
+		}
+	}
+
+	markPbElements() {
+		if ("pageBuilder"===this.editingMode) {
+			//get ARRAY of content for all editors
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+
+			pageBuilderIframe[0].contentWindow.markPbElements("doc_data");
+		}
+	}
+
+	getDataArray() {
+		if ("pageBuilder"===this.editingMode) {
+			//get ARRAY of content for all editors
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+
+			let editorsContent = pageBuilderIframe[0].contentWindow.getEditorsContent("doc_data");
+			console.log("getData, editorsContent=", editorsContent);
+			return editorsContent;
+		}
+		return [].push(this.getData());
+	}
+
+	getWysiwygEditors() {
+		if ("pageBuilder"===this.editingMode) {
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+			return pageBuilderIframe[0].contentWindow.getWysiwygEditors("doc_data")
+		}
+		return [];
 	}
 
 	setEditingMode(json) {
@@ -1786,12 +1866,23 @@ export class DatatablesCkEditor {
 		this.switchEditingMode(this.editingMode);
 	}
 
-	switchEditingMode(newEditingMode) {
-		//console.log("switchEditingMode to ", newEditingMode);
+	/**
+	 * Switch mode
+	 * @param {String} newEditingMode
+	 * @param {Boolean} userChange - true if this is user change and we would like to preserve HTML code between modes
+	 */
+	switchEditingMode(newEditingMode, userChange=false) {
+		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
 		let editorTypeSelector = $("#"+fieldId+"-editorTypeSelector");
+		let oldEditingMode = this.editingMode;
+
+		var data = null;
+		if (userChange === true) {
+			data = this.getData();
+		}
 
 		this.editingMode = newEditingMode;
 		if ("pageBuilder"===this.editingMode) {
@@ -1805,14 +1896,22 @@ export class DatatablesCkEditor {
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
 				pageBuilderElement.find("iframe")[0].contentWindow.$("div.exit-inline-editor select").val('pageBuilder');
 			}
+
+			if (data != null) {
+				this.pbInsertContent(data, "replace", true);
+			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			var data = this.ckEditorInstance.getData();
+			if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				ck.setMode('wysiwyg');
+				ck.setData(data);
+			}
 			setTimeout(()=>{
 				//this fix problems with codemirror line gutter
-				if (ckEditorInstance.mode!=="source") ck.setMode('source');
+				if (ck.mode!=="source") ck.setMode('source');
 				ck.setData(data);
 			}, 500);
 
@@ -1825,6 +1924,13 @@ export class DatatablesCkEditor {
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
+
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				var ck = this.ckEditorInstance;
+				setTimeout(()=>{
+					ck.setData(data);
+				}, 500);
+			}
 		}
 
 		this.editorHeightLatest = 0;

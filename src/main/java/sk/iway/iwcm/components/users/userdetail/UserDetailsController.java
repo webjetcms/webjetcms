@@ -12,7 +12,6 @@ import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +39,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyButton;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.users.PasswordSecurity;
@@ -130,6 +130,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         }
 
         if (entity.getRegDate() == null) entity.setRegDate(new Date(Tools.getNow()));
+
+        //check NULL
+        if (entity.getSexMale() == null) entity.setSexMale(true);
 
         //Save into session last saved user group's
         userDetailsService.setBeforeSaveUserGroups(entity);
@@ -378,7 +381,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         //Force random password generation -> null value can cause problems
         if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {
             entity.setPassword("random");
-            super.beforeDuplicate(entity);
         }
+        entity.setRegDate(new Date(Tools.getNow()));
+        entity.setLastLogonAsDate(null);
+        super.beforeDuplicate(entity);
     }
 }

@@ -2,6 +2,7 @@ const { I } = inject();
 const DT = require("./DT");
 const DTE = require("./DTE");
 const Apps = require("./Apps");
+const i18n = require("./i18n");
 
 /**
  * Funkcie pre pracu s Dokumentami
@@ -37,8 +38,8 @@ module.exports = {
     }
   },
 
-  screenshot(screenshotFilePath, width, height) {
-      this.screenshotElement(null, screenshotFilePath, width, height);
+  screenshot(screenshotFilePath, width, height, selectorToHighlight) {
+      this.screenshotElement(null, screenshotFilePath, width, height, selectorToHighlight);
   },
 
   screenshotElement(selector, screenshotFilePath, width, height, selectorToHighlight) {
@@ -56,15 +57,16 @@ module.exports = {
         path = path.replace(/\//gi, '\\');
       }
       I.wait(2);
+      this.highlightElement(selectorToHighlight);
+
       if (typeof selector != "undefined" && selector != null && selector != "") {
-
-        this.highlightElement(selectorToHighlight);
-
         I.saveElementScreenshot(selector, path);
-
-        this.unhighlightElement(selectorToHighlight);
       }
-      else I.saveScreenshot(path);
+      else {
+        I.saveScreenshot(path);
+      }
+
+      this.unhighlightElement(selectorToHighlight);
 
       I.say("windows resized=" + windowResized);
       if (windowResized) I.wjSetDefaultWindowSize();
@@ -141,9 +143,9 @@ module.exports = {
       I.click(locate('.dropdown-item').withText(domain));
       I.waitForElement("#toast-container-webjet", 10);
       I.waitForElement(".toastr-buttons button.btn-primary", 10);
-      I.waitForText("Pre zmenu domény je potrebné znovu načítať stránku", 10, ".toastr-message");
+      I.waitForText(i18n.get("You need to reload the page to change the domain."), 10, ".toastr-message");
       I.wait(0.5);
-      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText("Potvrdiť");
+      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText(i18n.get("Confirm"));
       I.waitForElement(btn);
       I.click(btn);
       I.say("Domain switched to: "+domain+" DO NOT FORGET TO LOGOUT AFTER THIS SCENARIO otherwise you will be logged in with wrong domain");

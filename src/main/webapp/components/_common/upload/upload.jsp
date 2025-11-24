@@ -6,9 +6,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
@@ -97,23 +94,23 @@ PageParams pp = new PageParams(request);
 
                         this.on("success", function(file)
                         {
-                            /*
-                            console.log("Upload success");
-                            console.log(file);
-                            */
+                            //console.log("Upload success, file: ", file);
 
-                            //console.log("response: " + file.xhr.response);
                             var response = JSON.parse(file.xhr.response);
                             var key = response.key;
 
-                            //console.log(key);
-
-                            //console.log(element);
+                            //console.log("response: ", response, "key: ", key, "element: ", element);
 
                             var input = element.find("input");
                             var uploadedObjectsInfo = element.find('input.uploadedObjectsInfo');
 
-                            if (input.length>0)
+                            if (response.success === false) {
+                                this.removeFile(file);
+                                if (response.error) window.alert(response.error);
+                                return;
+                            }
+
+                            if (input.length>0 && response.success === true)
                             {
                                 if (input[0].value == "" || dzmaxfiles==1) input[0].value = key;
                                 else input[0].value = input[0].value + ";" + key;
