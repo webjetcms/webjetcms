@@ -10,8 +10,7 @@
 	//vygeneruje pole pre zadanie textu z captcha obrazku
 
 
-	TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
-	if("none".equals(Constants.getString("captchaType")) || (temp != null && temp.isDisableSpamProtection())){
+	if(sk.iway.iwcm.system.captcha.Captcha.isRequired(null, request) == false){
 		return;
 	}
 
