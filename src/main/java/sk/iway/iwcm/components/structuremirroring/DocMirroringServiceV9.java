@@ -381,6 +381,7 @@ public class DocMirroringServiceV9 {
          if (group != null) {
             LabelValueDetails link = new LabelValueDetails();
             link.setLabel(group.getNavbarName());
+            link.setValue2(group.getLng());
 
             DocDetails groupDefaultDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);
             if (groupDefaultDoc==null || groupDefaultDoc.isAvailable()==false) continue;
