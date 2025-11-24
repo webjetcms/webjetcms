@@ -19,8 +19,8 @@ if (otherLanguages==null || otherLanguages.size()==0) {
    if (request.getAttribute("inPreviewMode")!=null) {
       String defaultLanguage = Constants.getString("defaultLanguage");
       if (Tools.isEmpty(defaultLanguage)) defaultLanguage = "sk";
-      LabelValueDetails lv = new LabelValueDetails(lng.toUpperCase(), "");
-      lv.setValue2(lng);
+      LabelValueDetails lv = new LabelValueDetails(defaultLanguage.toUpperCase(), "");
+      lv.setValue2(defaultLanguage);
       otherLanguages.add(lv);
       lv = new LabelValueDetails("EN", "");
       lv.setValue2("en");
