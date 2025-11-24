@@ -30,6 +30,7 @@ import sk.iway.iwcm.doc.TemplatesGroupDB;
 import sk.iway.iwcm.grideditor.dto.BlockDto;
 import sk.iway.iwcm.grideditor.dto.CategoryDto;
 import sk.iway.iwcm.grideditor.dto.GroupDto;
+import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
@@ -231,7 +232,24 @@ public class GridEditorController {
             group.setPremium( isPremium(groupId) );
         }else {
             if(includeBlocks){
-                List<BlockDto> blockList = getBlockList(request, rootDirPath, groupId.replace(catId+"/",""));
+                IwayProperties pageBuilderProp = null;
+                try {
+                    pageBuilderProp = new IwayProperties("utf-8");
+                    String lng = Prop.getLng(request, false);
+                    IwcmFile propFile = new IwcmFile(file, "pagebuilder_"+lng+".properties");
+                    if (propFile.exists()==false){
+                        propFile = new IwcmFile(file, "pagebuilder.properties");
+                    }
+                    if (propFile.exists()) {
+                        pageBuilderProp.load(propFile);
+                        group.setTextKey(pageBuilderProp.getProperty("title", group.getTextKey()));
+                        group.setTags(Tools.getTokens(pageBuilderProp.getProperty("tags", null), ",", true));
+                    }
+                } catch (Exception e){
+                    Logger.error(GridEditorController.class, "Error loading pagebuilder properties from file: "+file.getVirtualPath(), e);
+                }
+
+                List<BlockDto> blockList = getBlockList(request, rootDirPath, groupId.replace(catId+"/",""), pageBuilderProp);
                 group.setBlocks(blockList);
             }
         }
@@ -322,7 +340,7 @@ public class GridEditorController {
      * @param groupDirName
      * @return - objekt BlockDto, ktory sa vklada do json pre SideBar
      */
-    private BlockDto getBlockObjectForSideBar(HttpServletRequest request, IwcmFile blockFile, String rootDirPath, String groupDirName){
+    private BlockDto getBlockObjectForSideBar(HttpServletRequest request, IwcmFile blockFile, String rootDirPath, String groupDirName, IwayProperties pageBuilderProp){
         BlockDto block = new BlockDto();
 
         String virtualPath = blockFile.getVirtualPath();
@@ -330,6 +348,7 @@ public class GridEditorController {
         String blockId = filePathNoExtension.replace(rootDirPath+"/","");
         String textKey = blockId.replace(groupDirName+"/","");
         textKey = getTextKey(request, textKey);
+        if (pageBuilderProp != null) textKey = pageBuilderProp.getProperty("title."+FileTools.getFileNameWithoutExtension(blockFile.getName()), textKey);
         String imagePath = getImagePath(filePathNoExtension, request);
         String style = getBlockStyle(virtualPath);
 
@@ -365,14 +384,14 @@ public class GridEditorController {
         return block;
     }
 
-    private List<BlockDto> getBlockList(HttpServletRequest request, String rootDirPath,String groupDirName ){
+    private List<BlockDto> getBlockList(HttpServletRequest request, String rootDirPath, String groupDirName, IwayProperties pageBuilderProp){
         List<BlockDto> blockList = new ArrayList<>();
         IwcmFile tempDir = new IwcmFile(Tools.getRealPath(rootDirPath+"/"+groupDirName));
 
         IwcmFile blocks[] = FileTools.sortFilesByName(tempDir.listFiles());
 
         for (int j = 0; j < blocks.length; j++) {
-            BlockDto block = getBlockObjectForSideBar(request, blocks[j], rootDirPath, groupDirName);
+            BlockDto block = getBlockObjectForSideBar(request, blocks[j], rootDirPath, groupDirName, pageBuilderProp);
             if(block != null) blockList.add(block);
         }
 
@@ -391,7 +410,7 @@ public class GridEditorController {
         String groupDirName = f.getName();
 
         if(f.isDirectory()){
-            List<BlockDto> blockList = getBlockList(request,rootDirPath,groupDirName);
+            List<BlockDto> blockList = getBlockList(request,rootDirPath,groupDirName, null);
 
             String textKey = categoryDirName+"/"+groupDirName;
 
