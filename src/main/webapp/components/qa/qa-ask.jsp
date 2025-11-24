@@ -137,7 +137,7 @@ if (!Constants.getBoolean("disableWysiwyg"))
 
 	</div>
 
-	<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("qa")) { %>
+	<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("qa", request)) { %>
 			<div>
 				<% if ("internal".equals(sk.iway.iwcm.Constants.getString("captchaType"))) { %><label for="wjcaptcha1"><iwcm:text key="checkform.captchaLabelText"/>:</label><% } %>
 					<jsp:include page="/components/form/captcha.jsp"/>

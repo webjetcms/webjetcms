@@ -1,8 +1,6 @@
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
-<%@ page import="sk.iway.iwcm.doc.TemplateDetails" %>
-<%@
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ page import="sk.iway.iwcm.doc.TemplateDetails" %><%@
 		taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 		taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 		taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
@@ -13,7 +11,7 @@
 
 
 	TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
-	if(temp != null && temp.isDisableSpamProtection()){
+	if("none".equals(Constants.getString("captchaType")) || (temp != null && temp.isDisableSpamProtection())){
 		return;
 	}
 

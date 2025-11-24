@@ -265,7 +265,7 @@ float: left;
 			<%}
 		}%>
 		<p>
-			<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("userform")) {%>
+			<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("userform", request)) {%>
 				<jsp:include page="/components/form/captcha.jsp" />
 			<%}%>
 		</p>
