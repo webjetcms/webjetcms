@@ -1463,7 +1463,7 @@ public class Constants {
 
 		setBoolean("reCaptchaEnabled", false, MOD_CAPTCHA,
 				"nastavenim na true, prepne defaultnu WJ captchu na reCaptchu");
-		setString("captchaType", "internal", MOD_CAPTCHA, "Typ capthy. internal / reCaptcha / reCaptchaV3 / invisible");
+		setString("captchaType", "internal", MOD_CAPTCHA, "Typ captchy: internal / reCaptcha / reCaptchaV3 / invisible alebo none pre vypnutie captchy");
 		setBoolean("captchaLoadAfterFocus", true, MOD_CAPTCHA,
 				"Nacitavanie JS pre captchu az po kliknuti do pola formularu");
 
