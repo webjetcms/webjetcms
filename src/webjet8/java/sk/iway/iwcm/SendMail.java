@@ -1165,6 +1165,7 @@ public class SendMail
 
             String smtpMechanism = Constants.getString("smtpAuthMechanism");
             if (Tools.isNotEmpty(smtpMechanism)) {
+				//you can set mechanisms default "LOGIN PLAIN DIGEST-MD5 NTLM", but if you want to force only one, e.g. "NTLM", set only that
                 props.put("mail.smtp.auth.mechanisms", smtpMechanism);
             }
 
