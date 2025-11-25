@@ -42,6 +42,29 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - contactus.html
 ```
 
+## Názov a značky bloku
+
+Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:
+
+```properties
+title=Základné prvky
+icon=fa fa-cubes
+tags=Základné prvky
+title.Citat_v1=Citát v1
+title.Citat_v2=Citát v2
+```
+
+Môžete vytvoriť aj jazykové verzie súboru, napr. `pagebuilder_en.properties`.
+
+Ak používate `pug` formát, tak v súbore `build-pug.js` skontrolujte/doplňte podmienku tak, aby sa preniesol aj `.properties` súbor pre bloky:
+
+```javascript
+  } else if (
+    (filePath.match(/\.png$/) || filePath.match(/\.properties$/))
+    && filePath.match(/pagebuilder/)
+  )
+```
+
 ## Nastavenie šírky stĺpcov
 
 Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nástrojovej lište pri prepínači typu editora je možnosť nastaviť veľkosť (šírku) zariadenia.
