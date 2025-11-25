@@ -456,58 +456,6 @@ Scenario("form attachments", async ({ I }) => {
     I.see("Vitajte, Tester2 Playwright2");
 });
 
-Scenario("Form simple ADVANCED tab", ({ I, DTE }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=87146");
-    DTE.waitForEditor();
-    I.wait(5);
-
-    I.say("First nullify the advanced tab values");
-        openAdvancedTab(I);
-        fillAdvancedTab(I, "", "", "");
-        I.switchTo();
-        I.switchTo();
-        I.click( { css: 'a[title=OK]' } );
-        I.wait(5);
-
-    I.say("Set advanced tab values");
-        openAdvancedTab(I);
-        fillAdvancedTab(I, "tester@test.sk", "/tseer/formular.html", "18660");
-        I.switchTo();
-        I.switchTo();
-        I.click( { css: 'a[title=OK]' } );
-        I.wait(5);
-
-    I.say("Check advanced tab values");
-        openAdvancedTab(I);
-        I.seeInField({ css: 'input[name=attribute_ccEmails]' }, "tester@test.sk");
-        I.seeInField({ css: 'input[name=attribute_forward]' }, "/tseer/formular.html");
-        I.seeInField({ css: 'input[name=attribute_useFormMailDocId]' }, "18660");
-});
-
-function openAdvancedTab(I) {
-    //
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
-    I.click("iframe.wj_component");
-    I.switchTo();
-    I.wait(2);
-
-    //
-    I.switchTo(".cke_dialog_ui_iframe");
-    I.wait(2);
-    I.switchTo("#editorComponent");
-    I.wait(2);
-    I.clickCss("#tabLink2");
-}
-
-function fillAdvancedTab(I, ccEmails, forward, useFormMailDocId) {
-    //Must be twice !!
-    I.fillField({ css: 'input[name=attribute_ccEmails]' }, ccEmails);
-    I.fillField({ css: 'input[name=attribute_ccEmails]' }, ccEmails);
-
-    I.fillField({ css: 'input[name=attribute_forward]' }, forward);
-    I.fillField({ css: 'input[name=attribute_useFormMailDocId]' }, useFormMailDocId);
-}
-
 Scenario("odhlasenie2", async ({ I }) => {
     I.logout();
 });

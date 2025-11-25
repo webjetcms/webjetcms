@@ -259,7 +259,7 @@
 
 		<fieldset>
 
-			<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("dmail")) { %>
+			<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("dmail", request)) { %>
 			<p class="captcha">
 				<% if ("internal".equals(sk.iway.iwcm.Constants.getString("captchaType"))) { %><label for="wjcaptcha1"><iwcm:text key="checkform.captchaLabelText"/>:</label><% } %>
 					<jsp:include page="/components/form/captcha.jsp"/>

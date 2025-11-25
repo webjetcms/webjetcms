@@ -19,12 +19,25 @@ if (otherLanguages==null || otherLanguages.size()==0) {
    if (request.getAttribute("inPreviewMode")!=null) {
       String defaultLanguage = Constants.getString("defaultLanguage");
       if (Tools.isEmpty(defaultLanguage)) defaultLanguage = "sk";
-      otherLanguages.add(new LabelValueDetails(defaultLanguage.toUpperCase(), ""));
-      otherLanguages.add(new LabelValueDetails("EN", ""));
+      LabelValueDetails lv = new LabelValueDetails(defaultLanguage.toUpperCase(), "");
+      lv.setValue2(defaultLanguage);
+      otherLanguages.add(lv);
+      lv = new LabelValueDetails("EN", "");
+      lv.setValue2("en");
+      otherLanguages.add(lv);
    } else {
       return;
    }
 }
+
+String flagsPath = pageParams.getValue("flagsPath", null);
+if (Tools.isNotEmpty(flagsPath)) {
+   //change link.label to flagsPath + value2 + .png
+   for (LabelValueDetails link : otherLanguages) {
+      link.setLabel("<img src=\"" + flagsPath + link.getValue2() + ".png\" alt=\"" + link.getLabel() + "\" />");
+   }
+}
+
 %>
 <ul class="navbar-nav other-languages">
 <c:forEach var="link" items="<%=otherLanguages%>">

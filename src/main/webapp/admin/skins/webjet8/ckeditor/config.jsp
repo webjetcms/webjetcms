@@ -109,6 +109,12 @@ CKEDITOR.editorConfig = function( config )
 	<% } %>
 	config.magicline_color="#F7CA18";
 	config.magicline_triggers = { <%=Constants.getString("editorMagiclineElements")%> };
+	config.magicline_id="";
+	config.magicline_plusIcon='+';
+	if (window.location.href.indexOf("inline")!=-1) {
+		config.magicline_id="pb-wjmagicline";
+		config.magicline_plusIcon='<span class="pb-wjmagicline-plusicon"></span>';
+	}
 	config.bodyId = "WebJETEditorBody";
 	if (window.location.href.indexOf("inline")!=-1)
 	{

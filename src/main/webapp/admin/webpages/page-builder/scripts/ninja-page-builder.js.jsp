@@ -42,6 +42,24 @@
                 window.pbCustomSettings(this);
             }
 
+            this.set_settings_after();
+
+            var me = this;
+            window.webjethtmlboxDialogCommand = function(editor) {
+                //console.log("webjethtmlboxDialogCommand called, editor=", editor);
+                me.show_library_tab(null);
+            }
+
+            //inject section if there is no section in HTML
+            let html = $(this.element).html();
+            if (html.indexOf("<section")==-1)
+            {
+                //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
+                if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
+                html = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'"><div class="'+this.grid.column_default_class+'">'+html+'</div></div></div></section>';
+                $(this.element).html(html);
+            }
+
             this.setTemplateData();
             this.mark_grid_elements();
             this.create_modal();
@@ -165,6 +183,7 @@
                 row:                            prefix+'row',
                 column:                         prefix+'column',
                 column_content:                 prefix+'column__content',
+                content:                        prefix+'content',
 
                 editable_section:               'pb-section',
                 editable_container:             'pb-container',
@@ -251,10 +270,11 @@
                 library_column:                 prefix+'library--column',
                 library_container:              prefix+'library--container',
                 library_section:                prefix+'library--section',
+                library_content:                prefix+'library--content',
 
                 library_header:                 prefix+'library__header',
                 library_header_title:           prefix+'library__header__title',
-                library_content:                prefix+'library__content',
+                library_content_container:      prefix+'library__content',
                 library_footer:                 prefix+'library__footer',
                 library_footer_button:          prefix+'library__footer__button',
 
@@ -285,10 +305,6 @@
 
             // <%-- TAG Classes --%>
             me.tagc = {};
-
-            $.each(me.tag, function(key, val) {
-                me.tagc[key]= '.'+val;
-            });
 
             me.state = {
                 is_styling_column:              prefix+'is-styling-column',
@@ -325,18 +341,15 @@
 
             me.statec = {};
 
-            $.each(me.state, function(key, val) {
-                if(key === 'is_moving_type') {
-                    return;
-                }
-                me.statec[key]= '.'+val;
-            });
-
             me.grid = me.options.grid || {
                 section:                        'section:not(.pb-not-section)',
+                section_default_class:          '',
                 container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
+                container_default_class:        'container',
                 row:                            'div.row',
+                row_default_class:              'row',
                 column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
+                column_default_class:           'col col-md-12',
                 column_content:                 'div.column-content'
             };
 
@@ -347,18 +360,6 @@
                 valid_classes:                  [],
                 attr_prefix:                    'data-'+prefix
             };
-
-            $.each(me.column.valid_prefixes, function(index, class_name) {
-                for (var i = me.column.min_size; i < me.column.max_size+1; i++) {
-                    me.column.valid_classes.push(class_name+i);
-                }
-            });
-            //pridaj aj pb-col a pb-col-auto
-            me.column.valid_classes.push("pb-col");
-            me.column.valid_classes.push("pb-col-auto");
-            me.column.valid_prefixes.push("pb-col");
-            //console.log("me.column.valid_classes=", me.column.valid_classes);
-            //console.log("valid_prefixes=", me.column.valid_prefixes);
 
             me.user_style = {
                 counter: function(){
@@ -450,52 +451,73 @@
                                     "id": "1",
                                     "textKey": "column",
                                     "groups": [
-                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>',        'content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.2",    "textKey": '<span class="pb-col-2">2</span>',        'content': '<div class="col-md-2 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.3",    'textKey': '<span class="pb-col-3">3</span>',        'content': '<div class="col-md-3 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.4",    'textKey': '<span class="pb-col-4">4</span>',        'content': '<div class="col-md-4 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.5",    'textKey': '<span class="pb-col-5">5</span>',        'content': '<div class="col-md-5 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.6",    'textKey': '<span class="pb-col-6">6</span>',        'content': '<div class="col-md-6 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.7",    'textKey': '<span class="pb-col-7">7</span>',        'content': '<div class="col-md-7 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.8",    'textKey': '<span class="pb-col-8">8</span>',        'content': '<div class="col-md-8 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.9",    'textKey': '<span class="pb-col-9">9</span>',        'content': '<div class="col-md-9 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.10",   'textKey': '<span class="pb-col-10">10</span>',      'content': '<div class="col-md-10 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.11",   'textKey': '<span class="pb-col-11">11</span>',      'content': '<div class="col-md-11 '+me.state.is_special_helper+'"></div>'},--%>
-                                        // <%--{ "id": "id1.12",   'textKey': '<span class="pb-col-12">12</span>',      'content': '<div class="col-md-12 '+me.state.is_special_helper+'"></div>'}--%>
+                                        // <%--{ "id": "id1.1",    "textKey": '<span class="pb-col-1">1</span>','content': '<div class="col-md-1 '+me.state.is_special_helper+'"></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "2",
                                     "textKey": "container",
                                     "groups": [
-                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div>'},--%>
-                                        // <%--{"id": "id2.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div>'},--%>
-                                        // <%--{"id": "id2.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div>'}--%>
+                                        // <%--{"id": "id2.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div>'},--%>
                                     ]
                                 },
                                 {
                                     "id": "3",
                                     "textKey": "section",
                                     "groups": [
-                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>',                                                                                                                                                          'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.2",     'textKey': '<span class="pb-col-6">6</span><span class="pb-col-6">6</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/2+'"></div><div class="col-md-'+ me.options.max_col_size/2+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.3",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-4">4</span><span class="pb-col-4">4</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.4",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span><span class="pb-col-3">3</span>',                                                               'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.5",     'textKey': '<span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span><span class="pb-col-2">2</span>', 'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div><div class="col-md-'+ me.options.max_col_size/6+'"></div></div></div></section>'},--%>
-                                        // <%--{"id": "id3.6",     'textKey': '<span class="pb-col-4">4</span><span class="pb-col-8">8</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/3+'"></div><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.7",     'textKey': '<span class="pb-col-8">8</span><span class="pb-col-4">4</span>',                                                                                                                             'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ (me.options.max_col_size/3)*2+'"></div><div class="col-md-'+ me.options.max_col_size/3+'"></div></div></section>'},--%>
-                                        // <%--{"id": "id3.8",     'textKey': '<span class="pb-col-3">3</span><span class="pb-col-6">6</span><span class="pb-col-3">3</span>',                                                                                              'content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size/4+'"></div><div class="col-md-'+ (me.options.max_col_size/4)*2+'"></div><div class="col-md-'+ me.options.max_col_size/4+'"></div></div></div></section>'}--%>
+                                        // <%--{"id": "id3.1",     'textKey': '<span class="pb-col-12">12</span>','content': '<section><div class="container"><div class="row '+me.state.is_special_helper+'"><div class="col-md-'+ me.options.max_col_size+'"></div></div></div></section>'},--%>
+                                    ]
+                                },
+                                {
+                                    "id": "4",
+                                    "textKey": "content",
+                                    "groups": [
+                                        { id: "id4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
+                                        { id: "id4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
+                                        { id: "id4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
+                                        { id: "id4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
+                                        { id: "id4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
+                                        { id: "id4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
+                                        { id: "id4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
+                                        { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
+                                        { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
+                                        { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
+                                        { id: "id4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
                                 }
                             ];
             me.template.library = [];
             me.template.favorite = [];
 
+        },
+
+        set_settings_after: function() {
+            var me = this,
+                prefix = me.options.prefix+'-';
+
+            $.each(me.tag, function(key, val) {
+                me.tagc[key]= '.'+val;
+            });
+
+            $.each(me.state, function(key, val) {
+                if(key === 'is_moving_type') {
+                    return;
+                }
+                me.statec[key]= '.'+val;
+            });
+
+            $.each(me.column.valid_prefixes, function(index, class_name) {
+                for (let i = me.column.min_size; i < me.column.max_size+1; i++) {
+                    me.column.valid_classes.push(class_name+i);
+                }
+            });
+            //pridaj aj pb-col a pb-col-auto
+            me.column.valid_classes.push(prefix+"col");
+            me.column.valid_classes.push(prefix+"col-auto");
+            me.column.valid_prefixes.push(prefix+"col");
+            //console.log("me.column.valid_classes=", me.column.valid_classes);
+            //console.log("valid_prefixes=", me.column.valid_prefixes);
         },
 
         setTemplateData: function(){
@@ -541,6 +563,11 @@
                     groups: groups
                 });
             });
+            ret.push({
+                id: 4,
+                textKey: "content",
+                groups: me.template.basic[3].groups
+            });
             me.template.basic = ret;
 
             // <%-- nested functions--%>
@@ -556,7 +583,7 @@
                 return {
                     id: "id"+parentId+"."+id,
                     textKey: '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>',
-                    content: '<div class="col-md-'+v+' '+me.state.is_special_helper+'">Text</div>'
+                    content: '<div class="'+me.column.valid_prefixes[0]+v+' '+me.state.is_special_helper+'">Text</div>'
                 }
             }
             function getContainers(parentId,options){
@@ -569,18 +596,15 @@
             function getContainer(parentId,id,vals)
             {
                 // <%--//div.container alebo div.containerInner podla konfiguracie--%>
-                var containerClass = me.grid.container;
-                var dot = containerClass.indexOf(".");
-                if (dot!=-1) containerClass = containerClass.substring(dot+1);
-                if (containerClass.indexOf(" ")!=-1) containerClass = "container";
+                var containerClass = me.grid.container_default_class;
 
                 var textKey = '',
-                    content = '<div class="'+containerClass+'"><div class="row '+me.state.is_special_helper+'">';
+                    content = '<div class="'+containerClass+'"><div class="'+me.grid.row_default_class+' '+me.state.is_special_helper+'">';
                 $.each(vals,function(i,v){
                     var pb_col_size = (v/me.options.max_col_size)*12;
                     textKey += '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>';
                 });
-                $.each(vals,function(i,v){ content += '<div class="col-md-'+v+'">Text</div>'; });
+                $.each(vals,function(i,v){ content += '<div class="'+me.column.valid_prefixes[0]+v+'">Text</div>'; });
                 content += '</div></div>';
 
                 return {
@@ -592,7 +616,7 @@
             function getSections(parentId,options){
                 var containers = getContainers(parentId,options);
                 $.each(containers,function(i,v){
-                    v.content = '<section>'+v.content+'</section>';
+                    v.content = '<section class="'+me.grid.section_default_class+'">'+v.content+'</section>';
                 });
                 return containers;
             }
@@ -771,7 +795,6 @@
             if (column_sizes.length < 1) {
                 return;
             }
-
 
             $(column).addClass(me.tags.column);
 
@@ -1113,7 +1136,10 @@
             if(typeof content === 'undefined') {
                 content = '';
             }
-            return '<aside class="'+class_name+'">'+content+'</aside>';
+            var iconSpan = "";
+            //console.log("build_aside, class_name=", class_name);
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
+            return '<aside class="'+class_name+'">'+iconSpan+content+'</aside>';
         },
 
         /*==================================================================
@@ -1121,7 +1147,13 @@
         /*=================================================================*/
 
         get_actual_screen_size:function () {
-            var colPrefix = 'col-xl-';
+
+            if (typeof window.pbScreenSizePrefix === "function") {
+                //console.log("Using custom pbScreenSizePrefix function");
+                return window.pbScreenSizePrefix(this);
+            }
+
+            var colPrefix = this.column.valid_prefixes[4];
 
             var screenSize =  $(window).width();
 
@@ -1136,8 +1168,8 @@
             // <%--else if (screenSize < 1200) colPrefix = "col-lg-";--%>
             // <%--*/--%>
             // <%--//standardne pouzivame len col- a col-md            --%>
-            if (screenSize < 768) colPrefix = "col-";
-            else if (screenSize < 1200) colPrefix = "col-md-";
+            if (screenSize < 768) colPrefix = this.column.valid_prefixes[0];
+            else if (screenSize < 1200) colPrefix = this.column.valid_prefixes[2];
 
             // <%--console.log("get_actual_screen_size: ", screenSize, "colPrefix: ", colPrefix);--%>
 
@@ -1147,11 +1179,15 @@
         },
 
         get_actual_column_size: function(column) {
-            var size = parseInt( $(column).attr(this.column.attr_prefix+this.get_actual_screen_size()) );
+            var value = $(column).attr(this.column.attr_prefix+this.get_actual_screen_size());
+            if ("auto"===value) {
+                return value;
+            }
+            var size = parseInt( value );
             //console.log("size=", size);
             //nema zadanu velkost pre dany breakpoint, nacitaj default bez prefixu
-            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+"col-") );
-            //console.log("size=", size)
+            if (Number.isNaN(size)) size = parseInt( $(column).attr(this.column.attr_prefix+this.column.valid_prefixes[0]) );
+            if (Number.isNaN(size)) size = this.column.max_size;
             return size;
         },
 
@@ -1176,17 +1212,21 @@
         change_column_size: function (el,size) {
 
             var column = this.get_parent_grid_element($(el)),
-                actual_size = this.get_actual_column_size(column),
-                new_size = actual_size + (size);
+                actual_size = this.get_actual_column_size(column);
 
-            //console.log("change_column_size, column=", column, "new_size=", new_size);
-
-            if(new_size > this.options.max_col_size) {
-                new_size = this.options.max_col_size;
+            var new_size = actual_size + (size);
+            if ("auto" === actual_size) {
+                if (size > 0) {
+                    new_size = 1;
+                } else if (size < 0) {
+                    new_size = this.options.max_col_size;
+                } else {
+                    new_size = actual_size;
+                }
             }
 
-            if(new_size < 1) {
-                new_size = 1;
+            if(new_size > this.options.max_col_size || new_size < 1) {
+                new_size = "auto";
             }
 
             $(column)
@@ -1194,7 +1234,30 @@
                 .removeClass(this.get_actual_screen_size() + actual_size)
                 .addClass(this.get_actual_screen_size() + new_size);
 
-            $(column).find(this.tagc.size_changer_number).html(new_size);
+            var screenSizeText = this.get_actual_screen_size();
+            try {
+                //remove valid_prefixes[0] from screenSizeText
+                if (screenSizeText === this.column.valid_prefixes[0]) {
+                    screenSizeText = "";
+                } else {
+                    screenSizeText = screenSizeText.substring(this.column.valid_prefixes[0].length);
+                }
+                //if ends with - remove it
+                if (screenSizeText.endsWith("-")) {
+                    screenSizeText = screenSizeText.slice(0, -1);
+                }
+            } catch (e) {
+                console.error("Error processing screenSizeText:", e);
+            }
+            //if its longer than 4 characters, shorten it to LAST 4 characters
+            if (screenSizeText.length > 4) {
+                screenSizeText = screenSizeText.slice(-4);
+            }
+            if (screenSizeText !== "") {
+                screenSizeText = " [" + screenSizeText + "]";
+            }
+
+            $(column).find(this.tagc.size_changer_number).html(new_size+screenSizeText.toUpperCase());
         },
 
         listen_for_shift_key: function(e) {
@@ -1581,24 +1644,72 @@
             if($(parent).children(this.tagc.column).length < 1) {
                 size = this.options.max_col_size;
             }
-            return '<div class="col-md-' + size + '"></div>';
+            return '<div class="'+me.column.valid_prefixes[0] + size + '"></div>';
         },
 
         make_new_row: function () {
-            return '<div class="row"></div>';
+            return '<div class="'+this.grid.row_default_class+'"></div>';
         },
 
         make_new_container: function () {
-            return '<div class="container"></div>';
+            return '<div class="'+this.grid.container_default_class+'"></div>';
         },
 
         make_new_section: function () {
-            return '<section class=""></section>';
+            return '<section class="'+this.grid.section_default_class+'"></section>';
         },
 
         /*==================================================================
         /*====================|> CREATE LIBRARY
         /*=================================================================*/
+
+        insert_content_into_ckeditor_at_cursor: function(html) {
+            var oEditor = window.getCkEditorInstance();
+            if (html.indexOf("<span") == 0) {
+                oEditor.insertHtml(html)
+            } else if (html.indexOf("!INCLUDE")!=-1) {
+                oEditor.wjInsertUpdateComponent(html);
+            } else {
+                oEditor.wjInsertHtml(html);
+            }
+
+            if (html.indexOf("pb-split-column-placeholder")!=-1) {
+                var splitElement = $(".pb-split-column-placeholder").first();
+                if (splitElement.length>0) {
+                    var grid_element = this.get_parent_grid_element(splitElement);
+                    var columnHtmlCode = $(grid_element).prop('outerHTML');
+
+                    //we must wrap it into section because otherwise cleanup will not remove necessary classes
+                    columnHtmlCode = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'">'+columnHtmlCode+'</div></div></section>';
+
+                    var clone = $(columnHtmlCode);
+                    this.clearEditorAttributes(clone);
+
+                    var cleanHtml = clone.find(this.grid.column).prop("outerHTML");
+                    $(cleanHtml).insertAfter(grid_element);
+
+                    //iterate over elements in splitElement parent and delete all after+including splitElement
+                    var elementsToRemove = splitElement.nextAll().addBack();
+                    elementsToRemove.remove();
+
+                    //find news inserted column
+                    var newElement = $(grid_element).next();
+                    newElement.prop("outerHTML", clone.find("."+this.grid.column_default_class).prop("outerHTML"));
+
+                    //iterate over elements in newElement, find .pb-split-column-placeholder and remove all elements before it + itself
+                    var splitPlaceholder = newElement.find(".pb-split-column-placeholder");
+                    if (splitPlaceholder.length>0) {
+                        var elementsToRemoveBefore = splitPlaceholder.prevAll().addBack();
+                        elementsToRemoveBefore.remove();
+                    }
+
+                    //mark PB and call ckeditor init
+                    this.mark_column(newElement);
+                    this.options.onGridChanged();
+                }
+
+            }
+        },
 
         create_library: function () {
 
@@ -1606,7 +1717,7 @@
 
             var library  = '<div class="'+this.tag.library+'">';
             library += '<div class="'+this.tag.library_header+'"><div class="'+this.tag.library_header_title+'"><iwcm:text key="pagebuilder.create_library.insert"/></div>'+this.create_library_tab_menu()+'</div>';
-            library += '<div class="'+this.tag.library_content+'">'+this.create_library_tab_content()+'</div>';
+            library += '<div class="'+this.tag.library_content_container+'">'+this.create_library_tab_content()+'</div>';
             library += '<div class="'+this.tag.library_footer+'">'+ this.build_button(this.tag.library_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
             library += '</div>';
 
@@ -1642,6 +1753,8 @@
 
         // <%--// otvara taby basic/library/favorite--%>
         show_library_tab: function (el) {
+            //console.log("show_library_tab, el=", el);
+
             this.clicked_button = $(el);
 
             var me = this,
@@ -1651,12 +1764,13 @@
             $(me.tagc.library).removeClass(me.tag.library_column);
             $(me.tagc.library).removeClass(me.tag.library_container);
             $(me.tagc.library).removeClass(me.tag.library_section);
+            $(me.tagc.library).removeClass(me.tag.library_content);
 
-            $('.library-tab-link').removeClass('active');
-            $('.library-tab-link').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-link').removeClass('active');
+            $(me.tagc.library + ' .library-tab-link:nth-child(2)').addClass('active');
 
-            $('.library-tab-item').removeClass('active');
-            $('.library-tab-item').first().addClass('active');
+            $(me.tagc.library + ' .library-tab-item').removeClass('active');
+            $(me.tagc.library + ' .library-tab-item:nth-child(2)').addClass('active');
 
             //console.log("show_library_tab, parent=", $(parent), "css=", $(parent).attr("class"), "el=", this.clicked_button, "isEmptyPlaceholderButton=", isEmptyPlaceholderButton);
 
@@ -1670,6 +1784,14 @@
 
             if($(parent).hasClass(me.tag.container)) {
                 $(me.tagc.library).addClass(me.tag.library_container);
+            }
+
+            if (el == null) {
+                $(me.tagc.library).addClass(me.tag.library_content);
+                //hide favourites tab - there is no way to add content to favourites from CKEditor
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').hide();
+            } else {
+                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
             }
 
             if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
@@ -1710,8 +1832,8 @@
                 content_03 = me.create_library_content_template('favorite');
 
             var tab = '<div class="library-tab-content">';
-            tab += '<div class="library-tab-item library-tab-item--basic active" data-tab-id="01">'+content_01+'</div>';
-            tab += '<div class="library-tab-item library-tab-item--library" data-tab-id="02">'+content_02+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--basic" data-tab-id="01">'+content_01+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--library active" data-tab-id="02">'+content_02+'</div>';
             tab += '<div class="library-tab-item library-tab-item--favorite '+me.tag.library_favorites+'" data-tab-id="03">'+content_03+'</div>';
             tab += '</div>';
 
@@ -1739,9 +1861,18 @@
                     return;
                 }
 
-                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty);
+                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
-                if($(parent).hasClass(me.tag.column)) {
+                if (parent == null) {
+                    //its content element, insert into CkEditor
+                    var columns = me.get_json_object_by_attribute(me.template[template_type],'textKey','content');
+                    var groups = me.get_json_object_by_attribute(columns.groups,'id',id);
+
+                    //console.log("Inserting content into CKEditor:", content, "groups=", groups);
+                    var html = groups.content;
+                    me.insert_content_into_ckeditor_at_cursor(html);
+
+                } else if($(parent).hasClass(me.tag.column)) {
                     if(empty) {
                         alert('error 1: column empty. Please contact web administrator');
                         return;
@@ -1919,13 +2050,15 @@
                     me.mark_section(insert_content);
                 }
 
-                me.set_toolbar_visible(insert_content);
-                $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
+                if (parent != null) {
+                    me.set_toolbar_visible(insert_content);
+                    $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
 
-                me.newElement = $(insert_content);
-                me.options.onNewElementAdded();
-                me.changedElement = $(insert_content);
-                me.options.onGridChanged();
+                    me.newElement = $(insert_content);
+                    me.options.onNewElementAdded();
+                    me.changedElement = $(insert_content);
+                    me.options.onGridChanged();
+                }
 
                 me.hide_library();
 
@@ -1989,6 +2122,7 @@
                 else if($(parent).hasClass(me.tag.row)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.container)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.section)) parentTag = "section";
+                else if($(parent).hasClass(me.tag.content)) parentTag = "content";
 
                 //ak sa klikne na emptybutton musime posunut uroven parenta vyssie
                 var emptyClick = me.clicked_button.hasClass(me.tag.empty_placeholder_button);
@@ -2003,13 +2137,20 @@
                     else if(parentTag=="container") parentTag = "column";
                     else if (parentTag=="section") parentTag = "container";
                 }
-                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button);
 
-                if(parentTag != null) {
+                if (parentTag == null) parentTag = "content";
+                //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
+
+                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
+                //console.log("html=", html);
+
+                if ("content" === parentTag) {
+                    //insert content block into CKEditor
+                    html = html.trim();
+                    me.insert_content_into_ckeditor_at_cursor(html);
+                }
+                else if(parentTag != null) {
                         var clicked_button = me.clicked_button;
-
-                        var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
-                        //console.log("html=", html);
 
                         //ak vkladam tab-pane tak ho fyzicky potrebujem vlozit do div.tab-content (ak existuje)
                         if (html.indexOf("<div class=\"tab-pane")==0) {
@@ -2146,7 +2287,7 @@
         create_library_content_template: function(type) {
             var content = '';
 
-            var libraryMainGroups = ['section', 'container', 'column'];
+            var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
             libraryMainGroups.forEach(function (group, index) {

@@ -31,6 +31,14 @@ public class PerexGroupBean
    private String availableGroups;
 
    /**
+	* Return original perexGroupName. Not language variation
+	* @return String - perexGroupName
+    */
+   	public String getBasicPerexGroupName() {
+	   return perexGroupName;
+   	}
+
+   /**
      * Get perex group name by language of current webpage
      * @return
      */
@@ -86,6 +94,27 @@ public class PerexGroupBean
 	public void setPerexGroupName(String perexGroupName)
 	{
 		this.perexGroupName = perexGroupName;
+	}
+
+	/**
+	 * Set perex group name by language
+	 * @param lng
+	 * @param perexGroupName
+	 */
+	public void setPerexGroupName(String lng, String perexGroupName)
+	{
+		 switch(lng) {
+            case "sk": perexGroupNameSk = perexGroupName; break;
+            case "cz": perexGroupNameCz = perexGroupName; break;
+            case "en": perexGroupNameEn = perexGroupName; break;
+            case "de": perexGroupNameDe = perexGroupName; break;
+            case "pl": perexGroupNamePl = perexGroupName; break;
+            case "ru": perexGroupNameRu = perexGroupName; break;
+            case "hu": perexGroupNameHu = perexGroupName; break;
+            case "cho": perexGroupNameCho = perexGroupName; break;
+            case "esp": perexGroupNameEsp = perexGroupName; break;
+            default: return;
+        }
 	}
 
 	/**
