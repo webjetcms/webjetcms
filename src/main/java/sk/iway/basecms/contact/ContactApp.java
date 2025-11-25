@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
@@ -24,6 +24,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * <p>Príkladová trieda pre komponentu - http://docs.webjetcms.sk/v2022/#/custom-apps/spring-mvc/</p>
@@ -95,6 +96,10 @@ public class ContactApp extends WebjetComponentAbstract {
 	public String view(Model model, HttpServletRequest request)
 	{
         model.addAttribute("contants", contactRepository.findAllByCountry(country, null));
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user != null) {
+            model.addAttribute("currentUser", user);
+        }
 		return "/apps/contact/mvc/list";
 	}
 
@@ -142,13 +147,20 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null) {
+            return view(model, request);
+        }
+
         if (!result.hasErrors()) {
             contactRepository.save(entity);
-            return "redirect:" + PathFilter.getOrigPath(request);
+            model.addAttribute("success", Boolean.TRUE);
+            model.addAttribute("fileInfo", "Uploaded file: " + entity.getDocument().getOriginalFilename() + " (" + entity.getDocument().getSize() + " bytes)");
+            return view(model, request);
         }
         model.addAttribute("error", result);
         model.addAttribute("entity", entity);
-        return "/apps/contact/mvc/edit";
+        return edit(entity.getId(), model, request);
     }
 
 }

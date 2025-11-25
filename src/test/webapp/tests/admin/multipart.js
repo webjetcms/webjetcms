@@ -74,3 +74,23 @@ Scenario('form multiupload', ({ I, DT, DTE }) => {
     verifyForm("multiupload", text, I, DT, DTE);
 });
 
+Scenario('spring upload @current', ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/spring-app/kontakty/");
+    I.click("Upraviť", ".table-responsive table tbody tr:nth-child(4) .btn-secondary");
+    let text = "Spring upload test "+randomNumber;
+
+    I.seeInField("#name", "Tretia firma a. s.");
+    I.fillField("#street", text);
+    I.attachFile('input[type="file"]', filePath);
+
+    I.click("Potvrdiť", ".container form .btn-primary");
+
+    I.waitForText("Formulár bol úspešne odoslaný", 5, ".alert-success");
+    I.see("Uploaded file: "+fileName+" (51918 bytes)", ".alert-info");
+
+    //
+    I.say("Verify data");
+    I.amOnPage("/apps/spring-app/kontakty/");
+    I.click("Upraviť", ".table-responsive table tbody tr:nth-child(4) .btn-secondary");
+    I.seeInField("#street", text);
+});
