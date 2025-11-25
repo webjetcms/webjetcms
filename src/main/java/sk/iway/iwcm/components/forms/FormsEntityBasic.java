@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserDetailsConverter;
 
@@ -31,22 +33,57 @@ import sk.iway.iwcm.users.UserDetailsConverter;
 @Setter
 @Getter
 public class FormsEntityBasic {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_forms")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "formslist.tools",
+        renderFormatLinkTemplate = "javascript:openFormHtml('{{formName}}');",
+        renderFormatPrefix = "<i class=\"ti ti-eye\"></i>",
+        orderable = false,
+        hiddenEditor = true
+    )
+    private String preview;
+
     @Column(name = "form_name")
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = "formslist.nazov_formularu"
+    )
     private String formName;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title="formslist.pocet_zaznamov")
+    private transient Integer count;
 
     @Lob
     private String data;
 
-    @Lob
-    private String files;
-
     @Column(name = "create_date")
     @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formslist.createDate")
     private Date createDate;
+
+    @Column(name = "last_export_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formlist.export.lastExportDate")
+    private Date lastExportDate;
+
+    @Lob
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="formslist.note")
+    private String note;
+
+    @Lob
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title="formslist.attachments", className = "cell-not-editable"
+    )
+    private String files;
 
     @Lob
     private String html;
@@ -56,15 +93,8 @@ public class FormsEntityBasic {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
     private UserDetails userDetails;
 
-    @Lob
-    private String note;
-
     @Column(name = "doc_id")
     private int docId;
-
-    @Column(name = "last_export_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date lastExportDate;
 
     @Column(name = "domain_id")
     private int domainId;
@@ -78,7 +108,4 @@ public class FormsEntityBasic {
 
     @Transient
     private Map<String, String> columnNamesAndValues;
-
-    @Transient
-    private int count;
 }

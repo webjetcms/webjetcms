@@ -577,8 +577,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 //System.out.println("---------------------------- item="+item);
                 if (item != null) fieldType = item.getString("fieldType");
 
-                String label = Tools.getStringValue(item.getString("label"), "");
-                label = StringEscapeUtils.unescapeHtml4(label);
+                String value = "";
+                if (item.has("value")) {
+                    value = Tools.getStringValue(item.getString("value"), "");
+                }
 
                 boolean required = false;
                 try {
@@ -588,30 +590,24 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     catch (Exception ex2) {}
                 }
 
-                String value = "";
-                if (item.has("value")) {
-                    value = Tools.getStringValue(item.getString("value"), "");
-                }
+                String label = Tools.getStringValue(item.getString("label"), "");
+                label = StringEscapeUtils.unescapeHtml4(label);
 
                 String placeholder = "";
-                if (item.has("placeholder"))
-                {
+                if (item.has("placeholder")) {
                     placeholder = Tools.getStringValue(item.getString("placeholder"), "");
-                    if (Tools.isNotEmpty(placeholder))
-                    {
+
+                    if (Tools.isNotEmpty(placeholder)) {
                         placeholder = ResponseUtils.filter(placeholder);
 
                         //ak je zadany placeholder a nebol zadany label, tak label schovat
-                        if (Tools.isEmpty(Tools.getStringValue(item.getString("labelOriginal"), "")))
-                        {
+                        if (Tools.isEmpty(Tools.getStringValue(item.getString("labelOriginal"), ""))) {
                             if (isEmailRender==false) html = Tools.replace(html, "<label ", "<label class=\"d-none\" ");
 
-                            //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat
+                            //pretoze z label sa generuje potom ID/name elementu a potrebujeme polia rozlisovat (juts in case of JSP and rest only if they are checkboxes or radios)
                             label = placeholder;
-                            if (required) {
-                                if (Tools.isNotEmpty(requiredLabelAdd)) {
-                                    placeholder += requiredLabelAdd;
-                                }
+                            if (required &&Tools.isNotEmpty(requiredLabelAdd)) {
+                                placeholder += requiredLabelAdd;
                             }
                         }
                     }
@@ -629,7 +625,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 }
 
                 String labelSanitized = Jsoup.parse(label).text();
-                String id = item.getString("itemFormId");
+
+                //New logic prepare ID in itemFormId, old logic gonna be kept for backward compatibility
+                String id = "";
+                if(item.has("itemFormId")) id = item.getString("itemFormId");
+                else id = DocTools.removeChars(label, true);
+
                 String classes = "";
                 if (required) {
                     classes="required ";
@@ -641,8 +642,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 }
 
                 if (isEmailRender) tooltip = "";
-
-                //System.out.println("html="+html+" label="+label+" placeholder="+placeholder+" id="+id);
 
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading."+fieldType;
