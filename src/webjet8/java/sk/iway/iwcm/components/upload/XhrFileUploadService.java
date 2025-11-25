@@ -10,6 +10,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
@@ -222,19 +223,9 @@ public class XhrFileUploadService {
 
         if (file == null || !file.exists()) return null;
 
-        String originalFilename = file.getName();
+        String originalFilename = getOriginalFileName(fileKey);
 
-        if (originalFilename.startsWith(FINAL_PREFIX)) {
-            String baseName = originalFilename.substring(FINAL_PREFIX.length()).split(SEPARATOR)[0];
-            int dotIndex = originalFilename.lastIndexOf('.');
-            if (dotIndex != -1) {
-                originalFilename = baseName + originalFilename.substring(dotIndex);
-            } else {
-                originalFilename = baseName;
-            }
-        }
-
-        if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files"))
+        if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files") || dirVirtualPath.startsWith(FormMailAction.FORM_FILE_DIR))
         {
             originalFilename = DB.internationalToEnglish(originalFilename);
             originalFilename = DocTools.removeCharsDir(originalFilename, true).toLowerCase();
@@ -266,7 +257,7 @@ public class XhrFileUploadService {
         IwcmFile dirFile = new IwcmFile(dir);
         String dirVirtualPath = dirFile.getVirtualPath();
 
-        if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files"))
+        if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files") || dirVirtualPath.startsWith(FormMailAction.FORM_FILE_DIR))
         {
             fileName = DB.internationalToEnglish(fileName);
             fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();
@@ -290,6 +281,26 @@ public class XhrFileUploadService {
     public boolean delete(String hash) {
         IwcmFile file = getTempFinalFile(hash);
         return file != null && file.delete();
+    }
+
+    public String getOriginalFileName(String fileKey)
+    {
+        IwcmFile file = getTempFinalFile(fileKey);
+        if (file == null || !file.exists()) return null;
+
+        String originalFilename = file.getName();
+
+        if (originalFilename.startsWith(FINAL_PREFIX)) {
+            String baseName = originalFilename.substring(FINAL_PREFIX.length()).split(SEPARATOR)[0];
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex != -1) {
+                originalFilename = baseName + originalFilename.substring(dotIndex);
+            } else {
+                originalFilename = baseName;
+            }
+        }
+
+        return originalFilename;
     }
 
     public String getTempFileName(String fileKey)

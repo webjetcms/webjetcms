@@ -24,7 +24,6 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
-import sk.iway.iwcm.system.stripes.MultipartWrapper;
 
 /**
  * <p>Príkladová trieda pre komponentu - http://docs.webjetcms.sk/v2022/#/custom-apps/spring-mvc/</p>
@@ -143,9 +142,6 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
-        //you can process multipart file using request.getAttribute("MultipartWrapper.files")
-        entity.setDocument(MultipartWrapper.getFileStoredInRequest("document", request));
-
         if (!result.hasErrors()) {
             contactRepository.save(entity);
             return "redirect:" + PathFilter.getOrigPath(request);

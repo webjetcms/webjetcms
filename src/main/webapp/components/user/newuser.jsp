@@ -277,6 +277,7 @@ float: left;
 			<%=pageParams.persistToSession(request) %>
 			<stripes:submit id="bSubmitIdAjax" name="bSubmit" onclick="return invokeWJAjax('regUserFormDiv', 'ajaxFormResultContainer', 'bSubmit', '/RegUserAjax.action');"><iwcm:text key="button.save"/></stripes:submit>
 			<% } %>
+			<%sk.iway.iwcm.system.stripes.CSRF.writeCsrfTokenInputFiled(session, out);%>
 		</p>
    </fieldset>
 </iwcm:stripForm>
