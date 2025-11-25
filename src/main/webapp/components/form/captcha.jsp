@@ -36,7 +36,7 @@
 	{%>
 		<div class="form-group form-group-captcha">
 			<label><%=sk.iway.iwcm.system.captcha.Captcha.getImage(request) %></label>
-			<input type="text" id="wjcaptcha1" name="wjcaptcha" class="required captcha form-control" size="20" maxlength="255" value="" />
+			<input type="text" id="wjcaptcha1" name="wjcaptcha" class="required captcha form-control mb-3" size="20" maxlength="255" value="" />
 			<style type="text/css">
 				div.form-group-captcha .cs-error { display: none !important; }
 			</style>

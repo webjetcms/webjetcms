@@ -21,14 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
-import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -41,15 +38,16 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class FormItemsRestController extends DatatableRestControllerV2<FormItemEntity, Long> {
 
     private final FormItemsRepository formItemsRepository;
-    private final FormStepsRepository formStepsRepository;
     private final RegExpRepository regExpRepository;
 
+    private final MultistepFormsService multistepFormsService;
+
     @Autowired
-    public FormItemsRestController(FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, RegExpRepository regExpRepository) {
+    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService) {
         super(formItemsRepository);
         this.formItemsRepository = formItemsRepository;
-        this.formStepsRepository = formStepsRepository;
         this.regExpRepository = regExpRepository;
+        this.multistepFormsService = multistepFormsService;
     }
 
     @Override
@@ -72,7 +70,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
-        page.addOptions("stepId", MultistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), formStepsRepository), "label", "value", false);
+        page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest())), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
 
         return page;
@@ -144,42 +142,18 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         for(Integer regexId : entity.getRegexValidationArr()) sb.append(regexId).append("+");
         entity.setRegexValidation(sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "");
 
-
         //Prepare itemFormId - if insert
         if(entity.getId() == null || entity.getId() < 1) {
-            String itemFormId = DocTools.removeChars(entity.getFieldType(), true);
-
-            // Generate unique itemFormId with numeric postfix.
-            // Collect existing itemFormIds for this form/field type.
-            List<String> existingIds = formItemsRepository.getItemFormIds(entity.getFormName(), entity.getFieldType(), CloudToolsForCore.getDomainId());
-
-            String prefix = itemFormId + "-";
-            int biggestPostfix = 0;
-
-            // Determine highest numeric postfix used so far for the given prefix.
-            for (String existing : existingIds) {
-                if (existing != null && existing.startsWith(prefix)) {
-                    int lastDash = existing.lastIndexOf('-');
-                    if (lastDash > -1 && lastDash + 1 < existing.length()) {
-                        String numberPart = existing.substring(lastDash + 1);
-                        int num = Tools.getIntValue(numberPart, -1);
-                        if (num > biggestPostfix) biggestPostfix = num;
-                    }
-                }
-            }
-
-            // Next available postfix.
-            int nextPostfix = biggestPostfix + 1;
-            String candidate = prefix + nextPostfix;
-
-            // Safety loop if duplicates somehow appear in the loaded list.
-            while (existingIds.contains(candidate)) {
-                nextPostfix++;
-                candidate = prefix + nextPostfix;
-            }
-
-            entity.setItemFormId(candidate);
+            //Set itemFormId
+            String itemFormId = multistepFormsService.getValidItemFormId(entity); // generate unique
+            entity.setItemFormId(itemFormId);
         }
+    }
+
+    @Override
+    public void afterSave(FormItemEntity entity, FormItemEntity saved) {
+        // After save ensure that form pattern is updated
+        multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
     @GetMapping("/field-preview")

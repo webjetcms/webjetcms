@@ -47,7 +47,7 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", tab = "main")
     private String fieldType;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.formsimple.required", tab = "main")
     private Boolean required;
 
     @Column(name = "label")
@@ -77,7 +77,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String itemFormId;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.form_items.regex_validation", hidden = true, tab = "main")
     private transient Integer[] regexValidationArr;
 
     @Column(name = "domain_id")
