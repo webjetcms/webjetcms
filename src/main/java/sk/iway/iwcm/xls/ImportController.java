@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
@@ -29,7 +29,7 @@ public class ImportController {
 
     @PostMapping("/admin/import/excel/")
     @ResponseBody
-    public void importFromExcel(@RequestParam("file") CommonsMultipartFile file, HttpServletRequest request, HttpServletResponse response) {
+    public void importFromExcel(@RequestParam("file") MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
         try {
             Identity user = UsersDB.getCurrentUser(request);
             if (user == null || user.isAdmin()==false) {

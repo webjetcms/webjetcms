@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
@@ -814,7 +814,7 @@ public class DocForumService {
 	 * @param request
 	 * @return - path to file (forward)
 	 */
-	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request) {
+	public static String uploadForumFile(MultipartFile uploadFile, HttpServletRequest request) {
 		int forumId = Tools.getIntValue(request.getParameter("forumId") , -1);
 		if(forumId == -1 || uploadFile == null || uploadFile.isEmpty()) return null;
 
@@ -831,7 +831,7 @@ public class DocForumService {
 		return SAVE_FORUM_SUCCESS;
 	}
 
-	private static String uploadForumFileLogic(CommonsMultipartFile uploadedFile, DocForumEntity docForum, HttpServletRequest request) throws IOException {
+	private static String uploadForumFileLogic(MultipartFile uploadedFile, DocForumEntity docForum, HttpServletRequest request) throws IOException {
 		//Check logged user
 		Identity user = UsersDB.getCurrentUser(request);
 		if (user == null) {
@@ -853,13 +853,13 @@ public class DocForumService {
 		}
 
 		//Check uploaded file size limit
-		if (uploadLimits.getInt1() > 0 && (uploadLimits.getInt1() * 1024) < uploadedFile.getFileItem().getSize()) {
+		if (uploadLimits.getInt1() > 0 && (uploadLimits.getInt1() * 1024) < uploadedFile.getSize()) {
 			setPermissionDenied(request, "fileSize");
 			return SAVE_FORUM_SUCCESS;
 		}
 
 		//Check the file rights
-		String fileName = DocTools.removeChars(uploadedFile.getFileItem().getName()).toLowerCase();
+		String fileName = DocTools.removeChars(uploadedFile.getOriginalFilename()).toLowerCase();
 
 		//Check the suffix
 		if (fileName.endsWith(".jsp") || fileName.endsWith(".class")) {
@@ -899,14 +899,14 @@ public class DocForumService {
 		//zapis subor na disk
 		int bytesRead = 0;
 		byte[] buffer = new byte[8192];
-		BufferedInputStream buffReader = new BufferedInputStream(uploadedFile.getFileItem().getInputStream());
+		BufferedInputStream buffReader = new BufferedInputStream(uploadedFile.getInputStream());
 		FileOutputStream fos = new FileOutputStream(f);
 		while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)
 			fos.write(buffer, 0, bytesRead);
 
 		buffReader.close();
 		fos.close();
-		uploadedFile.getFileItem().delete();
+		//uploadedFile.delete();
 
 		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
 		if (fileAllreadyExists == false) {
@@ -918,7 +918,7 @@ public class DocForumService {
 			if (Tools.isNotEmpty(docForum.getSubject()))
 				m.setMediaTitleSk(docForum.getSubject());
 			else
-				m.setMediaTitleSk(uploadedFile.getFileItem().getName());
+				m.setMediaTitleSk(uploadedFile.getOriginalFilename());
 
 			m.setMediaLink(baseDir + fileName);
 			m.setMediaSortOrder(10);

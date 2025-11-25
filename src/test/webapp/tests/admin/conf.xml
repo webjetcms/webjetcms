@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="17.0.9" class="java.beans.XMLDecoder">
+ <object class="java.util.ArrayList">
+  <void method="add">
+   <object class="sk.iway.iwcm.system.ConfDetails">
+    <void property="dateChanged">
+     <object class="java.util.Date">
+      <long>1714045334000</long>
+     </object>
+    </void>
+    <void property="name">
+     <string>24payEshopId</string>
+    </void>
+    <void property="value">
+     <string>HAHA</string>
+    </void>
+   </object>
+  </void>
+ </object>
+</java>

@@ -75,7 +75,7 @@ Scenario('form multiupload', ({ I, DT, DTE }) => {
     verifyForm("multiupload", text, I, DT, DTE);
 });
 
-Scenario('spring upload @current', ({ I }) => {
+Scenario('spring upload', ({ I }) => {
     I.amOnPage("/apps/spring-app/kontakty/");
     I.click("Upraviť", ".table-responsive table tbody tr:nth-child(4) .btn-secondary");
     let text = "Spring upload test "+randomNumber;
@@ -96,7 +96,28 @@ Scenario('spring upload @current', ({ I }) => {
     I.seeInField("#street", text);
 });
 
-Scenario("stripes app in webpage", ({ I, DT, DTE }) => {
+Scenario("spring upload admin listener", ({ I }) => {
+    I.amOnPage("/apps/contact/admin/upload/");
+
+    I.see("P1");
+    I.see("Dokument");
+    I.click("Potvrdiť");
+
+    I.see("Pole P1 nemôže byť prázdne");
+    I.see("Pole P2 musí byť medzi 10 a 20 znakmi");
+    I.see("Dokument nemôže byť prázdny");
+
+    I.amOnPage("/apps/contact/admin/upload/");
+
+    I.fillField("P1", "test1");
+    I.fillField("P2", "test1test1test1");
+    I.attachFile("Dokument", 'tests/components/insert-script.xlsx');
+    I.click("Potvrdiť");
+
+    I.waitForText("File successfully uploaded, fileName: insert-script.xlsx, size: 9503 bytes.", 20, ".alert-success");
+});
+
+Scenario("stripes app in webpage", ({ I }) => {
     I.amOnPage("/apps/prihlaseny-pouzivatel/moj-profil/moj-profil-file.html");
     let text = "Stripes upload test "+randomNumber;
     I.fillField("#usrSignature", text);
@@ -109,4 +130,13 @@ Scenario("stripes app in webpage", ({ I, DT, DTE }) => {
     I.waitForText("Zle zadané staré heslo", 10, ".stripesErrors");
     I.see("Obrázok "+fileName+" (veľkosť "+fileSize+" B) je potrebné znova nastaviť do formuláru po neúspešnom odoslaní formuláru.", ".stripesErrors");
     I.seeInField("#usrSignature", text);
+});
+
+Scenario('stripes JSP admin form', ({ I }) => {
+    I.amOnPage("/admin/conf_import.jsp");
+    I.attachFile('#xmlFile', "tests/admin/conf.xml");
+    I.clickCss("#btnOk");
+
+    I.waitForText("24payEshopId", 10, "table[name=vypis_konfiguracie] tbody tr td");
+    I.seeInField("input[name=new_24payEshopId]", "HAHA");
 });
