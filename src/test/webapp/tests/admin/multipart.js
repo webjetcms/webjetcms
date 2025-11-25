@@ -11,6 +11,7 @@ Feature('admin.multipart');
 const fileName = 'ľščťú žýáíéô.png';
 const fileNameSanitized = 'lsctu-zyaieo.png';
 const filePath = 'tests/admin/'+fileName;
+const fileSize = 51918;
 let randomNumber;
 
 Before(({ I, login }) => {
@@ -74,7 +75,7 @@ Scenario('form multiupload', ({ I, DT, DTE }) => {
     verifyForm("multiupload", text, I, DT, DTE);
 });
 
-Scenario('spring upload @current', ({ I, DT, DTE }) => {
+Scenario('spring upload @current', ({ I }) => {
     I.amOnPage("/apps/spring-app/kontakty/");
     I.click("Upraviť", ".table-responsive table tbody tr:nth-child(4) .btn-secondary");
     let text = "Spring upload test "+randomNumber;
@@ -86,11 +87,26 @@ Scenario('spring upload @current', ({ I, DT, DTE }) => {
     I.click("Potvrdiť", ".container form .btn-primary");
 
     I.waitForText("Formulár bol úspešne odoslaný", 5, ".alert-success");
-    I.see("Uploaded file: "+fileName+" (51918 bytes)", ".alert-info");
+    I.see("Uploaded file: "+fileName+" ("+fileSize+" bytes)", ".alert-info");
 
     //
     I.say("Verify data");
     I.amOnPage("/apps/spring-app/kontakty/");
     I.click("Upraviť", ".table-responsive table tbody tr:nth-child(4) .btn-secondary");
     I.seeInField("#street", text);
+});
+
+Scenario("stripes app in webpage", ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/prihlaseny-pouzivatel/moj-profil/moj-profil-file.html");
+    let text = "Stripes upload test "+randomNumber;
+    I.fillField("#usrSignature", text);
+    I.attachFile('#userImageId', filePath);
+
+    I.click("Uložiť", "#regUserFormDiv .btn-primary");
+
+    I.waitForElement(".stripesErrors");
+
+    I.waitForText("Zle zadané staré heslo", 10, ".stripesErrors");
+    I.see("Obrázok "+fileName+" (veľkosť "+fileSize+" B) je potrebné znova nastaviť do formuláru po neúspešnom odoslaní formuláru.", ".stripesErrors");
+    I.seeInField("#usrSignature", text);
 });
