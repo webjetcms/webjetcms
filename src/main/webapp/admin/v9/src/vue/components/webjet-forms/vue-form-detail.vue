@@ -16,6 +16,15 @@
             if (this.formDetailTable != null) this.formDetailTable.destroy();
         },
         mounted() {
+            const formStepsLink = $("a.nav-link[href='/apps/form/admin/form-steps/']");
+
+            let formName =  this.$route.params.name;
+            let newLink = WJ.urlUpdateParam("/apps/form/admin/form-steps/", "formName", formName);
+            //console.log("newLink : ", newLink);
+
+            formStepsLink.attr("href", newLink);
+            formStepsLink.show();
+
             var titleKey = 'forms.formsList.js';
             if (window.formRestUrl.indexOf("archive")!=-1) titleKey = 'forms.archiveList.js'
             WJ.breadcrumb({

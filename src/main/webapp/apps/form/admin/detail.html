@@ -1,0 +1,128 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/forms-list/";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
+    const columnsToKeep = ["id", "createDate", "lastExportDate", "note", "files"];
+</script>
+
+<script type="text/javascript">
+    var formDetailTable;
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    var formName = urlParams.get('formName');
+
+    url = WJ.urlUpdateParam(url, "detail", true);
+    url = WJ.urlUpdateParam(url, "formName", formName);
+
+    WJ.breadcrumb({
+        id: "forms-detail",
+        tabs: [
+            {
+                url: "/apps/form/admin/",
+                title: WJ.translate("forms.formsList.js"),
+                active: false
+            },
+            {
+                url: "/apps/form/admin/detail/?formName=" + formName,
+                title: formName,
+                active: true
+            }
+        ]
+    });
+
+    var columnsFetchPromise = fetch('/admin/rest/forms-list/columns/' + encodeURIComponent(formName), {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-Token': window.csrfToken
+        }
+    }) .then(resp => {
+        if (!resp.ok) throw new Error('Failed to load form columns: ' + resp.status);
+        return resp.json();
+    }) .then(data => {
+        if (data) {
+            let newColumns = columns.filter(col => columnsToKeep.includes(col.data));
+
+            if(Array.isArray(data.columns)) {
+                data.columns.forEach(col => {
+                    newColumns.push({
+                        data: "col_" + col.value,
+                        name: "col_" + col.value,
+                        title: col.label,
+                        renderFormat: "dt-format-text",
+                        className: "",
+                        orderable: false,
+                    });
+                });
+            }
+
+            // swap columns
+            columns = newColumns;
+        }
+    }).catch(err => { console.error(err); });
+
+    // window.openFormHtml = function (id) {
+    //     //add print button
+    //     if ($("#modalPrintButton").length == 0) {
+    //         const printButton = document.createElement('button');
+    //         printButton.id = 'modalPrintButton';
+    //         printButton.className = 'btn btn-outline-secondary';
+    //         printButton.innerHTML = WJ.translate("button.print");
+    //         printButton.onclick = function() {
+    //             $("#modalIframeIframeElement")[0].contentWindow.print();
+    //         };
+    //         $('#modalIframe .modal-footer').prepend(printButton);
+    //     }
+    //     WJ.openIframeModal({
+    //         url: window.formRestUrl+"/html/?id="+id,
+    //         width: 800,
+    //         height: 600,
+    //         closeButtonPosition: 'close-button-over empty-header',
+    //         buttonTitleKey: 'button.confirm',
+    //         okclick: function() {
+    //             WJ.closeIframeModal();
+    //         }
+    //     });
+    // }
+
+    window.domReady.add(function () {
+        // !! hide form steps tab link !! - show only in form detail view
+        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
+
+        function initFormDetailTable() {
+            formDetailTable = WJ.DataTable({
+                url:  url,
+                columns: columns,
+                id: 'form-detail',
+                serverSide: true,
+                idAutoOpener: true,
+                onXhr: function( TABLE, e, settings, json, xhr ) {
+                    json.data.forEach(j => {
+
+                        if(j.columnNamesAndValues == undefined || j.columnNamesAndValues == null) return;
+
+                        for (let [key, value] of Object.entries(j.columnNamesAndValues)) {
+                            j["col_"+key] = value;
+                        }
+                        //set class for not confirmed double optin forms
+                        if (typeof j.doubleOptinHash != "undefined" && j.doubleOptinHash != null && j.doubleOptinHash != "") {
+                            if (typeof j.doubleOptinConfirmationDate != "undefined" && j.doubleOptinConfirmationDate == null) {
+                                j.editorFields = {
+                                    rowClass: "is-disabled"
+                                }
+                            }
+                        }
+                    });
+                },
+                lastExportColumnName: 'lastExportDate',
+                byIdExportColumnName: 'id'
+            });
+        }
+
+        //Initialize after potential dynamic column fetch
+        columnsFetchPromise.finally(() => initFormDetailTable());
+
+    });
+</script>
+
+<table id="form-detail" class="datatableInit table"></table>

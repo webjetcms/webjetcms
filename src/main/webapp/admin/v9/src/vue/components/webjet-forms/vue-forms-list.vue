@@ -82,8 +82,8 @@
                     window.VueTools.getRouter().push({path: `/detail/${dataAfterFetch.formName}`, params: {name: dataAfterFetch.formName}});
                 }
             });
-            this.formsListTable.hideButton("create");
-            this.formsListTable.hideButton("edit");
+            // this.formsListTable.hideButton("create");
+            // this.formsListTable.hideButton("edit");
             this.formsListTable.hideButton("celledit");
             this.formsListTable.hideButton("import");
             this.formsListTable.hideButton("export");

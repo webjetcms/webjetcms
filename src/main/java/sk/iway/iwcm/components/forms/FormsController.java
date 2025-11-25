@@ -1,12 +1,25 @@
 package sk.iway.iwcm.components.forms;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
@@ -23,12 +36,6 @@ import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/forms-list")
@@ -43,9 +50,30 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         this.formsService = formsService;
     }
 
+    private String getFormName() {
+        if(Tools.getBooleanValue(getRequest().getParameter("detail"), false))
+            return Tools.getStringValue(getRequest().getParameter("formName"), null);
+
+        return null;
+    }
+
+    private boolean isExport() { return "true".equals(getRequest().getParameter("export")); }
+
     @Override
     public Page<FormsEntity> getAllItems(Pageable pageable) {
-        Page<FormsEntity> page = new DatatablePageImpl<>(formsService.getFormsList(getUser()));
+
+        Page<FormsEntity> page;
+        String formName = getFormName();
+        Map<String, String> params = new HashMap<>();
+
+        if(formName != null) {
+            if (getRequest().getParameter("size")==null) page = formsService.findInDataByColumns(formName, getUser(), params, null);
+            else page = formsService.findInDataByColumns(formName, getUser(), params, pageable);
+
+            if (isExport()) formsService.setExportDate(page.getContent());
+        } else page = new DatatablePageImpl<>(formsService.getFormsList(getUser()));
+
+
         return page;
     }
 
@@ -57,35 +85,37 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Page<FormsEntity> findByColumns(Map<String, String> params, Pageable pageable, FormsEntity search) {
+
+        String formName = getFormName();
+        if(formName != null) {
+
+            java.util.Enumeration<String> parameterNames = getRequest().getParameterNames();
+            while (parameterNames.hasMoreElements()) {
+                String parameterName = parameterNames.nextElement();
+                Object value = getRequest().getParameter(parameterName);
+                if(value != null) params.put(parameterName, String.valueOf(value));
+            }
+
+            Page<FormsEntity> data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
+            if (isExport()) formsService.setExportDate(data.getContent());
+            return data;
+        }
+
+        return super.findByColumns(params, pageable, search);
+    }
+
     @GetMapping(path = "/columns/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
         return formsService.getColumnNames(formName, getUser());
     }
 
-    @GetMapping(path = "/data/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<FormsEntity> getSubList(@PathVariable String formName, @RequestParam Map<String, String> params, Pageable pageable) {
-        Page<FormsEntity> data;
-        if (getRequest().getParameter("size")==null) data = formsService.findInDataByColumns(formName, getUser(), params, null);
-        else data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
 
-        if ("true".equals(getRequest().getParameter("export"))) {
-            formsService.setExportDate(data.getContent());
-        }
 
-        return data;
-    }
 
-    @GetMapping(path = "/data/{formName}/search/findByColumns")
-    public Page<FormsEntity> findInDataByColumns(@PathVariable String formName, @RequestParam Map<String, String> params, Pageable pageable, FormsEntity search) {
 
-        Page<FormsEntity> data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
-
-        if ("true".equals(getRequest().getParameter("export"))) {
-            formsService.setExportDate(data.getContent());
-        }
-
-        return data;
-    }
 
     @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping(value = "/data/{formName}/editor", consumes = MediaType.APPLICATION_JSON_VALUE)

@@ -1,0 +1,171 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let url = "/admin/rest/form-items";
+
+    var tabs = [
+        { id: 'main', title: '[[#{datatable.tab.basic}]]', selected: true},
+        { id: 'strings', title: '[[#{components.form_items.item_preview}]]'}
+    ];
+
+</script>
+<script type="text/javascript">
+    var formItemsDataTable;
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+
+    WJ.breadcrumb({
+        id: "formItems",
+        tabs: [
+            {
+                url: '/apps/form/admin/#/detail/' + urlFormName,
+                title: urlFormName,
+                active: false
+            },
+            {
+                url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
+                title: '[[#{components.form_items.step_title}]]',
+                active: false
+            },
+            {
+                url: '/apps/form/admin/form-items/?formName=' + urlFormName,
+                title: '[[#{components.form_items.items_title}]]',
+                active: true
+            },
+            {
+                url: '#bonusTab',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    function getActualPath() {
+                let urlWithParams = WJ.urlUpdateParam(url, "formName", urlFormName);
+                let stepId = $("select.dt-filter-stepId").val();
+                if(stepId == undefined || stepId == null) stepId = "";
+                urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
+                return urlWithParams;
+    }
+
+    window.domReady.add(function () {
+
+        // window.helpLink = "/redactor/apps/form/regexps";
+
+        //presun filter do hlavicky
+        $("#pills-bonusTab-tab").html("");
+        $("div#formItemsDataTable_extfilter").appendTo("#pills-bonusTab-tab");
+
+        formItemsDataTable = WJ.DataTable({
+            url: getActualPath(),
+            serverSide: true,
+            columns: columns,
+            tabs: tabs,
+            id: "formItemsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+
+        $("select.dt-filter-stepId").on('change', function() {
+            formItemsDataTable.setAjaxUrl(getActualPath());
+            formItemsDataTable.ajax.reload();
+        });
+
+        formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            $("#DTE_Field_fieldType").on("change", function() {
+                const selectedFieldType = $(this).val();
+                const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+
+                let fieldsToHide = [];
+                for(let i = 0; i < hiddenFieldsByType.length; i++) {
+                    if(hiddenFieldsByType[i].value == selectedFieldType) {
+                        const hideFieldsStr = hiddenFieldsByType[i].label;
+                        fieldsToHide = hideFieldsStr.split(",").map(field => field.trim());
+                        break;
+                    }
+                }
+
+                const allwaysHidden = hiddenFieldsByType
+                    .find(field => field.value === "allwaysHidden")
+                    ?.label
+                    .split(',')
+                    .map(s => s.trim());
+
+                formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
+                    if(fieldsToHide.includes(fieldName)) {
+                        formItemsDataTable.EDITOR.field(fieldName).hide();
+                    } else if(allwaysHidden.includes(fieldName) == false) {
+                        formItemsDataTable.EDITOR.field(fieldName).show();
+                    }
+
+                    if(allwaysHidden.includes(fieldName)) {
+                        // like id or formName
+                        formItemsDataTable.EDITOR.field(fieldName).hide();
+                    }
+                });
+            });
+
+            $("#pills-dt-formItemsDataTable-strings-tab").on("click", function() {
+                const data = formItemsDataTable.EDITOR.currentJson;
+                const qs = new URLSearchParams(data).toString();
+
+                fetch(`/admin/rest/form-items/field-preview?${qs}`, {
+                        method: "GET",
+                        headers: {
+                            "X-CSRF-Token": window.csrfToken
+                        },
+                    }
+                )
+                .then(res => res.text())
+                .then(str => {
+                    const kks = $("#panel-body-dt-formItemsDataTable-strings");
+                    kks.html(str);
+                })
+                .catch(err => console.error(err));
+            });
+        });
+    });
+
+    function changeStep(diretion) {
+        const $select = $("#stepIdSelect > form > div > div > select.dt-filter-stepId");
+        const currentIndex = $select.prop("selectedIndex");
+
+        if (diretion === "up" && currentIndex < $select.find("option").length - 1) {
+            $select.prop("selectedIndex", currentIndex + 1).trigger("change");
+        } else if (diretion === "down" && currentIndex > 0) {
+            $select.prop("selectedIndex", currentIndex - 1).trigger("change");
+        }
+    }
+</script>
+
+    <table id="formItemsDataTable" class="datatableInit table"></table>
+
+    <style>
+        tr.even-step td { background-color: #F3F3F6 !important; }
+        button.dt-filtrujem-stepId { display: none; }
+        #stepIdSelect > form > div > div > button:hover { background: #999; }
+        #stepIdSelect > form > div > div > button {
+            background: white;
+            border-top-right-radius: 6px !important;
+            border-bottom-right-radius: 6px !important;
+        }
+    </style>
+
+    <div id="formItemsDataTable_extfilter">
+        <div class="row datatableInit">
+            <div class="col-auto">
+                <div class="btn-group status-info">
+                    <button class="btn btn-sm btn-outline-secondary step-back" onclick="changeStep('down')">
+                        <i class="ti ti-arrow-left"></i>
+                    </button>
+
+                    <div id="stepIdSelect" class="col-auto dt-extfilter dt-extfilter-stepId"></div>
+
+                    <button class="btn btn-sm btn-outline-secondary step-forward" onclick="changeStep('up')">
+                        <i class="ti ti-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>

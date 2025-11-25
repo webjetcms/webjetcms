@@ -37,10 +37,10 @@ import java.util.Optional;
 @Service
 public class XhrFileUploadService {
 
-    private final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4";
-    private final String BASE_DIR = "WEB-INF/tmp/";
-    private final String FINAL_PREFIX = "final_";
-    private final String SEPARATOR = "__upload__";
+    private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4";
+    private static final String BASE_DIR = "WEB-INF/tmp/";
+    private static final String FINAL_PREFIX = "final_";
+    private static final String SEPARATOR = "__upload__";
 
     protected XhrFileUploadResponse processUpload(HttpServletRequest request) {
         Prop prop = Prop.getInstance();
@@ -212,14 +212,12 @@ public class XhrFileUploadService {
         }
     }
 
-    @SuppressWarnings("java:S1130")
-    public String moveFile(String fileKey, String dir) throws IOException
-    {
-        IwcmFile dirFile = new IwcmFile(dir);
-        String dirVirtualPath = dirFile.getVirtualPath();
-
+    public String getOriginalFileName(String fileKey) {
         IwcmFile file = getTempFinalFile(fileKey);
+        return getOriginalFileName(file);
+    }
 
+    public static String getOriginalFileName(IwcmFile file) {
         if (file == null || !file.exists()) return null;
 
         String originalFilename = file.getName();
@@ -233,6 +231,21 @@ public class XhrFileUploadService {
                 originalFilename = baseName;
             }
         }
+
+        return originalFilename;
+    }
+
+    @SuppressWarnings("java:S1130")
+    public String moveFile(String fileKey, String dir) throws IOException
+    {
+        IwcmFile dirFile = new IwcmFile(dir);
+        String dirVirtualPath = dirFile.getVirtualPath();
+
+        IwcmFile file = getTempFinalFile(fileKey);
+
+        if (file == null || !file.exists()) return null;
+
+        String originalFilename = getOriginalFileName(file);
 
         if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files"))
         {
