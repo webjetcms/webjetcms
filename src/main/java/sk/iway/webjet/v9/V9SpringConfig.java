@@ -93,9 +93,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.sendlink",
     "sk.iway.iwcm.components.gdpr",
     "sk.iway.iwcm.components.sitebrowser",
-    "sk.iway.iwcm.components.basket.rest"
-
-
+    "sk.iway.iwcm.components.basket.rest",
+    "sk.iway.iwcm.components.upload"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
