@@ -140,3 +140,7 @@ Scenario('stripes JSP admin form', ({ I }) => {
     I.waitForText("24payEshopId", 10, "table[name=vypis_konfiguracie] tbody tr td");
     I.seeInField("input[name=new_24payEshopId]", "HAHA");
 });
+
+Scenario('ckeditor image paste @manual', ({ I, DT, DTE }) => {
+    I.say("MANUAL: This test requires manual verification of the pasted image in CKEditor. Just drag and drop the image into the CKEditor area when the editor is loaded and verify the file is uploaded to the server and inserted into page content.");
+});
