@@ -41,11 +41,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Testy pre OAuth2SuccessHandler
+ * Testy pre OAuth2AdminSuccessHandler
  * Testujú rôzne scenáre prihlásenia cez OAuth2 vrátane vytvárania používateľov,
  * aktualizácie údajov a synchronizácie skupín
  */
-class OAuth2SuccessHandlerTest extends BaseWebjetTest {
+class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
 
     @Mock
     private HttpServletRequest request;
