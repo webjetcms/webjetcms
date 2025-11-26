@@ -402,7 +402,7 @@ public class AtrDB
       try
       {
          db_conn = DBPool.getConnection(request);
-         String sql = "SELECT distinct atr_group FROM doc_atr_def "+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY atr_group";
+         String sql = "SELECT distinct atr_group FROM doc_atr_def WHERE atr_id>0 "+CloudToolsForCore.getDomainIdSqlWhere(true)+" ORDER BY atr_group";
          ps = db_conn.prepareStatement(sql);
          rs = ps.executeQuery();
          while (rs.next())

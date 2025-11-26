@@ -724,6 +724,12 @@ public class DataTableColumn {
                     dtcf.addCircularReference(classNameAttr);
                     String json = dtcf.getColumnsJson();
                     editor.addAttr(attrName, json);
+
+                    String tabs = editor.getAttr().get("data-dt-field-dt-tabs");
+                    if (Tools.isEmpty(tabs)) {
+                        String tabsJson = dtcf.getTabsJson();
+                        editor.addAttr("data-dt-field-dt-tabs", tabsJson);
+                    }
                 } catch (Exception e) {
                     Logger.error(DataTableColumn.class, e);
                 }

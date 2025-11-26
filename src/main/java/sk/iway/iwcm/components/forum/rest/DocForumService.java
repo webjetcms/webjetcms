@@ -906,7 +906,6 @@ public class DocForumService {
 
 		buffReader.close();
 		fos.close();
-		//MultipartFile is deleted automatically after request end uploadedFile.getFileItem().delete();
 
 		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
 		if (fileAllreadyExists == false) {

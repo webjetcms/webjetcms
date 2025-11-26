@@ -673,7 +673,7 @@ public class WriteTag extends BodyTagSupport
 									request.removeAttribute(IS_INLINE_EDITING);
 									int inlineDocId = -1;
 									boolean isInlineEditing = false;
-									if (Constants.getBoolean("inlineEditingEnabled"))
+									/*not supported anymore if (Constants.getBoolean("inlineEditingEnabled"))
 									{
 										if (request.getHeader("dmail") == null && request.getParameter(NO_WJTOOLBAR) == null && request.getParameter("isDmail") == null && request.getAttribute("isPreview") == null)
 										{
@@ -687,7 +687,7 @@ public class WriteTag extends BodyTagSupport
 												}
 											}
 										}
-									}
+									}*/
 
 									StringBuilder htmlCode = null;
 									if (applicationContext != null && applicationContext.containsBean(includeFileName)) {
@@ -1105,7 +1105,7 @@ public class WriteTag extends BodyTagSupport
 	 */
 	public static StringBuilder getInlineEditingStart(String includeFileName, String includeText, Identity user, int docId, HttpServletRequest request, Prop prop)
 	{
-		if (Constants.getBoolean("inlineEditingEnabled")==false || user == null || user.isAdmin()==false) return null;
+		if (user == null || user.isAdmin()==false) return null;
 
 		//test na isPageEditable je az tu, aby sa zbytocne netestoval pre ine komponenty na zaciatku metody
 		String includeFileNameNoInstallName = includeFileName;
