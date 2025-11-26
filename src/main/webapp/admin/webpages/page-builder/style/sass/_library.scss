@@ -216,8 +216,11 @@
 
                 &.tag-filter-active {
                     //hide all group buttons
-                    span.library-tab-item-button__toggler {
-                        //display: none;
+                    .library-tab-item-button__toggler {
+                        display: none;
+                    }
+                    .library-tab-item-button__toggler.active {
+                        display: block;
                     }
                     .library-full-width-item__wrapper {
                         display: block;

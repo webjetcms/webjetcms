@@ -2291,6 +2291,8 @@
 
                 $tabItem.addClass('tag-filter-active');
 
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
+
                 $tabItem.find('.library-full-width-item').each(function() {
                     var itemTag = $(this).attr('data-library-tags');
                     if (typeof itemTag === 'undefined' || itemTag === null) itemTag = "";
@@ -2329,6 +2331,13 @@
                                 $(this).removeClass('active');
                             }
                         }
+                    }
+                });
+
+                $tabItem.find('.library-full-width-item').each(function() {
+                    var $this = $(this);
+                    if ($this.hasClass('active')) {
+                        $this.parents('.library-tab-item-button__toggler').addClass('active');
                     }
                 });
             } else {

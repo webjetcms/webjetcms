@@ -1525,6 +1525,12 @@
 .pb-library__content .library-tab-content .library-tab-item.active {
   display: block;
 }
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-tab-item-button__toggler {
+  display: none;
+}
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-tab-item-button__toggler.active {
+  display: block;
+}
 .pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-full-width-item__wrapper {
   display: block;
 }
