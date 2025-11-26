@@ -283,6 +283,11 @@ public class XhrFileUploadService {
         return file != null && file.delete();
     }
 
+    /**
+     * Get uploaded (original) file name by its unique key.
+     * @param fileKey
+     * @return
+     */
     public String getOriginalFileName(String fileKey)
     {
         IwcmFile file = getTempFinalFile(fileKey);

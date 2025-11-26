@@ -61,6 +61,10 @@ Scenario('form upload', ({ I, DT, DTE }) => {
     verifyForm("Formular-upload", text, I, DT, DTE);
 });
 
+Scenario('spamprotection-wait', ({ Document }) => {
+    Document.deleteAllCacheObjects();
+});
+
 Scenario('form multiupload', ({ I, DT, DTE }) => {
     let text = "Multipart test "+randomNumber;
     I.amOnPage("/apps/formular-lahko/multiupload.html");

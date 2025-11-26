@@ -906,7 +906,6 @@ public class DocForumService {
 
 		buffReader.close();
 		fos.close();
-		//uploadedFile.delete();
 
 		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
 		if (fileAllreadyExists == false) {

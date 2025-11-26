@@ -74,7 +74,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
 		long maxPostSize = Tools.getLongValue(stripesPostSize, 0L);
 
-		// Set multipart config
+		// Set servlet 3.0 multipart config
 		MultipartConfigElement multipartConfig = new MultipartConfigElement(
 			null,// location (null = default temp dir)
 			maxPostSize,  // maxFileSize
