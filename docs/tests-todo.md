@@ -40,6 +40,8 @@ publicable=
 TO_CHAR(
 OFFSET - check limit
 
+CREATE SCHEMA IF NOT EXISTS "webjet_cms";
+
 /usr/local/opt/postgresql@16/bin/pg_dump -h publish.services.npp.int-dev.iway -p 10082 -U postgres -b -c -f wjdump.sql postgres
 
 /usr/local/opt/postgresql@16/bin/pg_dump -b -c -f webjet8v9-integer.sql webjet8v9-integer

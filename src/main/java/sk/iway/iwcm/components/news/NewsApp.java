@@ -201,7 +201,11 @@ public class NewsApp extends WebjetComponentAbstract  {
 
         List<OptionDto> newsTemplates = new ArrayList<>();
         for(NewsTemplatesEntity newsTemplate : newsTemplatesRepository.findAllByDomainId(CloudToolsForCore.getDomainId())) {
-            newsTemplates.add( new OptionDto(newsTemplate.getName(), newsTemplate.getName(), newsTemplate.getImagePath()) );
+            String imgPath = newsTemplate.getImagePath();
+            if (imgPath != null && (imgPath.startsWith("/images/") || imgPath.startsWith("/templates/"))) {
+                imgPath = "/thumb"+imgPath+"?w=380&h=200&ip=4&c=ffffff";
+            }
+            newsTemplates.add( new OptionDto(newsTemplate.getName(), newsTemplate.getName(), imgPath) );
         }
         options.put("template", newsTemplates);
 

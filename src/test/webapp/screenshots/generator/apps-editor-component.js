@@ -149,7 +149,12 @@ Scenario('apps screenshot for editor-components.jsp 2', ({ I, DT, DTE, Document 
 
 Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document }) => {
 
-    screenshotWebAndApp(I, Document, 26180, "/components/formsimple", "#formMailForm-formular-lahko", tabLink1, tabLink2, 800, 600);
+    screenshotWebAndApp(I, Document, 26180, "/components/formsimple", "#formMailForm-formular-lahko", tabLink1Spring, function(Document, I, DT, DTE) {
+        I.clickCss("#pills-dt-editor-component-datatable li:nth-child(3) a");
+        Document.screenshot(basePath+"/components/formsimple/screenshot-4.jpg");
+        tabLink2Spring(Document, I, DT, DTE);
+    }, 800, 600);
+
     screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 120026, "/components/news-calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 59889, "/components/map", "#map1", tabLink1, tabLink2, 1000, 1200);

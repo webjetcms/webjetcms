@@ -73,13 +73,12 @@ public class UploadFileAction {
 		String fileURL = "";
 		String realPath = null;
 		String fileName = null;
-		//Size must be taken from MultipartFile !! - MultipartFile.getFileItem().getSize() isn't firht value
 		long fileSize = multipartFile.getSize();
 
 		//Check file size for upload, upload type id fix ckeditor, we dont use this method for other upload type's
-		if (!isFileAllowed("ckeditor", multipartFile.getOriginalFilename(), fileSize, user, request)) return FILE_NOT_ALLOWED;
+		if (!isFileAllowed("ckeditor", multipartFile, user, request, fileSize)) return FILE_NOT_ALLOWED;
 
-		if (multipartFile.getSize() > 0) {
+		if (multipartFile != null && Tools.isNotEmpty(multipartFile.getOriginalFilename())) {
 			//Retrieve the file name
 			fileName = multipartFile.getOriginalFilename().trim();
 
@@ -152,6 +151,27 @@ public class UploadFileAction {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Check is the file is allowed
+	 * @param uploadType
+	 * @param file
+	 * @param user
+	 * @param request
+	 * @param fileSize
+	 * @return
+	 */
+	public static boolean isFileAllowed(String uploadType, MultipartFile file, Identity user, HttpServletRequest request, Long fileSize) {
+
+		if (file == null || Tools.isEmpty(file.getOriginalFilename())) return false;
+
+		//Prep file name
+		String fileName = file.getOriginalFilename().trim();
+		fileName = fileName.toLowerCase();
+
+		//
+		return UploadFileTools.isFileAllowed(uploadType, fileName, fileSize, user, request);
 	}
 
 	public static boolean isFileAllowed(UploadedFile formFile, Identity user, String uploadType, HttpServletRequest request)

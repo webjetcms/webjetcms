@@ -18,4 +18,5 @@ public @interface DataTableColumnEditor {
     DataTableColumnEditorAttr[] attr() default {};
     DataTableColumnEditorAttr[] opts() default {};
     String separator() default "";
+    DataTableOptionMethod[] optionMethods() default {};
 }

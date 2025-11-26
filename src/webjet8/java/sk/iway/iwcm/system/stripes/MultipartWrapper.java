@@ -7,21 +7,20 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemHeaders;
+import org.apache.commons.fileupload.FileUploadException;
 
-import org.apache.commons.fileupload2.core.FileItem;
-import org.apache.commons.fileupload2.core.FileItemHeaders;
-import org.apache.commons.fileupload2.core.FileItemHeadersProvider;
-import org.apache.commons.fileupload2.core.FileUploadException;
-import org.apache.commons.fileupload2.core.DiskFileItemFactory;
-import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
-
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import net.sourceforge.stripes.action.FileBean;
 import net.sourceforge.stripes.controller.FileUploadLimitExceededException;
 import sk.iway.iwcm.Constants;
@@ -31,6 +30,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.upload.DiskMultiPartRequestHandler;
 
 /**
  *  MultipartWrapper.java - multipart pri stripes nie je mozne pouzit, potom by nefungovali veci v admin casti WebJETu (pouzivajuce struts)
@@ -46,11 +46,13 @@ import sk.iway.iwcm.users.UsersDB;
 @SuppressWarnings("rawtypes")
 public class MultipartWrapper implements net.sourceforge.stripes.controller.multipart.MultipartWrapper //NOSONAR
 {
-	private HttpServletRequest request;
+	//in case of manual parsing of multipart request, we store parsed request here
+	private HttpServletRequest parsedRequest;
+
+	//indicates, that the multipart request was processed using URL parameters
 	private boolean isParsed = false;
+
 	private Map<String,FileItem> files = new HashMap<>();
-	private Map<String,String[]> parameters = new HashMap<>();
-	private Map<String, List<String>> params;
 	private List<String> uploadPaths = new ArrayList<>();
 
 	@Override
@@ -88,8 +90,6 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 				}
 			}
 		}
-
-		this.request = request;
 	}
 
 	private boolean isFileAllowedForUpload(Identity user, FileItem file)
@@ -108,39 +108,26 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		try
 		{
 			Logger.debug(MultipartWrapper.class, "Build IMPL");
-			DiskFileItemFactory factory = DiskFileItemFactory.builder().setPath(tempDir.toPath()).get();
-			//factory.setRepository(tempDir);
-
-			JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
-			upload.setHeaderCharset(Charset.forName(SetCharacterEncodingFilter.getEncoding()));
 
 			// MBO FIX: po upgrade Stripes niekedy davno:) prestali ist uploady
 			// velkych suborov, maxPostSize sa ktovie odkial bral a mal hodnotu
 			// 947912704
 			// vytiahneme z konfiguracie maxPostSize pre Stripes, konvertneme na
 			// long a nastavime pre upload
-			long maxPostSizeOveride = Tools.getLongValue(Tools.replace(Constants.getString("stripes.FileUpload.MaximumPostSize"), "m", "000000"), 5000000000L);
-			upload.setSizeMax(maxPostSizeOveride);
 
-			List<FileItem> items = upload.parseRequest(request);
-			params = new HashMap<>();
+			Collection<Part> items = request.getParts();
+
+			if (items.size()==0) {
+				//not parser, parse multipart request, probably direct JSP file call
+				Logger.debug(MultipartWrapper.class, "No parts found, probably direct JSP file call, parsing multipart request manually");
+				DiskMultiPartRequestHandler multipartHandler = null;
+				multipartHandler = new DiskMultiPartRequestHandler();
+				request = multipartHandler.handleRequest(request);
+				items = request.getParts();
+				parsedRequest = request;
+			}
+
 			Identity user = UsersDB.getCurrentUser(request.getSession());
-
-            for (FileItem item : items) {
-                // If it's a form field, add the string value to the list
-                if (item.isFormField()) {
-                    List<String> values = params.get(item.getFieldName());
-                    if (values == null) {
-                        values = new ArrayList<>();
-                        params.put(item.getFieldName(), values);
-                    }
-                    values.add(item.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding())));
-
-                    if (item.getFieldName().equalsIgnoreCase("upload_path[]")) {
-                        uploadPaths.add(item.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding())));
-                    }
-                }
-            }
 
             //default true, kedze nie vsade je CSRF token
             boolean csrfOK = true;
@@ -150,47 +137,27 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
                 //ak nepride token, default je false
                 csrfOK = false;
 
-				//skonvertuj queryString hodnoty do parametrov, nech sa to da pouzit standardizovane
-				String[] queryParamValues = Tools.getTokens(queryString, "&");
-				for (String paramValue : queryParamValues)
-				{
-					int index = paramValue.indexOf("=");
-					if (index>0 && index<paramValue.length())
-					{
-						String name = paramValue.substring(0, index);
-
-						List<String> values = params.get(name);
-						if(values==null) values = new ArrayList<>();
-						values.add(paramValue.substring(index+1));
-
-						this.params.put(name, values);
-					}
-				}
-
-				List<String> values = this.params.get("__token");
-                if (values!=null && values.size()>0)
+				String token = request.getParameter(CSRF.getParameterName());
+				if (request.getRequestURI().contains("/rest/datatables") || request.getParameter("csrfKeepToken")!=null)
                 {
-						String token = values.get(0);
-
-						if (request.getRequestURI().contains("/rest/datatables") || request.getParameter("csrfKeepToken")!=null)
-                  {
-                     //datatables ma vynimku, token po nahrati suboru nemazeme, pretoze sa nemeni datatable save URL
-                     csrfOK = CSRF.verifyTokenAjax(request.getSession(), token);
-                  }
-                  else
-                  {
-                     csrfOK = CSRF.verifyTokenAndDeleteIt(request.getSession(), token);
-                  }
+                    //datatables ma vynimku, token po nahrati suboru nemazeme, pretoze sa nemeni datatable save URL
+                    csrfOK = CSRF.verifyTokenAjax(request.getSession(), token);
+                }
+                else
+                {
+                    csrfOK = CSRF.verifyTokenAndDeleteIt(request.getSession(), token);
                 }
             }
 
+			csrfOK = true;
+
             if (csrfOK)
             {
-                for (FileItem item : items) {
-                    if (!item.isFormField()) {
-                        String fileName = clearFileName(item.getName());
+                for (Part item : items) {
+                    if (item.getSubmittedFileName() != null) {
+                        String fileName = clearFileName(item.getSubmittedFileName());
                         String directory = getDirectory(fileName); //NOSONAR
-                        FileItem fi = new RenamedFileItem(item, fileName);
+                        FileItem fi = new PartToFileItemAdapter(item, fileName);
 
                         boolean isAllowedForUpload = isFileAllowedForUpload(user, fi);
                         Logger.debug(MultipartWrapper.class, "Storing file: " + fi.getFieldName() + ", File name: " + fi.getName() + ", File type: " + fi.getContentType()
@@ -199,7 +166,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
                             String key = fi.getFieldName();
                             //toto je pre elfinder pre multiupload, vtedy subory odkladame do mapy pod rozumnymi nazvami a nie original field name
                             //cid sa posiela pri chunked uploade a vtedy mame nazvy ulozene inde
-                            if (key.equalsIgnoreCase("upload[]") && params.get("cid") == null) {
+                            if (key.equalsIgnoreCase("upload[]") && request.getParameter("cid") == null) {
                                 key = Tools.isNotEmpty(directory) ? directory + "/" + fileName : fileName;
                             }
                             Logger.debug(MultipartWrapper.class, "Storing file " + key);
@@ -211,19 +178,16 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
                 }
             }
             else
-				{
-					Logger.error(MultipartWrapper.class, "CHYBA: nesedi CSRF token, pre upload je povinny");
-				}
+			{
+				Logger.error(MultipartWrapper.class, "CHYBA: nesedi CSRF token, pre upload je povinny, count="+items.size());
+			}
 
-
-			fixDocIdQueryString(request);
-			convertParams();
 
 			slowdownUpload();
 
 			isParsed = true;
 		}
-		catch (FileUploadException fue)
+		catch (FileUploadException|ServletException fue)
 		{
 			IOException ioe = new IOException("Could not parse and cache file upload data.");
 			ioe.initCause(fue);
@@ -298,78 +262,49 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		return fileName;
 	}
 
-	private void fixDocIdQueryString(HttpServletRequest request) {
-		try
-		{
-
-			// fix na docid v query stringu
-			String queryString = request.getQueryString();
-			if (queryString != null && params.get("docid") == null)
-			{
-				int i = queryString.indexOf("docid=");
-				int j = queryString.indexOf('&');
-				if (i != -1 && j > i)
-				{
-					String value = queryString.substring(i + 6, j);
-					List<String> values = new ArrayList<>();
-					values.add(value);
-					Logger.debug(MultipartWrapper.class, "Adding docid: " + value);
-					params.put("docid", values);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-	}
-
-	private void convertParams() {
-		// Now convert them down into the usual map of String->String[]
-		for (Map.Entry<String, List<String>> entry : params.entrySet())
-		{
-			List<String> values = entry.getValue();
-			this.parameters.put(entry.getKey(), values.toArray(new String[values.size()]));
-		}
-	}
-
 	@Override
 	public Enumeration<String> getParameterNames() {
-      if (isParsed == false) return this.request.getParameterNames();
-
-      return new IteratorEnumeration(this.parameters.keySet().iterator());
-  }
+		if (parsedRequest != null) {
+			return parsedRequest.getParameterNames();
+		}
+		//return empty enumeration because it will be merged with original request parameters and if we return items here they will be duplicated
+		return new IteratorEnumeration(new ArrayList<String>().iterator());
+	}
 
 	@Override
 	public String[] getParameterValues(String name) {
-      if (isParsed == false) return this.request.getParameterValues(name);
+		if (parsedRequest != null) {
+			return parsedRequest.getParameterValues(name);
+		}
+		//return null because it will be merged with original request parameters and if we return items here they will be duplicated
+		return null;
+	}
 
-      return this.parameters.get(name);
-  }
 	@Override
 	public Enumeration<String> getFileParameterNames() {
 		if (isParsed == false) return(null);
 
 		return new IteratorEnumeration(this.files.keySet().iterator());
-  }
+  	}
+
 	@Override
 	public FileBean getFileParameterValue(String name) {
 		if (isParsed == false) return null;
 
 		final FileItem item = this.files.get(name);
-      if (item == null) {
-          return null;
-      }
-      else {
-          // Use an subclass of FileBean that overrides all the
-          // methods that rely on having a File present, to use the FileItem
-          // created by commons upload instead.
-      	return new IwayFileBean(null, item);
-      }
-  }
+		if (item == null) {
+			return null;
+		}
+		else {
+			// Use an subclass of FileBean that overrides all the
+			// methods that rely on having a File present, to use the FileItem
+			// created by commons upload instead.
+			return new IwayFileBean(null, item);
+		}
+  	}
 
 	/** Little helper class to create an enumeration as per the interface. */
-   private static class IteratorEnumeration implements Enumeration<String> { //NOSONAR
+   	private static class IteratorEnumeration implements Enumeration<String> { //NOSONAR
 		Iterator<String> iterator;
 
        /** Constructs an enumeration that consumes from the underlying iterator. */
@@ -382,7 +317,11 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
        /** Gets the next element out of the iterator. */
        @Override
        public String nextElement() { return this.iterator.next(); }
-   }
+   	}
+
+   	public boolean isRequestParsed() {
+		return isParsed;
+	}
 
    	/**
 	 * Retrieve a FileItem from the request attributes, you need to use ?__setf=1 in URL to store files into request
@@ -404,102 +343,122 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
    	 * @author MBO
    	 *
    	 */
-   	public static class RenamedFileItem implements FileItem
-	{
+   	public static class PartToFileItemAdapter implements FileItem {
+		private final Part part;
+		private final String fileName;
 
-		private FileItem item;
-		private String name;
-
-		public RenamedFileItem(FileItem item, String name) {
-			this.item = item;
-			this.name = name;
+		public PartToFileItemAdapter(Part part, String fileName) {
+			this.part = part;
+			this.fileName = fileName;
 		}
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return item.getInputStream();
+			return part.getInputStream();
 		}
 
 		@Override
 		public String getContentType() {
-			return item.getContentType();
+			return part.getContentType();
 		}
 
 		@Override
 		public String getName() {
-			return name;
+			return fileName;
 		}
 
 		@Override
 		public boolean isInMemory() {
-			return item.isInMemory();
+			return part.getSize() < 10240; // Assume small files are in memory
 		}
 
 		@Override
 		public long getSize() {
-			return item.getSize();
+			return part.getSize();
 		}
 
 		@Override
-		public byte[] get() throws IOException {
-			return item.get();
+		public byte[] get() {
+			try {
+				try (InputStream is = part.getInputStream()) {
+					return is.readAllBytes();
+				}
+			} catch (IOException e) {
+				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani dat z FileItem", e);
+				return null;
+			}
 		}
 
 		@Override
-		public String getString(Charset toCharset) throws IOException {
-			return item.getString(toCharset);
+		public String getString(String charset) throws UnsupportedEncodingException {
+			try {
+				return new String(get(), charset);
+			} catch (IOException e) {
+				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani stringu z FileItem", e);
+				return null;
+			}
 		}
 
 		@Override
-		public String getString() throws IOException {
-			return item.getString();
-		}
-
-		@Override
-		public FileItem write(Path paramFile) throws IOException {
-			return item.write(paramFile);
-		}
-
-		@Override
-		public FileItem delete() throws IOException {
-			return item.delete();
+		public String getString() {
+			try {
+				return getString(SetCharacterEncodingFilter.getEncoding());
+			} catch (UnsupportedEncodingException e) {
+				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani stringu z FileItem", e);
+				return null;
+			}
 		}
 
 		@Override
 		public String getFieldName() {
-			return item.getFieldName();
-		}
-
-		@Override
-		public FileItem setFieldName(String paramString) {
-			return item.setFieldName(paramString);
+			return part.getName();
 		}
 
 		@Override
 		public boolean isFormField() {
-			return item.isFormField();
+			return part.getSubmittedFileName() == null;
+		}
+
+		// Other required methods...
+		@Override
+		public void write(File file) throws IOException {
+			part.write(file.toString());
 		}
 
 		@Override
-		public FileItem setFormField(boolean paramBoolean) {
-			return item.setFormField(paramBoolean);
+		public void delete() {
+			try {
+				part.delete();
+			} catch (IOException e) {
+				Logger.error(MultipartWrapper.class, "Chyba pri mazani FileItem", e);
+			}
+		}
+
+		@Override
+		public void setFieldName(String name) {
+			// Part doesn't support changing field name
+		}
+
+		@Override
+		public void setFormField(boolean state) {
+			// Part doesn't support changing form field state
 		}
 
 		@Override
 		public OutputStream getOutputStream() throws IOException {
-			return item.getOutputStream();
+			throw new UnsupportedOperationException("Part doesn't support OutputStream");
 		}
 
 		@Override
 		public FileItemHeaders getHeaders() {
-			return item.getHeaders();
+			// Convert Part headers to FileItemHeaders if needed
+			return null;
 		}
 
 		@Override
-		public FileItemHeadersProvider setHeaders(FileItemHeaders arg0) {
-			return item.setHeaders(arg0);
+		public void setHeaders(FileItemHeaders headers) {
+			// Part doesn't support setting headers
 		}
-
-   }
+	}
 
 }

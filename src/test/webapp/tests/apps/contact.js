@@ -5,27 +5,6 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-/*Scenario('MVC upload', ({I}) => {
-    I.amOnPage("/apps/contact/admin/upload/");
-
-    I.see("P1");
-    I.see("Dokument");
-    I.click("Potvrdiť");
-
-    I.see("Pole P1 nemôže byť prázdne");
-    I.see("Pole P2 musí byť medzi 10 a 20 znakmi");
-    I.see("Dokument nemôže byť prázdny");
-
-    I.amOnPage("/apps/contact/admin/upload/");
-
-    I.fillField("P1", "test1");
-    I.fillField("P2", "test1test1test1");
-    I.attachFile("Dokument", 'tests/components/insert-script.xlsx');
-    I.click("Potvrdiť");
-
-    I.see("File successfully uploaded, fileName: insert-script.xlsx");
-});*/
-
 Scenario('Excel import', ({I, DT, DTE}) => {
     I.amOnPage("/apps/contact/admin/");
     DT.filterContains("name", "test5");

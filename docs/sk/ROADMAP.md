@@ -12,6 +12,10 @@ Vysvetlenie použitých piktogramov:
 - [ ] +ak začína na znak ```+``` bola úloha pridaná do zoznamu až po prvotnom vytvorení plánu, takéto úlohy sú typicky požadované zákazníkmi a ak budú realizované ovplyvnia časový plán. To znamená, že niektoré iné úlohy nemusia byť v danej verzii realizované z nedostatku času.
 - [ ] ~~preškrtnuté~~ úloha presunutá do inej verzie, alebo riešená iným spôsobom, alebo zrušená. V opise je vždy číslo verzie kam sa presunula alebo dôvod zrušenia.
 
+## 2026
+
+- Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+
 ## 2025
 
 - [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript (#57793).
@@ -78,6 +82,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
 - [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
 - [ ] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu.
+- [ ] +Vnorené datatabuľky - nastaviť počet záznamov v režime `auto` podľa veľkosti oblasti vnorenej datatabuľky.
+- [ ] +Funkcia odoslať email neskôr používa `sendMailSaveEmailPath`, ktoré nevie uložiť súbor podľa aktuálnej domény, zamyslieť sa nad riešením. Možno je to tak kvôli tomu, že sa emaily posielajú na pozadí kde doména nemusí byť známa.
 
 
 ## 2024
