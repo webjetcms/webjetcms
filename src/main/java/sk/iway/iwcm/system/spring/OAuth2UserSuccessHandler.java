@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * OAuth2 Success Handler pre zákaznícku zónu (user logon)
- * Na rozdiel od OAuth2SuccessHandler pre admin zónu:
+ * Na rozdiel od OAuth2AdminSuccessHandler pre admin zónu:
  * - Nenastavuje isAdmin flag
  * - Nenastavuje permission groups (skupiny práv)
  * - Mapuje iba user groups (skupiny používateľov)

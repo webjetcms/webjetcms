@@ -62,12 +62,12 @@ class OAuth2SuccessHandlerTest extends BaseWebjetTest {
     @Mock
     private SecurityContext securityContext;
 
-    private OAuth2SuccessHandler handler;
+    private OAuth2AdminSuccessHandler handler;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        handler = new OAuth2SuccessHandler();
+        handler = new OAuth2AdminSuccessHandler();
 
         // Základné nastavenie mockov
         when(request.getSession()).thenReturn(session);

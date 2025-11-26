@@ -17,7 +17,7 @@ import java.io.IOException;
  */
 public class OAuth2DynamicSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final OAuth2SuccessHandler adminHandler = new OAuth2SuccessHandler();
+    private final OAuth2AdminSuccessHandler adminHandler = new OAuth2AdminSuccessHandler();
     private final OAuth2UserSuccessHandler userHandler = new OAuth2UserSuccessHandler();
 
     @Override

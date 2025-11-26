@@ -55,13 +55,13 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     private Authentication authentication;
 
     private SpringSecurityConf springSecurityConf;
-    private OAuth2SuccessHandler successHandler;
+    private OAuth2AdminSuccessHandler successHandler;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         springSecurityConf = new SpringSecurityConf();
-        successHandler = new OAuth2SuccessHandler();
+        successHandler = new OAuth2AdminSuccessHandler();
 
         // Vyčistenie Constants
         Constants.clearValues();
