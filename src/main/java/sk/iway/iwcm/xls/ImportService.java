@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -30,7 +30,7 @@ import sk.iway.iwcm.system.spring.SpringUrlMapping;
 
 public class ImportService {
 
-	public static String importFromExcel(CommonsMultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public static String importFromExcel(MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		HttpSession session = request.getSession();
 		boolean setAdminLayout = true;
 		String importActionAllowedClass = (String)session.getAttribute("ImportXLSAction.allowedClass");

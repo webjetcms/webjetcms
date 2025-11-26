@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
-@Api(description = "Vracia eventy z kalendaru udalosti")
+@Tag(name="", description = "Vracia eventy z kalendaru udalosti")
 @RestController
 @RequestMapping(path = "/rest/events-calendar")
 public class CalendarService {

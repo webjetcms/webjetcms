@@ -12,6 +12,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DebugTimer;
 
 import javax.servlet.FilterRegistration;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
@@ -67,6 +68,20 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		Dynamic dynamic = servletContext.addServlet("springDispatcher", new DispatcherServlet(ctx));
 		dynamic.addMapping("/");
 		dynamic.setLoadOnStartup(1);
+
+		String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
+		stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
+		stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
+		long maxPostSize = Tools.getLongValue(stripesPostSize, 0L);
+
+		// Set servlet 3.0 multipart config
+		MultipartConfigElement multipartConfig = new MultipartConfigElement(
+			null,// location (null = default temp dir)
+			maxPostSize,  // maxFileSize
+			maxPostSize,  // maxRequestSize
+			65536    // fileSizeThreshold
+		);
+		dynamic.setMultipartConfig(multipartConfig);
 
 		CharacterEncodingFilter filter = new CharacterEncodingFilter();
 		filter.setEncoding(Constants.getString("defaultEncoding"));

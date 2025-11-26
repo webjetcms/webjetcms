@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
+import org.springframework.web.multipart.support.AbstractMultipartHttpServletRequest;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -174,30 +174,27 @@ public abstract class AbstractUploadListener<T> {
      * @param form T
      */
     private void setMultipartFilePerametersToProperties(HttpServletRequest request, T form) {
-        if (!request.getClass().isAssignableFrom(DefaultMultipartHttpServletRequest.class)) {
-            return;
-        }
+        if (request instanceof AbstractMultipartHttpServletRequest req) {
+            MultiValueMap<String, MultipartFile> multiFileMap = req.getMultiFileMap();
+            for (Map.Entry<String, List<MultipartFile>> stringListEntry : multiFileMap.entrySet()) {
+                String key = stringListEntry.getKey();
+                List<MultipartFile> value = stringListEntry.getValue();
 
-        DefaultMultipartHttpServletRequest req = (DefaultMultipartHttpServletRequest) request;
-        MultiValueMap<String, MultipartFile> multiFileMap = req.getMultiFileMap();
-        for (Map.Entry<String, List<MultipartFile>> stringListEntry : multiFileMap.entrySet()) {
-            String key = stringListEntry.getKey();
-            List<MultipartFile> value = stringListEntry.getValue();
+                for (MultipartFile multipartFile : value) {
+                    if (multipartFile.getSize() == 0) {
+                        continue;
+                    }
 
-            for (MultipartFile multipartFile : value) {
-                if (multipartFile.getSize() == 0) {
-                    continue;
-                }
+                    Method declaredMethodWithMinimalParameters = BeanUtils.findDeclaredMethod(form.getClass(), "set" + StringUtils.capitalize(key), MultipartFile.class);
+                    if (declaredMethodWithMinimalParameters == null) {
+                        continue;
+                    }
 
-                Method declaredMethodWithMinimalParameters = BeanUtils.findDeclaredMethod(form.getClass(), "set" + StringUtils.capitalize(key), MultipartFile.class);
-                if (declaredMethodWithMinimalParameters == null) {
-                    continue;
-                }
-
-                try {
-                    declaredMethodWithMinimalParameters.invoke(form, multipartFile);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    sk.iway.iwcm.Logger.error(e);
+                    try {
+                        declaredMethodWithMinimalParameters.invoke(form, multipartFile);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        sk.iway.iwcm.Logger.error(e);
+                    }
                 }
             }
         }

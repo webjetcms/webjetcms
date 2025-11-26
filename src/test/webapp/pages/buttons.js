@@ -42,7 +42,8 @@ const actions = {
   resend_button: 'buttons-resend',
   group_button :'btn-add-group',
   remove_group_button: 'buttons-removeGroupFromAll',
-  preview_button: 'buttons-history-preview'
+  preview_button: 'buttons-history-preview',
+  select_all_button: 'buttons-select-all',
 };
 
 const getButtonSelector = (context, action) => {
