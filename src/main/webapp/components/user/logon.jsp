@@ -34,6 +34,9 @@ boolean isOAuth2Enabled = Tools.isNotEmpty(Constants.getString("oauth2_clients")
 pageContext.setAttribute("isOAuth2Enabled", isOAuth2Enabled);
 
 if (isOAuth2Enabled) {
+	// Označ že ide o user sekciu (nie admin)
+	session.removeAttribute("oauth2_is_admin_section");
+
 	Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
 	String authorizationRequestBaseUri = "/oauth2/authorization";
 

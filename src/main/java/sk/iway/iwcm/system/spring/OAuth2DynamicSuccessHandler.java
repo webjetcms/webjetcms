@@ -26,27 +26,12 @@ public class OAuth2DynamicSuccessHandler implements AuthenticationSuccessHandler
         HttpSession session = request.getSession(false);
         boolean isAdminLogin = false;
 
-        // Zisti či ide o admin alebo user login
-        // 1. Skontroluj session atribút
-        if (session != null && session.getAttribute("oauth2_admin_login") != null) {
-            isAdminLogin = true;
-            session.removeAttribute("oauth2_admin_login");
-        }
-
-        // 2. Skontroluj referer
-        if (!isAdminLogin) {
-            String referer = request.getHeader("Referer");
-            if (referer != null && (referer.contains("/admin/") || referer.contains("admin/logon"))) {
-                isAdminLogin = true;
-            }
-        }
-
-        // 3. Skontroluj afterLogonRedirect
-        if (!isAdminLogin && session != null) {
-            String afterLogonRedirect = (String)session.getAttribute("afterLogonRedirect");
-            if (afterLogonRedirect != null && afterLogonRedirect.contains("/admin/")) {
-                isAdminLogin = true;
-            }
+        // Kontrola explicitného OAuth2 atribútu nastaveného v admin/user logon stránke
+        if (session != null) {
+            Boolean isAdminSection = (Boolean) session.getAttribute("oauth2_is_admin_section");
+            isAdminLogin = (isAdminSection != null && isAdminSection);
+            // Po použití odstráň atribút
+            session.removeAttribute("oauth2_is_admin_section");
         }
 
         Logger.info(OAuth2DynamicSuccessHandler.class, "OAuth2 login detected - isAdminLogin: " + isAdminLogin);

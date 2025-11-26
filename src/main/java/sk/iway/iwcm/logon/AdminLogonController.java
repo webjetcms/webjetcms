@@ -257,8 +257,13 @@ public class AdminLogonController {
         }
 
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
-            // Nastav session atribút pre OAuth2 admin login
-            session.setAttribute("oauth2_admin_login", true);
+            // Nastav explicitný atribút pre OAuth2 admin login
+            session.setAttribute("oauth2_is_admin_section", true);
+
+            // Ak adminAfterLogonRedirect neexistuje, nastav defaultnú hodnotu
+            if (session.getAttribute("adminAfterLogonRedirect") == null) {
+                session.setAttribute("adminAfterLogonRedirect", "/admin/");
+            }
 
             Iterable<ClientRegistration> clientRegistrations = null;
             ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
