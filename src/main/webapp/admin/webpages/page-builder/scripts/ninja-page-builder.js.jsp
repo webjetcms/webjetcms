@@ -2390,27 +2390,28 @@
                             libraryButtonClass = "__toggler";
                         }
 
-                        content += '<span class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey+'</span>';
-                        content += '<div class="library-full-width-item__wrapper">';
-                            $.each(obj.blocks, function(indexBlock, block)
-                            {
-                                var tagsText = "";
-                                if (block.tags != null && block.tags.length > 0) {
-                                    $.each(block.tags, function(i, tag){
-                                        tagsText += tag;
-                                        if (i < block.tags.length -1) tagsText += ",";
+                        content += '<div class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey;
+                            content += '<div class="library-full-width-item__wrapper">';
+                                $.each(obj.blocks, function(indexBlock, block)
+                                {
+                                    var tagsText = "";
+                                    if (block.tags != null && block.tags.length > 0) {
+                                        $.each(block.tags, function(i, tag){
+                                            tagsText += tag;
+                                            if (i < block.tags.length -1) tagsText += ",";
 
-                                        //merge block.tags into global tags array
-                                        if($.inArray(tag, tags) === -1){
-                                            tags.push(tag);
-                                        }
-                                    });
-                                    tagsText = tagsText.replace(/"/g, '&quot;');
-                                }
+                                            //merge block.tags into global tags array
+                                            if($.inArray(tag, tags) === -1){
+                                                tags.push(tag);
+                                            }
+                                        });
+                                        tagsText = tagsText.replace(/"/g, '&quot;');
+                                    }
 
-                                // <%--console.log("Block:", index, " ", block);--%>
-                                content += '<span class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'" style="background-image: url('+block.imagePath+')"><i>'+block.textKey+'</i></span>';
-                            });
+                                    // <%--console.log("Block:", index, " ", block);--%>
+                                    content += '<div class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                });
+                            content += '</div>';
                         content += '</div>';
                     }
                     else
