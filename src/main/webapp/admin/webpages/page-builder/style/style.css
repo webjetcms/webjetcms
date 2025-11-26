@@ -1524,6 +1524,68 @@
 .pb-library__content .library-tab-content .library-tab-item.active {
   display: block;
 }
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active span.library-tab-item-button__toggler {
+  display: none;
+}
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-full-width-item__wrapper {
+  display: block;
+}
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-full-width-item {
+  display: none;
+}
+.pb-library__content .library-tab-content .library-tab-item.tag-filter-active .library-full-width-item.active {
+  display: block;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block .library-tag-item {
+  display: none;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block .library-tag-item-btn {
+  display: inline-block;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1;
+  border: 1px solid #868EA5;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #13151B;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  text-decoration: none;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block .library-tag-item-btn:hover {
+  background-color: #DDDFE6;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block .library-tag-item:checked + .library-tag-item-btn {
+  background-color: #0063FB;
+  border-color: #0063FB;
+  color: white;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-tags-block .library-tag-item:checked + .library-tag-item-btn:hover {
+  background-color: #0049BE;
+  border-color: #0049BE;
+  color: white;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-filter-block {
+  margin-bottom: 10px;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-filter-block .library-filter-input {
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #868EA5;
+  border-radius: 6px;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-filter-block .library-filter-input:focus {
+  outline: none;
+  border-color: #0063FB;
+}
 .pb-library__content .library-tab-content .library-template-block {
   overflow: hidden;
   display: none;

@@ -2109,6 +2109,29 @@
 
             });
 
+            me.$wrapper.on('click', '.library-tag-item', function() {
+                var radio = $(this);
+                // Store the previous state before the click
+                var wasChecked = radio.data('was-checked') || false;
+
+                // If it was already checked, uncheck it
+                if (wasChecked) {
+                    radio.prop("checked", false);
+                    radio.data('was-checked', false);
+                } else {
+                    // Uncheck all other radios in the same group first
+                    $('input[name="' + radio.attr('name') + '"]').not(radio).data('was-checked', false);
+                    radio.prop("checked", true);
+                    radio.data('was-checked', true);
+                }
+
+                me.filter_library();
+            });
+
+            me.$wrapper.on('keyup', '.library-filter-input', function() {
+                me.filter_library();
+            }),
+
             me.$wrapper.on('click', '.library-full-width-item', function() {
 
                 var id = $(this).attr('data-library-item-id'),
@@ -2252,6 +2275,68 @@
             return tab;
         },
 
+        filter_library: function() {
+            //find selected radio in .library-tags-block
+            var $selectedTagButton = $(this.$wrapper).find('.library-tag-item:checked');
+            var $tabItem = $(".library-tab-item--library");
+            //get tag value
+            var tag = $selectedTagButton.attr('data-library-tag');
+            if (typeof tag === 'undefined' || tag === null) tag = "";
+
+            var searchText = $(this.$wrapper).find('.library-tab-item.active .library-filter-input').val();
+
+            if (tag != '' || searchText != '') {
+                //filter by tag
+                tag = tag.trim();
+
+                $tabItem.addClass('tag-filter-active');
+
+                $tabItem.find('.library-full-width-item').each(function() {
+                    var itemTag = $(this).attr('data-library-tags');
+                    if (typeof itemTag === 'undefined' || itemTag === null) itemTag = "";
+                    var itemText = $(this).text();
+                    if (tag != "") {
+                        var tags = itemTag.split(",");
+                        if (tags.length == 0) {
+                            $(this).removeClass('active');
+                            return;
+                        }
+                        for (var i = 0; i < tags.length; i++) {
+                            if (tags[i].trim() == tag) {
+                                if (searchText != "") {
+                                    //further filter by search text
+                                    if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+                                        $(this).addClass('active');
+                                        return;
+                                    } else {
+                                        $(this).removeClass('active');
+                                    }
+                                } else {
+                                    $(this).addClass('active');
+                                    return;
+                                }
+                            } else {
+                                $(this).removeClass('active');
+                            }
+                        }
+                    } else {
+                        //filter by search text
+                        if (searchText != "") {
+                            if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+                                $(this).addClass('active');
+                                return;
+                            } else {
+                                $(this).removeClass('active');
+                            }
+                        }
+                    }
+                });
+            } else {
+                $tabItem.removeClass('tag-filter-active');
+                $tabItem.find('.library-full-width-item').removeClass('active');
+            }
+        },
+
         thExecuteTag: function(dataTagName, realTagName, insert_content) {
             var element = insert_content.find("["+dataTagName+"]");
             //console.log("thExecuteTag=", element);
@@ -2290,6 +2375,7 @@
             var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
+            var tags = [];
             libraryMainGroups.forEach(function (group, index) {
                 // <%--console.log("create_library_content_template, type=", type, " group=", group, "template=", template);--%>
                 content += '<div class="library-template-block library-template-block--'+group+'">';
@@ -2308,8 +2394,22 @@
                         content += '<div class="library-full-width-item__wrapper">';
                             $.each(obj.blocks, function(indexBlock, block)
                             {
+                                var tagsText = "";
+                                if (block.tags != null && block.tags.length > 0) {
+                                    $.each(block.tags, function(i, tag){
+                                        tagsText += tag;
+                                        if (i < block.tags.length -1) tagsText += ",";
+
+                                        //merge block.tags into global tags array
+                                        if($.inArray(tag, tags) === -1){
+                                            tags.push(tag);
+                                        }
+                                    });
+                                    tagsText = tagsText.replace(/"/g, '&quot;');
+                                }
+
                                 // <%--console.log("Block:", index, " ", block);--%>
-                                content += '<span class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" style="background-image: url('+block.imagePath+')"><i>'+block.textKey+'</i></span>';
+                                content += '<span class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'" style="background-image: url('+block.imagePath+')"><i>'+block.textKey+'</i></span>';
                             });
                         content += '</div>';
                     }
@@ -2323,13 +2423,34 @@
                 content += '</div>';
             });
 
+            //insert tags as button on top of library
+            if(tags.length > 0){
+                var tagsContent = '<div class="library-tags-block">';
+                $.each(tags, function(i, tag){
+                    var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item" id="library-tag-item-' + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
+                    '<label class="library-tag-item-btn" for="library-tag-item-' + i + '">' + tag + '</label>';
+                    tagsContent += tagButton;
+                });
+                tagsContent += '</div>';
+                content = tagsContent + content;
+            }
+
+            //insert filter input field
+            var filterContent = '<div class="library-filter-block">' +
+                '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
+                '</div>';
+            content = filterContent + content;
 
             return content;
         },
 
         show_library: function () {
-            $(this.$wrapper).addClass(this.state.is_library_active);
-            this.set_toolbar_invisible();
+            var me = this;
+            $(me.$wrapper).addClass(me.state.is_library_active);
+            me.set_toolbar_invisible();
+            setTimeout(function(){
+                $(me.$wrapper).find('.library-tab-item.active .library-filter-input').focus();
+            },100);
         },
         hide_library: function () {
             $(this.$wrapper).removeClass(this.state.is_library_active);

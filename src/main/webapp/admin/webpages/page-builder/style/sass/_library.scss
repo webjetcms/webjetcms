@@ -212,6 +212,80 @@
                     display: block;
                 }
 
+                &.tag-filter-active {
+                    //hide all group buttons
+                    span.library-tab-item-button__toggler {
+                        display: none;
+                    }
+                    .library-full-width-item__wrapper {
+                        display: block;
+                    }
+                    .library-full-width-item {
+                        display: none;
+                    }
+                    .library-full-width-item.active {
+                        display: block;
+                    }
+                }
+
+                .library-tags-block {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    margin-bottom: 10px;
+
+                    .library-tag-item {
+                        display: none; // Hide the radio input
+                    }
+
+                    .library-tag-item-btn {
+                        display: inline-block;
+                        padding: 8px 12px;
+                        margin: 0;
+                        font-size: 13px;
+                        line-height: 1;
+                        border: 1px solid $nice-gray-300;
+                        border-radius: $modal-radius;
+                        background-color: transparent;
+                        color: $secondary;
+                        cursor: pointer;
+                        transition: all 0.3s ease-in-out;
+                        text-decoration: none;
+
+                        &:hover {
+                            background-color: $nice-gray-100;
+                        }
+                    }
+
+                    .library-tag-item:checked + .library-tag-item-btn {
+                        background-color: $primary;
+                        border-color: $primary;
+                        color: white;
+
+                        &:hover {
+                            background-color: $primary-hover;
+                            border-color: $primary-hover;
+                            color: white;
+                        }
+                    }
+                }
+
+                .library-filter-block {
+                    margin-bottom: 10px;
+                    .library-filter-input {
+                        width: 100%;
+                        padding: 6px 12px;
+                        font-size: 13px;
+                        border: 1px solid $nice-gray-300;
+                        border-radius: $modal-radius;
+
+                        &:focus {
+                            outline: none;
+                            border-color: $primary;
+                        }
+                    }
+                }
+
             }
 
             .library-template-block {

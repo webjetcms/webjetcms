@@ -243,7 +243,6 @@ public class GridEditorController {
                     if (propFile.exists()) {
                         pageBuilderProp.load(propFile);
                         group.setTextKey(pageBuilderProp.getProperty("title", group.getTextKey()));
-                        group.setTags(Tools.getTokens(pageBuilderProp.getProperty("tags", null), ",", true));
                     }
                 } catch (Exception e){
                     Logger.error(GridEditorController.class, "Error loading pagebuilder properties from file: "+file.getVirtualPath(), e);
@@ -348,7 +347,14 @@ public class GridEditorController {
         String blockId = filePathNoExtension.replace(rootDirPath+"/","");
         String textKey = blockId.replace(groupDirName+"/","");
         textKey = getTextKey(request, textKey);
-        if (pageBuilderProp != null) textKey = pageBuilderProp.getProperty("title."+FileTools.getFileNameWithoutExtension(blockFile.getName()), textKey);
+        if (pageBuilderProp != null) {
+            String fileKeySuffix = FileTools.getFileNameWithoutExtension(blockFile.getName());
+            textKey = pageBuilderProp.getProperty("title."+fileKeySuffix, textKey);
+
+            String tags = pageBuilderProp.getProperty("tags."+fileKeySuffix, null);
+            if (Tools.isEmpty(tags)) tags = pageBuilderProp.getProperty("tags", null);
+            block.setTags(Tools.getTokens(tags, ",", true));
+        }
         String imagePath = getImagePath(filePathNoExtension, request);
         String style = getBlockStyle(virtualPath);
 

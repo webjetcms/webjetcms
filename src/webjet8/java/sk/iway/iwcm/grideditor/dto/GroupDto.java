@@ -15,8 +15,6 @@ public class GroupDto {
     private String imagePath;
     private boolean premium;
 
-    private String[] tags;
-
     public String getId() {
         return id;
     }
@@ -87,13 +85,5 @@ public class GroupDto {
 
     public void setStyle(String style) {
         this.style = style;
-    }
-
-    public String[] getTags() {
-        return tags;
-    }
-
-    public void setTags(String[] tags) {
-        this.tags = tags;
     }
 }
