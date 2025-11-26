@@ -2,6 +2,7 @@ package sk.iway.iwcm.system.spring;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -267,14 +268,11 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Pomocná metóda na spracovanie chyby
+     * Pomocná metóda na spracovanie chyby - nastaví chybu do session a vykoná redirect
      */
-    protected void handleError(HttpServletRequest request, HttpServletResponse response, String error, String defaultRedirect) throws IOException {
-        String afterLogonRedirect = (String)request.getSession().getAttribute("afterLogonRedirect");
-        if (afterLogonRedirect != null && afterLogonRedirect.contains("docid=")) {
-            response.sendRedirect(afterLogonRedirect + "&error=" + error);
-        } else {
-            response.sendRedirect(defaultRedirect + "?error=" + error);
-        }
+    protected void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, String redirectUrl) throws IOException {
+        HttpSession session = request.getSession();
+        session.setAttribute("oauth2_logon_error", errorCode);
+        response.sendRedirect(redirectUrl);
     }
 }

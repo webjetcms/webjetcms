@@ -38,7 +38,7 @@ public class OAuth2SuccessHandler extends AbstractOAuth2SuccessHandler {
 
             if (email == null) {
                 Logger.error(OAuth2SuccessHandler.class, "OAuth2 email not found");
-                handleOAuth2Error(request, response, "oauth2_email_not_found");
+                handleError(request, response, "oauth2_email_not_found", "/admin/logon/");
                 return;
             }
 
@@ -48,7 +48,7 @@ public class OAuth2SuccessHandler extends AbstractOAuth2SuccessHandler {
                 userDetails = createNewUserFromOAuth2(oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2SuccessHandler.class, "Failed to create user for email: " + email);
-                    handleOAuth2Error(request, response, "oauth2_user_create_failed");
+                    handleError(request, response, "oauth2_user_create_failed", "/admin/logon/");
                     return;
                 }
                 Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
@@ -82,9 +82,9 @@ public class OAuth2SuccessHandler extends AbstractOAuth2SuccessHandler {
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
             response.sendRedirect("/admin/");
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, ex);
-            handleOAuth2Error(request, response, "oauth2_exception");
+            handleError(request, response, "oauth2_exception", "/admin/logon/");
         }
     }
 
@@ -221,12 +221,4 @@ public class OAuth2SuccessHandler extends AbstractOAuth2SuccessHandler {
         }
     }
 
-    /**
-     * Pomocná metóda na spracovanie OAuth2 chyby - nastaví chybu do session a vykoná redirect
-     */
-    private void handleOAuth2Error(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
-        HttpSession session = request.getSession();
-        session.setAttribute("oauth2_logon_error", errorCode);
-        response.sendRedirect("/admin/logon/");
-    }
 }
