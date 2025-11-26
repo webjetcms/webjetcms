@@ -12,7 +12,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.apache.commons.fileupload.FileItem;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -74,6 +74,6 @@ public class ContactEntity {
 
     @Transient
     @JsonIgnore
-    private FileItem document;
+    private MultipartFile document;
 
 }
