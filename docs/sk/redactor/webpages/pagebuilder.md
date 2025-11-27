@@ -45,6 +45,8 @@ Po kliknutí na ozubené koleso sa taktiež zobrazia ikony + pre vloženie nové
 
 ![](pagebuilder-library.png)
 
+V karte knižnica môžete vyhľadávať bloky podľa názvu, alebo filtrovať bloky podľa štítkov. Tie môžete definovať v súbore `pagebuilder.properties` pri [vytváraní blokov](../../frontend/page-builder/blocks.md#názov-a-značky-bloku) pre vašu web stránku.
+
 ## Nastavenie šírky stĺpcov
 
 Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nástrojovej lište pri prepínači typu editora je možnosť nastaviť veľkosť (šírku) zariadenia.

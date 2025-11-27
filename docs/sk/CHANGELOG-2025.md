@@ -28,6 +28,10 @@
 
 ![](redactor/webpages/pagebuilder.png)
 
+- Page Builder - doplnená možnosť filtrovať bloky podľa názvu a štítkov (#58173).
+
+![](redactor/webpages/pagebuilder-library.png)
+
 - Doplnená [detekcia zmeny obsahu](redactor/webpages/working-in-editor/README.md#detekcia-zmeny-obsahu-stránky) a upozornenie na neuložené zmeny pri zatváraní okna prehliadača. Zmeny sa začnú detegovať 5 sekúnd po otvorení web stránky. (#112).
 
 ### Aplikácie

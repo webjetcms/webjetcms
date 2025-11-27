@@ -561,9 +561,14 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
         pbElement.addClass("pb-has-toolbar-active");
         pbElement.children("aside.pb-toolbar").first().trigger("click");
         pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
-        mainWindow.$(".library-tab-link[data-library-type='library']").trigger("click");
-        mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
+        //mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
     });
+
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.wait(1);
+    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
+    I.wait(1);
+    I.switchTo();
 
     Document.screenshot("/redactor/webpages/pagebuilder-library.png");
 
