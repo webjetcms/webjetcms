@@ -22,9 +22,9 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
-import javax.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+import jakarta.servlet.ServletException;
 
 
 /**
@@ -63,9 +63,9 @@ public class DiskMultiPartRequestHandler
     */
    public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
    {
-		DiskFileItemFactory factory = new DiskFileItemFactory();
+		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
 
-		ServletFileUpload upload = new ServletFileUpload(factory);
+		JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
