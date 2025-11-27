@@ -2,12 +2,15 @@ package sk.iway.iwcm.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.io.IwcmFile;
@@ -25,6 +28,13 @@ import sk.iway.iwcm.io.IwcmFile;
  */
 public class FilePathTools
 {
+    private static final List<String> CLIENT_ABORT_MESSAGES = Arrays.asList(
+            "response already",
+            "connection reset by peer",
+            "broken pipe",
+            "socket write error"
+    );
+
 	private static String normalizeVirtualPath(String virtualPath)
 	{
 		if (Tools.isEmpty(virtualPath)) return "/";
@@ -184,15 +194,39 @@ public class FilePathTools
 					}
 					catch (Exception ex)
 					{
-						if (ex.getMessage().contains("java.io.IOException: Broken pipe"))
-						{
-							System.err.println(ex.getMessage());
-							return true;
-						}
-						else sk.iway.iwcm.Logger.error(ex);
+                        if (isClientAbortException(ex)) {
+                            Logger.error(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
+                            return true;
+                        }
+                        Logger.error(FilePathTools.class,"Error while sending file to client: " + ex);
 					}
 			}
 		}
 		return false;
 	}
+
+    /**
+     * checks whether the given exception or any of its causes is a client abort exception
+     * @return true if it is a client abort exception, false otherwise
+     */
+    private static boolean isClientAbortException(Exception ex)
+    {
+        Throwable current = ex;
+        while (current != null)
+        {
+            String msg = current.getMessage();
+            if (msg != null)
+            {
+                String upper = msg.toUpperCase();
+                for (String pattern : CLIENT_ABORT_MESSAGES)
+                {
+                    if (upper.contains(pattern.toUpperCase())) {
+                        return true;
+                    }
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
 }
