@@ -160,7 +160,9 @@ public class ContactApp extends WebjetComponentAbstract {
         }
         model.addAttribute("error", result);
         model.addAttribute("entity", entity);
-        return edit(entity.getId(), model, request);
+        //pridaj do modelu moznosti pre select country
+        model.addAttribute("countries", ContactRestController.getCountries());
+        return "/apps/contact/mvc/edit";
     }
 
 }

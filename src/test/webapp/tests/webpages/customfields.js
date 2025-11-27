@@ -265,6 +265,8 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
     DTE.fillField("fieldA", mapping);
     DTE.save();
     DT.waitForLoader();
+    //wait to cluster sync
+    I.wait(10);
 }
 
 function setCustomFields(I, DTE) {
