@@ -2286,12 +2286,12 @@
             else if ($(me.tagc.library).hasClass(me.tag.library_content)) type = "content";
 
             //find selected radio in .library-tags-block
-            var $selectedTagButton = $(this.$wrapper).find('.library-tag-item:checked');
-            var $tabItem = $(".library-tab-item--library");
+            var $selectedTagButton = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type+' .library-tag-item:checked');
+            var $tabItem = $(this.$wrapper).find(".library-tab-item--library");
             //get tag value
             var tag = $selectedTagButton.attr('data-library-tag');
             if (typeof tag === 'undefined' || tag === null) tag = "";
-            var searchText = $(this.$wrapper).find('.library-tab-item.active .library-filter-input').val();
+            var searchText = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type+' .library-filter-input').val();
 
             if (tag != '' || searchText != '') {
                 //filter by tag
@@ -2394,10 +2394,12 @@
             var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
-            var tags = [];
+
             libraryMainGroups.forEach(function (group, index) {
-                // <%--console.log("create_library_content_template, type=", type, " group=", group, "template=", template);--%>
+                var tags = [];
                 content += '<div class="library-template-block library-template-block--'+group+'">';
+
+                var contentInner = "";
                 $.each(that.get_json_object_by_attribute(template[type],'textKey',group).groups, function( index, obj ) {
                     var has_group = '';
                     if( obj.blocks != null ){
@@ -2409,8 +2411,8 @@
                             libraryButtonClass = "__toggler";
                         }
 
-                        content += '<div class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey;
-                            content += '<div class="library-full-width-item__wrapper">';
+                        contentInner += '<div class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey;
+                            contentInner += '<div class="library-full-width-item__wrapper">';
                                 $.each(obj.blocks, function(indexBlock, block)
                                 {
                                     var tagsText = "";
@@ -2428,40 +2430,43 @@
                                     }
 
                                     // <%--console.log("Block:", index, " ", block);--%>
-                                    content += '<div class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                    contentInner += '<div class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
                                 });
-                            content += '</div>';
-                        content += '</div>';
+                            contentInner += '</div>';
+                        contentInner += '</div>';
                     }
                     else
                     {
                         var deleteTool = '';
                         if(type=='favorite') deleteTool = '<aside class="library-tab-item-delete-favorite"></aside>';
-                        content += '<span class="library-tab-item-button" data-library-item-id="'+obj.id+'">'+obj.textKey+deleteTool+'</span>';
+                        contentInner += '<span class="library-tab-item-button" data-library-item-id="'+obj.id+'">'+obj.textKey+deleteTool+'</span>';
                     }
                 });
-                content += '</div>';
-            });
 
-            if ("library" === type) {
-                //insert tags as button on top of library
-                if(tags.length > 0){
-                    var tagsContent = '<div class="library-tags-block">';
-                    $.each(tags, function(i, tag){
-                        var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item" id="library-tag-item-' + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
-                        '<label class="library-tag-item-btn" for="library-tag-item-' + i + '">' + tag + '</label>';
-                        tagsContent += tagButton;
-                    });
-                    tagsContent += '</div>';
-                    content = tagsContent + content;
+                if ("library" === type) {
+                    //insert filter input field
+                    var filterContent = '<div class="library-filter-block">' +
+                        '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
+                        '</div>';
+                    content += filterContent;
+
+                    //insert tags as button on top of library
+                    if(tags.length > 0){
+                        var tagsContent = '<div class="library-tags-block">';
+                        $.each(tags, function(i, tag){
+                            var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item-' + group + '" id="library-tag-item-' + group + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
+                            '<label class="library-tag-item-btn" for="library-tag-item-' + group + i + '">' + tag + '</label>';
+                            tagsContent += tagButton;
+                        });
+                        tagsContent += '</div>';
+                        content += tagsContent;
+                    }
                 }
 
-                //insert filter input field
-                var filterContent = '<div class="library-filter-block">' +
-                    '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
-                    '</div>';
-                content = filterContent + content;
-            }
+                content += contentInner;
+
+                content += '</div>';
+            });
 
             return content;
         },
@@ -2472,6 +2477,7 @@
             me.set_toolbar_invisible();
             setTimeout(function(){
                 $(me.$wrapper).find('.library-tab-item.active .library-filter-input').focus();
+                me.filter_library();
             },100);
         },
         hide_library: function () {
