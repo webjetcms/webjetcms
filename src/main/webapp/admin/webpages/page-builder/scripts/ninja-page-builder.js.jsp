@@ -1038,32 +1038,32 @@
             var $el = $(el);
             if($el.children(this.tagc.toolbar).length < 1) {
 
-                var buttons = this.build_button(this.tags.toolbar_button_style);
+                var buttons = this.build_button(this.tags.toolbar_button_style, null, "<iwcm:text key='pagebuilder.toolbar.style'/>");
 
                 if($el.hasClass(this.tag.column)) {
                     if ($el.hasClass("pb-col") || $el.hasClass("pb-col-auto")) {
                         //ak to mama classu pb-col alebo pb-col-auto nezobrazime nastavenie velkosti
                     } else {
-                        buttons += this.build_button(this.tags.toolbar_button_resize);
+                        buttons += this.build_button(this.tags.toolbar_button_resize, null, "<iwcm:text key='pagebuilder.toolbar.resize'/>");
                     }
                 }
 
-                buttons += this.build_button(this.tags.toolbar_button_move);
-                buttons += this.build_button(this.tags.toolbar_button_duplicate);
-                buttons += this.build_button(this.tags.toolbar_button_add_to_favorites);
-                buttons += this.build_button(this.tags.toolbar_button_remove);
+                buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
+                buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
+                buttons += this.build_button(this.tags.toolbar_button_add_to_favorites, null, "<iwcm:text key='pagebuilder.toolbar.add_to_favorites'/>");
+                buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
 
                 var content = this.build_aside(this.tag.toolbar_content,buttons);
 
-                $(el).append(this.build_aside(this.tag.toolbar,content));
+                $(el).append(this.build_aside(this.tag.toolbar, content, "<iwcm:text key='pagebuilder.toolbar.title'/>"));
             }
         },
 
         create_plus_button: function (el) {
             if($(el).children(this.tagc._plus_button).length < 1) {
                 $(el)
-                    .append(this.build_aside(this.tags.append))
-                    .append(this.build_aside(this.tags.prepend));
+                    .append(this.build_aside(this.tags.append, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"))
+                    .append(this.build_aside(this.tags.prepend, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"));
             }
         },
 
@@ -1095,7 +1095,7 @@
         create_empty_placeholder: function(el){
             var me = this;
             if($(el).children(this.tagc.empty_placeholder).length < 1) {
-                var content = this.build_button(this.tag.empty_placeholder_button);
+                var content = this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>");
 
                 if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
                     $(el).children(this.tagc.column_content).is(':empty')
@@ -1125,21 +1125,31 @@
         /*====================|> BUILD ELEMENT
         /*=================================================================*/
 
-        build_button: function (class_name,content) {
-            if(typeof content === 'undefined') {
+        build_button: function (class_name, content=null, tooltip=null) {
+            if(typeof content === 'undefined' || content == null) {
                 content = '';
             }
-            return '<span class="'+class_name+'">'+content+'</span>';
+            var title = "";
+            if(tooltip !== null) {
+                title = ' title="'+tooltip+'" ';
+            }
+            return '<span class="'+class_name+'"'+title+'>'+content+'</span>';
         },
 
-        build_aside: function (class_name,content) {
-            if(typeof content === 'undefined') {
+        build_aside: function (class_name, content = null, tooltip = null) {
+            if(content === null) {
                 content = '';
             }
             var iconSpan = "";
             //console.log("build_aside, class_name=", class_name);
             if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
-            return '<aside class="'+class_name+'">'+iconSpan+content+'</aside>';
+
+            var title = "";
+            if(tooltip !== null) {
+                title = ' title="'+tooltip+'" ';
+            }
+
+            return '<aside class="'+class_name+'"'+title+'>'+iconSpan+content+'</aside>';
         },
 
         /*==================================================================
@@ -1373,7 +1383,7 @@
             if (pbElement.find("section").length==0) {
                 //zobraz tlacidlo na pridanie tabu
                 if (pbElement.find("."+this.tag.empty_placeholder).length==0) {
-                    pbElement.prepend(this.build_aside(this.tag.empty_placeholder, this.build_button(this.tag.empty_placeholder_button)));
+                    pbElement.prepend(this.build_aside(this.tag.empty_placeholder, this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>")));
                 }
             }
         },
