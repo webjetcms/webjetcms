@@ -195,7 +195,7 @@ public class FilePathTools
 					catch (Exception ex)
 					{
                         if (isClientAbortException(ex)) {
-                            Logger.error(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
+                            Logger.info(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
                             return true;
                         }
                         Logger.error(FilePathTools.class,"Error while sending file to client: " + ex);
