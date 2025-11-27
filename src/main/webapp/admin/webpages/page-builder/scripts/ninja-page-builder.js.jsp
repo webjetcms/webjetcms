@@ -2276,13 +2276,21 @@
         },
 
         filter_library: function() {
+            var me = this;
+
+            //detect which type of tab is active
+            var type = "";
+            if ($(me.tagc.library).hasClass(me.tag.library_column)) type = "column";
+            else if ($(me.tagc.library).hasClass(me.tag.library_container)) type = "container";
+            else if ($(me.tagc.library).hasClass(me.tag.library_section)) type = "section";
+            else if ($(me.tagc.library).hasClass(me.tag.library_content)) type = "content";
+
             //find selected radio in .library-tags-block
             var $selectedTagButton = $(this.$wrapper).find('.library-tag-item:checked');
             var $tabItem = $(".library-tab-item--library");
             //get tag value
             var tag = $selectedTagButton.attr('data-library-tag');
             if (typeof tag === 'undefined' || tag === null) tag = "";
-
             var searchText = $(this.$wrapper).find('.library-tab-item.active .library-filter-input').val();
 
             if (tag != '' || searchText != '') {
@@ -2292,15 +2300,16 @@
                 $tabItem.addClass('tag-filter-active');
 
                 $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('filtered-active');
 
-                $tabItem.find('.library-full-width-item').each(function() {
+                $tabItem.find('.library-template-block--'+type+' .library-full-width-item').each(function() {
                     var itemTag = $(this).attr('data-library-tags');
                     if (typeof itemTag === 'undefined' || itemTag === null) itemTag = "";
                     var itemText = $(this).text();
                     if (tag != "") {
                         var tags = itemTag.split(",");
                         if (tags.length == 0) {
-                            $(this).removeClass('active');
+                            $(this).removeClass('filtered-active');
                             return;
                         }
                         for (var i = 0; i < tags.length; i++) {
@@ -2334,15 +2343,16 @@
                     }
                 });
 
-                $tabItem.find('.library-full-width-item').each(function() {
+                var activeItems = $tabItem.find('.library-full-width-item.active');
+                activeItems.each(function() {
                     var $this = $(this);
-                    if ($this.hasClass('active')) {
-                        $this.parents('.library-tab-item-button__toggler').addClass('active');
-                    }
+                    $this.parents('.library-tab-item-button__toggler').addClass('filtered-active');
+                    if (activeItems.length <= me.options.filter_auto_open_items) $this.parents('.library-tab-item-button__toggler').addClass('active');
                 });
             } else {
                 $tabItem.removeClass('tag-filter-active');
                 $tabItem.find('.library-full-width-item').removeClass('active');
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
             }
         },
 
@@ -2433,23 +2443,25 @@
                 content += '</div>';
             });
 
-            //insert tags as button on top of library
-            if(tags.length > 0){
-                var tagsContent = '<div class="library-tags-block">';
-                $.each(tags, function(i, tag){
-                    var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item" id="library-tag-item-' + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
-                    '<label class="library-tag-item-btn" for="library-tag-item-' + i + '">' + tag + '</label>';
-                    tagsContent += tagButton;
-                });
-                tagsContent += '</div>';
-                content = tagsContent + content;
-            }
+            if ("library" === type) {
+                //insert tags as button on top of library
+                if(tags.length > 0){
+                    var tagsContent = '<div class="library-tags-block">';
+                    $.each(tags, function(i, tag){
+                        var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item" id="library-tag-item-' + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
+                        '<label class="library-tag-item-btn" for="library-tag-item-' + i + '">' + tag + '</label>';
+                        tagsContent += tagButton;
+                    });
+                    tagsContent += '</div>';
+                    content = tagsContent + content;
+                }
 
-            //insert filter input field
-            var filterContent = '<div class="library-filter-block">' +
-                '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
-                '</div>';
-            content = filterContent + content;
+                //insert filter input field
+                var filterContent = '<div class="library-filter-block">' +
+                    '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
+                    '</div>';
+                content = filterContent + content;
+            }
 
             return content;
         },
@@ -3858,6 +3870,7 @@
             return {
                 prefix: 'pb',
                 max_col_size: 12,
+                filter_auto_open_items: 10,
                 template_group_id: 0,
                 grid: '',
                 onNewElementAdded: function () {

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -360,7 +361,7 @@ public class GridEditorController {
 
         if (imagePath.indexOf("default")==-1)
         {
-            imagePath = "/thumb"+imagePath+"?ip=1&w=330";
+            imagePath = "/thumb"+imagePath+"?ip=1&w="+Constants.getInt("pagebuilderLibraryImageWidth");
         }
 
         String html = "";

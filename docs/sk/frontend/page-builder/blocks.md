@@ -4,9 +4,9 @@ Súčasťou Page Builder je aj vkladanie pripravených blokov. Ich zoznam sa aut
 
 V koreňovom adresári pre bloky môžete mať nasledovné pod adresáre:
 
-- ```section``` - pre bloky sekcií (modré označenie v Page Builderi)
-- ```container``` - pre kontajnery (červené označenie v Page Builderi)
-- ```column``` - pre stĺpce (zelené označenie v Page Builderi)
+- ```section``` - pre bloky sekcií (modré označenie v Page Builder)
+- ```container``` - pre kontajnery (červené označenie v Page Builder)
+- ```column``` - pre stĺpce (zelené označenie v Page Builder)
 - ```content``` - pre vkladané rôzne texty, tlačidlá a podobne. Vkladajú sa pomocou ikony Bloky a žltej čiary, ktorá sa zobrazuje medzi blokmi.
 
 V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov ako ďalšie pod adresáre**, napr. ```Contact, Features```. Až v týchto pod adresároch vytvárate jednotlivé HTML bloky. Príkladom je teda adresárová štruktúra:
@@ -282,9 +282,9 @@ Ukážkový kód:
 
 ## Karty v accordion
 
-Pri požiadavke vnárania objektov typu karta do ```accordion-u``` je možné využiť vlastnosť Page Builder - označuje aj **vnorené kontajnery**. Je potrebné uvažovať, čo bude možné editovať, ako duplikovať jednotlivé položky a podobne. Prakticky funguje vkladanie kariet do ```accordion-ov``` (čo je kontajner) ako vloženie ďalšieho ```columnu``` do kontajnera (pričom vložený ```column``` ďalej obsahuje vnorené kontajnery jednotlivých tabov).
+Pri požiadavke vnárania objektov typu karta do ```accordion-u``` je možné využiť vlastnosť Page Builder - označuje aj **vnorené kontajnery**. Je potrebné uvažovať, čo bude možné editovať, ako duplikovať jednotlivé položky a podobne. Prakticky funguje vkladanie kariet do ```accordion-ov``` (čo je kontajner) ako vloženie ďalšieho ```columnu``` do kontajnera (pričom vložený ```column``` ďalej obsahuje vnorené kontajnery jednotlivých kariet).
 
-V príklade si všimnite, že hlavný ```column``` má CSS štýl ```pb-not-editable``` aby automaticky nebol editovateľný CK editorom a zároveň CSS triedu ```pb-always-mark```. Ne editovateľný column sa štandardne neoznačí zeleným rámom, bez tejto možnosti by ale nebolo možné pridať za karty ďalší column, alebo celé karty zmazať (neboli by dostupné nástroje columnu).
+V príklade si všimnite, že hlavný ```column``` má CSS štýl ```pb-not-editable``` aby automaticky nebol editovateľný CK editorom a zároveň CSS triedu ```pb-always-mark```. Ne editovateľný column sa štandardne neoznačí zeleným rámom, bez tejto možnosti by ale nebolo možné pridať za karty ďalší column, alebo celé karty zmazať (neboli by dostupné nástroje stĺpca).
 
 Pri vložení HTML kódu obsahujúceho výraz ```container``` ako column objektu je spustený ```PageBuilder.mark_grid_elements();``` pre označenie všetkých elementov (aby sa zobrazili nástrojové lišty aj pre vnorené kontajnery).
 
