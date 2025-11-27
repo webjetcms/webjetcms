@@ -222,8 +222,8 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
      I.waitForElement('#componentsWindowTableMainDiv', 5);
      I.waitForText('Dynamický blok', 5);
      I.waitForText('Statický blok', 5);
-     I.waitForElement(locate('.filterOptions').withText('OSTATNÉ'), 5);
-     I.waitForElement(locate('.filterOptions').withText('INÁ STRÁNKA s DocID'), 5);
+     I.waitForElement(locate('.filterOptions').withText('Ostatné'), 5);
+     I.waitForElement(locate('.filterOptions').withText('Iná stránka s DocID'), 5);
      I.switchTo();
      I.waitForElement(locate('.cke_dialog_ui_button.cke_dialog_ui_button_ok').withText('OK'));
      I.wait(1);
@@ -781,7 +781,7 @@ async function testLinkElfinder(DTE, I) {
      await I.waitForElement(".elfinder-stat-selected[title^='jurko.jpg']", 10);
      I.switchTo();
      I.clickCss(".cke_dialog_tab[title='Rozšírené']");
-     I.seeInField('#cke_264_textInput', 'Súbor JPG, veľkosť 465,15 kB');
+     I.seeInField('#cke_270_textInput', 'Súbor JPG, veľkosť 465,15 kB');
 
      I.click(locate('.cke_dialog_ui_button').withText('OK'));
 }
