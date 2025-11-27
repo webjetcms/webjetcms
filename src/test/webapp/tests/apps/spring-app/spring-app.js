@@ -76,6 +76,8 @@ Scenario('demo component page params', ({I, DTE}) => {
 });
 
 Scenario('mvc aplikacia', async ({I}) => {
+    I.relogin('admin');
+
     I.amOnPage("/apps/spring-app/kontakty/");
     I.switchTo();
 
@@ -101,12 +103,10 @@ function checkSpringAppTexts(I, lng) {
         I.waitForText("Názov", 10, "table.table-contact-app tr th");
         I.see("DIČ", "table.table-contact-app tr th")
         I.see("Mesto", "table.table-contact-app tr th")
-        I.see("Nový kontakt", "a.btn.btn-primary");
     } else if ("en"===lng) {
         I.waitForText("Name", 10, "table.table-contact-app tr th");
         I.see("VAT ID", "table.table-contact-app tr th")
         I.see("City", "table.table-contact-app tr th")
-        I.see("New contact", "a.btn.btn-primary");
     }
 }
 

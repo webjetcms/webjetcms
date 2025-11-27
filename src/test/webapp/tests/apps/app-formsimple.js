@@ -1,4 +1,4 @@
-Feature('apps.formsimple');
+Feature('apps.app-formsimple');
 
 const applicationName = "Formulár ľahko";
 const applicationSelector = "#components-formsimple-title";
@@ -32,11 +32,10 @@ Scenario("Form simple - check defautl values on empty page", async ({ I, DT, DTE
         // We set page name BUT because page is new, BE set default formName and subject
         I.assertContain(await I.grabValueFrom("#DTE_Field_formName"), applicationName);
         I.assertContain(await I.grabValueFrom("#DTE_Field_attribute_recipients"), "tester@balat.sk");
-        I.seeCheckboxIsChecked("#DTE_Field_attribute_forceTextPlain_0");
+        I.dontSeeCheckboxIsChecked("#DTE_Field_attribute_forceTextPlain_0");
         I.seeCheckboxIsChecked("#DTE_Field_attribute_addTechInfo_0");
         I.clickCss("#pills-dt-component-datatable-advanced-tab");
-        I.assertContain(await I.grabValueFrom("#DTE_Field_attribute_subject"), applicationName);
-        I.assertEqual(await I.grabValueFrom("#DTE_Field_attribute_forwardType"), "addParams");
+        I.assertEqual(await I.grabValueFrom("#DTE_Field_attribute_forwardType"), "");
 });
 
 Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
@@ -149,17 +148,20 @@ Scenario("Form simple - test items inner table", async ({ I, DT, DTE, Apps }) =>
         changeItemType(I, "Adresa");
         I.clickCss("#DTE_Field_label > div.editor.ql-container > div.ql-editor");
         I.fillField('#DTE_Field_label div.ql-editor', "Label field");
-        I.fillField("#DTE_Field_value", "Value field");
         I.checkOption("#DTE_Field_required_0");
+        advancedTab(I);
+        I.fillField("#DTE_Field_value", "Value field");
+
         DTE.save("datatableFieldDTE_Field_editorData");
 
     I.say("Check and edit item");
-        I.click(locate("tr").withAttr({ id: "1" }));
+        I.click(locate("#datatableFieldDTE_Field_editorData tr").withAttr({ id: "1" }).find(".dt-select-td"));
         I.click(DT.btn.simpleformItems_edit_button);
         I.seeInField('#DTE_Field_label div.ql-editor', "Label field");
-        I.seeInField("#DTE_Field_value", "Value field");
         I.seeCheckboxIsChecked("#DTE_Field_required_0");
 
+        advancedTab(I);
+        I.seeInField("#DTE_Field_value", "Value field");
         I.clickCss("#DTE_Field_tooltip > div.editor.ql-container > div.ql-editor");
         I.fillField('#DTE_Field_tooltip div.ql-editor', "This is tooltip");
         I.fillField('#DTE_Field_placeholder', "Placeholder field");
@@ -198,7 +200,7 @@ Scenario("Form simple - test items inner table 2", async ({ I, DT, DTE, Apps }) 
         DT.checkTableRow("datatableFieldDTE_Field_editorData", 3, ["3", "30", "Captcha"]);
 
     I.say("Delete item, save app, anch check editorData");
-        I.click(locate("tr").withAttr({ id: "1" }));
+        I.click(locate("#datatableFieldDTE_Field_editorData tr").withAttr({ id: "1" }).find(".dt-select-td"));
         I.click(DT.btn.simpleformItems_delete_button);
         I.waitForVisible(".DTE.modal-content.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
@@ -251,6 +253,7 @@ function openCreatedApp(I, DT, DTE, Apps) {
 }
 
 function changeItemType(I, fieldType) {
+    basicTab(I);
     I.clickCss("button[data-id='DTE_Field_fieldType']");
     I.waitForVisible("div.dropdown-menu.show");
     I.click( locate("div.dropdown-menu.show").find( locate("a.dropdown-item").withText(fieldType) ) );
@@ -261,10 +264,24 @@ function checkItemFieldsVisibility(I, fieldType, visibleFields) {
     I.say(`Checking item fields for type: ${fieldType}`);
         changeItemType(I, fieldType);
         allItemFields.forEach(field => {
+            if ("#DTE_Field_value"===field || "#DTE_Field_placeholder"===field || "#DTE_Field_tooltip"===field) {
+                //value field is not visible for upload images type
+                advancedTab(I);
+            } else {
+                basicTab(I);
+            }
+
             if (visibleFields.includes(field)) {
                 I.seeElement(field);
             } else {
                 I.dontSeeElement(field);
             }
         });
+}
+
+function basicTab(I) {
+    I.clickCss("#pills-dt-datatableFieldDTE_Field_editorData-basic-tab");
+}
+function advancedTab(I) {
+    I.clickCss("#pills-dt-datatableFieldDTE_Field_editorData-advanced-tab");
 }

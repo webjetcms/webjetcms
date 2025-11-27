@@ -523,23 +523,23 @@ Scenario("Feature: perexGroups with same names are distinquised by id perexGroup
 });
 
 function checkPerexGroups(isGroupIdFiltered, I, parentSelector = ".DTE_Field_Name_perexGroups") {
-    checkPerex(I, 624, "PerexWithoutGroup", parentSelector);
+    checkPerexEditor(I, 624, "PerexWithoutGroup", parentSelector);
     if (isGroupIdFiltered) I.dontSee("Newsletter perex skupina", parentSelector);
-    else checkPerex(I, 10, "Newsletter perex skupina", parentSelector);
+    else checkPerexEditor(I, 10, "Newsletter perex skupina", parentSelector);
 
     I.say("Z_Duplicity-Unique show no id NOR perexGroupName, because returned string is unique");
-    checkPerex(I, 1968, "Z_Duplicity-Unique", parentSelector);
+    checkPerexEditor(I, 1968, "Z_Duplicity-Unique", parentSelector);
 
     I.say("Z_DUPLICITY show only id, because lng text and perexGroupName are same, so not logic to add it");
-    checkPerex(I, 1969, "Z_DUPLICITY (1969)", parentSelector);
+    checkPerexEditor(I, 1969, "Z_DUPLICITY (1969)", parentSelector);
 
     I.say("Z_Duplicity-a show id AND perexGroupName, because this values are different, so for better distinquise.");
-    checkPerex(I, 1970, "Z_Dupľičity (1970:Z_Duplicity-A)", parentSelector);
+    checkPerexEditor(I, 1970, "Z_Dupľičity (1970:Z_Duplicity-A)", parentSelector);
 
     I.say("Z_Duplicity-a same as Z_Duplicity-b");
-    checkPerex(I, 1971, "Z_Duplicity (1971:Z_Duplicity-b)", parentSelector);
+    checkPerexEditor(I, 1971, "Z_Duplicity (1971:Z_Duplicity-b)", parentSelector);
 }
 
-function checkPerex(I, id, name, parentSelector) {
+function checkPerexEditor(I, id, name, parentSelector) {
     I.seeElement( locate( locate(parentSelector + " div.custom-control.form-switch").withChild( locate("input.form-check-input[value='" + id + "']") ).find( locate("label.form-check-label").withText(name) ) ) );
 }
