@@ -11,8 +11,9 @@ Before(({ I , login, DT}) => {
     DT.addContext("users" ,"#userGroupsDataTable_wrapper");
 });
 
-Scenario('Delete users', async ({ I, DT }) => {
+Scenario('Delete users', async ({ I, DT, TempMail }) => {
     await deleteDmailUsers(I, DT);
+    await TempMail.destroyInbox("webjetcmsdmail");
 });
 
 Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
