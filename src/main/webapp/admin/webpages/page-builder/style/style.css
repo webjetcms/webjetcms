@@ -330,7 +330,6 @@
 .pb-wrapper.pb-is-library-active .pb-empty-placeholder__button {
   display: none !important;
 }
-
 .pb-toolbar {
   opacity: 0;
   position: absolute;
@@ -1836,6 +1835,10 @@
 
 .pb-container > .pb-toolbar:not(.pb-is-toolbar-active):hover > span.pb-tooltip::before {
   transform: translate(-80%, -80%);
+}
+
+.pb-empty-placeholder__button.pb-tooltip {
+  position: absolute;
 }
 
 #pb-wjmagicline {

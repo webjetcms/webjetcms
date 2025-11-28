@@ -109,4 +109,8 @@
     &.#{$prefix}-is-library-active .#{$prefix}-empty-placeholder__button {
         display: none !important;
     }
+
+    > .#{$prefix}-empty-placeholder > .#{$prefix}-empty-placeholder__button {
+
+    }
 }

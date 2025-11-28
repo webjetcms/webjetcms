@@ -708,6 +708,8 @@
                     me.mark_section(section);
                 });
             }
+            //add empty placeholder to bottom of page
+            //me.create_empty_placeholder(wrapper);
         },
 
         mark_section: function (section) {
@@ -2262,14 +2264,8 @@
                         me.thExecuteTag("data-th-src", "src", insert_content);
                         me.thExecuteTag("data-th-href", "href", insert_content);
 
-                        if ("column" == parentTag) {
-                            //niekedy ako column potrebujeme vlozit aj nieco obsahujuce container, napr. taby do accordionu
-                            if (html.indexOf("container")) me.mark_grid_elements();
-                            else me.mark_column(insert_content);
-                        }
-                        else if ("row" == parentTag) me.mark_row(insert_content);
-                        else if ("container" == parentTag) me.mark_container(insert_content);
-                        else if ("section" == parentTag) me.mark_section(insert_content);
+                        //inserted block can possibly have multiple sections/containers/columns so we must mark all grid elements
+                        me.mark_grid_elements();
                 }
 
                 me.set_toolbar_visible(insert_content);
@@ -2370,6 +2366,12 @@
             }
         },
 
+        /**
+         * Replace Thymeleaf code from html file, because it is prepared as thymeleaf but read as plain html
+         * @param dataTagName
+         * @param realTagName
+         * @param insert_content
+         */
         thExecuteTag: function(dataTagName, realTagName, insert_content) {
             var element = insert_content.find("["+dataTagName+"]");
             //console.log("thExecuteTag=", element);

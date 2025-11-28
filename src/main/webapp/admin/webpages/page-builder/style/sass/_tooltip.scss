@@ -69,3 +69,8 @@
 .#{$prefix}-container > .#{$prefix}-toolbar:not(.#{$prefix}-is-toolbar-active):hover > span.#{$prefix}-tooltip::before {
     transform: translate(-80%, -80%);
 }
+
+//empty placeholder
+.#{$prefix}-empty-placeholder__button.#{$prefix}-tooltip {
+    position: absolute;
+}
