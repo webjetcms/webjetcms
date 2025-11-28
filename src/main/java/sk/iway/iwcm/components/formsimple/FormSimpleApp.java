@@ -21,6 +21,8 @@ import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
@@ -32,6 +34,7 @@ import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -67,7 +70,7 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
     @Autowired
     @JsonIgnore
-    private FormAttributesRepository formAttributesRepository;
+    private FormSettingsRepository formSettingsRepository;
 
     /* TAB BASIC */
 
@@ -75,69 +78,13 @@ public class FormSimpleApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.formsimple.formName")
     private String formName;
 
-    @NotBlank
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.formsimple.recipients")
-    private String attribute_recipients;
-
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.formsimple.rowView")
     private Boolean rowView;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title = "components.formsimple.textBefore")
-    private String attribute_emailTextBefore;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title = "components.formsimple.textAfter")
-    private String attribute_emailTextAfter;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "editor.form.force_text_plain")
-    private Boolean attribute_forceTextPlain;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "editor.form.addTechInfo")
-    private Boolean attribute_addTechInfo;
-
     /* TAB ADVANCED */
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.cc_emails")
-    private String attribute_ccEmails;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.bcc_emails")
-    private String attribute_bccEmails;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.reply_to_emails")
-    private String attribute_replyTo;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.subject")
-    private String attribute_subject;
-
-    @DataTableColumn(inputType=DataTableColumnType.ELFINDER, tab="advanced", title="editor.form.forward", className="dt-tree-page-null")
-    private String attribute_forward;
-
-    @DataTableColumn(inputType=DataTableColumnType.ELFINDER, tab="advanced", title="editor.form.forward_fail", className="dt-tree-page-null")
-    private String attribute_forwardFail;
-
-    @DataTableColumn(inputType=DataTableColumnType.SELECT, tab="advanced", title="editor.form.forward_type", editor = {
-        @DataTableColumnEditor(options = {
-                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.default", value = ""),
-                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.forward", value = "forward"),
-                @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.addParams", value = "addParams")
-        })
-    })
-    private String attribute_forwardType;
-
-    @DataTableColumn(inputType=DataTableColumnType.JSON, tab="advanced", title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")
-    private DocDetailsDto attribute_useFormMailDocId;
-
-    @DataTableColumn(inputType=DataTableColumnType.JSON, tab="advanced", title="editor.form.send_user_info_doc_id", className="dt-tree-page-null")
-    private DocDetailsDto attribute_formmail_sendUserInfoDocId;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.afterSendInterceptor")
-    private String attribute_afterSendInterceptor;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "advanced", title = "components.form.encryptionKey")
-    private String attribute_encryptKey;
-
-    @JsonIgnore
-    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "advanced", title = "components.form.encryptionKey.tooltip", className = "allow-html")
-    private String encrypKeyInfo;
+    @DataTableColumnNested
+    private FormSettingsEntity formSettings;
 
     /* TAB ITEMS */
 
@@ -172,12 +119,7 @@ public class FormSimpleApp extends WebjetComponentAbstract {
         if(Tools.isNotEmpty(formName)) {
             StringBuilder sb = new StringBuilder();
 
-            // formName is sanitazed
-            // app include contains original text like "Formulár ľahko" BUT attribues have value "formular-lahko"
-            for(FormAttributesEntity attribute : formAttributesRepository.findAllByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId())) {
-                sb.append(", ").append(ATTRIBUTE_PREFIX).append(attribute.getParamName());
-                sb.append("=\"").append(attribute.getValue()).append("\"");
-            }
+            this.formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
 
             String newParams = componentRequest.getParameters().replaceFirst("editorData=", sb.toString() + ", editorData=");
             componentRequest.setParameters(newParams);
@@ -185,13 +127,14 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
         //Set defautl values into params, when creating new app
         if(isNewApp(componentRequest)) {
-            this.attribute_forceTextPlain = false;
-            this.attribute_addTechInfo = true;
-            this.attribute_forwardType = "";
+            this.formSettings = new FormSettingsEntity();
+            this.formSettings.setForceTextPlain(false);
+            this.formSettings.setAddTechInfo(true);
+            this.formSettings.setForwardType("");
 
             UserDetails currentUser =  UsersDB.getCurrentUser(request);
-            if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) this.attribute_recipients = currentUser.getEmail();
-            else this.attribute_recipients = "";
+            if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) this.formSettings.setRecipients(currentUser.getEmail());
+            else this.formSettings.setRecipients("");
 
             if(componentRequest.getDocId() < 1) {
                 // New page, set default value
@@ -202,6 +145,16 @@ public class FormSimpleApp extends WebjetComponentAbstract {
                 DocDetails doc = DocDB.getInstance().getDoc(componentRequest.getDocId());
                 this.formName = doc.getTitle();
             }
+        }
+
+        if(this.formSettings.getUseFormMailDocId() != null) {
+            DocDetails doc = DocDB.getInstance().getDoc( this.formSettings.getUseFormMailDocId() );
+            if(doc != null) this.formSettings.setUseFormMailDoc( new DocDetailsDto(doc) );
+        }
+
+        if(this.formSettings.getFormmailSendUserInfoDocId() != null) {
+            DocDetails doc = DocDB.getInstance().getDoc( this.formSettings.getFormmailSendUserInfoDocId() );
+            if(doc != null) this.formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
         }
 
         super.initAppEditor(componentRequest, request);
