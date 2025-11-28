@@ -1132,6 +1132,7 @@
             var title = "";
             if(tooltip !== null) {
                 title = ' title="'+tooltip+'" ';
+                class_name = class_name + ' pb-tooltip';
             }
             return '<span class="'+class_name+'"'+title+'>'+content+'</span>';
         },
@@ -1140,14 +1141,17 @@
             if(content === null) {
                 content = '';
             }
-            var iconSpan = "";
-            //console.log("build_aside, class_name=", class_name);
-            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
 
+            var spanClass = "";
             var title = "";
             if(tooltip !== null) {
-                title = ' title="'+tooltip+'" ';
+                spanClass = ' class="pb-tooltip" ';
+                title = ' title="'+tooltip+'"';
             }
+
+            var iconSpan = "";
+            //console.log("build_aside, class_name=", class_name);
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span"+spanClass+title+"></span>"; //pb-toolbar gear icon
 
             return '<aside class="'+class_name+'"'+title+'>'+iconSpan+content+'</aside>';
         },

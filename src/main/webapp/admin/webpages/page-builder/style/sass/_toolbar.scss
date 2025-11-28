@@ -39,7 +39,6 @@
         bottom: 100%;
         width: auto;
         height: $toolbar-content-button-size;
-        overflow: hidden;
         margin-bottom: $toolbar-content-gap;
         white-space: nowrap;
         word-break: keep-all;
@@ -54,7 +53,6 @@
             display: inline-block;
             width: $toolbar-content-button-size;
             height: $toolbar-content-button-size;
-            overflow: hidden;
             text-indent: -1000px;
             background-repeat: no-repeat;
             background-position: center;

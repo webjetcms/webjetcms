@@ -367,7 +367,6 @@
   bottom: 100%;
   width: auto;
   height: 40px;
-  overflow: hidden;
   margin-bottom: 8px;
   white-space: nowrap;
   word-break: keep-all;
@@ -381,7 +380,6 @@
   display: inline-block;
   width: 40px;
   height: 40px;
-  overflow: hidden;
   text-indent: -1000px;
   background-repeat: no-repeat;
   background-position: center;
@@ -1771,6 +1769,73 @@
 /* JEEFF zmeny pre library */
 .library-tab-item-group {
   color: white;
+}
+
+.pb-tooltip {
+  position: relative;
+  cursor: pointer;
+}
+.pb-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -80%);
+}
+.pb-tooltip::before {
+  content: attr(title);
+  text-indent: initial;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-100% + 10px));
+  background-color: #23262E;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: "Asap", sans-serif, Arial, Helvetica;
+  line-height: 1.2;
+  white-space: nowrap;
+  z-index: 104000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
+  pointer-events: none;
+}
+
+.pb-toolbar:not(.pb-is-toolbar-active):hover > span.pb-tooltip::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -70%);
+}
+
+.pb-plus-button:hover > span.pb-tooltip::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -60%);
+}
+
+.pb-column > aside.pb-prepend.pb-plus-button:hover > span.pb-tooltip::before {
+  transform: translate(-10%, -54%);
+}
+
+.pb-column > aside.pb-append.pb-plus-button:hover > span.pb-tooltip::before {
+  transform: translate(-90%, -54%);
+}
+
+.pb-section > .pb-toolbar > span.pb-tooltip::before {
+  transform: translate(-20%, calc(-100% + 10px));
+}
+
+.pb-section > .pb-toolbar:not(.pb-is-toolbar-active):hover > span.pb-tooltip::before {
+  transform: translate(-20%, -80%);
+}
+
+.pb-container > .pb-toolbar > span.pb-tooltip::before {
+  transform: translate(-80%, calc(-100% + 10px));
+}
+
+.pb-container > .pb-toolbar:not(.pb-is-toolbar-active):hover > span.pb-tooltip::before {
+  transform: translate(-80%, -80%);
 }
 
 #pb-wjmagicline {
