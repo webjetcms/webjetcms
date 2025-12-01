@@ -6,8 +6,8 @@
     z-index: $library-index;
 
 	top: 2%;
-	left: -400px;
-	width: 355px;
+	left: calc(-1 * (var(--#{$prefix}-image-width, 340px) + 58px));
+	width: calc(var(--#{$prefix}-image-width, 340px) + 48px);
 	height: 96%;
 	border-radius: 0px;
 	border-right: 1px solid $dark-60;
@@ -125,7 +125,7 @@
                     }
                 }
 
-                span.library-tab-item-button__toggler,
+                div.library-tab-item-button__toggler,
                 span.library-tab-item-button {
                     display: block;
                     width: 100%;
@@ -139,19 +139,28 @@
                     background-color: $nice-gray-100;
                     border-radius: $modal-radius;
 
+                    transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
+
                     &:last-child {
                         margin-bottom: 0;
                     }
 
                     &.active {
-                        background-color: $primary;
+                        background-color: $nice-gray-300;
                         color: white;
+                        padding-bottom: 2px;
+                        .library-full-width-item__wrapper {
+                            display: block;
+                        }
+                        &:hover {
+                            background-color: $nice-gray-300;
+                        }
                     }
 
                     &:hover {
                         cursor: pointer;
                         color: white;
-                        background-color: $primary;
+                        background-color: $nice-gray-300;
                     }
                 }
 
@@ -159,14 +168,10 @@
                     display: none;
                 }
 
-                span.library-tab-item-button__toggler.active+.library-full-width-item__wrapper {
-                    display: block;
-                }
 
-                span.library-full-width-item {
+                .library-full-width-item {
                     position: relative;
                     display: block;
-                    padding-top: 56.25%;
                     margin: 0 0 8px 0;
                     color: #ffffff;
                     font-size: 13px;
@@ -174,35 +179,32 @@
                     font-weight: 400;
                     text-align: center;
                     border-radius: $modal-radius;
-                    background-size: cover;
 
-                    width: 330px;
-                    height: 200px;
-                    background-size: initial;
-                    background-repeat: no-repeat;
+                    width: calc(var(--#{$prefix}-image-width, 340px) + 4px);
+                    min-height: 40px;
                     background-color: white;
-                    background-position-y: 20px;
-                    border: 2px solid white;
+                    border: 2px solid $nice-gray-300;
+
+                    transition: border-color 0.3s ease-in-out;
+
+                    img {
+                        max-width: 100%;
+                        margin-bottom: $modal-radius;
+                    }
 
                     &:hover {
                         cursor: pointer;
-                        border-color: $primary;
-	                    background-color: unset;
+                        border-color: white;
                     }
 
                     i {
                         display: block;
-                        position: absolute;
-                        left: 0;
-                        right: 0;
                         font-size: 12px;
                         line-height: 20px;
 
                         color: $nice-black;
                         font-style: normal;
                         background-color: $nice-gray-100;
-                        top: 0px;
-                        padding-left: 4px;
                         border-top-left-radius: $modal-radius;
                         border-top-right-radius: $modal-radius;
                     }
@@ -210,6 +212,85 @@
 
                 &.active {
                     display: block;
+                }
+
+                &.tag-filter-active {
+                    //hide all group buttons
+                    .library-tab-item-button__toggler {
+                        display: none;
+                    }
+                    .library-tab-item-button__toggler.filtered-active {
+                        display: block;
+                    }
+                    .library-tab-item-button__toggler.active {
+                        .library-full-width-item__wrapper {
+                            display: block;
+                        }
+                    }
+                    .library-full-width-item {
+                        display: none;
+                    }
+                    .library-full-width-item.active {
+                        display: block;
+                    }
+                }
+
+                .library-tags-block {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    margin-bottom: 10px;
+
+                    .library-tag-item {
+                        display: none; // Hide the radio input
+                    }
+
+                    .library-tag-item-btn {
+                        display: inline-block;
+                        padding: 8px 12px;
+                        margin: 0;
+                        font-size: 13px;
+                        line-height: 1;
+                        border: 1px solid $nice-gray-300;
+                        border-radius: $modal-radius;
+                        background-color: transparent;
+                        color: $secondary;
+                        cursor: pointer;
+                        transition: all 0.3s ease-in-out;
+                        text-decoration: none;
+
+                        &:hover {
+                            background-color: $nice-gray-100;
+                        }
+                    }
+
+                    .library-tag-item:checked + .library-tag-item-btn {
+                        background-color: $primary;
+                        border-color: $primary;
+                        color: white;
+
+                        &:hover {
+                            background-color: $primary-hover;
+                            border-color: $primary-hover;
+                            color: white;
+                        }
+                    }
+                }
+
+                .library-filter-block {
+                    margin-bottom: 10px;
+                    .library-filter-input {
+                        width: 100%;
+                        padding: 6px 12px;
+                        font-size: 13px;
+                        border: 1px solid $nice-gray-300;
+                        border-radius: $modal-radius;
+
+                        &:focus {
+                            outline: none;
+                            border-color: $primary;
+                        }
+                    }
                 }
 
             }

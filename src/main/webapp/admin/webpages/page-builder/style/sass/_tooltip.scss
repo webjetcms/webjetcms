@@ -1,0 +1,76 @@
+.#{$prefix}-tooltip {
+    position: relative;
+    cursor: pointer;
+
+    // Hide the default browser tooltip
+    &:hover::before {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -80%);
+    }
+
+    // Tooltip content (rectangle with text)
+    &::before {
+        content: attr(data-title);
+        text-indent: initial;
+        position: absolute;
+        bottom: 50%;
+        left: 50%;
+        transform: translate(-50%, calc(-100% + 10px));
+        background-color: $tooltip-bg;
+        color: white;
+        padding: 6px 8px;
+        border-radius: $modal-radius;
+        font-size: 14px;
+        font-family: $font-family-base;
+        line-height: 1.2;
+        white-space: nowrap;
+        z-index: $tooltip-index;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
+        pointer-events: none;
+    }
+}
+
+//special hover cases for tools toolbar where we dont want to show tooltip when toolbar is active
+.#{$prefix}-toolbar:not(.#{$prefix}-is-toolbar-active):hover > span.#{$prefix}-tooltip::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -70%);
+}
+
+//plus button position above the toolbar
+.#{$prefix}-plus-button:hover > span.#{$prefix}-tooltip::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -60%);
+}
+//plus button position to the right for columns
+.#{$prefix}-column > aside.#{$prefix}-prepend.#{$prefix}-plus-button:hover > span.#{$prefix}-tooltip::before {
+    transform: translate(-10%, -54%);
+}
+.#{$prefix}-column > aside.#{$prefix}-append.#{$prefix}-plus-button:hover > span.#{$prefix}-tooltip::before {
+    transform: translate(-90%, -54%);
+}
+
+//section position
+.#{$prefix}-section > .#{$prefix}-toolbar > span.#{$prefix}-tooltip::before {
+    transform: translate(-20%, calc(-100% + 10px));
+}
+.#{$prefix}-section > .#{$prefix}-toolbar:not(.#{$prefix}-is-toolbar-active):hover > span.#{$prefix}-tooltip::before {
+    transform: translate(-20%, -80%);
+}
+
+//container position
+.#{$prefix}-container > .#{$prefix}-toolbar > span.#{$prefix}-tooltip::before {
+    transform: translate(-80%, calc(-100% + 10px));
+}
+.#{$prefix}-container > .#{$prefix}-toolbar:not(.#{$prefix}-is-toolbar-active):hover > span.#{$prefix}-tooltip::before {
+    transform: translate(-80%, -80%);
+}
+
+//empty placeholder
+.#{$prefix}-empty-placeholder__button.#{$prefix}-tooltip {
+    position: absolute;
+}

@@ -212,7 +212,6 @@ function saveStyleModal(I) {
     I.dontSeeElement("#wjInline-docdata div.pb-modal");
 }
 
-
 Scenario('check toolbar elements', ({I, DTE, Document}) => {
     //reset PB settings
     //Document.resetPageBuilderMode();
@@ -438,4 +437,108 @@ Scenario("custom PB settings", ({I, DTE, Apps, Document}) => {
 
     checkStyleModal(150095, ".col-md-12", true, I, DTE, Apps);
     checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
+});
+
+Scenario("filtering and tags", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(3);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+
+    I.waitForElement(".library-template-block--section", 10);
+
+    var baseHarmonika = locate(".library-tab-item-button__toggler").withText("Harmonika");;
+    var baseKontakt = locate(".library-tab-item-button__toggler").withText("Kontakt");
+    var subHarmonika = locate(".library-full-width-item").withText("Harmonika");;
+    var subKontakt = locate(".library-full-width-item").withText("Kontaktný formulár");
+    var subKontaktOSK = locate(".library-tab-item-button__toggler").withText("OSK-case3").find(".library-full-width-item").withText("form");
+
+    //
+    I.say("Check main items are present");
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+
+    //
+    I.say("Check main items are not opened");
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Open Harmonika");
+    I.click(baseHarmonika);
+    I.seeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Filter by tag 'form'");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.say("Clear filter");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Search form");
+    I.fillField(".library-filter-block input.library-filter-input", "form");
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.say("Search notfound something");
+    I.fillField(".library-filter-block input.library-filter-input", "notfound");
+    I.wait(1);
+    I.dontSeeElement("div.library-tab-item-button__toggler");
+    I.dontSeeElement("div.library-full-width-item");
+
+    //
+    I.say("Search form + tags");
+    I.fillField(".library-filter-block input.library-filter-input", "form");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.seeElement(subKontaktOSK);
+    I.dontSeeElement(subHarmonika);
+    I.click(locate("label.library-tag-item-btn").withText("Kontakt"));
+    I.dontSeeElement(baseHarmonika);
+    I.dontSeeElement(baseKontakt);
+    I.dontSeeElement(subKontakt);
+    I.seeElement(subKontaktOSK);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.click(locate("label.library-tag-item-btn").withText("Kontakt")); //unclick kontakt tag
+    I.fillField(".library-filter-block input.library-filter-input", "harmon");
+    I.seeElement(baseHarmonika);
+    I.dontSeeElement(baseKontakt);
+    I.seeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Clear search");
+    I.fillField(".library-filter-block input.library-filter-input", "");
+    I.wait(1);
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.switchTo();
 });

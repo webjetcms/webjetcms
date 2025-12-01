@@ -64,6 +64,7 @@
             this.mark_grid_elements();
             this.create_modal();
             this.create_notify();
+            this.create_fixed_empty_placeholder();
             // <%--// this.create_library();--%>
             this.bind_events();
         },
@@ -72,9 +73,13 @@
         /*====================|> GET CLEAR DATA
         /*=================================================================*/
 
-        getClearNode: function() {
+        getClone: function() {
+            return $(this.$wrapper).clone(true);
+        },
 
-            var clone = $(this.$wrapper).clone(true);
+        getClearNode: function(clone = null) {
+
+            if (clone === null) clone = this.getClone();
 
             clone = this.remove_elements(clone);
             clone = this.remove_attributes(clone);
@@ -101,7 +106,7 @@
 
         clearEditorAttributes: function(node) {
             // <%--//musime odstranit vsetky CKeditor atributy a CSS triedy--%>
-            node.find("*[class*='editableElement']").removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label");
+            node.find("*[class*='editableElement']").removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label aria-readonly aria-multiline");
             node.find("*[class*='editableElement']").attr('style', function(i, style)
             {
                 // <%--//ckeditor vklada position:relative do elementu--%>
@@ -123,6 +128,8 @@
                 node.find("aside."+me.tag.dimmer).remove();
                 node.find("aside."+me.tag.empty_placeholder).remove();
                 node.find("aside."+me.tag.connection_button).remove();
+                node.find("aside."+me.tag.connection_button).remove();
+                node.find("aside."+me.tag.size_changer).remove();
 
                 node.find("."+me.tag._grid_element)
                     .removeClass(me.tag.section)
@@ -227,6 +234,7 @@
                 connection_reference:           prefix+'connection-reference',
 
                 empty_placeholder:              prefix+'empty-placeholder',
+                empty_placeholder_wrapper:      prefix+'empty-placeholder-wrapper',
                 empty_placeholder_button:       prefix+'empty-placeholder__button',
 
                 modal:                          prefix+'modal',
@@ -708,6 +716,8 @@
                     me.mark_section(section);
                 });
             }
+            //add empty placeholder to bottom of page
+            //me.create_empty_placeholder(wrapper);
         },
 
         mark_section: function (section) {
@@ -1038,32 +1048,32 @@
             var $el = $(el);
             if($el.children(this.tagc.toolbar).length < 1) {
 
-                var buttons = this.build_button(this.tags.toolbar_button_style);
+                var buttons = this.build_button(this.tags.toolbar_button_style, null, "<iwcm:text key='pagebuilder.toolbar.style'/>");
 
                 if($el.hasClass(this.tag.column)) {
                     if ($el.hasClass("pb-col") || $el.hasClass("pb-col-auto")) {
                         //ak to mama classu pb-col alebo pb-col-auto nezobrazime nastavenie velkosti
                     } else {
-                        buttons += this.build_button(this.tags.toolbar_button_resize);
+                        buttons += this.build_button(this.tags.toolbar_button_resize, null, "<iwcm:text key='pagebuilder.toolbar.resize'/>");
                     }
                 }
 
-                buttons += this.build_button(this.tags.toolbar_button_move);
-                buttons += this.build_button(this.tags.toolbar_button_duplicate);
-                buttons += this.build_button(this.tags.toolbar_button_add_to_favorites);
-                buttons += this.build_button(this.tags.toolbar_button_remove);
+                buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
+                buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
+                buttons += this.build_button(this.tags.toolbar_button_add_to_favorites, null, "<iwcm:text key='pagebuilder.toolbar.add_to_favorites'/>");
+                buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
 
                 var content = this.build_aside(this.tag.toolbar_content,buttons);
 
-                $(el).append(this.build_aside(this.tag.toolbar,content));
+                $(el).append(this.build_aside(this.tag.toolbar, content, "<iwcm:text key='pagebuilder.toolbar.title'/>"));
             }
         },
 
         create_plus_button: function (el) {
             if($(el).children(this.tagc._plus_button).length < 1) {
                 $(el)
-                    .append(this.build_aside(this.tags.append))
-                    .append(this.build_aside(this.tags.prepend));
+                    .append(this.build_aside(this.tags.append, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"))
+                    .append(this.build_aside(this.tags.prepend, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"));
             }
         },
 
@@ -1095,9 +1105,12 @@
         create_empty_placeholder: function(el){
             var me = this;
             if($(el).children(this.tagc.empty_placeholder).length < 1) {
-                var content = this.build_button(this.tag.empty_placeholder_button);
+                var content = this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>");
 
-                if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
+                if( $(el).hasClass(this.tag.empty_placeholder_wrapper) && $(el).children(this.tagc.empty_placeholder).length <1 ){
+                    //console.log("Appending empty placeholder to wrapper");
+                    $(el).append(this.build_aside(this.tag.empty_placeholder,content));
+                } else if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
                     $(el).children(this.tagc.column_content).is(':empty')
                 ) {
                     if($(el).hasClass(this.tag.container)) {
@@ -1107,14 +1120,34 @@
                             $(el).append(this.build_aside(this.tag.empty_placeholder, content));
                         }
                     }
-                }else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section).length <1 ){
+                } else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section).length < 1 ){
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
                 }
             }
         },
 
+        /**
+         * This placeholder will be always visible at the bottom of the page builder to easily allow adding new sections
+         */
+        create_fixed_empty_placeholder: function () {
+            var $empty_placeholder  = $('<div class="'+this.tag.empty_placeholder_wrapper+' '+this.tag._grid_element+'"></div>');
+            $empty_placeholder.appendTo(this.$wrapper);
+
+            this.create_empty_placeholder($empty_placeholder[0]);
+        },
+
+        /**
+         * Remove only empty placeholder inside section/container/column
+         * not the fixed one at the bottom of the page
+         */
         remove_empty_placeholder: function(){
-            this.$wrapper.find(this.tagc.empty_placeholder).remove();
+            var me = this;
+            this.$wrapper.find(this.tagc.empty_placeholder).each(function(){
+                var $this = $(this);
+                if($this.parents("."+me.tag.empty_placeholder_wrapper).length === 0){
+                    $this.remove();
+                }
+            });
         },
 
         create_dimmer: function(el){
@@ -1125,21 +1158,35 @@
         /*====================|> BUILD ELEMENT
         /*=================================================================*/
 
-        build_button: function (class_name,content) {
-            if(typeof content === 'undefined') {
+        build_button: function (class_name, content=null, tooltip=null) {
+            if(typeof content === 'undefined' || content == null) {
                 content = '';
             }
-            return '<span class="'+class_name+'">'+content+'</span>';
+            var title = "";
+            if(tooltip !== null) {
+                title = ' data-title="'+tooltip+'" ';
+                class_name = class_name + ' '+this.options.prefix+'-tooltip';
+            }
+            return '<span class="'+class_name+'"'+title+'>'+content+'</span>';
         },
 
-        build_aside: function (class_name,content) {
-            if(typeof content === 'undefined') {
+        build_aside: function (class_name, content = null, tooltip = null) {
+            if(content === null) {
                 content = '';
             }
+
+            var spanClass = "";
+            var title = "";
+            if(tooltip !== null) {
+                spanClass = ' class="'+this.options.prefix+'-tooltip" ';
+                title = ' data-title="'+tooltip+'"';
+            }
+
             var iconSpan = "";
             //console.log("build_aside, class_name=", class_name);
-            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span></span>"; //pb-toolbar gear icon
-            return '<aside class="'+class_name+'">'+iconSpan+content+'</aside>';
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span"+spanClass+title+"></span>"; //pb-toolbar gear icon
+
+            return '<aside class="'+class_name+'"'+title+'>'+iconSpan+content+'</aside>';
         },
 
         /*==================================================================
@@ -1373,7 +1420,7 @@
             if (pbElement.find("section").length==0) {
                 //zobraz tlacidlo na pridanie tabu
                 if (pbElement.find("."+this.tag.empty_placeholder).length==0) {
-                    pbElement.prepend(this.build_aside(this.tag.empty_placeholder, this.build_button(this.tag.empty_placeholder_button)));
+                    pbElement.prepend(this.build_aside(this.tag.empty_placeholder, this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>")));
                 }
             }
         },
@@ -1621,19 +1668,26 @@
         },
 
         get_insert_new_element: function (el, new_element, parent) {
-
-            if($(el).hasClass(this.tag.append)){
+            var $el = $(el);
+            if($el.hasClass(this.tag.append)){
                 $(new_element).insertAfter(parent);
                 return $(parent).next();
             }
-            else if($(el).hasClass(this.tag.prepend)){
+            else if($el.hasClass(this.tag.prepend)){
                 $(new_element).insertBefore(parent);
                 return $(parent).prev();
             }
-            else if($(el).hasClass(this.tag.empty_placeholder_button)){
-                $(new_element).addClass(this.state.is_special_helper).prependTo(parent);
-                $(parent).children(this.tagc.empty_placeholder).off().unbind().remove();
-                return $(parent).children(this.statec.is_special_helper);
+            else if($el.hasClass(this.tag.empty_placeholder_button)){
+                if ($el.parents("."+this.tag.empty_placeholder_wrapper).length>0 && $(parent).hasClass(this.tag.wrapper)==false) {
+                    //special case for fixed empty placeholder at the bottom of PB
+                    //then parent is wrapper, we need to insert after last section
+                    $(new_element).insertAfter(parent);
+                    return $(parent).next();
+                } else {
+                    $(new_element).addClass(this.state.is_special_helper).prependTo(parent);
+                    $(parent).children(this.tagc.empty_placeholder).off().unbind().remove();
+                    return $(parent).children(this.statec.is_special_helper);
+                }
             }
         },
 
@@ -1794,7 +1848,10 @@
                 $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
             }
 
-            if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
+            if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
+                //fixed empty placeholder - show section library
+                $(me.tagc.library).addClass(me.tag.library_section);
+            } else if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
                 if (isEmptyPlaceholderButton && $(me.element).find("section").length>0) $(me.tagc.library).addClass(me.tag.library_container);
                 else $(me.tagc.library).addClass(me.tag.library_section);
             }
@@ -2109,6 +2166,29 @@
 
             });
 
+            me.$wrapper.on('click', '.library-tag-item', function() {
+                var radio = $(this);
+                // Store the previous state before the click
+                var wasChecked = radio.data('was-checked') || false;
+
+                // If it was already checked, uncheck it
+                if (wasChecked) {
+                    radio.prop("checked", false);
+                    radio.data('was-checked', false);
+                } else {
+                    // Uncheck all other radios in the same group first
+                    $('input[name="' + radio.attr('name') + '"]').not(radio).data('was-checked', false);
+                    radio.prop("checked", true);
+                    radio.data('was-checked', true);
+                }
+
+                me.filter_library();
+            });
+
+            me.$wrapper.on('keyup', '.library-filter-input', function() {
+                me.filter_library();
+            });
+
             me.$wrapper.on('click', '.library-full-width-item', function() {
 
                 var id = $(this).attr('data-library-item-id'),
@@ -2133,6 +2213,13 @@
                     if (parentTag==null) {
                         parentTag = "section";
                         parent = me.element;
+
+                        //check if there are any sections, if yes, insert after last section
+                        //fixed empty placeholder at the bottom of PB
+                        var lastSection = $(me.element).children("section").last();
+                        if (lastSection.length>0) {
+                            parent = lastSection;
+                        }
                     }
                     else if(parentTag=="container") parentTag = "column";
                     else if (parentTag=="section") parentTag = "container";
@@ -2225,14 +2312,8 @@
                         me.thExecuteTag("data-th-src", "src", insert_content);
                         me.thExecuteTag("data-th-href", "href", insert_content);
 
-                        if ("column" == parentTag) {
-                            //niekedy ako column potrebujeme vlozit aj nieco obsahujuce container, napr. taby do accordionu
-                            if (html.indexOf("container")) me.mark_grid_elements();
-                            else me.mark_column(insert_content);
-                        }
-                        else if ("row" == parentTag) me.mark_row(insert_content);
-                        else if ("container" == parentTag) me.mark_container(insert_content);
-                        else if ("section" == parentTag) me.mark_section(insert_content);
+                        //inserted block can possibly have multiple sections/containers/columns so we must mark all grid elements
+                        me.mark_grid_elements();
                 }
 
                 me.set_toolbar_visible(insert_content);
@@ -2252,6 +2333,95 @@
             return tab;
         },
 
+        filter_library: function() {
+            var me = this;
+
+            //detect which type of tab is active
+            var type = "";
+            if ($(me.tagc.library).hasClass(me.tag.library_column)) type = "column";
+            else if ($(me.tagc.library).hasClass(me.tag.library_container)) type = "container";
+            else if ($(me.tagc.library).hasClass(me.tag.library_section)) type = "section";
+            else if ($(me.tagc.library).hasClass(me.tag.library_content)) type = "content";
+
+            var $templateBlock = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type);
+
+            //find selected radio in .library-tags-block
+            var $selectedTagButton = $templateBlock.find('.library-tag-item:checked');
+            var $tabItem = $(this.$wrapper).find(".library-tab-item--library");
+            //get tag value
+            var tag = $selectedTagButton.attr('data-library-tag');
+            if (typeof tag === 'undefined' || tag === null) tag = "";
+            var searchText = $templateBlock.find('.library-filter-input').val();
+
+            if (tag != '' || searchText != '') {
+                //filter by tag
+                tag = tag.trim();
+
+                $tabItem.addClass('tag-filter-active');
+
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('filtered-active');
+
+                $tabItem.find('.library-template-block--'+type+' .library-full-width-item').each(function() {
+                    var itemTag = $(this).attr('data-library-tags');
+                    if (typeof itemTag === 'undefined' || itemTag === null) itemTag = "";
+                    var itemText = $(this).text();
+                    if (tag != "") {
+                        var tags = itemTag.split(",");
+                        if (itemTag === "") {
+                            $(this).removeClass('filtered-active');
+                            return;
+                        }
+                        for (var i = 0; i < tags.length; i++) {
+                            if (tags[i].trim() == tag) {
+                                if (searchText != "") {
+                                    //further filter by search text
+                                    if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+                                        $(this).addClass('active');
+                                        return;
+                                    } else {
+                                        $(this).removeClass('active');
+                                    }
+                                } else {
+                                    $(this).addClass('active');
+                                    return;
+                                }
+                            } else {
+                                $(this).removeClass('active');
+                            }
+                        }
+                    } else {
+                        //filter by search text
+                        if (searchText != "") {
+                            if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+                                $(this).addClass('active');
+                                return;
+                            } else {
+                                $(this).removeClass('active');
+                            }
+                        }
+                    }
+                });
+
+                var activeItems = $tabItem.find('.library-full-width-item.active');
+                activeItems.each(function() {
+                    var $this = $(this);
+                    $this.parents('.library-tab-item-button__toggler').addClass('filtered-active');
+                    if (activeItems.length <= me.options.filter_auto_open_items) $this.parents('.library-tab-item-button__toggler').addClass('active');
+                });
+            } else {
+                $tabItem.removeClass('tag-filter-active');
+                $tabItem.find('.library-full-width-item').removeClass('active');
+                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
+            }
+        },
+
+        /**
+         * Replace Thymeleaf code from html file, because it is prepared as thymeleaf but read as plain html
+         * @param dataTagName
+         * @param realTagName
+         * @param insert_content
+         */
         thExecuteTag: function(dataTagName, realTagName, insert_content) {
             var element = insert_content.find("["+dataTagName+"]");
             //console.log("thExecuteTag=", element);
@@ -2290,9 +2460,12 @@
             var libraryMainGroups = ['section', 'container', 'column', 'content'];
             var template = this.template;
             var that = this;
+
             libraryMainGroups.forEach(function (group, index) {
-                // <%--console.log("create_library_content_template, type=", type, " group=", group, "template=", template);--%>
+                var tags = [];
                 content += '<div class="library-template-block library-template-block--'+group+'">';
+
+                var contentInner = "";
                 $.each(that.get_json_object_by_attribute(template[type],'textKey',group).groups, function( index, obj ) {
                     var has_group = '';
                     if( obj.blocks != null ){
@@ -2304,32 +2477,74 @@
                             libraryButtonClass = "__toggler";
                         }
 
-                        content += '<span class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey+'</span>';
-                        content += '<div class="library-full-width-item__wrapper">';
-                            $.each(obj.blocks, function(indexBlock, block)
-                            {
-                                // <%--console.log("Block:", index, " ", block);--%>
-                                content += '<span class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" style="background-image: url('+block.imagePath+')"><i>'+block.textKey+'</i></span>';
-                            });
-                        content += '</div>';
+                        contentInner += '<div class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey;
+                            contentInner += '<div class="library-full-width-item__wrapper">';
+                                $.each(obj.blocks, function(indexBlock, block)
+                                {
+                                    var tagsText = "";
+                                    if (block.tags != null && block.tags.length > 0) {
+                                        $.each(block.tags, function(i, tag){
+                                            tagsText += tag;
+                                            if (i < block.tags.length - 1) tagsText += ",";
+
+                                            //merge block.tags into global tags array
+                                            if($.inArray(tag, tags) === -1){
+                                                tags.push(tag);
+                                            }
+                                        });
+                                        tagsText = tagsText.replace(/"/g, '&quot;');
+                                    }
+
+                                    // <%--console.log("Block:", index, " ", block);--%>
+                                    contentInner += '<div class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                });
+                            contentInner += '</div>';
+                        contentInner += '</div>';
                     }
                     else
                     {
                         var deleteTool = '';
                         if(type=='favorite') deleteTool = '<aside class="library-tab-item-delete-favorite"></aside>';
-                        content += '<span class="library-tab-item-button" data-library-item-id="'+obj.id+'">'+obj.textKey+deleteTool+'</span>';
+                        contentInner += '<span class="library-tab-item-button" data-library-item-id="'+obj.id+'">'+obj.textKey+deleteTool+'</span>';
                     }
                 });
+
+                if ("library" === type) {
+                    //insert filter input field
+                    var filterContent = '<div class="library-filter-block">' +
+                        '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
+                        '</div>';
+                    content += filterContent;
+
+                    //insert tags as button on top of library
+                    if(tags.length > 0){
+                        var tagsContent = '<div class="library-tags-block">';
+                        $.each(tags, function(i, tag){
+                            var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item-' + group + '" id="library-tag-item-' + group + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
+                            '<label class="library-tag-item-btn" for="library-tag-item-' + group + i + '">' + tag + '</label>';
+                            tagsContent += tagButton;
+                        });
+                        tagsContent += '</div>';
+                        content += tagsContent;
+                    }
+                }
+
+                content += contentInner;
+
                 content += '</div>';
             });
-
 
             return content;
         },
 
         show_library: function () {
-            $(this.$wrapper).addClass(this.state.is_library_active);
-            this.set_toolbar_invisible();
+            var me = this;
+            $(me.$wrapper).addClass(me.state.is_library_active);
+            me.set_toolbar_invisible();
+            setTimeout(function(){
+                $(me.$wrapper).find('.library-tab-item.active .library-filter-input').focus();
+                me.filter_library();
+            },100);
         },
         hide_library: function () {
             $(this.$wrapper).removeClass(this.state.is_library_active);
@@ -3662,13 +3877,12 @@
             $wrapper.find(me.tagc._highlighter).remove();
             $wrapper.find(me.tagc.dimmer).remove();
             $wrapper.find(me.tagc.empty_placeholder).remove();
+            $wrapper.find(me.tagc.empty_placeholder_wrapper).remove();
             $wrapper.find(me.tagc.size_changer).remove();
             $wrapper.find(me.tagc.connection_button).remove();
             $wrapper.find(me.tagc.notify).remove();
             $wrapper.find(me.tagc.modal).remove();
             $wrapper.find(me.tagc.library).remove();
-
-            //console.log("remove_elements, html=", $wrapper.html());
 
             if (typeof clone !== 'undefined') {
                 return $wrapper;
@@ -3693,6 +3907,7 @@
 
             $.each(me.column.valid_prefixes, function(index, class_name) {
                 $(wrapper).find(me.tagc.column).removeAttr(me.column.attr_prefix+class_name);
+                $(wrapper).find(me.grid.column).removeAttr(me.column.attr_prefix+class_name);
             });
 
             // <%--console.log("wrapper: ", wrapper, " editable_content: ", me.tag.editable_content, " me.tagc._grid_element: ", me.tagc._grid_element);--%>
@@ -3709,7 +3924,10 @@
                 .removeClass(me.tag.editable_section)
                 .removeClass(me.tag.editable_container)
                 .removeClass(me.tag.editable_element)
-                .removeClass(me.tag._grid_element);
+                .removeClass(me.tag._grid_element)
+                .removeClass(me.state.has_toolbar_active)
+                .removeClass(me.state.has_child_toolbar_active)
+                .removeClass(me.state.is_resize_columns);
 
             $(wrapper).removeClass(me.tag.wrapper);
 
@@ -3727,6 +3945,7 @@
             return {
                 prefix: 'pb',
                 max_col_size: 12,
+                filter_auto_open_items: 10,
                 template_group_id: 0,
                 grid: '',
                 onNewElementAdded: function () {
