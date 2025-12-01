@@ -73,9 +73,13 @@
         /*====================|> GET CLEAR DATA
         /*=================================================================*/
 
-        getClearNode: function() {
+        getClone: function() {
+            return $(this.$wrapper).clone(true);
+        },
 
-            var clone = $(this.$wrapper).clone(true);
+        getClearNode: function(clone = null) {
+
+            if (clone == null) clone = this.getClone();
 
             clone = this.remove_elements(clone);
             clone = this.remove_attributes(clone);
@@ -102,7 +106,7 @@
 
         clearEditorAttributes: function(node) {
             // <%--//musime odstranit vsetky CKeditor atributy a CSS triedy--%>
-            node.find("*[class*='editableElement']").removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label");
+            node.find("*[class*='editableElement']").removeAttr("contenteditable data-ckeditor-instance tabindex spellcheck role aria-label aria-readonly aria-multiline");
             node.find("*[class*='editableElement']").attr('style', function(i, style)
             {
                 // <%--//ckeditor vklada position:relative do elementu--%>
@@ -124,6 +128,8 @@
                 node.find("aside."+me.tag.dimmer).remove();
                 node.find("aside."+me.tag.empty_placeholder).remove();
                 node.find("aside."+me.tag.connection_button).remove();
+                node.find("aside."+me.tag.connection_button).remove();
+                node.find("aside."+me.tag.size_changer).remove();
 
                 node.find("."+me.tag._grid_element)
                     .removeClass(me.tag.section)
@@ -3876,8 +3882,6 @@
             $wrapper.find(me.tagc.modal).remove();
             $wrapper.find(me.tagc.library).remove();
 
-            //console.log("remove_elements, html=", $wrapper.html());
-
             if (typeof clone !== 'undefined') {
                 return $wrapper;
             }
@@ -3901,6 +3905,7 @@
 
             $.each(me.column.valid_prefixes, function(index, class_name) {
                 $(wrapper).find(me.tagc.column).removeAttr(me.column.attr_prefix+class_name);
+                $(wrapper).find(me.grid.column).removeAttr(me.column.attr_prefix+class_name);
             });
 
             // <%--console.log("wrapper: ", wrapper, " editable_content: ", me.tag.editable_content, " me.tagc._grid_element: ", me.tagc._grid_element);--%>
@@ -3917,7 +3922,10 @@
                 .removeClass(me.tag.editable_section)
                 .removeClass(me.tag.editable_container)
                 .removeClass(me.tag.editable_element)
-                .removeClass(me.tag._grid_element);
+                .removeClass(me.tag._grid_element)
+                .removeClass(me.state.has_toolbar_active)
+                .removeClass(me.state.has_child_toolbar_active)
+                .removeClass(me.state.is_resize_columns);
 
             $(wrapper).removeClass(me.tag.wrapper);
 

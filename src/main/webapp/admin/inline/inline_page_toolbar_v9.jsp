@@ -224,11 +224,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             }
 
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
-            var node = pageBuilderInstance.getClearNode();
+            var node = $(pageBuilderInstance.getClone());
             //console.log(node);
 
-            //console.log("Node html:");
-            //console.log(node.html());
+            //console.log("Node html:", node.html());
 
             var editableElements = node.find("*[class*='editableElement']");
             editableElements.each(function()
@@ -241,6 +240,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 var editorData = CKEDITOR.instances[editorName].getData();
                 $(this).html(editorData);
             });
+
+            node = pageBuilderInstance.getClearNode(node[0]);
 
             //console.log("Before unwrap HTML:", node.html());
             pageBuilderInstance.clearEditorAttributes(node);
