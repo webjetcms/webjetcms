@@ -110,7 +110,17 @@
         display: none !important;
     }
 
-    > .#{$prefix}-empty-placeholder > .#{$prefix}-empty-placeholder__button {
+    > .#{$prefix}-empty-placeholder-wrapper > .#{$prefix}-empty-placeholder {
+        position: relative;
+        > .#{$prefix}-empty-placeholder__button {
+            background-color: $color-section;
+            &::after {
+                border-color: $color-section;
+            }
 
+            &:hover {
+                background-color: darken($color-section,15%);
+            }
+        }
     }
 }

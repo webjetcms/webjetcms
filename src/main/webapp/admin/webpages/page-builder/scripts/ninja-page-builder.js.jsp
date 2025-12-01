@@ -64,6 +64,7 @@
             this.mark_grid_elements();
             this.create_modal();
             this.create_notify();
+            this.create_fixed_empty_placeholder();
             // <%--// this.create_library();--%>
             this.bind_events();
         },
@@ -227,6 +228,7 @@
                 connection_reference:           prefix+'connection-reference',
 
                 empty_placeholder:              prefix+'empty-placeholder',
+                empty_placeholder_wrapper:      prefix+'empty-placeholder-wrapper',
                 empty_placeholder_button:       prefix+'empty-placeholder__button',
 
                 modal:                          prefix+'modal',
@@ -1099,7 +1101,10 @@
             if($(el).children(this.tagc.empty_placeholder).length < 1) {
                 var content = this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>");
 
-                if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
+                if( $(el).hasClass(this.tag.empty_placeholder_wrapper) && $(el).children(this.tagc.empty_placeholder).length <1 ){
+                    //console.log("Appending empty placeholder to wrapper");
+                    $(el).append(this.build_aside(this.tag.empty_placeholder,content));
+                } else if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
                     $(el).children(this.tagc.column_content).is(':empty')
                 ) {
                     if($(el).hasClass(this.tag.container)) {
@@ -1109,14 +1114,34 @@
                             $(el).append(this.build_aside(this.tag.empty_placeholder, content));
                         }
                     }
-                }else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section).length <1 ){
+                } else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section).length < 1 ){
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
                 }
             }
         },
 
+        /**
+         * This placeholder will be always visible at the bottom of the page builder to easily allow adding new sections
+         */
+        create_fixed_empty_placeholder: function () {
+            var $empty_placeholder  = $('<div class="'+this.tag.empty_placeholder_wrapper+' '+this.tag._grid_element+'"></div>');
+            $empty_placeholder.appendTo(this.$wrapper);
+
+            this.create_empty_placeholder($empty_placeholder[0]);
+        },
+
+        /**
+         * Remove only empty placeholder inside section/container/column
+         * not the fixed one at the bottom of the page
+         */
         remove_empty_placeholder: function(){
-            this.$wrapper.find(this.tagc.empty_placeholder).remove();
+            var me = this;
+            this.$wrapper.find(this.tagc.empty_placeholder).each(function(){
+                var $this = $(this);
+                if($this.parents("."+me.tag.empty_placeholder_wrapper).length === 0){
+                    $this.remove();
+                }
+            });
         },
 
         create_dimmer: function(el){
@@ -1637,19 +1662,26 @@
         },
 
         get_insert_new_element: function (el, new_element, parent) {
-
-            if($(el).hasClass(this.tag.append)){
+            var $el = $(el);
+            if($el.hasClass(this.tag.append)){
                 $(new_element).insertAfter(parent);
                 return $(parent).next();
             }
-            else if($(el).hasClass(this.tag.prepend)){
+            else if($el.hasClass(this.tag.prepend)){
                 $(new_element).insertBefore(parent);
                 return $(parent).prev();
             }
-            else if($(el).hasClass(this.tag.empty_placeholder_button)){
-                $(new_element).addClass(this.state.is_special_helper).prependTo(parent);
-                $(parent).children(this.tagc.empty_placeholder).off().unbind().remove();
-                return $(parent).children(this.statec.is_special_helper);
+            else if($el.hasClass(this.tag.empty_placeholder_button)){
+                if ($el.parents("."+this.tag.empty_placeholder_wrapper).length>0 && $(parent).hasClass(this.tag.wrapper)==false) {
+                    //special case for fixed empty placeholder at the bottom of PB
+                    //then parent is wrapper, we need to insert after last section
+                    $(new_element).insertAfter(parent);
+                    return $(parent).next();
+                } else {
+                    $(new_element).addClass(this.state.is_special_helper).prependTo(parent);
+                    $(parent).children(this.tagc.empty_placeholder).off().unbind().remove();
+                    return $(parent).children(this.statec.is_special_helper);
+                }
             }
         },
 
@@ -1810,7 +1842,10 @@
                 $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
             }
 
-            if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
+            if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
+                //fixed empty placeholder - show section library
+                $(me.tagc.library).addClass(me.tag.library_section);
+            } else if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
                 if (isEmptyPlaceholderButton && $(me.element).find("section").length>0) $(me.tagc.library).addClass(me.tag.library_container);
                 else $(me.tagc.library).addClass(me.tag.library_section);
             }
@@ -2172,6 +2207,13 @@
                     if (parentTag==null) {
                         parentTag = "section";
                         parent = me.element;
+
+                        //check if there are any sections, if yes, insert after last section
+                        //fixed empty placeholder at the bottom of PB
+                        var lastSection = $(me.element).children("section").last();
+                        if (lastSection.length>0) {
+                            parent = lastSection;
+                        }
                     }
                     else if(parentTag=="container") parentTag = "column";
                     else if (parentTag=="section") parentTag = "container";
@@ -3827,6 +3869,7 @@
             $wrapper.find(me.tagc._highlighter).remove();
             $wrapper.find(me.tagc.dimmer).remove();
             $wrapper.find(me.tagc.empty_placeholder).remove();
+            $wrapper.find(me.tagc.empty_placeholder_wrapper).remove();
             $wrapper.find(me.tagc.size_changer).remove();
             $wrapper.find(me.tagc.connection_button).remove();
             $wrapper.find(me.tagc.notify).remove();

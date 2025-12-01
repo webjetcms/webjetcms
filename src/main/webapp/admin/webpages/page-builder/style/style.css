@@ -330,6 +330,19 @@
 .pb-wrapper.pb-is-library-active .pb-empty-placeholder__button {
   display: none !important;
 }
+.pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder {
+  position: relative;
+}
+.pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder > .pb-empty-placeholder__button {
+  background-color: #6486FF;
+}
+.pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder > .pb-empty-placeholder__button::after {
+  border-color: #6486FF;
+}
+.pb-wrapper > .pb-empty-placeholder-wrapper > .pb-empty-placeholder > .pb-empty-placeholder__button:hover {
+  background-color: #184aff;
+}
+
 .pb-toolbar {
   opacity: 0;
   position: absolute;
