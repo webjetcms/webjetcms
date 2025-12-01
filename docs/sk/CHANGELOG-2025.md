@@ -33,7 +33,7 @@
 
 ![](redactor/webpages/pagebuilder.png)
 
-- Page Builder - doplnená možnosť filtrovať bloky podľa názvu a štítkov (#58173).
+- Page Builder - doplnená možnosť [filtrovať bloky](frontend/page-builder/blocks.md#názov-a-značky-bloku) podľa názvu a štítkov (#58173).
 
 ![](redactor/webpages/pagebuilder-library.png)
 
