@@ -110,6 +110,7 @@
         display: none !important;
     }
 
+    //empty-placeholder on bottom of the page
     > .#{$prefix}-empty-placeholder-wrapper > .#{$prefix}-empty-placeholder {
         position: relative;
         > .#{$prefix}-empty-placeholder__button {

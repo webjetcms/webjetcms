@@ -21,7 +21,6 @@ Pre správne spustenie Page Builder nastavte:
 
 - `pagebuilderFilterAutoOpenItems` - počet položiek, ktoré sa pri filtrovaní v zozname blokov automaticky otvoria, predvolene 10.
 - `pagebuilderLibraryImageWidth` - šírka náhľadových obrázkov v knižnici blokov, predvolene 310.
-- `inlineEditableObjects` - objekty, na ktorá sa okrem doc_data aplikuje editácia (napr. doc_header, doc_footer, doc_right_menu)
 - `inlineEditingDisabledUrls` - zoznam URL adries, pre ktoré nebude dostupný inline editor
 - `pageBuilderPrefix` - prefix, ktorý sa používa pre CSS triedy Page Builder (predvolene pb), zmeniť je možné len ak zmeníte aj prefixy v CSS triedach Page Builder
 

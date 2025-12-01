@@ -241,6 +241,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 $(this).html(editorData);
             });
 
+            //clear node after CkEditor, because sometimes with invalid PB HTML structure some classes are inside CkEditor editable area
             node = pageBuilderInstance.getClearNode(node[0]);
 
             //console.log("Before unwrap HTML:", node.html());

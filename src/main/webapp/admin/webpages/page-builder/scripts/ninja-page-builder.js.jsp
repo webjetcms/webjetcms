@@ -79,7 +79,7 @@
 
         getClearNode: function(clone = null) {
 
-            if (clone == null) clone = this.getClone();
+            if (clone === null) clone = this.getClone();
 
             clone = this.remove_elements(clone);
             clone = this.remove_attributes(clone);
@@ -1164,8 +1164,8 @@
             }
             var title = "";
             if(tooltip !== null) {
-                title = ' title="'+tooltip+'" ';
-                class_name = class_name + ' pb-tooltip';
+                title = ' data-title="'+tooltip+'" ';
+                class_name = class_name + ' '+this.options.prefix+'-tooltip';
             }
             return '<span class="'+class_name+'"'+title+'>'+content+'</span>';
         },
@@ -1178,8 +1178,8 @@
             var spanClass = "";
             var title = "";
             if(tooltip !== null) {
-                spanClass = ' class="pb-tooltip" ';
-                title = ' title="'+tooltip+'"';
+                spanClass = ' class="'+this.options.prefix+'-tooltip" ';
+                title = ' data-title="'+tooltip+'"';
             }
 
             var iconSpan = "";
@@ -2187,7 +2187,7 @@
 
             me.$wrapper.on('keyup', '.library-filter-input', function() {
                 me.filter_library();
-            }),
+            });
 
             me.$wrapper.on('click', '.library-full-width-item', function() {
 
@@ -2343,13 +2343,15 @@
             else if ($(me.tagc.library).hasClass(me.tag.library_section)) type = "section";
             else if ($(me.tagc.library).hasClass(me.tag.library_content)) type = "content";
 
+            var $templateBlock = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type);
+
             //find selected radio in .library-tags-block
-            var $selectedTagButton = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type+' .library-tag-item:checked');
+            var $selectedTagButton = $templateBlock.find('.library-tag-item:checked');
             var $tabItem = $(this.$wrapper).find(".library-tab-item--library");
             //get tag value
             var tag = $selectedTagButton.attr('data-library-tag');
             if (typeof tag === 'undefined' || tag === null) tag = "";
-            var searchText = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type+' .library-filter-input').val();
+            var searchText = $templateBlock.find('.library-filter-input').val();
 
             if (tag != '' || searchText != '') {
                 //filter by tag
@@ -2366,7 +2368,7 @@
                     var itemText = $(this).text();
                     if (tag != "") {
                         var tags = itemTag.split(",");
-                        if (tags.length == 0) {
+                        if (itemTag === "") {
                             $(this).removeClass('filtered-active');
                             return;
                         }
@@ -2483,7 +2485,7 @@
                                     if (block.tags != null && block.tags.length > 0) {
                                         $.each(block.tags, function(i, tag){
                                             tagsText += tag;
-                                            if (i < block.tags.length -1) tagsText += ",";
+                                            if (i < block.tags.length - 1) tagsText += ",";
 
                                             //merge block.tags into global tags array
                                             if($.inArray(tag, tags) === -1){

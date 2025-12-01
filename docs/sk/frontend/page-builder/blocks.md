@@ -44,7 +44,7 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
 
 ## Názov a značky bloku
 
-Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:
+Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v kódovaní `utf-8` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:
 
 ```properties
 title=Základné prvky

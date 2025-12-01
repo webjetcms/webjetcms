@@ -574,6 +574,17 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     I.switchTo();
     Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(5);
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.moveCursorTo(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+
+    Document.screenshot("/redactor/webpages/pagebuilder-plusbutton.png");
+
+    I.switchTo();
 });
 
 Scenario('welcome', ({ I, Document }) => {

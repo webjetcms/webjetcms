@@ -1793,7 +1793,7 @@
   transform: translate(-50%, -80%);
 }
 .pb-tooltip::before {
-  content: attr(title);
+  content: attr(data-title);
   text-indent: initial;
   position: absolute;
   bottom: 50%;

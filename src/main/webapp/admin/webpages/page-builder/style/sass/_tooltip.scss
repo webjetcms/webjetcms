@@ -11,7 +11,7 @@
 
     // Tooltip content (rectangle with text)
     &::before {
-        content: attr(title);
+        content: attr(data-title);
         text-indent: initial;
         position: absolute;
         bottom: 50%;
