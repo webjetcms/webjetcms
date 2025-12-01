@@ -38,6 +38,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntityMapper;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.form.FormAttributeDB;
@@ -321,10 +322,10 @@ public class MultistepFormsService {
         form.setDomainId(CloudToolsForCore.getDomainId());
         form.setCreateDate(new Date());
         form.setDocId(0);
-        form.setUserDetails(UsersDB.getCurrentUser(request));
+        form.setUserDetails( UserDetailsEntityMapper.INSTANCE.userDetailsToUserDetailsEntity( UsersDB.getCurrentUser(request) ) );
 
         //
-        String prefix = form.getUserDetails().getUserId() + "_" + formName + "_";
+        String prefix = form.getUserDetails().getId() + "_" + formName + "_";
         StringBuilder data = new StringBuilder();
 
         // Enumerate session attributes (Enumeration is not directly iterable by for-each)

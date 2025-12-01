@@ -19,11 +19,6 @@
         id: "formItems",
         tabs: [
             {
-                url: '/apps/form/admin/#/detail/' + urlFormName,
-                title: urlFormName,
-                active: false
-            },
-            {
                 url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
                 title: '[[#{components.form_items.step_title}]]',
                 active: false
@@ -38,7 +33,11 @@
                 title: '{filter}',
                 active: false
             }
-        ]
+        ],
+        backlink: {
+            url: '/apps/form/admin/#/detail/' + urlFormName,
+            title: urlFormName,
+        }
     });
 
     function getActualPath() {

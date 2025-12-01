@@ -1,11 +1,16 @@
 <script data-th-inline="javascript">
     let url = "/admin/rest/forms-list/";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    const columnsToKeep = ["id", "createDate", "lastExportDate", "note", "files"];
-</script>
+    const columnsToKeep = ["id", "preview", "createDate", "lastExportDate", "note", "files"];
+    const removeUserFields = ["admin", "apiKey", "password"];
 
-<script type="text/javascript">
-    var formDetailTable;
+    var tabs = [
+        { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'content', title: /*[[#{components.forms.detail.tab.fields}]]*/ '', selected: false },
+        { id: 'personalInfo', title: /*[[#{useredit.personal_info}]]*/ '', selected: false },
+        { id: 'contactTab', title: /*[[#{components.users.contact}]]*/ '', selected: false },
+        { id: 'freeItems', title: /*[[#{editor.tab.fields}]]*/ '', selected: false },
+    ];
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -14,22 +19,61 @@
     url = WJ.urlUpdateParam(url, "detail", true);
     url = WJ.urlUpdateParam(url, "formName", formName);
 
-    WJ.breadcrumb({
-        id: "forms-detail",
+    WJ.setTitle(/*[[#{forms.formsList.js}]]*/ '');
+
+    WJ.headerTabs({
+        id: 'tabsFilter',
         tabs: [
-            {
-                url: "/apps/form/admin/",
-                title: WJ.translate("forms.formsList.js"),
-                active: false
-            },
+            { url: '/apps/form/admin/', title: /*[[#{forms.formsList.js}]]*/ '', active: true },
+            { url: '/apps/form/admin/form-steps/?formName=' + formName, title: /*[[#{components.form_items.navbar_title}]]*/ '', active: false }
+        ]
+    });
+
+    WJ.breadcrumb({
+        id: "form-details",
+        tabs: [
             {
                 url: "/apps/form/admin/detail/?formName=" + formName,
                 title: formName,
                 active: true
             }
-        ]
+        ],
+        backlink: {
+            url: "/apps/form/admin/",
+            title: WJ.translate("forms.formsList.js"),
+        }
     });
+</script>
 
+<script type="text/javascript">
+    var formDetailDataTable;
+
+    window.openFormHtml = function (id) {
+        //add print button
+        if ($("#modalPrintButton").length == 0) {
+            const printButton = document.createElement('button');
+            printButton.id = 'modalPrintButton';
+            printButton.className = 'btn btn-outline-secondary';
+            printButton.innerHTML = WJ.translate("button.print");
+            printButton.onclick = function() {
+                $("#modalIframeIframeElement")[0].contentWindow.print();
+            };
+            $('#modalIframe .modal-footer').prepend(printButton);
+        }
+
+        WJ.openIframeModal({
+            url: "/admin/rest/forms-list/html/?id=" + id,
+            width: 800,
+            height: 600,
+            closeButtonPosition: 'close-button-over empty-header',
+            buttonTitleKey: 'button.confirm',
+            okclick: function() {
+                WJ.closeIframeModal();
+            }
+        });
+    }
+
+    let filteredColumns = [];
     var columnsFetchPromise = fetch('/admin/rest/forms-list/columns/' + encodeURIComponent(formName), {
         method: 'GET',
         headers: {
@@ -41,66 +85,115 @@
         return resp.json();
     }) .then(data => {
         if (data) {
-            let newColumns = columns.filter(col => columnsToKeep.includes(col.data));
+            //First filter
+            filteredColumns = columns.filter(col => columnsToKeep.includes(col.data) || (col.data.startsWith('userDetails.') && !removeUserFields.includes(col.data.split('.')[1])));
+            //Remove all userDetails.editorFields columns
+            filteredColumns = filteredColumns.filter(col => !(col.data.startsWith('userDetails.editorFields.')));
 
+            //Set createDate as new row editor column
+            window.WJ.DataTable.mergeColumns(filteredColumns, {
+                name: "createDate",
+                className: "dt-row-edit cell-not-editable",
+                renderFormatLinkTemplate: "javascript:;",
+                renderFormatPrefix: '<i class="ti ti-pencil"></i> '
+            });
+
+            // Set userId column as base text column
+            window.WJ.DataTable.mergeColumns(filteredColumns, {
+                name: "userDetails.id",
+                renderFormat: "dt-format-text",
+                searchable: false,
+                filter: false,
+                className: "cell-not-editable"
+            });
+
+            window.WJ.DataTable.mergeColumns(filteredColumns, {
+                name: "files",
+                render: function ( data, type, full, meta ) {
+                    let htmlCode = "";
+                    if (data != null && data.length>0){
+                        let fileNames = data.split(",");
+                        for (const fileName of fileNames) {
+                            if (htmlCode != "") htmlCode += ", ";
+                            let fileNameText = fileName;
+                            let i = fileName.indexOf("_");
+                            if (i>0) fileNameText = fileName.substring(i+1);
+                            htmlCode += `<a href="/apps/forms/admin/attachment/?name=${fileName}" target="_blank">${fileNameText}</a>`;
+                        }
+                    }
+                    return htmlCode;
+                }
+            });
+
+            //Add form fields as columns
             if(Array.isArray(data.columns)) {
                 data.columns.forEach(col => {
-                    newColumns.push({
+                    filteredColumns.push({
                         data: "col_" + col.value,
                         name: "col_" + col.value,
                         title: col.label,
                         renderFormat: "dt-format-text",
-                        className: "",
                         orderable: false,
+                        editor: {
+                            tab: "content"
+                        }
                     });
                 });
             }
 
-            // swap columns
-            columns = newColumns;
+            // Disable columns
+            filteredColumns.forEach(col => {
+                if(col.data === "userDetails.login") {
+                    delete col.renderFormatLinkTemplate;
+                    delete col.renderFormatPrefix;
+                }
+
+                if(col.data === "note") return;
+
+                window.WJ.DataTable.mergeColumns(filteredColumns, {
+                    name: col.data,
+                    //className: "cell-not-editable",
+                    //disabled: true,
+                    editor: {
+                        attr: {
+                            disabled: true
+                        }
+                    },
+                    ai: null
+                });
+            });
+
+            //Sort fields by editor.tab value
+            filteredColumns.sort((a, b) => {
+                const tabOrder = {
+                    'basic': 1,
+                    'content': 2,
+                    'personalInfo': 3,
+                    'contactTab': 4,
+                    'freeItems': 5
+                };
+                const tabA = a.editor && a.editor.tab ? a.editor.tab : 'personalInfo';
+                const tabB = b.editor && b.editor.tab ? b.editor.tab : 'personalInfo';
+                return (tabOrder[tabA] || 99) - (tabOrder[tabB] || 99);
+            });
+
+            console.log("Filtered columns:", filteredColumns);
         }
     }).catch(err => { console.error(err); });
 
-    // window.openFormHtml = function (id) {
-    //     //add print button
-    //     if ($("#modalPrintButton").length == 0) {
-    //         const printButton = document.createElement('button');
-    //         printButton.id = 'modalPrintButton';
-    //         printButton.className = 'btn btn-outline-secondary';
-    //         printButton.innerHTML = WJ.translate("button.print");
-    //         printButton.onclick = function() {
-    //             $("#modalIframeIframeElement")[0].contentWindow.print();
-    //         };
-    //         $('#modalIframe .modal-footer').prepend(printButton);
-    //     }
-    //     WJ.openIframeModal({
-    //         url: window.formRestUrl+"/html/?id="+id,
-    //         width: 800,
-    //         height: 600,
-    //         closeButtonPosition: 'close-button-over empty-header',
-    //         buttonTitleKey: 'button.confirm',
-    //         okclick: function() {
-    //             WJ.closeIframeModal();
-    //         }
-    //     });
-    // }
-
     window.domReady.add(function () {
-        // !! hide form steps tab link !! - show only in form detail view
-        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
 
-        function initFormDetailTable() {
-            formDetailTable = WJ.DataTable({
+        function initformDetailDataTable() {
+            formDetailDataTable = WJ.DataTable({
                 url:  url,
-                columns: columns,
-                id: 'form-detail',
+                columns: filteredColumns,
+                id: 'formDetailDataTable',
+                tabs: tabs,
                 serverSide: true,
                 idAutoOpener: true,
                 onXhr: function( TABLE, e, settings, json, xhr ) {
                     json.data.forEach(j => {
-
                         if(j.columnNamesAndValues == undefined || j.columnNamesAndValues == null) return;
-
                         for (let [key, value] of Object.entries(j.columnNamesAndValues)) {
                             j["col_"+key] = value;
                         }
@@ -117,12 +210,33 @@
                 lastExportColumnName: 'lastExportDate',
                 byIdExportColumnName: 'id'
             });
+            formDetailDataTable.hideButton('create');
+            formDetailDataTable.hideButton('duplicate');
+            formDetailDataTable.hideButton('celledit');
+            formDetailDataTable.hideButton('import');
+
+            formDetailDataTable.button().add(4, {
+                extends: 'remove',
+                text: '<i class="ti ti-archive"></i>',
+                action: function (e, dt, node) {
+                    //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                    formDetailDataTable.executeAction("archiveFormDetail");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    'title': '[[#{components.form.admin_forms.archivuj_formular}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
         }
 
         //Initialize after potential dynamic column fetch
-        columnsFetchPromise.finally(() => initFormDetailTable());
+        columnsFetchPromise.finally(() => initformDetailDataTable());
 
     });
 </script>
 
-<table id="form-detail" class="datatableInit table"></table>
+<table id="formDetailDataTable" class="datatableInit table"></table>

@@ -17,12 +17,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
@@ -147,15 +147,8 @@ public class FormSimpleApp extends WebjetComponentAbstract {
             }
         }
 
-        if(this.formSettings.getUseFormMailDocId() != null) {
-            DocDetails doc = DocDB.getInstance().getDoc( this.formSettings.getUseFormMailDocId() );
-            if(doc != null) this.formSettings.setUseFormMailDoc( new DocDetailsDto(doc) );
-        }
-
-        if(this.formSettings.getFormmailSendUserInfoDocId() != null) {
-            DocDetails doc = DocDB.getInstance().getDoc( this.formSettings.getFormmailSendUserInfoDocId() );
-            if(doc != null) this.formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
-        }
+        //
+        FormSettingsService.prepareSettingsForEdit(formSettings);
 
         super.initAppEditor(componentRequest, request);
     }

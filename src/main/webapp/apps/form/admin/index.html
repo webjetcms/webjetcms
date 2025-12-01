@@ -1,11 +1,18 @@
 <script data-th-inline="javascript">
     let url = "/admin/rest/forms-list/";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    const columnsToKeep = ["id", "preview", "formName", "count", "createDate"];
+    const columnsToKeep = ["id", "formName", "count", "createDate"];
+
+    var tabs = [
+        { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
+        { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
+        { id: 'settings-file-limits', title: /*[[#{editor.form.file_limits}]]*/ '', selected: false }
+    ];
 </script>
 
 <script type="text/javascript">
-    var formDetailTable;
+    var formsDataTable;
 
     WJ.breadcrumb({
         id: "forms",
@@ -23,48 +30,82 @@
         window.location.href="/apps/form/admin/detail/?formName="+ formName;
     }
 
-    let filteredColumns = columns.filter(col => columnsToKeep.includes(col.data));
+    let filteredColumns = [];
+    columns.forEach(function(column) {
+        if(columnsToKeep.includes(column.data)) filteredColumns.push(column);
+        else if(column.data.startsWith("formSettings.")) {
+            let classes = column.className != null ? column.className.split(" ") : [];
+
+            //Not show column
+            if(classes.includes("not-form")) return;
+
+            column.hidden = true;
+            if(classes.includes("form-file-limits")) {
+                column.editor.tab = "settings-file-limits";
+            } else if(classes.includes("form-email")) {
+                column.editor.tab = "settings-email";
+            } else {
+                column.editor.tab = "settings-basic";
+            }
+
+            filteredColumns.push(column);
+        }
+    });
+
     window.WJ.DataTable.mergeColumns(filteredColumns, { name: "createDate", title: '[[#{formslist.datum_posledneho}]]' });
+    window.WJ.DataTable.mergeColumns(filteredColumns, {
+        name:"formName",
+        renderFormatLinkTemplate: "javascript:openFormHtml('{{formName}}');",
+        renderFormatPrefix: '<i class="ti ti-eye"></i> '
+    });
     let columnsFetchPromise = Promise.resolve();
 
     window.domReady.add(function () {
         // !! hide form steps tab link !! - show only in form detail view
-        //$("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
+        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
 
-        function initFormDetailTable() {
-            formDetailTable = WJ.DataTable({
+        function initformsDataTable() {
+            formsDataTable = WJ.DataTable({
                 url:  url,
                 columns: filteredColumns,
-                id: 'form-detail',
+                id: 'formsDataTable',
                 serverSide: false,
+                tabs: tabs,
                 //
                 idAutoOpener: true,
-                onXhr: function( TABLE, e, settings, json, xhr ) {
-                    json.data.forEach(j => {
-                        if(j.columnNamesAndValues == undefined || j.columnNamesAndValues == null) return;
-
-                        for (let [key, value] of Object.entries(j.columnNamesAndValues)) {
-                            j["col_"+key] = value;
-                        }
-                        //set class for not confirmed double optin forms
-                        if (typeof j.doubleOptinHash != "undefined" && j.doubleOptinHash != null && j.doubleOptinHash != "") {
-                            if (typeof j.doubleOptinConfirmationDate != "undefined" && j.doubleOptinConfirmationDate == null) {
-                                j.editorFields = {
-                                    rowClass: "is-disabled"
-                                }
-                            }
-                        }
-                    });
-                },
                 lastExportColumnName: 'lastExportDate',
-                byIdExportColumnName: 'id'
+                byIdExportColumnName: 'id',
+                fetchOnEdit: true
+            });
+            formsDataTable.hideButton('celledit');
+            formsDataTable.hideButton('import');
+
+            //TODO for now until logic is finished
+            formsDataTable.hideButton('create');
+            formsDataTable.hideButton('duplicate');
+
+            formsDataTable.button().add(4, {
+                extends: 'remove',
+                text: '<i class="ti ti-archive"></i>',
+                action: function (e, dt, node) {
+                    //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                    formsDataTable.executeAction("archiveForm");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    'title': '[[#{components.form.admin_forms.archivuj_formular}]]',
+                    'data-toggle': 'tooltip'
+                }
             });
         }
 
         //Initialize after potential dynamic column fetch
-        columnsFetchPromise.finally(() => initFormDetailTable());
+        columnsFetchPromise.finally(() => initformsDataTable());
 
     });
 </script>
 
-<table id="form-detail" class="datatableInit table"></table>
+<table id="formsDataTable" class="datatableInit table"></table>

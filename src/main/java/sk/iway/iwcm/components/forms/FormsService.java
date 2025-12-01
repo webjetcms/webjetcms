@@ -66,6 +66,15 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         this.formsRepository = formsRepository;
     }
 
+    public void prepareForm(E entity, int domainId) {
+        entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);
+        E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);
+        if (lastOne != null) {
+            entity.setCreateDate(lastOne.getCreateDate());
+            entity.setDocId(lastOne.getDocId());
+        }
+    }
+
     /**
      * Vrati zoznam vsetkych formularov, vyfiltruje len take, na ktore ma pouzivatel prava
      * @param user
@@ -74,17 +83,8 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     public List<E> getFormsList(UserDetails user) {
         Integer domainId = CloudToolsForCore.getDomainId();
         List<E> formsEntities = formsRepository.findAllByCreateDateIsNullAndDomainId(domainId);
-        for (E entity : formsEntities) {
-            entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);
-            E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);
-            if (lastOne != null) {
-                entity.setCreateDate(lastOne.getCreateDate());
-                entity.setDocId(lastOne.getDocId());
-            }
-        }
-
+        for (E entity : formsEntities) prepareForm(entity, domainId);
         formsEntities = filterDistinct(formsEntities);
-
         return filterFormsByUser(user, formsEntities);
     }
 

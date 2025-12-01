@@ -1,5 +1,41 @@
 
-<div data-th-include="/apps/form/admin/index.html" data-th-remove="tag"/>
-<script type="text/javascript">
-    window.formRestUrl = "/admin/rest/forms/archive-list";
+<script data-th-inline="javascript">
+    let url = "/admin/rest/forms/archive-list";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
+    const columnsToKeep = ["id", "formName", "count", "createDate"];
 </script>
+
+<script type="text/javascript">
+    var formDetailArchivedTable;
+
+    window.openFormHtml = function (formName) {
+        if(formName == undefined || formName == null) return;
+        window.location.href="/apps/form/admin/detail/?formName="+ formName;
+    }
+
+    let filteredColumns = columns.filter(col => columnsToKeep.includes(col.data));
+    window.WJ.DataTable.mergeColumns(filteredColumns, { name: "createDate", title: '[[#{formslist.datum_posledneho}]]' });
+    window.WJ.DataTable.mergeColumns(filteredColumns, {
+        name:"formName",
+        renderFormatLinkTemplate: "javascript:openFormHtml('{{formName}}');",
+        renderFormatPrefix: '<i class="ti ti-eye"></i> '
+    });
+
+    window.domReady.add(function () {
+
+        formDetailTable = WJ.DataTable({
+            url:  url,
+            columns: filteredColumns,
+            id: 'formDetailArchivedTable',
+            serverSide: false
+        });
+        formDetailTable.hideButton('celledit');
+        formDetailTable.hideButton('import');
+        formDetailTable.hideButton('export');
+        formDetailTable.hideButton('create');
+        formDetailTable.hideButton('edit');
+        formDetailTable.hideButton('duplicate');
+    });
+</script>
+
+<table id="formDetailArchivedTable" class="datatableInit table"></table>

@@ -11,13 +11,8 @@
     const urlFormName = urlParams.get('formName');
 
     WJ.breadcrumb({
-        id: "fomSteps",
+        id: "form-steps",
         tabs: [
-            {
-                url: '/apps/form/admin/#/detail/' + urlFormName,
-                title: urlFormName,
-                active: false
-            },
             {
                 url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
                 title: '[[#{components.form_items.step_title}]]',
@@ -28,7 +23,11 @@
                 title: '[[#{components.form_items.items_title}]]',
                 active: false
             }
-        ]
+        ],
+        backlink: {
+            url: '/apps/form/admin/#/detail/' + urlFormName,
+            title: urlFormName,
+        }
     });
 
     window.domReady.add(function () {
