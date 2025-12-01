@@ -9,6 +9,7 @@ public class BlockDto {
     private String filePath;
     private String action;
     private String style;
+    private String[] tags;
 
     public String getId() {
         return id;
@@ -72,5 +73,13 @@ public class BlockDto {
 
     public void setStyle(String style) {
         this.style = style;
+    }
+
+    public String[] getTags() {
+        return tags;
+    }
+
+    public void setTags(String[] tags) {
+        this.tags = tags;
     }
 }

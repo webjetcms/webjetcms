@@ -30,6 +30,9 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     <!-- /NINJA PAGE BUILDER -->
     <style>
+        :root {
+            --<%=Constants.getString("pageBuilderPrefix", "pb")%>-image-width: <%=Constants.getInt("pagebuilderLibraryImageWidth")%>px;
+        }
         p.text-right { text-align: right; }
         p.text-center { text-align: center; }
         p.text-justify { text-align: justify; }
@@ -85,6 +88,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         pageDiv.ninjaPageBuilder({
             max_col_size: <%=Constants.getInt("bootstrapColumns", 12)%>,
             prefix: "<%=pbPrefix%>",
+            filter_auto_open_items: <%=Constants.getInt("pagebuilderFilterAutoOpenItems")%>,
             //toto sa berie z inline_script.jsp kde sa hodnota inicializuje
             template_group_id: templateGroupId,
             <%
@@ -220,11 +224,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             }
 
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
-            var node = pageBuilderInstance.getClearNode();
+            var node = $(pageBuilderInstance.getClone());
             //console.log(node);
 
-            //console.log("Node html:");
-            //console.log(node.html());
+            //console.log("Node html:", node.html());
 
             var editableElements = node.find("*[class*='editableElement']");
             editableElements.each(function()
@@ -237,6 +240,9 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 var editorData = CKEDITOR.instances[editorName].getData();
                 $(this).html(editorData);
             });
+
+            //clear node after CkEditor, because sometimes with invalid PB HTML structure some classes are inside CkEditor editable area
+            node = pageBuilderInstance.getClearNode(node[0]);
 
             //console.log("Before unwrap HTML:", node.html());
             pageBuilderInstance.clearEditorAttributes(node);

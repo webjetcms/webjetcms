@@ -561,14 +561,30 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
         pbElement.addClass("pb-has-toolbar-active");
         pbElement.children("aside.pb-toolbar").first().trigger("click");
         pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
-        mainWindow.$(".library-tab-link[data-library-type='library']").trigger("click");
-        mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
+        //mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
     });
+
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.wait(1);
+    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
+    I.wait(1);
+    I.switchTo();
 
     Document.screenshot("/redactor/webpages/pagebuilder-library.png");
 
     I.switchTo();
     Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(5);
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.moveCursorTo(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+
+    Document.screenshot("/redactor/webpages/pagebuilder-plusbutton.png");
+
+    I.switchTo();
 });
 
 Scenario('welcome', ({ I, Document }) => {
