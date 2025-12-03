@@ -7,7 +7,7 @@
 
 	top: 2%;
 	left: calc(-1 * (var(--#{$prefix}-image-width, 340px) + 58px));
-	width: calc(var(--#{$prefix}-image-width, 340px) + 48px);
+	width: calc(var(--#{$prefix}-image-width, 340px) + 48px + $scrollbar-width);
 	height: 96%;
 	border-radius: 0px;
 	border-right: 1px solid $dark-60;
@@ -79,7 +79,6 @@
 
     &__content {
         padding:0;
-        overflow-y: auto;
         width: 100%;
         max-height: 60vh;
 

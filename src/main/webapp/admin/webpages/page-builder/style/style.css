@@ -1355,7 +1355,7 @@
   z-index: 102000;
   top: 2%;
   left: calc(-1 * (var(--pb-image-width, 340px) + 58px));
-  width: calc(var(--pb-image-width, 340px) + 48px);
+  width: calc(var(--pb-image-width, 340px) + 48px + 17px);
   height: 96%;
   border-radius: 0px;
   border-right: 1px solid #686F83;
@@ -1416,7 +1416,6 @@
 }
 .pb-library__content {
   padding: 0;
-  overflow-y: auto;
   width: 100%;
   max-height: 60vh;
   overflow-y: scroll;

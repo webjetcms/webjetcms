@@ -90,10 +90,32 @@ CKEDITOR.editorConfig = function( config )
 	{
 	   if (DictionaryDB.getAll().size()>0) hasTooltip = true;
 	}
+	boolean hasSvgIcon = false;
+	String ckeditorSvgIconPath = Constants.getString("ckeditorSvgIconPath");
+	if (Tools.isNotEmpty(ckeditorSvgIconPath)) hasSvgIcon = true;
 	%>
 
+	config.webjetsvgicon = {
+		spritePath: "<%=Constants.getString("ckeditorSvgIconPath")%>",
+		icons2: {
+			"4g": ["other"],
+			"5g": ["other"],
+			"accessibility-mobility": ["people"],
+			"accessibility-motor": ["other"],
+			"accessibility-vision": ["other"],
+			accessibility: ["people"],
+			add: ["common"],
+			advertising: ["other"],
+			aeroplane: ["vehicles"],
+			"age-rating-3": ["other"],
+			"airbox-auto": ["vehicles", "waves"],
+			"alias-numbers": ["people"],
+			"android-manage": ["other"],
+		}
+	};
+
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
-		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %>";
+		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %><% if (hasSvgIcon) { %>webjetsvgicon<% } %>";
 		config.sharedSpaces = {
 		    top: 'wjInlineCkEditorToolbarElement'
 		}
@@ -104,7 +126,7 @@ CKEDITOR.editorConfig = function( config )
 		config.height = 600;
 		config.removePlugins = 'floatingspace,sharedspace'
 	<% } else { %>
-		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %><% if (hasSvgIcon) { %>,webjetsvgicon<% } %>";
 		config.removePlugins = 'floatingspace,sharedspace';
 	<% } %>
 	config.magicline_color="#F7CA18";
@@ -136,6 +158,7 @@ CKEDITOR.editorConfig = function( config )
 		//zatial zakomentovane, neotestovane:
 		if (hasTooltip) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
 		if (hasFontAwesome) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
+		if (hasSvgIcon) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
 
 		if ("pageBuilder".equals(Tools.getRequestParameter(request, "inlineMode")))
 		{
