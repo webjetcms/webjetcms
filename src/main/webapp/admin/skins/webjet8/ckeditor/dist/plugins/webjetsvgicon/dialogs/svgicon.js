@@ -145,7 +145,7 @@
 
         var gridHtml = '<div class="wj-icon-grid" style="' +
             'display: grid; ' +
-            'grid-template-columns: repeat(auto-fit, minmax(' + iconWidth + 'px, 1fr)); ' +
+            'grid-template-columns: repeat(auto-fit, minmax(' + (iconWidth + 2 + 16) + 'px, 1fr)); ' +
             'gap: 8px; ' +
             'max-height: ' + gridHeight + 'px; ' +
             'overflow-y: auto; ' +
@@ -167,6 +167,7 @@
                 'width: ' + iconWidth + 'px; ' +
                 'height: ' + (iconHeight + 30) + 'px; ' +
                 'justify-content: center;' +
+                'overflow: hidden;' +
             '">' +
                 '<div class="wj-icon-placeholder" style="' +
                     'width: ' + iconWidth + 'px; ' +
@@ -335,7 +336,7 @@
         {
             type: 'hbox',
             padding: 0,
-            widths: ['50%', '50%'],
+            widths: [ '49%', '2%', '49%' ],
             children: [
                 {
                     type: 'select',
@@ -346,6 +347,10 @@
                     onChange: function() {
                         filterIcons(this.getDialog());
                     }
+                },
+                {
+                    type: 'html',
+                    html: '&nbsp;'
                 },
                 {
                     type: 'text',
@@ -393,7 +398,7 @@
     return {
         title: editor.lang.webjetsvgicon.title,
         minWidth: 800,
-        minHeight: 600,
+        minHeight: 500,
         contents: [
             {
                 id: 'icons',
@@ -441,6 +446,22 @@
                     var groups = iconToGroups[selectedIconName];
                     if (groups.length > 0) {
                         this.setValueOf('icons', 'iconGroup', groups[0]);
+                    }
+                }
+
+                //add class wj-selected to the selected icon
+                var gridContainer = dialog.getContentElement('icons', 'iconGrid').getElement();
+                var iconItems = gridContainer.find('.wj-icon-item');
+                for (var i = 0; i < iconItems.count(); i++) {
+                    var item = iconItems.getItem(i);
+                    var iconName = item.getAttribute('data-icon-name');
+                    if (iconName === selectedIconName) {
+                        item.addClass('wj-selected');
+                        item.setStyles({
+                            'border-color': '#2196f3',
+                            'background-color': '#e3f2fd'
+                        });
+                        break;
                     }
                 }
             }
