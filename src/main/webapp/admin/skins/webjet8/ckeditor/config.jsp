@@ -91,27 +91,17 @@ CKEDITOR.editorConfig = function( config )
 	   if (DictionaryDB.getAll().size()>0) hasTooltip = true;
 	}
 	boolean hasSvgIcon = false;
-	String ckeditorSvgIconPath = Constants.getString("ckeditorSvgIconPath");
+	String ckeditorSvgIconPath = Constants.getString("ckeditor_svgIcon_path");
 	if (Tools.isNotEmpty(ckeditorSvgIconPath)) hasSvgIcon = true;
 	%>
 
 	config.webjetsvgicon = {
-		spritePath: "<%=Constants.getString("ckeditorSvgIconPath")%>",
-		icons2: {
-			"4g": ["other"],
-			"5g": ["other"],
-			"accessibility-mobility": ["people"],
-			"accessibility-motor": ["other"],
-			"accessibility-vision": ["other"],
-			accessibility: ["people"],
-			add: ["common"],
-			advertising: ["other"],
-			aeroplane: ["vehicles"],
-			"age-rating-3": ["other"],
-			"airbox-auto": ["vehicles", "waves"],
-			"alias-numbers": ["people"],
-			"android-manage": ["other"],
-		}
+		spritePath: "<%=Constants.getString("ckeditor_svgIcon_path")%>",
+		icons: <%=Constants.getString("ckeditor_svgIcon_icons")%>,
+		iconWidth: <%=Constants.getString("ckeditor_svgIcon_width")%>,
+		iconHeight: <%=Constants.getString("ckeditor_svgIcon_height")%>,
+		sizes: "<%=Constants.getString("ckeditor_svgIcon_sizes")%>",
+		colors: "<%=Constants.getString("ckeditor_svgIcon_colors")%>"
 	};
 
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>

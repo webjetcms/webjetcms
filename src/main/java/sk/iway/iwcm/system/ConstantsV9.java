@@ -169,6 +169,13 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 
         Constants.setString("smtpAuthMechanism", "", "config;dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
+
+		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
+		Constants.setString("ckeditor_svgIcon_icons", "{}", Constants.MOD_EDITOR, "JSON objekt definujúci ikony pre CKEditor vo formáte {nazov: [skupiny], nazov2: [skupiny]}, napr. {\"4g\": [\"other\"], \"5g\": [\"other\"], \"accessibility-mobility\": [\"people\"]}. Ak je prázdne získa sa zo SVG súboru podľa hodnoty ID elementov, skupiny v takom prípade nie sú dostupné.");
+		Constants.setInt("ckeditor_svgIcon_width", 56, Constants.MOD_EDITOR, "Šírka SVG ikony v pixeloch");
+		Constants.setInt("ckeditor_svgIcon_height", 56, Constants.MOD_EDITOR, "Výška SVG ikony v pixeloch");
+		Constants.setString("ckeditor_svgIcon_sizes", "", Constants.MOD_EDITOR, "Dostupné veľkosti ikon oddelené čiarkou, napr. small,medium,large,xlarge,xxlarge,huge");
+		Constants.setString("ckeditor_svgIcon_colors", "", Constants.MOD_EDITOR, "Dostupné farby ikon oddelené čiarkou, napr. info,success,warning,danger,orange");
 	}
 
 	/**
