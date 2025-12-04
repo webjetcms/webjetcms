@@ -165,14 +165,16 @@ public class SessionClusterService {
     }
 
     private static void deleteOldData(boolean isCron) {
-        //clean up old records (older than 24 hours)
+        //clean up old records (older than 24 hours or 1 hour for cron)
         long backTime = (24 * 60 * 60 * 1000L); //24 hours
+        String periodStr = "24 hours";
         if (isCron) {
             backTime = 60 * 60 * 1000L; //one hour for cron
+            periodStr = "1 hour";
         }
-        Timestamp twentyFourHoursAgo = new Timestamp(Tools.getNow() - backTime);
-        int deletedOldRecords = new SimpleQuery().executeWithUpdateCount(DELETE_OLD, TYPE, twentyFourHoursAgo);
-        Logger.debug(SessionClusterService.class, String.format("Deleted %d old session records older than 24 hours", deletedOldRecords));
+        Timestamp thresholdTime = new Timestamp(Tools.getNow() - backTime);
+        int deletedOldRecords = new SimpleQuery().executeWithUpdateCount(DELETE_OLD, TYPE, thresholdTime);
+        Logger.debug(SessionClusterService.class, String.format("Deleted %d old session records older than %s", deletedOldRecords, periodStr));
     }
 
 }
