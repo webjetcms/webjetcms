@@ -6507,7 +6507,7 @@
                      validity NVARCHAR2(255),
                      type NVARCHAR2(255),
                      classification NVARCHAR2(255));
-                  INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('cookies1' , 100, 'cookies', 'cookie_id');
+                  INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('cookies' , 100, 'cookies', 'cookie_id');
                  </string>
              </void>
          </object>

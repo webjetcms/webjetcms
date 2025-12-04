@@ -19,7 +19,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('campaings-zakladne testy', ({I, DTE}) => {
+Scenario('campaings-zakladne testy @baseTest', ({I, DTE}) => {
 
     var entityName = entityNameOriginal+"-zt";
 
@@ -223,7 +223,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.dontSee(entityName);
  });
 
- Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
+ Scenario('testy skupiny pouzivatelov @baseTest', ({I, DT, DTE}) => {
 
     var entityName = entityNameOriginal+"-ug";
     DT.waitForLoader();
