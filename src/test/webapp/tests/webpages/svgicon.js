@@ -38,6 +38,6 @@ Scenario('SVG Icon Dialog @screenshot', async ({ I, DT, DTE, Document, Apps }) =
     I.assertContain(inputString, '<use xlink:href="/templates/aceintegration/jet/assets/images/sprite.svg#birth"', 'SVG icon was not inserted correctly');
 });
 
-Scenario("reset settings", ({ Document }) => {
+Scenario("reset settings @screenshot", ({ Document }) => {
     Document.setConfigValue("ckeditor_svgIcon_path", "");
 });
