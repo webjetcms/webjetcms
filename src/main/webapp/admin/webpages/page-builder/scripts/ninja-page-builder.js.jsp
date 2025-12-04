@@ -2496,7 +2496,11 @@
                                     }
 
                                     // <%--console.log("Block:", index, " ", block);--%>
-                                    contentInner += '<div class="library-full-width-item" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                    var isEmptyClass = "";
+                                    if (block.imagePath == null || block.imagePath == "" || block.imagePath == "/components/grideditor/data/default.png") {
+                                        isEmptyClass = " library-full-width-item--no-image";
+                                    }
+                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
                                 });
                             contentInner += '</div>';
                         contentInner += '</div>';

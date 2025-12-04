@@ -1110,3 +1110,7 @@ body.is-edit-mode section .container:hover {
 	font-variant: normal;
 	text-rendering: auto;
 }
+
+svg.icon {
+	cursor: pointer;
+}

@@ -90,10 +90,22 @@ CKEDITOR.editorConfig = function( config )
 	{
 	   if (DictionaryDB.getAll().size()>0) hasTooltip = true;
 	}
+	boolean hasSvgIcon = false;
+	String ckeditorSvgIconPath = Constants.getString("ckeditor_svgIcon_path");
+	if (Tools.isNotEmpty(ckeditorSvgIconPath)) hasSvgIcon = true;
 	%>
 
+	config.webjetsvgicon = {
+		spritePath: "<%=Constants.getString("ckeditor_svgIcon_path")%>",
+		icons: <%=Constants.getString("ckeditor_svgIcon_icons")%>,
+		iconWidth: <%=Constants.getString("ckeditor_svgIcon_width")%>,
+		iconHeight: <%=Constants.getString("ckeditor_svgIcon_height")%>,
+		sizes: "<%=Constants.getString("ckeditor_svgIcon_sizes")%>",
+		colors: "<%=Constants.getString("ckeditor_svgIcon_colors")%>"
+	};
+
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
-		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %>";
+		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %><% if (hasSvgIcon) { %>webjetsvgicon<% } %>";
 		config.sharedSpaces = {
 		    top: 'wjInlineCkEditorToolbarElement'
 		}
@@ -104,7 +116,7 @@ CKEDITOR.editorConfig = function( config )
 		config.height = 600;
 		config.removePlugins = 'floatingspace,sharedspace'
 	<% } else { %>
-		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %><% if (hasSvgIcon) { %>,webjetsvgicon<% } %>";
 		config.removePlugins = 'floatingspace,sharedspace';
 	<% } %>
 	config.magicline_color="#F7CA18";
@@ -135,6 +147,7 @@ CKEDITOR.editorConfig = function( config )
 		if (Tools.isNotEmpty(customToolbar)) toolbar = customToolbar;
 		//zatial zakomentovane, neotestovane:
 		if (hasTooltip) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
+		if (hasSvgIcon) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
 		if (hasFontAwesome) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
 
 		if ("pageBuilder".equals(Tools.getRequestParameter(request, "inlineMode")))
