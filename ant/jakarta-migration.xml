@@ -234,6 +234,19 @@
                 <exclude name="node_modules/**"/>
             </fileset>
         </sync>
+
+
+        <copy todir="${jakartaDir}/.vscode" overwrite="true">
+            <fileset dir="${root}/.vscode/">
+                <include name="**/*"/>
+                <exclude name="settings.json"/>
+            </fileset>
+        </copy>
+        <sync todir="${jakartaDir}/.devcontainer" overwrite="true">
+            <fileset dir="${root}/.devcontainer/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
     </target>
 
 </project>
