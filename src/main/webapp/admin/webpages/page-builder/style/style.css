@@ -1531,6 +1531,17 @@
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
+.pb-library__content .library-tab-content .library-tab-item .library-full-width-item.library-full-width-item--no-image {
+  min-height: auto;
+  background-color: #DDDFE6;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-full-width-item.library-full-width-item--no-image img {
+  display: none;
+}
+.pb-library__content .library-tab-content .library-tab-item .library-full-width-item.library-full-width-item--no-image i {
+  margin-bottom: 6px;
+  padding-top: 6px;
+}
 .pb-library__content .library-tab-content .library-tab-item.active {
   display: block;
 }

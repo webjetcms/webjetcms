@@ -207,6 +207,18 @@
                         border-top-left-radius: $modal-radius;
                         border-top-right-radius: $modal-radius;
                     }
+
+                    &.library-full-width-item--no-image {
+                        img {
+                            display: none;
+                        }
+                        i {
+                            margin-bottom: $modal-radius;
+                            padding-top: $modal-radius;
+                        }
+                        min-height: auto;
+                        background-color: $nice-gray-100;
+                    }
                 }
 
                 &.active {
