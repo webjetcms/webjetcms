@@ -6,6 +6,8 @@ import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.view.RedirectView;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
@@ -33,7 +35,8 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
             String viewNameLocal = viewName;
 
             if (!WebjetInternalResourceViewResolver.class.isAssignableFrom(viewResolver.getClass())
-                    && !WebjetFreeMarkerViewResolver.class.isAssignableFrom(viewResolver.getClass())) {
+                    && !WebjetFreeMarkerViewResolver.class.isAssignableFrom(viewResolver.getClass())
+                    && !ThymeleafViewResolver.class.isAssignableFrom(viewResolver.getClass())) {
                 View view = viewResolver.resolveViewName(viewNameLocal, locale);
                 if (view != null) {
                     return view;
@@ -45,12 +48,14 @@ public class WebjetViewResolver extends WebApplicationObjectSupport implements V
             String prefix;
             String suffix;
 
-            if (viewResolver instanceof WebjetInternalResourceViewResolver) {
-                WebjetInternalResourceViewResolver wjViewResolver = (WebjetInternalResourceViewResolver) viewResolver;
+            if (viewResolver instanceof WebjetInternalResourceViewResolver wjViewResolver) {
                 prefix = wjViewResolver.getPrefix();
                 suffix = wjViewResolver.getSuffix();
             }
-            else {
+            else if (viewResolver instanceof ThymeleafViewResolver) {
+                prefix = "/";
+                suffix = ".html";
+            } else {
                 WebjetFreeMarkerViewResolver wjViewResolver = (WebjetFreeMarkerViewResolver) viewResolver;
                 prefix = wjViewResolver.getPrefix();
                 suffix = wjViewResolver.getSuffix();

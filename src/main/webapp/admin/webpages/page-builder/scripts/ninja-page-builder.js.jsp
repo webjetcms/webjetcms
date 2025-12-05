@@ -1920,6 +1920,20 @@
 
                 //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
+                if (empty === true) {
+                    if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
+                        //check if there are any sections, if yes, insert after last section
+                        //fixed empty placeholder at the bottom of PB
+                        var lastSection = $(me.element).children("section").last();
+                        if (lastSection.length>0) {
+                            parent = lastSection;
+                            empty = false;
+                        } else {
+                            parent = $(me.element);
+                        }
+                    }
+                }
+
                 if (parent == null) {
                     //its content element, insert into CkEditor
                     var columns = me.get_json_object_by_attribute(me.template[template_type],'textKey','content');

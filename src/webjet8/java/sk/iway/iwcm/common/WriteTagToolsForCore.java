@@ -754,7 +754,7 @@ public class WriteTagToolsForCore {
     public static String getCustomPath(String url, HttpServletRequest request)
     {
         //riesime len /components/ alebo /templates/ adresare
-        if (url.startsWith("/components/")==false && url.startsWith("/templates/")==false) return url;
+        if (url.startsWith("/components/")==false && url.startsWith("/templates/")==false && url.startsWith("/apps/")==false) return url;
 
         if ("/components/form/check_form_impl.jsp".equals(url) && request != null)
         {
