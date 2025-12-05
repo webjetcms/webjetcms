@@ -2492,5 +2492,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>05.12.2025</string></void>
+                <void property="desc"><string>ai - update gemini-2.5-flash-image</string></void>
+                <void property="mysql"><string>UPDATE ai_assistants SET model='gemini-2.5-flash-image' WHERE model='gemini-2.5-flash-image-preview'</string></void>
+                <void property="mssql"><string>UPDATE ai_assistants SET model='gemini-2.5-flash-image' WHERE model='gemini-2.5-flash-image-preview'</string></void>
+                <void property="oracle"><string>UPDATE ai_assistants SET model='gemini-2.5-flash-image' WHERE model='gemini-2.5-flash-image-preview'</string></void>
+                <void property="pgsql"><string>UPDATE ai_assistants SET model='gemini-2.5-flash-image' WHERE model='gemini-2.5-flash-image-preview'</string></void>
+            </object>
+        </void>
+
     </object>
 </java>
