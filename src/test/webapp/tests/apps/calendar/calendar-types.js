@@ -13,7 +13,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zakladne testy', ({I, DT, DTE}) => {
+Scenario('zakladne testy @baseTest', ({I, DT, DTE}) => {
 
     I.click("button.buttons-create");
     DTE.waitForEditor('calendarTypesDataTable');
@@ -52,7 +52,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
     I.dontSee(entityName + ".changed")
 });
 
-Scenario('Domain test', ({I, DT, Document}) => {
+Scenario('Domain test @baseTest', ({I, DT, Document}) => {
     I.amOnPage("/apps/calendar/admin/calendar-types");
     DT.filterContains("name", "Výstava");
     I.see("Výstava");
