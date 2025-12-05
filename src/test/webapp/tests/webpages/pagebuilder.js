@@ -542,3 +542,41 @@ Scenario("filtering and tags", ({I, DTE, Apps, Document}) => {
     //
     I.switchTo();
 });
+
+Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(3);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+    I.waitForElement(".library-template-block--section", 10);
+
+    //
+    I.say("Inserting contact form block");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.click(locate(".library-full-width-item").withText("Kontaktný formulár"));
+
+    I.waitForElement(locate("section.pb-section h2.text-center").withText("Contact us"), 10);
+
+    //
+    I.say("Inserting standard section block");
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+    I.waitForElement(".library-template-block--section", 10);
+    I.click(".pb-library--section .library-tab-link:nth-child(1)"); //first tab
+    I.click('.library-template-block--section .library-tab-item-button[data-library-item-id="id2.4"]');
+
+    I.waitForElement(locate("section.pb-section div.col-2.pb-column").withText("Text"), 10);
+
+    I.switchTo();
+    I.resizeWindow(1280, 1200);
+
+    Apps.switchEditor('html');
+    I.seeElement(locate(".CodeMirror-line").withText("!INCLUDE(/components/formsimple/form.jsp"));
+    I.seeElement(locate(".CodeMirror-line").withText('Text'));
+    I.seeElement(locate(".CodeMirror-line .cm-string").withText('col-2'));
+
+    I.wjSetDefaultWindowSize();
+});
