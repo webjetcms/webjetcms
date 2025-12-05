@@ -2142,6 +2142,7 @@
       );
       SET IDENTITY_INSERT groups_scheduler ON;
       INSERT INTO crontab (second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays) VALUES ('0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.GroupPublisher', NULL, 0);
+      SET IDENTITY_INSERT groups_scheduler OFF;
      </string>
     </void>
     <void property="oracle">

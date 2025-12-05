@@ -67,10 +67,46 @@ if (query!=null && query.trim().length()>0)
 				sql = Tools.replace(sql, "&amp|", "&amp;");
 				sql = Tools.replace(sql, "px|", "px;");
 
+				if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL)
+				{
+					sql = Tools.replace(sql, "`", ""); //remove mysql backticks
+				}
+				if (Constants.DB_TYPE == Constants.DB_MSSQL)
+				{
+					//allow identity inserts
+					if (sql.startsWith("INSERT INTO ") && sql.indexOf("VALUES") > sql.indexOf(")"))
+					{
+						//table names without identity inserts
+						String skipIdentityInsertTables[] = new String[] {
+							"_conf_",
+							"templates_group",
+							"enumeration_type",
+							"enumeration_data",
+							"banner_banners"
+						};
+
+						String tableName = sql.substring("INSERT INTO ".length());
+						if (tableName.indexOf(" ")!=-1)
+							tableName = tableName.substring(0, tableName.indexOf(" "));
+
+						boolean skipIdentityInsert = false;
+						for (String skipTable : skipIdentityInsertTables)
+						{
+							if (tableName.equalsIgnoreCase(skipTable))
+							{
+								skipIdentityInsert = true;
+								break;
+							}
+						}
+						if (!skipIdentityInsert) {
+							sql = "SET IDENTITY_INSERT " + tableName + " OFF; SET IDENTITY_INSERT " + tableName + " ON; " + sql + "; SET IDENTITY_INSERT " + tableName + " OFF";
+						}
+					}
+				}
+
 				if (Constants.DB_TYPE == Constants.DB_ORACLE)
 				{
 					sql = Tools.replace(sql, "|", ";");
-					sql = Tools.replace(sql, "`", ""); //remove mysql backticks
 					sql = Tools.replace(sql, "INSERT INTO _conf_", "INSERT INTO webjet_conf");
 					sql = Tools.replace(sql, "INSERT INTO _properties_", "INSERT INTO webjet_properties");
 
