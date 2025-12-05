@@ -68,6 +68,6 @@ Scenario('Domain test @baseTest', ({I, DT, Document}) => {
     I.see("DomainTest_Test23_type");
 });
 
-Scenario('logout', async ({I}) => {
+Scenario('logout @baseTest', async ({I}) => {
     I.logout();
 });
