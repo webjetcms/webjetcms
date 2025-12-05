@@ -2,7 +2,7 @@ Feature('components.template-groups');
 
 Before(({ I, login }) => {
     login('admin');
-    I.amOnPage("/admin/v9/templates/temps-groups-list");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
 });
 
 Scenario('template-groups-zakladne testy @baseTest', async ({ I, DataTables }) => {
@@ -77,7 +77,7 @@ Scenario('overenie nacitania podla prihlaseneho jazyka', ({ I, DTE }) => {
     I.forceClick("Přihlásit se");
     I.wait(3);
 
-    I.amOnPage("/admin/v9/templates/temps-groups-list");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
 
     I.click("Demo JET");
     DTE.waitForEditor();
@@ -98,7 +98,7 @@ Scenario('odhlasenie', ({ I }) => {
 });
 
 function checkMetadataAuthor(author, I, DTE) {
-    I.amOnPage("/admin/v9/templates/temps-groups-list");
+    I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.click("Demo JET");
     DTE.waitForEditor();
 

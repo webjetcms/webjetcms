@@ -131,6 +131,8 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if (entity.getRegDate() == null) entity.setRegDate(new Date(Tools.getNow()));
 
+        if (entity.getSexMale() == null) entity.setSexMale(true);
+
         //Save into session last saved user group's
         userDetailsService.setBeforeSaveUserGroups(entity);
     }

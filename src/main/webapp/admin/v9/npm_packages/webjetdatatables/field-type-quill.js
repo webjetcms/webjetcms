@@ -131,6 +131,10 @@ export function typeQuill() {
         });
 
         htmlCode = $html.html();
+
+        //remove end br before p closing tag
+        htmlCode = htmlCode.replace(/<br><\/p>/gi, "</p>");
+
         return htmlCode;
     }
 

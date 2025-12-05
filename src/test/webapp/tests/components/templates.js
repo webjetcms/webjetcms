@@ -27,7 +27,7 @@ let testOptions = {
 
 Before(({ I, login }) => {
     login('admin');
-    I.amOnPage("/admin/v9/templates/temps-list");
+    I.amOnPage("/admin/v9/templates/temps-list/");
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();

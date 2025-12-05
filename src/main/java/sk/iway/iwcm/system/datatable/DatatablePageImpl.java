@@ -75,15 +75,15 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
     public void addOptions(String field, List options, String labelProperty, String valueProperty, boolean includeOriginalObject) {
         List<OptionDto> fieldOptions = getFieldOptions(field);
         for (Object o : options) {
-            BeanWrapperImpl bw = new BeanWrapperImpl(o);
-
             String label;
             String value;
 
             if(Tools.isEmpty(labelProperty) && Tools.isEmpty(valueProperty)) {
+                if (o == null) o = "";
                 label = (String)o;
                 value = (String)o;
             } else {
+                BeanWrapperImpl bw = new BeanWrapperImpl(o);
                 label = String.valueOf(bw.getPropertyValue(labelProperty));
                 value = String.valueOf(bw.getPropertyValue(valueProperty));
             }

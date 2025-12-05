@@ -10,7 +10,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('cronjob base test', async ({ I, DataTables }) => {
+Scenario('cronjob base test @baseTest', async ({ I, DataTables }) => {
     await DataTables.baseTest({
         dataTable: 'cronTable',
         perms: 'cmp_crontab',
