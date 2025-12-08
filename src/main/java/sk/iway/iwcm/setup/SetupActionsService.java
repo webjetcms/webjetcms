@@ -273,11 +273,15 @@ public class SetupActionsService {
 
 			String msg = ex.getMessage();
 
-			if (msg.indexOf("Unknown database ") != -1) {
+			if (msg.indexOf("Unknown database ") != -1 || msg.contains("Cannot open database")) {
 				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
 
 				String origDBName = setupForm.getDbName();
 				setupForm.setDbName("mysql");
+				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("master");
+				else if ("org.postgresql.Driver".equals(setupForm.getDbDriver()))
+					setupForm.setDbName("postgres");
 
 				try {
 					if (setupForm.isDbUseSuperuser()) {

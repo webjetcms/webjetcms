@@ -1,4 +1,4 @@
-<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*"%>
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*,java.util.regex.*"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -102,6 +102,17 @@ if (query!=null && query.trim().length()>0)
 							sql = "SET IDENTITY_INSERT " + tableName + " OFF; SET IDENTITY_INSERT " + tableName + " ON; " + sql + "; SET IDENTITY_INSERT " + tableName + " OFF";
 						}
 					}
+
+					// Add N prefix for string literals containing Unicode characters
+					Pattern pattern = Pattern.compile("'([^']*[\\u0080-\\uFFFF][^']*)'");
+					Matcher matcher = pattern.matcher(sql);
+					StringBuffer sb = new StringBuffer();
+					while (matcher.find()) {
+						String match = matcher.group(1);
+						matcher.appendReplacement(sb, "N'" + match + "'");
+					}
+					matcher.appendTail(sb);
+					sql = sb.toString();
 				}
 
 				if (Constants.DB_TYPE == Constants.DB_ORACLE)

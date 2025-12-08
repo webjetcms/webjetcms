@@ -2934,12 +2934,12 @@
     </void>
     <void property="mssql">
      <string>
-      CREATE TABLE stopword ( word varchar(255) DEFAULT NULL,language varchar(2) DEFAULT NULL);
+      CREATE TABLE stopword ( word nvarchar(255) DEFAULT NULL,language nvarchar(2) DEFAULT NULL);
      </string>
     </void>
     <void property="oracle">
      <string>
-      CREATE TABLE stopword ( word varchar(255) DEFAULT NULL,language varchar(2) DEFAULT NULL);
+      CREATE TABLE stopword ( word nvarchar2(255) DEFAULT NULL,language nvarchar2(2) DEFAULT NULL);
      </string>
     </void>
    </object>
