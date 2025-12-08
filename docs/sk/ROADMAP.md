@@ -14,6 +14,7 @@ Vysvetlenie použitých piktogramov:
 
 ## 2026
 
+- Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
 - Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
 
 ## 2025

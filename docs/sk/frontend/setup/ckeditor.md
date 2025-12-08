@@ -12,6 +12,18 @@ Podporované sú nasledovné konfiguračné premenné:
 - `ckeditor_toolbar-standalone` - nastavenie položiek nástrojovej lišty pre vloženie editora do rôznych dátových tabuliek, hodnoty sú v JSON formáte.
 - `ckeditor_removeButtons` - zoznam tlačidiel, ktoré chcete v editore schovať (nezobraziť), nie je potrebné upraviť nastavenie `toolbar`, stačí sem nastaviť čiarkou oddelený zoznam.
 
+Nastavenie pre tabuľky:
+
+- `ckeditor_table_class` - Predvolená CSS trieda pre tabuľky v CKEditore, ak nie je nastavená použije sa hodnota `table tabulkaStandard` pre Bootstrap 3 a `table table-sm tabulkaStandard` pre Bootstrap 4 a 5.
+- `ckeditor_table_columns` - Predvolený počet stĺpcov tabuľky v CKEditore, štandardne 5.
+- `ckeditor_table_rows` - Predvolený počet riadkov tabuľky v CKEditore, štandardne 2.
+- `ckeditor_table_width` - Predvolená šírka tabuľky v CKEditore, štandardne 100%.
+- `ckeditor_table_height` - Predvolená výška tabuľky v CKEditore.
+- `ckeditor_table_border` - Predvolená hodnota okraja tabuľky v CKEditore, štandardne 1.
+- `ckeditor_table_cellpadding` - Predvolená hodnota `cellpadding` tabuľky v CKEditore, štandardne 1.
+- `ckeditor_table_cellspacing` - Predvolená hodnota `cellspacing` tabuľky v CKEditore, štandardne 1.
+- `ckeditor_table_wrapper` - Predvolený wrapper pre tabuľku v CKEditore, štandardne `<div class="table-responsive"></table>`.
+
 ## PICTURE element
 
 Ak potrebujete vo vašom projekte podporu pre `PICTURE` element, stačí, keď do konfigurácie `ckeditor_toolbar` pridáte na vhodné miesto hodnotu `WebjetPicture`. Ikona sa automaticky pridá aj ak máte nastavenú vlastnú hodnotu v konfiguračnej premennej `ckeditor_pictureDialogBreakpoints`.

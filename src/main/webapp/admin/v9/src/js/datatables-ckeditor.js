@@ -169,7 +169,7 @@ export class DatatablesCkEditor {
 
 		if (typeof that.ckEditorObject.ckEditorAtLeastOneInitialized == "undefined")
 		{
-			//console.log("customizeEditor, initializing=", that.ckEditorObject.ckEditorAtLeastOneInitialized, "CKEDITOR=", that.ckEditorObject);
+			//console.log("customizeEditor, initializing=", that, "CKEDITOR=", that.ckEditorObject);
 
 			that.ckEditorObject.aaa = "aaa";
 			that.ckEditorObject.on( 'dialogDefinition', function( ev )
@@ -194,17 +194,21 @@ export class DatatablesCkEditor {
 
 				if ( dialogName == 'tableProperties' || dialogName == 'table')
 				{
-					//console.log("tableProperties");
+					//console.log("tableProperties, class=", that.ckEditorInstance.config.qtClass);
 
 					var infoTab = dialogDefinition.getContents('info');
 					infoTab.get('selHeaders')['default'] = 'row';
-					infoTab.get('txtWidth')['default'] = '100%';
+					infoTab.get('txtCols')['default'] = that.ckEditorInstance.config.tableCols;
+					infoTab.get('txtRows')['default'] = that.ckEditorInstance.config.tableRows;
+					infoTab.get('txtWidth')['default'] = that.ckEditorInstance.config.qtWidth;
+					infoTab.get('txtHeight')['default'] = that.ckEditorInstance.config.qtHeight;
+
+					infoTab.get('txtBorder')['default'] = that.ckEditorInstance.config.qtBorder;
+					infoTab.get('txtCellSpace')['default'] = that.ckEditorInstance.config.qtCellSpacing;
+					infoTab.get('txtCellPad')['default'] = that.ckEditorInstance.config.qtCellPadding;
+
 					var advancedTab = dialogDefinition.getContents('advanced');
-					if (typeof that.myWindow.bootstrapVersion == "undefined" || that.myWindow.bootstrapVersion.indexOf("3")==0) {
-						advancedTab.get('advCSSClasses')['default'] = 'tabulkaStandard';
-					} else {
-						advancedTab.get('advCSSClasses')['default'] = 'table table-sm tabulkaStandard';
-					}
+					advancedTab.get('advCSSClasses')['default'] = that.ckEditorInstance.config.qtClass;
 					dialogDefinition.dialog.on( 'show', function()
 					{
 						//this.getContentElement("info", "txtSummary");

@@ -176,6 +176,16 @@ public class ConstantsV9 {
 		Constants.setInt("ckeditor_svgIcon_height", 56, Constants.MOD_EDITOR, "Výška SVG ikony v pixeloch");
 		Constants.setString("ckeditor_svgIcon_sizes", "", Constants.MOD_EDITOR, "Dostupné veľkosti ikon oddelené čiarkou, napr. small,medium,large,xlarge,xxlarge,huge");
 		Constants.setString("ckeditor_svgIcon_colors", "", Constants.MOD_EDITOR, "Dostupné farby ikon oddelené čiarkou, napr. info,success,warning,danger,orange");
+
+		Constants.setString("ckeditor_table_class", "", Constants.MOD_EDITOR, "Predvolená CSS trieda pre tabuľky v CKEditore, ak nie je nastavená použije sa hodnota table tabulkaStandard pre Bootstrap 3 a table table-sm tabulkaStandard pre Bootstrap 4 a 5.");
+		Constants.setString("ckeditor_table_cols", "5", Constants.MOD_EDITOR, "Predvolený počet stĺpcov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_rows", "2", Constants.MOD_EDITOR, "Predvolený počet riadkov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_width", "100%", Constants.MOD_EDITOR, "Predvolená šírka tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_height", "", Constants.MOD_EDITOR, "Predvolená výška tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_border", "1", Constants.MOD_EDITOR, "Predvolená hodnota okraja tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellpadding", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellpadding tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellspacing", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellspacing tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_wrapper", "<div class=\"table-responsive\"></table>", Constants.MOD_EDITOR, "Predvolený wrapper pre tabuľku v CKEditore.");
 	}
 
 	/**
