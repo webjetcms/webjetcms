@@ -104,6 +104,16 @@ CKEDITOR.editorConfig = function( config )
 		colors: "<%=Constants.getString("ckeditor_svgIcon_colors")%>"
 	};
 
+	config.qtClass = "<%=Constants.getString("ckeditor_table_class")%>";
+	config.tableCols = "<%=Constants.getString("ckeditor_table_cols")%>";
+	config.tableRows = "<%=Constants.getString("ckeditor_table_rows")%>";
+	config.qtWidth = "<%=Constants.getString("ckeditor_table_width")%>";
+	config.qtHeight = "<%=Constants.getString("ckeditor_table_height")%>";
+	config.qtBorder = "<%=Constants.getString("ckeditor_table_border")%>";
+	config.qtCellPadding = "<%=Constants.getString("ckeditor_table_cellpadding")%>";
+	config.qtCellSpacing = "<%=Constants.getString("ckeditor_table_cellspacing")%>";
+	config.tableWrapperClass = "<%=Constants.getString("ckeditor_table_wrapper_class")%>";
+
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
 		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %><% if (hasSvgIcon) { %>webjetsvgicon<% } %>";
 		config.sharedSpaces = {
@@ -146,9 +156,9 @@ CKEDITOR.editorConfig = function( config )
 		if (Tools.isNotEmpty(Tools.getRequestParameter(request, "toolbar"))) customToolbar = Constants.getString("ckeditor_toolbar-"+Tools.getRequestParameter(request, "toolbar"));
 		if (Tools.isNotEmpty(customToolbar)) toolbar = customToolbar;
 		//zatial zakomentovane, neotestovane:
-		if (hasTooltip) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
-		if (hasSvgIcon) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
-		if (hasFontAwesome) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
+		if (hasTooltip && toolbar.contains("'Tooltip'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
+		if (hasSvgIcon && toolbar.contains("'WebjetSvgIcon'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
+		if (hasFontAwesome && toolbar.contains("'FontAwesome'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
 
 		if ("pageBuilder".equals(Tools.getRequestParameter(request, "inlineMode")))
 		{
@@ -174,9 +184,6 @@ CKEDITOR.editorConfig = function( config )
     config.floatingToolsGroups = [
         <%=Constants.getString("ckeditor_floatingToolsGroups")%>
     ];
-
-	//quicktable
-	config.qtWidth = "100%";
 
 	<% if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints"))) { %>
 		config.pictureDialogBreakpoints = <%=Constants.getString("ckeditor_pictureDialogBreakpoints")%>;

@@ -26,56 +26,64 @@ public class MirroringDTO {
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldA;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldB;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldC;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldD;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldE;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldF;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldG;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         className = "dt-style-text-nowrap show-html",
-        hiddenEditor = true
+        hiddenEditor = true,
+        ai = false
     )
     private String fieldH;
 
@@ -92,28 +100,28 @@ public class MirroringDTO {
     @DataTableColumnNested
 	private transient MirroringEditorFields editorFields = null;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorA;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorB;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorC;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorD;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorE;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorF;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorG;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true, ai = false)
     private IdFullPath selectorH;
 
     public void setField(char field, String value) {

@@ -88,31 +88,41 @@ export class DatatablesCkEditor {
 
 	afterInit() {
 		var that = this;
+
 		this.ckEditorInstance.on('afterPaste', function(e) {
 			//console.log("After paste, e=", e);
+
+			var ckConfig = that.ckEditorInstance.config;
+			var tableClass = ckConfig.qtClass;
+			var tableSelector = tableClass.split(" ").join(".");
+			var wrapperClass = ckConfig.tableWrapperClass;
+			var wrapperSelector = wrapperClass.split(" ").join(".");
+
 			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
-				//najdi tabulky a wrapni ich do table-responsive
-				$(that.ckEditorInstance.document.$).find("table.tabulkaStandard").each(function() {
+				//najdi tabulky a wrapni ich do tableWrapperClass
+				$(that.ckEditorInstance.document.$).find("table."+tableSelector).each(function() {
 					var $table = $(this);
-						if ($table.hasClass("tabulkaStandard")) {
-						//console.log("table=", this);
-						$table.attr("class", "table table-sm tabulkaStandard");
-						//aby to bolo rovnake ako standardne vytvorenie tabulky
-						$table.attr("border", "1");
+					//console.log("table=", this);
+					//aby to bolo rovnake ako standardne vytvorenie tabulky
+					if (ckConfig.qtBorder != "") $table.attr("border", ckConfig.qtBorder);
+					if (ckConfig.qtWidth != "") $table.css("width", ckConfig.qtWidth);
 
-						var parent = $table.parent("div.table-responsive");
-						if (parent.length == 0)	$table.wrap('<div class="table-responsive"></div>');
+					if (wrapperClass != "") {
+						var parent = $table.parent("div."+wrapperSelector);
+						if (parent.length == 0)	$table.wrap('<div class="'+wrapperClass+'"></div>');
 					}
-
 				});
 			}
 		 });
 		 this.ckEditorInstance.on('afterCommandExec', function(e) {
-			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
-				//console.log("afterCommandExec, e=", e.data.name);
-				if ("tableDelete"==e.data.name || "deleteTable"==e.data.name) {
-					//odstran prazdne table-responsive div elementy
-					$(that.ckEditorInstance.document.$).find("div.table-responsive:empty").remove();
+			//console.log("afterCommandExec, e=", e.data.name);
+			if ("tableDelete"==e.data.name || "deleteTable"==e.data.name) {
+				//odstran prazdne tableWrapperClass div elementy
+				var ckConfig = that.ckEditorInstance.config;
+				var wrapperClass = ckConfig.tableWrapperClass;
+				var wrapperSelector = wrapperClass.split(" ").join(".");
+				if (wrapperClass != "") {
+					$(that.ckEditorInstance.document.$).find("div."+wrapperSelector+":empty").remove();
 				}
 			}
 		 });
@@ -169,7 +179,7 @@ export class DatatablesCkEditor {
 
 		if (typeof that.ckEditorObject.ckEditorAtLeastOneInitialized == "undefined")
 		{
-			//console.log("customizeEditor, initializing=", that.ckEditorObject.ckEditorAtLeastOneInitialized, "CKEDITOR=", that.ckEditorObject);
+			//console.log("customizeEditor, initializing=", that, "CKEDITOR=", that.ckEditorObject);
 
 			that.ckEditorObject.aaa = "aaa";
 			that.ckEditorObject.on( 'dialogDefinition', function( ev )
@@ -194,17 +204,21 @@ export class DatatablesCkEditor {
 
 				if ( dialogName == 'tableProperties' || dialogName == 'table')
 				{
-					//console.log("tableProperties");
+					//console.log("tableProperties, class=", that.ckEditorInstance.config.qtClass);
 
 					var infoTab = dialogDefinition.getContents('info');
 					infoTab.get('selHeaders')['default'] = 'row';
-					infoTab.get('txtWidth')['default'] = '100%';
+					infoTab.get('txtCols')['default'] = that.ckEditorInstance.config.tableCols;
+					infoTab.get('txtRows')['default'] = that.ckEditorInstance.config.tableRows;
+					infoTab.get('txtWidth')['default'] = that.ckEditorInstance.config.qtWidth;
+					infoTab.get('txtHeight')['default'] = that.ckEditorInstance.config.qtHeight;
+
+					infoTab.get('txtBorder')['default'] = that.ckEditorInstance.config.qtBorder;
+					infoTab.get('txtCellSpace')['default'] = that.ckEditorInstance.config.qtCellSpacing;
+					infoTab.get('txtCellPad')['default'] = that.ckEditorInstance.config.qtCellPadding;
+
 					var advancedTab = dialogDefinition.getContents('advanced');
-					if (typeof that.myWindow.bootstrapVersion == "undefined" || that.myWindow.bootstrapVersion.indexOf("3")==0) {
-						advancedTab.get('advCSSClasses')['default'] = 'tabulkaStandard';
-					} else {
-						advancedTab.get('advCSSClasses')['default'] = 'table table-sm tabulkaStandard';
-					}
+					advancedTab.get('advCSSClasses')['default'] = that.ckEditorInstance.config.qtClass;
 					dialogDefinition.dialog.on( 'show', function()
 					{
 						//this.getContentElement("info", "txtSummary");
@@ -213,12 +227,12 @@ export class DatatablesCkEditor {
 					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
-							var wrapTable = false;
-							if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) wrapTable = true;
+							var tableWrapperClass = that.ckEditorInstance.config.tableWrapperClass;
+							var tableWrapperSelector = tableWrapperClass.split(" ").join(".");
 
 							var id = null;
 							var originalId = null;
-							if (wrapTable) {
+							if (tableWrapperClass != "") {
 								//nastav ID na nasu hodnotu
 								var advField = this.getContentElement("advanced", "advId");
 								id = "table"+(new Date()).getTime();
@@ -228,15 +242,15 @@ export class DatatablesCkEditor {
 
 							original.call(this);
 
-							if (wrapTable) {
+							if (tableWrapperClass != "") {
 								var table = window.getCkEditorInstance().document.$.getElementById(id);
 								var $table = $(table);
-								var parent = $table.parent("div.table-responsive");
+								var parent = $table.parent("div."+tableWrapperSelector);
 
-								//console.log("table=", table, "$table=", $table);
+								//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
 								//console.log("this=", this, "parent=", parent);
 
-								if (parent.length == 0)	$table.wrap('<div class="table-responsive"></div>');
+								if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
 
 								if (originalId != "") $table.attr("id", originalId);
 								else $table.removeAttr("id");
@@ -1589,9 +1603,18 @@ export class DatatablesCkEditor {
 					filter.disallow( 'table[height]' );
 					filter.disallow( 'table[border]' );
 					filter.disallow( 'td(*)' ); //all class on TD
+					filter.disallow( 'td[valign]' );
+					filter.disallow( 'td[align]' );
+					filter.disallow( 'p[align]' );
 					filter.disallow( 'span' );
 					filter.disallow( 'col[width]' );
 					filter.disabled = false;
+
+					var ckConfig = that.ckEditorInstance.config;
+					var tableClasses = ckConfig.qtClass.split(" ");
+					var tableStyle = "";
+					if (ckConfig.qtWidth != "") tableStyle = ' style="width: ' + ckConfig.qtWidth + ';"';
+					var wrapperClass = ckConfig.tableWrapperClass;
 
 					filter.addTransformations([
 						[
@@ -1601,20 +1624,25 @@ export class DatatablesCkEditor {
 									return true;
 								},
 								right: function( el, tools ) {
-									el.classes = ["table", "table-sm", "tabulkaStandard"];
+									el.classes = tableClasses;
 								}
 							}
 						]
 					]);
 
-					//console.log("filter=", filter);
+					//console.log("filter=", filter, "options=", that);
 
 					filter.applyTo( fragment );
 					fragment.writeHtml( writer );
 
 					var html = writer.getHtml();
-					html = html.replace(/<table/gi, "<div class=\"table-responsive\"><table style=\"width: 100%\" ");
-					html = html.replace(/<\/table>/gi, "</table></div>");
+					if (wrapperClass != "") {
+						html = html.replace(/<table/gi, "<div class=\"" + wrapperClass + "\"><table");
+						html = html.replace(/<\/table>/gi, "</table></div>");
+					}
+					if (tableStyle != "") {
+						html = html.replace(/<table/gi, "<table " + tableStyle);
+					}
 
 					html = html.replace(/<b>/gi, "<strong>");
 					html = html.replace(/<\/b>/gi, "</strong>");

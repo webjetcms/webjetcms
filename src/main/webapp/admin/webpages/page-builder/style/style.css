@@ -856,6 +856,11 @@
   /*====================|> IS MODAL OPEN
   /*=================================================================*/
 }
+.pb-modal input {
+  font-family: "Asap", sans-serif, Arial, Helvetica;
+  font-size: 14px;
+  line-height: 24px;
+}
 .pb-modal__header {
   position: relative;
   overflow: hidden;
