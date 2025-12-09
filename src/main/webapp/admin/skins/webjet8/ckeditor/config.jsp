@@ -156,9 +156,9 @@ CKEDITOR.editorConfig = function( config )
 		if (Tools.isNotEmpty(Tools.getRequestParameter(request, "toolbar"))) customToolbar = Constants.getString("ckeditor_toolbar-"+Tools.getRequestParameter(request, "toolbar"));
 		if (Tools.isNotEmpty(customToolbar)) toolbar = customToolbar;
 		//zatial zakomentovane, neotestovane:
-		if (hasTooltip) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
-		if (hasSvgIcon) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
-		if (hasFontAwesome) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
+		if (hasTooltip && toolbar.contains("'Tooltip'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
+		if (hasSvgIcon && toolbar.contains("'WebjetSvgIcon'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
+		if (hasFontAwesome && toolbar.contains("'FontAwesome'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
 
 		if ("pageBuilder".equals(Tools.getRequestParameter(request, "inlineMode")))
 		{
