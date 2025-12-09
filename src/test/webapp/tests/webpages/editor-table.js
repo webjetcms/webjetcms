@@ -69,7 +69,7 @@ async function verifyTableConfig(I, DTE, Browser, tableConfig, quickTable) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=266");
     DTE.waitForEditor();
     DTE.waitForCkeditor();
-    I.wait(5);
+    I.wait(2);
 
     I.clickCss('.cke_button.cke_button__table.cke_button_.cke_button_off');
     I.waitForElement('.cke_button.cke_button__table.cke_button_.cke_button_on', 10);
@@ -126,6 +126,19 @@ async function verifyTableConfig(I, DTE, Browser, tableConfig, quickTable) {
     await checkCkEditorValue(I, "Triedy štýlu", tableConfig.class);
 
     I.clickCss(".cke_dialog_ui_button.cke_dialog_ui_button_ok");
+
+    //
+    I.say("Verifying wrapper class around table in source code");
+    let htmlCode = await DTE.getCkeditor();
+    let wrapperClass = tableConfig.wrapperClass;
+
+    I.say("wrapperClass='" + wrapperClass + "' htmlCode='" + htmlCode + "'");
+
+    if (wrapperClass==="") {
+        I.assertFalse(htmlCode.includes('<div'), "Wrapper class div should not be present");
+    } else {
+        I.assertTrue(htmlCode.includes('class="' + wrapperClass + '"'), "Wrapper class div not found");
+    }
 }
 
 Scenario('table config-custom', async ({ I, DT, DTE, Document, Browser }) => {
