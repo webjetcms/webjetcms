@@ -1613,7 +1613,7 @@ export class DatatablesCkEditor {
 					var ckConfig = that.ckEditorInstance.config;
 					var tableClasses = ckConfig.qtClass.split(" ");
 					var tableStyle = "";
-					if (ckConfig.qtWidth != "") tableStyle = ' style=width: ' + ckConfig.qtWidth + ';"';
+					if (ckConfig.qtWidth != "") tableStyle = ' style="width: ' + ckConfig.qtWidth + ';"';
 					var wrapperClass = ckConfig.tableWrapperClass;
 
 					filter.addTransformations([
