@@ -15,6 +15,8 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
+- Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
+- Migrácia na Spring Boot projekt.
 - Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
 
 ## 2025
