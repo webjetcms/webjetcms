@@ -14,7 +14,7 @@ Podporované sú nasledovné konfiguračné premenné:
 
 Nastavenie pre tabuľky:
 
-- `ckeditor_table_class` - Predvolená CSS trieda pre tabuľky v CKEditore, ak nie je nastavená použije sa hodnota `table tabulkaStandard` pre Bootstrap 3 a `table table-sm tabulkaStandard` pre Bootstrap 4 a 5.
+- `ckeditor_table_class` - Predvolená CSS trieda pre tabuľky v CKEditore, štandardne `table table-sm tabulkaStandard`.
 - `ckeditor_table_columns` - Predvolený počet stĺpcov tabuľky v CKEditore, štandardne 5.
 - `ckeditor_table_rows` - Predvolený počet riadkov tabuľky v CKEditore, štandardne 2.
 - `ckeditor_table_width` - Predvolená šírka tabuľky v CKEditore, štandardne 100%.
@@ -22,7 +22,7 @@ Nastavenie pre tabuľky:
 - `ckeditor_table_border` - Predvolená hodnota okraja tabuľky v CKEditore, štandardne 1.
 - `ckeditor_table_cellpadding` - Predvolená hodnota `cellpadding` tabuľky v CKEditore, štandardne 1.
 - `ckeditor_table_cellspacing` - Predvolená hodnota `cellspacing` tabuľky v CKEditore, štandardne 1.
-- `ckeditor_table_wrapper` - Predvolený wrapper pre tabuľku v CKEditore, štandardne `<div class="table-responsive"></table>`.
+- `ckeditor_table_wrapper_class` - CSS trieda obaľovača pre tabuľku v CKEditore, štandardne `table-responsive`. Ak je prázdne, tabuľka sa nebude obalovať do responzívneho kontajnera.
 
 ## PICTURE element
 

@@ -8,7 +8,8 @@ var defaultConfig = {
     height: "",
     border: "1",
     cellpadding: "1",
-    cellspacing: "1"
+    cellspacing: "1",
+    wrapperClass: "table-responsive"
 };
 
 var customConfig = {
@@ -19,18 +20,20 @@ var customConfig = {
     height: "200px",
     border: "2",
     cellpadding: "5",
-    cellspacing: "3"
+    cellspacing: "3",
+    wrapperClass: "customWrapperClass"
 };
 
 var customConfigEmpty = {
-    class: "customTableClass",
+    class: "",
     cols: "3",
     rows: "4",
     width: "",
     height: "",
     border: "",
     cellpadding: "",
-    cellspacing: ""
+    cellspacing: "",
+    wrapperClass: ""
 };
 
 Before(({ login }) => {
@@ -47,6 +50,7 @@ function setCustomTableConfig(I, Document, config) {
     Document.setConfigValue("ckeditor_table_border", config.border);
     Document.setConfigValue("ckeditor_table_cellpadding", config.cellpadding);
     Document.setConfigValue("ckeditor_table_cellspacing", config.cellspacing);
+    Document.setConfigValue("ckeditor_table_wrapper_class", config.wrapperClass);
 }
 
 async function checkCkEditorValue(I, label, expectedValue) {

@@ -159,3 +159,13 @@ Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.c
 Overiť stav AI modelov môžete zadaním nasledujúcej adresy do riadku prehliadača: `chrome://on-device-internals/`.
 
 Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže po použití dôjsť k automatickému prekladu. Prekladač je však pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť aj po vykonaní iných AI asistentov na preklad výstupného textu.
+
+## Pripojenie
+
+Volanie AI služieb vyžaduje pripojenie na internet. Uistite sa, že váš server má prístup k vonkajším službám a že firewall alebo iné bezpečnostné opatrenia neblokujú požiadavky na API daného poskytovateľa. Použité sú nasledovné doménové mená:
+
+- OpenAI: `api.openai.com`
+- Gemini: `generativelanguage.googleapis.com`
+- OpenRouter: `openrouter.ai`
+
+tieto je potrebné povoliť v odchádzajúcich požiadavkách na prípadnom proxy serveri alebo firewalle.

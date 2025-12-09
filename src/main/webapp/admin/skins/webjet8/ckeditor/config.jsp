@@ -104,11 +104,7 @@ CKEDITOR.editorConfig = function( config )
 		colors: "<%=Constants.getString("ckeditor_svgIcon_colors")%>"
 	};
 
-	config.qtClass = "<%
-		if (Tools.isNotEmpty(Constants.getString("ckeditor_table_class"))) out.print(Constants.getString("ckeditor_table_class"));
-		else if ("3".equals(Constants.getString("bootstrapVersion"))) out.print("tabulkaStandard");
-		else out.print("table table-sm tabulkaStandard");
-		%>";
+	config.qtClass = "<%=Constants.getString("ckeditor_table_class")%>";
 	config.tableCols = "<%=Constants.getString("ckeditor_table_cols")%>";
 	config.tableRows = "<%=Constants.getString("ckeditor_table_rows")%>";
 	config.qtWidth = "<%=Constants.getString("ckeditor_table_width")%>";
@@ -116,7 +112,7 @@ CKEDITOR.editorConfig = function( config )
 	config.qtBorder = "<%=Constants.getString("ckeditor_table_border")%>";
 	config.qtCellPadding = "<%=Constants.getString("ckeditor_table_cellpadding")%>";
 	config.qtCellSpacing = "<%=Constants.getString("ckeditor_table_cellspacing")%>";
-	config.tableWrapper = '<%=Constants.getString("ckeditor_table_wrapper")%>';
+	config.tableWrapperClass = "<%=Constants.getString("ckeditor_table_wrapper_class")%>";
 
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
 		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %><% if (hasSvgIcon) { %>webjetsvgicon<% } %>";
