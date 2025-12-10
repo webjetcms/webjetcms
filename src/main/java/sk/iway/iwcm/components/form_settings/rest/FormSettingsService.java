@@ -22,7 +22,7 @@ public class FormSettingsService {
 
         // convert object back to id
         if(formSettings.getFormmailSendUserInfoDoc() == null) formSettings.setFormmailSendUserInfoDoc(null);
-        else formSettings.setFormmailSendUserInfoDocId(formSettings.getFormmailSendUserInfoDoc().getDocId());
+        else formSettings.setFormMailSendUserInfoDocId(formSettings.getFormmailSendUserInfoDoc().getDocId());
 
         //
         if(formSettings.getDomainId() == null) formSettings.setDomainId(CloudToolsForCore.getDomainId());
@@ -36,8 +36,8 @@ public class FormSettingsService {
             if(doc != null) formSettings.setUseFormMailDoc( new DocDetailsDto(doc) );
         }
 
-        if(formSettings.getFormmailSendUserInfoDocId() != null) {
-            DocDetails doc = DocDB.getInstance().getDoc( formSettings.getFormmailSendUserInfoDocId() );
+        if(formSettings.getFormMailSendUserInfoDocId() != null) {
+            DocDetails doc = DocDB.getInstance().getDoc( formSettings.getFormMailSendUserInfoDocId() );
             if(doc != null) formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
         }
     }

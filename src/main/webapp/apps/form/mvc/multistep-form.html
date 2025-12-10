@@ -125,7 +125,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': /*[[${csrf}]]*/ ""
                 },
                 body: JSON.stringify(result)
             });
@@ -186,19 +187,3 @@
         }
     }
 </script>
-
-<style>
-    /* form > div.form-group {
-        border: 1px solid;
-        margin: 5px;
-        padding: 5px;
-    } */
-
-    div.form-group > label {
-        display: ruby;
-    }
-
-    div.form-group > label > p {
-        padding: 0px;
-    }
-</style>

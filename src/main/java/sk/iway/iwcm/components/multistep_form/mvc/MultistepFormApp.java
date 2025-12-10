@@ -15,18 +15,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.users.UsersDB;
 
 @WebjetComponent("sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp")
 @WebjetAppStore(
@@ -44,14 +53,23 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     @JsonIgnore
     private final FormStepsRepository formStepsRepository;
 
+    @JsonIgnore
+    private final FormSettingsRepository formSettingsRepository;
+
+    @JsonIgnore
+    private final FormsRepository formsRepository;
+
     private static final String VIEW_PATH = "/apps/form/mvc/multistep-form"; //NOSONAR
+    private static final String ERROR_PATH = "/apps/form/mvc/error"; //NOSONAR
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
     private String formName;
 
     @Autowired
-    public MultistepFormApp(FormStepsRepository formStepsRepository) {
+    public MultistepFormApp(FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository, FormsRepository formsRepository) {
         this.formStepsRepository = formStepsRepository;
+        this.formSettingsRepository = formSettingsRepository;
+        this.formsRepository = formsRepository;
     }
 
     @Override
@@ -61,8 +79,29 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
     @DefaultHandler
 	public String view(Model model, HttpServletRequest request) {
+        //Check first, if user can fill form
+        Identity currentcUser = UsersDB.getCurrentUser(request);
+        if(currentcUser != null && currentcUser.getUserId() > 0) {
+            FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+            if(Tools.isTrue(formSettings.getAllowOnlyOneSubmit())) {
+                //Did user allready submitted ?
+                Integer count = formsRepository.getNumberOfSubmitted(formName, CloudToolsForCore.getDomainId());
+                if(count != null && count > 0) {
+                    model.addAttribute("err_msg", Prop.getInstance(request).getText("checkform.formIsAllreadySubmitted"));
+                    return ERROR_PATH;
+                }
+            }
+        }
+
+
         model.addAttribute("stepPath", "/rest/multistep-form/get-step");
         model.addAttribute("formName", formName);
+
+        String csrf = CSRF.getCsrfToken(request.getSession(), true);
+        model.addAttribute("csrf", csrf);
+
+        // Set docId of current page
+        request.getSession().setAttribute(MultistepFormsService.getNewSessionKey(formName, csrf), Tools.getIntValue(request.getParameter("docid"), -1));
 
         //Get first step id
         List<FormStepEntity> steps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());

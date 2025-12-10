@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.i18n.Prop;
 
 @RestController
@@ -23,10 +24,12 @@ import sk.iway.iwcm.i18n.Prop;
 public class MultistepFormsRestController {
 
     private final MultistepFormsService multistepFormsService;
+    private final FormHtmlHandler formHtmlHandler;
 
     @Autowired
-    public MultistepFormsRestController(MultistepFormsService multistepFormsService) {
+    public MultistepFormsRestController(MultistepFormsService multistepFormsService, FormHtmlHandler formHtmlHandler) {
        this.multistepFormsService = multistepFormsService;
+       this.formHtmlHandler = formHtmlHandler;
     }
 
     @PostMapping(value = "/save-form", params={"form-name", "step-id"}, consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
@@ -35,9 +38,12 @@ public class MultistepFormsRestController {
         try {
             multistepFormsService.saveFormStep(formName, stepId, request, response);
             return ResponseEntity.ok(response.toString());
+        } catch (SaveFormException sfe) {
+            Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + sfe.getLocalizedMessage());
+            response.put("message", sfe.getLocalizedMessage());
+            return ResponseEntity.badRequest().body(response.toString());
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage());
-
             response.put("message", Prop.getInstance(request).getText("datatable.error.unknown"));
             return ResponseEntity.badRequest().body(response.toString());
         }
@@ -50,7 +56,7 @@ public class MultistepFormsRestController {
         String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
 
         try {
-            String stepHtml = multistepFormsService.getFormStepHtml(formName, stepId, request);
+            String stepHtml = formHtmlHandler.getFormStepHtml(formName, stepId, request);
 
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)

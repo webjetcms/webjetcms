@@ -1993,7 +1993,7 @@ public class FormMailAction extends HttpServlet
 	 *@param  formFile  Description of the Parameter
 	 *@param  mp        Description of the Parameter
 	 */
-	private static void attFile(IwcmFile formFile, Multipart mp, String emailEncoding)
+	public static void attFile(IwcmFile formFile, Multipart mp, String emailEncoding)
 	{
 		try
 		{
@@ -2295,7 +2295,7 @@ public class FormMailAction extends HttpServlet
 	 * Ulozi formular ako pdfko
 	 * @param htmlData
 	 */
-	private static String saveFormAsPdf(String htmlData, int formId, HttpServletRequest request)
+	public static String saveFormAsPdf(String htmlData, int formId, HttpServletRequest request)
 	{
 		Logger.println(FormMailAction.class, "Exportujem formular do pdf, form_id: "+formId+" path: "+
 				Tools.getRealPath(FORM_FILE_DIR)+File.separator+formId+"_pdf.pdf");
@@ -2392,7 +2392,7 @@ public class FormMailAction extends HttpServlet
 	 * @param htmlCode - HTML kod
 	 * @return
 	 */
-	private static String createAbsolutePath(String htmlCode, HttpServletRequest request)
+	public static String createAbsolutePath(String htmlCode, HttpServletRequest request)
 	{
 		String basePath = Tools.getBaseHref(request);
 		//ak je tam uz base path, tak ju zrus, inak tam bude 2x
@@ -2407,7 +2407,7 @@ public class FormMailAction extends HttpServlet
 		return(htmlCode);
 	}
 
-	private static String checkEmailCssVersion(String cssLink)
+	public static String checkEmailCssVersion(String cssLink)
 	{
 		if (cssLink == null) return cssLink;
 
@@ -2489,7 +2489,7 @@ public class FormMailAction extends HttpServlet
 	 * @param emails
 	 * @return
 	 */
-	private static String getFirstEmail(String emails)
+	public static String getFirstEmail(String emails)
 	{
 		if (Tools.isEmpty(emails)) return "";
 
@@ -2540,7 +2540,7 @@ public class FormMailAction extends HttpServlet
 	 * @param attachs
 	 * @param request
 	 */
-	private static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
+	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
 	{
 		DocDB docDB = DocDB.getInstance();
 

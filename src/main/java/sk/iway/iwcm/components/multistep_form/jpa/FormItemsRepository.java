@@ -35,4 +35,7 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
 
     @Query("SELECT fie FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.stepId = :stepId AND fie.domainId = :domainId")
     List<FormItemEntity> findItemsToDuplicate(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fie FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.stepId = :stepId AND fie.domainId = :domainId AND fie.fieldType = :fieldType")
+    FormItemEntity findSpecificField(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId, @Param("fieldType") String fieldType);
 }

@@ -102,7 +102,7 @@ public class FormsEntityBasic {
 
     @Lob
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXT, tab = "basic",
+        inputType = DataTableColumnType.TEXTAREA, tab = "basic",
         title="formslist.attachments", className = "cell-not-editable"
     )
     private String files;

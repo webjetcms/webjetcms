@@ -33,22 +33,28 @@ public class FormStepEntity {
 
     @Column(name = "form_name")
     @NotBlank
-    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.forms.file_restrictions.form_name", hidden = true)
     private String formName;
 
     @Column(name = "step_name")
-    @NotBlank
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "")
-
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader")
     private String stepName;
 
     @Column(name = "step_sub_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.secondaryHeader")
     private String stepSubName;
 
     @Column(name = "sort_priority")
     @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "")
     private Integer sortPriority;
+
+    @Column(name = "step_validator")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "")
+    private String stepValidator;
+
+    @Column(name = "step_interceptor")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "")
+    private String stepInterceptor;
 
     @Column(name = "domain_id")
     private Integer domainId;

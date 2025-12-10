@@ -2503,9 +2503,13 @@
                         CREATE TABLE form_steps (
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
-                            step_name VARCHAR(255) NOT NULL,
-                            step_sub_name VARCHAR(255),
+                            step_name VARCHAR(255) NULL,
+                            step_sub_name VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+
+                            step_validator VARCHAR(255) NULL,
+                            step_interceptor VARCHAR(255) NULL,
+
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2515,9 +2519,13 @@
                         CREATE TABLE form_steps (
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             form_name NVARCHAR(255) NOT NULL,
-                            step_name NVARCHAR(255) NOT NULL,
-                            step_sub_name NVARCHAR(255),
+                            step_name NVARCHAR(255) NULL,
+                            step_sub_name NVARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+
+                            step_validator NVARCHAR(255) NULL,
+                            step_interceptor NVARCHAR(255) NULL,
+
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2527,9 +2535,13 @@
                         CREATE TABLE form_steps (
                             id INTEGER NOT NULL PRIMARY KEY,
                             form_name NVARCHAR(255) NOT NULL,
-                            step_name NVARCHAR(255) NOT NULL,
-                            step_sub_name NVARCHAR(255),
+                            step_name NVARCHAR(255) NULL,
+                            step_sub_name NVARCHAR(255) NULL,
                             sort_priority INTEGER NOT NULL,
+
+                            step_validator NVARCHAR(255) NULL,
+                            step_interceptor NVARCHAR(255) NULL,
+
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_steps START WITH 1;
@@ -2552,9 +2564,13 @@
                         CREATE TABLE form_steps (
                             id INT DEFAULT NEXTVAL('S_form_steps') PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
-                            step_name VARCHAR(255) NOT NULL,
-                            step_sub_name VARCHAR(255),
+                            step_name VARCHAR(255) NULL,
+                            step_sub_name VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+
+                            step_validator VARCHAR(255) NULL,
+                            step_interceptor VARCHAR(255) NULL,
+
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2670,6 +2686,7 @@
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
                             recipients VARCHAR(255) NULL,
+                            row_view tinyint(1) NULL,
                             cc_emails VARCHAR(255) NULL,
                             bcc_emails VARCHAR(255) NULL,
                             reply_to VARCHAR(255) NULL,
@@ -2691,7 +2708,6 @@
                             message_as_attach_file_name VARCHAR(255) NULL,
                             formmail_send_user_info_doc_id INT NULL,
                             fields_email_header VARCHAR(255) NULL,
-                            source VARCHAR(255) NULL,
                             after_send_interceptor VARCHAR(255) NULL,
                             encryption_key VARCHAR(1024) NULL,
                             max_size_in_kilobytes INT NULL,
@@ -2710,6 +2726,7 @@
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
                             recipients NVARCHAR(255) NULL,
+                            row_view BIT NULL,
                             cc_emails NVARCHAR(255) NULL,
                             bcc_emails NVARCHAR(255) NULL,
                             reply_to NVARCHAR(255) NULL,
@@ -2731,7 +2748,6 @@
                             message_as_attach_file_name NVARCHAR(255) NULL,
                             formmail_send_user_info_doc_id INT NULL,
                             fields_email_header NVARCHAR(255) NULL,
-                            source NVARCHAR(255) NULL,
                             after_send_interceptor NVARCHAR(255) NULL,
                             encryption_key NVARCHAR(1024) NULL,
                             max_size_in_kilobytes INT NULL,
@@ -2750,6 +2766,7 @@
                             id INTEGER NOT NULL PRIMARY KEY,
                             form_name NVARCHAR(255) NOT NULL,
                             recipients NVARCHAR(255) NULL,
+                            row_view SMALLINT NULL,
                             cc_emails NVARCHAR(255) NULL,
                             bcc_emails NVARCHAR(255) NULL,
                             reply_to NVARCHAR(255) NULL,
@@ -2771,7 +2788,6 @@
                             message_as_attach_file_name NVARCHAR(255) NULL,
                             formmail_send_user_info_doc_id INTEGER NULL,
                             fields_email_header NVARCHAR(255) NULL,
-                            source NVARCHAR(255) NULL,
                             after_send_interceptor NVARCHAR(255) NULL,
                             encryption_key NVARCHAR(1024) NULL,
                             max_size_in_kilobytes INTEGER NULL,
@@ -2800,6 +2816,7 @@
                             id INT DEFAULT NEXTVAL('S_form_settings') PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
                             recipients VARCHAR(255) NULL,
+                            row_view BOOLEAN DEFAULT FALSE,
                             cc_emails VARCHAR(255) NULL,
                             bcc_emails VARCHAR(255) NULL,
                             reply_to VARCHAR(255) NULL,
@@ -2821,7 +2838,6 @@
                             message_as_attach_file_name VARCHAR(255) NULL,
                             formmail_send_user_info_doc_id INT NULL,
                             fields_email_header VARCHAR(255) NULL,
-                            source VARCHAR(255) NULL,
                             after_send_interceptor VARCHAR(255) NULL,
                             encryption_key VARCHAR(1024) NULL,
                             max_size_in_kilobytes INT NULL,

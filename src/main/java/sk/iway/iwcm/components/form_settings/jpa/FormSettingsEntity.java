@@ -43,6 +43,10 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String recipients;
 
+    @Column(name = "row_view")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView")
+    private Boolean rowView;
+
     @Column(name = "cc_emails")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.cc_emails", className = "form-email")
     @Size(max = 255)
@@ -134,17 +138,12 @@ public class FormSettingsEntity {
     private String messageAsAttachFileName;
 
     @Column(name = "formmail_send_user_info_doc_id")
-    private Integer formmailSendUserInfoDocId;
+    private Integer formMailSendUserInfoDocId;
 
     @Column(name = "fields_email_header")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple form-email")
     @Size(max = 255)
     private String fieldsEmailHeader;
-
-    @Column(name = "source")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.source", className = "not-formsimple")
-    @Size(max = 255)
-    private String source;
 
     @Column(name = "after_send_interceptor")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-email")
