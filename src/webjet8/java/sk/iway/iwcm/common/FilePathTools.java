@@ -204,10 +204,11 @@ public class FilePathTools
      */
     private static boolean isClientAbortException(Exception ex)
     {
+		if (CLIENT_ABORT_MESSAGES == null) CLIENT_ABORT_MESSAGES = Constants.getArray("clientAbortMessages");
+
         Throwable current = ex;
         while (current != null)
         {
-			if (CLIENT_ABORT_MESSAGES == null) CLIENT_ABORT_MESSAGES = Constants.getArray("clientAbortMessages");
             String msg = current.getMessage();
             if (msg != null)
             {
