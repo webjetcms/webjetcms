@@ -6,7 +6,7 @@ var datatableName = "configurationDatatable";
 Before(({ I, login, DT }) => {
 
     login('admin');
-    I.amOnPage("/admin/v9/settings/configuration");
+    I.amOnPage("/admin/v9/settings/configuration/");
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
@@ -21,7 +21,7 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.see("Predvolená hodnota (default value)");
 });
 
-Scenario('pridanie konfiguracnej premennej', ({ I, DT, DTE }) => {
+Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
 
     I.click("button.buttons-create");
     I.click("Pridať");
@@ -47,7 +47,7 @@ Scenario('pridanie konfiguracnej premennej', ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
-Scenario('vyhladanie konfiguracnej premennej', ({ I, DT }) => {
+Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {
 
     //hladanie podla mena
     I.fillField("input.dt-filter-name", randomNumber);
@@ -62,7 +62,7 @@ Scenario('vyhladanie konfiguracnej premennej', ({ I, DT }) => {
     I.see(value);
 });
 
-Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
+Scenario("upravenie konfiguracnej premennej @baseTest", ({ I, DTE }) => {
 
     I.fillField("input.dt-filter-name", name);
     I.pressKey('Enter', "input.dt-filter-name");
@@ -89,7 +89,7 @@ Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
 
 //chyba v nastaveni id
 //detto pri editacii existujuceho, ked sa ulozilo a dalo sa znova editovat padlo
-Scenario("overenie nastavenia ID-edit", ({ I, DT, DTE }) => {
+Scenario("overenie nastavenia ID-edit @baseTest", ({ I, DT, DTE }) => {
 
     DT.filterContains("name", name)
     I.click(name);
@@ -104,7 +104,7 @@ Scenario("overenie nastavenia ID-edit", ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
-Scenario("zmazanie konfiguracnej premennej", ({ I, DT }) => {
+Scenario("zmazanie konfiguracnej premennej @baseTest", ({ I, DT }) => {
 
     I.fillField("input.dt-filter-value", value);
     I.pressKey('Enter', "input.dt-filter-name");

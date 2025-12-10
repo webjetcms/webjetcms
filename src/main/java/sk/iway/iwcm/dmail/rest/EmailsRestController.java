@@ -211,10 +211,11 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         //Set create values
         if (campaign == null || campaign.getId()==null || campaign.getId().longValue()<1) {
             entity.setCampainId((long)-loggedUserId);
-            entity.setUrl("");
-            entity.setSubject("");
-            entity.setSenderName("");
-            entity.setSenderEmail("");
+            //oracle cant store null in string fields, so we set "-"
+            entity.setUrl("-");
+            entity.setSubject("-");
+            entity.setSenderName("-");
+            entity.setSenderEmail("-");
             entity.setCreatedByUserId(loggedUserId);
         } else {
             entity.setCampainId(campaign.getId());
