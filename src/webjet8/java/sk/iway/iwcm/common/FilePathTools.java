@@ -2,8 +2,6 @@ package sk.iway.iwcm.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,12 +26,7 @@ import sk.iway.iwcm.io.IwcmFile;
  */
 public class FilePathTools
 {
-    private static final List<String> CLIENT_ABORT_MESSAGES = Arrays.asList(
-            "response already",
-            "connection reset by peer",
-            "broken pipe",
-            "socket write error"
-    );
+    private static String[] CLIENT_ABORT_MESSAGES = null;
 
 	private static String normalizeVirtualPath(String virtualPath)
 	{
@@ -194,11 +187,11 @@ public class FilePathTools
 					}
 					catch (Exception ex)
 					{
-                        if (isClientAbortException(ex)) {
-                            Logger.info(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
+                        if (ex instanceof IOException || isClientAbortException(ex)) {
+                            Logger.debug(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
                             return true;
                         }
-                        Logger.error(FilePathTools.class,"Error while sending file to client: " + ex);
+                        Logger.error(FilePathTools.class, "Error while sending file to client: " + ex.getMessage());
 					}
 			}
 		}
@@ -214,13 +207,14 @@ public class FilePathTools
         Throwable current = ex;
         while (current != null)
         {
+			if (CLIENT_ABORT_MESSAGES == null) CLIENT_ABORT_MESSAGES = Constants.getArray("clientAbortMessages");
             String msg = current.getMessage();
             if (msg != null)
             {
-                String upper = msg.toUpperCase();
+                String lower = msg.toLowerCase();
                 for (String pattern : CLIENT_ABORT_MESSAGES)
                 {
-                    if (upper.contains(pattern.toUpperCase())) {
+                    if (lower.contains(pattern)) {
                         return true;
                     }
                 }

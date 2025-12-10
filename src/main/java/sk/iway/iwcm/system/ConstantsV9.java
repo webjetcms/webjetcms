@@ -165,6 +165,8 @@ public class ConstantsV9 {
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
 		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
+		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
+
 		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 	}
