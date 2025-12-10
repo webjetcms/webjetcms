@@ -169,6 +169,25 @@ public class ConstantsV9 {
 
 		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
+
+        Constants.setString("smtpAuthMechanism", "", "config;dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
+
+		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
+		Constants.setString("ckeditor_svgIcon_icons", "{}", Constants.MOD_EDITOR, "JSON objekt definujúci ikony pre CKEditor vo formáte {nazov: [skupiny], nazov2: [skupiny]}, napr. {\"4g\": [\"other\"], \"5g\": [\"other\"], \"accessibility-mobility\": [\"people\"]}. Ak je prázdne získa sa zo SVG súboru podľa hodnoty ID elementov, skupiny v takom prípade nie sú dostupné.");
+		Constants.setInt("ckeditor_svgIcon_width", 56, Constants.MOD_EDITOR, "Šírka SVG ikony v pixeloch");
+		Constants.setInt("ckeditor_svgIcon_height", 56, Constants.MOD_EDITOR, "Výška SVG ikony v pixeloch");
+		Constants.setString("ckeditor_svgIcon_sizes", "", Constants.MOD_EDITOR, "Dostupné veľkosti ikon oddelené čiarkou, napr. small,medium,large,xlarge,xxlarge,huge");
+		Constants.setString("ckeditor_svgIcon_colors", "", Constants.MOD_EDITOR, "Dostupné farby ikon oddelené čiarkou, napr. info,success,warning,danger,orange");
+
+		Constants.setString("ckeditor_table_class", "table table-sm tabulkaStandard", Constants.MOD_EDITOR, "Predvolená CSS trieda pre tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cols", "5", Constants.MOD_EDITOR, "Predvolený počet stĺpcov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_rows", "2", Constants.MOD_EDITOR, "Predvolený počet riadkov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_width", "100%", Constants.MOD_EDITOR, "Predvolená šírka tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_height", "", Constants.MOD_EDITOR, "Predvolená výška tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_border", "1", Constants.MOD_EDITOR, "Predvolená hodnota okraja tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellpadding", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellpadding tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellspacing", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellspacing tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_wrapper_class", "table-responsive", Constants.MOD_EDITOR, "Predvolený wrapper pre tabuľku v CKEditore.");
 	}
 
 	/**

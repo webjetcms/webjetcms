@@ -353,7 +353,9 @@ function changeTabAndCheck(I, DT, tab, doTest = true) {
 }
 
 function selectAndOpen(I, DTE, table) {
-    I.clickCss("td.sorting_1");
+    I.wait(0.5);
+    I.clickCss("#"+table+" td.sorting_1");
+    I.wait(0.5);
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor(table);
 }

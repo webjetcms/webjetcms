@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -233,13 +234,22 @@ public class ComponentsService {
                 return group;
             }
 
-            if (parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.doc.DocDetails") || parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.admin.layout.DocDetailsDto")) {
+            if (parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.doc.DocDetails")) {
                 int docId = Tools.getIntValue(value, 0);
                 if (docId == 0 || docId == -1) {
                     return null;
                 }
                 DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
                 return doc;
+            }
+
+            if(parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.admin.layout.DocDetailsDto")) {
+                int docId = Tools.getIntValue(value, 0);
+                if (docId == 0 || docId == -1) {
+                    return null;
+                }
+                DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
+                return new DocDetailsDto(doc);
             }
 
             if (parameterType.getTypeName().equalsIgnoreCase("java.util.List")) {
