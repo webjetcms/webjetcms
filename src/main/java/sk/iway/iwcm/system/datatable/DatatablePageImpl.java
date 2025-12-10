@@ -79,7 +79,6 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             String value;
 
             if(Tools.isEmpty(labelProperty) && Tools.isEmpty(valueProperty)) {
-                if (o == null) o = "";
                 label = (String)o;
                 value = (String)o;
             } else {
@@ -91,6 +90,11 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             Object original;
             if (includeOriginalObject) original = o;
             else original = null;
+
+            //Oracle sees "" as NULL, in select options we usualy want empty string instead of null
+            if (label == null) label = "";
+            if (value == null) value = "";
+
             fieldOptions.add(new OptionDto(label, value, original));
         }
     }

@@ -154,7 +154,9 @@ if (query!=null && query.trim().length()>0)
 			   out.println("Executing: "+Tools.escapeHtml(sql)+"<br>");
 
 	      	s = spojeni.createStatement();
-	      	if (sql.toLowerCase().indexOf("select")==0 || sql.toLowerCase().indexOf("execute")==0 || sql.toLowerCase().indexOf("show")==0)
+	      	String lowerSql = sql.toLowerCase();
+			//if starts with select, execute or show, we expect results
+	      	if (lowerSql.indexOf("select")==0 || lowerSql.indexOf("execute")==0 || lowerSql.indexOf("show")==0)
 	      	{
 		      	ResultSet rs = s.executeQuery(sql);
 

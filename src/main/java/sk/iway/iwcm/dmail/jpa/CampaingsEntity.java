@@ -41,7 +41,7 @@ public class CampaingsEntity implements Serializable {
     @PreUpdate
 	public void prePersist() {
 		if (domainId == null) domainId = CloudToolsForCore.getDomainId();
-        if (id != null && id.longValue()==-1L) id=null;
+        if (Long.valueOf(-1L).equals(id)) id=null;
 	}
 
     @Id
