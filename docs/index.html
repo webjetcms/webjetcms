@@ -148,7 +148,7 @@
             return rendered;
           }
 
-          if (href.indexOf("/")) {
+          if (href.indexOf("/") && href.indexOf("#") != 0) {
             //link in same folder
             //append link to window.location.pathname without part after last /
             href = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/")+1) + href;

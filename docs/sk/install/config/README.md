@@ -4,6 +4,8 @@ Najčastejšie používané [konfiguračné premenné](../../admin/setup/configu
 
 ## Logovanie
 
+Na logovanie sa používa knižnica [Logback](http://logback.qos.ch/), ktorá umožňuje detailné nastavenie logovania pre jednotlivé java balíky. Používa sa [ConsoleAppender](https://logback.qos.ch/manual/appenders.html#ConsoleAppender), je ale možné nastaviť aj [FileAppender](https://logback.qos.ch/manual/appenders.html#FileAppender) alebo [RollingFileAppender](https://logback.qos.ch/manual/appenders.html#RollingFileAppender). Konfiguračný súbor je v `WEB-INF/classes/logback.xml`, avšak pre základné nastavenie je možné použiť nasledovné konfiguračné premenné:
+
 - `logLevel` - základná úroveň logovania, môže mať hodnotu `debug` pre podrobné logovanie, alebo `normal` pre produkčné nasadenie.
 - `logLevels` - zoznam java balíkov s úrovňou logovania (každý na novom riadku), napr:
 
@@ -12,6 +14,8 @@ sk.iway=DEBUG
 sk.iway.iwcm=WARN
 org.springframework=WARN
 ```
+
+V prípade potreby je možné nastavit/implementovať vlastný [Appender](https://logback.qos.ch/manual/appenders.html). Ten môže odosielať logy napríklad do externého systému na analýzu logov. Priamo `Logback` okrem iných poskytuje `Appender` pre [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) alebo [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). V prípade potreby je možné vytvoriť [vlastný Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
 ## Odosielanie emailov
 
