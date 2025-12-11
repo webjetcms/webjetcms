@@ -32,7 +32,7 @@ public class MediaGroupBean extends ActiveRecordRepository implements Serializab
 
 	@Id
 	@GeneratedValue(generator="WJGen_MediaGroup")
-	@TableGenerator(name="WJGen_MediaGroup",pkColumnValue="MediaGroup")
+	@TableGenerator(name="WJGen_MediaGroup",pkColumnValue="media_groups")
 	@Column(name = "media_group_id")
 	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;

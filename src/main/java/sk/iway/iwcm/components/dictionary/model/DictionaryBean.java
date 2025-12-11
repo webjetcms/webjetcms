@@ -66,6 +66,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
 
 	@Lob
     @Column(name="value")
+	@NotBlank
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="[[#{components.htmlbox.basic}]]")
 	private String value;
 

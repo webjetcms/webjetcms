@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -39,6 +40,7 @@ public class SessionClusterService {
      * @param args
      */
     public static void main(String[] args) {
+        deleteOldData(true);
         updateSessionData();
     }
 
@@ -48,6 +50,8 @@ public class SessionClusterService {
      * @return
      */
     public static ArrayNode getUserSessionsAllNodes(int userId) {
+        deleteOldData(false);
+
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode allNodesSessions = mapper.createArrayNode();
 
@@ -55,7 +59,7 @@ public class SessionClusterService {
 			@Override
 			public Object map(ResultSet rs) throws SQLException {
                 ObjectNode newObject = allNodesSessions.addObject();
-                newObject.put("cluster", rs.getString("node"));
+                newObject.put("cluster", DB.getDbString(rs, "node"));
                 newObject.set("userSessions", convertToTree(rs.getString("content"), userId));
                 return null;
 			}
@@ -118,6 +122,10 @@ public class SessionClusterService {
 
         try {
             String myNodeName = Constants.getString("clusterMyNodeName");
+            if (Constants.DB_TYPE==Constants.DB_ORACLE && Tools.isEmpty(myNodeName)) {
+                //empty==null node name not allowed in oracle, set default
+                myNodeName = "server";
+            }
 
             // Prepare session data
             ObjectMapper mapper = new ObjectMapper();
@@ -149,14 +157,24 @@ public class SessionClusterService {
                 Logger.debug(SessionClusterService.class, String.format("Updated existing session data for node %s", myNodeName));
             }
 
-            //clean up old records (older than 24 hours)
-            Timestamp twentyFourHoursAgo = new Timestamp(Tools.getNow() - (24 * 60 * 60 * 1000L));
-            int deletedOldRecords = new SimpleQuery().executeWithUpdateCount(DELETE_OLD, TYPE, twentyFourHoursAgo);
-            Logger.debug(SessionClusterService.class, String.format("Deleted %d old session records older than 24 hours", deletedOldRecords));
+            deleteOldData(false);
         } catch (Exception e) {
             Logger.error(SessionClusterService.class, "Error updating session data in cluster monitoring: " + e.getLocalizedMessage());
         }
 
+    }
+
+    private static void deleteOldData(boolean isCron) {
+        //clean up old records (older than 24 hours or 1 hour for cron)
+        long backTime = (24 * 60 * 60 * 1000L); //24 hours
+        String periodStr = "24 hours";
+        if (isCron) {
+            backTime = 60 * 60 * 1000L; //one hour for cron
+            periodStr = "1 hour";
+        }
+        Timestamp thresholdTime = new Timestamp(Tools.getNow() - backTime);
+        int deletedOldRecords = new SimpleQuery().executeWithUpdateCount(DELETE_OLD, TYPE, thresholdTime);
+        Logger.debug(SessionClusterService.class, String.format("Deleted %d old session records older than %s", deletedOldRecords, periodStr));
     }
 
 }

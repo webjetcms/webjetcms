@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
@@ -37,8 +38,10 @@ public class CampaingsEntity implements Serializable {
 
     //Set entity domain id
 	@PrePersist
+    @PreUpdate
 	public void prePersist() {
-		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+		if (domainId == null) domainId = CloudToolsForCore.getDomainId();
+        if (Long.valueOf(-1L).equals(id)) id=null;
 	}
 
     @Id

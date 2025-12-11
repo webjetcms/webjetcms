@@ -2686,6 +2686,7 @@ public class PathFilter implements Filter
 
 			for (String blockedPath : blockedPaths) {
 				if (path.contains(blockedPath)) {
+					Logger.debug(PathFilter.class, "Blocked path detected, path="+path+", blocked="+blockedPath);
 					return true;
 				}
 			}

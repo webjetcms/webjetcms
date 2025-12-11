@@ -22,7 +22,7 @@ Before(({ I, login, DT }) => {
     DT.addContext("campaings" ,"#campaingsDataTable_wrapper");
 });
 
-Scenario('campaings-zakladne testy', ({I, DT, DTE}) => {
+Scenario('campaings-zakladne testy @baseTest', ({I, DT, DTE}) => {
     baseEntityName = entityNameOriginal+"-zt";
 
     I.say("CREATE TEST");
@@ -231,7 +231,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.click(locate("#modalIframe button").withText("OK"));
 });
 
-Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
+Scenario('testy skupiny pouzivatelov @baseTest', ({I, DT, DTE}) => {
     ugEntityName = entityNameOriginal + "-ug";
 
     /* PREPARE ENTITY */
@@ -1005,7 +1005,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
     I.fillField("#DTE_Field_recipientEmail", "testdefault@balat.sk");
     I.clickCss(recipientsModal + " > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
     I.waitForInvisible("#datatableFieldDTE_Field_recipientsTab_processing", 30);
-    
+
     I.say("Check that see default recipient");
     I.see("testdefault@balat.sk");
 
@@ -1016,7 +1016,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
     I.dontSee("user_sha512@balat.sk");
 
     I.see("testdefault@balat.sk");
-    
+
     I.click( locate(recipientsWrapper).find("button.buttons-select-all") );
     I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-remove") );
     I.waitForElement("div.DTE_Action_Remove");
