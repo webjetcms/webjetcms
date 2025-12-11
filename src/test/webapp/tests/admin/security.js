@@ -58,3 +58,25 @@ Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
     I.see("Text "+xss+" nahradeny");
     I.see("za "+xss+" v data_asc");
 });
+
+Scenario("pathFilterBlockedPaths", ({ I, Document }) => {
+    let random = I.getRandomTextShort();
+    let pathFilterBlockedPaths = ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./";
+    //set default values
+    Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths);
+
+    I.amOnPage("/templates/aceintegration/jet/config.properties?v=1-"+random);
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.amOnPage("/WEB-INF./web.xml");
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    //allow config.properties
+    Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths.replace("config.properties", ""));
+
+    I.amOnPage("/templates/aceintegration/jet/config.properties?v=2-"+random);
+    I.see("ninjaDebug=false");
+
+    //restore default
+    Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths);
+});
