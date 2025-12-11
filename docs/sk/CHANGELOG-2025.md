@@ -10,6 +10,7 @@
 
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
 - Bezpečnosť - opravená možná zraniteľnosť v synchronizácii stránok (#55193-7).
+- Bezpečnosť - pridaná možnosť konfigurácie blokovaných ciest súborov/adresárov cez premennú `pathFilterBlockedPaths`. Štandardne sú blokované URL adresy, ktoré v názve obsahujú výraz `.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./`. Je možné pridať ďalšie podľa potreby (#PR103).
 - Bannerový systém - opravené zobrazenie YouTube video banneru (#55193-7).
 - Dátové tabuľky - opravené zobrazenie pokročilých možností exportu (#58113).
 - Kalendár udalostí - opravené ukladanie poľa popis, na ktorom nebolo povolené ukladanie HTML kódu (#58113).
