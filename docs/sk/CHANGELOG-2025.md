@@ -8,6 +8,10 @@
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
+## 2025.0.50
+
+> Opravná verzia pôvodnej verzie 2025.0.
+
 - Bezpečnosť - opravená možnosť prihlásenia, ak heslo obsahuje diakritiku.
 - Bezpečnosť - opravená možná zraniteľnosť v synchronizácii stránok (#55193-7).
 - Bezpečnosť - pridaná možnosť konfigurácie blokovaných ciest súborov/adresárov cez premennú `pathFilterBlockedPaths`. Štandardne sú blokované URL adresy, ktoré v názve obsahujú výraz `.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./`. Je možné pridať ďalšie podľa potreby (#PR103).
