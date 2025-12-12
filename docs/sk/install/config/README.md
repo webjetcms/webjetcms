@@ -48,6 +48,7 @@ konfiguračnú hodnotu je možné nastaviť špeciálne pre moduly pomocou prefi
 - `dmail` - odosielateľ nového hromadného emailu.
 - `formmail` - odosielateľ notifikácie pre návštevníka, ktorý vyplnil formulár.
 - `reservation` - odosielateľ schválenia/zamietnutia rezervácie.
+- `passwordReset` - odosielateľ emailu pre zmenu hesla používateľa.
 
 ### Nastavenie Amazon SES
 
