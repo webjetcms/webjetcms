@@ -94,6 +94,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](redactor/webpages/perex-duplicity-values.png)
 
 - Zrkadlenie - pridaná možnosť zobraziť obrázok vlajky namiesto textu v [prepínači jazyka stránky](redactor/apps/docmirroring/README.md#vytvorenie-odkazu-na-jazykové-mutácie-v-hlavičke-stránky) (#54273-79).
+- Zmena hesla - pridaná možnosť nastaviť meno a email adresu z ktorej je odoslaný email s odkazom na zmenu hesla cez konfiguračné premenné `passwordResetDefaultSenderEmail` a `passwordResetDefaultSenderName` (#58125).
 
 ### Oprava chýb
 

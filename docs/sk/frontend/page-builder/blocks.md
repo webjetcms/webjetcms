@@ -559,6 +559,6 @@ atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
 'section/00-Zakladne-prvky/Citat_v1'
 ```
 
-Pre bloky z karty Základné sa ako ID používa výraz typu `id2.1`, čo znamená blok z karty Základné (id2) a jeho poradové číslo v zozname blokov (1).
+Pre bloky z karty Základné sa ako ID používa výraz typu `pb-basic-2.1`, kde prvé číslo je typ bloku (0=stĺpec, 1=kontajner, 2=sekcia, 4=content) a druhé číslo je poradové číslo bloku v zozname.
 
 ID bloku sa nastaví na vložený element, teda napríklad na `section`, `div` kontajner a podobne podľa typu bloku. Nie je nastavený na celú vloženú štruktúru, ale len na vložený element.

@@ -31,10 +31,13 @@ Do poľa musíte zadať Vašu **emailovú adresu** alebo **prihlasovacie meno**.
 ## Email k zmene hesla
 
 Zaslaný email obsahuje 2 odkazy:
+
 - odkaz pre zmenu hesla, **Ak si chcete zmeniť heslo, kliknite sem do 30 minút.**
 - odkaz na zrušenie akcie zmeny hesla, **Ak ste nepožiadali o zmenu hesla môžete túto akciu zrušiť kliknutím sem.**
 
 ![](email.png)
+
+Meno a email adresu z ktorej je odoslaný email s odkazom na zmenu hesla je možné nastaviť cez konfiguračné premenné `passwordResetDefaultSenderEmail` a `passwordResetDefaultSenderName`.
 
 ### Akcia zmeny hesla
 

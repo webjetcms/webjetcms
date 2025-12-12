@@ -1918,7 +1918,7 @@
                     return;
                 }
 
-                console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
+                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
                 if (empty === true) {
                     if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
