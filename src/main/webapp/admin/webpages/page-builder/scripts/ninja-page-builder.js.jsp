@@ -2206,6 +2206,7 @@
             me.$wrapper.on('click', '.library-full-width-item', function() {
 
                 var id = $(this).attr('data-library-item-id'),
+                    count = $(this).attr('data-library-count-id'),
                     group_id = $(this).attr('data-library-group-id'),
                     parent = me.get_parent_grid_element(me.clicked_button),
                     insert_content = '',
@@ -2242,7 +2243,7 @@
                 if (parentTag == null) parentTag = "content";
                 //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
 
-                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
+                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[count].content;
                 //console.log("html=", html);
 
                 if ("content" === parentTag) {
@@ -2328,6 +2329,9 @@
 
                         //inserted block can possibly have multiple sections/containers/columns so we must mark all grid elements
                         me.mark_grid_elements();
+
+                        //set ID of PB block
+                        insert_content.attr("data-pb-id", id);
                 }
 
                 me.set_toolbar_visible(insert_content);
@@ -2514,7 +2518,7 @@
                                     if (block.imagePath == null || block.imagePath == "" || block.imagePath == "/components/grideditor/data/default.png") {
                                         isEmptyClass = " library-full-width-item--no-image";
                                     }
-                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-count-id="'+indexBlock+'" data-library-item-id="'+block.id+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
                                 });
                             contentInner += '</div>';
                         contentInner += '</div>';

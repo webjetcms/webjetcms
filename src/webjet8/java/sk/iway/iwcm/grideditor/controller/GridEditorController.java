@@ -345,7 +345,7 @@ public class GridEditorController {
 
         String virtualPath = blockFile.getVirtualPath();
         String filePathNoExtension = FileTools.getFilePathWithoutExtension(virtualPath);
-        String blockId = filePathNoExtension.replace(rootDirPath+"/","");
+        String blockId = filePathNoExtension.replace(rootDirPath,"");
         String textKey = blockId.replace(groupDirName+"/","");
         textKey = getTextKey(request, textKey);
         if (pageBuilderProp != null) {

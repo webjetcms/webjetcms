@@ -547,3 +547,16 @@ window.pbGetWindowSize = function(name) {
     return maxWidth;
 }
 ```
+
+## ID bloku
+
+Po vložení bloku do stránky sa nastaví do atribútu `data-pb-block-id` cesta k HTML súboru bloku kódovaná cez Baese64. Pomocou hodnoty teda viete nájsť cez vyhľadávanie v administrácii všetky stránky, ktoré obsahujú daný blok. Môžete tak ľahko zistiť, kde sa používa určitý blok v prípade jeho úpravy.
+
+Cestu k HTML súboru z atribútu viete získať cez JavaScript funkciu `atob()`, napríklad:
+
+```JavaScript
+atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
+'section/00-Zakladne-prvky/Citat_v1'
+```
+
+ID bloku sa nastaví na vložený element, teda napríklad na `section`, `div` kontajner a podobne podľa typu bloku. Nie je nastavený na celú vloženú štruktúru, ale len na vložený element.
