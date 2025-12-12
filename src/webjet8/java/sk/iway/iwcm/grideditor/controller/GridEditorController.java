@@ -163,12 +163,15 @@ public class GridEditorController {
      */
     private String getFavouritesDirPath(Integer templateGroupId, HttpServletRequest request)
     {
+        Identity user = UsersDB.getCurrentUser(request);
+        String login = user.getLogin();
+
         if (templateGroupId != null && templateGroupId.intValue()>0)
         {
             TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());
             if (tgroup != null && Tools.isNotEmpty(tgroup.getDirectory()))
             {
-                String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/", request);
+                String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/"+login+"/", request);
                 //tu na rozdiel od citania pripravenych blokov netestujeme, ci adresar existuje, ak nie, tak ho ulozenie vytvori
                 //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+templateFavDirPath);
                 return templateFavDirPath;
@@ -176,7 +179,7 @@ public class GridEditorController {
         }
 
         //ak neexistuju pre sablonu pouzi default
-        String favDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/grideditor/", request);
+        String favDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/grideditor/"+login+"/", request);
         //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+favDirPath);
         return favDirPath;
     }

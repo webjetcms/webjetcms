@@ -560,13 +560,15 @@ Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
     I.click(locate(".library-full-width-item").withText("Kontaktný formulár"));
 
     I.waitForElement(locate("section.pb-section h2.text-center").withText("Contact us"), 10);
+    //check data-pb-id attribute
+    I.seeElement(locate('section[data-pb-id="c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY="]'));
 
     //
     I.say("Inserting standard section block");
     I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
     I.waitForElement(".library-template-block--section", 10);
     I.click(".pb-library--section .library-tab-link:nth-child(1)"); //first tab
-    I.click('.library-template-block--section .library-tab-item-button[data-library-item-id="id2.4"]');
+    I.click('.library-template-block--section .library-tab-item-button[data-library-item-id="pb-basic-2.4"]');
 
     I.waitForElement(locate("section.pb-section div.col-2.pb-column").withText("Text"), 10);
 
@@ -577,6 +579,7 @@ Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
     I.seeElement(locate(".CodeMirror-line").withText("!INCLUDE(/components/formsimple/form.jsp"));
     I.seeElement(locate(".CodeMirror-line").withText('Text'));
     I.seeElement(locate(".CodeMirror-line .cm-string").withText('col-2'));
+    I.seeElement(locate(".CodeMirror-line .cm-string").withText('c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY'));
 
     I.wjSetDefaultWindowSize();
 });

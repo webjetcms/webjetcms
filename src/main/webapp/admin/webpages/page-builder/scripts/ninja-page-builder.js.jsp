@@ -480,18 +480,18 @@
                                     "id": "4",
                                     "textKey": "content",
                                     "groups": [
-                                        { id: "id4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
-                                        { id: "id4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
-                                        { id: "id4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
-                                        { id: "id4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
-                                        { id: "id4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
-                                        { id: "id4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
-                                        { id: "id4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
-                                        { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
-                                        { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
-                                        { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
-                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
-                                        { id: "id4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
+                                        { id: "pb-basic-4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
+                                        { id: "pb-basic-4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
+                                        { id: "pb-basic-4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
+                                        { id: "pb-basic-4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
+                                        { id: "pb-basic-4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
+                                        { id: "pb-basic-4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
+                                        { id: "pb-basic-4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
+                                        { id: "pb-basic-4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
+                                        { id: "pb-basic-4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
+                                        { id: "pb-basic-4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "pb-basic-4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
+                                        { id: "pb-basic-4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
                                 }
                             ];
@@ -589,7 +589,7 @@
             function getCol(parentId,id,v){
                 var pb_col_size = (v/me.options.max_col_size)*12;
                 return {
-                    id: "id"+parentId+"."+id,
+                    id: "pb-basic-"+parentId+"."+id,
                     textKey: '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>',
                     content: '<div class="'+me.column.valid_prefixes[0]+v+' '+me.state.is_special_helper+'">Text</div>'
                 }
@@ -616,7 +616,7 @@
                 content += '</div></div>';
 
                 return {
-                    id: "id"+parentId+"."+id,
+                    id: "pb-basic-"+parentId+"."+id,
                     textKey: textKey,
                     content: content
                 }
@@ -1918,7 +1918,7 @@
                     return;
                 }
 
-                //console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
+                console.log("Library item clicked, parent=", parent, "classes=", $(parent).attr("class"), "empty=", empty, "template_type=", template_type, "id=", id);
 
                 if (empty === true) {
                     if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
@@ -2120,6 +2120,11 @@
                     insert_content = me.get_insert_new_element(me.clicked_button, content, parent);
                     me.mark_section(insert_content);
                 }
+
+                try {
+                    //set ID of PB block
+                    if (insert_content!="") insert_content.attr("data-pb-id", id);
+                } catch (e) {}
 
                 if (parent != null) {
                     me.set_toolbar_visible(insert_content);
