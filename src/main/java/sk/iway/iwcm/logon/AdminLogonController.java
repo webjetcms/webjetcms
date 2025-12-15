@@ -256,6 +256,12 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
+        addOAuth2UrlsToModel(session, model);
+
+        return LOGON_FORM;
+    }
+
+    private void addOAuth2UrlsToModel(HttpSession session, ModelMap model) {
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
             // Nastav explicitný atribút pre OAuth2 admin login
             session.setAttribute("oauth2_is_admin_section", true);
@@ -277,8 +283,6 @@ public class AdminLogonController {
                 model.addAttribute("urls", oauth2AuthenticationUrls);
             }
         }
-
-        return LOGON_FORM;
     }
 
     @PostMapping("logon/")
@@ -305,6 +309,7 @@ public class AdminLogonController {
         if (errors.get("ERROR_KEY")!=null) {
             Logger.error(this,"su nejake chyby v logovacom formulari");
             model.addAttribute("errors", errors.get("ERROR_KEY"));
+            addOAuth2UrlsToModel(session, model);
             return LOGON_FORM;
         }
 
