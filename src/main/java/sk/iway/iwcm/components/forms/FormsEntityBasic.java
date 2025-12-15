@@ -110,7 +110,11 @@ public class FormsEntityBasic {
     @Lob
     private String html;
 
-    //Relation to users table; load lazily, converter removed (was invalid for to-one relation)
+    // Numeric value of the same column (user_id)
+    @Column(name = "user_id")
+    private Long userId;
+
+    // Relation to users table; load lazily, only readable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

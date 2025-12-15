@@ -48,6 +48,9 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class FormMailService {
 
+	public static final String NAME_FIELD_KEY = "multistepform_nameFields";
+	public static final String EMAIL_FIELD_KEY = "multistepform_emailFields";
+
 	private final FormSettingsRepository formSettingsRepository;
 
 	@Autowired
@@ -80,17 +83,16 @@ public class FormMailService {
 
     public void mailShit(FormsEntity form, boolean emailAllowed, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
 
+		Prop prop = Prop.getInstance(request);
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
 
         String meno = null;
-        List<String> namesList = getFieldsValues(form, "multistepform_nameFields");
+        List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY);
         if(namesList.size() > 0) meno = namesList.stream().map(name -> DB.internationalToEnglish(name)).collect(Collectors.joining(" "));
 
         String email = null;
-        List<String> emailsList = getFieldsValues(form, "multistepform_emailFields");
+        List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY);
         if(emailsList.size() > 0) email = emailsList.get(0);
-
-		Prop prop = Prop.getInstance(request);
 
 		String emailEncoding = SetCharacterEncodingFilter.getEncoding();
 		String formMailEncoding = Constants.getString("formMailEncoding");
@@ -100,20 +102,10 @@ public class FormMailService {
 		String host = Constants.getString("smtpServer");
 		boolean forceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
 
-
-
-
-
-		// ---------
-
-
-
         int sendUserInfoDocId =  (formSettings.getFormMailSendUserInfoDocId() != null) ? formSettings.getFormMailSendUserInfoDocId() : -1;
 		Logger.debug(FormMailService.class, "sendUserInfoDocId=" + sendUserInfoDocId + " email=" + email);
-		if (sendUserInfoDocId>0)
-		{
+		if (sendUserInfoDocId > 0)
 			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
-		}
 
 		Logger.println(FormMailService.class,"FormMailAction emailAllowed=" + emailAllowed + " recipients=" + recipients);
 
@@ -261,22 +253,6 @@ public class FormMailService {
 
 					String from = email;
 					msg.setFrom(new InternetAddress(FormMailAction.getFirstEmail(email), meno));
-
-					// TODO : ASK JEEFF
-					//iteruj cez polozky formularu
-					// String fieldsEmailHeader = formSettings.getFieldsEmailHeader();
-					// if (fieldsEmailHeader != null)
-					// {
-					// 	StringTokenizer st = new StringTokenizer(fieldsEmailHeader, ",");
-					// 	String field;
-					// 	String value;
-					// 	while (st.hasMoreTokens())
-					// 	{
-					// 		field = st.nextToken();
-					// 		value = ResponseUtils.filter(DB.internationalToEnglish(recode(request.getParameter(field)))).replace("\n", " ").replace("\r", " ");
-					// 		msg.setHeader(field, value);
-					// 	}
-					// }
 
 					//subject = new String(subject.getBytes(), emailEncoding);
 					//msg.setSubject(subject);

@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,7 +40,6 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
     private final FormItemsRepository formItemsRepository;
     private final RegExpRepository regExpRepository;
-
     private final MultistepFormsService multistepFormsService;
 
     @Autowired
@@ -67,6 +67,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             if(even) item.setRowClass("even-step");
             else item.setRowClass("odd-step");
         }
+
+        setItemsPreview(page.getContent());
 
         page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
@@ -126,7 +128,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
             if(stepId != -1) entity.setStepId(stepId);
-        } else entity = formItemsRepository.getById(id);
+        } else {
+            entity = formItemsRepository.getById(id);
+            setItemPreview(entity);
+        }
 
         entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
 
@@ -156,8 +161,25 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
-    @GetMapping("/field-preview")
-    public String kokos(FormItemEntity fie) {
-        return EditorToolsForCore.renderIncludes(FormsService.getFieldHtml(fie, getProp()), false, getRequest());
+    private void setItemsPreview(List<FormItemEntity> items) {
+        for(FormItemEntity stepItem : items) {
+            setItemPreview(stepItem);
+        }
+    }
+
+    private void setItemPreview(FormItemEntity stepItem) {
+        JSONObject item = new JSONObject(stepItem);
+        String fieldType = item.getString("fieldType");
+
+        item.put("labelOriginal", item.getString("label"));
+        if (Tools.isEmpty(item.getString("label")))
+            item.put("label", getProp().getText("components.formsimple.label." + fieldType));
+
+        String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp());
+
+        if(itemHtml.contains("!INCLUDE"))
+                itemHtml = EditorToolsForCore.renderIncludes(itemHtml, false, getRequest());
+
+        stepItem.setGeneratedItem(itemHtml);
     }
 }

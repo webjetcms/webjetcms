@@ -23,36 +23,11 @@ public interface UserDetailsEntityMapper {
     @Mapping(target = "lastLogonAsDate", ignore = true) //avoid accidental overwrite if not needed
     UserDetails userDetailsEntityToUserDetails(UserDetailsEntity user);
 
-    @Mapping(target = "regDate", source = "regDate", qualifiedByName = "longToDate")
-    @Mapping(target = "dateOfBirth", source = "dateOfBirth", qualifiedByName = "stringToDate")
-    @Mapping(target = "allowLoginStart", source = "allowLoginStart", qualifiedByName = "stringToDate")
-    @Mapping(target = "allowLoginEnd", source = "allowLoginEnd", qualifiedByName = "stringToDate")
-    @Mapping(target = "id", source = "userId")
-    UserDetailsEntity userDetailsToUserDetailsEntity(UserDetails user);
 
     @Named("dateToLong")
     default long dateToLong(Date value) {
         if (value == null) return 0L;
         return value.getTime();
-    }
-
-    @Named("longToDate")
-    default Date longToDate(long value) {
-        if (value <= 0L) return null;
-        return new Date(value);
-    }
-
-    // Map dateOfBirth between String (UserDetails) and Date (UserDetailsEntity)
-    @Named("stringToDate")
-    default Date stringToDate(String value) {
-        if (value == null) return null;
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) return null;
-        try {
-            return Date.valueOf(trimmed);
-        } catch (IllegalArgumentException ex) {
-            return null;
-        }
     }
 
     @Named("dateToString")

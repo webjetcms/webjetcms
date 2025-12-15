@@ -25,6 +25,8 @@
         id: 'tabsFilter',
         tabs: [
             { url: '/apps/form/admin/', title: /*[[#{forms.formsList.js}]]*/ '', active: true },
+            { url: '/apps/form/admin/archived/', title: /*[[#{forms.archiveList.js}]]*/ '', active: false },
+            { url: '/apps/form/admin/regexps/', title: /*[[#{components.form.admin_form.table_reg_exp}]]*/ '', active: false },
             { url: '/apps/form/admin/form-steps/?formName=' + formName, title: /*[[#{components.form_items.navbar_title}]]*/ '', active: false }
         ]
     });

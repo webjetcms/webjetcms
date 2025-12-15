@@ -431,7 +431,6 @@ public class UserDetailsService {
                     String body = docDetails.getData();
                     body = AuthorizeAction.updateEmailText(body, UserDetailsEntityMapper.INSTANCE.userDetailsEntityToUserDetails(user), null, request);
 
-
                     SendMail.send(admin.getFullName(), admin.getEmail(), user.getEmail(), docDetails.getTitle(), body);
                 }
             }

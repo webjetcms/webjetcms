@@ -26,7 +26,6 @@ import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsEntityMapper;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormMailAction;
@@ -58,22 +57,13 @@ public class SaveFormService {
     }
 
     public final String saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, Integer iLastDocIdMail, HttpServletRequest request) throws SaveFormException, IOException {
-
         if (!SpamProtection.canPost("form", null, request))
             throw new SaveFormException(Prop.getInstance(request).getText("send_mail_error.probablySpamBot"));
-
-		String recipients = null;
-		if (Tools.isNotEmpty(formSettings.getRecipients()))
-			recipients = WriteTag.decodeEmailAddress(formSettings.getRecipients());
-
-		if (recipients != null && recipients.indexOf('@') == -1)
-			recipients = null;
 
         String subject = "Formular z www stranky";
 		if (Tools.isNotEmpty(formSettings.getSubject()))
 			subject = formSettings.getSubject();
 
-        String forwardDefault = "/";
 		String forwardOk = null;
 		String forwardFail = null;
 		if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
@@ -91,13 +81,34 @@ public class SaveFormService {
                 if(Tools.isEmpty(formSettings.getSubject()))
                     subject = doc.getTitle();
 
-                if(Tools.isEmpty(formSettings.getForward()))
-                    forwardDefault = docDB.getDocLink(iLastDocId);
-
                 if(Tools.isEmpty(formSettings.getForwardFail()))
                     forwardFail = docDB.getDocLink(iLastDocId);
             }
         }
+
+        try {
+            saveFormAnswers(formName, formSettings, iLastDocIdMail, docId, subject, request);
+        } catch (SaveFormException sfe) {
+            if(Tools.isNotEmpty(forwardFail)) return forwardFail;
+            else throw sfe;
+        } catch (Exception ex) {
+            if(Tools.isNotEmpty(forwardFail)) return forwardFail;
+            else throw ex;
+        }
+
+        if(Tools.isNotEmpty(forwardOk)) return forwardOk;
+        else return null;
+    }
+
+    private final String saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocIdMail, int docId, String subject, HttpServletRequest request) throws SaveFormException, IOException {
+
+        String recipients = null;
+		if (Tools.isNotEmpty(formSettings.getRecipients()))
+			recipients = WriteTag.decodeEmailAddress(formSettings.getRecipients());
+
+		if (recipients != null && recipients.indexOf('@') == -1)
+			recipients = null;
+
 
 		//ak aktualizujeme zaznam, toto potom nastavime na false, aby sa nic neposlalo
 		boolean emailAllowed = false;
@@ -137,7 +148,7 @@ public class SaveFormService {
         }
 
         if(userId > 0 && Tools.isTrue(formSettings.getOverwriteOldForms())) {
-            // TODO delete old forms
+            // TODO
         }
 
 
@@ -146,7 +157,7 @@ public class SaveFormService {
         form.setDomainId(CloudToolsForCore.getDomainId());
         form.setCreateDate(new Date());
         form.setDocId(docId);
-        form.setUserDetails( UserDetailsEntityMapper.INSTANCE.userDetailsToUserDetailsEntity( UsersDB.getCurrentUser(request) ) );
+        form.setUserId(Long.valueOf(userId));
 
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");
@@ -195,9 +206,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-
         formMailService.mailShit(form, emailAllowed, recipients, subject, formFiles, attachFiles, htmlHandler.getCssDataPair().getFirst(), new StringBuilder(htmlHandler.getFormHtmlBeforeCss()), request);
-
 
         return null;
     }

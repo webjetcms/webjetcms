@@ -2,30 +2,33 @@
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
     let url = "/admin/rest/form-items";
 
-    var tabs = [
-        { id: 'main', title: '[[#{datatable.tab.basic}]]', selected: true},
-        { id: 'strings', title: '[[#{components.form_items.item_preview}]]'}
-    ];
-
-</script>
-<script type="text/javascript">
-    var formItemsDataTable;
-
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    const urlFormName = urlParams.get('formName');
+    var urlFormName = urlParams.get('formName');
+
+    WJ.setTitle(/*[[#{forms.formsList.js}]]*/ '');
+
+    WJ.headerTabs({
+        id: 'tabsFilter',
+        tabs: [
+            { url: '/apps/form/admin/', title: /*[[#{forms.formsList.js}]]*/ '', active: false },
+            { url: '/apps/form/admin/archived/', title: /*[[#{forms.archiveList.js}]]*/ '', active: false },
+            { url: '/apps/form/admin/regexps/', title: /*[[#{components.form.admin_form.table_reg_exp}]]*/ '', active: false },
+            { url: '/apps/form/admin/form-steps/?formName=' + urlFormName, title: /*[[#{components.form_items.navbar_title}]]*/ '', active: true }
+        ]
+    });
 
     WJ.breadcrumb({
-        id: "formItems",
+        id: "form-items",
         tabs: [
             {
                 url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
-                title: '[[#{components.form_items.step_title}]]',
+                title: /*[[#{components.form_items.step_title}]]*/ '',
                 active: false
             },
             {
                 url: '/apps/form/admin/form-items/?formName=' + urlFormName,
-                title: '[[#{components.form_items.items_title}]]',
+                title: /*[[#{components.form_items.items_title}]]*/ '',
                 active: true
             },
             {
@@ -39,6 +42,10 @@
             title: urlFormName,
         }
     });
+</script>
+
+<script type="text/javascript">
+    var formItemsDataTable;
 
     function getActualPath() {
                 let urlWithParams = WJ.urlUpdateParam(url, "formName", urlFormName);
@@ -50,17 +57,18 @@
 
     window.domReady.add(function () {
 
-        // window.helpLink = "/redactor/apps/form/regexps";
-
         //presun filter do hlavicky
         $("#pills-bonusTab-tab").html("");
         $("div#formItemsDataTable_extfilter").appendTo("#pills-bonusTab-tab");
+
+        var order = [];
+        order.push([1, 'desc']);
 
         formItemsDataTable = WJ.DataTable({
             url: getActualPath(),
             serverSide: true,
             columns: columns,
-            tabs: tabs,
+            order: order,
             id: "formItemsDataTable",
             fetchOnEdit: true,
             fetchOnCreate: true
@@ -138,33 +146,43 @@
     }
 </script>
 
-    <table id="formItemsDataTable" class="datatableInit table"></table>
+<table id="formItemsDataTable" class="datatableInit table"></table>
 
-    <style>
-        tr.even-step td { background-color: #F3F3F6 !important; }
-        button.dt-filtrujem-stepId { display: none; }
-        #stepIdSelect > form > div > div > button:hover { background: #999; }
-        #stepIdSelect > form > div > div > button {
-            background: white;
-            border-top-right-radius: 6px !important;
-            border-bottom-right-radius: 6px !important;
-        }
-    </style>
+<style>
+    tr.even-step td { background-color: #F3F3F6 !important; }
+    button.dt-filtrujem-stepId { display: none; }
+    #stepIdSelect > form > div > div > button:hover { background: #999; }
+    #stepIdSelect > form > div > div > button {
+        background: white;
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    button.button_center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    div.dt-filter-stepId button.dropdown-toggle  {
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    td.allow-html {
+        pointer-events: none;
+    }
+</style>
 
-    <div id="formItemsDataTable_extfilter">
-        <div class="row datatableInit">
-            <div class="col-auto">
-                <div class="btn-group status-info">
-                    <button class="btn btn-sm btn-outline-secondary step-back" onclick="changeStep('down')">
-                        <i class="ti ti-arrow-left"></i>
-                    </button>
-
-                    <div id="stepIdSelect" class="col-auto dt-extfilter dt-extfilter-stepId"></div>
-
-                    <button class="btn btn-sm btn-outline-secondary step-forward" onclick="changeStep('up')">
-                        <i class="ti ti-arrow-right"></i>
-                    </button>
-                </div>
+<div id="formItemsDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <div class="btn-group status-info">
+                <button class="btn btn-sm btn-outline-secondary button_center step-back" onclick="changeStep('down')">
+                    <i class="ti ti-arrow-left"></i>
+                </button>
+                <div id="stepIdSelect" class="col-auto dt-extfilter dt-extfilter-stepId"></div>
+                <button class="btn btn-sm btn-outline-secondary button_center step-forward" onclick="changeStep('up')">
+                    <i class="ti ti-arrow-right"></i>
+                </button>
             </div>
         </div>
     </div>
+</div>

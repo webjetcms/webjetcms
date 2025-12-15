@@ -1,10 +1,6 @@
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
     let url = "/admin/rest/form-steps";
-</script>
-
-<script type="text/javascript">
-    var formStepsDataTable;
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -15,12 +11,12 @@
         tabs: [
             {
                 url: '/apps/form/admin/form-steps/?formName=' + urlFormName,
-                title: '[[#{components.form_items.step_title}]]',
+                title: /*[[#{components.form_items.step_title}]]*/ '',
                 active: true
             },
             {
                 url: '/apps/form/admin/form-items/?formName=' + urlFormName,
-                title: '[[#{components.form_items.items_title}]]',
+                title: /*[[#{components.form_items.items_title}]]*/ '',
                 active: false
             }
         ],
@@ -29,6 +25,10 @@
             title: urlFormName,
         }
     });
+</script>
+
+<script type="text/javascript">
+    var formStepsDataTable;
 
     window.domReady.add(function () {
 

@@ -42,32 +42,36 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.form_items.step")
     private Integer stepId;
 
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.item_preview", hiddenEditor = true, className = "allow-html")
+    private transient String generatedItem;
+
     @Column(name = "field_type")
     @NotBlank
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType")
     private String fieldType;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.formsimple.required", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.formsimple.required")
     private Boolean required;
 
     @Column(name = "label")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="dt-row-edit", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="dt-row-edit", hidden = true)
     private String label;
 
     @Column(name = "value")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", className="dt-row-edit", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", className="dt-row-edit", hidden = true)
     private String value;
 
     @Column(name = "placeholder")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.placeholder", hidden = true)
     private String placeholder;
 
     @Column(name = "tooltip")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", hidden = true)
     private String tooltip;
 
     @Column(name = "sort_priority")
-    @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "")
     private Integer sortPriority;
 
     @Column(name = "regex_validation")
@@ -77,7 +81,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String itemFormId;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.form_items.regex_validation", hidden = true, tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.form_items.regex_validation", hidden = true)
     private transient Integer[] regexValidationArr;
 
     @Column(name = "domain_id")

@@ -7,7 +7,8 @@
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
         { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
         { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
-        { id: 'settings-file-limits', title: /*[[#{editor.form.file_limits}]]*/ '', selected: false }
+        { id: 'settings-file-limits', title: /*[[#{editor.form.file_limits}]]*/ '', selected: false },
+        { id: 'settings-form-style', title: /*[[#{editor.form.form_style}]]*/ '', selected: false }
     ];
 </script>
 
@@ -44,6 +45,8 @@
                 column.editor.tab = "settings-file-limits";
             } else if(classes.includes("form-email")) {
                 column.editor.tab = "settings-email";
+            } else if(classes.includes("form-style")) {
+                column.editor.tab = "settings-form-style";
             } else {
                 column.editor.tab = "settings-basic";
             }

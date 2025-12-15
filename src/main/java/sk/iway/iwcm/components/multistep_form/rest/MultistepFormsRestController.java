@@ -56,11 +56,9 @@ public class MultistepFormsRestController {
         String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
 
         try {
-            String stepHtml = formHtmlHandler.getFormStepHtml(formName, stepId, request);
-
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
-                .body(stepHtml);
+                .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage());
 

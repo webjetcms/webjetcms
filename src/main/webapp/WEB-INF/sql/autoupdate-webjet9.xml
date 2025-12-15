@@ -2716,6 +2716,8 @@
                             picture_width INT NULL,
                             email_text_before VARCHAR(1024) NULL,
                             email_text_after VARCHAR(1024) NULL,
+                            form_add_classes VARCHAR(255) NULL,
+                            form_css VARCHAR(1024) NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2756,6 +2758,8 @@
                             picture_width INT NULL,
                             email_text_before NVARCHAR(1024) NULL,
                             email_text_after NVARCHAR(1024) NULL,
+                            form_add_classes NVARCHAR(255) NULL,
+                            form_css NVARCHAR(1024) NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2796,6 +2800,8 @@
                             picture_width INTEGER NULL,
                             email_text_before NVARCHAR(1024) NULL,
                             email_text_after NVARCHAR(1024) NULL,
+                            form_add_classes NVARCHAR(255) NULL,
+                            form_css NVARCHAR(1024) NULL,
                             domain_id INTEGER DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_settings START WITH 1;
@@ -2846,6 +2852,8 @@
                             picture_width INT NULL,
                             email_text_before VARCHAR(1024) NULL,
                             email_text_after VARCHAR(1024) NULL,
+                            form_add_classes VARCHAR(255) NULL,
+                            form_css VARCHAR(1024) NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

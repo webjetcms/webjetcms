@@ -1,0 +1,23 @@
+div.form-group > label {
+    display: ruby;
+}
+
+div.form-step > div.form-group > label > p {
+    padding: 0px !important;
+}
+
+.verify-code-single {
+  width: 15.5rem;
+  height: 3rem;
+  font-size: 1.5rem;
+  text-align: center;
+  letter-spacing: 1.5rem;
+  padding-left: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font-family: monospace;
+}
+
+.verify-code-single::placeholder {
+  letter-spacing: 1.5rem;
+}

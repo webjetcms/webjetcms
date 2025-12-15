@@ -66,6 +66,8 @@ public class FormHtmlHandler {
     private boolean addTechInfo;
     private boolean formForceTextPlain;
     private String publicKey;
+    private String formAddClasses;
+    private String formCss;
     private Map<String, String> formData;
 
     private DocDB docDB;
@@ -98,12 +100,15 @@ public class FormHtmlHandler {
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
         this.rowView = Tools.isTrue(formSettings.getRowView());
         this.recipients = formSettings.getRecipients();
-
-        this.isEmailRender = isEmailRender;
         this.addTechInfo = Tools.isTrue(formSettings.getAddTechInfo());
         this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
         this.publicKey = formSettings.getEncryptKey();
+        this.formCss = formSettings.getFormCss();
 
+        this.formAddClasses = formSettings.getFormAddClasses();
+        if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
+
+        this.isEmailRender = isEmailRender;
         this.docDB = DocDB.getInstance();
     }
 
@@ -127,11 +132,17 @@ public class FormHtmlHandler {
     }
 
     private StringBuilder getFormStart(String formName, Long stepId) {
-        StringBuilder formStartHtml = new StringBuilder();
+        StringBuilder formStartHtml = new StringBuilder("");
+
+        //<link rel="stylesheet" type="text/css" href="/templates/aceintegration/jet/assets/multistep-form/css/base.css" />
+        for(String css : Tools.getTokens(this.formCss, "\n", true))
+            formStartHtml.append("<link rel='stylesheet' type='text/css' href='").append(css).append("' />");
+
         formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop));
         if (rowView) formStartHtml.append("<div class=\"row\">");
         String newPath = "/rest/multistep-form/save-form?form-name=" + formName + "&step-id=" + stepId;
         Tools.replace(formStartHtml, "${formActionSrc}", newPath);
+        Tools.replace(formStartHtml, "${formAddClasses}", this.formAddClasses);
         return formStartHtml;
     }
 
@@ -238,6 +249,8 @@ public class FormHtmlHandler {
         }
         formHtml = Tools.replace(formHtml, "{tech-info}", techInfo);
 
+        //Remove submit buttons
+        formHtml = Tools.replaceRegex(formHtml, "<button.*type=\"submit\".*?><\\/button>", "", false);
 
         String formHtmlAsText;
         if (this.formForceTextPlain || Constants.getBoolean("formMailSendPlainText"))
@@ -292,18 +305,22 @@ public class FormHtmlHandler {
         return htmlDataWithStyle.toString();
 	}
 
-    /**
-     *
-     * @param iLastDocIdMail
-     * @return <cssData, cssLink>
-     */
+
     private Pair<String, String> getCssDataLink(Integer iLastDocIdMail) {
-        if(Constants.getBoolean("formMailSendPlainText") == true || this.formForceTextPlain) return new Pair<>("", "");
+        return getCssDataLink(iLastDocIdMail, this.formForceTextPlain, this.docDB, this.formCss);
+    }
+
+    public static Pair<String, String> getCssDataLink(Integer iLastDocIdMail, boolean forceTextPlain, DocDB docDB) {
+        return getCssDataLink(iLastDocIdMail, forceTextPlain, docDB, null);
+    }
+
+    public static Pair<String, String> getCssDataLink(Integer iLastDocIdMail, boolean forceTextPlain, DocDB docDB, String formSpecificCssStr) {
+        if(Constants.getBoolean("formMailSendPlainText") == true || forceTextPlain) return new Pair<>("", "");
 
         String cssData = null;
 		String cssLink = null;
 
-        DocDetails doc = this.docDB.getDoc(iLastDocIdMail, -1, false);
+        DocDetails doc = docDB.getDoc(iLastDocIdMail, -1, false);
         if(doc == null) return null;
 
         GroupsDB groupsDB = GroupsDB.getInstance();
@@ -321,19 +338,8 @@ public class FormHtmlHandler {
 			{
 				String domainAlias = MultiDomainFilter.getDomainAlias(group.getDomainName());
 
-                // temp
-				String tempCssLinks[] = null;
-				if (temp.getCss() != null && temp.getCss().length() > 1) {
-					tempCssLinks = Tools.getTokens(temp.getCss(), "\n");
-					if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
-                        for(String tempCssLink : tempCssLinks) {
-                            //ak je cssko v /templates adresari uz domain alias nepridavame
-                            if (tempCssLink.contains(domainAlias)==false && tempCssLink.contains("/templates/")==false && tempCssLink.contains("/files/")==false)
-                                tempCssLink = Tools.replace(tempCssLink, "/css/", "/css/" + domainAlias + "/");
-                        }
-					}
-				}
-                if(tempCssLinks != null) for(String tempCssLink : tempCssLinks) tempCssLink = FormMailAction.checkEmailCssVersion(tempCssLink);
+                //nacitaj css styl ako v editore stranok
+				StringBuilder cssStyle = new StringBuilder("");
 
                 // base
 				String baseCssPaths[] = Tools.getTokens(temp.getBaseCssPath(), "\n");
@@ -344,40 +350,44 @@ public class FormHtmlHandler {
                             baseCssPath = Tools.replace(baseCssPath, "/css/", "/css/" + MultiDomainFilter.getDomainAlias(group.getDomainName()) + "/"); //NOSONAR
                     }
 				}
-                for(String baseCssPath : baseCssPaths) baseCssPath = FormMailAction.checkEmailCssVersion(baseCssPath);
+                for(String baseCssPath : baseCssPaths) {
+                    baseCssPath = FormMailAction.checkEmailCssVersion(baseCssPath);
+                    cssStyle.append(FileTools.readFileContent(baseCssPath)).append('\n');
+                    cssLink += "<link rel='stylesheet' href='" + baseCssPath + "' type='text/css'/>\n";
+                }
+
+                // temp
+				String tempCssLinks[] =  Tools.getTokens(temp.getCss(), "\n");
+				if (group != null && Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(group.getDomainName())) {
+                    for(String tempCssLink : tempCssLinks) {
+                        //ak je cssko v /templates adresari uz domain alias nepridavame
+                        if (tempCssLink.contains(domainAlias)==false && tempCssLink.contains("/templates/")==false && tempCssLink.contains("/files/")==false)
+                            tempCssLink = Tools.replace(tempCssLink, "/css/", "/css/" + domainAlias + "/");
+                    }
+				}
+                for(String tempCssLink : tempCssLinks) {
+                    tempCssLink = FormMailAction.checkEmailCssVersion(tempCssLink);
+                    cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
+                    cssLink += "<link rel='stylesheet' href='" + tempCssLink + "' type='text/css'/>\n";
+                }
 
                 // editor
 				String editorEditorCsses[] = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
-                for(String editorEditorCss : editorEditorCsses) editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
-
-
-				//Logger.debug(FormMailAction.class, "Reading baseCSS: "+baseCssPath+" tempCss: "+tempCssLink);
-
-				//nacitaj css styl ako v editore stranok
-				StringBuilder cssStyle = new StringBuilder("");
-
-                for(String baseCssPath : baseCssPaths)
-				    cssStyle.append(FileTools.readFileContent(baseCssPath)).append('\n');
-
-                if (tempCssLinks != null)
-                    for(String tempCssLink : tempCssLinks)
-                        cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
-
-                for(String editorEditorCss : editorEditorCsses)
+                for(String editorEditorCss : editorEditorCsses) {
+                    editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
                     cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
+                    cssLink += "<link rel='stylesheet' href='" + editorEditorCss + "' type='text/css'/>\n";
+                }
 
+                // Form specific csss (from form settings)
+                String formSpecificCsses[] = Tools.getTokens(formSpecificCssStr, "\n");
+                for(String formSpecificCss : formSpecificCsses) {
+                    formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
+                    cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
+                    cssLink += "<link rel='stylesheet' href='" + formSpecificCss + "' type='text/css'/>\n";
+                }
 
 				cssData += cssStyle.toString();
-
-                for(String baseCssPath : baseCssPaths)
-				    cssLink += "<link rel='stylesheet' href='" + baseCssPath + "' type='text/css'/>\n";
-
-                if (tempCssLinks != null)
-                    for(String tempCssLink : tempCssLinks)
-                        cssLink += "<link rel='stylesheet' href='" + tempCssLink + "' type='text/css'/>\n";
-
-                for(String editorEditorCss : editorEditorCsses)
-                    cssLink += "<link rel='stylesheet' href='" + editorEditorCss + "' type='text/css'/>\n";
 			} else {
 				//nacitaj css styl
 				InputStream is = Constants.getServletContext().getResourceAsStream("/css/email.css");
@@ -430,7 +440,7 @@ public class FormHtmlHandler {
                 if (radioCheckboxAsText) {
                     String replacement = isSelected
                         ? "<span class='inputcheckbox emailinput-cb input-checked'>[X]</span>"
-                        : "<span class='inputcheckbox emailinput-cb input-unchecked'>[ ]</span>";
+                        : "<span class='inputcheckbox emailinput-cb input-unchecked'>[&nbsp;]</span>";
                     itemHtml = Tools.replace(itemHtml, originalValue, replacement);
                 } else {
                     String replacement = isSelected
@@ -443,7 +453,7 @@ public class FormHtmlHandler {
                 if (radioCheckboxAsText) {
                     String replacement = isSelected
                         ? "<span class='inputradio emailinput-radio input-checked'>[X]</span>"
-                        : "<span class='inputradio emailinput-radio input-unchecked'>[ ]</span>";
+                        : "<span class='inputradio emailinput-radio input-unchecked'>[&nbsp;]</span>";
                     itemHtml = Tools.replace(itemHtml, originalValue, replacement);
                 } else {
                     String replacement = isSelected
@@ -466,9 +476,6 @@ public class FormHtmlHandler {
 
         // Remove help blocks
         itemHtml = Tools.replaceRegex(itemHtml, "<div class=\"help-block.*?<\\/div>", "", false);
-
-        //Remove submit buttons
-        itemHtml = Tools.replaceRegex(itemHtml, "<button.*type=\"submit\".*?><\\/button>", "", false);
 
         return itemHtml;
     }

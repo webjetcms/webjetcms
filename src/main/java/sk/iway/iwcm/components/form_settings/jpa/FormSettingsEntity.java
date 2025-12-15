@@ -44,8 +44,18 @@ public class FormSettingsEntity {
     private String recipients;
 
     @Column(name = "row_view")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView", className = "form-style")
     private Boolean rowView;
+
+    @Column(name = "form_add_classes")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "", className = "not-formsimple form-style")
+    @Size(max = 255)
+    private String formAddClasses;
+
+    @Column(name = "form_css")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "", className = "not-formsimple form-style")
+    @Size(max = 1024)
+    private String formCss;
 
     @Column(name = "cc_emails")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.cc_emails", className = "form-email")

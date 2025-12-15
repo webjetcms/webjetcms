@@ -11,6 +11,8 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
+import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.*;
@@ -21,12 +23,12 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
 import sk.iway.upload.DiskMultiPartRequestHandler;
 import sk.iway.upload.UploadedFile;
 
@@ -577,6 +579,9 @@ public class FormMailAction extends HttpServlet
 						fields = null;
 						String field;
 
+						List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
+						List<String> nameFieldsNames = Arrays.stream( Constants.getArray(FormMailService.NAME_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
+
 						//vytvor strom
 						HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(doc.getData(), "/>", ">").toCharArray());
 						//HTMLTree htmlTree = new HTMLTree(htmlTokenizer);
@@ -636,11 +641,9 @@ public class FormMailAction extends HttpServlet
 								field = tagToken.getAttribute("name");
 								if (Tools.isEmpty(field)) field = tagToken.getAttribute("id");
 
-								if (field!=null)
-								{
+								if (field != null) {
 									String className = tagToken.getAttribute("class");
-									if (className != null)
-									{
+									if (className != null) {
 										LabelValueDetails lvb = new LabelValueDetails(field, className);
 										lvb.setValue2(tagToken.getAttribute("id"));
 										classNames.add(lvb);
@@ -648,148 +651,36 @@ public class FormMailAction extends HttpServlet
 									}
 
 									//skus najst pole nazvane email, to bude odosielatel emailu
-									if (request.getParameter("femail") == null)
-									{
-										if ("email".equalsIgnoreCase(field) || "e-mail".equalsIgnoreCase(field))
-										{
-											//email = request.getParameter(field);
-											//field = tagToken.getAttribute("value");
-											field = request.getParameter(field);
-											if (field!=null && field.length()>3)
-											{
-												email = field;
-											}
-										}
+									if (request.getParameter("femail") == null && emailFieldsNames.contains(field)) {
+										field = request.getParameter(field);
+										if (field!=null && field.length() > 3)
+											email = field;
 									}
-									if (request.getParameter("fname") == null)
-									{
-										if ("name".equalsIgnoreCase(field) ||
-												"firstname".equalsIgnoreCase(field) ||
-												"lastname".equalsIgnoreCase(field) ||
-												"meno".equalsIgnoreCase(field) ||
-												"priezvisko".equalsIgnoreCase(field) ||
-												"jmeno".equalsIgnoreCase(field) ||
-												"prijmeni".equalsIgnoreCase(field)
-										)
-										{
-											//field = tagToken.getAttribute("value");
-											field = request.getParameter(field);
-											if (field!=null && field.length()>3)
-											{
-												if (meno==null || meno.length()==0)
-												{
-													meno = DB.internationalToEnglish(field);
-												}
-												else
-												{
-													meno += " " + DB.internationalToEnglish(field); //NOSONAR
-												}
-											}
+
+									//skus najst pole nazvane name, to bude odosielatel emailu meno
+									if (request.getParameter("fname") == null && nameFieldsNames.contains(field)) {
+										//field = tagToken.getAttribute("value");
+										field = request.getParameter(field);
+										if (field != null && field.length() > 3) {
+											if (meno == null || meno.length() == 0) meno = DB.internationalToEnglish(field);
+											else meno += " " + DB.internationalToEnglish(field); //NOSONAR
 										}
 									}
 								}
-							}
-							else
-							{
+							} else {
 								if (skipToTag == null) htmlData.append(o.toString());
-								if (labelFor != null)
-								{
+								if (labelFor != null) {
 									if (labelContent == null) labelContent = new StringBuilder(o.toString());
 									else labelContent.append(o.toString());
 								}
 							}
 						}
 
-						if (htmlData.length() > 10)
-						{
+						if (htmlData.length() > 10) {
 							hasHtmlData = true;
-
-							if (Constants.getBoolean("formMailSendPlainText")==false && forceTextPlain==false)
-							{
-								try
-								{
-									cssData = "<style type='text/css'>";
-									cssLink = "";
-
-									if (temp != null)
-									{
-										String domainAlias = MultiDomainFilter.getDomainAlias(group.getDomainName());
-
-										String tempCssLink = null;
-										if (temp.getCss() != null && temp.getCss().length() > 1)
-										{
-											tempCssLink = temp.getCss();
-											if (group!=null && Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(group.getDomainName()))
-											{
-												//ak je cssko v /templates adresari uz domain alias nepridavame
-												if (tempCssLink.contains(domainAlias)==false && tempCssLink.contains("/templates/")==false && tempCssLink.contains("/files/")==false)
-												{
-													tempCssLink = Tools.replace(tempCssLink, "/css/", "/css/" + domainAlias + "/");
-												}
-											}
-										}
-										String baseCssPath = temp.getBaseCssPath();
-										if (group!=null && Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(group.getDomainName()))
-										{
-											//ak je cssko v /templates adresari uz domain alias nepridavame
-											if (baseCssPath.contains(domainAlias)==false && baseCssPath.contains("/templates/")==false && baseCssPath.contains("/files/")==false)
-											{
-
-												baseCssPath = Tools.replace(baseCssPath, "/css/", "/css/" + MultiDomainFilter.getDomainAlias(group.getDomainName()) + "/"); //NOSONAR
-											}
-										}
-
-										String editorEditorCss = Constants.getString("editorEditorCss");
-
-										tempCssLink = checkEmailCssVersion(tempCssLink);
-										baseCssPath = checkEmailCssVersion(baseCssPath);
-										editorEditorCss = checkEmailCssVersion(editorEditorCss);
-
-										Logger.debug(FormMailAction.class, "Reading baseCSS: "+baseCssPath+" tempCss: "+tempCssLink);
-
-										//nacitaj css styl ako v editore stranok
-										StringBuilder cssStyle = new StringBuilder(FileTools.readFileContent(baseCssPath)).append('\n');
-										if (tempCssLink!=null) cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
-										cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
-
-										cssData += cssStyle.toString();
-										cssLink += "<link rel='stylesheet' href='"+baseCssPath+"' type='text/css'/>\n";
-										if (tempCssLink!=null) cssLink += "<link rel='stylesheet' href='"+tempCssLink+"' type='text/css'/>\n";
-										cssLink += "<link rel='stylesheet' href='"+editorEditorCss+"' type='text/css'/>\n";
-									}
-									else
-									{
-										//nacitaj css styl
-										InputStream is = Constants.getServletContext().getResourceAsStream("/css/email.css");
-										if (is==null)
-										{
-											is = Constants.getServletContext().getResourceAsStream(Constants.getString("editorPageCss"));
-											cssLink += "<link rel='stylesheet' href='"+Constants.getString("editorPageCss")+"' type='text/css'/>\n";
-										}
-										else
-										{
-											cssLink += "<link rel='stylesheet' href='/css/email.css' type='text/css'/>\n";
-										}
-										if (is!=null)
-										{
-											BufferedReader br = new BufferedReader(new InputStreamReader(is, Constants.FILE_ENCODING));
-											String line;
-											StringBuilder startBuf = new StringBuilder(cssData);
-											while ((line=br.readLine())!=null)
-											{
-												startBuf.append(line).append('\n');
-											}
-											cssData = startBuf.toString();
-										}
-									}
-								}
-								catch (Exception ex)
-								{
-									Logger.error(FormMailAction.class, ex);
-								}
-
-								cssData += "</style>";
-							}
+							Pair<String, String> cssDataLink = FormHtmlHandler.getCssDataLink(iLastDocIdMail, forceTextPlain, docDB);
+							cssData = cssDataLink.first;
+							cssLink = cssDataLink.second;
 						}
 					}
 				}
@@ -2540,6 +2431,7 @@ public class FormMailAction extends HttpServlet
 	 * @param attachs
 	 * @param request
 	 */
+	@SuppressWarnings("unchecked")
 	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
 	{
 		DocDB docDB = DocDB.getInstance();
@@ -2563,8 +2455,9 @@ public class FormMailAction extends HttpServlet
 				data = Tools.replace(data, "!OPTIN_HASH!", hash);
 			}
 
-			for (String parameterName: Collections.list(request.getParameterNames()))
+			for (Object parameterNameObj: Collections.list(request.getParameterNames()))
 			{
+				String parameterName = String.valueOf(parameterNameObj);
 				String value = getValue(parameterName, request, formFilesTable);
 
 				data = Tools.replace(data, "!" + parameterName.toUpperCase() + "!", value);
