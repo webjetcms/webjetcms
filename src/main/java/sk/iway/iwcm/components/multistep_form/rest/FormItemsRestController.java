@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.EditorToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
@@ -41,13 +43,15 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     private final FormItemsRepository formItemsRepository;
     private final RegExpRepository regExpRepository;
     private final MultistepFormsService multistepFormsService;
+    private final FormSettingsRepository formSettingsRepository;
 
     @Autowired
-    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService) {
+    public FormItemsRestController(FormItemsRepository formItemsRepository, RegExpRepository regExpRepository, MultistepFormsService multistepFormsService, FormSettingsRepository formSettingsRepository) {
         super(formItemsRepository);
         this.formItemsRepository = formItemsRepository;
         this.regExpRepository = regExpRepository;
         this.multistepFormsService = multistepFormsService;
+        this.formSettingsRepository = formSettingsRepository;
     }
 
     @Override
@@ -112,11 +116,14 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormItemEntity> target, Identity user, Errors errors, Long id, FormItemEntity entity) {
         super.validateEditor(request, target, user, errors, id, entity);
 
-        if(Tools.isEmpty(entity.getFormName()))
-            throw new IllegalStateException("NO FORM NAME");
+        //
+        if(Tools.isEmpty(entity.getFormName()) || entity.getStepId() == null || entity.getStepId() < 1)
+            throw new IllegalStateException(getProp().getText("datatable.error.unknown"));
 
-        if(entity.getStepId() == null || entity.getStepId() < 1)
-            throw new IllegalStateException("IVALID stepId");
+        //
+        boolean isRowView = Tools.isTrue(formSettingsRepository.isRowView(entity.getFormName(), CloudToolsForCore.getDomainId()) );
+        if(isRowView == false && MultistepFormsService.getRowViewItemTypes().contains(entity.getFieldType()))
+            throw new IllegalStateException(getProp().getText("components.form_items.formIsNotRowView"));
     }
 
     @Override

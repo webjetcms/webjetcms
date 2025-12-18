@@ -5,11 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -25,11 +29,15 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
@@ -41,12 +49,16 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     private final FormsServiceImpl formsService;
     private final FormSettingsRepository formSettingsRepository;
+    private final FormStepsRepository formStepsRepository;
+    private final FormItemsRepository formItemsRepository;
 
     @Autowired
-    public FormsController(FormsRepository formsRepository, FormsServiceImpl formsService, FormSettingsRepository formSettingsRepository) {
+    public FormsController(FormsRepository formsRepository, FormsServiceImpl formsService, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         super(formsRepository);
         this.formsService = formsService;
         this.formSettingsRepository = formSettingsRepository;
+        this.formStepsRepository = formStepsRepository;
+        this.formItemsRepository = formItemsRepository;
     }
 
     private String getFormName() {
@@ -59,7 +71,6 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public Page<FormsEntity> getAllItems(Pageable pageable) {
-
         Page<FormsEntity> page;
         String formName = getFormName();
         Map<String, String> params = new HashMap<>();
@@ -71,8 +82,20 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             if (isExport()) formsService.setExportDate(page.getContent());
         } else page = new DatatablePageImpl<>(formsService.getFormsList(getUser()));
 
-
         return page;
+    }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormsEntity> target, Identity user, Errors errors, Long id, FormsEntity entity) {
+        // Check if form is trying save as rowView == false but got rowView items
+        String formName = entity.getFormName();
+        if(Tools.isEmpty(formName)) return;
+
+        formName = DocTools.removeChars(formName, true);
+        if(Tools.isTrue(formSettingsRepository.isRowView(formName, CloudToolsForCore.getDomainId()))) {
+            int count = formItemsRepository.countItemsThatHasType(formName, CloudToolsForCore.getDomainId(), MultistepFormsService.getRowViewItemTypes());
+            if(count > 0) errors.rejectValue("errorField.formSettings.rowView", null, getProp().getText("components.form_items.hasRowViewFields"));
+        }
     }
 
     @Override
@@ -202,5 +225,12 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             html = Tools.replace(html, "\n", "\n<br/>");
         }
         return html;
+    }
+
+    @GetMapping(path="/isMultistep")
+    public boolean isFormMultistep(@RequestParam("formName") String formName) {
+        if(Tools.isEmpty(formName)) return false;
+        int count = formStepsRepository.getNumberOfSteps(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
+        return count > 0 ? true : false;
     }
 }

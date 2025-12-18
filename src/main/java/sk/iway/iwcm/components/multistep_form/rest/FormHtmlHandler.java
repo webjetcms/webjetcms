@@ -138,8 +138,8 @@ public class FormHtmlHandler {
         for(String css : Tools.getTokens(this.formCss, "\n", true))
             formStartHtml.append("<link rel='stylesheet' type='text/css' href='").append(css).append("' />");
 
-        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop));
-        if (rowView) formStartHtml.append("<div class=\"row\">");
+        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
+
         String newPath = "/rest/multistep-form/save-form?form-name=" + formName + "&step-id=" + stepId;
         Tools.replace(formStartHtml, "${formActionSrc}", newPath);
         Tools.replace(formStartHtml, "${formAddClasses}", this.formAddClasses);
@@ -156,8 +156,12 @@ public class FormHtmlHandler {
         stepWrapperStart = Tools.replace(stepWrapperStart, "${step-secondaryHeader}", formStep.getStepSubName() == null ? "" : formStep.getStepSubName());
         formStepHtml.append(stepWrapperStart);
 
+        if (rowView) formStepHtml.append("<div class=\"row\">");
+
         // Into formStep we must insert step items
         formStepHtml.append( getStepItems(formName, stepId, request) );
+
+        if (rowView) formStepHtml.append("</div>");
 
         // Form step wrapper end
         formStepHtml.append( prop.getText("components.mustistep.step.end") );
@@ -204,8 +208,7 @@ public class FormHtmlHandler {
     private StringBuilder getFormEnd(String formName, String submitButtonString) {
         StringBuilder formEndHtml = new StringBuilder();
 
-        if (rowView) formEndHtml.append("</div>");
-        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop) );
+        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop) );
 
         Tools.replace(formEndHtml, "${submitButtonText}", submitButtonString);
 
@@ -214,7 +217,7 @@ public class FormHtmlHandler {
         return formEndHtml;
     }
 
-    public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer iLastDocIdMail) {
+    public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
         StringBuilder formHtml = new StringBuilder("");
 
         //
@@ -259,7 +262,7 @@ public class FormHtmlHandler {
             formHtmlAsText = SearchTools.removeCommands(formHtml.toString()); // odstranim z HTML riadiace bloky napr.: !INCLUDE(...)!, !PARAMETER(...)! - MULTISTEP form should not have this problem but just in case I leave it here
 
         //Get CSS data
-        Pair<String, String> cssPair = getCssDataLink(iLastDocIdMail);
+        Pair<String, String> cssPair = getCssDataLink(docId);
         this.cssDataPair = cssPair;
 
         // Set final value without CSS and without crypto to separe variable .... we need tthis value other logic like PDF version etc
@@ -306,21 +309,21 @@ public class FormHtmlHandler {
 	}
 
 
-    private Pair<String, String> getCssDataLink(Integer iLastDocIdMail) {
-        return getCssDataLink(iLastDocIdMail, this.formForceTextPlain, this.docDB, this.formCss);
+    private Pair<String, String> getCssDataLink(Integer docId) {
+        return getCssDataLink(docId, this.formForceTextPlain, this.docDB, this.formCss);
     }
 
-    public static Pair<String, String> getCssDataLink(Integer iLastDocIdMail, boolean forceTextPlain, DocDB docDB) {
-        return getCssDataLink(iLastDocIdMail, forceTextPlain, docDB, null);
+    public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain, DocDB docDB) {
+        return getCssDataLink(docId, forceTextPlain, docDB, null);
     }
 
-    public static Pair<String, String> getCssDataLink(Integer iLastDocIdMail, boolean forceTextPlain, DocDB docDB, String formSpecificCssStr) {
+    public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain, DocDB docDB, String formSpecificCssStr) {
         if(Constants.getBoolean("formMailSendPlainText") == true || forceTextPlain) return new Pair<>("", "");
 
         String cssData = null;
 		String cssLink = null;
 
-        DocDetails doc = docDB.getDoc(iLastDocIdMail, -1, false);
+        DocDetails doc = docDB.getDoc(docId, -1, false);
         if(doc == null) return null;
 
         GroupsDB groupsDB = GroupsDB.getInstance();

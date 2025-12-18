@@ -172,6 +172,8 @@ public class ConstantsV9 {
 
 		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
+		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
+		Constants.setString("multistepform_subjectDefaultValue", "Formular z www stranky", Constants.MOD_FORMMAIL, "");
 	}
 
 	/**

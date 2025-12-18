@@ -72,7 +72,6 @@ public class MultistepFormsService {
 
     private FormSettingsEntity formSettings = null;
     private Integer iLastDocId = null;
-    private Integer iLastDocIdMail = null;
     private boolean spamProtectionEnabled = true;
 
     private DocDB docDB = DocDB.getInstance();
@@ -147,7 +146,7 @@ public class MultistepFormsService {
         return options;
     }
 
-    public static FormStepEntity getNextStep(String formName, Long currentStepId, FormStepsRepository repo) {
+    public static final FormStepEntity getNextStep(String formName, Long currentStepId, FormStepsRepository repo) {
         List<FormStepEntity> steps = repo.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
 
         for(int i = 0; i < steps.size(); i++) {
@@ -159,6 +158,10 @@ public class MultistepFormsService {
         }
 
         throw new IllegalStateException("Give currentStepId: " + currentStepId + " for form " + formName + " does NOT exist");
+    }
+
+    public static final List<String> getRowViewItemTypes() {
+        return List.of("novy-riadok", "prazdny-stlpec");
     }
 
     /* ********** PUBLIC - supprot methods ********** */
@@ -284,21 +287,26 @@ public class MultistepFormsService {
         // CUSTOM STEP VALIDATION
         customStepValidation(formName, stepId, received, request, errors);
 
-        // RUN STEP INTERCEPTOR
-        customStepInterceptor(formName, stepId, received, request, errors);
-
         if(errors == null || errors.size() < 1) {
+            // RUN STEP INTERCEPTOR
+            customStepInterceptor(formName, stepId, received, request, errors);
+
             //Save step of form - its LOCAL save into session, NOT db save
             saveStepData(formName, stepId, received, request);
 
             // Validation success
             FormStepEntity nextStep = getNextStep(formName, stepId, formStepsRepository);
 
+            String forwardOk = null;
             if(nextStep == null) {
+                // Set ok forward
+                if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
+
                 // REAL form save into DB (will join all the steps and save it)
-                saveFormService.saveFormAnswers(formName, formSettings, iLastDocId, iLastDocIdMail, request);
+                saveFormService.saveFormAnswers(formName, formSettings, iLastDocId, request);
             }
 
+            if(Tools.isNotEmpty(forwardOk)) response.put("forward", forwardOk);
             response.put("form-name", formName);
             response.put("step-id", nextStep == null ? -1L : nextStep.getId()); // -1L means that form ends, there is no more steps
 
@@ -325,10 +333,10 @@ public class MultistepFormsService {
                 }
 
             } catch (SaveFormException sfe) {
-                throw sfe;
+                throw sfe; // Custom msg error from validator
             } catch (Exception e) {
                 Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step validator : " + validator + ". Cause: " + e.getLocalizedMessage());
-                throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"));
+                throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
     }
@@ -354,7 +362,7 @@ public class MultistepFormsService {
                 throw sfe;
             } catch (Exception e) {
                 Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step interceptor : " + interceptor + ". Cause: " + e.getLocalizedMessage());
-                throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"));
+                throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
     }
@@ -396,12 +404,12 @@ public class MultistepFormsService {
 
             // XSS check of name
             if (DocTools.testXss(fieldName) || fieldName.indexOf('"') != -1 || fieldName.indexOf('\'') != -1)
-                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"));
+                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
 
             // XSS check of values
             for(String value : asArray(stepItem.getItemFormId(), received))
                 if(DocTools.testXss(value))
-                    throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"));
+                    throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
 
             // Check if field is required
             if(Tools.isTrue(stepItem.getRequired())) {
@@ -589,21 +597,13 @@ public class MultistepFormsService {
 
         iLastDocId = (int) request.getSession().getAttribute( getSessionKey(formName, request) );
 
-		//niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
+        //niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
 		//sa mu musi presne povedat, kde sa ten formular nachadza
-		if (formSettings.getUseFormDocId() != null)
+		if (formSettings.getUseFormDocId() != null && formSettings.getUseFormDocId() > 0)
 			iLastDocId = formSettings.getUseFormDocId();
 
-		iLastDocIdMail = iLastDocId;
-
-		//aby sme pre mail mohli specifikovat inu stranku ako to co sa zobrazuje
-		if (formSettings.getUseFormMailDocId() != null) {
-			iLastDocIdMail = formSettings.getUseFormMailDocId();
-            if(iLastDocIdMail == -1) iLastDocIdMail = iLastDocId;
-		}
-
-		if (iLastDocIdMail != null && iLastDocId != null) {
-            DocDetails doc = docDB.getDoc(iLastDocIdMail, -1, false);
+		if (iLastDocId != null) {
+            DocDetails doc = docDB.getDoc(iLastDocId, -1, false);
             if (doc != null) {
                 TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
                 if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection() == false;
@@ -619,11 +619,11 @@ public class MultistepFormsService {
 
         //test na cookies (spameri zvycajne nemaju nastavene)
 		if (request.getCookies() == null || request.getCookies().length == 0)
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"));
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
 
         // Check CRSF
 		if (spamProtectionEnabled && checkCsrf(request) == false)
-            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBotCsrf"));
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBotCsrf"), false, null);
     }
 
     private boolean checkCaptcha(HttpServletRequest request, String captchaResponse) {

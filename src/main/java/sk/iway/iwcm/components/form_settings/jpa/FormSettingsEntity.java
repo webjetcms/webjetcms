@@ -43,19 +43,32 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String recipients;
 
-    @Column(name = "row_view")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView", className = "form-style")
-    private Boolean rowView;
+    /* STYLES in multistep form */
+        @Column(name = "row_view")
+        @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView", className = "form-advanced",
+            editor = {
+                @DataTableColumnEditor(
+                    attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.form.form_style") }
+                )
+            }
+        )
+        private Boolean rowView;
 
-    @Column(name = "form_add_classes")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "", className = "not-formsimple form-style")
-    @Size(max = 255)
-    private String formAddClasses;
+        @Column(name = "form_add_classes")
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "", className = "not-formsimple form-advanced")
+        @Size(max = 255)
+        private String formAddClasses;
 
-    @Column(name = "form_css")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "", className = "not-formsimple form-style")
-    @Size(max = 1024)
-    private String formCss;
+        @Column(name = "form_css")
+        @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "", className = "not-formsimple form-advanced",
+            editor = {
+                @DataTableColumnEditor(
+                    attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after") }
+                )
+            }
+        )
+        @Size(max = 1024)
+        private String formCss;
 
     @Column(name = "cc_emails")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.cc_emails", className = "form-email")
@@ -77,8 +90,9 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String subject;
 
+    /* Deprecated in multistep because we have field formName, so we dont need to use this field, that contained formName in the past */
     @Column(name = "savedb")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.savedb", className = "not-formsimple")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.savedb", className = "not-formsimple form-deprecated")
     @Size(max = 255)
     private String savedb;
 
@@ -92,8 +106,11 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String forwardFail;
 
+
+
+    /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", className = "form-deprecated", editor = {
         @DataTableColumnEditor(options = {
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.default", value = ""),
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.forward", value = "forward"),
@@ -103,13 +120,6 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String forwardType;
 
-    @Column(name = "use_form_doc_id")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.use_form_doc_id", className = "not-formsimple")
-    private Integer useFormDocId;
-
-    @Column(name = "use_form_mail_doc_id")
-    private Integer useFormMailDocId;
-
     @Column(name = "force_text_plain")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.force_text_plain", className = "not-formsimple form-email")
     private Boolean forceTextPlain;
@@ -117,6 +127,10 @@ public class FormSettingsEntity {
     @Column(name = "form_mail_encoding")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.form_mail_encoding", className = "not-formsimple form-email")
     private Boolean formMailEncoding;
+
+    @Column(name = "add_tech_info")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.addTechInfo", className = "form-email")
+    private Boolean addTechInfo;
 
     @Column(name = "is_pdf")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.is_pdf", className = "not-formsimple")
@@ -130,61 +144,42 @@ public class FormSettingsEntity {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.overwrite_old_forms", className = "not-formsimple")
     private Boolean overwriteOldForms;
 
-    @Column(name = "message_as_attach")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.message_as_attach", className = "not-formsimple")
-    private Boolean messageAsAttach;
-
     @Column(name = "double_opt_in")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.doubleOptIn", className = "not-formsimple")
     private Boolean doubleOptIn;
 
-    @Column(name = "add_tech_info")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.addTechInfo")
-    private Boolean addTechInfo;
+    @Column(name = "message_as_attach")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.message_as_attach", className = "not-formsimple")
+    private Boolean messageAsAttach;
 
     @Column(name = "message_as_attach_file_name")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.message_as_attach_file_name", className = "not-formsimple")
     @Size(max = 255)
     private String messageAsAttachFileName;
 
-    @Column(name = "formmail_send_user_info_doc_id")
-    private Integer formMailSendUserInfoDocId;
-
+    /* This looks useless for us. Why set fields values to email headers. */
     @Column(name = "fields_email_header")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple form-deprecated")
     @Size(max = 255)
     private String fieldsEmailHeader;
 
+    /* We re-implemented this in new way, where interceptor can be set to any step of multistep form. */
     @Column(name = "after_send_interceptor")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-deprecated")
     @Size(max = 255)
     private String afterSendInterceptor;
+
+    @Column(name = "use_form_mail_doc_id")
+    private Integer useFormMailDocId;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null form-deprecated")
+    private transient DocDetailsDto useFormMailDoc;
 
     @Column(name = "encryption_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.form.encryptionKey")
     @Size(max = 1024)
     private String encryptKey;
-
-    @Transient
-    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html")
-    private transient String encrypKeyInfo;
-
-    @Column(name = "max_size_in_kilobytes")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.file_size_in_kilobytes", className = "not-formsimple form-file-limits")
-    private Integer maxSizeInKilobytes;
-
-    @Column(name = "allowed_extensions")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple form-file-limits")
-    @Size(max = 255)
-    private String allowedExtensions;
-
-    @Column(name = "picture_height")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_height", className = "not-formsimple form-file-limits")
-    private Integer pictureHeight;
-
-    @Column(name = "picture_width")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_width", className = "not-formsimple form-file-limits")
-    private Integer pictureWidth;
 
     @Column(name = "email_text_before")
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textBefore", className = "form-email")
@@ -196,17 +191,54 @@ public class FormSettingsEntity {
     @Size(max = 1024)
     private String emailTextAfter;
 
-    @Column(name = "domain_id")
-    private Integer domainId;
-
-    //
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null form-email")
-    private transient DocDetailsDto useFormMailDoc;
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html")
+    private transient String encrypKeyInfo;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_doc_id", className="not-formsimple dt-tree-page-null")
+    private transient DocDetailsDto useFormDoc;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.send_user_info_doc_id", className="dt-tree-page-null")
     private transient DocDetailsDto formmailSendUserInfoDoc;
+
+    /* FILE PROPERTIES */
+    @Column(name = "max_size_in_kilobytes")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.file_size_in_kilobytes", className = "not-formsimple form-advanced",
+        editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.form.file_limits") }
+			)
+		}
+    )
+    private Integer maxSizeInKilobytes;
+
+    @Column(name = "allowed_extensions")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple form-advanced")
+    @Size(max = 255)
+    private String allowedExtensions;
+
+    @Column(name = "picture_height")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_height", className = "not-formsimple form-advanced")
+    private Integer pictureHeight;
+
+    @Column(name = "picture_width")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_width", className = "not-formsimple form-advanced")
+    private Integer pictureWidth;
+
+
+
+
+
+    @Column(name = "use_form_doc_id")
+    private Integer useFormDocId;
+
+    @Column(name = "formmail_send_user_info_doc_id")
+    private Integer formMailSendUserInfoDocId;
+
+    @Column(name = "domain_id")
+    private Integer domainId;
 
 
     public static String toPascalCase(String input) {

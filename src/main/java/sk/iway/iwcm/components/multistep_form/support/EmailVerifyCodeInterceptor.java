@@ -20,6 +20,7 @@ import sk.iway.iwcm.i18n.Prop;
 public class EmailVerifyCodeInterceptor implements StepInterceptorInterface {
 
     public static final String SESSION_VERIFY_CODE_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE";
+    public static final String SESSION_VERIFY_CODE_ATTEMPTS_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE_ATTEMPTS";
 
     @Override
     public void runInterceptor(String formName, Long currentStepId, JSONObject currentReceived, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
@@ -58,11 +59,12 @@ public class EmailVerifyCodeInterceptor implements StepInterceptorInterface {
         }
 
         if(Tools.isEmail(email) == false) {
-            throw new SaveFormException("E-mail address not found or is invalid.");
+            throw new SaveFormException("E-mail address not found or is invalid.", false, null);
         }
 
         String verifyCode = Password.generatePassword(5);
         request.getSession().setAttribute(prefix + SESSION_VERIFY_CODE_KEY, verifyCode);
+        request.getSession().setAttribute(prefix + SESSION_VERIFY_CODE_ATTEMPTS_KEY, 0);
 
         try {
             Prop prop = Prop.getInstance(request);
@@ -75,7 +77,7 @@ public class EmailVerifyCodeInterceptor implements StepInterceptorInterface {
 
             SendMail.send(senderName, senderEmail, email, null, null, null, prop.getText("components.multistep_form.verify_code.subject", formName), body, null, null);
         } catch (Exception e) {
-            throw new SaveFormException("Failed to send verify code e-mail.");
+            throw new SaveFormException("Failed to send verify code e-mail.", false, null);
         }
     }
 }

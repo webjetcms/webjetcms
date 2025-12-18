@@ -35,16 +35,27 @@ public class MultistepFormsRestController {
     @PostMapping(value = "/save-form", params={"form-name", "step-id"}, consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
     public ResponseEntity<String> saveForm(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
         JSONObject response = new JSONObject();
+
         try {
+            // Save step form, is its last step, will save whole form answers too
             multistepFormsService.saveFormStep(formName, stepId, request, response);
             return ResponseEntity.ok(response.toString());
-        } catch (SaveFormException sfe) {
+        }
+
+        catch (SaveFormException sfe) {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + sfe.getLocalizedMessage());
-            response.put("message", sfe.getLocalizedMessage());
+            response.put("err_msg", sfe.getLocalizedMessage());
+            response.put("end_try", sfe.isEndUserTry());
+
+            if(Tools.isNotEmpty(sfe.getErrorRedirect()))
+                response.put("err_redirect", sfe.getErrorRedirect());
+
             return ResponseEntity.badRequest().body(response.toString());
-        } catch (Exception e) {
+        }
+
+        catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage());
-            response.put("message", Prop.getInstance(request).getText("datatable.error.unknown"));
+            response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
             return ResponseEntity.badRequest().body(response.toString());
         }
     }
@@ -61,9 +72,8 @@ public class MultistepFormsRestController {
                 .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage());
-
             JSONObject response = new JSONObject();
-            response.put("message", Prop.getInstance(request).getText("datatable.error.unknown"));
+            response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
             return ResponseEntity.badRequest()
                 .header("Content-Type", contentTypeWithCharset)
                 .body(response.toString());

@@ -56,51 +56,42 @@ public class SaveFormService {
         private final List<IwcmFile> attachs = new ArrayList<>();
     }
 
-    public final String saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, Integer iLastDocIdMail, HttpServletRequest request) throws SaveFormException, IOException {
-        if (!SpamProtection.canPost("form", null, request))
-            throw new SaveFormException(Prop.getInstance(request).getText("send_mail_error.probablySpamBot"));
+    public final void saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, HttpServletRequest request) throws SaveFormException, IOException {
 
-        String subject = "Formular z www stranky";
+        String forwardFail = null;
+		if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
+
+        if (!SpamProtection.canPost("form", null, request))
+                throw new SaveFormException(Prop.getInstance(request).getText("send_mail_error.probablySpamBot"), false, forwardFail);
+
+        String subject = Constants.getString("multistepform_subjectDefaultValue");
 		if (Tools.isNotEmpty(formSettings.getSubject()))
 			subject = formSettings.getSubject();
 
-		String forwardOk = null;
-		String forwardFail = null;
-		if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
-		if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
-
-        //id stranky z ktorej je automaticky vyparsovany HTML kod formularu
 		int docId = -1;
         DocDB docDB = DocDB.getInstance();
-        if (iLastDocIdMail != null && iLastDocId != null) {
-            DocDetails doc = docDB.getDoc(iLastDocIdMail, -1, false);
+        if (iLastDocId != null) {
+            DocDetails doc = docDB.getDoc(iLastDocId, -1, false);
             docId = iLastDocId.intValue();
 
             if(doc != null) {
-
                 if(Tools.isEmpty(formSettings.getSubject()))
                     subject = doc.getTitle();
-
-                if(Tools.isEmpty(formSettings.getForwardFail()))
-                    forwardFail = docDB.getDocLink(iLastDocId);
             }
         }
 
         try {
-            saveFormAnswers(formName, formSettings, iLastDocIdMail, docId, subject, request);
+            saveFormAnswers(formName, formSettings, docId, subject, request);
         } catch (SaveFormException sfe) {
-            if(Tools.isNotEmpty(forwardFail)) return forwardFail;
+            if(Tools.isNotEmpty(forwardFail)) throw new SaveFormException(sfe.getMessage(), false, forwardFail);
             else throw sfe;
         } catch (Exception ex) {
-            if(Tools.isNotEmpty(forwardFail)) return forwardFail;
+            if(Tools.isNotEmpty(forwardFail)) throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), ex.getCause(), false, forwardFail);
             else throw ex;
         }
-
-        if(Tools.isNotEmpty(forwardOk)) return forwardOk;
-        else return null;
     }
 
-    private final String saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocIdMail, int docId, String subject, HttpServletRequest request) throws SaveFormException, IOException {
+    private final String saveFormAnswers(String formName, FormSettingsEntity formSettings, int docId, String subject, HttpServletRequest request) throws SaveFormException, IOException {
 
         String recipients = null;
 		if (Tools.isNotEmpty(formSettings.getRecipients()))
@@ -108,7 +99,6 @@ public class SaveFormService {
 
 		if (recipients != null && recipients.indexOf('@') == -1)
 			recipients = null;
-
 
 		//ak aktualizujeme zaznam, toto potom nastavime na false, aby sa nic neposlalo
 		boolean emailAllowed = false;
@@ -148,9 +138,8 @@ public class SaveFormService {
         }
 
         if(userId > 0 && Tools.isTrue(formSettings.getOverwriteOldForms())) {
-            // TODO
+            formsRepository.deleteAllUserSubmitted(formName, CloudToolsForCore.getDomainId(), Long.valueOf(userId));
         }
-
 
         FormsEntity form = new FormsEntity();
         form.setFormName(formName);
@@ -170,7 +159,7 @@ public class SaveFormService {
         setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
 
         // set html
-        htmlHandler.setFormHtml(form, request, iLastDocIdMail);
+        htmlHandler.setFormHtml(form, request, docId);
 
         form = formsRepository.save(form);
 
@@ -178,7 +167,7 @@ public class SaveFormService {
 
         // NEW PART
         String pdfUrl = "";
-        if("true".equals(request.getParameter("isPdfVersion"))) {
+        if(Tools.isTrue(formSettings.getIsPdf())) {
 			pdfUrl = FormMailAction.saveFormAsPdf(htmlHandler.getFormPdfVersion(), form.getId().intValue(), request);
 			IwcmFile pdfFile =  new IwcmFile(pdfUrl);
 			formFiles.getFileNames().add(pdfFile.getName());

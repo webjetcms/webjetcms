@@ -93,9 +93,10 @@ public class MultistepFormApp extends WebjetComponentAbstract {
             }
         }
 
-
         model.addAttribute("stepPath", "/rest/multistep-form/get-step");
         model.addAttribute("formName", formName);
+
+        Logger.debug(MultistepFormApp.class, "Generating CSRF token for multistep form, formName= " + formName + " actual datetime is : " + Tools.getNow());
 
         String csrf = CSRF.getCsrfToken(request.getSession(), true);
         model.addAttribute("csrf", csrf);
@@ -117,7 +118,6 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
        List<String> multistepFormNames = formStepsRepository.getMultistepFormNames(CloudToolsForCore.getDomainId());
 
-        //TODO : later get allso real formNames ... this is saniotazed value
         List<OptionDto> formNameOption = new ArrayList<>();
         for(String formName : multistepFormNames) {
             formNameOption.add( new OptionDto(formName, formName, "") );

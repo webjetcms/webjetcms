@@ -146,7 +146,7 @@ public class FormMailService {
 			if(sendMessageAsAttach)
 			{
 				String messageAsAttachFileName = formSettings.getMessageAsAttachFileName();
-				if(Tools.isEmpty(messageAsAttachFileName)) messageAsAttachFileName = "priloha.html";
+				if(Tools.isEmpty(messageAsAttachFileName)) messageAsAttachFileName = Constants.getString("multistepform_attachmentDefaultName");
 				else messageAsAttachFileName = DocTools.removeChars(messageAsAttachFileName);
 				messageAsAttachFile = new IwcmFile(Tools.getRealPath(FormMailAction.FORM_FILE_DIR + File.separator + form.getId() + "_" + messageAsAttachFileName));
 				FileTools.saveFileContent(messageAsAttachFile.getVirtualPath(), "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset="+emailEncoding+"\">"+(cssData == null ? "" : cssData)+"</head><body id=\"WebJETEditorBody\" class=\"WebJETMailBody\"><div class=\"WebJETMailWrapper\">\n\n"+htmlData+"\n\n</div></body></html>", emailEncoding);

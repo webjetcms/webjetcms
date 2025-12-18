@@ -17,6 +17,10 @@ public class FormSettingsService {
         formSettings.setId(formSettingsId);
 
         // convert object back to id
+        if(formSettings.getUseFormDoc() == null) formSettings.setUseFormDoc(null);
+        else formSettings.setUseFormDocId(formSettings.getUseFormDoc().getDocId());
+
+        // convert object back to id
         if(formSettings.getUseFormMailDoc() == null) formSettings.setUseFormMailDocId(null);
         else formSettings.setUseFormMailDocId(formSettings.getUseFormMailDoc().getDocId());
 
@@ -30,6 +34,11 @@ public class FormSettingsService {
 
     public static void prepareSettingsForEdit(FormSettingsEntity formSettings) {
         if(formSettings == null) return;
+
+        if(formSettings.getUseFormDocId() != null) {
+            DocDetails doc = DocDB.getInstance().getDoc( formSettings.getUseFormDocId() );
+            if(doc != null) formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
+        }
 
         if(formSettings.getUseFormMailDocId() != null) {
             DocDetails doc = DocDB.getInstance().getDoc( formSettings.getUseFormMailDocId() );
