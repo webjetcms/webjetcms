@@ -127,7 +127,7 @@ public class CampaingsEditorFields implements Serializable {
         permisions = splitPermsEmails.get(0);
         emails = splitPermsEmails.get(1);
 
-        if (false == Long.valueOf(-1L).equals(campOriginal.getId())) {
+        if (campOriginal.getId() != null && false == Long.valueOf(-1L).equals(campOriginal.getId())) {
             //Set email status
             String currentStatus = EmailDB.getStaus(campOriginal.getId().intValue());
 
