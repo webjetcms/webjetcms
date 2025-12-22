@@ -45,7 +45,7 @@ public class DomainThrottle
 	}
 
 	private void init(){
-		domainLimits = Collections.emptyMap();
+		domainLimits = new HashMap<>();
 		maxTimeLimit = 0;
 		Collection<DomainLimitBean> allLimits = DomainLimitsDB.getInstance(true).getAll();
 		try {
@@ -279,7 +279,7 @@ public class DomainThrottle
 		try {
 			if(allLimits != null) {
 				//domainLimits = Lambda.index(allLimits, Lambda.on(DomainLimitBean.class).getDomain());
-				domainLimits = Collections.emptyMap();
+				domainLimits = new HashMap<>();
 				allLimits.forEach(limit -> domainLimits.put(limit.getDomain(), limit));
 			}
 			if(!domainLimits.isEmpty()) {
