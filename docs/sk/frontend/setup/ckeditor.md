@@ -105,3 +105,16 @@ SVG súbor musí obsahovať definície ikon s nastaveným ID atribútom, príkla
 ```
 
 Ukážkový `sprite.svg` súbor môžete získať v [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) balíku v ceste `build/sprite.svg`.
+
+## Tlačidlo
+
+Tlačidlo sa často používa ako `call to action` prvok na webových stránkach. WebJET podporuje vkladanie elementu `button` alebo `a` s triedou `btn` cez vlastné tlačidlo v CKEditore. Pre `button` je možné nastaviť nasledovné konfiguračné premenné:
+
+- `ckeditor_button_baseClass` - Základná CSS trieda pre tlačidlá v CKEditore, štandardne `btn`.
+- `ckeditor_button_sizes` - Dostupné veľkosti tlačidla oddelenené čiarkou, štandardne `btn-lg,btn-sm`.
+- `ckeditor_button_types` - Dostupné farby/typy tlačidla oddelené čiarkou, štandardne `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
+- `ckeditor_button_textHiddenClass` - CSS trieda pre schovanie textu tlačidla - zobrazenie iba ikony, štandardne `visually-hidden`.
+
+Podporované sú aj SVG ikony, ktoré je možné vložiť do tlačidla, viď sekcia vyššie.
+
+Ak tlačidlo nastavíte ako zakázané - `disabled`, tak naň nie je možné v editore kliknúť pre otvorenie dialógu na úpravu vlastností tlačidla. Môžete ale kliknúť prvým tlačidlom a v kontextovej ponuke zvoliť možnosť Vlastnosti tlačidla.

@@ -188,6 +188,13 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_table_cellpadding", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellpadding tabuľky v CKEditore.");
 		Constants.setString("ckeditor_table_cellspacing", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellspacing tabuľky v CKEditore.");
 		Constants.setString("ckeditor_table_wrapper_class", "table-responsive", Constants.MOD_EDITOR, "Predvolený wrapper pre tabuľku v CKEditore.");
+
+		Constants.setString("ckeditor_extraPlugins", "", Constants.MOD_EDITOR, "Zoznam doplnkov pre CKEditor oddelených čiarkou.");
+
+		Constants.setString("ckeditor_button_baseClass", "btn", Constants.MOD_EDITOR, "Základná CSS trieda pre tlačidlá.");
+		Constants.setString("ckeditor_button_sizes", "btn-lg,btn-sm", Constants.MOD_EDITOR, "CSS trieda pre veľkosť tlačidla.");
+		Constants.setString("ckeditor_button_types", "btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark", Constants.MOD_EDITOR, "CSS trieda pre farbu/typ tlačidla.");
+		Constants.setString("ckeditor_button_textHiddenClass", "visually-hidden", Constants.MOD_EDITOR, "CSS trieda pre schovanie textu tlačidla - zobrazí sa iba ikona.");
 	}
 
 	/**
