@@ -44,7 +44,7 @@ public class DomainLimitRestController extends DatatableRestControllerV2<DomainL
     public DomainLimitBean insertItem(DomainLimitBean entity) {
 
         if(entity.save()) {
-            return entity;
+            return processFromEntity(entity, ProcessItemAction.CREATE, 1);
         } else {
             throwError("");
             return null;
@@ -65,7 +65,7 @@ public class DomainLimitRestController extends DatatableRestControllerV2<DomainL
     public DomainLimitBean editItem(DomainLimitBean entity, long id) {
 
         if(entity.save()) {
-            return entity;
+            return processFromEntity(entity, ProcessItemAction.EDIT, 1);
         } else {
             throwError("");
             return null;
