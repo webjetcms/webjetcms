@@ -126,7 +126,7 @@ CKEDITOR.editorConfig = function( config )
 		sizes: "<%=Constants.getString("ckeditor_button_sizes")%>",
 		types: "<%=Constants.getString("ckeditor_button_types")%>",
 		textHiddenClass: "<%=Constants.getString("ckeditor_button_textHiddenClass")%>"
-	}
+	};
 
 	config.qtClass = "<%=Constants.getString("ckeditor_table_class")%>";
 	config.tableCols = "<%=Constants.getString("ckeditor_table_cols")%>";
