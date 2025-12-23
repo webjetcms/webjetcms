@@ -15,6 +15,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
@@ -57,6 +58,7 @@ public class CampaingsEntity implements Serializable {
         tab = "main",
         sortAfter = "editorFields.pageToSend"
     )
+    @NotBlank
     @Size(max = 255)
     private String subject;
 
