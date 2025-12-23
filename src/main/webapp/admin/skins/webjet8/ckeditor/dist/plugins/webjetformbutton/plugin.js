@@ -1,7 +1,0 @@
-﻿/*
- Copyright (c) 2003-2024, CKSource - Frederico Knabben. All rights reserved.
- For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
-*/
-CKEDITOR.plugins.add("webjetformbutton",{requires:"dialog",icons:"formbutton",lang:"sk,en,cs",init:function(a){a.filter.allow({button:{attributes:"!*",children:!0}});a.addCommand("webjetformbutton",new CKEDITOR.dialogCommand("webjetformbuttonDialog"));a.ui.addButton("WebjetFormButton",{label:a.lang.webjetformbutton.buttonLabel,command:"webjetformbutton",toolbar:"insert",icon:this.path+"icons/formbutton.svg"});CKEDITOR.dialog.add("webjetformbuttonDialog",this.path+"dialogs/formbutton.js");a.on("contentDom",
-function(){function c(a,c){for(var b=a;b&&b!==c.$;){if("BUTTON"===b.tagName)return b;b=b.parentElement}return null}var d=a.editable();d.attachListener(d,"mouseup",function(a){0===a.data.$.button&&(a=c(a.data.$.target,d))&&(ckEditorInstance.lastWjButton=a,setTimeout(function(){ckEditorInstance.execCommand("webjetformbutton")},10))})});a.addMenuItems&&a.addMenuItems({webjetformbutton:{label:a.lang.webjetformbutton.title,command:"webjetformbutton",group:"form",icon:this.path+"icons/formbutton.svg"}});
-a.contextMenu&&a.contextMenu.addListener(function(a){if(a&&!a.isReadOnly()&&a.is("button"))return{webjetformbutton:CKEDITOR.TRISTATE_OFF}})}});

@@ -92,7 +92,6 @@ CKEDITOR.editorConfig = function( config )
 	{
 		extraPlugins.addAll(java.util.Arrays.asList(Constants.getArray("ckeditor_extraPlugins")));
 	}
-	extraPlugins.add("webjetformbutton");
 
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");
 	System.out.println("editorFontAwesomeCssPath="+editorFontAwesomeCssPath);

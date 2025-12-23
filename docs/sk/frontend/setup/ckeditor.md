@@ -118,3 +118,9 @@ Tlačidlo sa často používa ako `call to action` prvok na webových stránkach
 Podporované sú aj SVG ikony, ktoré je možné vložiť do tlačidla, viď sekcia vyššie.
 
 Ak tlačidlo nastavíte ako zakázané - `disabled`, tak naň nie je možné v editore kliknúť pre otvorenie dialógu na úpravu vlastností tlačidla. Môžete ale kliknúť prvým tlačidlom a v kontextovej ponuke zvoliť možnosť Vlastnosti tlačidla.
+
+## Vlasnté doplnky (plugins)
+
+CKEditor podporuje pridanie vlastných doplnkov (plugins). Po vytvorení vlastného doplnku je potrebné ho pridať do konfiguračnej premennej `ckeditor_extraPlugins` ako čiarkou oddelený zoznam. Viac informácií o vytváraní vlastných doplnkov nájdete v [dokumentácii CKEditora](https://ckeditor.com/docs/ckeditor4/latest/guide/plugin_sdk_intro.html).
+
+Výsledný plugin umiestnite do adresára `src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/` vášho projektu.
