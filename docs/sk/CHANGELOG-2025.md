@@ -8,6 +8,10 @@
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
+- Hromadný email - upravené tlačidlá pre spustenie/zastavenie odosielania hromadného emailu na lepšie zrozumiteľné `play` a `stop` (#54273-81).
+- Hromadný email - opravené ukladanie v Oracle databáze, pole predmet nastavené ako povinné (#54273-81).
+- Hromadný email - Doménové limity - opravené načítanie limitov pre domény z databázy (#54273-81).
+
 ## 2025.0.50
 
 > Opravná verzia pôvodnej verzie 2025.0.

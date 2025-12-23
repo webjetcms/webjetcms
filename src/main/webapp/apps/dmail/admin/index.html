@@ -62,7 +62,7 @@
         });
 
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="ti ti-toggle-right"></i>',
+            text: '<i class="ti ti-player-play"></i>',
             action: function (e, dt, node) {
                 campaingsDataTable.executeAction("start", true, /*[[#{components.dmail.campaings.start.button}]]*/ '', /*[[#{components.dmail.campaings.start.areYousure}]]*/ '');
             },
@@ -77,7 +77,7 @@
         });
 
         campaingsDataTable.button().add(buttonCounter++, {
-            text: '<i class="ti ti-toggle-left"></i>',
+            text: '<i class="ti ti-player-stop"></i>',
             action: function (e, dt, node) {
                 campaingsDataTable.executeAction("stop", true, /*[[#{components.dmail.campaings.stop.button}]]*/ '', /*[[#{components.dmail.campaings.stop.areYousure}]]*/ '');
             },

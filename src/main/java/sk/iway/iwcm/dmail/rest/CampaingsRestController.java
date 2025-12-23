@@ -98,6 +98,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             entity = new CampaingsEntity();
             entity.setSenderName(user.getFullName());
             entity.setSenderEmail(user.getEmail());
+            //we need to set -1 as ID because of nested tables handling like recipients - they are saved using -1 as campain ID and after save we update it
             entity.setId(id);
             entity.setCountOfSentMails(0);
 

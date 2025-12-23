@@ -1641,6 +1641,17 @@
                 <void property="pgsql"><string> INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES('media_groups', 1 , 'media_groups', 'media_group_id');</string></void>
             </object>
         </void>
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>23.12.2025</string></void>
+                <void property="desc"><string>emails_campain - delete wrong records</string></void>
+                <void property="mysql"><string>DELETE FROM emails_campain WHERE emails_campain_id=-1</string></void>
+                <void property="mssql"><string>DELETE FROM emails_campain WHERE emails_campain_id=-1</string></void>
+                <void property="oracle"><string>DELETE FROM emails_campain WHERE emails_campain_id=-1</string></void>
+                <void property="pgsql"><string>DELETE FROM emails_campain WHERE emails_campain_id=-1</string></void>
+            </object>
+        </void>
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
