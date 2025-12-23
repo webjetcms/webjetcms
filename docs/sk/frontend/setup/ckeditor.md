@@ -108,7 +108,7 @@ Ukážkový `sprite.svg` súbor môžete získať v [@orangesk/orange-design-sys
 
 ## Tlačidlo
 
-Tlačidlo sa často používa ako `call to action` prvok na webových stránkach. WebJET podporuje vkladanie elementu `button` alebo `a` s triedou `btn` cez vlastné tlačidlo v CKEditore. Pre `button` je možné nastaviť nasledovné konfiguračné premenné:
+Tlačidlo sa často používa ako `click to action` prvok na webových stránkach. WebJET podporuje vkladanie elementu `button` alebo `a` s triedou `btn` cez vlastné tlačidlo v CKEditore. Pre `button` je možné nastaviť nasledovné konfiguračné premenné:
 
 - `ckeditor_button_baseClass` - Základná CSS trieda pre tlačidlá v CKEditore, štandardne `btn`.
 - `ckeditor_button_sizes` - Dostupné veľkosti tlačidla oddelenené čiarkou, štandardne `btn-lg,btn-sm`.
@@ -118,6 +118,8 @@ Tlačidlo sa často používa ako `call to action` prvok na webových stránkach
 Podporované sú aj SVG ikony, ktoré je možné vložiť do tlačidla, viď sekcia vyššie.
 
 Ak tlačidlo nastavíte ako zakázané - `disabled`, tak naň nie je možné v editore kliknúť pre otvorenie dialógu na úpravu vlastností tlačidla. Môžete ale kliknúť prvým tlačidlom a v kontextovej ponuke zvoliť možnosť Vlastnosti tlačidla.
+
+Možnosť vložiť tlačidlo sa zobrazuje vo výberovom menu pre vloženie formuláru. Do nástrojovej lišty ho pridáte pridaním hodnoty `WebjetFormButton` do konfiguračnej premennej `ckeditor_toolbar`. Zobrazí sa automaticky ak máte nakonfigurované vkladanie SVG ikon.
 
 ## Vlasnté doplnky (plugins)
 

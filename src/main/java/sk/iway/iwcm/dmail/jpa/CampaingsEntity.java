@@ -15,7 +15,6 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -59,7 +58,6 @@ public class CampaingsEntity implements Serializable {
         sortAfter = "editorFields.pageToSend"
     )
     @Size(max = 255)
-    @NotBlank
     private String subject;
 
     @Column(name = "sender_name")
