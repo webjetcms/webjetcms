@@ -139,12 +139,14 @@ export function typeWysiwyg() {
                 $("#"+id+"-pageBuilderIframe").attr("src", "about:blank");
             });
 
-            window.switchEditorType = function(select, e) {
-                //console.log("Switch editor type to:", select.value, "conf=", conf.wjeditor, "e=", e);
-                let editorType = select.value;
-                conf.wjeditor.switchEditingMode(editorType, true);
-                window.editorTypeForced = editorType;
-                if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+            if (typeof window.switchEditorType == "undefined") {
+                window.switchEditorType = function(select, e) {
+                    //console.log("Switch editor type to:", select.value, "conf=", conf, "e=", e);
+                    let editorType = select.value;
+                    conf.wjeditor.switchEditingMode(editorType, true);
+                    window.editorTypeForced = editorType;
+                    if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+                }
             }
 
             window.pbSetWindowSize = function(size) {
