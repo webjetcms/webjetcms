@@ -480,18 +480,18 @@
                                     "id": "4",
                                     "textKey": "content",
                                     "groups": [
-                                        { id: "id4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
-                                        { id: "id4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
-                                        { id: "id4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
-                                        { id: "id4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
-                                        { id: "id4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
-                                        { id: "id4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
-                                        { id: "id4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
-                                        { id: "id4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
-                                        { id: "id4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
-                                        { id: "id4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
-                                        { id: "id4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
-                                        { id: "id4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
+                                        { id: "pb-basic-4.1", textKey: "<iwcm:text key='editor.h1'/>", content: "<h1><iwcm:text key='editor.h1'/></h1>" },
+                                        { id: "pb-basic-4.2", textKey: "<iwcm:text key='editor.h2'/>", content: "<h2><iwcm:text key='editor.h2'/></h2>" },
+                                        { id: "pb-basic-4.3", textKey: "<iwcm:text key='editor.h3'/>", content: "<h3><iwcm:text key='editor.h3'/></h3>" },
+                                        { id: "pb-basic-4.4", textKey: "<iwcm:text key='editor.h4'/>", content: "<h4><iwcm:text key='editor.h4'/></h4>" },
+                                        { id: "pb-basic-4.5", textKey: "<iwcm:text key='editor.h5'/>", content: "<h5><iwcm:text key='editor.h5'/></h5>" },
+                                        { id: "pb-basic-4.6", textKey: "<iwcm:text key='editor.h6'/>", content: "<h6><iwcm:text key='editor.h6'/></h6>" },
+                                        { id: "pb-basic-4.7", textKey: "<iwcm:text key='daisydiff.diff-p'/>", content: "<p><iwcm:text key='daisydiff.diff-p'/></p>" },
+                                        { id: "pb-basic-4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
+                                        { id: "pb-basic-4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
+                                        { id: "pb-basic-4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "pb-basic-4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
+                                        { id: "pb-basic-4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
                                 }
                             ];
@@ -589,7 +589,7 @@
             function getCol(parentId,id,v){
                 var pb_col_size = (v/me.options.max_col_size)*12;
                 return {
-                    id: "id"+parentId+"."+id,
+                    id: "pb-basic-"+parentId+"."+id,
                     textKey: '<span class="'+me.options.prefix+'-col-'+pb_col_size+'">'+v+'</span>',
                     content: '<div class="'+me.column.valid_prefixes[0]+v+' '+me.state.is_special_helper+'">Text</div>'
                 }
@@ -616,7 +616,7 @@
                 content += '</div></div>';
 
                 return {
-                    id: "id"+parentId+"."+id,
+                    id: "pb-basic-"+parentId+"."+id,
                     textKey: textKey,
                     content: content
                 }
@@ -2121,6 +2121,11 @@
                     me.mark_section(insert_content);
                 }
 
+                try {
+                    //set ID of PB block
+                    if (insert_content!="") insert_content.attr("data-pb-id", id);
+                } catch (e) {}
+
                 if (parent != null) {
                     me.set_toolbar_visible(insert_content);
                     $(me.tagc._grid_element).removeClass(me.state.is_special_helper);
@@ -2206,6 +2211,7 @@
             me.$wrapper.on('click', '.library-full-width-item', function() {
 
                 var id = $(this).attr('data-library-item-id'),
+                    count = $(this).attr('data-library-count-id'),
                     group_id = $(this).attr('data-library-group-id'),
                     parent = me.get_parent_grid_element(me.clicked_button),
                     insert_content = '',
@@ -2242,7 +2248,7 @@
                 if (parentTag == null) parentTag = "content";
                 //console.log("parentTag2=", parentTag, "parent=", parent, "button=", me.clicked_button, "group_id=", group_id, "id=", id);
 
-                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[id].content;
+                var html = me.get_json_object_by_attribute(me.template[template_type], 'textKey', parentTag).groups[group_id].blocks[count].content;
                 //console.log("html=", html);
 
                 if ("content" === parentTag) {
@@ -2328,6 +2334,9 @@
 
                         //inserted block can possibly have multiple sections/containers/columns so we must mark all grid elements
                         me.mark_grid_elements();
+
+                        //set ID of PB block
+                        insert_content.attr("data-pb-id", id);
                 }
 
                 me.set_toolbar_visible(insert_content);
@@ -2514,7 +2523,7 @@
                                     if (block.imagePath == null || block.imagePath == "" || block.imagePath == "/components/grideditor/data/default.png") {
                                         isEmptyClass = " library-full-width-item--no-image";
                                     }
-                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-item-id="'+indexBlock+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
+                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-count-id="'+indexBlock+'" data-library-item-id="'+block.id+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
                                 });
                             contentInner += '</div>';
                         contentInner += '</div>';

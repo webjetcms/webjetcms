@@ -547,3 +547,18 @@ window.pbGetWindowSize = function(name) {
     return maxWidth;
 }
 ```
+
+## ID bloku
+
+Po vložení bloku do stránky sa nastaví do atribútu `data-pb-id` cesta k HTML súboru bloku kódovaná cez `Base64`. Pomocou hodnoty teda viete nájsť cez vyhľadávanie v administrácii všetky stránky, ktoré obsahujú daný blok. Môžete tak ľahko zistiť, kde sa používa určitý blok v prípade jeho úpravy.
+
+Cestu k HTML súboru z atribútu viete získať cez JavaScript funkciu `atob()`, napríklad:
+
+```JavaScript
+atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
+'section/00-Zakladne-prvky/Citat_v1'
+```
+
+Pre bloky z karty Základné sa ako ID používa výraz typu `pb-basic-2.1`, kde prvé číslo je typ bloku (0=stĺpec, 1=kontajner, 2=sekcia, 4=content) a druhé číslo je poradové číslo bloku v zozname.
+
+ID bloku sa nastaví na vložený element, teda napríklad na `section`, `div` kontajner a podobne podľa typu bloku. Nie je nastavený na celú vloženú štruktúru, ale len na vložený element.

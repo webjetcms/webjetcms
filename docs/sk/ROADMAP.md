@@ -18,6 +18,7 @@ Vysvetlenie použitých piktogramov:
 - Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
 - Migrácia na Spring Boot projekt.
 - Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 
 ## 2025
 
