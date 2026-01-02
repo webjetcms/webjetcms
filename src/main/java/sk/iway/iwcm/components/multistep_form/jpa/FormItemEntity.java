@@ -17,6 +17,7 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
 @Table(name = "form_items")
@@ -43,6 +44,10 @@ public class FormItemEntity extends BaseEditorFields {
     private Integer stepId;
 
     @Transient
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "components.formsimple.label", hiddenEditor = true, className = "dt-row-edit")
+    private transient String generatedTitle;
+
+    @Transient
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.item_preview", hiddenEditor = true, className = "allow-html")
     private transient String generatedItem;
 
@@ -56,6 +61,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "label")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="dt-row-edit", hidden = true)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
 
     @Column(name = "value")
@@ -68,6 +74,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "tooltip")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", hidden = true)
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
 
     @Column(name = "sort_priority")

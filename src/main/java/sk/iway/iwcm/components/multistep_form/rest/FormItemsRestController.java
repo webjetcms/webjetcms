@@ -33,6 +33,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/form-items")
@@ -72,12 +73,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             else item.setRowClass("odd-step");
         }
 
-        setItemsPreview(page.getContent());
-
         page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest())), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
+
+        processFromEntity(page, ProcessItemAction.GETALL);
 
         return page;
     }
@@ -168,12 +169,6 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
-    private void setItemsPreview(List<FormItemEntity> items) {
-        for(FormItemEntity stepItem : items) {
-            setItemPreview(stepItem);
-        }
-    }
-
     private void setItemPreview(FormItemEntity stepItem) {
         JSONObject item = new JSONObject(stepItem);
         String fieldType = item.getString("fieldType");
@@ -189,4 +184,20 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         stepItem.setGeneratedItem(itemHtml);
     }
+
+    @Override
+    public FormItemEntity processFromEntity(FormItemEntity entity, ProcessItemAction action, int rowCount) {
+
+        setItemPreview(entity);
+
+        String generatedTitle = "";
+        if (Tools.isNotEmpty(entity.getLabel())) generatedTitle = entity.getLabel();
+        else generatedTitle = entity.getFieldType();
+
+        generatedTitle = Tools.html2text(generatedTitle);
+        entity.setGeneratedTitle(generatedTitle);
+
+        return entity;
+    }
+
 }
