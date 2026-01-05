@@ -3530,10 +3530,12 @@
                 }
 
             });
-
             if (style != "") {
                 //replace default values
                 style = style.replace("box-shadow:rgba(0, 0, 0, 0.5) 0px 0px 0px 0px;", "");
+            }
+
+            if (style != "") {
                 //wrap style into proper selector
                 style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{' + style + "}";
             }

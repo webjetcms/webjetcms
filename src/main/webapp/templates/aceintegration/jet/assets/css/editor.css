@@ -6,6 +6,10 @@
 background-color: yellow;
 }
 
+span.baretest3 {
+background-color: pink;
+}
+
 a.btn.btn-primary {
 /*bootstrap default*/
 }
@@ -21,4 +25,11 @@ table.table.table.table-striped {
 }
 table.table.table-bordered {
 /*bootstrap default*/
+}
+
+section.test-section {
+    background-color: orange;
+}
+div.container.test-container {
+    background-color: blue;
 }

@@ -637,33 +637,31 @@
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button {
-  width: 70px;
   border-radius: 6px;
   z-index: 500;
   margin-top: -2px;
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button,
 .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button {
-  width: 70px;
   border-radius: 6px;
   z-index: 500;
   margin-bottom: -2px;
 }
-.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-prepend,
-.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-prepend {
-  background-image: url("/admin/webpages/page-builder/images/move-top.png");
+.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-prepend span,
+.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-prepend span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
 }
-.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-prepend,
-.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-prepend {
-  background-image: url("/admin/webpages/page-builder/images/move-top.png");
+.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-prepend span,
+.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-prepend span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
 }
-.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-append,
-.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-append {
-  background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-plus-button.pb-append span,
+.pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-plus-button.pb-append span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
 }
-.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-append,
-.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-append {
-  background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-container > .pb-plus-button.pb-append span,
+.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-plus-button.pb-append span {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
 }
 .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-moving > .pb-plus-button,
 .pb-wrapper.pb-is-moving-child .pb-grid-element + .pb-grid-element > .pb-prepend, .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-sibling-left > .pb-plus-button.pb-append, .pb-wrapper.pb-is-moving-child .pb-grid-element.pb-is-sibling-right > .pb-plus-button.pb-prepend {

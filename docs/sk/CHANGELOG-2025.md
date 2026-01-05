@@ -34,7 +34,7 @@
 - Page Builder - doplnená možnosť rozdeliť stĺpec na dve časti pomocou novej funkcie Rozdeliť stĺpec. Vyvoláte ju pomocou kliknutia na + v žltej lište, zvolením možnosti Blok a následne v karte Základné zvolíte možnosť Rozdeliť stĺpec. Funkcia umožňuje rýchle rozdelenie stĺpca bez nutnosti vkladať nový stĺpec a presúvať obsah (#58165).
 - Page Builder - doplnená možnosť vložiť blok, ktorý obsahuje viacero sekcií alebo iných elementov - označia sa po vložení všetky sekcie (#58173).
 - Page Builder - doplnené [ID bloku](frontend/page-builder/blocks.md#id-bloku) do atribútu `data-pb-id` pre možnosť vyhľadania použitia bloku vo web stránkach cez vyhľadávanie v administrácii (#58193).
-- Page Builder - zoznam oblúbených blokov je ukladaný pre každého používateľa zvlášť, aby si každý mohol spravovať vlastný zoznam obľúbených blokov (#58193).
+- Page Builder - zoznam obľúbených blokov je ukladaný pre každého používateľa zvlášť, aby si každý mohol spravovať vlastný zoznam obľúbených blokov (#58193).
 - Page Builder - pridaná stále zobrazená ikona na pridanie novej sekcie na konci stránky, čo zjednodušuje pridávanie nových sekcií do stránky (#58173).
 
 ![](redactor/webpages/pagebuilder-plusbutton.png)
@@ -297,13 +297,13 @@ INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false"
 Pre prvý `INCLUDE` boli odstránené značky s ID 625 a 626, pretože tie sa nezobrazujú v danom priečinku/doméne - mali nastavené zobrazenie len pre určitý priečinok. V druhom `INCLUDE` boli zmenené značky `3+645` na novo vzniknuté `1438+1439` a `794` za `1440`.
 
 | perex_group_id | perex_group_name      | domain_id | available_groups |
-|----------------|-----------------------|-----------|-----------------|
-| 3              | ďalšia perex skupina  | 1         | NULL            |
-| 645            | deletedPerexGroup     | 1         | NULL            |
-| 794            | kalendár-udalostí     | 1         | NULL            |
-| 1438           | ďalšia perex skupina  | 83        | NULL            |
-| 1439           | deletedPerexGroup     | 83        | NULL            |
-| 1440           | kalendár-udalostí     | 83        | NULL            |
+|----------------|-----------------------|-----------|------------------|
+| 3              | ďalšia perex skupina  | 1         | NULL             |
+| 645            | deletedPerexGroup     | 1         | NULL             |
+| 794            | kalendár-udalostí     | 1         | NULL             |
+| 1438           | ďalšia perex skupina  | 83        | NULL             |
+| 1439           | deletedPerexGroup     | 83        | NULL             |
+| 1440           | kalendár-udalostí     | 83        | NULL             |
 
 Pred spustením aktualizácie existovali v databáze len záznamy `3, 645 a 794`, ktorým sa nastavilo `domain_id=1`. Záznamy `1438, 1439 a 1440` vznikli pri aktualizácii pre `domain_id=83`.
 
