@@ -95,11 +95,6 @@ CKEDITOR.editorConfig = function( config )
 
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");
 	System.out.println("editorFontAwesomeCssPath="+editorFontAwesomeCssPath);
-	if (Tools.isNotEmpty(editorFontAwesomeCssPath)) {
-		extraPlugins.add("fontawesome");
-		if (toolbar.contains("'FontAwesome'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
-	}
-
 	if (FileTools.isFile("/components/tooltip/tooltip.jsp") && DictionaryDB.getAll().size()>0)
 	{
 		if (toolbar.contains("'Tooltip'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
@@ -109,6 +104,10 @@ CKEDITOR.editorConfig = function( config )
 		extraPlugins.add("webjetsvgicon");
 		if (toolbar.contains("'WebjetSvgIcon'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
 		if (toolbar.contains("'WebjetFormButton'")==false) toolbar = Tools.replace(toolbar, "WebjetSvgIcon", "WebjetSvgIcon' , 'WebjetFormButton");
+	}
+	if (Tools.isNotEmpty(editorFontAwesomeCssPath)) {
+		extraPlugins.add("fontawesome");
+		if (toolbar.contains("'FontAwesome'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
 	}
 	%>
 
