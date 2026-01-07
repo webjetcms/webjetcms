@@ -232,6 +232,9 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.switchTo("iframe.cke_panel_frame");
     I.see("Nadpis 1");
     I.see("baretest1");
+    I.see("Bare TEST 02 bold");
+    I.see("Bare TEST 03");
+    I.see("Bare TEST 04");
     I.switchTo();
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.pressKey(['Escape']);

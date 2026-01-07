@@ -936,7 +936,9 @@ Scenario('Nacitanie CSS do listy', ({ I, DTE, Browser }) => {
 
     I.switchTo(".cke_panel_frame");
     I.see("baretest1");
-    I.see("baretest2");
+    I.see("Bare TEST 02 bold");
+    I.see("Bare TEST 03");
+    I.see("Bare TEST 04");
     I.see("more-info1");
 
     I.switchTo();
