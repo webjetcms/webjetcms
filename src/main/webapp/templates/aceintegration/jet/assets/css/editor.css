@@ -3,11 +3,20 @@
 }
 
 .baretest2 {
-background-color: yellow;
+    background-color: yellow;
+    /* Bare TEST 02 */
+    font-weight: bold;
+    /* editor title: Bare TEST 02 bold */
+}
+
+.baretest4 { /* Bare TEST 04 */
+    color: red;
 }
 
 span.baretest3 {
-background-color: pink;
+    /* Bare TEST 03 */
+    background-color: pink;
+    /* editor title: Bare TEST 03 */
 }
 
 a.btn.btn-primary {

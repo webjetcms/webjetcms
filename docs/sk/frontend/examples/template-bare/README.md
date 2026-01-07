@@ -239,6 +239,27 @@ span.more-info {
 
 následne je možné označiť text a aplikovať tento štýl len na označený text. Ak by nemal HTML značku ```span``` aplikoval by sa na rodičovský element, čiže typicky na celý odstavec - ```p```.
 
+Ak vám nevyhovuje predvolený názov štýlu vo výberovom poli, môžete ho zmeniť pridaním komentára:
+
+```css
+span.more-info {
+    /* editor title: Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+prípadne v skrátenej forme priamo s komentárom na konci riadku definície štýlu:
+
+```css
+span.more-info { /* Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
 ## Tvorba PageBuilder blokov
 
 Ak potrebujete vytvoriť nový blok pre PageBuilder postupujte podľa tohto návodu.
