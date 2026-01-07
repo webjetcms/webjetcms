@@ -31,6 +31,13 @@
         transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
         pointer-events: none;
     }
+
+    &[data-action="move"] {
+        display: none;
+    }
+    &[data-action="duplicate"] {
+        display: none;
+    }
 }
 
 //special hover cases for tools toolbar where we dont want to show tooltip when toolbar is active
@@ -73,4 +80,31 @@
 //empty placeholder
 .#{$prefix}-empty-placeholder__button.#{$prefix}-tooltip {
     position: absolute;
+}
+
+//plus button tooltips
+.#{$prefix}-wrapper {
+    &.#{$prefix}-is-moving-child {
+        .#{$prefix}-tooltip {
+            &[data-action="move"] {
+                display: block;
+            }
+            &[data-action="add"] {
+                display: none;
+            }
+        }
+    }
+    &.#{$prefix}-is-duplicating {
+        .#{$prefix}-tooltip {
+            &[data-action="duplicate"] {
+                display: block;
+            }
+            &[data-action="move"] {
+                display: none !important;
+            }
+            &[data-action="add"] {
+                display: none;
+            }
+        }
+    }
 }

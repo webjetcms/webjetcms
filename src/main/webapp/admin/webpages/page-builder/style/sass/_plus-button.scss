@@ -180,7 +180,6 @@
         &.#{$prefix}-is-moving-container {
             .#{$prefix}-container > .#{$prefix}-plus-button,
             .#{$prefix}-section > .#{$prefix}-plus-button {
-                width: $plus-button-moving-size;
                 border-radius: $plus-button-radius;
                 z-index: $plus-button-moving-index;
                 margin-top: - $highlighter-size;
@@ -190,7 +189,6 @@
         &.#{$prefix}-is-moving-section {
             .#{$prefix}-container > .#{$prefix}-plus-button,
             .#{$prefix}-section > .#{$prefix}-plus-button {
-                width: $plus-button-moving-size;
                 border-radius: $plus-button-radius;
                 z-index: $plus-button-moving-index;
                 margin-bottom: - $highlighter-size;
@@ -198,30 +196,30 @@
         }
 
         &.#{$prefix}-is-moving-container {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("/admin/webpages/page-builder/images/move-top.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend span {
+                background-image: $icon-move-up;
             }
         }
 
         &.#{$prefix}-is-moving-section {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("/admin/webpages/page-builder/images/move-top.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend span {
+                background-image: $icon-move-up;
             }
         }
 
         &.#{$prefix}-is-moving-container {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append span {
+                background-image: $icon-move-down;
             }
         }
 
         &.#{$prefix}-is-moving-section {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append span {
+                background-image: $icon-move-down;
             }
         }
 

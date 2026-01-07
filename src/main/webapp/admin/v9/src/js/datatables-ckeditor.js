@@ -2004,6 +2004,10 @@ export class DatatablesCkEditor {
 				}
 				name += nameClass;
 
+				if (typeof v.title != "undefined" && v.title != null && v.title != "") {
+					name = v.title;
+				}
+
 				result.name = name;
 				result.element = v.tag == "*" ? allElements : v.tag;
 				result.attributes = { 'class': v.class };
