@@ -185,15 +185,9 @@
   background-color: black;
   opacity: 0.3;
 }
-.pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-container > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-highlighter__bottom, .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-highlighter {
+.pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-section > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-container > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-container > .pb-highlighter, .pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-highlighter {
   display: block;
   opacity: 1;
-}
-.pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-highlighter {
-  background-color: transparent;
-}
-.pb-wrapper.pb-is-moving-child.pb-is-moving-section .pb-section > .pb-highlighter {
-  background-color: transparent;
 }
 .pb-wrapper.pb-is-modal-open .pb-highlighter {
   display: none !important;
@@ -627,10 +621,10 @@
   z-index: 500;
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-plus-button.pb-prepend span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left-pipe"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6v12" /><path d="M18 6l-6 6l6 6" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11 7l-5 5l5 5" /><path d="M17 7l-5 5l5 5" /></svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-column .pb-column > .pb-plus-button.pb-append span {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right-pipe"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 6l6 6l-6 6" /><path d="M17 5v13" /></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l-5 5" /><path d="M13 7l5 5l-5 5" /></svg>');
 }
 .pb-wrapper.pb-is-moving-child.pb-is-moving-container .pb-section > .pb-empty-placeholder, .pb-wrapper.pb-is-moving-child.pb-is-moving-row .pb-section > .pb-empty-placeholder {
   opacity: 1;
@@ -1826,6 +1820,12 @@
   transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
   pointer-events: none;
 }
+.pb-tooltip[data-action=move] {
+  display: none;
+}
+.pb-tooltip[data-action=duplicate] {
+  display: none;
+}
 
 .pb-toolbar:not(.pb-is-toolbar-active):hover > span.pb-tooltip::before {
   opacity: 1;
@@ -1865,6 +1865,22 @@
 
 .pb-empty-placeholder__button.pb-tooltip {
   position: absolute;
+}
+
+.pb-wrapper.pb-is-moving-child .pb-tooltip[data-action=move] {
+  display: block;
+}
+.pb-wrapper.pb-is-moving-child .pb-tooltip[data-action=add] {
+  display: none;
+}
+.pb-wrapper.pb-is-duplicating .pb-tooltip[data-action=duplicate] {
+  display: block;
+}
+.pb-wrapper.pb-is-duplicating .pb-tooltip[data-action=move] {
+  display: none !important;
+}
+.pb-wrapper.pb-is-duplicating .pb-tooltip[data-action=add] {
+  display: none;
 }
 
 #pb-wjmagicline {

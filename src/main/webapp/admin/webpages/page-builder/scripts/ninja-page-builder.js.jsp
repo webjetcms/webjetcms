@@ -1184,7 +1184,15 @@
 
             var iconSpan = "";
             //console.log("build_aside, class_name=", class_name);
-            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span"+spanClass+title+"></span>"; //pb-toolbar gear icon
+            if(class_name === this.tag.toolbar || class_name.indexOf(this.tag._plus_button) !== -1) iconSpan = "<span"+spanClass+title+" data-action=\"add\"></span>"; //pb-toolbar gear icon
+
+            if (class_name.indexOf(this.tag._plus_button) !== -1) {
+                //for plus button we need to have multiple tooltip for different actions
+                let moveHereTitle = '<iwcm:text key="pagebuilder.toolbar.move"/>';
+                let duplicateHereTitle = '<iwcm:text key="pagebuilder.toolbar.duplicate"/>';
+                iconSpan += '<span class="'+this.options.prefix+'-tooltip" data-action="move" data-title="'+moveHereTitle+'" ></span>';
+                iconSpan += '<span class="'+this.options.prefix+'-tooltip" data-action="duplicate" data-title="'+duplicateHereTitle+'" ></span>';
+            }
 
             return '<aside class="'+class_name+'"'+title+'>'+iconSpan+content+'</aside>';
         },
