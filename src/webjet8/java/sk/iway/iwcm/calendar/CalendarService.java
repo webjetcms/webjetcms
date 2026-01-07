@@ -69,7 +69,7 @@ public class CalendarService {
         return Collections.emptyList();
     }
 
-    @ApiOperation(value = "getEventsForMonth", notes = "Vrati eventy pre /rok/mesiac/")
+    @ApiOperation(value = "getEventsForMonth", description = "Vrati eventy pre /rok/mesiac/")
     @RequestMapping(path="/{year}/{month}", method={RequestMethod.GET})
     public List<EventsCalendarBean> getEventsForMonth(
             @ApiParam(value = "Rok, napr. '2018'", required = true) @PathVariable int year,
@@ -83,7 +83,7 @@ public class CalendarService {
         return JpaDB.getResultList(query);
     }
 
-    @ApiOperation(value = "getEventsByTypeForMonth", notes = "Vrati eventy pre /rok/mesiac/id1,id2,id3 kde id1..idX su idcka konkretnych CalendarTypeBean")
+    @ApiOperation(value = "getEventsByTypeForMonth", description = "Vrati eventy pre /rok/mesiac/id1,id2,id3 kde id1..idX su idcka konkretnych CalendarTypeBean")
     @RequestMapping(path="/{year}/{month}/{types}", method={RequestMethod.GET})
     public List<EventsCalendarBean> getEventsByTypeForMonth(
             @ApiParam(value = "Rok, napr. '2018'", required = true) @PathVariable int year,
@@ -117,7 +117,7 @@ public class CalendarService {
         return result.stream().filter(i -> types.indexOf(i.getType().getId()) >= 0).collect(Collectors.toList());
     }
 
-    @ApiOperation(value = "getEventTypes", notes = "Vrati typy eventov")
+    @ApiOperation(value = "getEventTypes", description = "Vrati typy eventov")
     @RequestMapping(path="/types", method={RequestMethod.GET})
     public List<CalendarTypeBean> getEventTypes()
     {

@@ -1,8 +1,7 @@
 package sk.iway.upload;
 
-import javax.servlet.http.Part;
-
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
+import org.apache.commons.fileupload2.core.FileItem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +44,7 @@ public class FileItemPart implements Part {
     @Override
     public void write(String fileName) throws IOException {
         try {
-            fileItem.write(new java.io.File(fileName));
+            fileItem.write(new java.io.File(fileName).toPath());
         } catch (Exception e) {
             throw new IOException("Failed to write file", e);
         }
