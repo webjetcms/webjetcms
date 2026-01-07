@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CssDto {
-    public String tag;
-    public String className;
-    public String title;
+    private String tag;
+    private String className;
+    private String title;
 }
