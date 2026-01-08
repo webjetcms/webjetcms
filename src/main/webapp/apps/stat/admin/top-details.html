@@ -75,6 +75,11 @@
                 data.fixed_dayDate = dateRange;
                 data.fixed_docId = docId;
                 data.fixed_chartType = ChartTools.ChartType.Not_Chart;
+            },
+            summary: {
+                mode: "all",
+                columns: ["visits", "sessions", "uniqueUsers"],
+                title: "[[#{components.summary.total_title}]]",
             }
         });
 
