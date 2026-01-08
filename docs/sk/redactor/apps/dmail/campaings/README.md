@@ -8,6 +8,13 @@ E-mail je možné posielať návštevníkom, ktorí sú registrovaní v admin č
 
 ![](dataTable.png)
 
+Tabuľka obsahuje špeciálne ikony:
+
+- <i class="ti ti-eye"></i> - zobraziť stránku - zobrazí náhľad web stránky, ktorá je použitá ako obsah emailu
+- <i class="ti ti-player-play"></i> - spustiť odosielanie - spustí odosielanie emailov kampane
+- <i class="ti ti-player-stop"></i> - zastaviť odosielanie - zastaví odosielanie emailov kampane
+- <i class="ti ti-repeat"></i> - znova odoslať všetky emaily - všetky emaily v kampani sa označia ako nové a budú znovu odoslané
+
 ## Základné
 
 Pri vytváraní nového záznamu máme v karte **Základné** na výber iba jednu kartu zo základnými informáciami, ktoré potrebujeme vyplniť a to **Predmet** a **Web stránka**.
@@ -119,7 +126,7 @@ Po vybratí/zaškrtnutí želanej skupiny (alebo viacerých skupín) musíte svo
 
 !>**Upozornenie:** vaše zmeny **sa uložia okamžite**. To znamená, že sa nečaká  na uloženie kampane! Treba si na to dať pozor, nakoľko aj keď neuložíte upravovanú kampaň, príjemcovia pridaný/odstránený výberom skupiny ostanú zmenený.
 
-Vaše zmeny sa okamžite prejavia v karte **Príjemcovia**. Emaily pridané zo skupiny budú vždy obsahovať nejakú hodnotu v stĺpci **Skupiny**. Môže nastať situácia, že medzi príjemcami sú emaily, ktoré patria pod nejakú skupinu aj keď žiadna skupina kampani nebola pridaná. 
+Vaše zmeny sa okamžite prejavia v karte **Príjemcovia**. Emaily pridané zo skupiny budú vždy obsahovať nejakú hodnotu v stĺpci **Skupiny**. Môže nastať situácia, že medzi príjemcami sú emaily, ktoré patria pod nejakú skupinu aj keď žiadna skupina kampani nebola pridaná.
 Situácia nastáva, ak ručne pridáte email patriaci pod nejakú skupinu. WebJET ho automatický rozpozná a bude zobrazovať v stĺpci **Skupina** všetky skupiny, pod ktoré patrí.
 
 ![](receivers_B.png)

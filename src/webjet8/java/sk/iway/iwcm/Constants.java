@@ -199,8 +199,8 @@ public class Constants {
 				"true || false - ak je nastavené na true bude sa vykonávať kontrola práv na zaheslované stránky aj administrátorom (štandardne sa nekontroluje, administrátor má prístup ku všetkým stránkam)");
 		setBoolean("adminRequireSSL", false, MOD_SECURITY,
 				"ak je nastavené na true a na serveri je nastavené SSL pre prístup do admin časti bude vyžadovaný httpS protokol");
-		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn", MOD_SECURITY,
-				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db a podobne");
+		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./", MOD_SECURITY,
+				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db, /WEB-INF./web.xml a podobne");
 
 		// server pre aktualizaciu WebJETu
 		setString("updateRemoteServer", "http://license.interway.sk");
@@ -862,6 +862,8 @@ public class Constants {
 
 		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", MOD_CONFIG,
 				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
+		setString("stripes.MultipartWrapperFactory.Class", "sk.iway.iwcm.system.stripes.MultipartWrapperFactory", MOD_CONFIG,
+				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
 		setString("stripes.LocalizationBundleFactory.Class", "sk.iway.iwcm.system.stripes.LocalizationBundleFactory",
 				MOD_CONFIG, "Factory trieda pre prácu s IwayResourceBundle.");
 		setString("stripes.ActionBeanPropertyBinder.Class", "sk.iway.iwcm.system.stripes.XssSafeActionBeanPropertyBinder",
@@ -1463,7 +1465,7 @@ public class Constants {
 
 		setBoolean("reCaptchaEnabled", false, MOD_CAPTCHA,
 				"nastavenim na true, prepne defaultnu WJ captchu na reCaptchu");
-		setString("captchaType", "internal", MOD_CAPTCHA, "Typ capthy. internal / reCaptcha / reCaptchaV3 / invisible");
+		setString("captchaType", "internal", MOD_CAPTCHA, "Typ captchy: internal / reCaptcha / reCaptchaV3 / invisible alebo none pre vypnutie captchy");
 		setBoolean("captchaLoadAfterFocus", true, MOD_CAPTCHA,
 				"Nacitavanie JS pre captchu az po kliknuti do pola formularu");
 
@@ -1963,6 +1965,10 @@ public class Constants {
 				"Prefix pre PageBuilder, musi voci nemu korespondovat aj CSS PageBuildera (napr. pre CSS PREFIX-column-text-wrapper, predvolene pb-column-text-wrapper)");
 		setString("pageBuilderGrid", "", MOD_EDITOR,
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
+		setInt("pagebuilderFilterAutoOpenItems", 10, MOD_EDITOR,
+				"Počet automaticky otvorených položiek v zozname komponentov PageBuildera pri filtrovaní.");
+		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
+				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
 
 		setString("analyticsTrackerConf", "", MOD_CONFIG,
 				"Slúži na konfiguráciu trackovania analytics eventov z backendu. Uvádajú sa dvojice vzorUrl:trieda oddelené ;. Napr: '/files/filearchiv/:sk.iway.iwcm.FileArchiveAnalytics;/images/trackovane/:sk.iway.iwcm.TrackujObrazok'");

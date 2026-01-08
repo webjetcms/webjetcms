@@ -1,16 +1,21 @@
 # Základná konfigurácia
+
 Najčastejšie používané [konfiguračné premenné](../../admin/setup/configuration/README.md).
 
 ## Logovanie
 
+Na logovanie sa používa knižnica [Logback](http://logback.qos.ch/), ktorá umožňuje detailné nastavenie logovania pre jednotlivé java balíky. Používa sa [ConsoleAppender](https://logback.qos.ch/manual/appenders.html#ConsoleAppender), je ale možné nastaviť aj [FileAppender](https://logback.qos.ch/manual/appenders.html#FileAppender) alebo [RollingFileAppender](https://logback.qos.ch/manual/appenders.html#RollingFileAppender). Konfiguračný súbor je v `WEB-INF/classes/logback.xml`, avšak pre základné nastavenie je možné použiť nasledovné konfiguračné premenné:
+
 - `logLevel` - základná úroveň logovania, môže mať hodnotu `debug` pre podrobné logovanie, alebo `normal` pre produkčné nasadenie.
 - `logLevels` - zoznam java balíkov s úrovňou logovania (každý na novom riadku), napr:
 
-```
+```txt
 sk.iway=DEBUG
 sk.iway.iwcm=WARN
 org.springframework=WARN
 ```
+
+V prípade potreby je možné nastavit/implementovať vlastný [Appender](https://logback.qos.ch/manual/appenders.html). Ten môže odosielať logy napríklad do externého systému na analýzu logov. Priamo `Logback` okrem iných poskytuje `Appender` pre [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) alebo [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). V prípade potreby je možné vytvoriť [vlastný Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
 ## Odosielanie emailov
 
@@ -20,6 +25,7 @@ Pre odosielanie emailov je potrebné nastaviť korektne SMTP server:
 - `smtpUseSSL` - nastavením na `true` aktivujete použitie SSL.
 - `smtpUseTLS` - `TLS` autentifikácia - ak je port 587, `smtpUseTLS` musí byť `true`.
 - `smtpTLSVersion` - verzia `TLS` pre smtp spojenie.
+- `smtpAuthMechanism` - autorizačný mechanizmus pre SMTP server (napr. `NTLM XOAUTH2`), ak je prázdne, použije sa predvolený mechanizmus knižnice JavaMail. Nastavuje hodnotu `mail.smtp.auth.mechanisms`. Pre vynútenie použitia `NTLM/v2` pred `BASIC` nastavte hodnotu na `NTLM`. Pre podporu `OAuth` nastavte hodnotu na `XOAUTH2`.
 - `smtpUser` - prihlasovacie meno.
 - `smtpPassword` - heslo.
 - `smtpPort` - port pre pripojenie na SMTP server.
@@ -42,7 +48,7 @@ konfiguračnú hodnotu je možné nastaviť špeciálne pre moduly pomocou prefi
 - `dmail` - odosielateľ nového hromadného emailu.
 - `formmail` - odosielateľ notifikácie pre návštevníka, ktorý vyplnil formulár.
 - `reservation` - odosielateľ schválenia/zamietnutia rezervácie.
-
+- `passwordReset` - odosielateľ emailu pre zmenu hesla používateľa.
 
 ### Nastavenie Amazon SES
 

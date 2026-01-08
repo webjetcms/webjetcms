@@ -320,6 +320,15 @@ export function typeDatatable() {
                         }
                     }
 
+                    try {
+                        if (typeof window.datatableLocalJsonUpdate === "function") {
+                            //allow user to modify loaded data
+                            val = window.datatableLocalJsonUpdate(val, conf);
+                        }
+                    } catch (e) {
+                        console.log("Error in datatableLocalJsonUpdate:", e);
+                    }
+
                     //console.log("decoded val=", val);
 
                     dtConf.url = null;

@@ -28,7 +28,6 @@ public class ProxyRestController extends DatatableRestControllerV2<ProxyBean, Lo
         if(id != -1) return super.getOneItem(id);
 
         ProxyBean entity = new ProxyBean();
-        entity.setProxyId(-1);
         entity.setRemotePort(80);
         entity.setEncoding("utf-8");
         entity.setProxyMethod("ProxyByHttpClient");

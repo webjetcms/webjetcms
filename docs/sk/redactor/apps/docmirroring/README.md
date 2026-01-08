@@ -51,6 +51,12 @@ Odkaz je vo forme ```SK | CZ | EN``` generovaný ako ```ul-li``` zoznam. Pre vyg
 
 Názvy SK, CZ, EN sú generované zo zadaných ID adresárov v konfigurácii zrkadlenia, používa sa hodnota zadaná v poli **Navigačná lišta a menu**.
 
+Ak potrebujete namiesto textových odkazov zobraziť vlajky, nastavte parameter `flagsPath` na cestu k obrázkom vlajok. Obrázky musia byť pomenované podľa kódu jazyka, napr. `sk.png`, `en.png`, `cz.png`:
+
+```html
+!INCLUDE(/components/structuremirroring/language_switcher.jsp, flagsPath=/images/flags/)!
+```
+
 ## Automatický preklad
 
 WebJET dokáže automaticky prekladať názov adresára alebo stránky pri jej vytvorení. Je potrebné nasledovné nastavenie:

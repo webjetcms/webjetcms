@@ -265,18 +265,19 @@ float: left;
 			<%}
 		}%>
 		<p>
-			<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("userform")) {%>
+			<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("userform", request)) {%>
 				<jsp:include page="/components/form/captcha.jsp" />
 			<%}%>
 		</p>
 
 		<p>
 			<% if (useAjax==false) { %>
-			<stripes:submit id="bSubmitId" name="bSubmit"><iwcm:text key="button.save"/></stripes:submit>
+			<stripes:submit id="bSubmitId" name="bSubmit" class="btn btn-primary"><iwcm:text key="button.save"/></stripes:submit>
 			<% } else { %>
 			<%=pageParams.persistToSession(request) %>
-			<stripes:submit id="bSubmitIdAjax" name="bSubmit" onclick="return invokeWJAjax('regUserFormDiv', 'ajaxFormResultContainer', 'bSubmit', '/RegUserAjax.action');"><iwcm:text key="button.save"/></stripes:submit>
+			<stripes:submit id="bSubmitIdAjax" name="bSubmit" onclick="return invokeWJAjax('regUserFormDiv', 'ajaxFormResultContainer', 'bSubmit', '/RegUserAjax.action');" class="btn btn-primary"><iwcm:text key="button.save"/></stripes:submit>
 			<% } %>
+			<%sk.iway.iwcm.system.stripes.CSRF.writeCsrfTokenInputFiled(session, out);%>
 		</p>
    </fieldset>
 </iwcm:stripForm>

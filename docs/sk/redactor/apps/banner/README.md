@@ -6,7 +6,7 @@ Aplikácia Bannerový systém, umožňuje do stránky vložiť banner. Systém p
 
 - Obrázok - zobrazí statický obrázok, alebo animovaný ```gif```. Eviduje kliknutie na banner.
 - Html kód - vloží do stránky zadaný HTML kód dynamického bannera. Neeviduje kliknutie na banner.
-- Obsahový banner - vloží do stránky obrázok v pozadí nad ktorým sa nachádza text a tlačidlá pre vykonanie akcie (tzv. click to action tlačidlá).
+- Obsahový banner - vloží do stránky obrázok v pozadí nad ktorým sa nachádza text a tlačidlá pre vykonanie akcie (tzv. `call to action` tlačidlá).
 - Video - vloží do stránky lokálny video súbor, alebo video z YouTube.
 
 ![](datatable.png)

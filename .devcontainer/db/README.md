@@ -126,13 +126,14 @@ docker exec -it webjetcms-oracle bash
 sqlplus system/${WEBJET_DB_PASS}@localhost/XEPDB1
 ```
 
-Then create user and schema:
+Then create user and schema (paste commands line by line, do not forget to change `${WEBJET_DB_PASS}` to real password):
 
 ```sql
 CREATE USER webjetcms_autotest_web IDENTIFIED BY "${WEBJET_DB_PASS}";
 GRANT CONNECT, RESOURCE TO webjetcms_autotest_web;
 ALTER USER webjetcms_autotest_web DEFAULT TABLESPACE users;
 ALTER USER webjetcms_autotest_web QUOTA UNLIMITED ON users;
+EXIT
 ```
 
 ### PostgreSQL

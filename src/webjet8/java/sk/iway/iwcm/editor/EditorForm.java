@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import sk.iway.css.CssDto;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
@@ -33,7 +34,6 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  *  Formular ktory sa pouziva pri editore
@@ -1834,15 +1834,16 @@ public class EditorForm implements Serializable
 				    continue;
             }
 				sk.iway.css.CssParser cssParser = new sk.iway.css.CssParser(file);
-				List<Pair<String, String>> editorCss = cssParser.getElements();
+				List<CssDto> editorCss = cssParser.getElements();
 				try
 				{
 					//prehod na json format
-					for(Pair<String, String> element : editorCss)
+					for(CssDto element : editorCss)
 					{
 						Map<String, String> map = new HashMap<>();
-						map.put("tag", element.getFirst());
-						map.put("class", element.getSecond());
+						map.put("tag", element.getTag());
+						map.put("class", element.getClassName());
+						map.put("title", element.getTitle());
 						sessionCssParsed.add(map);
 					}
 				}

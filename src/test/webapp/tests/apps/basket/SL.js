@@ -98,7 +98,9 @@ module.exports = {
                 I.clickCss("button#deny");
             }
 
-            I.waitForVisible(locate("div").withText("Dokončovanie platby…"), 20);
+            I.wait(5);
+            I.waitForInvisible(locate("div").withText("Overovanie platby…"), 20);
+            I.wait(5);
             I.waitForInvisible(locate("div").withText("Dokončovanie platby…"), 20);
         }
 

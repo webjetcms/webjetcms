@@ -11,9 +11,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -37,8 +39,10 @@ public class CampaingsEntity implements Serializable {
 
     //Set entity domain id
 	@PrePersist
+    @PreUpdate
 	public void prePersist() {
-		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+		if (domainId == null) domainId = CloudToolsForCore.getDomainId();
+        if (Long.valueOf(-1L).equals(id)) id=null;
 	}
 
     @Id
@@ -54,6 +58,7 @@ public class CampaingsEntity implements Serializable {
         tab = "main",
         sortAfter = "editorFields.pageToSend"
     )
+    @NotBlank
     @Size(max = 255)
     private String subject;
 

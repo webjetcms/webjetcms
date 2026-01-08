@@ -41,7 +41,7 @@
                 dbParameters = "encoding=utf-8";
             } else if ("oracle.jdbc.driver.OracleDriver" == value) {
                 dbParameters = /*[[${setupForm.dbParameters}]]*/ '';
-                document.getElementById("dbPort").value = "1521";
+                //document.getElementById("dbPort").value = "1521";
                 if (tdDbName != null) tdDbName.innerHTML = "SID:";
             } else if ("org.postgresql.Driver" == value) {
                 dbParameters = /*[[${setupForm.dbParameters}]]*/ '';
