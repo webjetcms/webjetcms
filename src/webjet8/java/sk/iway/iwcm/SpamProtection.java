@@ -603,7 +603,8 @@ public class SpamProtection
 	public static int getMinutePostLimit(String module)
 	{
 		int minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY+"-"+module);
-		if (minuteLimit < 1 && minuteLimit >= -1) minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY);
+		//-1 returns when constant does not exist, use default
+		if (minuteLimit == -1) minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY);
 		return minuteLimit;
 	}
 

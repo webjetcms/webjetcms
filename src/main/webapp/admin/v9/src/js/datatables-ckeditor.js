@@ -1087,7 +1087,7 @@ export class DatatablesCkEditor {
 							}
 
 							var nameCleared = WJ.removeChars(WJ.internationalToEnglish(name).toLowerCase());
-							nameCleared = nameCleared.replace(/\./g, "-").replace(/--/g, "-");
+							nameCleared = nameCleared.replace(/\./g, "-").replace(/-{2,}/g, "-");
 							//remove dashes at start or end
 							nameCleared = nameCleared.replace(/^-+/g, '').replace(/-+$/g, '');
 

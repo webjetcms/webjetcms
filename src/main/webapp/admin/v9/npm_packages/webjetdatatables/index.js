@@ -3040,7 +3040,7 @@ export const dataTableInit = options => {
                             let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.")+".show input";
                             let element = $(selector);
                             //console.log("Done, selector=", selector, " element=", element);
-                            if (element.length>0 && ("text"==element[0].type || "textarea"==element[0].type)) {
+                            if (element.length>0 && (element[0].type === "text" || element[0].type === "textarea")) {
                                 try {
                                     element[0].focus();
                                     element[0].setSelectionRange(0,0);
