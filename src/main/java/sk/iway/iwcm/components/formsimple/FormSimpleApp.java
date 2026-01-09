@@ -130,10 +130,10 @@ public class FormSimpleApp extends WebjetComponentAbstract {
     private DocDetailsDto attribute_useFormMailDocId;
 
     @DataTableColumn(inputType=DataTableColumnType.JSON, tab="advanced", title="editor.form.use_form_doc_id", className="dt-tree-page-null", editor = {
-            @DataTableColumnEditor(
-				message="editor.form.help.use_form_doc_id"
-			)
-        })
+        @DataTableColumnEditor(
+            message="editor.form.help.use_form_doc_id"
+        )
+    })
     private DocDetailsDto attribute_useFormDocId;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "advanced", title = "editor.form.afterSendInterceptor")
