@@ -56,6 +56,15 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 
 @Service
 public class MultistepFormsService {
+    /**
+     * Service handling validation, session persistence and saving of multistep forms.
+     * <p>
+     * Responsibilities:
+     * - Generate stable session keys per form and user request
+     * - Validate step inputs (required, regex, XSS, CAPTCHA, CSRF, file rules)
+     * - Orchestrate custom processors/interceptors for steps and final save
+     * - Persist intermediate step data into HTTP session and finalize DB save
+     */
 
     public static final String SESSION_PREFIX = "MultistepForm_";
     public static final String MULTIUPLOAD_PREFIX = "multiupload_";
@@ -86,10 +95,24 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC STATIC - small support methods ********** */
 
+    /**
+     * Build the session key used to store per-form, per-request step data.
+     *
+     * @param formName logical form name (will be sanitized elsewhere)
+     * @param request  HTTP request providing the CSRF token header
+     * @return stable session key in format {@code MultistepForm_<formName>_<domainId>_<csrf>}
+     */
     public static final String getSessionKey(String formName, HttpServletRequest request) {
         return getNewSessionKey(formName, request.getHeader("X-CSRF-Token"));
     }
 
+    /**
+     * Build a new session key for the given form and CSRF token.
+     *
+     * @param formName logical form name
+     * @param csrf     CSRF token value
+     * @return session key string
+     */
     public static final String getNewSessionKey(String formName, String csrf) {
         StringBuilder sessionKey = new StringBuilder(SESSION_PREFIX);
         sessionKey.append(formName).append("_");
@@ -98,16 +121,35 @@ public class MultistepFormsService {
         return sessionKey.toString();
     }
 
+    /**
+     * Extract and sanitize the {@code formName} from a params map.
+     *
+     * @param params map potentially containing key {@code formName}
+     * @return sanitized form name (safe for identifiers)
+     */
     public static final String getFormName(Map<String, String> params) {
         String formName = Tools.getStringValue(params.get("formName"), "");
         return DocTools.removeChars(formName, true);
     }
 
+    /**
+     * Extract and sanitize the {@code formName} from the request.
+     *
+     * @param request HTTP request containing parameter {@code formName}
+     * @return sanitized form name (safe for identifiers)
+     */
     public static final String getFormName(HttpServletRequest request) {
         String formName = Tools.getStringValue(request.getParameter("formName"), "");
         return DocTools.removeChars(formName, true);
     }
 
+    /**
+     * Provide available regular expression validations as label/value pairs for UI.
+     *
+     * @param regExpRepository repository of regex definitions
+     * @param request          request used to resolve localized titles
+     * @return list of label/value options
+     */
     public static final List<LabelValue> getRegExOptions(RegExpRepository regExpRepository, HttpServletRequest request) {
         Prop prop = Prop.getInstance(request);
         List<LabelValue> options = new ArrayList<>();
@@ -118,6 +160,12 @@ public class MultistepFormsService {
         return options;
     }
 
+    /**
+     * Provide supported form field types as label/value pairs.
+     *
+     * @param request request used to resolve localized labels
+     * @return list of field type options
+     */
     public static final List<LabelValue> getFieldTypes(HttpServletRequest request) {
         Prop prop = Prop.getInstance(request);
 
@@ -130,6 +178,13 @@ public class MultistepFormsService {
         return options;
     }
 
+    /**
+     * Provide visibility configuration per field type (which technical fields are hidden).
+     * Adds a special option {@code allwaysHidden}.
+     *
+     * @param request request used to resolve localized labels
+     * @return list of visibility label/value pairs
+     */
     public static final List<LabelValue> getFiledTypeVisibility(HttpServletRequest request) {
         Prop prop = Prop.getInstance(request);
 
@@ -145,6 +200,15 @@ public class MultistepFormsService {
         return options;
     }
 
+    /**
+     * Get the next step following the provided step within a form sequence.
+     *
+     * @param formName      logical form name
+     * @param currentStepId identifier of current step
+     * @param repo          repository used to fetch ordered steps
+     * @return next step entity or {@code null} if current step is the last
+     * @throws IllegalStateException when the provided step does not belong to the form/domain
+     */
     public static final FormStepEntity getNextStep(String formName, Long currentStepId, FormStepsRepository repo) {
         List<FormStepEntity> steps = repo.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
 
@@ -163,6 +227,14 @@ public class MultistepFormsService {
         return List.of("novy-riadok", "prazdny-stlpec");
     }
 
+    /**
+     * Determine the position of a step within the ordered form sequence.
+     *
+     * @param formName logical form name
+     * @param stepId   step identifier
+     * @param repo     repository used to fetch ordered steps
+     * @return index if found, otherwise -1
+     */
     public static int getStepPositionIndex(String formName, Long stepId, FormStepsRepository repo) {
         int index = 1;
         boolean found = false;
@@ -180,6 +252,12 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - supprot methods ********** */
 
+    /**
+     * Build human-readable options for steps of a form suitable for selection inputs.
+     *
+     * @param formName logical form name
+     * @return list of label/value pairs ordered by step sorting
+     */
     public final List<LabelValue> getFormStepsOptions(String formName) {
         List<LabelValue> options = new ArrayList<>();
 
@@ -193,6 +271,16 @@ public class MultistepFormsService {
         return options;
     }
 
+    /**
+     * Generate a valid and unique {@code itemFormId} for a form item within a form.
+     * <p>
+     * For {@code radio} fields, derives id from label/placeholder and required flag,
+     * allowing multiple radio buttons to share the same logical id. For other fields,
+     * generates a unique suffix (numeric) to avoid collisions among the same field type.
+     *
+     * @param entity form item to generate id for
+     * @return unique itemFormId string safe for storage and queries
+     */
     public final String getValidItemFormId(FormItemEntity entity) {
 
         // type radio use placeholder or label as itemFormId, so we can join them - here same id is wanted outcome
@@ -249,6 +337,13 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - main logic methods to work with form ********** */
 
+    /**
+     * Update or create the pattern entity (form definition) for the form by
+     * concatenating all unique {@code itemFormId}s in validation order.
+     * Multi-upload fields append the {@code -fileNames} postfix.
+     *
+     * @param formName logical form name
+     */
     public final void updateFormPattern(String formName) {
         //First get from pattern entity
         FormsEntity patternEntity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());
@@ -275,6 +370,18 @@ public class MultistepFormsService {
         formsRepository.save(patternEntity);
     }
 
+    /**
+     * Validate and persist a single step of a multistep form into session, and optionally
+     * finalize the form submission. Performs CSRF/CAPTCHA/file validations and invokes
+     * custom processors. When the last step is completed, triggers final save into DB.
+     *
+     * @param formName logical form name
+     * @param stepId   current step identifier
+     * @param request  HTTP request containing JSON body of field values
+     * @param response JSON response to be enriched with errors, next step or forward
+     * @throws SaveFormException when validation or processing fails in a controlled way
+     * @throws IOException       when reading request body fails
+     */
     public final void saveFormStep(String formName, Long stepId, HttpServletRequest request, JSONObject response) throws SaveFormException, IOException {
         if(validateFormInfo(formName, stepId) == false) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
 
@@ -605,6 +712,12 @@ public class MultistepFormsService {
         return values;
     }
 
+    /**
+     * Fetch distinct minimal form item definitions required for validation for the form.
+     *
+     * @param formName logical form name
+     * @return list of simplified {@code FormItemEntity} containing id, label, type, regex, required
+     */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
         String sql = "SELECT DISTINCT(item_form_id), label, field_type, regex_validation, required FROM form_items WHERE form_name = ? AND domain_id = ?";
 

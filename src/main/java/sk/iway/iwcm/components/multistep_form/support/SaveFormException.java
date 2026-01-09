@@ -1,5 +1,12 @@
 package sk.iway.iwcm.components.multistep_form.support;
 
+/**
+ * Exception indicating a failure while saving a multistep form.
+ *
+ * <p>Provides context whether the error was caused by an end-user action
+ * and an optional error redirect target to navigate
+ * the user to a dedicated error page or step.</p>
+ */
 public class SaveFormException extends Exception {
 
     private boolean endUserTry = false;

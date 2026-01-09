@@ -1,7 +1,22 @@
 // ES module for Multistep Form app
 // Exports class `MultistepForm` which encapsulates all logic and DOM rendering
+/**
+ * Multistep Form application controller.
+ *
+ * Renders the shell, loads individual steps from server, submits data,
+ * and handles success/error UI states.
+ */
 
 export class MultistepForm {
+    /**
+     * Create a new MultistepForm instance.
+     * @param {Object} [options] - Initialization options.
+     * @param {string} [options.container] - CSS selector of the mount container (preferred).
+     * @param {string} [options.mountSelector] - Alternative mount selector; defaults to Bootstrap container/body.
+     * @param {string} [options.formName] - Form identifier used by the backend.
+     * @param {string|number} [options.stepId] - Initial step identifier to load.
+     * @param {string} [options.csrf] - CSRF token added to POST requests.
+     */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
         this.mountSelector = options.container || options.mountSelector || 'body > article > div.container';
@@ -15,10 +30,15 @@ export class MultistepForm {
         this._renderShell();
     }
 
-    start() {
-        this.loadStep(this.formName, this.stepId);
-    }
+    /**
+     * Start the flow by loading the configured form and step.
+     */
+    start() { this.loadStep(this.formName, this.stepId); }
 
+    /**
+     * Render the application shell (alerts + content holder) and mount it.
+     * Creates `this.wrapper` for subsequent DOM operations.
+     */
     _renderShell() {
         // Create wrapper that holds everything
         const wrapper = document.createElement('div');
@@ -59,6 +79,12 @@ export class MultistepForm {
         this.wrapper = wrapper;
     }
 
+    /**
+     * Load and render a step's HTML from the backend.
+     * @param {string} formName - The form name to query.
+     * @param {string|number} stepId - The step identifier to load.
+     * @returns {Promise<void>} Resolves when the step content is injected.
+     */
     async loadStep(formName, stepId) {
         if (!formName || !stepId) {
             console.warn('Missing formName or stepId; skipping load.');
@@ -109,6 +135,12 @@ export class MultistepForm {
         }
     }
 
+    /**
+     * Validate and submit the current step form via AJAX.
+     * Collects all input/select/textarea values and posts JSON to the server.
+     * @param {SubmitEvent} event - The submit event from the step form.
+     * @returns {Promise<void>} Resolves after handling response actions.
+     */
     async doValidationAndSave(event) {
         event.preventDefault();
         const form = event.currentTarget;
@@ -168,6 +200,11 @@ export class MultistepForm {
         }
     }
 
+    /**
+     * Show a global success alert with a message.
+     * @param {string} [message] - Message to display; default is a generic text.
+     * @returns {Promise<void>} Resolves after the UI is updated.
+     */
     async showGlobalSuccess(message) {
         const successMsg = message || 'Operation completed successfully.';
         const success = this.wrapper.querySelector('div.alert.alert-success');
@@ -177,6 +214,12 @@ export class MultistepForm {
         if (p) p.innerHTML = `<span>${successMsg}</span>`;
     }
 
+    /**
+     * Show a global error alert using a structured response.
+     * @param {Object} response - Server response containing error details.
+     * @param {string} [response.err_msg] - Human-readable error message.
+     * @returns {Promise<void>} Resolves after the UI is updated.
+     */
     async showGlobalErr(response) {
         const errorMsg = response.err_msg || 'Unknown error occurred.';
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
@@ -186,6 +229,9 @@ export class MultistepForm {
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
     }
 
+    /**
+     * Hide and clear any field/global error messages in the UI.
+     */
     hideErrors() {
         if (window.$) {
             $(this.wrapper).find('div.cs-error').text('');
@@ -198,6 +244,16 @@ export class MultistepForm {
         }
     }
 
+    /**
+     * Handle server response after a successful POST.
+     * Can redirect, render field errors, or load the next step.
+     * @param {Object} response - Parsed JSON from the server.
+     * @param {string} [response.forward] - URL to redirect to on success.
+     * @param {Object<string,string>} [response.fieldErrors] - Map of fieldName to error message(s).
+     * @param {string} [response['form-name']] - Current form name.
+     * @param {string|number} [response['step-id']] - Next step id; -1 means finished.
+     * @returns {Promise<void>} Resolves after performing the required action.
+     */
     async postSaveAction(response) {
         this.hideErrors();
 

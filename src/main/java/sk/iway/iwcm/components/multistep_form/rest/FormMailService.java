@@ -45,6 +45,15 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Service responsible for preparing and sending emails for multi‑step forms.
+ * <p>
+ * Responsibilities:
+ * - Extracts sender name and email from submitted form data based on configured field keys
+ * - Composes HTML or plain‑text email body including optional CSS and attachments
+ * - Applies repository settings (encoding, reply-to/cc/bcc, delayed send, double‑opt‑in)
+ * - Sends email via configured SMTP or schedules deferred sending when SMTP is disabled
+ */
 @Service
 public class FormMailService {
 
@@ -58,6 +67,14 @@ public class FormMailService {
 		this.formSettingsRepository = formSettingsRepository;
 	}
 
+	/**
+	 * Extracts values from the given form for fields whose names match the configured list
+	 * defined by the provided {@code constant} key.
+	 *
+	 * @param form the submitted form entity containing serialized field data
+	 * @param constant configuration key whose value is an array of field names
+	 * @return ordered list of matching field values; empty list when none found or no data
+	 */
     private List<String> getFieldsValues(FormsEntity form, String constant) {
         List<String> foundValues = new ArrayList<>();
 
@@ -81,6 +98,25 @@ public class FormMailService {
         return foundValues;
     }
 
+		/**
+		 * Sends a notification email for the given form submission.
+		 * <p>
+		 * Behavior overview:
+		 * - Determines sender name/email from form data using configuration keys
+		 * - Applies form settings (encoding, reply-to/cc/bcc, delayed sending, attachments handling)
+		 * - Inlines CSS into HTML body when sending as HTML unless forced to plain text
+		 * - Optionally attaches message HTML as a separate file when configured
+		 * - Sends immediately via SMTP or schedules for later when SMTP is disabled
+		 *
+		 * @param form       form entity with metadata and serialized field data
+		 * @param recipients comma‑separated list of recipient emails
+		 * @param subject    email subject
+		 * @param formFiles  uploaded files container to optionally attach
+		 * @param attachFiles when true attaches uploaded files to the email
+		 * @param cssData    inline <style> block or CSS links already made absolute
+		 * @param htmlData   rendered form body HTML (will be transformed as needed)
+		 * @param request    current HTTP request used for context and headers
+		 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
 		Prop prop = Prop.getInstance(request);
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());

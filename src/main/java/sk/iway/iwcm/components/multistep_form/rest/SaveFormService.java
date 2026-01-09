@@ -37,6 +37,15 @@ import sk.iway.iwcm.users.UsersDB;
 
 @Service
 public class SaveFormService {
+    /**
+     * Service responsible for saving multi-step form answers and sending notification emails.
+     * <p>
+     * Workflow overview:
+     * - Validates spam protection and resolves email recipients
+     * - Persists a new {@link FormsEntity} record and prepares HTML content
+     * - Handles uploaded files (attachments) and optional PDF generation
+     * - Sends the final email with rendered HTML and attachments when allowed
+     */
 
     private FormHtmlHandler htmlHandler;
     private FormsRepository formsRepository;
@@ -56,6 +65,21 @@ public class SaveFormService {
         private final List<IwcmFile> attachs = new ArrayList<>();
     }
 
+    /**
+     * Saves answers of a multi-step form and sends the notification email.
+     * <p>
+     * This method performs spam protection, resolves recipients, prepares the {@link FormsEntity},
+     * stores uploaded files, optionally generates a PDF summary, and finally sends the email.
+     * If an error occurs and {@code forwardFail} is configured in {@code formSettings},
+     * the thrown {@link SaveFormException} will contain a forward target.
+     *
+     * @param formName      technical name of the form (used for session and persistence)
+     * @param formSettings  form configuration containing recipients, subject and options
+     * @param iLastDocId    optional doc ID used to derive subject and context; may be {@code null}
+     * @param request       current HTTP request (used for session and user context)
+     * @throws SaveFormException when validation fails or sending logic requires forwarding on failure
+     * @throws IOException       when an I/O error occurs during file operations
+     */
     public final void saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, HttpServletRequest request) throws SaveFormException, IOException {
 
         String forwardFail = null;
@@ -91,6 +115,19 @@ public class SaveFormService {
         }
     }
 
+    /**
+     * Internal save operation that persists form data, processes uploaded files,
+     * generates optional PDF, and sends the notification email.
+     *
+     * @param formName     technical name of the form
+     * @param formSettings form configuration
+     * @param docId        resolved document ID for context/subject; {@code -1} if unknown
+     * @param subject      email subject to be used
+     * @param request      current HTTP request
+     * @return unused value (returns {@code null}); present for legacy compatibility
+     * @throws SaveFormException when validation or email sending fails
+     * @throws IOException       when file operations fail
+     */
     private final String saveFormAnswers(String formName, FormSettingsEntity formSettings, int docId, String subject, HttpServletRequest request) throws SaveFormException, IOException {
 
         String recipients = null;
@@ -174,6 +211,20 @@ public class SaveFormService {
         return null;
     }
 
+    /**
+     * Builds and assigns the data payload for the given form before saving.
+     * <p>
+     * Iterates over validated form items, reads values from the session using the
+     * multistep prefix, encrypts values when a public key is provided, and assembles
+     * a pipe-delimited key-value string expected by the persistence layer. For multi-upload
+     * items, files are processed and associated file names are recorded.
+     *
+     * @param form        persisted {@link FormsEntity} that will receive its data string
+     * @param formName    technical name of the form (used for session key prefix)
+     * @param request     current HTTP request to access the session
+     * @param formFiles   container for associated file names and attachments
+     * @param formSettings form configuration containing encryption key and options
+     */
     private final void setFormDataBeforeSave(FormsEntity form, String formName, HttpServletRequest request, FormFiles formFiles, FormSettingsEntity formSettings) {
         String prefix = MultistepFormsService.getSessionKey(formName, request) + "_";
         StringBuilder data = new StringBuilder();
@@ -210,6 +261,17 @@ public class SaveFormService {
         form.setData( data.toString() );
     }
 
+    /**
+     * Moves uploaded temporary files into the form directory and renames them using the form ID.
+     * <p>
+     * The {@code keysString} contains semicolon-separated temporary keys. For each key, the
+     * file is moved, renamed to "{formId}_{originalName}", and recorded in {@code formFiles}.
+     * When SMTP server usage is disabled, a send-later record (virtual path and file name) is appended.
+     *
+     * @param keysString semicolon-separated list of temporary upload keys; may be empty
+     * @param formId     current form ID used for renaming persisted files
+     * @param formFiles  container updated with file names, virtual paths and attachments
+     */
     private final void saveFiles(String keysString, Long formId, FormFiles formFiles) {
         if(Tools.isEmpty(keysString)) return;
 

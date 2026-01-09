@@ -20,6 +20,20 @@ import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.i18n.Prop;
 
+/**
+ * Processor that handles email verification for multi-step forms.
+ *
+ * <p>
+ * Responsibilities:
+ * <ul>
+ *   <li>After step 1, generates a verification code and sends it to the user's email.</li>
+ *   <li>During step 2, validates the code provided by the user and manages attempt limits.</li>
+ * </ul>
+ * </p>
+ *
+ * Session keys are namespaced per form to avoid collisions between multiple forms
+ * processed in the same session.
+ */
 public class FormEmailVerificationProcessor implements FormProcessorInterface {
 
     public static final String SESSION_VERIFY_CODE_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE";
@@ -27,6 +41,16 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     private static final Integer MAX_VERIFY_ATTEMPTS = 3;
 
     @Override
+    /**
+     * Intercepts form processing to trigger email verification after the first step.
+     *
+     * @param formName the unique form name
+     * @param currentStepId the ID of the current step being processed
+     * @param stepData JSON payload containing fields submitted in the current step
+     * @param request current HTTP request
+     * @param errors map to collect validation errors (not used in this step)
+     * @throws SaveFormException if email cannot be determined or email sending fails
+     */
     public void runStepInterceptor(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         FormStepsRepository fsr = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
         if(fsr == null) throw new IllegalStateException("Could not obtain FormStepsRepository.");
@@ -41,6 +65,21 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     }
 
     @Override
+    /**
+     * Validates the email verification code during the second step.
+     *
+     * <p>If the code is invalid, the error is placed into the {@code errors}
+     * map for the corresponding field. If the maximum number of attempts is
+     * exceeded, a {@link SaveFormException} is thrown to interrupt the
+     * processing and redirect to an error page.</p>
+     *
+     * @param formName the unique form name
+     * @param currentStepId the ID of the current step being validated
+     * @param stepData JSON payload containing fields submitted in the current step
+     * @param request current HTTP request
+     * @param errors map to collect validation errors when the code is invalid
+     * @throws SaveFormException when verification code attempts exceed the allowed maximum
+     */
     public void validateStep(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         FormStepsRepository fsr = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
         if(fsr == null) throw new IllegalStateException("Could not obtain FormStepsRepository.");
@@ -61,6 +100,16 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
         return true;
     }
 
+    /**
+     * Extracts the user's email from the current step or session and sends a
+     * verification code to that address. Stores the code and attempt counter in
+     * the session under a form-specific namespace.
+     *
+     * @param formName the unique form name
+     * @param currentReceived JSON payload from the current step containing submitted fields
+     * @param request current HTTP request
+     * @throws SaveFormException when no valid email is found or sending the email fails
+     */
     private void verifyEmailInterceptor(String formName, JSONObject currentReceived, HttpServletRequest request) throws SaveFormException {
         //Try get email from current json
         List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
@@ -119,6 +168,16 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     }
 
     @SuppressWarnings("null")
+    /**
+     * Validates the verification code provided by the user. Increments the
+     * attempt counter and enforces a maximum number of attempts.
+     *
+     * @param formName the unique form name
+     * @param currentReceived JSON payload from the current step containing submitted fields
+     * @param request current HTTP request
+     * @param errors map to collect validation errors when the code is invalid
+     * @throws SaveFormException when max attempts are exceeded, causing processing to stop
+     */
     private void emaiCodeValidation(String formName, JSONObject currentReceived, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         String verifyCode = null;
         String foundKey = null;
