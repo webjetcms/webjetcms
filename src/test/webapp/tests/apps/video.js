@@ -118,3 +118,12 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
     I.switchToNextTab();
     I.seeElement(".videoBox.videoBox1");
 });
+
+Scenario("Video - test zobrazovania v bannery", ({ I }) => {
+    I.amOnPage("/en/apps/banner-system/classic_video_banner_yt.html");
+    I.waitForElement('iframe[src*="youtube.com"]');
+    within({frame: "#video"}, () => {
+        I.waitForElement(locate("div.ytp-ce-playlist-title").withText('WebJET produkty'), 10);
+        I.dontSeeElement("div.ytp-error-content-wrap-subreason");
+    });
+});

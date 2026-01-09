@@ -4,7 +4,7 @@
             <div class="col-md-8 mx-auto">
 
                 <p data-th-if="${importedFileName ne null}" class="alert alert-success">
-                    File successfully uploaded, fileName: <span data-th-text="${importedFileName}"></span>
+                    File successfully uploaded, fileName: <span data-th-text="${importedFileName}"></span>, size: <span data-th-text="${importedFileSize}"></span> bytes.
                 </p>
 
                 <form method="post" data-th-action="@{/apps/contact/admin/upload/}" data-th-object="${form}" enctype="multipart/form-data">

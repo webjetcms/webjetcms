@@ -190,6 +190,20 @@ module.exports = {
      },
 
      /**
+      *
+      * @returns HTML code from ckEditor instance
+      */
+     async getCkeditor() {
+          this.waitForCkeditor();
+          I.clickCss('#trEditor');
+          I.pressKey('ArrowLeft');
+          var htmlCode = await I.executeScript(function () {
+               return window.ckEditorInstance.getData();
+          });
+          return htmlCode;
+     },
+
+     /**
       * Fills value into the WYSIWYG editor Quill
       * @param {String} name - Name of the field to fill
       * @param {String} value - Value to fill in the field

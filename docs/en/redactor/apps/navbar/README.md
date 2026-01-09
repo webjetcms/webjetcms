@@ -30,3 +30,57 @@ or it can be inserted directly into the web page as an expression:
 ```
 
 ![](editor-dialog.png)
+
+## Custom Navigation Bar Implementation
+
+For some projects, it may be necessary to create a custom navigation bar implementation with different formatting or structure. WebJET allows you to define a custom class for generating the navigation bar.
+
+### Creating a Custom Implementation
+
+A custom implementation must implement the `sk.iway.iwcm.doc.NavbarInterface` interface:
+
+```java
+package com.example.custom;
+
+import javax.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.doc.NavbarInterface;
+
+public class CustomNavbar implements NavbarInterface {
+
+    @Override
+    public String getNavbar(int groupId, int docId, HttpServletRequest request) {
+        return "Custom navbar for group " + groupId + " doc " + docId;
+    }
+
+    @Override
+    public String getNavbarForNonDefaultDoc(sk.iway.iwcm.doc.DocDetails docDetails, String navbar, HttpServletRequest request) {
+        return navbar + ", Custom navbar for non-default doc " + docDetails.getDocId();
+    }
+
+}
+```
+
+### Configuration
+
+After creating a custom implementation, you need to set the `navbarDefaultType` configuration variable to the full class name (including package):
+
+```
+navbarDefaultType=com.example.custom.CustomNavbar
+```
+
+This configuration is set in **Settings > Configuration** in the WebJET administration.
+
+### Standard Implementations
+
+WebJET includes three standard implementations:
+
+- **NavbarStandard** - standard text navigation (value `normal` or empty)
+- **NavbarRDF** - navigation in RDF format (value `rdf`)
+- **NavbarSchemaOrg** - navigation in Schema.org format (value `schema.org`)
+
+### Notes
+
+- If the `navbarDefaultType` configuration variable contains a class name (not standard values `normal`, `rdf`, `schema.org`), WebJET will attempt to load this class and use it.
+- If the class does not exist or does not implement `NavbarInterface`, the standard implementation will be used.
+- The custom class must have a public constructor without parameters.
+

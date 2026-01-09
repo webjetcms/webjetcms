@@ -166,7 +166,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Column(name="priority")
 	@DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
-        title="components.banner.priority",
+        title="editor.sort_order",
 		tab = "advanced"
     )
 	private Integer priority;
@@ -516,10 +516,6 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		else this.referenceId = referenceId;
 	}
 
-	public void setReferenceId(int referenceId) {
-		this.referenceId = Long.valueOf(referenceId);
-	}
-
 	public Integer getOrderId() { return orderId == null ? -1 : orderId; }
 	public Integer getPriority() { return priority == null ? 0 : priority; }
 	public Boolean getShowFile() { return Tools.isTrue(showFile); }
@@ -537,4 +533,14 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		if (id == null) return 0;
 		return id.intValue();
 	}
+
+
+    public void setReferenceId(int referenceId) {
+        this.referenceId = Long.valueOf(referenceId);
+    }
+
+    public int getReferenceIdInt() {
+        return referenceId == null ? 0 : referenceId.intValue();
+    }
+
 }

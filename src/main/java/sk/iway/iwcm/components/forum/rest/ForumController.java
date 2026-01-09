@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
@@ -54,7 +54,7 @@ public class ForumController {
     }
 
     @PostMapping("/apps/forum/saveForumFile")
-    public String saveForumFile(@RequestParam("uploadedFile") CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
+    public String saveForumFile(@RequestParam("uploadedFile") MultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         try {
             return DocForumService.uploadForumFile(uploadFile, request);
         } catch(Exception e) {

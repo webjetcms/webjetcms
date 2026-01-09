@@ -110,6 +110,11 @@ module.exports = {
         }
         DTE.waitForEditor();
         //I.wait(5);
+
+        this.openCurrentAppEditor(modalId, editIcon);
+    },
+
+    openCurrentAppEditor(modalId = "component-datatable_modal", editIcon = false) {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
@@ -151,6 +156,15 @@ module.exports = {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
 
+        this.openAppForInsert(applicationName, applicationSelector);
+
+        I.switchTo();
+        I.switchTo();
+        if (shouldClickOkButton)
+            I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    openAppForInsert(applicationName, applicationSelector) {
         I.clickCss('#pills-dt-datatableInit-content-tab');
         I.clickCss('.cke_button.cke_button__components.cke_button_off');
         I.switchTo('.cke_dialog_ui_iframe');
@@ -167,10 +181,6 @@ module.exports = {
         I.wait(1);
         I.click(i18n.get("Add to page")); //I.clickCss('a.buy');
         DTE.waitForEditor("component-datatable");
-        I.switchTo();
-        I.switchTo();
-        if (shouldClickOkButton)
-            I.clickCss('.cke_dialog_ui_button_ok');
     },
 
     /**
@@ -179,6 +189,16 @@ module.exports = {
     confirm() {
         I.switchTo();
         I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_ok");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
+     * Click on the Cancel button in the Editor App dialog to discard app settings changes
+     */
+    cancel() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_cancel");
         //wait for component preview to load
         I.wait(3);
     },

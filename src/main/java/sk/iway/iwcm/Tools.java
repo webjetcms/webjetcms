@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
@@ -758,6 +758,9 @@ public class Tools
 
 	public static String join(String[] array, String glue)
 	{
+		if (array == null) {
+            return null;
+        }
 		StringBuilder result = new StringBuilder();
 		for(int i = 0; i < array.length; i++)
 		{
@@ -1039,6 +1042,18 @@ public class Tools
 			ret = ret.substring(0, ret.indexOf('#'));
 		}
 		return ResponseUtils.filter(ret);
+	}
+
+	/**
+	 * Get parameter value from request. If value is null, return empty string.
+	 * Value is filtered for XSS.
+	 * @param request
+	 * @param name
+	 * @return
+	 */
+	public static String getParameterNotNull(HttpServletRequest request, String name) {
+		String value = getParameter(request, name);
+		return (value != null) ? value : "";
 	}
 
 	/**
@@ -2905,6 +2920,8 @@ public class Tools
 	 * @return
 	 */
 	public static String convertToHtmlTags(String text){
+
+		//notice: &#47; is / and this is replaced to avoid problems with jstree path separator
 
 		if (text.contains("*||")) text = Tools.replace(text, "*||", "</");
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");

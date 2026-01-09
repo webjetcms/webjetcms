@@ -26,8 +26,6 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
-import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
-import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
@@ -36,6 +34,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
@@ -51,14 +50,12 @@ import sk.iway.iwcm.users.UsersDB;
 public class GalleryRestController extends DatatableRestControllerV2<GalleryEntity, Long> {
 
     private final GalleryRepository repository;
-    private final PerexGroupsRepository perexGroupsRepository;
     private final GalleryDimensionRepository gdr;
 
     @Autowired
-    public GalleryRestController(GalleryRepository repository, PerexGroupsRepository perexGroupsRepository, GalleryDimensionRepository gdr, HttpServletRequest request) {
+    public GalleryRestController(GalleryRepository repository, GalleryDimensionRepository gdr, HttpServletRequest request) {
         super(repository);
         this.repository = repository;
-        this.perexGroupsRepository = perexGroupsRepository;
         this.gdr = gdr;
     }
 
@@ -101,8 +98,8 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
 
         //this can't be in getOptions method becase getAll is never called
-        List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
-        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
+        List<OptionDto> perexList = DocDB.getInstance().getPerexGroupOptions();
+        page.addOptions("editorFields.perexGroupsIds", perexList, "label", "value", false);
 
         return page;
     }

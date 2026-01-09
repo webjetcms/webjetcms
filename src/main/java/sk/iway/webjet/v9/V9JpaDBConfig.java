@@ -79,6 +79,7 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
         "sk.iway.iwcm.components.news.templates.jpa",
         "sk.iway.iwcm.components.ai.jpa",
         "sk.iway.iwcm.components.ai.stat.jpa",
+        "sk.iway.iwcm.components.formsimple",
         "sk.iway.iwcm.components.basket.delivery_methods.jpa"
     }
 ) // package s repozitarmi
@@ -147,6 +148,7 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.news.templates.jpa",
                             "sk.iway.iwcm.components.ai.jpa",
                             "sk.iway.iwcm.components.ai.stat.jpa",
+                            "sk.iway.iwcm.components.formsimple",
                             "sk.iway.iwcm.components.basket.delivery_methods.jpa"
         );
 

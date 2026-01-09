@@ -7,7 +7,6 @@
 <%@
 		taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<%@page import="org.apache.commons.lang.time.DateUtils"%>
 <%@page import="sk.iway.iwcm.PathFilter"%>
 <%@page import="java.util.regex.Pattern"%>
 <%@page import="sk.iway.iwcm.Tools"%>
@@ -49,9 +48,9 @@
 
 		<p>
 			<input type="hidden" type="text" name="iframed" value="${iframed}"/>
-			<label> <iwcm:text key="admin.tail.exp"/> <input type="text" name="exp" value="${param.exp}"/></label>
-			<iwcm:text key="admin.tail.lines_before"/> <input type="text" name="linesBefore"  value="${param.linesBefore}"/>
-			<iwcm:text key="admin.tail.lines_after"/> <input type="text" name="linesAfter" value="${param.linesAfter}" />
+			<label> <iwcm:text key="admin.tail.exp"/> <input type="text" name="exp" value="<%=Tools.getParameterNotNull(request, "exp")%>"/></label>
+			<iwcm:text key="admin.tail.lines_before"/> <input type="text" name="linesBefore"  value="<%=Tools.getParameterNotNull(request, "linesBefore")%>"/>
+			<iwcm:text key="admin.tail.lines_after"/> <input type="text" name="linesAfter" value="<%=Tools.getParameterNotNull(request, "linesAfter")%>" />
 			<input type="submit"  name="grep" class="button100" value='<iwcm:text key="admin.tail.grep"/>'/>
 			<input type="hidden" name="file" value="${filePath}" />
 		</p>
@@ -105,12 +104,9 @@
 
 				for (File f:files)
 				{
-					//if (f.length()>0 && DateUtils.isSameDay(new Date(f.lastModified()),now))
-					{
 		%>
 		<li> <a href="/admin/tail.jsp?file=<%=Tools.escapeHtml(f.getAbsolutePath())%>"><%=Tools.escapeHtml(f.getName() + " (" + FileTools.getFormatFileSize(f.length(),false ) + ", " + Tools.formatDateTimeSeconds(f.lastModified())) %>) </a></li>
 		<%
-					}
 				}
 			}
 		%>

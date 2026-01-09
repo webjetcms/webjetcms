@@ -1,4 +1,4 @@
-<%@page import="java.util.Map"%><%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*"%>
+<%@page import="java.util.Map"%><%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*,java.util.regex.*"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -42,32 +42,119 @@ if (query!=null && query.trim().length()>0)
    {
       out.println("<br>-----------------------<br>");
       out.println(Tools.escapeHtml(query));
+	  query = Tools.replace(query, "&#47;", "&#47|");
+	  query = Tools.replace(query, "&nbsp;", "&nbsp|");
+	  query = Tools.replace(query, "&quot;", "&quot|");
+	  query = Tools.replace(query, "&amp;", "&amp|");
+	  query = Tools.replace(query, "px;", "px|");
       out.println("<br>-----------------------<br><br>");
 
       long start = Tools.getNow();
 
-		String[] pole = query.split(";");
+		String[] pole = Tools.getTokens(query, ";");
 		Statement s;
 		int countRecords = 0;
 		for (String sql:pole)
 		{
 			if (Tools.isNotEmpty(sql))
 			{
+				sql = Tools.replace(sql, "&#47|", "&#47;");
+				sql = Tools.replace(sql, "&nbsp|", "&nbsp;");
+				sql = Tools.replace(sql, "&quot|", "&quot;");
+				sql = Tools.replace(sql, "&amp|", "&amp;");
+				sql = Tools.replace(sql, "px|", "px;");
+
+				if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL)
+				{
+					sql = Tools.replace(sql, "`", ""); //remove mysql backticks
+				}
+				if (Constants.DB_TYPE == Constants.DB_MSSQL)
+				{
+					//allow identity inserts
+					if (sql.startsWith("INSERT INTO ") && sql.indexOf("VALUES") > sql.indexOf(")"))
+					{
+						//table names without identity inserts
+						String skipIdentityInsertTables[] = new String[] {
+							"_conf_",
+							"templates_group",
+							"enumeration_type",
+							"enumeration_data",
+							"banner_banners"
+						};
+
+						String tableName = sql.substring("INSERT INTO ".length());
+						if (tableName.indexOf(" ")!=-1)
+							tableName = tableName.substring(0, tableName.indexOf(" "));
+
+						boolean skipIdentityInsert = false;
+						for (String skipTable : skipIdentityInsertTables)
+						{
+							if (tableName.equalsIgnoreCase(skipTable))
+							{
+								skipIdentityInsert = true;
+								break;
+							}
+						}
+						if (!skipIdentityInsert) {
+							sql = "SET IDENTITY_INSERT " + tableName + " OFF; SET IDENTITY_INSERT " + tableName + " ON; " + sql + "; SET IDENTITY_INSERT " + tableName + " OFF";
+						}
+					}
+
+					// Add N prefix for string literals containing Unicode characters
+					Pattern pattern = Pattern.compile("'([^']*[\\u0080-\\uFFFF][^']*)'");
+					Matcher matcher = pattern.matcher(sql);
+					StringBuffer sb = new StringBuffer();
+					while (matcher.find()) {
+						String match = matcher.group(1);
+						matcher.appendReplacement(sb, "N'" + match + "'");
+					}
+					matcher.appendTail(sb);
+					sql = sb.toString();
+				}
+
 				if (Constants.DB_TYPE == Constants.DB_ORACLE)
 				{
 					sql = Tools.replace(sql, "|", ";");
 					sql = Tools.replace(sql, ";;", "|");
+					sql = Tools.replace(sql, "INSERT INTO _conf_", "INSERT INTO webjet_conf");
+					sql = Tools.replace(sql, "INSERT INTO _properties_", "INSERT INTO webjet_properties");
+
+					// Match datetime literals in format 'YYYY-MM-DD HH:mm:ss'
+					String pattern = ", '(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})'";
+					String replacement = ", to_date('$1', 'YYYY-MM-DD HH24:MI:SS')";
+
+					sql = sql.replaceAll(pattern, replacement);
+
 					 if (sql.indexOf("TRIGGER")!=-1)
 					   {
 					   	sql = sql.replace('\n', ' ');
 					   	sql = sql.replace('\r', ' ');
 					   	sql = sql.replace('\t', ' ');
 					   }
+
+					if (sql.contains("INSERT INTO webjet_properties_")) sql = Tools.replace(sql, ";", "|");
 				}
+				if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_MSSQL) {
+					//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
+					sql = Tools.replace(sql, "\\'", "''");
+					sql = Tools.replace(sql, "\\\"", "\"");
+					//mariadb has \\" in instructions like <img src=\\"/components/...
+					sql = Tools.replace(sql, "\\\\\"", "\\\"");
+
+					if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+						//convert literal backslash-n to real newline character
+						sql = Tools.replace(sql, "\\n", "\n");
+					} else {
+						sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
+					}
+				}
+				System.out.println("Executing SQL: "+sql);
 			   out.println("Executing: "+Tools.escapeHtml(sql)+"<br>");
 
 	      	s = spojeni.createStatement();
-	      	if (sql.toLowerCase().indexOf("select")!=-1 || sql.toLowerCase().indexOf("execute")!=-1 || sql.toLowerCase().indexOf("show")!=-1)
+	      	String lowerSql = sql.toLowerCase();
+			//if starts with select, execute or show, we expect results
+	      	if (lowerSql.indexOf("select")==0 || lowerSql.indexOf("execute")==0 || lowerSql.indexOf("show")==0)
 	      	{
 		      	ResultSet rs = s.executeQuery(sql);
 
@@ -195,7 +282,7 @@ if (lastUsed!=null && lastUsed.size()>0)
 	out.print("<option value=\"\" >Last used commands</option>");
 	for (String command : uniqueCommands)
 	{
-		out.print("<option value=\""+command+"\" >"+(command.length()>120?command.substring(0, 119):command)+"</option>");
+		out.print("<option value=\""+Tools.escapeHtml(command)+"\" >"+Tools.escapeHtml((command.length()>120?command.substring(0, 119):command))+"</option>");
 	}
 	out.print("</select>");
 }

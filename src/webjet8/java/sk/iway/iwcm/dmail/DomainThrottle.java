@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
@@ -45,13 +44,15 @@ public class DomainThrottle
 	}
 
 	private void init(){
-		domainLimits = Collections.emptyMap();
+		domainLimits = new HashMap<>();
 		maxTimeLimit = 0;
 		Collection<DomainLimitBean> allLimits = DomainLimitsDB.getInstance(true).getAll();
 		try {
 			if(allLimits != null) {
 				//domainLimits = Lambda.index(allLimits, Lambda.on(DomainLimitBean.class).getDomain());
-				allLimits.forEach(domainLimit -> domainLimits.put(domainLimit.getDomain(), domainLimit));
+				for (DomainLimitBean limit : allLimits) {
+					if (limit.isActive()) domainLimits.put(limit.getDomain(), limit);
+				}
 			}
 			if(!domainLimits.isEmpty()) {
 				//maxTimeLimit = Lambda.max(domainLimits.values(), Lambda.on(DomainLimitBean.class).getTimeUnit().toMillis(1));
@@ -279,8 +280,10 @@ public class DomainThrottle
 		try {
 			if(allLimits != null) {
 				//domainLimits = Lambda.index(allLimits, Lambda.on(DomainLimitBean.class).getDomain());
-				domainLimits = Collections.emptyMap();
-				allLimits.forEach(limit -> domainLimits.put(limit.getDomain(), limit));
+				domainLimits = new HashMap<>();
+				for (DomainLimitBean limit : allLimits) {
+					if (limit.isActive()) domainLimits.put(limit.getDomain(), limit);
+				}
 			}
 			if(!domainLimits.isEmpty()) {
 				//maxTimeLimit = Lambda.max(domainLimits.values(), Lambda.on(DomainLimitBean.class).getTimeUnit().toMillis(1));

@@ -88,31 +88,41 @@ export class DatatablesCkEditor {
 
 	afterInit() {
 		var that = this;
+
 		this.ckEditorInstance.on('afterPaste', function(e) {
 			//console.log("After paste, e=", e);
+
+			var ckConfig = that.ckEditorInstance.config;
+			var tableClass = ckConfig.qtClass;
+			var tableSelector = tableClass.split(" ").join(".");
+			var wrapperClass = ckConfig.tableWrapperClass;
+			var wrapperSelector = wrapperClass.split(" ").join(".");
+
 			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
-				//najdi tabulky a wrapni ich do table-responsive
-				$(that.ckEditorInstance.document.$).find("table.tabulkaStandard").each(function() {
+				//najdi tabulky a wrapni ich do tableWrapperClass
+				$(that.ckEditorInstance.document.$).find("table."+tableSelector).each(function() {
 					var $table = $(this);
-						if ($table.hasClass("tabulkaStandard")) {
-						//console.log("table=", this);
-						$table.attr("class", "table table-sm tabulkaStandard");
-						//aby to bolo rovnake ako standardne vytvorenie tabulky
-						$table.attr("border", "1");
+					//console.log("table=", this);
+					//aby to bolo rovnake ako standardne vytvorenie tabulky
+					if (ckConfig.qtBorder != "") $table.attr("border", ckConfig.qtBorder);
+					if (ckConfig.qtWidth != "") $table.css("width", ckConfig.qtWidth);
 
-						var parent = $table.parent("div.table-responsive");
-						if (parent.length == 0)	$table.wrap('<div class="table-responsive"></div>');
+					if (wrapperClass != "") {
+						var parent = $table.parent("div."+wrapperSelector);
+						if (parent.length == 0)	$table.wrap('<div class="'+wrapperClass+'"></div>');
 					}
-
 				});
 			}
 		 });
 		 this.ckEditorInstance.on('afterCommandExec', function(e) {
-			if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) {
-				//console.log("afterCommandExec, e=", e.data.name);
-				if ("tableDelete"==e.data.name || "deleteTable"==e.data.name) {
-					//odstran prazdne table-responsive div elementy
-					$(that.ckEditorInstance.document.$).find("div.table-responsive:empty").remove();
+			//console.log("afterCommandExec, e=", e.data.name);
+			if ("tableDelete"==e.data.name || "deleteTable"==e.data.name) {
+				//odstran prazdne tableWrapperClass div elementy
+				var ckConfig = that.ckEditorInstance.config;
+				var wrapperClass = ckConfig.tableWrapperClass;
+				var wrapperSelector = wrapperClass.split(" ").join(".");
+				if (wrapperClass != "") {
+					$(that.ckEditorInstance.document.$).find("div."+wrapperSelector+":empty").remove();
 				}
 			}
 		 });
@@ -169,7 +179,7 @@ export class DatatablesCkEditor {
 
 		if (typeof that.ckEditorObject.ckEditorAtLeastOneInitialized == "undefined")
 		{
-			//console.log("customizeEditor, initializing=", that.ckEditorObject.ckEditorAtLeastOneInitialized, "CKEDITOR=", that.ckEditorObject);
+			//console.log("customizeEditor, initializing=", that, "CKEDITOR=", that.ckEditorObject);
 
 			that.ckEditorObject.aaa = "aaa";
 			that.ckEditorObject.on( 'dialogDefinition', function( ev )
@@ -194,17 +204,21 @@ export class DatatablesCkEditor {
 
 				if ( dialogName == 'tableProperties' || dialogName == 'table')
 				{
-					//console.log("tableProperties");
+					//console.log("tableProperties, class=", that.ckEditorInstance.config.qtClass);
 
 					var infoTab = dialogDefinition.getContents('info');
 					infoTab.get('selHeaders')['default'] = 'row';
-					infoTab.get('txtWidth')['default'] = '100%';
+					infoTab.get('txtCols')['default'] = that.ckEditorInstance.config.tableCols;
+					infoTab.get('txtRows')['default'] = that.ckEditorInstance.config.tableRows;
+					infoTab.get('txtWidth')['default'] = that.ckEditorInstance.config.qtWidth;
+					infoTab.get('txtHeight')['default'] = that.ckEditorInstance.config.qtHeight;
+
+					infoTab.get('txtBorder')['default'] = that.ckEditorInstance.config.qtBorder;
+					infoTab.get('txtCellSpace')['default'] = that.ckEditorInstance.config.qtCellSpacing;
+					infoTab.get('txtCellPad')['default'] = that.ckEditorInstance.config.qtCellPadding;
+
 					var advancedTab = dialogDefinition.getContents('advanced');
-					if (typeof that.myWindow.bootstrapVersion == "undefined" || that.myWindow.bootstrapVersion.indexOf("3")==0) {
-						advancedTab.get('advCSSClasses')['default'] = 'tabulkaStandard';
-					} else {
-						advancedTab.get('advCSSClasses')['default'] = 'table table-sm tabulkaStandard';
-					}
+					advancedTab.get('advCSSClasses')['default'] = that.ckEditorInstance.config.qtClass;
 					dialogDefinition.dialog.on( 'show', function()
 					{
 						//this.getContentElement("info", "txtSummary");
@@ -213,12 +227,12 @@ export class DatatablesCkEditor {
 					dialogDefinition.onOk = that.ckEditorObject.tools.override(dialogDefinition.onOk, function(original) {
 						return function()
 						{
-							var wrapTable = false;
-							if (typeof that.myWindow.bootstrapVersion != "undefined" && that.myWindow.bootstrapVersion.indexOf("3")!=0) wrapTable = true;
+							var tableWrapperClass = that.ckEditorInstance.config.tableWrapperClass;
+							var tableWrapperSelector = tableWrapperClass.split(" ").join(".");
 
 							var id = null;
 							var originalId = null;
-							if (wrapTable) {
+							if (tableWrapperClass != "") {
 								//nastav ID na nasu hodnotu
 								var advField = this.getContentElement("advanced", "advId");
 								id = "table"+(new Date()).getTime();
@@ -228,15 +242,15 @@ export class DatatablesCkEditor {
 
 							original.call(this);
 
-							if (wrapTable) {
+							if (tableWrapperClass != "") {
 								var table = window.getCkEditorInstance().document.$.getElementById(id);
 								var $table = $(table);
-								var parent = $table.parent("div.table-responsive");
+								var parent = $table.parent("div."+tableWrapperSelector);
 
-								//console.log("table=", table, "$table=", $table);
+								//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
 								//console.log("this=", this, "parent=", parent);
 
-								if (parent.length == 0)	$table.wrap('<div class="table-responsive"></div>');
+								if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
 
 								if (originalId != "") $table.attr("id", originalId);
 								else $table.removeAttr("id");
@@ -1068,8 +1082,8 @@ export class DatatablesCkEditor {
 							var prevName = "";
 							if (oldElement != null)
 							{
-							prevName = $(oldElement.$).prop("id");
-							//console.log("prevName 1="+prevName);
+								prevName = $(oldElement.$).prop("id");
+								//console.log("prevName 1="+prevName);
 							}
 
 							if (typeof savedNameElement == "undefined")
@@ -1086,7 +1100,11 @@ export class DatatablesCkEditor {
 								name = this.getContentElement("info", "name").getValue();
 							}
 
-							var nameCleared = WJ.internationalToEnglish(name).toLowerCase();
+							var nameCleared = WJ.removeChars(WJ.internationalToEnglish(name).toLowerCase());
+							nameCleared = nameCleared.replace(/\./g, "-").replace(/-{2,}/g, "-");
+							//remove dashes at start or end
+							nameCleared = nameCleared.replace(/^-+/g, '').replace(/-+$/g, '');
+
 							var idElement = this.getContentElement("info", "id");
 
 							if (typeof savedNameElement != "undefined") {
@@ -1103,8 +1121,7 @@ export class DatatablesCkEditor {
 							var editor = this._.editor;
 							var startElement = editor.getSelection().getStartElement();
 
-							//console.log(startElement);
-							//console.log("prevName="+prevName);
+							//console.log("nameCleared=", nameCleared, "startElement=", startElement, "prevName="+prevName);
 
 							var tagName = "input";
 							if (dialogName == 'select') tagName = "select";
@@ -1323,7 +1340,7 @@ export class DatatablesCkEditor {
 							var element = this.getSelectedElement();
 
 							var onclick = onclickAjax;
-							var typeSelectedIndex = document.getElementById(this.getContentElement("info", "type")._.inputId).selectedIndex;
+							var typeSelectedIndex = this.getContentElement("info", "type").getInputElement().$.selectedIndex;
 							if (typeSelectedIndex==3)
 							{
 								onclick = onclickPrint;
@@ -1589,9 +1606,18 @@ export class DatatablesCkEditor {
 					filter.disallow( 'table[height]' );
 					filter.disallow( 'table[border]' );
 					filter.disallow( 'td(*)' ); //all class on TD
+					filter.disallow( 'td[valign]' );
+					filter.disallow( 'td[align]' );
+					filter.disallow( 'p[align]' );
 					filter.disallow( 'span' );
 					filter.disallow( 'col[width]' );
 					filter.disabled = false;
+
+					var ckConfig = that.ckEditorInstance.config;
+					var tableClasses = ckConfig.qtClass.split(" ");
+					var tableStyle = "";
+					if (ckConfig.qtWidth != "") tableStyle = ' style="width: ' + ckConfig.qtWidth + ';"';
+					var wrapperClass = ckConfig.tableWrapperClass;
 
 					filter.addTransformations([
 						[
@@ -1601,20 +1627,25 @@ export class DatatablesCkEditor {
 									return true;
 								},
 								right: function( el, tools ) {
-									el.classes = ["table", "table-sm", "tabulkaStandard"];
+									el.classes = tableClasses;
 								}
 							}
 						]
 					]);
 
-					//console.log("filter=", filter);
+					//console.log("filter=", filter, "options=", that);
 
 					filter.applyTo( fragment );
 					fragment.writeHtml( writer );
 
 					var html = writer.getHtml();
-					html = html.replace(/<table/gi, "<div class=\"table-responsive\"><table style=\"width: 100%\" ");
-					html = html.replace(/<\/table>/gi, "</table></div>");
+					if (wrapperClass != "") {
+						html = html.replace(/<table/gi, "<div class=\"" + wrapperClass + "\"><table");
+						html = html.replace(/<\/table>/gi, "</table></div>");
+					}
+					if (tableStyle != "") {
+						html = html.replace(/<table/gi, "<table " + tableStyle);
+					}
 
 					html = html.replace(/<b>/gi, "<strong>");
 					html = html.replace(/<\/b>/gi, "</strong>");
@@ -1722,15 +1753,18 @@ export class DatatablesCkEditor {
 			//ziskaj HTML kod z iframe elementu
 			let fieldId = this.options.fieldid;
 			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
-
-			let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
-			//console.log("saveData=", saveData);
-			//ziskaj data pre element doc_data
-			for (let i=0; i<saveData.editable.length; i++) {
-				let inlineData = saveData.editable[i];
-				if ("doc_data"===inlineData.wjAppField) {
-					htmlCode = inlineData.data;
+			try {
+				let saveData = pageBuilderIframe[0].contentWindow.getSaveData();
+				//console.log("saveData=", saveData);
+				//ziskaj data pre element doc_data
+				for (let i=0; i<saveData.editable.length; i++) {
+					let inlineData = saveData.editable[i];
+					if ("doc_data"===inlineData.wjAppField) {
+						htmlCode = inlineData.data;
+					}
 				}
+			} catch (error) {
+				//console.error("Error getting data from pageBuilderIframe:", error);
 			}
 		}
 		//console.log("getData, htmlCode=", htmlCode);
@@ -1761,6 +1795,8 @@ export class DatatablesCkEditor {
 			if ("replace" === mode || "edit" === mode) {
 				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
 				$container.children('section').remove();
+				//remove all custom styles
+				$container.children('style').remove();
 			}
 			const $lastSection = $container.children('section').last();
 			if ($lastSection.length > 0) {
@@ -1861,12 +1897,23 @@ export class DatatablesCkEditor {
 		this.switchEditingMode(this.editingMode);
 	}
 
-	switchEditingMode(newEditingMode) {
-		//console.log("switchEditingMode to ", newEditingMode);
+	/**
+	 * Switch mode
+	 * @param {String} newEditingMode
+	 * @param {Boolean} userChange - true if this is user change and we would like to preserve HTML code between modes
+	 */
+	switchEditingMode(newEditingMode, userChange=false) {
+		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
 		let editorTypeSelector = $("#"+fieldId+"-editorTypeSelector");
+		let oldEditingMode = this.editingMode;
+
+		var data = null;
+		if (userChange === true) {
+			data = this.getData();
+		}
 
 		this.editingMode = newEditingMode;
 		if ("pageBuilder"===this.editingMode) {
@@ -1880,14 +1927,22 @@ export class DatatablesCkEditor {
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
 				pageBuilderElement.find("iframe")[0].contentWindow.$("div.exit-inline-editor select").val('pageBuilder');
 			}
+
+			if (data != null) {
+				this.pbInsertContent(data, "replace", true);
+			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			var data = this.ckEditorInstance.getData();
+			if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				ck.setMode('wysiwyg');
+				ck.setData(data);
+			}
 			setTimeout(()=>{
 				//this fix problems with codemirror line gutter
-				if (ckEditorInstance.mode!=="source") ck.setMode('source');
+				if (ck.mode!=="source") ck.setMode('source');
 				ck.setData(data);
 			}, 500);
 
@@ -1900,6 +1955,13 @@ export class DatatablesCkEditor {
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
+
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				var ck = this.ckEditorInstance;
+				setTimeout(()=>{
+					ck.setData(data);
+				}, 500);
+			}
 		}
 
 		this.editorHeightLatest = 0;
@@ -1944,6 +2006,10 @@ export class DatatablesCkEditor {
 					name += "] ";
 				}
 				name += nameClass;
+
+				if (typeof v.title != "undefined" && v.title != null && v.title != "") {
+					name = v.title;
+				}
 
 				result.name = name;
 				result.element = v.tag == "*" ? allElements : v.tag;

@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.io.IwcmFile;
@@ -25,6 +26,8 @@ import sk.iway.iwcm.io.IwcmFile;
  */
 public class FilePathTools
 {
+    private static String[] CLIENT_ABORT_MESSAGES = null;
+
 	private static String normalizeVirtualPath(String virtualPath)
 	{
 		if (Tools.isEmpty(virtualPath)) return "/";
@@ -184,15 +187,41 @@ public class FilePathTools
 					}
 					catch (Exception ex)
 					{
-						if (ex.getMessage().contains("java.io.IOException: Broken pipe"))
-						{
-							System.err.println(ex.getMessage());
-							return true;
-						}
-						else sk.iway.iwcm.Logger.error(ex);
+                        if (ex instanceof IOException || isClientAbortException(ex)) {
+                            Logger.debug(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
+                            return true;
+                        }
+                        Logger.error(FilePathTools.class, "Error while sending file to client: " + ex.getMessage());
 					}
 			}
 		}
 		return false;
 	}
+
+    /**
+     * checks whether the given exception or any of its causes is a client abort exception
+     * @return true if it is a client abort exception, false otherwise
+     */
+    private static boolean isClientAbortException(Exception ex)
+    {
+		if (CLIENT_ABORT_MESSAGES == null) CLIENT_ABORT_MESSAGES = Constants.getArray("clientAbortMessages");
+
+        Throwable current = ex;
+        while (current != null)
+        {
+            String msg = current.getMessage();
+            if (msg != null)
+            {
+                String lower = msg.toLowerCase();
+                for (String pattern : CLIENT_ABORT_MESSAGES)
+                {
+                    if (lower.contains(pattern)) {
+                        return true;
+                    }
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
 }

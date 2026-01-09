@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.Tools"%><%@page import="sk.iway.iwcm.FileTools"%><%@page import="sk.iway.iwcm.Constants"%><%@ page import="sk.iway.iwcm.components.dictionary.DictionaryDB"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%
+<%@page import="sk.iway.iwcm.Tools"%><%@page import="sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,java.util.List,java.util.ArrayList"%><%@ page import="sk.iway.iwcm.components.dictionary.DictionaryDB"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/_tmp_/ckeditor/custom/config.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" %><%@
@@ -81,34 +81,85 @@ CKEDITOR.editorConfig = function( config )
 	    return true;
 	};
 	<%
-	boolean hasFontAwesome = false;
+	String toolbar = Constants.getString("ckeditor_toolbar");
+
+	String customToolbar = null;
+	if (Tools.isNotEmpty(Tools.getRequestParameter(request, "toolbar"))) customToolbar = Constants.getString("ckeditor_toolbar-"+Tools.getRequestParameter(request, "toolbar"));
+	if (Tools.isNotEmpty(customToolbar)) toolbar = customToolbar;
+
+	List<String> extraPlugins = new ArrayList<String>();
+	if (Tools.isNotEmpty(Constants.getString("ckeditor_extraPlugins")))
+	{
+		extraPlugins.addAll(java.util.Arrays.asList(Constants.getArray("ckeditor_extraPlugins")));
+	}
+
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");
 	System.out.println("editorFontAwesomeCssPath="+editorFontAwesomeCssPath);
-	if (Tools.isNotEmpty(editorFontAwesomeCssPath)) hasFontAwesome = true;
-	boolean hasTooltip = false;
-	if (FileTools.isFile("/components/tooltip/tooltip.jsp"))
+	if (FileTools.isFile("/components/tooltip/tooltip.jsp") && DictionaryDB.getAll().size()>0)
 	{
-	   if (DictionaryDB.getAll().size()>0) hasTooltip = true;
+		if (toolbar.contains("'Tooltip'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
+	}
+	String ckeditorSvgIconPath = Constants.getString("ckeditor_svgIcon_path");
+	if (Tools.isNotEmpty(ckeditorSvgIconPath)) {
+		extraPlugins.add("webjetsvgicon");
+		if (toolbar.contains("'WebjetSvgIcon'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "WebjetSvgIcon");
+		if (toolbar.contains("'WebjetFormButton'")==false) toolbar = Tools.replace(toolbar, "WebjetSvgIcon", "WebjetSvgIcon' , 'WebjetFormButton");
+	}
+	if (Tools.isNotEmpty(editorFontAwesomeCssPath)) {
+		extraPlugins.add("fontawesome");
+		if (toolbar.contains("'FontAwesome'")==false) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
 	}
 	%>
 
+	config.webjetsvgicon = {
+		spritePath: "<%=Constants.getString("ckeditor_svgIcon_path")%>",
+		icons: <%=Constants.getString("ckeditor_svgIcon_icons")%>,
+		iconWidth: <%=Constants.getString("ckeditor_svgIcon_width")%>,
+		iconHeight: <%=Constants.getString("ckeditor_svgIcon_height")%>,
+		sizes: "<%=Constants.getString("ckeditor_svgIcon_sizes")%>",
+		colors: "<%=Constants.getString("ckeditor_svgIcon_colors")%>"
+	};
+
+	config.webjetformbutton = {
+		baseClass: "<%=Constants.getString("ckeditor_button_baseClass")%>",
+		sizes: "<%=Constants.getString("ckeditor_button_sizes")%>",
+		types: "<%=Constants.getString("ckeditor_button_types")%>",
+		textHiddenClass: "<%=Constants.getString("ckeditor_button_textHiddenClass")%>"
+	};
+
+	config.qtClass = "<%=Constants.getString("ckeditor_table_class")%>";
+	config.tableCols = "<%=Constants.getString("ckeditor_table_cols")%>";
+	config.tableRows = "<%=Constants.getString("ckeditor_table_rows")%>";
+	config.qtWidth = "<%=Constants.getString("ckeditor_table_width")%>";
+	config.qtHeight = "<%=Constants.getString("ckeditor_table_height")%>";
+	config.qtBorder = "<%=Constants.getString("ckeditor_table_border")%>";
+	config.qtCellPadding = "<%=Constants.getString("ckeditor_table_cellpadding")%>";
+	config.qtCellSpacing = "<%=Constants.getString("ckeditor_table_cellspacing")%>";
+	config.tableWrapperClass = "<%=Constants.getString("ckeditor_table_wrapper_class")%>";
+
 	<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>
-		config.extraPlugins = "<% if (hasFontAwesome) { %>fontawesome<% } %>";
+		config.extraPlugins = "<%=Tools.join(extraPlugins, ",")%>";
 		config.sharedSpaces = {
 		    top: 'wjInlineCkEditorToolbarElement'
 		}
 		config.removePlugins = 'maximize,resize,webjetfloatingtools';
 		config.forceEnterMode = true;
 	<% } else if ("standalone".equals(Tools.getRequestParameter(request, "toolbar"))) { %>
-		config.extraPlugins = "codemirror<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "codemirror<% if (extraPlugins.size() > 0) { out.print(","+Tools.join(extraPlugins, ",")); } %>";
 		config.height = 600;
 		config.removePlugins = 'floatingspace,sharedspace'
 	<% } else { %>
-		config.extraPlugins = "codemirror,codesnippet<% if (hasFontAwesome) { %>,fontawesome<% } %>";
+		config.extraPlugins = "codemirror,codesnippet<% if (extraPlugins.size() > 0) { out.print(","+Tools.join(extraPlugins, ",")); } %>";
 		config.removePlugins = 'floatingspace,sharedspace';
 	<% } %>
 	config.magicline_color="#F7CA18";
 	config.magicline_triggers = { <%=Constants.getString("editorMagiclineElements")%> };
+	config.magicline_id="";
+	config.magicline_plusIcon='+';
+	if (window.location.href.indexOf("inline")!=-1) {
+		config.magicline_id="pb-wjmagicline";
+		config.magicline_plusIcon='<span class="pb-wjmagicline-plusicon"></span>';
+	}
 	config.bodyId = "WebJETEditorBody";
 	if (window.location.href.indexOf("inline")!=-1)
 	{
@@ -122,15 +173,6 @@ CKEDITOR.editorConfig = function( config )
            //{ name: 'publish', items: ['InlinePublish']},
 		<% } %>
 		<%
-		String toolbar = Constants.getString("ckeditor_toolbar");
-
-		String customToolbar = null;
-		if (Tools.isNotEmpty(Tools.getRequestParameter(request, "toolbar"))) customToolbar = Constants.getString("ckeditor_toolbar-"+Tools.getRequestParameter(request, "toolbar"));
-		if (Tools.isNotEmpty(customToolbar)) toolbar = customToolbar;
-		//zatial zakomentovane, neotestovane:
-		if (hasTooltip) toolbar = Tools.replace(toolbar, "SpecialChar", "SpecialChar' , 'Tooltip");
-		if (hasFontAwesome) toolbar = Tools.replace(toolbar, "SpecialChar", "FontAwesome");
-
 		if ("pageBuilder".equals(Tools.getRequestParameter(request, "inlineMode")))
 		{
 			//toto nam ziadno nepomoze: toolbar += ",{ name: 'Layout', items: ['layout-desktop',';','layout-tablet','layout-mobile']}";
@@ -155,9 +197,6 @@ CKEDITOR.editorConfig = function( config )
     config.floatingToolsGroups = [
         <%=Constants.getString("ckeditor_floatingToolsGroups")%>
     ];
-
-	//quicktable
-	config.qtWidth = "100%";
 
 	<% if (Tools.isNotEmpty(Constants.getString("ckeditor_pictureDialogBreakpoints"))) { %>
 		config.pictureDialogBreakpoints = <%=Constants.getString("ckeditor_pictureDialogBreakpoints")%>;

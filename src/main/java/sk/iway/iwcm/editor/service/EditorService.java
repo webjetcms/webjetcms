@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
+import sk.iway.css.CssDto;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -63,7 +64,6 @@ import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Servis pre ukladanie web stranok (tabulka documents a documents_history).
@@ -1176,15 +1176,16 @@ public class EditorService {
 			}
 
 			sk.iway.css.CssParser cssParser = new sk.iway.css.CssParser(file);
-			List<Pair<String, String>> editorCss = cssParser.getElements();
+			List<CssDto> editorCss = cssParser.getElements();
 			try
 			{
 				//prehod na json format
-				for(Pair<String, String> element : editorCss)
+				for(CssDto element : editorCss)
 				{
 					Map<String, String> map = new HashMap<>();
-					map.put("tag", element.getFirst());
-					map.put("class", element.getSecond());
+					map.put("tag", element.getTag());
+					map.put("class", element.getClassName());
+					map.put("title", element.getTitle());
 					sessionCssParsed.add(map);
 				}
 			}

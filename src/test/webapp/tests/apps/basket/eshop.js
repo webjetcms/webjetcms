@@ -247,6 +247,9 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     const closedDate = I.parseDateTime(getCurrentDate(true));
 
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
+    //uncheck all items
+    I.click("#datatableFieldDTE_Field_editorFields-payments_wrapper button.buttons-select-all");
+
     lineColor = await SL.getFontColor(I, 1,2);
     I.assertEqual(lineColor, SL.black);
 

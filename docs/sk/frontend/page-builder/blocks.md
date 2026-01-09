@@ -4,9 +4,10 @@ Súčasťou Page Builder je aj vkladanie pripravených blokov. Ich zoznam sa aut
 
 V koreňovom adresári pre bloky môžete mať nasledovné pod adresáre:
 
-- ```section``` - pre bloky sekcií (modré označenie v Page Builderi)
-- ```container``` - pre kontajnery (červené označenie v Page Builderi)
-- ```column``` - pre stĺpce (zelené označenie v Page Builderi)
+- ```section``` - pre bloky sekcií (modré označenie v Page Builder)
+- ```container``` - pre kontajnery (červené označenie v Page Builder)
+- ```column``` - pre stĺpce (zelené označenie v Page Builder)
+- ```content``` - pre vkladané rôzne texty, tlačidlá a podobne. Vkladajú sa pomocou ikony Bloky a žltej čiary, ktorá sa zobrazuje medzi blokmi.
 
 V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov ako ďalšie pod adresáre**, napr. ```Contact, Features```. Až v týchto pod adresároch vytvárate jednotlivé HTML bloky. Príkladom je teda adresárová štruktúra:
 
@@ -34,6 +35,34 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - left.jpg
     - right.html
     - right.jpg
+- content
+  - Buttons
+    - standard.html
+    - big.jpg
+    - contactus.html
+```
+
+## Názov a značky bloku
+
+Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v kódovaní `utf-8` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:
+
+```properties
+title=Základné prvky
+icon=fa fa-cubes
+tags=Základné prvky
+title.Citat_v1=Citát v1
+title.Citat_v2=Citát v2
+```
+
+Môžete vytvoriť aj jazykové verzie súboru, napr. `pagebuilder_en.properties`.
+
+Ak používate `pug` formát, tak v súbore `build-pug.js` skontrolujte/doplňte podmienku tak, aby sa preniesol aj `.properties` súbor pre bloky:
+
+```javascript
+  } else if (
+    (filePath.match(/\.png$/) || filePath.match(/\.properties$/))
+    && filePath.match(/pagebuilder/)
+  )
 ```
 
 ## Nastavenie šírky stĺpcov
@@ -137,6 +166,8 @@ Pre pohodlnú editáciu kariet (```tabs```) je podporované ich automatické gen
 Element ```UL``` je potrebné označiť CSS triedou ```pb-autotabs```. JavaScript kód v súbore ```/admin/webpages/page-builder/scripts/pagesupport.js``` zabezpečí generovanie kariet po pridaní elementu / každých 5 sekúnd. Meno karty berie z ```title``` atribútu kontajnera, alebo z elementu s CSS triedou ```pb-tab-title``` (čo je pohodlnejšie na editáciu).
 
 Samotné karty nie sú teda editovateľné, generujú sa automaticky. Editovateľný je len obsah ```tab``` kontajneru. Všimnite si, že v ukážkovom kóde UL element neobsahuje žiadne ```LI taby```, tie sa vygenerujú automaticky. V HTML kóde zostanú následne vygenerované a aj sa korektne uložia. Na stránke zostane zobrazená karta tak, ako bola zobrazený počas editácie (je na to potrebné myslieť).
+
+Atribúty ID jednotlivých kariet sú generované automaticky podľa názvu karty. Ak potrebujete použiť špecifický názov je možné v HTML kóde nastaviť hodnotu `data-title` na `.tab-pane` elemente.
 
 Všimnite si použitie CSS triedy ```pb-not-container``` na hlavnom kontajner elemente. To zabezpečí, že tento element nebude označený ako kontajner a za kontajnery budú považované až jednotlivé karty. Každá karta používa CSS triedu ```pb-custom-container```, čo zabezpečí zobrazenie červeného rámu/nástrojovej lišty kontajnera.
 
@@ -251,9 +282,9 @@ Ukážkový kód:
 
 ## Karty v accordion
 
-Pri požiadavke vnárania objektov typu karta do ```accordion-u``` je možné využiť vlastnosť Page Builder - označuje aj **vnorené kontajnery**. Je potrebné uvažovať, čo bude možné editovať, ako duplikovať jednotlivé položky a podobne. Prakticky funguje vkladanie kariet do ```accordion-ov``` (čo je kontajner) ako vloženie ďalšieho ```columnu``` do kontajnera (pričom vložený ```column``` ďalej obsahuje vnorené kontajnery jednotlivých tabov).
+Pri požiadavke vnárania objektov typu karta do ```accordion-u``` je možné využiť vlastnosť Page Builder - označuje aj **vnorené kontajnery**. Je potrebné uvažovať, čo bude možné editovať, ako duplikovať jednotlivé položky a podobne. Prakticky funguje vkladanie kariet do ```accordion-ov``` (čo je kontajner) ako vloženie ďalšieho ```columnu``` do kontajnera (pričom vložený ```column``` ďalej obsahuje vnorené kontajnery jednotlivých kariet).
 
-V príklade si všimnite, že hlavný ```column``` má CSS štýl ```pb-not-editable``` aby automaticky nebol editovateľný CK editorom a zároveň CSS triedu ```pb-always-mark```. Ne editovateľný column sa štandardne neoznačí zeleným rámom, bez tejto možnosti by ale nebolo možné pridať za karty ďalší column, alebo celé karty zmazať (neboli by dostupné nástroje columnu).
+V príklade si všimnite, že hlavný ```column``` má CSS štýl ```pb-not-editable``` aby automaticky nebol editovateľný CK editorom a zároveň CSS triedu ```pb-always-mark```. Ne editovateľný column sa štandardne neoznačí zeleným rámom, bez tejto možnosti by ale nebolo možné pridať za karty ďalší column, alebo celé karty zmazať (neboli by dostupné nástroje stĺpca).
 
 Pri vložení HTML kódu obsahujúceho výraz ```container``` ako column objektu je spustený ```PageBuilder.mark_grid_elements();``` pre označenie všetkých elementov (aby sa zobrazili nástrojové lišty aj pre vnorené kontajnery).
 
@@ -461,3 +492,73 @@ Kompletná ukážka HTML kódu web stránky s ukážkovými sekciami:
 ## Podporný JavaScript kód
 
 Ak potrebujete vlastný podporný JavaScript súbor (viď vyššie spomínaný `pagesupport.js`), môžete vytvoriť súbor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, ktorý ak existuje načíta sa po súbore `pagesupport.js`. Môžete tak doplniť vlastné funkcie, alebo upraviť štandardné existujúce funkcie z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
+
+Môžete aj upraviť niektoré nastavenia, ako napríklad zoznam farieb, upraviť CSS selektory, nastaviť šírku pre rôzne zariadenia a podobne. Nasledujúci kód je len ukážkový, vložte ho do súboru `pagesupport-custom.js`:
+
+```JavaScript
+window.pbCustomOptions = function(options) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        //custom code to modify options on page builder init
+        console.log("pbCustomOptions called, options=", options, "href=", window.location.href);
+        options.color_swatches = [
+            "#ff0000",
+            "#00ff00",
+            "#0000ff",
+            "#ffff00",
+            "#00ffff",
+        ];
+        //disable any color picker, only swatches will be available
+        options.color_picker = false;
+    }
+};
+
+window.pbCustomSettings = function(me) {
+    //redefine grid column content selector
+    me.grid.section_default_class = 'section';
+    me.grid.row = 'div.grid, div[class*="pb-grid"]';
+    me.grid.row_default_class = 'grid';
+    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
+    me.grid.column_default_class = 'grid__col grid__col--12';
+
+    me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
+};
+
+window.pbScreenSizePrefix = function(me) {
+    var screenSize =  $(window).width();
+    var colPrefix = me.column.valid_prefixes[0];
+    if (screenSize >= 1240) colPrefix = me.column.valid_prefixes[4];
+    else if (screenSize >= 992) colPrefix = me.column.valid_prefixes[3];
+    else if (screenSize >= 768) colPrefix = me.column.valid_prefixes[2];
+    else if (screenSize >= 480) colPrefix = me.column.valid_prefixes[1];
+
+    //console.log("pbScreenSizePrefix, screenSize=", screenSize, "colPrefix=", colPrefix);
+
+    return colPrefix;
+}
+
+window.pbGetWindowSize = function(name) {
+    var maxWidth = "";
+    if ('tablet'==name) {
+        maxWidth = "768px";
+    } else if ('phone'==name) {
+        maxWidth = "479px";
+    }
+    //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
+    return maxWidth;
+}
+```
+
+## ID bloku
+
+Po vložení bloku do stránky sa nastaví do atribútu `data-pb-id` cesta k HTML súboru bloku kódovaná cez `Base64`. Pomocou hodnoty teda viete nájsť cez vyhľadávanie v administrácii všetky stránky, ktoré obsahujú daný blok. Môžete tak ľahko zistiť, kde sa používa určitý blok v prípade jeho úpravy.
+
+Cestu k HTML súboru z atribútu viete získať cez JavaScript funkciu `atob()`, napríklad:
+
+```JavaScript
+atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
+'section/00-Zakladne-prvky/Citat_v1'
+```
+
+Pre bloky z karty Základné sa ako ID používa výraz typu `pb-basic-2.1`, kde prvé číslo je typ bloku (0=stĺpec, 1=kontajner, 2=sekcia, 4=content) a druhé číslo je poradové číslo bloku v zozname.
+
+ID bloku sa nastaví na vložený element, teda napríklad na `section`, `div` kontajner a podobne podľa typu bloku. Nie je nastavený na celú vloženú štruktúru, ale len na vložený element.

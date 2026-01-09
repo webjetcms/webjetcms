@@ -140,7 +140,7 @@ npm run build
 npm run start
 ```
 
-jednotlivé ```npm``` skripty sú definované v [package.json](package.json) v elemente ```scripts``` a vykonané z ```node_scripts/*.js``` adresára:
+jednotlivé ```npm``` skripty sú definované v [package.json](https://github.com/webjetcms/templates-bare/blob/master/package.json) v elemente ```scripts``` a vykonané z ```node_scripts/*.js``` adresára:
 
 - ```npm run build``` - vygeneruje kompletný ```dist``` adresár.
 - ```npm run build:assets``` - nanovo vygeneruje súbory z adresára ```assets``` (obrázky, ikony písma).
@@ -151,11 +151,11 @@ jednotlivé ```npm``` skripty sú definované v [package.json](package.json) v e
 - ```npm run start``` - spustí režim prototypovania - vygeneruje ```dist``` adresár, sleduje zmeny v súboroch a otvorí prehliadač s prototyp verziou.
 - ```npm run start:debug``` - spustí režim prototypovania s ```debug``` režimom prehliadača.
 
-Konfigurácia pre režim prototypovania ```browser-sync``` sa nachádza v súbore [node-scripts/bs-config.js](node_scripts/bs-config.js). Tam je prípadne potrebné upraviť cestu pre nahradzovanie adries písiem/obrázkov, ktoré sú linkované s plnou URL adresou v CSS súboroch (keďže počas prototypovania sa URL adresa stránok odlišuje voči adrese vo finálnej verzii cez WebJET CMS).
+Konfigurácia pre režim prototypovania ```browser-sync``` sa nachádza v súbore [node-scripts/bs-config.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/bs-config.js). Tam je prípadne potrebné upraviť cestu pre nahradzovanie adries písiem/obrázkov, ktoré sú linkované s plnou URL adresou v CSS súboroch (keďže počas prototypovania sa URL adresa stránok odlišuje voči adrese vo finálnej verzii cez WebJET CMS).
 
 ### Spracovanie JavaScript súborov
 
-Aby bolo možné používať priamo npm moduly v súbore [ninja.js](src/js/ninja.js) je použitý [browserify](https://www.npmjs.com/package/browserify) s rozšírením [esmify](https://www.npmjs.com/package/esmify). Spracovanie je v súbore [render-scripts.js](node_scripts/render-scripts.js).
+Aby bolo možné používať priamo npm moduly v súbore [ninja.js](https://github.com/webjetcms/templates-bare/blob/master/src/js/ninja.js) je použitý [browserify](https://www.npmjs.com/package/browserify) s rozšírením [esmify](https://www.npmjs.com/package/esmify). Spracovanie je v súbore [render-scripts.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/render-scripts.js).
 
 Dôvod je, aby sa všetky použité JavaScript knižnice vo web stránke dali spravovať cez npm (čiže ľahko aktualizovať).
 
@@ -239,6 +239,27 @@ span.more-info {
 
 následne je možné označiť text a aplikovať tento štýl len na označený text. Ak by nemal HTML značku ```span``` aplikoval by sa na rodičovský element, čiže typicky na celý odstavec - ```p```.
 
+Ak vám nevyhovuje predvolený názov štýlu vo výberovom poli, môžete ho zmeniť pridaním komentára:
+
+```css
+span.more-info {
+    /* editor title: Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+prípadne v skrátenej forme priamo s komentárom na konci riadku definície štýlu:
+
+```css
+span.more-info { /* Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
 ## Tvorba PageBuilder blokov
 
 Ak potrebujete vytvoriť nový blok pre PageBuilder postupujte podľa tohto návodu.
@@ -262,7 +283,7 @@ Napríklad súbor ```src/pagebuilder/column/card/card.pug```:
 
 súbor ```src/pug/pagebuilder/container/cards/cards.pug```
 
-```
+```pugjs
 .container
     .row
         include ../../column/card/card
@@ -272,7 +293,7 @@ súbor ```src/pug/pagebuilder/container/cards/cards.pug```
 
 súbor ```src/pug/pagebuilder/section/cards/cards.pug```
 
-```
+```pugjs
 section
     include ../../container/cards/cards
 ```

@@ -113,6 +113,7 @@ if ("/robots.txt".equals(path))
 <% }
 %>Disallow: /components
 Disallow: /thumb
+Disallow: /topdf
 Sitemap: <%=Tools.getBaseHref(request)%>/sitemap.xml
 <%
 	return;

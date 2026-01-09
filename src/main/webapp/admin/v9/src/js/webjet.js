@@ -659,6 +659,10 @@ const WJ = (() => {
         fileName = fileName.replace(/&/gi, "");
         fileName = internationalToEnglish(fileName);
         fileName = removeChars(fileName);
+        //remove last dash or underscore
+        if (fileName.length > 1 && (fileName.endsWith("-") || fileName.endsWith("_"))) {
+            fileName = fileName.substring(0, fileName.length - 1);
+        }
         return fileName.toLowerCase();
     }
 

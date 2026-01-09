@@ -45,6 +45,12 @@ Po kliknutí na ozubené koleso sa taktiež zobrazia ikony + pre vloženie nové
 
 ![](pagebuilder-library.png)
 
+V karte knižnica môžete vyhľadávať bloky podľa názvu, alebo filtrovať bloky podľa štítkov. Tie môžete definovať v súbore `pagebuilder.properties` pri [vytváraní blokov](../../frontend/page-builder/blocks.md#názov-a-značky-bloku) pre vašu web stránku.
+
+Na konci stránky sa zobrazuje ikona `+` pre jednoduchšie pridanie novej sekcie.
+
+![](pagebuilder-plusbutton.png)
+
 ## Nastavenie šírky stĺpcov
 
 Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nástrojovej lište pri prepínači typu editora je možnosť nastaviť veľkosť (šírku) zariadenia.
@@ -58,3 +64,7 @@ Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nás
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+## Rozdelenie stĺpca
+
+Funkciu Rozdeliť stĺpec vyvoláte pomocou kliknutia na `+` v žltej lište a zvolením možnosti Blok. Následne v karte Základné zvolíte možnosť Rozdeliť stĺpec. Funkcia umožňuje rýchle rozdelenie stĺpca bez nutnosti vkladať nový stĺpec a presúvať obsah. Umožní vám vkladať nové komplexné bloky napr. do dlhého textového stĺpca.

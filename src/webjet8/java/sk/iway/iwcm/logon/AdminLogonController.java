@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
@@ -490,7 +493,7 @@ public class AdminLogonController {
             }
 
             // Google Authenticator
-            //String token = RandomStringUtils.random(4, false, true);
+            //String token = RandomStringUtils.secure().next(4, false, true);
             //sendToken(mobileDevice, token);
             session.setAttribute("adminUser_waitingForToken", user);
             session.removeAttribute(Constants.USER_KEY);
@@ -518,4 +521,16 @@ public class AdminLogonController {
 		}
 		return -1;
 	}
+
+    @PostMapping("/rest/removeSession")
+    @PreAuthorize("@WebjetSecurityService.isAdmin()")
+    @ResponseBody
+    public String removeSession(@RequestParam("sessionId") String sessionId, HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request);
+        boolean success = false;
+        if (user != null) {
+            success = sk.iway.iwcm.stat.SessionHolder.getInstance().invalidateSession(user.getUserId(), sessionId);
+        }
+        return "{success: "+success+"}";
+    }
 }

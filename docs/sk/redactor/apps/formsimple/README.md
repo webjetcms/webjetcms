@@ -6,13 +6,13 @@ Aplikácia formulár ľahko slúži na jednoduchú tvorbu formulárov. Výhoda j
 
 Formuláru je potrebné nastaviť nasledovné hodnoty.
 
-- Unikátne meno formuláru - zadané meno formuláru by malo byť unikátne pre celý web, pod týmto menom sa formulár uloží do aplikácie Formuláre.
-- Email adresa príjemcu - zoznam email adries oddelených čiarkami na ktoré má byť zaslaný vyplnený formulár.
-- Riadkové zobrazenie - polia formuláru sa zobrazia v riadku vedľa seba (inak je každé pole na novom riadku). Pre vytvorenie nového riadku vložte do formuláru pole Nový riadok.
-- Text na začiatku e-mailu - text, ktorý sa pridá do emailu pred polia formuláru.
-- Text na konci e-mailu - text, ktorý sa pridá do emailu za polia formuláru.
-- Odoslať email ako text bez formátovania - ak zaškrtnete je email odoslaný ako neformátovaná text verzia (vo formáte meno poľa: hodnota), inak je odoslaný ako formátovaný HTML text v podobe ako je zobrazený na web stránke.
-- Pridať technické informácie - ak zaškrtnete pridajú sa do emailu aj technické informácie (názov stránky, adresa stránky, dátum a čas odoslania, informácia o prehliadači).
+- **Unikátne meno formuláru** - zadané meno formuláru by malo byť unikátne pre celý web, pod týmto menom sa formulár uloží do aplikácie Formuláre.
+- **Email adresa príjemcu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaný vyplnený formulár.
+- **Riadkové zobrazenie** - polia formuláru sa zobrazia v riadku vedľa seba (inak je každé pole na novom riadku). Pre vytvorenie nového riadku vložte do formuláru pole Nový riadok.
+- **Text na začiatku e-mailu** - text, ktorý sa pridá do emailu pred polia formuláru.
+- **Text na konci e-mailu** - text, ktorý sa pridá do emailu za polia formuláru.
+- **Odoslať email ako text bez formátovania** - ak zaškrtnete je email odoslaný ako neformátovaná text verzia (vo formáte meno poľa: hodnota), inak je odoslaný ako formátovaný HTML text v podobe ako je zobrazený na web stránke.
+- **Pridať technické informácie** - ak zaškrtnete pridajú sa do emailu aj technické informácie (názov stránky, adresa stránky, dátum a čas odoslania, informácia o prehliadači).
 
 ![](editor-dialog-basic.png)
 
@@ -28,35 +28,38 @@ Po zvolení možnosti Riadkové zobrazenie sa polia môžu zobrazovať v riadku 
 
 Záložka pokročilé obsahuje pokročilé nastavenia nastavenia, ktoré nie sú povinné.
 
-- Šifrovací kľúč - ak chcete hodnoty formuláru zašifrovať, môžete zadať šifrovací kľúč.
-- Príjemca kópie emailu - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
-- Neviditeľní príjemcovia - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
-- Predmet emailu - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.
-- Presmerovanie po vyplnení - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
-- Presmerovanie po chybe - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má **Presmerovanie po vyplnení**.
-- Spôsob presmerovania - typ presmerovania po spracovaní formuláru.
-  -  Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr. formSend=true).
+- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
+- **Príjemca kópie emailu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
+- **Neviditeľní príjemcovia** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
+- **Predmet emailu** - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.
+- **Presmerovanie po vyplnení** - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
+- **Presmerovanie po chybe** - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má **Presmerovanie po vyplnení**.
+- **Spôsob presmerovania** - typ presmerovania po spracovaní formuláru.
+  - Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr. `formSend=true`).
   - Hodnota ```forward``` znamená, že na cieľovú stránku sa vykoná interné presmerovanie. Cieľová stránka má tak prístup k identickým parametrom ako formulár a môže vykonať dodatočnú akciu. Keďže sa jedná o interné presmerovanie v adresnom riadku prehliadača zostane hodnota ```/formmail.do```.
   - Hodnota ```addParams``` vykoná presmerovanie na cieľovú stránku s pridaním jednotlivých parametrov do URL. V takomto prípade presmerovanie vykoná prehliadač a v adresnom riadku zostane adresa cieľovej stránky. Keďže ale parametre sú pridané do URL adresy je limitovaný ich počet dĺžkou URL čo je štandardne 2048 znakov.
-- Doc id stránky s verziou pre email - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
-- Doc id notifikácie pre používateľa - ak je nastavené na hodnotu docId niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa s názvom `email / e-mail`) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu. Hodnotu z formuláru do stránky vložíte ako výraz `!field-name!`, čo je hodnota v `name` atribúte formulárového poľa.
-- Interceptor pred odoslaním emailu - hodnota je názov triedy, ktorá **musí implementovať interface ```AfterSendInterceptor```**. Po odoslaní email-u sa vykoná kód z tejto triedy.
+- **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu docId niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa s názvom `email / e-mail`) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu. Hodnotu z formuláru do stránky vložíte ako výraz `!field-name!`, čo je hodnota v `name` atribúte formulárového poľa.
+- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota `none` nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
+- **Doc id stránky, na ktorej sa formulár nachádza** - stránka, na ktorej sa formulár nachádza. Je potrebné vyplniť, ak je formulár vložený napríklad v pätičke stránky a systém potrebuje vedieť z akej stránky má načítať údaje formuláru pri jeho odoslaní.
+- **Interceptor pred odoslaním emailu** - hodnota je názov triedy, ktorá **musí implementovať interface ```AfterSendInterceptor```**. Po odoslaní email-u sa vykoná kód z tejto triedy.
 
 ![](editor-dialog-advanced.png)
 
 ## Položky
 
-V karte položky môžete pridať nové pole formuláru, presúvať poradie polí (pomocou drag & drop) a mazať pole formuláru kliknutím na ikonu mazania.
+V karte položky môžete pridať/upraviť/duplikovať pole formuláru, presúvať poradie polí (pomocou drag & drop) alebo mazať pole formuláru.
 
 ![](editor-dialog-items.png)
 
-Pole (položku) formuláru pridáte kliknutím na tlačidlo Nová položka, ktorá je zobrazená pod zoznamom existujúcich polí. Vo výberovom poli Typ poľa si môžete vybrať z definovaných polí formuláru. Väčšina polí umožňuje zadať nasledovné polia:
+Pri vytváraní alebo úprave položiek vo formulári si môžete v rozbaľovacom poli Typ poľa vybrať jeden z preddefinovaných typov polí. Na základe zvoleného typu sa následne zobrazia ďalšie možnosti, pomocou ktorých môžete upraviť jeho vlastnosti:
 
-- Názov - predstavuje meno poľa formuláru (zobrazený názov), ak ponecháte prázdne použije sa názov z výberového menu Typ poľa. Pre informačné polia (popisky) zadajte text, ktorý chcete zobraziť.
-- Hodnota - pred vyplnená hodnota, ktorá sa zobrazí v poli pri jeho načítaní.
-- Zástupný text - pre štandardné textové polia reprezentuje hodnotu zástupného textu (```placeholder```), ktorý sa zobrazí, keď je pole prázdne.
-- Povinné pole - zaškrtnutím sa pole označí ako povinné pre odoslanie formuláru.
-- Tooltip - ak zadáte hodnotu zobrazí sa pri názve poľa informačná bublina (vysvetlivka) s textom zadaným v tomto poli. Spôsob zobrazenia záleží od dizajnu web stránky (typicky vyžaduje podporu [FontAwesome](https://fontawesome.com) pre zobrazenie ikony).
+- **Názov** - predstavuje meno poľa formuláru (zobrazený názov), ak ponecháte prázdne použije sa názov z výberového menu Typ poľa. Pre informačné polia (popisky) zadajte text, ktorý chcete zobraziť.
+- **Hodnota** - pred vyplnená hodnota, ktorá sa zobrazí v poli pri jeho načítaní.
+- **Zástupný text** - pre štandardné textové polia reprezentuje hodnotu zástupného textu (```placeholder```), ktorý sa zobrazí, keď je pole prázdne.
+- **Povinné pole** - zaškrtnutím sa pole označí ako povinné pre odoslanie formuláru.
+- **Tooltip** - ak zadáte hodnotu zobrazí sa pri názve poľa informačná bublina (vysvetlivka) s textom zadaným v tomto poli. Spôsob zobrazenia záleží od dizajnu web stránky (typicky vyžaduje podporu [FontAwesome](https://fontawesome.com) pre zobrazenie ikony).
+
+![](editor-dialog-items_edit_1.png)
 
 **Poznámka:** ak je v poli **Hodnota** prázdny text a je zadaný text v poli **Zástupný text**, tak sa pri zobrazení formuláru na web stránke nezobrazí názov poľa samostatne ale len ako zástupný text. Umožňuje to vytvoriť menší formulár z pohľadu jeho priestoru na web stránke.
 
@@ -89,7 +92,7 @@ Jednotlivé položky definujete cez kľúče:
 
 Príklad:
 
-```
+```properties
 //najjednoduchsi typ pola
 components.formsimple.label.meno=Meno
 components.formsimple.input.meno=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>

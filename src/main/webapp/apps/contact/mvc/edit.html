@@ -1,7 +1,7 @@
 <h3 data-th-text="#{components.contact.dialog_title}">Kontakt</h3>
 
 <!--/* https://spring.io/guides/gs/handling-form-submission/ */-->
-<form data-th-action="@{${request.getAttribute('ninja').page.urlPath}(\_\_forceParse=1,\_\_setf=1)}" data-th-object="${entity}" method="post" enctype="multipart/form-data">
+<form data-th-action="${request.getAttribute('ninja').page.urlPath}" data-th-object="${entity}" method="post" enctype="multipart/form-data">
     <div data-th-if="${error!=null}" class="alert alert-danger">
         <!--/* https://www.baeldung.com/spring-thymeleaf-error-messages */-->
         <p data-th-text="#{chat.form_fill_error}"></p>

@@ -1,10 +1,8 @@
 package sk.iway.css;
 
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.utils.Pair;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,7 +17,7 @@ import java.util.Scanner;
 
 public class CssParser {
 
-	List<Pair<String, String>> elements = new LinkedList<Pair<String, String>>();
+	List<CssDto> elements = new LinkedList<CssDto>();
 
 	public CssParser(IwcmFile css)
 	{
@@ -28,12 +26,14 @@ public class CssParser {
 
 	private void parseCssFile(IwcmFile css)
 	{
+		IwcmInputStream is = null;
 		Reader in = null;
 		Scanner scanner = null;
 		boolean success = false;
 		try
 		{
-			in = new InputStreamReader(new IwcmInputStream(css));
+			is = new IwcmInputStream(css);
+			in = new InputStreamReader(is);
 			scanner = new Scanner(in);
 			scanner.useDelimiter("}");
 
@@ -48,6 +48,7 @@ public class CssParser {
 			{
 				if (scanner!=null) scanner.close();
 				if (in!=null) in.close();
+				if (is!=null) is.close();
 			}
 			catch (Exception e)
 			{
@@ -63,10 +64,10 @@ public class CssParser {
 	private boolean parse(Scanner scanner)
 	{
 		while (scanner.hasNext()) {
-			String text = cleanText(scanner.next());
+			String line = scanner.next();
+			String text = cleanText(line);
 
 			if (text.contains("@media") || text.contains("/** Editor end **/") || text.contains(".cssParserEnd")) {
-				Logger.debug(CssParser.class, "break");
 				return false;
 			}
 
@@ -74,8 +75,11 @@ public class CssParser {
 				continue;
 			}
 
-			Pair<String, String> result = new Pair<String, String>(parseTag(text), parseClass(text));
-			elements.add(result);
+			CssDto dto = new CssDto();
+			dto.setTag(parseTag(text));
+			dto.setClassName(parseClass(text));
+			dto.setTitle(parseTitle(line));
+			elements.add(dto);
         }
 
 		return true;
@@ -90,13 +94,16 @@ public class CssParser {
 			String lastLine = null;
 			while ((line = br.readLine()) != null) {
 
-				if (line.contains("/* editor */") && lastLine != null) {
+				if (line.contains("/* editor") && line.contains(" */") && lastLine != null) {
 					String text = cleanText(lastLine);
 					if (text.contains(" ") || text.contains("#") || !text.contains(".")) {
 						continue;
 					}
-					Pair<String, String> result = new Pair<String, String>(parseTag(text), parseClass(text));
-					elements.add(result);
+					CssDto dto = new CssDto();
+					dto.setTag(parseTag(text));
+					dto.setClassName(parseClass(text));
+					dto.setTitle(parseTitle(line));
+					elements.add(dto);
 				}
 
 				lastLine = line;
@@ -126,6 +133,41 @@ public class CssParser {
 		return Tools.replace(element.substring(dotIndex + 1).trim(), ".", " ");
 	}
 
+	/**
+	 * Parse title from comment in css element (must be on same line as element definition)
+	 * example:
+	 * .baretest2 { \/* Bare TEST 02 *\/
+	 * or use comment with prefix /* title: Your Title *\/
+	 * @param element
+	 * @return
+	 */
+	private String parseTitle(String element)
+	{
+		if (element==null) {
+			return null;
+		}
+		element = element.trim();
+		if (element.contains("/* editor")) {
+			//use comment with title prefix
+			int titleStart = element.indexOf("/* editor title:") + 17;
+			int titleEnd = element.indexOf("*/", titleStart);
+			if (titleStart >= 0 && titleEnd > titleStart) {
+				return element.substring(titleStart, titleEnd).trim();
+			}
+			return null;
+		} else if (element.contains("\n")) {
+			//strip first line
+			element = element.substring(0, element.indexOf("\n"));
+		}
+
+		int commentStart = element.indexOf("/*");
+		int commentEnd = element.indexOf("*/");
+		if (commentStart >= 0 && commentEnd > commentStart) {
+			return element.substring(commentStart + 2, commentEnd).trim();
+		}
+		return null;
+	}
+
 	private String cleanText(String text)
 	{
 		if (text.contains("{")) {
@@ -136,12 +178,12 @@ public class CssParser {
 		return text;
 	}
 
-	public List<Pair<String, String>> getElements()
+	public List<CssDto> getElements()
 	{
 		return elements;
 	}
 
-	public void setElements(List<Pair<String, String>> elements)
+	public void setElements(List<CssDto> elements)
 	{
 		this.elements = elements;
 	}

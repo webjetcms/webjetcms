@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name");
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -165,7 +165,36 @@ public class ConstantsV9 {
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
 		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
+		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
+
+		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
+
+        Constants.setString("smtpAuthMechanism", "", "config;dmail;security", "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
+
+		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
+		Constants.setString("ckeditor_svgIcon_icons", "{}", Constants.MOD_EDITOR, "JSON objekt definujúci ikony pre CKEditor vo formáte {nazov: [skupiny], nazov2: [skupiny]}, napr. {\"4g\": [\"other\"], \"5g\": [\"other\"], \"accessibility-mobility\": [\"people\"]}. Ak je prázdne získa sa zo SVG súboru podľa hodnoty ID elementov, skupiny v takom prípade nie sú dostupné.");
+		Constants.setInt("ckeditor_svgIcon_width", 56, Constants.MOD_EDITOR, "Šírka SVG ikony v pixeloch");
+		Constants.setInt("ckeditor_svgIcon_height", 56, Constants.MOD_EDITOR, "Výška SVG ikony v pixeloch");
+		Constants.setString("ckeditor_svgIcon_sizes", "", Constants.MOD_EDITOR, "Dostupné veľkosti ikon oddelené čiarkou, napr. small,medium,large,xlarge,xxlarge,huge");
+		Constants.setString("ckeditor_svgIcon_colors", "", Constants.MOD_EDITOR, "Dostupné farby ikon oddelené čiarkou, napr. info,success,warning,danger,orange");
+
+		Constants.setString("ckeditor_table_class", "table table-sm tabulkaStandard", Constants.MOD_EDITOR, "Predvolená CSS trieda pre tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cols", "5", Constants.MOD_EDITOR, "Predvolený počet stĺpcov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_rows", "2", Constants.MOD_EDITOR, "Predvolený počet riadkov tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_width", "100%", Constants.MOD_EDITOR, "Predvolená šírka tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_height", "", Constants.MOD_EDITOR, "Predvolená výška tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_border", "1", Constants.MOD_EDITOR, "Predvolená hodnota okraja tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellpadding", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellpadding tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_cellspacing", "1", Constants.MOD_EDITOR, "Predvolená hodnota cellspacing tabuľky v CKEditore.");
+		Constants.setString("ckeditor_table_wrapper_class", "table-responsive", Constants.MOD_EDITOR, "Predvolený wrapper pre tabuľku v CKEditore.");
+
+		Constants.setString("ckeditor_extraPlugins", "", Constants.MOD_EDITOR, "Zoznam doplnkov pre CKEditor oddelených čiarkou.");
+
+		Constants.setString("ckeditor_button_baseClass", "btn", Constants.MOD_EDITOR, "Základná CSS trieda pre tlačidlá.");
+		Constants.setString("ckeditor_button_sizes", "btn-lg,btn-sm", Constants.MOD_EDITOR, "CSS trieda pre veľkosť tlačidla.");
+		Constants.setString("ckeditor_button_types", "btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark", Constants.MOD_EDITOR, "CSS trieda pre farbu/typ tlačidla.");
+		Constants.setString("ckeditor_button_textHiddenClass", "visually-hidden", Constants.MOD_EDITOR, "CSS trieda pre schovanie textu tlačidla - zobrazí sa iba ikona.");
 	}
 
 	/**

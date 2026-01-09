@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -55,7 +54,7 @@ public class TooltipRestController extends DatatableRestControllerV2<DictionaryB
     }
 
     @Override
-    public DictionaryBean getOne(@PathVariable("id") long id) {
+    public DictionaryBean getOneItem(long id) {
 
         //If id isnt -1 return exist entity
         if(id != -1) {

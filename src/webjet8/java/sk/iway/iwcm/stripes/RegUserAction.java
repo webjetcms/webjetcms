@@ -46,6 +46,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.AuthorizeAction;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.PasswordsHistoryDB;
@@ -808,6 +809,12 @@ public class RegUserAction extends WebJETActionBean
 			{
 				sk.iway.iwcm.Logger.error(ex2);
 			}
+		}
+
+		if (errors.size()>0 && userImage != null && userImage.getFileName() != null && userImage.getFileName().length() > 0)
+		{
+			String fileName = userImage.getFileName().toLowerCase();
+			errors.add("userImage", new SimpleError(prop.getText("components.user.newuser.userImage.submitFailed", ResponseUtils.filter(fileName), ""+userImage.getSize())));
 		}
 
 		Logger.debug(RegUserAction.class, "validation koniec, errors="+errors);

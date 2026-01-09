@@ -1,10 +1,10 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, java.util.*" %><%@ 
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@ 
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
-taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, java.util.*" %><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
+taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
+taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
+taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
@@ -59,7 +59,7 @@ if(Tools.isEmpty(filterValues))
 	<iwcm:stripForm id="filterForm" name="filterForm" method="GET" action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.components.adresar.AdresarAction">
 	<stripes:errors/>
 		<iwcm:text key="components.adresar.vyhladavanie.kontaktov"/>:
-		<stripes:text name="vyraz"/> 
+		<stripes:text name="vyraz"/>
 		<%
 		String filterList[] = Tools.getTokens(filterValues, "|");
 		if(filterList != null && filterList.length > 0)
@@ -77,7 +77,7 @@ if(Tools.isEmpty(filterValues))
 		<input type="hidden" name="hladaj" value="true"/>
 		<input type="submit" value="<iwcm:text key="components.adresar.hladaj"/>"/>
 		<c:if test="${not empty param.forward}">
-			<input type="hidden" name="forward" value="${param.forward}" />
+			<input type="hidden" name="forward" value="<%=Tools.getParameterNotNull(request, "forward")%>" />
 		</c:if>
 	</iwcm:stripForm>
 </div>

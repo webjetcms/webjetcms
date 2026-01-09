@@ -1,6 +1,6 @@
 package sk.iway.iwcm.calendar;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;

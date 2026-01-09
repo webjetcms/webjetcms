@@ -68,6 +68,8 @@ public class PathFilter implements Filter
 	//pocet sekund cache pre staticky obsah
 	private static int cacheStaticContentSeconds = -1;
 	private static String[] cacheStaticContentSuffixes = null;
+	//blocked paths for file/directory metadata disclosure prevention
+	private static String[] blockedPaths = null;
 
 	private static List<ResponseHeaderBean> responseHeaders;
 
@@ -327,29 +329,30 @@ public class PathFilter implements Filter
 			}
 
 			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws)
-         if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
-         {
-            boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
-            if (swaggerEnabled)
-            {
-               //testni, ci je povoleny aj pre neadmina
-               if (Constants.getBoolean("swaggerRequireAdmin"))
-               {
-                  Identity user = UsersDB.getCurrentUser(req);
-                  if (user==null || user.isAdmin()==false) swaggerEnabled = false;
-               }
-            }
+			if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
+			{
+				boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
+				if (swaggerEnabled)
+				{
+				//testni, ci je povoleny aj pre neadmina
+				if (Constants.getBoolean("swaggerRequireAdmin"))
+				{
+					Identity user = UsersDB.getCurrentUser(req);
+					if (user==null || user.isAdmin()==false) swaggerEnabled = false;
+				}
+				}
 
-            if (swaggerEnabled==false)
-            {
-               Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
-               res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-               forwardSafely("/404.jsp", req, res);
-					return;
-            }
-         }
+				if (swaggerEnabled==false)
+				{
+				Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				forwardSafely("/404.jsp", req, res);
+						return;
+				}
+			}
 
-			if (path.contains(".DS_Store") || path.contains("debug.") || path.contains("config.properties"))
+			//check for blocked file/directory metadata
+			if (isPathBlocked(path))
 			{
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				forwardSafely("/404.jsp", req, res);
@@ -2604,6 +2607,10 @@ public class PathFilter implements Filter
 		cacheStaticContentSuffixes = null;
 	}
 
+	public static void resetBlockedPaths() {
+		blockedPaths = null;
+	}
+
 	//pre WebJET 9 kontrolujeme pri REST volaniach CSRF token
 	private boolean checkCSRFToken(String path, HttpServletRequest request) {
 
@@ -2657,6 +2664,37 @@ public class PathFilter implements Filter
 		} catch (Exception ex) {
 			Logger.error(PathFilter.class, ex);
 		}
+	}
+
+	/**
+	 * Check if path contains blocked file or directory metadata
+	 * @param path - the request path
+	 * @return true if path should be blocked
+	 */
+	private static boolean isPathBlocked(String path) {
+		if (Tools.isEmpty(path)) return false;
+
+		try {
+			if (blockedPaths == null) {
+				synchronized(PathFilter.class) //NOSONAR
+				{
+					if (blockedPaths == null) {
+						blockedPaths = Constants.getArray("pathFilterBlockedPaths");
+					}
+				}
+			}
+
+			for (String blockedPath : blockedPaths) {
+				if (path.contains(blockedPath)) {
+					Logger.debug(PathFilter.class, "Blocked path detected, path="+path+", blocked="+blockedPath);
+					return true;
+				}
+			}
+		} catch (Exception ex) {
+			//failsafe to concurent modification exception, just to be sure
+		}
+
+		return false;
 	}
 
 	private static boolean isPathSafe(String path) {
