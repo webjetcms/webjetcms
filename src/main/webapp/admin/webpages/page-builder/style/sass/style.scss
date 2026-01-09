@@ -1,6 +1,6 @@
 /* WJ admin variables from ninja.scss */
 $primary: #0063FB;
-$primary-hover: #0054d5;
+$primary-hover: #0049BE;
 $nice-primary: #0090FC;
 $secondary: #13151B;
 
@@ -36,6 +36,9 @@ $color-dark-text: #002160; //Blue90
 $color-magicline: #F6BE3F; //Yellow30
 $color-magicline-g: #F9D76E; //Yellow10
 
+$font-family-base: "Asap", sans-serif, Arial, Helvetica;
+
+$scrollbar-width: 17px;
 $minimum-index: 100000;
 
 $highlighter-size: 2px;
@@ -100,16 +103,22 @@ $icon-add-to-favorites: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/20
 //trash
 $icon-remove: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>');
 
-//chevron-left-pipe
-$icon-move-left: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left-pipe"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6v12" /><path d="M18 6l-6 6l6 6" /></svg>');
-//chevron-right-pipe
-$icon-move-right: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right-pipe"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 6l6 6l-6 6" /><path d="M17 5v13" /></svg>');
+//chevron-left
+$icon-move-left: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11 7l-5 5l5 5" /><path d="M17 7l-5 5l5 5" /></svg>');
+//chevron-right
+$icon-move-right: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l-5 5" /><path d="M13 7l5 5l-5 5" /></svg>');
+//chevrons-up
+$icon-move-up: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 11l5 -5l5 5" /><path d="M7 17l5 -5l5 5" /></svg>');
+//chevrons-down
+$icon-move-down: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevrons-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7l5 5l5 -5" /><path d="M7 13l5 5l5 -5" /></svg>');
 //chevron-left
 $icon-left: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>');
 //chevron-right
 $icon-right: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(0, 33, 96)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>');
 
-
+//tooltip
+$tooltip-index: $minimum-index + 4000;
+$tooltip-bg: $sidebar-active-bg;
 
 @import "grid-element";
 @import "highlighter";
@@ -121,6 +130,7 @@ $icon-right: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" wid
 @import "modal";
 @import "notify";
 @import "library";
+@import "tooltip";
 @import "magicline";
 
 .#{$prefix}-column { padding:0; }
@@ -368,7 +378,7 @@ div.exit-inline-editor {
   padding-left: 4px;
   z-index: 101;
   background-color: #f5f5f5;
-  font-family: "Asap", sans-serif, Arial, Helvetica;
+  font-family: $font-family-base;
   font-size: 13px;
   font-weight: normal;
   line-height: 19px;

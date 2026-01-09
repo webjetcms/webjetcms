@@ -1236,29 +1236,23 @@ public class FormMailAction extends HttpServlet
 									{
 										for (String param : Tools.getTokens(keys, ";"))
 										{
-											String fileName = XhrFileUploadServlet.getService().moveFile(param, baseDirName + File.separator);
-											IwcmFile file = new IwcmFile(dir, fileName);
-											if (file.exists())
+											String fileName = XhrFileUploadServlet.getService().getOriginalFileName(param);
+											fileName = XhrFileUploadServlet.getService().moveAndReplaceFile(param, baseDirName + File.separator, formId + "_" + fileName);
+											IwcmFile dest = new IwcmFile(dir, fileName);
+											if (dest.exists())
 											{
-												IwcmFile dest = new IwcmFile(dir, formId + "_" + fileName);
-												file.renameTo(dest);
-												if (dest.exists())
+												if (fileNames == null)
 												{
-													if (fileNames == null)
-													{
-														fileNames = new StringBuilder(dest.getName());
-													} else
-													{
-														fileNames.append(",").append(dest.getName());
-													}
-													if ("false".equals(Constants.getString("useSMTPServer"))) {
-														if (fileNamesSendLater==null) fileNamesSendLater = new StringBuilder();
-														fileNamesSendLater.append(";").append(dest.getVirtualPath()).append(";").append(dest.getName());
-													}
-
-
-													attachs.add(dest);
+													fileNames = new StringBuilder(dest.getName());
+												} else
+												{
+													fileNames.append(",").append(dest.getName());
 												}
+												if ("false".equals(Constants.getString("useSMTPServer"))) {
+													if (fileNamesSendLater==null) fileNamesSendLater = new StringBuilder();
+													fileNamesSendLater.append(";").append(dest.getVirtualPath()).append(";").append(dest.getName());
+												}
+												attachs.add(dest);
 											}
 										}
 									}

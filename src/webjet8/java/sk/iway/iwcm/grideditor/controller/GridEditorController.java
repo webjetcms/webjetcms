@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -30,6 +31,7 @@ import sk.iway.iwcm.doc.TemplatesGroupDB;
 import sk.iway.iwcm.grideditor.dto.BlockDto;
 import sk.iway.iwcm.grideditor.dto.CategoryDto;
 import sk.iway.iwcm.grideditor.dto.GroupDto;
+import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
@@ -161,12 +163,15 @@ public class GridEditorController {
      */
     private String getFavouritesDirPath(Integer templateGroupId, HttpServletRequest request)
     {
+        Identity user = UsersDB.getCurrentUser(request);
+        String login = user.getLogin();
+
         if (templateGroupId != null && templateGroupId.intValue()>0)
         {
             TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());
             if (tgroup != null && Tools.isNotEmpty(tgroup.getDirectory()))
             {
-                String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/", request);
+                String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/"+login+"/", request);
                 //tu na rozdiel od citania pripravenych blokov netestujeme, ci adresar existuje, ak nie, tak ho ulozenie vytvori
                 //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+templateFavDirPath);
                 return templateFavDirPath;
@@ -174,7 +179,7 @@ public class GridEditorController {
         }
 
         //ak neexistuju pre sablonu pouzi default
-        String favDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/grideditor/", request);
+        String favDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/grideditor/"+login+"/", request);
         //Logger.debug(GridEditorController.class, "getFavouritesDirPath, returning "+favDirPath);
         return favDirPath;
     }
@@ -231,7 +236,23 @@ public class GridEditorController {
             group.setPremium( isPremium(groupId) );
         }else {
             if(includeBlocks){
-                List<BlockDto> blockList = getBlockList(request, rootDirPath, groupId.replace(catId+"/",""));
+                IwayProperties pageBuilderProp = null;
+                try {
+                    pageBuilderProp = new IwayProperties("utf-8");
+                    String lng = Prop.getLng(request, false);
+                    IwcmFile propFile = new IwcmFile(file, "pagebuilder_"+lng+".properties");
+                    if (propFile.exists()==false){
+                        propFile = new IwcmFile(file, "pagebuilder.properties");
+                    }
+                    if (propFile.exists()) {
+                        pageBuilderProp.load(propFile);
+                        group.setTextKey(pageBuilderProp.getProperty("title", group.getTextKey()));
+                    }
+                } catch (Exception e){
+                    Logger.error(GridEditorController.class, "Error loading pagebuilder properties from file: "+file.getVirtualPath(), e);
+                }
+
+                List<BlockDto> blockList = getBlockList(request, rootDirPath, groupId.replace(catId+"/",""), pageBuilderProp);
                 group.setBlocks(blockList);
             }
         }
@@ -322,20 +343,28 @@ public class GridEditorController {
      * @param groupDirName
      * @return - objekt BlockDto, ktory sa vklada do json pre SideBar
      */
-    private BlockDto getBlockObjectForSideBar(HttpServletRequest request, IwcmFile blockFile, String rootDirPath, String groupDirName){
+    private BlockDto getBlockObjectForSideBar(HttpServletRequest request, IwcmFile blockFile, String rootDirPath, String groupDirName, IwayProperties pageBuilderProp){
         BlockDto block = new BlockDto();
 
         String virtualPath = blockFile.getVirtualPath();
         String filePathNoExtension = FileTools.getFilePathWithoutExtension(virtualPath);
-        String blockId = filePathNoExtension.replace(rootDirPath+"/","");
+        String blockId = filePathNoExtension.replace(rootDirPath,"");
         String textKey = blockId.replace(groupDirName+"/","");
         textKey = getTextKey(request, textKey);
+        if (pageBuilderProp != null) {
+            String fileKeySuffix = FileTools.getFileNameWithoutExtension(blockFile.getName());
+            textKey = pageBuilderProp.getProperty("title."+fileKeySuffix, textKey);
+
+            String tags = pageBuilderProp.getProperty("tags."+fileKeySuffix, null);
+            if (Tools.isEmpty(tags)) tags = pageBuilderProp.getProperty("tags", null);
+            block.setTags(Tools.getTokens(tags, ",", true));
+        }
         String imagePath = getImagePath(filePathNoExtension, request);
         String style = getBlockStyle(virtualPath);
 
         if (imagePath.indexOf("default")==-1)
         {
-            imagePath = "/thumb"+imagePath+"?ip=1&w=330";
+            imagePath = "/thumb"+imagePath+"?ip=1&w="+Constants.getInt("pagebuilderLibraryImageWidth");
         }
 
         String html = "";
@@ -365,14 +394,14 @@ public class GridEditorController {
         return block;
     }
 
-    private List<BlockDto> getBlockList(HttpServletRequest request, String rootDirPath,String groupDirName ){
+    private List<BlockDto> getBlockList(HttpServletRequest request, String rootDirPath, String groupDirName, IwayProperties pageBuilderProp){
         List<BlockDto> blockList = new ArrayList<>();
         IwcmFile tempDir = new IwcmFile(Tools.getRealPath(rootDirPath+"/"+groupDirName));
 
         IwcmFile blocks[] = FileTools.sortFilesByName(tempDir.listFiles());
 
         for (int j = 0; j < blocks.length; j++) {
-            BlockDto block = getBlockObjectForSideBar(request, blocks[j], rootDirPath, groupDirName);
+            BlockDto block = getBlockObjectForSideBar(request, blocks[j], rootDirPath, groupDirName, pageBuilderProp);
             if(block != null) blockList.add(block);
         }
 
@@ -391,7 +420,7 @@ public class GridEditorController {
         String groupDirName = f.getName();
 
         if(f.isDirectory()){
-            List<BlockDto> blockList = getBlockList(request,rootDirPath,groupDirName);
+            List<BlockDto> blockList = getBlockList(request,rootDirPath,groupDirName, null);
 
             String textKey = categoryDirName+"/"+groupDirName;
 

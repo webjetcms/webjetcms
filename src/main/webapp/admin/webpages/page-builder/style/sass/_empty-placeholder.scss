@@ -109,4 +109,19 @@
     &.#{$prefix}-is-library-active .#{$prefix}-empty-placeholder__button {
         display: none !important;
     }
+
+    //empty-placeholder on bottom of the page
+    > .#{$prefix}-empty-placeholder-wrapper > .#{$prefix}-empty-placeholder {
+        position: relative;
+        > .#{$prefix}-empty-placeholder__button {
+            background-color: $color-section;
+            &::after {
+                border-color: $color-section;
+            }
+
+            &:hover {
+                background-color: darken($color-section,15%);
+            }
+        }
+    }
 }

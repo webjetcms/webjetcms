@@ -1,5 +1,6 @@
 package sk.iway.upload;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.servlet.ServletException;
 
 
@@ -58,9 +60,11 @@ public class DiskMultiPartRequestHandler
     * @throws FileUploadException
 	 * @throws UnsupportedEncodingException
     */
-   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException
+   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
    {
-		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
+		DiskFileItemFactory factory = new DiskFileItemFactory();
+
+		ServletFileUpload upload = new ServletFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
@@ -107,6 +111,13 @@ public class DiskMultiPartRequestHandler
 				List<String> valueList = me.getValue();
 				if (valueList.size()<1) continue;
 				wrapped.setParameterValues(name, valueList.toArray(new String[0]));
+			}
+
+			// Add parts to the wrapped request
+			for (FileItem item : files)
+			{
+				Part part = new FileItemPart(item);
+                wrapped.addPart(part);
 			}
 		}
 
@@ -156,7 +167,11 @@ public class DiskMultiPartRequestHandler
 	{
 		for (FileItem item : files)
 		{
-			item.delete();
+			try {
+				item.delete();
+			} catch (Exception e) {
+				Logger.error(DiskMultiPartRequestHandler.class, "Error deleting file item", e);
+			}
 		}
 	}
 }

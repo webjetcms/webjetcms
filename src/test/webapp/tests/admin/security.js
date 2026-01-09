@@ -75,11 +75,14 @@ Scenario("Ninja URL with double quotes", ({ I }) => {
 
 Scenario("pathFilterBlockedPaths", ({ I, Document }) => {
     let random = I.getRandomTextShort();
-    let pathFilterBlockedPaths = ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn";
+    let pathFilterBlockedPaths = ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./";
     //set default values
     Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths);
 
     I.amOnPage("/templates/aceintegration/jet/config.properties?v=1-"+random);
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.amOnPage("/WEB-INF./web.xml");
     I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     //allow config.properties

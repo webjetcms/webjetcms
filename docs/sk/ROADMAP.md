@@ -12,6 +12,14 @@ Vysvetlenie použitých piktogramov:
 - [ ] +ak začína na znak ```+``` bola úloha pridaná do zoznamu až po prvotnom vytvorení plánu, takéto úlohy sú typicky požadované zákazníkmi a ak budú realizované ovplyvnia časový plán. To znamená, že niektoré iné úlohy nemusia byť v danej verzii realizované z nedostatku času.
 - [ ] ~~preškrtnuté~~ úloha presunutá do inej verzie, alebo riešená iným spôsobom, alebo zrušená. V opise je vždy číslo verzie kam sa presunula alebo dôvod zrušenia.
 
+## 2026
+
+- Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
+- Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
+- Migrácia na Spring Boot projekt.
+- Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
+
 ## 2025
 
 - [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript (#57793).

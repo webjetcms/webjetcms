@@ -10,3 +10,5 @@ Hodnota `INSTALL_NAME` je meno inštalácie, v konfigurácii v položke s názvo
 - `/components/search/search.jsp`
 
 Vyhľadanie správneho súboru prebehne automaticky. Použije sa prvý nájdený podľa uvedeného poradia.
+
+Podobne funguje aj pre Spring aplikácie v priečinku `/apps/INSTALL_NAME/`, napr. `/apps/file-archive/mvc/file-archive.html` skopírujte do `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` a upravte podľa vašich potrieb.

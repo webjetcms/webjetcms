@@ -48,6 +48,7 @@ String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -
     <c:otherwise>
         <iwcm:combine type="css" set="">
             ${ninja.temp.basePathCss}ninja.min.css
+            ${ninja.temp.basePathCss}editor.css
             ${ninja.temp.basePathCss}shame.css
         </iwcm:combine>
     </c:otherwise>

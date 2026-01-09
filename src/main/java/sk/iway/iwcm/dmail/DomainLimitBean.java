@@ -7,9 +7,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.TableGenerator;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 
@@ -44,8 +44,7 @@ public class DomainLimitBean extends ActiveRecord implements Serializable
 	private static final long serialVersionUID = -5776093287890776273L;
 
 	@Id
-	@GeneratedValue(generator="WJGen_domain_limits")
-	@TableGenerator(name="WJGen_domain_limits",pkColumnValue="domain_limit_id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_domain_limits")
 	@Column(name="domain_limit_id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
 	private int id;

@@ -2,7 +2,6 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
@@ -13,7 +12,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
@@ -33,7 +32,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableSpringDataWebSupport
 @Configuration
 @EnableWebMvc
-@MultipartConfig
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -171,9 +169,8 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
     }
 
     @Bean(name = "multipartResolver")
-    public CommonsMultipartResolver multipartResolver() {
-        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-        multipartResolver.setMaxUploadSize(-1);
+    public StandardServletMultipartResolver multipartResolver() {
+        StandardServletMultipartResolver multipartResolver = new StandardServletMultipartResolver();
         return multipartResolver;
     }
 

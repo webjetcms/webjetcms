@@ -222,8 +222,8 @@ public class UserChangePasswordService {
 				subject = prop.getText(subjectKey, Tools.getBaseHref(request), DocDB.getDomain(request));
 			}
 
-			String fromName = Tools.getRequestAttribute(request, "sendPasswordFromName", newestUser.getFullName());
-			String fromEmail = Tools.getRequestAttribute(request, "sendPasswordFromEmail", newestUser.getEmail());
+			String fromName = SendMail.getDefaultSenderName("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromName", newestUser.getFullName()));
+			String fromEmail = SendMail.getDefaultSenderEmail("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromEmail", newestUser.getEmail()));
 
 			String text = prop.getText(propKey, pageUrl, String.valueOf(Constants.getInt("passwordResetValidityInMinutes")), cancelActionLink);
 

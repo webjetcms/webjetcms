@@ -6,7 +6,7 @@
         <jndiName>jndi-iwcm</jndiName>
         <driver>net.sourceforge.jtds.jdbc.Driver</driver>
 
-        <url>jdbc:jtds:sqlserver://host.docker.internal:11433/webjetcms_autotest_web</url>
+        <url>jdbc:jtds:sqlserver://host.docker.internal:11433/webjetcms_autotest_web;encoding=utf-8</url>
 
         <username>sa</username>
         <password>${WEBJET_DB_PASS}</password>

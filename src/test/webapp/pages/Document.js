@@ -10,6 +10,11 @@ const i18n = require("./i18n");
 
 module.exports = {
 
+  isScreenshotsEnabled() {
+      var enabled = process.env.CODECEPT_SCREENSHOTS;
+      return "true" === enabled;
+  },
+
   /**
    * Highlight element on page, by adding class 'screenshotHighlight'.
    * @param {*} selector
@@ -43,6 +48,8 @@ module.exports = {
   },
 
   screenshotElement(selector, screenshotFilePath, width, height, selectorToHighlight) {
+    if (!this.isScreenshotsEnabled()) return;
+
       var windowResized = false;
       if (typeof width != "undefined" && width != null && typeof height != "undefined" && height != null) {
         I.say("resizing window");
@@ -73,6 +80,8 @@ module.exports = {
   },
 
   screenshotAppEditor(docId, path, callback, width, height) {
+    if (!this.isScreenshotsEnabled()) return;
+
       var windowResized = false;
       if (typeof width != "undefined" && width != null && typeof height != "undefined" && height != null) {
         I.say("resizing window");

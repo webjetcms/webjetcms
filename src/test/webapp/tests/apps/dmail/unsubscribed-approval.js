@@ -18,7 +18,7 @@ Before(async ({ I, DT, login }) => {
    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
 });
 
-Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
+Scenario('Preparation - create random subscribers', async ({ I, DT, DTE, TempMail }) => {
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor('campaingsDataTable')
     I.clickCss('#pills-dt-campaingsDataTable-receivers-tab');
@@ -37,6 +37,13 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
         I.clickCss('[id^="confirmationYes"]', "#toast-container-webjet");
     });
     DTE.save('campaingsDataTable');
+
+    //wait for email from campaign to be sent
+    I.wait(5);
+    TempMail.login(randomName_1);
+    TempMail.openLatestEmail();
+    I.waitForText("testOfUnsucribed", 10, 'div.subject');
+    await TempMail.destroyInbox(randomName_1);
 });
 
 

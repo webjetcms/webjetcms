@@ -8,6 +8,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "${WEBJET_DB_PASS}"
       MSSQL_PID: "Developer"
+      MSSQL_COLLATION: "Latin1_General_CI_AI"
     ports:
       - "11433:1433"
     volumes:
