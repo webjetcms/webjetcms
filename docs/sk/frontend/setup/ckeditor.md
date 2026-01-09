@@ -126,3 +126,5 @@ Možnosť vložiť tlačidlo sa zobrazuje vo výberovom menu pre vloženie formu
 CKEditor podporuje pridanie vlastných doplnkov (plugins). Po vytvorení vlastného doplnku je potrebné ho pridať do konfiguračnej premennej `ckeditor_extraPlugins` ako čiarkou oddelený zoznam. Viac informácií o vytváraní vlastných doplnkov nájdete v [dokumentácii CKEditora](https://ckeditor.com/docs/ckeditor4/latest/guide/plugin_sdk_intro.html).
 
 Výsledný plugin umiestnite do adresára `src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/` vášho projektu.
+
+Tlačidlo následne pridajte do konfiguračnej premennej `ckeditor_toolbar` na vhodné miesto.

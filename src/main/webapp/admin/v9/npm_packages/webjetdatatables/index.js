@@ -3198,7 +3198,7 @@ export const dataTableInit = options => {
                             let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.")+".show input";
                             let element = $(selector);
                             //console.log("Done, selector=", selector, " element=", element);
-                            if (element.length>0) {
+                            if (element.length>0 && (element[0].type === "text" || element[0].type === "textarea")) {
                                 try {
                                     element[0].focus();
                                     element[0].setSelectionRange(0,0);
@@ -3209,6 +3209,19 @@ export const dataTableInit = options => {
                         var liner = $("div.DTE_Bubble_Liner");
                         if (liner.find("div.DTE_Field_Type_quill").length>0) liner.addClass("type_quill");
                         else liner.removeClass("type_quill");
+
+                        if (liner.find("div.DTE_Field_Type_select").length>0) {
+                            //initialize/refresh BS select
+                            if (liner.find(".bootstrap-select").length>0) {
+                                liner.find("div.DTE_Field_Type_select select").selectpicker("refresh");
+                            } else {
+                                liner.find("div.DTE_Field_Type_select select").selectpicker(DT_SELECTPICKER_OPTS_EDITOR);
+                            }
+                        }
+                        //initialize checkboxes
+                        liner.find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
+                        liner.find('input[type="checkbox"]').addClass("form-check-input");
+                        liner.find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
 
                         EDITOR.bubblePosition();
 
