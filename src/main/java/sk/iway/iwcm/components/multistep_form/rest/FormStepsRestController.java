@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -57,13 +58,17 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     public FormStepEntity getOneItem(long id) {
         FormStepEntity entity = (id == -1) ? new FormStepEntity() : formStepsRepository.getById(id);
         if(id < 1) entity.setFormName(MultistepFormsService.getFormName(getRequest()));
+        // Copy value so it can be used during duplicate action
+        entity.setIdForDuplication(entity.getId());
         return entity;
     }
 
     @Override
     public void afterSave(FormStepEntity entity, FormStepEntity saved) {
         // After save ensure that form pattern is updated
-        multistepFormsService.updateFormPattern(entity.getFormName());
+        // !! do not call, when action was duplication
+        if(entity.getId().equals(entity.getIdForDuplication()) == false)
+            multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
     @Override
@@ -77,28 +82,35 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         formItemsRepository.deleteAllByStepIdAndDomainId(id, CloudToolsForCore.getDomainId());
     }
 
-    // @Override
-    // public void beforeDuplicate(FormStepEntity entity) {
-    //     //IF something went wrong, delete all awaiting duplicate
-    //     formItemsRepository.deleteAllByFormNameAndStepIdAndDomainId(entity.getFormName(), Long.valueOf(-getUser().getUserId()), CloudToolsForCore.getDomainId());
+    @Override
+    public void beforeDuplicate(FormStepEntity entity) {
+        int tmpId = -getUser().getUserId();
 
-    //     //Now insert new items that gonna be set after duplicate - stepId gonna be -currentUserId
-    //     List<FormItemEntity> stepItemsToDuplicate = formItemsRepository.getAllStepItems(entity.getId(), CloudToolsForCore.getDomainId());
-    //     for(FormItemEntity stepItem : stepItemsToDuplicate) {
-    //         stepItem.setId(null);
-    //         stepItem.setStepId(-getUser().getUserId());
-    //         stepItem.setItemFormId(""); //remove itemFormId so in afterDuplicate its generated new one
-    //     }
-    //     formItemsRepository.saveAll(stepItemsToDuplicate);
-    // }
+        //IF something went wrong, delete all awaiting duplicate
+        formItemsRepository.deleteAllByFormNameAndStepIdAndDomainId(entity.getFormName(), Long.valueOf(tmpId), CloudToolsForCore.getDomainId());
 
-    // @Override
-    // public void afterDuplicate(FormStepEntity entity, Long originalId) {
-    //     // Find all items taht are awaiting step duplicate to have id, and set id
-    //     for(FormItemEntity stepItem : formItemsRepository.findItemsToDuplicate(entity.getFormName(), Long.valueOf(-getUser().getUserId()), CloudToolsForCore.getDomainId())) {
-    //         stepItem.setStepId(entity.getId().intValue());
-    //         stepItem.setItemFormId( MultistepFormsService.getValidItemFormId(stepItem, formItemsRepository) );
-    //         formItemsRepository.save(stepItem);
-    //     }
-    // }
+        //Now insert new items that gonna be set after duplicate - stepId gonna be -currentUserId
+        List<FormItemEntity> stepItemsToDuplicate = formItemsRepository.getAllStepItems(entity.getIdForDuplication(), CloudToolsForCore.getDomainId());
+        for(FormItemEntity stepItem : stepItemsToDuplicate) {
+            stepItem.setId(null);
+            stepItem.setStepId(-getUser().getUserId());
+            stepItem.setItemFormId(""); //remove itemFormId so in afterDuplicate its generated new one
+        }
+        formItemsRepository.saveAll(stepItemsToDuplicate);
+    }
+
+    @Override
+    public void afterDuplicate(FormStepEntity entity, Long originalId) {
+        int tmpId = -getUser().getUserId();
+
+        // Find all items taht are awaiting step duplicate to have id, and set id
+        for(FormItemEntity stepItem : formItemsRepository.findItemsToDuplicate(entity.getFormName(), Long.valueOf(tmpId), CloudToolsForCore.getDomainId())) {
+            stepItem.setStepId(entity.getId().intValue());
+            stepItem.setItemFormId( multistepFormsService.getValidItemFormId(stepItem) );
+            formItemsRepository.save(stepItem);
+        }
+
+        // Now update form pattern
+        multistepFormsService.updateFormPattern(entity.getFormName());
+    }
 }

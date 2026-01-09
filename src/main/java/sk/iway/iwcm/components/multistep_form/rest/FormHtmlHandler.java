@@ -42,6 +42,7 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
 
 @Service
@@ -69,6 +70,9 @@ public class FormHtmlHandler {
     private String formAddClasses;
     private String formCss;
     private Map<String, String> formData;
+
+    private String emailTextBefore;
+    private String emailTextAfter;
 
     private DocDB docDB;
 
@@ -104,6 +108,8 @@ public class FormHtmlHandler {
         this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
         this.publicKey = formSettings.getEncryptKey();
         this.formCss = formSettings.getFormCss();
+        this.emailTextBefore = formSettings.getEmailTextBefore();
+        this.emailTextAfter = formSettings.getEmailTextAfter();
 
         this.formAddClasses = formSettings.getFormAddClasses();
         if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
@@ -120,25 +126,25 @@ public class FormHtmlHandler {
         StringBuilder stepHtml = new StringBuilder();
 
         // Form start
-        stepHtml.append( getFormStart(formName, stepId) );
+        stepHtml.append( getFormStart(formName, stepId, request) );
 
         // Form fields for selected step (aka step items)
         stepHtml.append( getStepHtml(formName, stepId, request) );
 
         // From end
-        stepHtml.append( getFormEnd(formName, stepId) );
+        stepHtml.append( getFormEnd(formName, stepId, request) );
 
         return stepHtml.toString();
     }
 
-    private StringBuilder getFormStart(String formName, Long stepId) {
+    private StringBuilder getFormStart(String formName, Long stepId, HttpServletRequest request) {
         StringBuilder formStartHtml = new StringBuilder("");
 
         //<link rel="stylesheet" type="text/css" href="/templates/aceintegration/jet/assets/multistep-form/css/base.css" />
         for(String css : Tools.getTokens(this.formCss, "\n", true))
             formStartHtml.append("<link rel='stylesheet' type='text/css' href='").append(css).append("' />");
 
-        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop));
+        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request));
 
         String newPath = "/rest/multistep-form/save-form?form-name=" + formName + "&step-id=" + stepId;
         Tools.replace(formStartHtml, "${formActionSrc}", newPath);
@@ -180,7 +186,7 @@ public class FormHtmlHandler {
             if (Tools.isEmpty(item.getString("label")))
                 item.put("label", prop.getText("components.formsimple.label." + fieldType));
 
-            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop);
+            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
 
             if (isEmailRender == false) {
                 if(itemHtml.contains("!INCLUDE"))
@@ -197,18 +203,18 @@ public class FormHtmlHandler {
         return stepItemsHtml;
     }
 
-    private StringBuilder getFormEnd(String formName, Long stepId) {
+    private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request) {
         String submitButtonString = "";
         if(isLastStep(formName, stepId)) submitButtonString = prop.getText("components.mustistep.form.save_form");
         else submitButtonString = prop.getText("components.mustistep.form.next_step");
 
-        return getFormEnd(formName, submitButtonString);
+        return getFormEnd(formName, submitButtonString, request);
     }
 
-    private StringBuilder getFormEnd(String formName, String submitButtonString) {
+    private StringBuilder getFormEnd(String formName, String submitButtonString, HttpServletRequest request) {
         StringBuilder formEndHtml = new StringBuilder();
 
-        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop) );
+        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request) );
 
         Tools.replace(formEndHtml, "${submitButtonText}", submitButtonString);
 
@@ -220,11 +226,13 @@ public class FormHtmlHandler {
     public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
         StringBuilder formHtml = new StringBuilder("");
 
+        formHtml.append(ResponseUtils.filter(emailTextBefore).replaceAll("\\n", "<br/>")).append("<br/>");
+
         //
         setSupportValues(form.getFormName(), request, true);
 
         // Form start
-        formHtml.append( getFormStart(form.getFormName(), -1L) );
+        formHtml.append( getFormStart(form.getFormName(), -1L, request) );
 
         // prepare data
         this.formData = new HashMap<>();
@@ -242,8 +250,9 @@ public class FormHtmlHandler {
         }
 
         // End form
-        formHtml.append( getFormEnd(form.getFormName(), "") );
+        formHtml.append( getFormEnd(form.getFormName(), "", request) );
 
+        formHtml.append("<br/>").append(ResponseUtils.filter(emailTextAfter).replaceAll("\\n", "<br/>")).append("<br/>");
 
         String techInfo = "";
         if(this.addTechInfo) {
@@ -470,7 +479,7 @@ public class FormHtmlHandler {
         }
 
         // Loop all textareas
-        String textareaRegex = "<textarea.*?></textarea>";
+        String textareaRegex = "<textarea.*?</textarea>";
         Pattern textareaPattern = Pattern.compile(textareaRegex);
         Matcher textareaMatcher = textareaPattern.matcher(itemHtml);
 

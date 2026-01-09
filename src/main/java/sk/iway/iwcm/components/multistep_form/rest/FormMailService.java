@@ -81,8 +81,7 @@ public class FormMailService {
         return foundValues;
     }
 
-    public void mailShit(FormsEntity form, boolean emailAllowed, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
-
+    public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
 		Prop prop = Prop.getInstance(request);
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
 
@@ -104,38 +103,30 @@ public class FormMailService {
 
         int sendUserInfoDocId =  (formSettings.getFormMailSendUserInfoDocId() != null) ? formSettings.getFormMailSendUserInfoDocId() : -1;
 		Logger.debug(FormMailService.class, "sendUserInfoDocId=" + sendUserInfoDocId + " email=" + email);
+
+		// set as attribute so sendUserInfo would know
+		request.setAttribute("doubleOptIn", formSettings.getDoubleOptIn());
+
 		if (sendUserInfoDocId > 0)
 			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
 
-		Logger.println(FormMailService.class,"FormMailAction emailAllowed=" + emailAllowed + " recipients=" + recipients);
+		Logger.println(FormMailService.class,"FormMailAction recipients=" + recipients);
 
-
-        if (emailAllowed && "nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
+        if ("nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
 		{
-			if (Tools.isEmail(email))
-			{
+			if (Tools.isEmail(email)) {
 				String emailProtectionSenderEmail = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
-				if (Tools.isEmail(emailProtectionSenderEmail))
-				{
+				if (Tools.isEmail(emailProtectionSenderEmail)) {
 					email = emailProtectionSenderEmail;
-				}
-				else
-				{
+				} else {
 					//skus nastavit odosielatela ako prijemcu
 					String[] emails = recipients.split(",");
-					if (emails != null && emails.length > 0)
-					{
-						email = emails[0];
-					} else
-					{
-						email = "webform@" + Tools.getServerName(request);
-					}
+					if (emails != null && emails.length > 0) email = emails[0];
+					else email = "webform@" + Tools.getServerName(request);
 				}
 			}
-			if (meno == null || meno.trim().length() < 1)
-			{
-				meno = email;
-			}
+
+			if (meno == null || meno.trim().length() < 1) meno = email;
 
 			if (emailEncoding.indexOf("ASCII") != -1) htmlData = new StringBuilder(DB.internationalToEnglish(htmlData.toString()));
 			htmlData = new StringBuilder(FormMailAction.createAbsolutePath(htmlData.toString(), request));
@@ -143,8 +134,7 @@ public class FormMailService {
 
 			boolean sendMessageAsAttach = Tools.isTrue(formSettings.getMessageAsAttach());
 			IwcmFile messageAsAttachFile = null;
-			if(sendMessageAsAttach)
-			{
+			if(sendMessageAsAttach) {
 				String messageAsAttachFileName = formSettings.getMessageAsAttachFileName();
 				if(Tools.isEmpty(messageAsAttachFileName)) messageAsAttachFileName = Constants.getString("multistepform_attachmentDefaultName");
 				else messageAsAttachFileName = DocTools.removeChars(messageAsAttachFileName);
@@ -152,20 +142,17 @@ public class FormMailService {
 				FileTools.saveFileContent(messageAsAttachFile.getVirtualPath(), "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset="+emailEncoding+"\">"+(cssData == null ? "" : cssData)+"</head><body id=\"WebJETEditorBody\" class=\"WebJETMailBody\"><div class=\"WebJETMailWrapper\">\n\n"+htmlData+"\n\n</div></body></html>", emailEncoding);
 			}
 
-			if ("false".equals(Constants.getString("useSMTPServer")))
-			{
-				if(sendMessageAsAttach && messageAsAttachFile!=null)
-				{
+			if ("false".equals(Constants.getString("useSMTPServer"))) {
+				if(sendMessageAsAttach && messageAsAttachFile!=null) {
 					htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
 					formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
 				}
+
 				if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
 
 				String messageBody = htmlData.toString();
 				if (sendMessageAsAttach==false && forceTextPlain==false)
-				{
 					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
-				}
 
 				Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne ulozeny do databazy, odoslany bude neskor", form.getDocId(), form.getId().intValue());
 
@@ -174,37 +161,23 @@ public class FormMailService {
 				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
 
 				SendMail.sendLater(meno, FormMailAction.getFirstEmail(email), recipients, formSettings.getReplyTo(), formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater() != null ? "" : formFiles.getFileNamesSendLater().toString());
-			}
-			else
-			{
+			} else {
 				//vygeneruj mail a posli ho
 				Properties props = System.getProperties();
 
-				try
-				{
+				try {
 					if (host != null && host.length() > 2)
-					{
 						props.put("mail.smtp.host", host);
-					}
 					else if (props.getProperty("mail.smtp.host") == null)
-					{
 						props.put("mail.smtp.host", InetAddress.getLocalHost().getHostName());
-					}
-				}
-				catch (Exception ex)
-				{
-					Logger.error(FormMailAction.class, ex);
-				}
+				} catch (Exception ex) { Logger.error(FormMailAction.class, ex); }
 
 				Session session = SendMail.getSession(props);
-
 				MimeMessage msg = new MimeMessage(session);
 				InternetAddress[] toAddrs = null;
 
-				try
-				{
+				try {
 					//este potrebujeme updatnut linky na subory
-
 					FormDetails formDetails = new FormDetails();
 					formDetails.setFiles( String.join(",", formFiles.getFileNames()) );
 
@@ -212,41 +185,33 @@ public class FormMailService {
 					String baseHref = Tools.getBaseHref(request);
 					htmlData = Tools.replace(htmlData, "!ATTACHMENTS!", formDetails.getAttachements(baseHref));
 
-					try
-					{
+					try {
 						String proxyHost = request.getHeader("x-forwarded-for");
-						if (proxyHost != null && proxyHost.length()>4)
-						{
+						if (proxyHost != null && proxyHost.length() > 4)
 							msg.setHeader("X-sender-proxy", proxyHost);
-						}
 
 						msg.setHeader("X-sender-ip", Tools.getRemoteIP(request));
 						msg.setHeader("X-sender-host", Tools.getRemoteHost(request));
 						msg.setHeader("X-server-name", Tools.getServerName(request));
+
 						Identity user = UsersDB.getCurrentUser(request);
-						if (user!=null)
-						{
+						if (user != null) {
 							msg.setHeader("X-sender-userid", Integer.toString(user.getUserId()));
 							msg.setHeader("X-sender-fullname", DB.internationalToEnglish(user.getFullName()));
 						}
-					}
-					catch (Exception ex)
-					{
-						Logger.error(FormMailAction.class, ex);
-					}
+					} catch (Exception ex) { Logger.error(FormMailAction.class, ex); }
 
 					toAddrs = InternetAddress.parse(recipients, false);
 					msg.setRecipients(Message.RecipientType.TO, toAddrs);
 
 					String ccEmails = formSettings.getCcEmails();
-					if (Tools.isEmail(ccEmails))
-					{
+					if (Tools.isEmail(ccEmails)) {
 						InternetAddress[] ccAddrs = InternetAddress.parse(ccEmails, false);
 						msg.setRecipients(Message.RecipientType.CC, ccAddrs);
 					}
+
 					String bccEmails = formSettings.getBccEmails();
-					if (Tools.isEmail(bccEmails))
-					{
+					if (Tools.isEmail(bccEmails)) {
 						InternetAddress[] bccAddrs = InternetAddress.parse(bccEmails, false);
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
@@ -254,55 +219,34 @@ public class FormMailService {
 					String from = email;
 					msg.setFrom(new InternetAddress(FormMailAction.getFirstEmail(email), meno));
 
-					//subject = new String(subject.getBytes(), emailEncoding);
-					//msg.setSubject(subject);
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
-
 					msg.setSentDate(new java.util.Date());
 
-					//msg.setText(body);
-
-					//MimeBodyPart text = new MimeBodyPart();
 
 					MimeBodyPart html = new MimeBodyPart();
-
-					//htmlData = new String(htmlData.getBytes(EMAIL_ENCODING));
 
 					if(sendMessageAsAttach) htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
 					if(formFiles.getAttachs() != null && attachFiles == false) htmlData.append(prop.getText("email.too_large_attachments"));
 
 					//odstran diakritiku
 					if (emailEncoding.indexOf("ASCII")!=-1)
-					{
 						htmlData = new StringBuilder(DB.internationalToEnglish(htmlData.toString()));
-					}
 
 					//test ci je to HTML content, alebo nie. <br> za HTML content nepovazujem
 					String htmlDataNoBR = Tools.replace(htmlData.toString(), "<br>", "\n");
 					htmlDataNoBR = Tools.replace(htmlDataNoBR, "<br/>", "\n");
 					if (htmlDataNoBR.indexOf('<') != -1 && htmlDataNoBR.indexOf('>') != -1)
-					{
 						html.setContent(FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain), "text/html; charset="+emailEncoding);
-					}
 					else
-					{
 						html.setContent(htmlData.toString(), "text/plain; charset=" + emailEncoding);
-					}
 
 					Multipart mp = new MimeMultipart("mixed");
-					if ((forceTextPlain==false || (formFiles.getAttachs() != null && attachFiles)) && (sendMessageAsAttach || (htmlDataNoBR.indexOf('<') != -1 && htmlDataNoBR.indexOf('>') != -1)))
-					{
-						//html.setContent(htmlData, contentType);
-
-						//mp.addBodyPart(text);
-
+					if ((forceTextPlain==false || (formFiles.getAttachs() != null && attachFiles)) && (sendMessageAsAttach || (htmlDataNoBR.indexOf('<') != -1 && htmlDataNoBR.indexOf('>') != -1))) {
 						//#15245 - ak je nastaveny forceTextPlain a mal som aj prilohy, text formularu necham ako text/plain a prilohy pridam standartnym sposobom
 						if(forceTextPlain)
 							html.setContent(SearchTools.htmlToPlain(htmlDataNoBR), "text/plain; charset="+emailEncoding);
 
 						mp.addBodyPart(html);
-
-						//Multipart mp = new MimeMultipart("mixed");
 
 						if(formFiles.getAttachs() != null && attachFiles) {
 							for(IwcmFile file : formFiles.getAttachs())
@@ -312,23 +256,17 @@ public class FormMailService {
 						if(sendMessageAsAttach) FormMailAction.attFile(messageAsAttachFile, mp, emailEncoding);
 
 						msg.setContent(mp);
-					}
-					else
-					{
+					} else {
 						//mame iba textovy obsah, posli zjednodusene
 						htmlDataNoBR = SearchTools.htmlToPlain(htmlDataNoBR);
 						msg.setContent(htmlDataNoBR, "text/plain; charset="+emailEncoding);
 					}
 
 					String formMailFixedSenderEmail = Constants.getString("formMailFixedSenderEmail");
-					if (Tools.isEmail(formMailFixedSenderEmail))
-					{
+					if (Tools.isEmail(formMailFixedSenderEmail)) {
 						msg.setFrom(new InternetAddress(formMailFixedSenderEmail, formMailFixedSenderEmail));
-					}
-					else
-					{
-						if (Tools.isEmail(Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY)))
-						{
+					} else {
+						if (Tools.isEmail(Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY))) {
 							from = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
 							Address[] oldSenders = msg.getFrom();
 							if (oldSenders != null && oldSenders.length>0 && from.equals(oldSenders[0].toString()) == false) msg.setReplyTo(oldSenders);
@@ -338,28 +276,19 @@ public class FormMailService {
 
 					//ak mame parameter "replyTo", nastavme ho
 					String replyTo = formSettings.getReplyTo();
-					if(Tools.isEmail(replyTo))
-					{
+					if(Tools.isEmail(replyTo)) {
 						InternetAddress[] replyToAddrs = InternetAddress.parse(replyTo, false);
 						msg.setReplyTo(replyToAddrs);
 					}
 
 					Transport.send(msg);
-
 					Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne odoslany na email " + recipients, form.getDocId(), form.getId().intValue());
-
-
 				}
 				catch (Exception ex) {
 					Logger.error(FormMailAction.class, ex);
 					Adminlog.add(Adminlog.TYPE_FORMMAIL, "", form.getDocId(), form.getId().intValue());
 				}
 			}
-		}
-		else
-		{
-			Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne ulozeny do databazy", form.getDocId(), form.getId().intValue());
-		}
+		} else { Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne ulozeny do databazy", form.getDocId(), form.getId().intValue()); }
     }
-
 }

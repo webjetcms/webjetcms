@@ -34,9 +34,8 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
-import sk.iway.iwcm.components.multistep_form.support.StepInterceptorInterface;
-import sk.iway.iwcm.components.multistep_form.support.StepValidatorInterface;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -164,6 +163,21 @@ public class MultistepFormsService {
         return List.of("novy-riadok", "prazdny-stlpec");
     }
 
+    public static int getStepPositionIndex(String formName, Long stepId, FormStepsRepository repo) {
+        int index = 1;
+        boolean found = false;
+        for(FormStepEntity formStep : repo.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
+            if(stepId.equals(formStep.getId())) {
+                found = true;
+                break;
+            }
+            index++;
+        }
+
+        if(found) return index;
+        else return -1; //not found
+    }
+
     /* ********** PUBLIC - supprot methods ********** */
 
     public final List<LabelValue> getFormStepsOptions(String formName) {
@@ -284,12 +298,15 @@ public class MultistepFormsService {
         /* Separe validate file fields */
         validateFileFields(formName, received, errors, request);
 
-        // CUSTOM STEP VALIDATION
-        customStepValidation(formName, stepId, received, request, errors);
+        // GET form processor that can have custom validation / interceptor / form save
+        FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId);
+
+        // STEP VALIDATION
+        customStepValidation(formProcessor, formName, stepId, received, request, errors);
 
         if(errors == null || errors.size() < 1) {
             // RUN STEP INTERCEPTOR
-            customStepInterceptor(formName, stepId, received, request, errors);
+            customStepInterceptor(formProcessor, formName, stepId, received, request, errors);
 
             //Save step of form - its LOCAL save into session, NOT db save
             saveStepData(formName, stepId, received, request);
@@ -302,8 +319,13 @@ public class MultistepFormsService {
                 // Set ok forward
                 if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
 
-                // REAL form save into DB (will join all the steps and save it)
-                saveFormService.saveFormAnswers(formName, formSettings, iLastDocId, request);
+                // HERE we can run custom saving of form
+                boolean continueWithSaving = customFormSave(formProcessor, formName, request);
+
+                if(continueWithSaving) {
+                    // REAL form save into DB (will join all the steps and save it)
+                    saveFormService.saveFormAnswers(formName, formSettings, iLastDocId, request);
+                }
             }
 
             if(Tools.isNotEmpty(forwardOk)) response.put("forward", forwardOk);
@@ -315,56 +337,72 @@ public class MultistepFormsService {
 
     /* ********** PRIVATE - main logic methods ********** */
 
-    private void customStepValidation(String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
-        String validatorsStr = formStepsRepository.getStepValidators(formName, stepId, CloudToolsForCore.getDomainId());
-        for(String validator : Tools.getTokens(validatorsStr, ",;", true)) {
+    private FormProcessorInterface getFormProcessor(HttpServletRequest request, String formName, Long stepId) throws SaveFormException {
+        String className = formSettings.getAfterSendInterceptor();
+        if (Tools.isEmpty(className)) return null;
+
+        try {
+            // Load class dynamically
+            Class<?> clazz = Class.forName(className);
+
+            // The interface we want to check
+            if (FormProcessorInterface.class.isAssignableFrom(clazz)) {
+                // return instance
+                return (FormProcessorInterface) clazz.getDeclaredConstructor().newInstance();
+            } else {
+                Logger.error(MultistepFormsService.class, "Provided form processor " + className + " , do NOT implement required FormProcessorInterface. For formName: " + formName + " stepId:" + stepId);
+            }
+        } catch (Exception e) {
+            Logger.error(MultistepFormsService.class, "Failed to get instance of " + className + ". Cause: " + e.getLocalizedMessage());
+            throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
+        }
+
+        return null;
+    }
+
+    private void customStepValidation(FormProcessorInterface formProcessor, String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+        if(formProcessor != null) {
             try {
-                // Load class dynamically
-                Class<?> clazz = Class.forName(validator);
-
-                // The interface we want to check
-                if (StepValidatorInterface.class.isAssignableFrom(clazz)) {
-                    // get instance
-                    StepValidatorInterface instance = (StepValidatorInterface) clazz.getDeclaredConstructor().newInstance();
-                    // run validation
-                    instance.validateFields(formName, stepId, received, request, errors);
-                } else {
-                   Logger.error(MultistepFormsService.class, "Provided step validator class: " + validator + " ,do NOT implement required StepValidatorInterface. For formName: " + formName + " stepId:" + stepId);
-                }
-
+                formProcessor.validateStep(formName, stepId, received, request, errors);
             } catch (SaveFormException sfe) {
-                throw sfe; // Custom msg error from validator
+                throw sfe;
             } catch (Exception e) {
-                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step validator : " + validator + ". Cause: " + e.getLocalizedMessage());
+                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed step validation. Cause: " + e.getLocalizedMessage());
                 throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
     }
 
-    private void customStepInterceptor(String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
-        String interceptorssStr = formStepsRepository.getStepInterceptors(formName, stepId, CloudToolsForCore.getDomainId());
-        for(String interceptor : Tools.getTokens(interceptorssStr, ",;", true)) {
+    private void customStepInterceptor(FormProcessorInterface formProcessor, String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+        if(formProcessor != null) {
             try {
-                // Load class dynamically
-                Class<?> clazz = Class.forName(interceptor);
-
-                // The interface we want to check
-                if (StepInterceptorInterface.class.isAssignableFrom(clazz)) {
-                    // get instance
-                    StepInterceptorInterface instance = (StepInterceptorInterface) clazz.getDeclaredConstructor().newInstance();
-                    // run validation
-                    instance.runInterceptor(formName, stepId, received, request, errors);
-                } else {
-                   Logger.error(MultistepFormsService.class, "Provided step interceptor class: " + interceptor + " ,do NOT implement required StepInterceptorInterface. For formName: " + formName + " stepId:" + stepId);
-                }
-
+                formProcessor.runStepInterceptor(formName, stepId, received, request, errors);
             } catch (SaveFormException sfe) {
                 throw sfe;
             } catch (Exception e) {
-                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step interceptor : " + interceptor + ". Cause: " + e.getLocalizedMessage());
+                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step interceptor. Cause: " + e.getLocalizedMessage());
                 throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
+    }
+
+    /**
+     * @return
+     *  TRUE - continue with WebJET basic save
+     *  FALSE - skip basic save
+     */
+    private boolean customFormSave(FormProcessorInterface formProcessor, String formName, HttpServletRequest request) throws SaveFormException {
+        if(formProcessor != null) {
+            try {
+                return formProcessor.handleFormSave(formName, formSettings, iLastDocId, request);
+            } catch (SaveFormException sfe) {
+                throw sfe;
+            } catch (Exception e) {
+                Logger.error(MultistepFormsService.class, "FormName: " + formName + " failed run custom save. Cause: " + e.getLocalizedMessage());
+                throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
+            }
+        }
+        return true; // CONTINUE with basic saving
     }
 
     private void saveStepData(String formName, Long stepId, JSONObject received, HttpServletRequest request) {

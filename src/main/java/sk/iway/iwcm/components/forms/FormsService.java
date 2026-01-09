@@ -22,7 +22,6 @@ import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
-import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -565,7 +564,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return null;
     }
 
-    public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop)
+    public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
         html = Tools.replace(html, "${formname}", formName);
         html = Tools.replace(html, "${savedb}", formName);
@@ -803,22 +802,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
           html = "<div class=\"col\">"+html+"</div>";
        }
 
-       return html;
-    }
-
-    public static final String getFieldHtml(FormItemEntity fie, Prop prop) {
-        if(Tools.isEmpty(fie.getFieldType())) return "";
-
-        String input = prop.getText("components.formsimple.input." + fie.getFieldType());
-        String requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
-
-        JSONObject json = new JSONObject(fie);
-        json.put("labelOriginal", json.getString("label"));
-        if (Tools.isEmpty(json.getString("label"))) {
-            String label = prop.getText("components.formsimple.label." + fie.getFieldType());
-            json.put("label", label);
-        }
-
-        return FormsService.replaceFields(input, fie.getFormName(), "", json, requiredLabelAdd, false, false, new HashSet<String>(), prop);
+       return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
     }
 }

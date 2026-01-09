@@ -138,12 +138,9 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             if(stepId != -1) entity.setStepId(stepId);
         } else {
             entity = formItemsRepository.getById(id);
-            setItemPreview(entity);
         }
 
-        entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
-
-        return entity;
+        return processFromEntity(entity, ProcessItemAction.GETONE);
     }
 
     @Override
@@ -177,7 +174,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if (Tools.isEmpty(item.getString("label")))
             item.put("label", getProp().getText("components.formsimple.label." + fieldType));
 
-        String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp());
+        String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp(), getRequest());
 
         if(itemHtml.contains("!INCLUDE"))
                 itemHtml = EditorToolsForCore.renderIncludes(itemHtml, false, getRequest());
@@ -186,9 +183,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     @Override
-    public FormItemEntity processFromEntity(FormItemEntity entity, ProcessItemAction action, int rowCount) {
+    public FormItemEntity processFromEntity(FormItemEntity entity, ProcessItemAction action) {
 
-        setItemPreview(entity);
+        if(ProcessItemAction.GETALL.equals(action))
+            setItemPreview(entity);
 
         String generatedTitle = "";
         if (Tools.isNotEmpty(entity.getLabel())) generatedTitle = entity.getLabel();
@@ -196,6 +194,9 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         generatedTitle = Tools.html2text(generatedTitle);
         entity.setGeneratedTitle(generatedTitle);
+
+        if(ProcessItemAction.GETONE.equals(action))
+            entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
 
         return entity;
     }

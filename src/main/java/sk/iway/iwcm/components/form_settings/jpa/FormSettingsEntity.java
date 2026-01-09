@@ -55,12 +55,12 @@ public class FormSettingsEntity {
         private Boolean rowView;
 
         @Column(name = "form_add_classes")
-        @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "", className = "not-formsimple form-advanced")
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "editor.form.add_classes", className = "not-formsimple form-advanced")
         @Size(max = 255)
         private String formAddClasses;
 
         @Column(name = "form_css")
-        @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "", className = "not-formsimple form-advanced",
+        @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "editor.form.add_css_styles", className = "not-formsimple form-advanced",
             editor = {
                 @DataTableColumnEditor(
                     attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after") }
@@ -163,9 +163,9 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String fieldsEmailHeader;
 
-    /* We re-implemented this in new way, where interceptor can be set to any step of multistep form. */
+    /* We are re-using this in multistep forms (just using old value, but functionality is different) */
     @Column(name = "after_send_interceptor")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-deprecated")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-advanced")
     @Size(max = 255)
     private String afterSendInterceptor;
 

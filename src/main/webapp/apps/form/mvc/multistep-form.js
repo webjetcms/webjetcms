@@ -97,7 +97,7 @@ export class MultistepForm {
             // init cleditor if needed
             window.setTimeout(() => {
                 if (window.$ && $.fn && $.fn.cleditor) {
-                    $("textarea.formsimple-wysiwyg").cleditor({
+                    $(this.wrapper).find("textarea.formsimple-wysiwyg").cleditor({
                         width: '100%',
                         controls: 'bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext',
                         bodyStyle: 'font: 11px  Arial, Helvetica, sans-serif;'
@@ -188,7 +188,7 @@ export class MultistepForm {
 
     hideErrors() {
         if (window.$) {
-            $('div.cs-error').text('');
+            $(this.wrapper).find('div.cs-error').text('');
         }
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
         if (danger) {
@@ -213,7 +213,7 @@ export class MultistepForm {
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
                 if (window.$) {
-                    const errDiv = $('div.cs-error-' + fieldName);
+                    const errDiv = $(this.wrapper).find('div.cs-error-' + fieldName);
                     const errorMsgArr = String(errorMsg).split('\n');
                     errDiv.html('');
                     let html = "<ul style='margin:0px; padding-left: 20px;'>";
@@ -231,7 +231,7 @@ export class MultistepForm {
             if (stepId === -1 || stepId === '-1') {
                 const holder = this.wrapper.querySelector('#multistepStepContent');
                 if (holder) holder.remove();
-                await this.showGlobalSuccess('multistep_form.form_save_succ.js' || null);
+                await this.showGlobalSuccess('#{multistep_form.form_save_succ.js}' || null);
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';

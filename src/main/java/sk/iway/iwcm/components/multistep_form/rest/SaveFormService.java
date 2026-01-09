@@ -100,36 +100,10 @@ public class SaveFormService {
 		if (recipients != null && recipients.indexOf('@') == -1)
 			recipients = null;
 
-		//ak aktualizujeme zaznam, toto potom nastavime na false, aby sa nic neposlalo
-		boolean emailAllowed = false;
-
-        String allowedRecipients = Constants.getString("formmailAllowedRecipients");
-		if (Tools.isEmpty(allowedRecipients)) allowedRecipients = "@"+Tools.getServerName(request); //aby sa nahodou nestalo, ze je niekde zabudnute nastavenie email adresy
-		if (emailAllowed == false && Tools.isNotEmpty(allowedRecipients) && Tools.isNotEmpty(recipients)) {
-			try {
-                for(String recipient : recipients.split(",")) {
-                    boolean emailFound = false;
-                    for(String allowedRecipient : allowedRecipients.split(",")) {
-                        if(recipient.toLowerCase().endsWith(allowedRecipient)) {
-                            emailFound = true;
-                            break;
-                        }
-                    }
-
-                    if(emailFound) {
-                        emailAllowed = true;
-                        break;
-                    }
-                }
-			}
-			catch (Exception ex) { Logger.error(FormMailAction.class, ex); }
-		}
-
 		if ("cloud".equals(Constants.getInstallName()) && Tools.isEmpty(recipients)) {
             UserDetails admin = CloudToolsForCore.getAdmin();
 			if (admin != null && Tools.isEmail(admin.getEmail())) recipients = admin.getEmail();
 		}
-
 
         int userId = -1;
         Identity currentUser = UsersDB.getCurrentUser(request);
@@ -152,7 +126,7 @@ public class SaveFormService {
         form.setData("-");
         form = formsRepository.save(form);
 
-        if(form == null) throw new IllegalStateException("ou shiiiii");
+        if(form == null) throw new IllegalStateException("saveFormAnswers - Error during saving FormsEntity.");
 
         //data MUST be set sooner than HTML
         FormFiles formFiles = new FormFiles(); // in form files we store all needed files, files names etc.
@@ -163,7 +137,7 @@ public class SaveFormService {
 
         form = formsRepository.save(form);
 
-        if(form == null) throw new IllegalStateException("ou shiiiii");
+        if(form == null) throw new IllegalStateException("saveFormAnswers - Error during saving FormsEntity.");
 
         // NEW PART
         String pdfUrl = "";
@@ -195,7 +169,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.mailShit(form, emailAllowed, recipients, subject, formFiles, attachFiles, htmlHandler.getCssDataPair().getFirst(), new StringBuilder(htmlHandler.getFormHtmlBeforeCss()), request);
+        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, htmlHandler.getCssDataPair().getFirst(), new StringBuilder(htmlHandler.getFormHtmlBeforeCss()), request);
 
         return null;
     }

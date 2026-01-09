@@ -2449,7 +2449,11 @@ public class FormMailAction extends HttpServlet
 				attachments.append(";");
 			}
 
-			if ("true".equals(request.getParameter("doubleOptIn"))) {
+			// For multistep form logic - because it do not work with params
+			boolean doubleOptIn = false;
+			if(request.getAttribute("doubleOptIn") != null) doubleOptIn = (Boolean) request.getAttribute("doubleOptIn");
+
+			if ("true".equals(request.getParameter("doubleOptIn")) || doubleOptIn) {
 				String hash = getDoubleOptInParameters(request, formId);
 				data = Tools.replace(data, "!FORM_ID!", "" + formId);
 				data = Tools.replace(data, "!OPTIN_HASH!", hash);

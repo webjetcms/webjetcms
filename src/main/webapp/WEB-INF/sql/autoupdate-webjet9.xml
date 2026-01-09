@@ -2506,10 +2506,6 @@
                             step_name VARCHAR(255) NULL,
                             step_sub_name VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
-
-                            step_validator VARCHAR(255) NULL,
-                            step_interceptor VARCHAR(255) NULL,
-
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2522,10 +2518,6 @@
                             step_name NVARCHAR(255) NULL,
                             step_sub_name NVARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
-
-                            step_validator NVARCHAR(255) NULL,
-                            step_interceptor NVARCHAR(255) NULL,
-
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2538,10 +2530,6 @@
                             step_name NVARCHAR(255) NULL,
                             step_sub_name NVARCHAR(255) NULL,
                             sort_priority INTEGER NOT NULL,
-
-                            step_validator NVARCHAR(255) NULL,
-                            step_interceptor NVARCHAR(255) NULL,
-
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_steps START WITH 1;
@@ -2567,10 +2555,6 @@
                             step_name VARCHAR(255) NULL,
                             step_sub_name VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
-
-                            step_validator VARCHAR(255) NULL,
-                            step_interceptor VARCHAR(255) NULL,
-
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

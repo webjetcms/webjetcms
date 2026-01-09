@@ -44,7 +44,7 @@ import sk.iway.iwcm.users.UsersDB;
     itemKey= "cmp_app-cookiebar",
     imagePath = "ti ti-route",
     galleryImages = "",
-    commonSettings = true
+    customHtml = "/apps/form/mvc/editor-component.html"
 )
 @Getter
 @Setter

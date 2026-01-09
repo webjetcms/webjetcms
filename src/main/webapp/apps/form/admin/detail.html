@@ -27,7 +27,7 @@
             { url: '/apps/form/admin/', title: /*[[#{forms.formsList.js}]]*/ '', active: true },
             { url: '/apps/form/admin/archived/', title: /*[[#{forms.archiveList.js}]]*/ '', active: false },
             { url: '/apps/form/admin/regexps/', title: /*[[#{components.form.admin_form.table_reg_exp}]]*/ '', active: false },
-            { url: '/apps/form/admin/form-steps/?formName=' + formName, title: /*[[#{components.form_items.navbar_title}]]*/ '', active: false }
+            { url: '/apps/form/admin/form-content/?formName=' + formName, title: /*[[#{components.form_items.navbar_title}]]*/ '', active: false }
         ]
     });
 
@@ -87,6 +87,7 @@
         return resp.json();
     }) .then(data => {
         if (data) {
+            //debugger;
             //First filter
             filteredColumns = columns.filter(col => columnsToKeep.includes(col.data) || (col.data.startsWith('userDetails.') && !removeUserFields.includes(col.data.split('.')[1])));
             //Remove all userDetails.editorFields columns
