@@ -3312,6 +3312,12 @@ public class Tools
 		return m.replaceAll(newStr);
 	}
 
+	public static StringBuilder replaceRegex(StringBuilder source, String regexPattern, String newStr, boolean isCaseInsensitive) {
+		if(source == null) return null;
+
+		return new StringBuilder( replaceRegex(source.toString(), regexPattern, newStr, isCaseInsensitive) );
+	}
+
 	/*
 	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
 	 * @param session

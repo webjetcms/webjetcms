@@ -1,94 +1,157 @@
 <script data-th-inline="javascript">
-    window.formRestUrl = "/admin/rest/forms-list";
-</script>
+    let url = "/admin/rest/forms-list/";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
+    const columnsToKeep = ["id", "formName", "count", "createDate"];
 
-<div id="forms-list-app">
-    <router-view></router-view>
-</div>
+    var tabs = [
+        { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
+        { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
+        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
+        { id: 'settings-deprecated', title: /*[[#{deprecated}]]*/ '', selected: false },
+    ];
+</script>
 
 <script type="text/javascript">
+    var formsDataTable;
 
-    function openFormHtml(id) {
-        //add print button
-        if ($("#modalPrintButton").length == 0) {
-            const printButton = document.createElement('button');
-            printButton.id = 'modalPrintButton';
-            printButton.className = 'btn btn-outline-secondary';
-            printButton.innerHTML = WJ.translate("button.print");
-            printButton.onclick = function() {
-                $("#modalIframeIframeElement")[0].contentWindow.print();
-            };
-            $('#modalIframe .modal-footer').prepend(printButton);
-        }
-        WJ.openIframeModal({
-            url: window.formRestUrl+"/html/?id="+id,
-            width: 800,
-            height: 600,
-            closeButtonPosition: 'close-button-over empty-header',
-            buttonTitleKey: 'button.confirm',
-            okclick: function() {
-                WJ.closeIframeModal();
+    WJ.breadcrumb({
+        id: "forms",
+        tabs: [
+            {
+                url: "/apps/form/admin/",
+                title: WJ.translate("forms.formsList.js"),
+                active: true
             }
-        });
-    }
-
-    window.domReady.add(function () {
-        //const name = window.location.hash.split('/').pop() || null;
-        //if (name) document.getElementById('pills-form-detail-tab').innerHTML = name;
-
-        let vueFormsApp = window.VueTools.createApp({
-            components: {
-
-            }
-        });
-
-        /* preklady pre vue */
-        vueFormsApp.config.globalProperties.$id = '[[#{datatables.id.js}]]';
-        vueFormsApp.config.globalProperties.$formName = '[[#{formslist.nazov_formularu}]]';
-        vueFormsApp.config.globalProperties.$count = '[[#{formslist.pocet_zaznamov}]]';
-        vueFormsApp.config.globalProperties.$lastSendDate = '[[#{formslist.datum_posledneho}]]';
-        vueFormsApp.config.globalProperties.$lastExportDate = '[[#{formlist.export.lastExportDate}]]';
-        vueFormsApp.config.globalProperties.$doubleOptinConfirmationDate = '[[#{formslist.doubleOptInDate}]]';
-        vueFormsApp.config.globalProperties.$btnListOfForms = '[[#{components.forms.label.list_of_forms}]]';
-        vueFormsApp.config.globalProperties.$createDate = '[[#{formslist.createDate}]]';
-        vueFormsApp.config.globalProperties.$note  = '[[#{formslist.note}]]';
-        vueFormsApp.config.globalProperties.$files = '[[#{formslist.attachments}]]';
-        vueFormsApp.config.globalProperties.$tools = '[[#{formslist.tools}]]';
-        vueFormsApp.config.globalProperties.$preview = '[[#{editor.preview}]]';
-
-        //taby
-        vueFormsApp.config.globalProperties.$tabMetadata = '[[#{components.forms.detail.tab.metadata}]]';
-        vueFormsApp.config.globalProperties.$tabFields = '[[#{components.forms.detail.tab.fields}]]';
-        vueFormsApp.config.globalProperties.$tabUser = '[[#{components.forms.detail.tab.user}]]';
-
-        //user
-        vueFormsApp.config.globalProperties.$userId = '[[#{components.users.groups_approve.user_id}]]';
-        vueFormsApp.config.globalProperties.$userFirstName = '[[#{user.firstName}]]';
-        vueFormsApp.config.globalProperties.$userLastName = '[[#{user.lastName}]]';
-        vueFormsApp.config.globalProperties.$userLogin = '[[#{user.login}]]';
-        vueFormsApp.config.globalProperties.$userCompany = '[[#{user.company}]]';
-        vueFormsApp.config.globalProperties.$userAdress = '[[#{user.address}]]';
-        vueFormsApp.config.globalProperties.$userCity = '[[#{user.city}]]';
-        vueFormsApp.config.globalProperties.$userZip = '[[#{user.ZIP}]]';
-        vueFormsApp.config.globalProperties.$userCountry = '[[#{user.country}]]';
-        vueFormsApp.config.globalProperties.$userEmail = '[[#{user.email}]]';
-        vueFormsApp.config.globalProperties.$userAddress = '[[#{user.phone}]]';
-        vueFormsApp.config.globalProperties.$userFieldA = '[[#{user.fieldA}]]';
-        vueFormsApp.config.globalProperties.$userFieldB = '[[#{user.fieldB}]]';
-        vueFormsApp.config.globalProperties.$userFieldC = '[[#{user.fieldC}]]';
-        vueFormsApp.config.globalProperties.$userFieldD = '[[#{user.fieldD}]]';
-        vueFormsApp.config.globalProperties.$userFieldE = '[[#{user.fieldE}]]';
-
-        //prava
-        vueFormsApp.config.globalProperties.$permsDeniedTitle = '[[#{admin.operationPermissionDenied}]]';
-        vueFormsApp.config.globalProperties.$permsDeniedText = '[[#{components.forms.permsDeniedNote}]]';
-
-        //archivuj
-        vueFormsApp.config.globalProperties.$archiveForm = '[[#{components.form.admin_forms.archivuj_formular}]]';
-
-        vueFormsApp.use(window.VueTools.getRouter());
-        vueFormsApp.mount("#forms-list-app");
-
+        ]
     });
 
+    window.openFormHtml = function (formName) {
+        if(formName == undefined || formName == null) return;
+        window.location.href="/apps/form/admin/detail/?formName="+ formName;
+    }
+
+    let filteredColumns = [];
+    columns.forEach(function(column) {
+        if(columnsToKeep.includes(column.data)) filteredColumns.push(column);
+        else if(column.data.startsWith("formSettings.")) {
+            let classes = column.className != null ? column.className.split(" ") : [];
+
+            //Not show column
+            if(classes.includes("not-form")) return;
+
+            column.hidden = true;
+            if(classes.includes("form-email")) {
+                column.editor.tab = "settings-email";
+            } else if(classes.includes("form-advanced")) {
+                column.editor.tab = "settings-advanced";
+            } else if(classes.includes("form-deprecated")) {
+                column.editor.tab = "settings-deprecated";
+            } else {
+                column.editor.tab = "settings-basic";
+            }
+
+            filteredColumns.push(column);
+        }
+    });
+
+    window.WJ.DataTable.mergeColumns(filteredColumns, { name: "createDate", title: '[[#{formslist.datum_posledneho}]]' });
+    window.WJ.DataTable.mergeColumns(filteredColumns, {
+        name:"formName",
+        renderFormatLinkTemplate: "javascript:openFormHtml('{{formName}}');",
+        renderFormatPrefix: '<i class="ti ti-eye"></i> '
+    });
+    let columnsFetchPromise = Promise.resolve();
+
+    var editorWasInitialized = false;
+    window.domReady.add(function () {
+        // !! hide form steps tab link !! - show only in form detail view
+        $("a.nav-link[href='/apps/form/admin/form-content/']").hide();
+
+        function initformsDataTable() {
+            formsDataTable = WJ.DataTable({
+                url:  url,
+                columns: filteredColumns,
+                id: 'formsDataTable',
+                serverSide: false,
+                tabs: tabs,
+                //
+                idAutoOpener: true,
+                lastExportColumnName: 'lastExportDate',
+                byIdExportColumnName: 'id',
+                fetchOnEdit: true
+            });
+            formsDataTable.hideButton('celledit');
+            formsDataTable.hideButton('import');
+
+            formsDataTable.button().add(4, {
+                extends: 'remove',
+                text: '<i class="ti ti-archive"></i>',
+                action: function (e, dt, node) {
+                    //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                    formsDataTable.executeAction("archiveForm");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    'title': '[[#{components.form.admin_forms.archivuj_formular}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            formsDataTable.EDITOR.on('open', function (e, type, action) {
+                initEditor();
+
+                //Check if its multi step form
+                handleDeprecatedTab(formsDataTable.EDITOR, action);
+            });
+
+            function initEditor() {
+                if(editorWasInitialized === false) {
+                    editorWasInitialized = true;
+                    //Show hide file name field based on checkbox
+                    $("#DTE_Field_formSettings-messageAsAttach_0").on("change", function() {
+                        if($(this).is(":checked")) {
+                            $("div.DTE_Field_Name_formSettings\\.messageAsAttachFileName").show();
+                        } else {
+                            $("div.DTE_Field_Name_formSettings\\.messageAsAttachFileName").hide();
+                        }
+                    });
+                }
+            }
+
+            function handleDeprecatedTab(editor, action) {
+                if(action === 'create') {
+                    $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
+                    return;
+                }
+
+                let formName = editor.field('formName').get();
+                fetch(`/admin/rest/forms-list/isMultistep?formName=${encodeURIComponent(formName)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': window.csrfToken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(isMultistep => {
+                    if(true === isMultistep) {
+                        $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
+                    } else {
+                        $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
+                    }
+                })
+            }
+        }
+
+        //Initialize after potential dynamic column fetch
+        columnsFetchPromise.finally(() => initformsDataTable());
+
+    });
 </script>
+
+<table id="formsDataTable" class="datatableInit table"></table>

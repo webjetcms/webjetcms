@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +16,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -41,7 +43,11 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -60,6 +66,7 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.update.DomainIdUpdateService;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
 
 
 /**
@@ -131,6 +138,7 @@ public class UpdateDatabase
 	public static void updateWithSpringInitialized() {
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
+		updateFormAttributesTable();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -2497,6 +2505,77 @@ public class UpdateDatabase
 				}
 			}
 		}
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
+	}
+
+	public static void updateFormAttributesTable()
+	{
+		String note = "27.11.2025 [sivan] prekonvertovanie hodnot z tabulky form_attributes do novej tabulky form_settings";
+		if (isAllreadyUpdated(note)) return;
+
+		FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
+		if(formSettingsRepository == null) {
+			Logger.error(UpdateDatabase.class, "FormSettingsRepository bean not found");
+			return;
+		}
+
+		// KEY formName-domainId, VALUE <paramName, value>
+		Map<String, List<Pair<String, String>>> oldAttributes = new HashMap<>();
+		String query = "SELECT value, form_name, param_name, domain_id FROM form_attributes";
+		new ComplexQuery().setSql(query.toString()).list(new Mapper<Object>() {
+			@Override
+			public Object map(ResultSet rs) throws SQLException {
+				String mapKey = rs.getString("form_name") + "-" + rs.getInt("domain_id");
+				if(oldAttributes.containsKey(mapKey) == false) oldAttributes.put(mapKey, new ArrayList<>());
+				oldAttributes.get(mapKey).add( new Pair<>(rs.getString("param_name"), rs.getString("value")) );
+                return null;
+			}
+		});
+
+
+		oldAttributes.forEach( (key, attributes) -> {
+			int idx = key.lastIndexOf('-');
+			if (idx == -1) {
+				return; //err
+			}
+
+			String formName = key.substring(0, idx);
+			int domainId = Integer.parseInt( key.substring(idx + 1) );
+
+			FormSettingsEntity newSettings = new FormSettingsEntity();
+			newSettings.setId(null);
+			newSettings.setFormName(formName);
+			newSettings.setDomainId(domainId);
+
+			Class<?> type = newSettings.getClass();
+			for(Pair<String, String> attr : attributes) {
+				String paramName = attr.getFirst();
+				paramName = FormSettingsEntity.toPascalCase(paramName);
+				String value = attr.getSecond();
+
+				try {
+					Field field = type.getDeclaredField(paramName);
+					field.setAccessible(true);
+					if(field.getType() == String.class) {
+						field.set(newSettings, value);
+					} else if(field.getType() == Integer.class) {
+						field.set(newSettings, Integer.valueOf(value));
+					} else if(field.getType() == Boolean.class) {
+						field.set(newSettings, Boolean.valueOf(value));
+					}
+				} catch (Exception e) {
+					continue; // err
+				}
+			}
+
+			try {
+				formSettingsRepository.save(newSettings);
+			} catch (Exception e) {
+				Logger.error(UpdateDatabase.class, "Error saving new form attributes for form: " + formName + ", domainId: " + domainId + " - " + e.getMessage());
+			}
+		});
 
 		//zapis do DB, ze je to aktualizovane
 		saveSuccessUpdate(note);

@@ -18,6 +18,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -842,6 +843,22 @@ public class FormDB
 		return new SimpleQuery().forList("SELECT DISTINCT(form_name) FROM forms WHERE create_date IS NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
 	}
 
+	public List<RegExpEntity> getAllRegularExpressionAsEntity() {
+		List<String[]> allAsArr = getAllRegularExpression();
+		List<RegExpEntity> allAsList = new ArrayList<>();
+
+		for(String[] regexArr : allAsArr) {
+			RegExpEntity regExp = new RegExpEntity();
+			regExp.setTitle(regexArr[0]);
+			regExp.setType(regexArr[1]);
+			regExp.setRegExp(regexArr[2]);
+			regExp.setId( Tools.getLongValue(regexArr[3], -1) );
+			allAsList.add(regExp);
+		}
+
+		return allAsList;
+	}
+
 	public List<String[]> getAllRegularExpression()
 	{
 		String[] regularExp = null;
@@ -863,10 +880,11 @@ public class FormDB
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
-				regularExp = new String[3];
+				regularExp = new String[4];
 				regularExp[0] = DB.getDbString(rs, "title");
 				regularExp[1] = DB.getDbString(rs, "type");
 				regularExp[2] = DB.getDbString(rs, "reg_exp");
+				regularExp[3] = DB.getDbString(rs, "id");
 				newRegExpList.add(regularExp);
 			}
 			regExpList = newRegExpList;

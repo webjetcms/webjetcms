@@ -172,6 +172,11 @@ export const dataTableInit = options => {
     DATA.isLocalJson = false;
     if (typeof DATA.src !== "undefined" && DATA.src != null) DATA.isLocalJson = true;
 
+    // row toggle
+    DATA.toggleSelector = options.toggleSelector ? options.toggleSelector : "td.dt-select-td";
+    DATA.toggleStyle = options.toggleStyle ? options.toggleStyle : "multi";
+    if("multi" !== options.toggleStyle && "single" !== options.toggleStyle) options.toggleStyle = "multi";
+
     //console.log("options=", options);
 
     //pre podporu multi tabuliek a editora potrebujeme mat unikatne ID pre kazdu DT a editor
@@ -2389,9 +2394,10 @@ export const dataTableInit = options => {
             //     rightColumns: 0
             // },
 
+            // KOKOS
             select: {
-                style: 'multi',
-                selector: 'td.dt-select-td'
+                style: DATA.toggleStyle,
+                selector: DATA.toggleSelector
             },
 
             //buttons

@@ -1,0 +1,13 @@
+<script>
+    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+        // Prepare include FIRST !!
+        let include = "!INCLUDE(" + componentPath;
+        include += ", " + convertObjectToInludeParams(params);
+
+        //
+        include += ", insertDateTime=" + Date.now();
+
+        include += ")!";
+        return include;
+    }
+</script>

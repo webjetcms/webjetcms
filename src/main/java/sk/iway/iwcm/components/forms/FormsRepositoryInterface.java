@@ -28,7 +28,7 @@ public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long>
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE FormsEntity SET lastExportDate = :lastExportDate WHERE id IN :formIds")
+    @Query(value = "UPDATE FormsEntity fe SET fe.lastExportDate = :lastExportDate WHERE fe.id IN :formIds")
     public void updateLastExportDate(@Param("lastExportDate")Date lastExportDate, @Param("formIds")List<Long> formIds);
 
     @Transactional

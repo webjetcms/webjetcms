@@ -1,0 +1,274 @@
+<link rel="stylesheet" type="text/css" href="/components/_common/cleditor/jquery.cleditor.css" />
+<script type="text/javascript" src="/components/_common/javascript/jquery.browser.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
+
+<script data-th-inline="javascript">
+
+    let itemsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemUrl = "/admin/rest/form-items";
+
+    let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
+    let stepUrl = "/admin/rest/form-steps";
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+
+    WJ.breadcrumb({
+        id: "form-content",
+        tabs: [
+            {
+                url: '/apps/form/admin/form-content/?formName=' + urlFormName,
+                title: /*[[#{components.form_items.navbar_title}]]*/ '',
+                active: true
+            }
+        ],
+        backlink: {
+            url: '/apps/form/admin/detail/?formName=' + urlFormName,
+            title: urlFormName,
+        }
+    });
+</script>
+
+<script type="text/javascript">
+    var formStepsDataTable;
+    var formItemsDataTable;
+    var loadingPreview = false;
+
+    function getActualPath(stepId) {
+        let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
+        urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
+        return urlWithParams;
+    }
+
+    window.domReady.add(function () {
+        formStepsDataTable = WJ.DataTable({
+            url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
+            serverSide: true,
+            columns: stepColumns,
+            id: "formStepsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            idAutoOpener: false,
+            toggleStyle: "single",
+            toggleSelector: "td"
+        });
+        formStepsDataTable.hideButtons(["import", "export", "celledit"]);
+
+        formStepsDataTable.on('select.dt.DT deselect.dt.DT', function () {
+            console.log("formStepsDataTable selection changed");
+            let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
+            if(selectedStep.length > 0) {
+                const stepId = selectedStep[0].getAttribute("id");
+                // reload form items table for current step
+                formItemsDataTable.setAjaxUrl(getActualPath(stepId));
+                formItemsDataTable.ajax.reload();
+
+                // load step preview
+                loadStepPreview();
+            } else {
+                // clear step data
+                formItemsDataTable.setAjaxUrl(getActualPath(-1));
+                formItemsDataTable.ajax.reload();
+                $("div.stepPreview").html("");
+            }
+        });
+
+        formStepsDataTable.on("draw", function() {
+            if(loadingPreview === false) {
+                loadingPreview = true;
+                // load step preview
+                loadStepPreview();
+            }
+        });
+
+        var order = [];
+        order.push([1, 'desc']);
+
+        formItemsDataTable = WJ.DataTable({
+            url: getActualPath(-1),
+            serverSide: true,
+            columns: itemsColumns,
+            order: order,
+            id: "formItemsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            idAutoOpener: false,
+            toggleStyle: "multi",
+            toggleSelector: "td"
+        });
+        formItemsDataTable.hideButtons(["import", "export", "celledit"]);
+
+        formItemsDataTable.on("draw", function() {
+            if(loadingPreview === false) {
+                loadingPreview = true;
+                // load step preview
+                loadStepPreview();
+            }
+        });
+
+        formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            $("#DTE_Field_fieldType").on("change", function() {
+                const selectedFieldType = $(this).val();
+                const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+
+                let fieldsToHide = [];
+                for(let i = 0; i < hiddenFieldsByType.length; i++) {
+                    if(hiddenFieldsByType[i].value == selectedFieldType) {
+                        const hideFieldsStr = hiddenFieldsByType[i].label;
+                        fieldsToHide = hideFieldsStr.split(",").map(field => field.trim());
+                        break;
+                    }
+                }
+
+                const allwaysHidden = hiddenFieldsByType
+                    .find(field => field.value === "allwaysHidden")
+                    ?.label
+                    .split(',')
+                    .map(s => s.trim());
+
+                formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
+                    if(fieldsToHide.includes(fieldName)) {
+                        formItemsDataTable.EDITOR.field(fieldName).hide();
+                    } else if(allwaysHidden.includes(fieldName) == false) {
+                        formItemsDataTable.EDITOR.field(fieldName).show();
+                    }
+
+                    if(allwaysHidden.includes(fieldName)) {
+                        // like id or formName
+                        formItemsDataTable.EDITOR.field(fieldName).hide();
+                    }
+                });
+            });
+
+            $("#pills-dt-formItemsDataTable-strings-tab").on("click", function() {
+                const data = formItemsDataTable.EDITOR.currentJson;
+                const qs = new URLSearchParams(data).toString();
+
+                fetch(`/admin/rest/form-items/field-preview?${qs}`, {
+                        method: "GET",
+                        headers: {
+                            "X-CSRF-Token": window.csrfToken
+                        },
+                    }
+                )
+                .then(res => res.text())
+                .then(str => {
+                    const kks = $("#panel-body-dt-formItemsDataTable-strings");
+                    kks.html(str);
+                })
+                .catch(err => console.error(err));
+            });
+        });
+    });
+
+    async function loadStepPreview() {
+        let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
+        if(selectedStep.length === 0) {
+            $("div.stepPreview").html("");
+            loadingPreview = false;
+            return;
+        }
+
+        const stepId = selectedStep[0].getAttribute("id");
+        const getStepUrl = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        try {
+            const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json' } });
+            if (!r.ok) {
+                const raw = await r.text();
+                try {
+                    let parsed;
+                    try { parsed = JSON.parse(raw); } catch (_) { parsed = { raw }; }
+                    await this.showGlobalErr(parsed);
+                } catch (e) { /* ignore */ }
+            }
+            const html = await r.text();
+
+            $("div.stepPreview").html(html);
+
+            // init wysiwyg inside preview
+            window.setTimeout(() => {
+                if (window.$ && $.fn && $.fn.cleditor) {
+                    $("div.stepPreview").find("textarea.formsimple-wysiwyg").cleditor({
+                        width: '100%',
+                        controls: 'bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext',
+                        bodyStyle: 'font: 11px  Arial, Helvetica, sans-serif;'
+                    });
+                }
+            }, 100);
+        } catch (error) {
+            console.error("Error fetching step preview:", error);
+        }
+
+        loadingPreview = false;
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            onResize();
+        }, 500);
+    });
+
+    function onResize() {
+        let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight();
+        $("div.stepPreview").css("max-height", height + "px");
+    }
+</script>
+
+<style>
+    tr.even-step td { background-color: #F3F3F6 !important; }
+    button.dt-filtrujem-stepId { display: none; }
+    #stepIdSelect > form > div > div > button:hover { background: #999; }
+    #stepIdSelect > form > div > div > button {
+        background: white;
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    button.button_center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    div.dt-filter-stepId button.dropdown-toggle  {
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    td.allow-html { pointer-events: none; }
+    button.buttons-settings { display: none; }
+    div.stepPreviewWrapper { background-color: #F3F3F6; }
+    div.stepPreview {
+        padding-top: 15px;
+        padding-bottom: 15px;
+        overflow: auto;
+        pointer-events: none;
+        opacity: 0.9;
+    }
+    div.dt-scroll-head { display: none; }
+</style>
+
+<div class="row">
+    <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">
+        <table id="formStepsDataTable" class="datatableInit table"></table>
+    </div>
+
+    <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">
+        <table id="formItemsDataTable" class="datatableInit table"></table>
+    </div>
+
+    <div class="col-md-6 stepPreviewWrapper">
+        <div id="" class="dt-header-row clearfix">
+            <div class="row">
+                <div class="col-auto">
+                    <div class="dt-buttons">
+                       <button class="btn btn-warning btn-preview" style="margin-right: 16px; margin-left: 0px;"><i class="ti ti-eye"></i> Náhľad</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stepPreview"></div>
+    </div>
+</div>

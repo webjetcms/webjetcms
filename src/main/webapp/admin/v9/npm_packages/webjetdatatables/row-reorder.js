@@ -53,6 +53,10 @@ export function getRowReorderConfig(DATA) {
 }
 
 export function renderRowReorder(td, type, rowData, row, dtConfig) {
+    if (typeof row.settings.aoColumns[row.col].className != "undefined" && row.settings.aoColumns[row.col].className.indexOf("icon-only")!=-1) {
+        return '<span class="row-reorder-handler"><i class="ti ti-caret-up-down"></i></span>';
+    }
+
     //add reorder handler for drag drop reordering of rows
     return '<span class="row-reorder-handler"><i class="ti ti-caret-up-down"></i></span>' + dtConfig.renderTd(row, td, rowData);
 }

@@ -195,6 +195,11 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_sizes", "btn-lg,btn-sm", Constants.MOD_EDITOR, "CSS trieda pre veľkosť tlačidla.");
 		Constants.setString("ckeditor_button_types", "btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark", Constants.MOD_EDITOR, "CSS trieda pre farbu/typ tlačidla.");
 		Constants.setString("ckeditor_button_textHiddenClass", "visually-hidden", Constants.MOD_EDITOR, "CSS trieda pre schovanie textu tlačidla - zobrazí sa iba ikona.");
+
+		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
+		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
+		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
+		Constants.setString("multistepform_subjectDefaultValue", "Formular z www stranky", Constants.MOD_FORMMAIL, "");
 	}
 
 	/**
