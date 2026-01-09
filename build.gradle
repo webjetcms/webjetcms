@@ -316,6 +316,20 @@ test {
     testLogging {
         events "passed", "skipped", "failed", "standard_out", "standard_error"
         showStandardStreams = true
+        exceptionFormat = 'full'
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+    }
+    // For even more verbose output during development
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\nTest result: ${result.resultType}"
+            println "Test summary: ${result.testCount} tests, " +
+                    "${result.successfulTestCount} succeeded, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped"
+        }
     }
 }
 
