@@ -206,16 +206,21 @@ export function bindKeyboardSave(EDITOR) {
                 //console.log("Saving editor, editor=", EDITOR, "displayed=", EDITOR.displayed());
 
                 let title = getTitle(EDITOR);
-
-                //console.log("title=", title);
+                let mode = $("#"+EDITOR.TABLE.DATA.id+"_modal").attr("data-action");
 
                 let editorAction = EDITOR.s.action;
                 //console.log("editorAction=", editorAction);
                 EDITOR.submit(
-                    function() {
+                    function(response) {
+                        //console.log("Editor saved successfully, data=", response, " mode=", mode);
                         EDITOR.s.action = editorAction;
                         //console.log("SAVED");
                         WJ.notifySuccess(WJ.translate("datatables.saved.title.js"), WJ.translate("datatables.saved.text.js", title), 2000);
+
+                        //for new records set the json data back to editor to set the ID field
+                        if ("create" == mode) {
+                            EDITOR.setJson(response.data[0]);
+                        }
                     },
                     null,
                     null,

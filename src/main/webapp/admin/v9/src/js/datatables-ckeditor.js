@@ -1068,8 +1068,8 @@ export class DatatablesCkEditor {
 							var prevName = "";
 							if (oldElement != null)
 							{
-							prevName = $(oldElement.$).prop("id");
-							//console.log("prevName 1="+prevName);
+								prevName = $(oldElement.$).prop("id");
+								//console.log("prevName 1="+prevName);
 							}
 
 							if (typeof savedNameElement == "undefined")
@@ -1086,7 +1086,11 @@ export class DatatablesCkEditor {
 								name = this.getContentElement("info", "name").getValue();
 							}
 
-							var nameCleared = WJ.internationalToEnglish(name).toLowerCase();
+							var nameCleared = WJ.removeChars(WJ.internationalToEnglish(name).toLowerCase());
+							nameCleared = nameCleared.replace(/\./g, "-").replace(/-{2,}/g, "-");
+							//remove dashes at start or end
+							nameCleared = nameCleared.replace(/^-+/g, '').replace(/-+$/g, '');
+
 							var idElement = this.getContentElement("info", "id");
 
 							if (typeof savedNameElement != "undefined") {
@@ -1103,8 +1107,7 @@ export class DatatablesCkEditor {
 							var editor = this._.editor;
 							var startElement = editor.getSelection().getStartElement();
 
-							//console.log(startElement);
-							//console.log("prevName="+prevName);
+							//console.log("nameCleared=", nameCleared, "startElement=", startElement, "prevName="+prevName);
 
 							var tagName = "input";
 							if (dialogName == 'select') tagName = "select";
