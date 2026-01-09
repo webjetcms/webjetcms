@@ -213,29 +213,6 @@ public class XhrFileUploadService {
         }
     }
 
-    public String getOriginalFileName(String fileKey) {
-        IwcmFile file = getTempFinalFile(fileKey);
-        return getOriginalFileName(file);
-    }
-
-    public static String getOriginalFileName(IwcmFile file) {
-        if (file == null || !file.exists()) return null;
-
-        String originalFilename = getOriginalFileName(fileKey);
-
-        if (originalFilename.startsWith(FINAL_PREFIX)) {
-            String baseName = originalFilename.substring(FINAL_PREFIX.length()).split(SEPARATOR)[0];
-            int dotIndex = originalFilename.lastIndexOf('.');
-            if (dotIndex != -1) {
-                originalFilename = baseName + originalFilename.substring(dotIndex);
-            } else {
-                originalFilename = baseName;
-            }
-        }
-
-        return originalFilename;
-    }
-
     @SuppressWarnings("java:S1130")
     public String moveFile(String fileKey, String dir) throws IOException
     {
@@ -314,6 +291,12 @@ public class XhrFileUploadService {
     public String getOriginalFileName(String fileKey)
     {
         IwcmFile file = getTempFinalFile(fileKey);
+        if (file == null || !file.exists()) return null;
+
+        return getOriginalFileName(file);
+    }
+
+    public static String getOriginalFileName(IwcmFile file) {
         if (file == null || !file.exists()) return null;
 
         String originalFilename = file.getName();
