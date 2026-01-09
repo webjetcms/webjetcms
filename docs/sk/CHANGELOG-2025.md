@@ -11,6 +11,9 @@
 - Hromadný email - upravené tlačidlá pre spustenie/zastavenie odosielania hromadného emailu na lepšie zrozumiteľné `play` a `stop` (#54273-81).
 - Hromadný email - opravené ukladanie v Oracle databáze, pole predmet nastavené ako povinné (#54273-81).
 - Hromadný email - Doménové limity - opravené načítanie limitov pre domény z databázy (#54273-81).
+- Dátové tabuľky - opravená chyba zobrazenia výberových polí pri zapnutí režimu Upraviť v zobrazení mriežky (#57657-16).
+- Formuláre - upravené generovanie názvu poľa tak, aby neobsahovalo bodku (#57657-16).
+- Spam ochrana - opravená chyba kontroly časového rozmedzia medzi odoslaniami formuláru/vyhľadávania (#57657-16).
 
 ## 2025.0.50
 
