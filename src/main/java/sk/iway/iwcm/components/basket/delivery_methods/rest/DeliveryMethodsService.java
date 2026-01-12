@@ -72,7 +72,7 @@ public class DeliveryMethodsService {
     public List<MethodDto> getAllDeliveryMethods(HttpServletRequest request, Prop prop, String country) { // set title by default -> its importatnt for JSP file
         List<DeliveryMethodEntity> allDeliveryMethods = getAllDeliveryMethods(request, prop, true);
         List<DeliveryMethodEntity> filtered = allDeliveryMethods.stream().filter(dm -> dm.getSupportedCountriesList().contains(country)).toList();
-        return filtered.stream().map(dme -> new MethodDto(dme.getId() + "", dme.getTitle(), dme.getPriceVat())).toList();
+        return filtered.stream().map(dme -> new MethodDto(dme.getId() + "", dme.getCustomerTitle(), dme.getPriceVat())).toList();
     }
 
     public DeliveryMethodEntity getDeliveryMethod(long id, String deliveryMethodName, Prop prop) {

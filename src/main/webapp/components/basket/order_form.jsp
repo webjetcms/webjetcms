@@ -43,7 +43,7 @@
 
 			$.ajax({
 				type: "GET",
-				url: "/apps/eshop/modeOfTransports",
+				url: "/rest/apps/eshop/modeOfTransports",
 				dataType: 'json',
 				data: {
 					"country": deliveryCountry

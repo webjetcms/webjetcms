@@ -10,6 +10,7 @@ import org.springframework.validation.Errors;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.BasketTools;
+import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.tags.CurrencyTag;
@@ -59,10 +60,26 @@ public class SupportService {
         }
     }
 
-    public static final String getJspTitle(BigDecimal priceVat, HttpServletRequest request, Prop prop, SupportMethod annotation) {
+    public static final String getCustomerTitle(BigDecimal priceVat, HttpServletRequest request, Prop prop, SupportMethod annotation) {
         StringBuilder name = new StringBuilder();
         name.append( prop.getText(annotation.nameKey()) ).append(": ");
         BigDecimal convertedPrice = BasketTools.convertToBasketDisplayCurrency(priceVat, request);
+        name.append( CurrencyTag.formatNumber(convertedPrice) ).append(" ");
+        name.append( CurrencyTag.getLabelFromCurrencyCode( Constants.getString("basketDisplayCurrency") ) );
+        return name.toString();
+    }
+
+    public static final String getCustomerTitle(DeliveryMethodEntity dme, HttpServletRequest request, Prop prop, SupportMethod annotation) {
+        StringBuilder name = new StringBuilder();
+
+        if (Tools.isNotEmpty(dme.getTitle())) {
+            name.append(prop.getText(dme.getTitle()));
+        } else {
+            name.append(prop.getText(annotation.nameKey()));
+        }
+        name.append(": ");
+
+        BigDecimal convertedPrice = BasketTools.convertToBasketDisplayCurrency(dme.getPriceVat(), request);
         name.append( CurrencyTag.formatNumber(convertedPrice) ).append(" ");
         name.append( CurrencyTag.getLabelFromCurrencyCode( Constants.getString("basketDisplayCurrency") ) );
         return name.toString();

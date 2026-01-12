@@ -2535,18 +2535,18 @@
                             price decimal(10,2),
                             vat INTEGER,
                             sort_priority INTEGER,
-                            field_a NVARCHAR(255),
-                            field_b NVARCHAR(255),
-                            field_c NVARCHAR(255),
-                            field_d NVARCHAR(255),
-                            field_e NVARCHAR(255),
-                            field_f NVARCHAR(255),
-                            field_g NVARCHAR(255),
-                            field_h NVARCHAR(255),
-                            field_i NVARCHAR(255),
-                            field_j NVARCHAR(255),
-                            field_k NVARCHAR(255),
-                            field_l NVARCHAR(255),
+                            field_a NVARCHAR2(255),
+                            field_b NVARCHAR2(255),
+                            field_c NVARCHAR2(255),
+                            field_d NVARCHAR2(255),
+                            field_e NVARCHAR2(255),
+                            field_f NVARCHAR2(255),
+                            field_g NVARCHAR2(255),
+                            field_h NVARCHAR2(255),
+                            field_i NVARCHAR2(255),
+                            field_j NVARCHAR2(255),
+                            field_k NVARCHAR2(255),
+                            field_l NVARCHAR2(255),
                             domain_id INTEGER DEFAULT 1 NOT NULL
 
                         );
@@ -2590,6 +2590,17 @@
                         );
                     </string>
                 </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="date"><string>12.1.2026</string></void>
+                <void property="desc"><string>delivery_methods - add title columns</string></void>
+                <void property="mysql"><string>ALTER TABLE delivery_methods ADD title VARCHAR(255)</string></void>
+                <void property="mssql"><string>ALTER TABLE delivery_methods ADD title NVARCHAR(255)</string></void>
+                <void property="oracle"><string>ALTER TABLE delivery_methods ADD title NVARCHAR2(255)</string></void>
+                <void property="pgsql"><string>ALTER TABLE delivery_methods ADD title VARCHAR(255)</string></void>
             </object>
         </void>
 

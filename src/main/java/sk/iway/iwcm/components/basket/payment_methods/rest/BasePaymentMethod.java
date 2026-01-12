@@ -251,7 +251,7 @@ public abstract class BasePaymentMethod {
             BasketInvoiceItemEntity tmp = new BasketInvoiceItemEntity();
             getPaymentMethodCost(tmp, paymentMethod);
 
-            paymentMethods.add( new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getJspTitle(tmp.getItemPriceVat(), request, prop, annotation), tmp.getItemPriceVat()) );
+            paymentMethods.add( new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getCustomerTitle(tmp.getItemPriceVat(), request, prop, annotation), tmp.getItemPriceVat()) );
         }
     }
 

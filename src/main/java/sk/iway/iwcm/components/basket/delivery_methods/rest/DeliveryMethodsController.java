@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.basket.support.MethodDto;
 @RestController
 public class DeliveryMethodsController {
 
-    @GetMapping(value = "/apps/eshop/modeOfTransports", produces = "application/json")
+    @GetMapping(value = "/rest/apps/eshop/modeOfTransports", produces = "application/json")
     public List<MethodDto> getDeliveryMethodsDtos(@RequestParam("country" )String country, HttpServletRequest request) {
         return EshopService.getInstance().getModeOfTransports(request, country);
     }

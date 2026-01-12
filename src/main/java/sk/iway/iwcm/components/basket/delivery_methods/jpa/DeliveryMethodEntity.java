@@ -44,15 +44,12 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
-    //For JSP files, here we gonna set name from translation key, based on "deliveryMethodName" plus price and currency
-    @Transient
-    private String title;
-
     @Column(name = "delivery_method_name")
     @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title = "components.basket.invoice_email.delivery_method",
+        className="dt-row-edit",
         editor = {
             @DataTableColumnEditor(
                 attr = {
@@ -63,6 +60,17 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     )
     @Size(max = 255)
     private String deliveryMethodName;
+
+    @Column(name = "title")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "components.basket.delivery_method.title"
+    )
+    private String title;
+
+    //For frontend files, here we gonna set name from translation key, based on "title/deliveryMethodName" plus price and currency
+    @Transient
+    private String customerTitle;
 
     @Transient
     @DataTableColumn(
