@@ -10,7 +10,7 @@ Pre pridanie nového spôsobu doručenia musíme vytvoriť Servis napr. ako [InS
 
 ```java
 @Service
-@SupportMethod(
+@FieldsConfig(
     nameKey = "apps.eshop.delivery_methods.in_store"
 )
 public class InStoreService extends BaseDeliveryMethod {
@@ -20,12 +20,12 @@ public class InStoreService extends BaseDeliveryMethod {
 
 **Každý takýto Service reprezentujúci dopravu musí spĺňať nasledujúce podmienky**:
 
-- Povinná ```SupportMethod``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob doručenia.
+- Povinná ```FieldsConfig``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob doručenia.
 - Povinné dedenie triedy ```BaseDeliveryMethod```, ktorá definuje povinné metódy k implementácií ako aj poskytuje podpornú logiku.
 
 Každý takto vytvorený Servis je následne získaný v [DeliveryMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/delivery_methods/rest/DeliveryMethodsService.java). Proces je automatický, takže ak bol nový spôsob doručenia vytvorený korektne, automaticky sa zobrazí v tabuľke a má všetku potrebnú logiku.
 
-## Anotácia ```SupportMethod```
+## Anotácia ```FieldsConfig```
 
 Anotácia poskytuje parametre pre nastavenie:
 

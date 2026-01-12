@@ -49,7 +49,7 @@ public class SupportService {
     }
 
     @SuppressWarnings("java:S4449")
-    public static final void validateCustomFields(SupportMethod annotation, SupportMethodEntity methodEntity, Errors errors, Prop prop) {
+    public static final void validateCustomFields(FieldsConfig annotation, SupportMethodEntity methodEntity, Errors errors, Prop prop) {
         for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
             if(fieldMapAttr.isRequired() == true) {
                 String fieldValue = getFieldValue(methodEntity, fieldMapAttr.fieldAlphabet());
@@ -60,7 +60,7 @@ public class SupportService {
         }
     }
 
-    public static final String getCustomerTitle(BigDecimal priceVat, HttpServletRequest request, Prop prop, SupportMethod annotation) {
+    public static final String getCustomerTitle(BigDecimal priceVat, HttpServletRequest request, Prop prop, FieldsConfig annotation) {
         StringBuilder name = new StringBuilder();
         name.append( prop.getText(annotation.nameKey()) ).append(": ");
         BigDecimal convertedPrice = BasketTools.convertToBasketDisplayCurrency(priceVat, request);
@@ -69,7 +69,7 @@ public class SupportService {
         return name.toString();
     }
 
-    public static final String getCustomerTitle(DeliveryMethodEntity dme, HttpServletRequest request, Prop prop, SupportMethod annotation) {
+    public static final String getCustomerTitle(DeliveryMethodEntity dme, HttpServletRequest request, Prop prop, FieldsConfig annotation) {
         StringBuilder name = new StringBuilder();
 
         if (Tools.isNotEmpty(dme.getTitle())) {

@@ -28,7 +28,7 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.components.basket.support.MethodDto;
-import sk.iway.iwcm.components.basket.support.SupportMethod;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -317,7 +317,7 @@ public class PaymentMethodsService {
 
             Prop prop = Prop.getInstance(request);
             String title = "";
-            SupportMethod annotation = payment.getClass().getAnnotation(SupportMethod.class);
+            FieldsConfig annotation = payment.getClass().getAnnotation(FieldsConfig.class);
             if(annotation != null) title = prop.getText(annotation.nameKey());
             item.setItemTitle( title );
 
@@ -344,7 +344,7 @@ public class PaymentMethodsService {
             BasePaymentMethod payment = getBasePaymentMethod(paymentMethod);
             if(payment == null) return "";
 
-            SupportMethod annotation = payment.getClass().getAnnotation(SupportMethod.class);
+            FieldsConfig annotation = payment.getClass().getAnnotation(FieldsConfig.class);
             if(annotation == null) return "";
 
             return Prop.getInstance(request).getText(annotation.nameKey());

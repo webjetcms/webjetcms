@@ -9,7 +9,7 @@ import org.springframework.validation.Errors;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodsRepository;
-import sk.iway.iwcm.components.basket.support.SupportMethod;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.components.basket.support.SupportService;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
@@ -21,7 +21,7 @@ public abstract class BaseDeliveryMethod {
     private static final Character LAST_ALPHABET = 'L';
 
     protected List<DeliveryMethodEntity> getDeliveryMethods(DeliveryMethodsRepository repo, HttpServletRequest request, Prop prop, boolean setTitle) {
-        SupportMethod annotation = this.getClass().getAnnotation(SupportMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return null;
 
         List<DeliveryMethodEntity> deliveryMethods = repo.findAllByDeliveryMethodNameAndDomainId(this.getClass().getName(), CloudToolsForCore.getDomainId());
@@ -33,7 +33,7 @@ public abstract class BaseDeliveryMethod {
     }
 
     protected LabelValue getDeliveryMethodOption(Prop prop) {
-        SupportMethod annotation = this.getClass().getAnnotation(SupportMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return null;
 
         return new LabelValue(prop.getText(annotation.nameKey()), this.getClass().getName());
@@ -41,7 +41,7 @@ public abstract class BaseDeliveryMethod {
 
     @SuppressWarnings("all")
     protected void validateEditorValues(DeliveryMethodEntity deliveryMethod, Errors errors, Prop prop, DeliveryMethodsRepository repo) {
-        SupportMethod annotation = this.getClass().getAnnotation(SupportMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return;
 
         SupportService.validateCustomFields(annotation, deliveryMethod, errors, prop);
@@ -55,7 +55,7 @@ public abstract class BaseDeliveryMethod {
     }
 
     protected void prepareDelivery(DeliveryMethodEntity deliveryMethod, Prop prop) {
-        SupportMethod annotation = this.getClass().getAnnotation(SupportMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return;
 
         BaseEditorFields def = new BaseEditorFields();

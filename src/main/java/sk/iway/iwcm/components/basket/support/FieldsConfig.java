@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface SupportMethod {
+public @interface FieldsConfig {
     public String nameKey() default "";
     public FieldMapAttr[] fieldMap() default {};
 }

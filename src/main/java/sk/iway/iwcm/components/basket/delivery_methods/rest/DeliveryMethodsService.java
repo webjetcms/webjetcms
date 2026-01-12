@@ -17,7 +17,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodsRepository;
 import sk.iway.iwcm.components.basket.support.MethodDto;
-import sk.iway.iwcm.components.basket.support.SupportMethod;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -48,7 +48,7 @@ public class DeliveryMethodsService {
                 Constructor<?> constructor = dmClass.getConstructor();
                 BaseDeliveryMethod delivery = (BaseDeliveryMethod) constructor.newInstance();
 
-                SupportMethod annotation = delivery.getClass().getAnnotation(SupportMethod.class);
+                FieldsConfig annotation = delivery.getClass().getAnnotation(FieldsConfig.class);
                 if(annotation == null) return "";
 
                 return Prop.getInstance(request).getText(annotation.nameKey());

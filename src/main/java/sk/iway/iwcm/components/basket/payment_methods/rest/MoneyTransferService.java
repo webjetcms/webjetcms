@@ -16,11 +16,11 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
 import sk.iway.iwcm.components.basket.support.FieldMapAttr;
-import sk.iway.iwcm.components.basket.support.SupportMethod;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
-@SupportMethod(
+@FieldsConfig(
     nameKey = "components.basket.invoice_email.payment_method.money_transfer",
     fieldMap = {
         @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "components.basket.editor.account", isRequired = true),

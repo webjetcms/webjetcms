@@ -10,7 +10,7 @@ Pre pridanie nového spôsobu platby musíme vytvoriť Servis napr. ako [GoPaySe
 
 ```java
 @Service
-@SupportMethod(
+@FieldsConfig(
     nameKey = "apps.eshop.payments.go_pay",
     fieldMap = {
         @PaymentFieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
@@ -30,12 +30,12 @@ public class GoPayService extends BasePaymentMethod {
 
 **Každý takýto Service reprezentujúci platbu musí spĺňať nasledujúce podmienky**:
 
-- Povinná ```SupportMethod``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob platby.
+- Povinná ```FieldsConfig``` anotácia, pomocou tejto anotácie nastavíte vzhľad editora pre daný spôsob platby.
 - Povinné dedenie triedy ```BasePaymentMethod```, ktorá definuje povinné metódy k implementácií ako aj poskytuje podpornú logiku.
 
 Každý takto vytvorený Servis je následne získaný v [PaymentMethodsService](../../../../../../src/main/java/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethodsService.java). Proces je automatický, takže ak bol nový spôsob platby vytvorený korektne, automatický sa zobrazí v tabuľke a má všetku potrebnú logiku.
 
-## Anotácia ```SupportMethod```
+## Anotácia ```FieldsConfig```
 
 Anotácia poskytuje parametre pre nastavenie:
 

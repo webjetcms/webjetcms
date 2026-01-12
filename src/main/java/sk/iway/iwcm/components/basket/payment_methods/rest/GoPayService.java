@@ -45,11 +45,11 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.components.basket.support.FieldMapAttr;
-import sk.iway.iwcm.components.basket.support.SupportMethod;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
-@SupportMethod(
+@FieldsConfig(
     nameKey = "apps.eshop.payments.go_pay",
     fieldMap = {
         @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
