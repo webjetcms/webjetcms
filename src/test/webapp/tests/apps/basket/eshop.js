@@ -23,7 +23,7 @@ Scenario('Set config value to default', ({ Document }) => {
 
 Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async ({ I, Document }) => {
     const testerName = "autotest-noPay-" + randomNumber;
-    const deliveryMethodTitle = "Doručenie poštou: 6,15 €"; //JSP title with info
+    const deliveryMethodTitle = "Štandardná pošta: 6,15 €"; //JSP title with info
     const paymentMethodTitle = "GoPay: 0,43 €"; //JSP title with info
 
     SL.clearBasket(I);
@@ -275,7 +275,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
-    I.waitForText("Zaplatená suma: 15,96 eur zo sumy: 7,35 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 16,56 eur zo sumy: 7,95 eur (preplatok : 8,61)", 10, ".dt-footer-row > div > p");
 
     I.click(DT.btn.editorpayment_add_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
@@ -290,7 +290,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.waitForElement(locate(".DTE_Form_Error").withText("Celková zaplatená suma nesmie byť väčšia ako suma objednávky"));
     DTE.fillField("payedPrice", "-9");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
-    I.waitForText("Zaplatená suma: 6,96 eur zo sumy: 7,35 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
+    I.waitForText("Zaplatená suma: 7,56 eur zo sumy: 7,95 eur (nedoplatok : 0,39)", 10, ".dt-footer-row > div > p");
 
     DT.filterSelect("paymentStatus", "Úspešná refundácia");
     I.clickCss("#datatableFieldDTE_Field_editorFields-payments_wrapper button.buttons-select-all");

@@ -380,7 +380,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
       				<div class="col-price col-md-6 col-sm-6">
       					<p class="price">
 							<span class="cenaOld">
-								<iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr>
+								<iway:curr currency="<%=doc.getCurrency()%>"><%= doc.getFieldM() %></iway:curr>
 							</span>
 							<iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr>
 						</p>
@@ -439,7 +439,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 				{%>
               	<div class="pi-price">
 			  		<span class="cenaOld">
-						<iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr>
+						<iway:curr currency="<%=doc.getCurrency()%>"><%= doc.getFieldM() %></iway:curr>
 					</span>
 					<iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr>
 				</div>
@@ -502,7 +502,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 
       			<div class="row">
       				<div class="col-md-6 col-sm-6">
-      					<p class="price"><span class="cenaOld"><iway:curr currency="<%=displayCurrency%>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr> </p>
+      					<p class="price"><span class="cenaOld"><iway:curr currency="<%=doc.getCurrency()%>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr> </p>
       				</div>
       				<div class="col-md-6 col-sm-6">
       					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>"><span class="fa fa-shopping-cart" aria-hidden="true"></span></i>

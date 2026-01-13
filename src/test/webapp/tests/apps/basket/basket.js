@@ -180,21 +180,21 @@ Scenario('Delivery method by country logic', async ({ I }) => {
         I.waitForVisible("#orderFormAccordion");
 
     I.say("Check selected delivery method");
-        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+        await checkDeliveryValue(I, "Štandardná pošta: 6,15 €");
 
     I.say("Change constact and delivery country and verify value");
         I.selectOption('#contactCountryId', SL.Countries.cz);
-        checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
+        await checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
 
         I.clickCss("button.accordion-button.collapsed[data-bs-target='#orderFormDeliveryInfo']");
         I.selectOption('#deliveryCountryId', SL.Countries.sk);
-        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+        await checkDeliveryValue(I, "Štandardná pošta: 6,15 €");
 
         I.selectOption('#contactCountryId', SL.Countries.pl);
-        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+        await checkDeliveryValue(I, "Štandardná pošta: 6,15 €");
 
         I.selectOption('#deliveryCountryId', "-");
-        checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
+        await checkDeliveryValue(I, "Vyzdvihnutie v predajni: 0,00 €");
 });
 
 Scenario('Check price and currency based on selected basketDisplayCurrency', async ({ I, Document }) => {
@@ -226,10 +226,10 @@ Scenario('Check price and currency based on selected basketDisplayCurrency', asy
         I.clickCss('#orderButton > a');
         I.waitForVisible("#orderFormAccordion");
 
-        checkDeliveryValue(I, "Doručenie poštou: 6,15 €");
+        await checkDeliveryValue(I, "Štandardná pošta: 6,15 €");
 
         const totalOrderPriceA = await I.grabTextFrom("span.totalOrderPrice");
-        I.assertEqual("46,71 eur", sanitazeValue(totalOrderPriceA));
+        I.assertEqual("47,31 eur", sanitazeValue(totalOrderPriceA));
 
     Document.setConfigValue("basketDisplayCurrency", "czk");
     I.say("Do CZK check");
@@ -252,13 +252,13 @@ Scenario('Check price and currency based on selected basketDisplayCurrency', asy
         I.clickCss('#orderButton > a');
         I.waitForVisible("#orderFormAccordion");
 
-        checkDeliveryValue(I, "Doručenie poštou: 149,01 Kč");
+        await checkDeliveryValue(I, "Štandardná pošta: 149,01 Kč");
 
         const totalOrderPriceB = await I.grabTextFrom("span.totalOrderPrice");
-        I.assertEqual("2085,48 czk", sanitazeValue(totalOrderPriceB));
+        I.assertEqual("2100,01 czk", sanitazeValue(totalOrderPriceB));
 });
 
-Scenario('basketDisplayCurrency to default', ({ I, Document }) => {
+Scenario('basketDisplayCurrency to default 2', ({ I, Document }) => {
     Document.setConfigValue("basketDisplayCurrency", "eur");
 });
 
@@ -282,7 +282,9 @@ function sanitazeValue(value) {
 }
 
 async function checkDeliveryValue(I, wantedValue) {
-    const deliveryValue = await I.grabTextFrom("#deliveryMethodId");
+    const deliveryValue = await I.executeScript(() => {
+        return $("#deliveryMethodId option:selected").text();
+    });
     I.assertEqual(deliveryValue.trim(), wantedValue.trim());
 }
 

@@ -12,7 +12,7 @@ module.exports = {
 
     DeliveryMethods: {
         inStoreDelivery: "Vyzdvihnutie v predajni",
-        byMailDelivery: "Doručenie poštou"
+        byMailDelivery: "Štandardná pošta"
     },
 
     Countries: {

@@ -30,6 +30,13 @@ public class BasketTools {
 		return convertCurrency(amount, Constants.getString(BASKET_PRODUCT_CURRENCY), EshopService.getDisplayCurrency(request));
 	}
 
+	/**
+	 * Convert amount from one currency to another using defined constants kurs_FROM_TO, e.g. kurz_eur_usd=1.123
+	 * @param amount
+	 * @param fromCurrency
+	 * @param toCurrency
+	 * @return
+	 */
     public static BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
 		if(BigDecimal.ZERO.equals(amount)) return amount;
 
