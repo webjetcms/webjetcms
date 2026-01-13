@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.basket.payment_methods.jpa;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -23,7 +25,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 @Entity
-@Table(name = "payment_methods")
+@Table(name = "basket_payment_methods")
 @Getter
 @Setter
 @EntityListeners(AuditEntityListener.class)
@@ -32,6 +34,7 @@ public class PaymentMethodEntity extends SupportMethodEntity {
 
     @Id //We do not use this ID, it's here just because it must be here
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_basket_payment_methods")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 

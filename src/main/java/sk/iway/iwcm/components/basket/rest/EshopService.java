@@ -260,7 +260,9 @@ public class EshopService {
 			if(deliveryMethodId > 0) {
 				try {
 					DeliveryMethodEntity dme = dms.getDeliveryMethod(deliveryMethodId, null, Prop.getInstance(request));
-					invoice.setDeliveryMethod(dme.getDeliveryMethodName());
+					String title = dme.getTitle();
+					if (Tools.isEmpty(title)) title = dme.getDeliveryMethodName();
+					invoice.setDeliveryMethod(title);
 				} catch(Exception e) {
 					Logger.error(e);
 				}
@@ -452,7 +454,7 @@ public class EshopService {
 
 		basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(-1) );
 
-		basketItem.setItemTitle( DeliveryMethodsService.getDeliveryMethodLabel(dme.getDeliveryMethodName(), request) );
+		basketItem.setItemTitle( DeliveryMethodsService.getDeliveryMethodLabel(dme.getDeliveryMethodName(), dme.getTitle(), request) );
 		basketItem.setItemPartNo(null);
 
 		saveBasketItem(basketItem);

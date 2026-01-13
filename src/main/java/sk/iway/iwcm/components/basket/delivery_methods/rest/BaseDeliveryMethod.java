@@ -16,6 +16,10 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Base class for delivery method implementations. You can extend this class to create your own delivery method.
+ * See existing implementations in ByMailService or InStoreService for examples.
+ */
 public abstract class BaseDeliveryMethod {
 
     private static final Character LAST_ALPHABET = 'L';

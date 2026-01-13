@@ -108,6 +108,6 @@ public class DeliveryMethodRestController extends DatatableRestControllerV2<Deli
 
     @GetMapping("/supported-deliveries")
     public List<LabelValue> getSupportedDeliveryMethods() {
-        return deliveryMethodsService.getDeliveryOptions(getProp());
+        return deliveryMethodsService.getDeliveryOptionsClasses(getProp());
     }
 }

@@ -36,8 +36,19 @@ public class DeliveryMethodsService {
 
     /* PUBLIC STATIC */
 
-    public static String getDeliveryMethodLabel(String deliveryMethod, HttpServletRequest request) {
+    public static String getDeliveryMethodLabel(String deliveryMethod, String title, HttpServletRequest request) {
+        Prop prop = Prop.getInstance(request);
+        return getDeliveryMethodLabel(deliveryMethod, title, prop);
+    }
+
+    public static String getDeliveryMethodLabel(String deliveryMethod, String title, Prop prop) {
         if(Tools.isEmpty(deliveryMethod)) return "";
+
+
+
+        if (Tools.isNotEmpty(title)) {
+            return prop.getText(title);
+        }
 
         try{
             Class<?> dmClass = Class.forName(deliveryMethod);
@@ -51,12 +62,14 @@ public class DeliveryMethodsService {
                 FieldsConfig annotation = delivery.getClass().getAnnotation(FieldsConfig.class);
                 if(annotation == null) return "";
 
-                return Prop.getInstance(request).getText(annotation.nameKey());
+                return prop.getText(annotation.nameKey());
             }
             return "";
         } catch(Exception e) {
-            return "";
+
         }
+
+        return prop.getText(deliveryMethod);
     }
 
     /* PUBLIC  */
@@ -98,12 +111,29 @@ public class DeliveryMethodsService {
     }
 
     public void setOptions(DatatablePageImpl<DeliveryMethodEntity> page, Prop prop) {
-        page.addOptions("deliveryMethodName", getDeliveryOptions(prop), "label", "value", false);
+        page.addOptions("deliveryMethodName", getDeliveryOptionsClasses(prop), "label", "value", false);
         setCoutryOptions(page, prop);
         setCurrencyOptions(page);
     }
 
     public final List<LabelValue> getDeliveryOptions(Prop prop) {
+        List<LabelValue> deliveryMethodOptions = new ArrayList<>();
+
+        List<DeliveryMethodEntity> deliveryMethodsRepo = repo.findAllByDomainId(CloudToolsForCore.getDomainId());
+
+        for(DeliveryMethodEntity dm : deliveryMethodsRepo) {
+            String label = getDeliveryMethodLabel(dm.getDeliveryMethodName(), dm.getTitle(), prop);
+            String value = dm.getTitle();
+            if (Tools.isEmpty(value)) value = dm.getDeliveryMethodName();
+
+            LabelValue option = new LabelValue(label, value);
+            deliveryMethodOptions.add(option);
+        }
+
+        return deliveryMethodOptions;
+    }
+
+    public final List<LabelValue> getDeliveryOptionsClasses(Prop prop) {
         List<LabelValue> deliveryMethodOptions = new ArrayList<>();
 
         for(BaseDeliveryMethod dm : deliveryMethods) {

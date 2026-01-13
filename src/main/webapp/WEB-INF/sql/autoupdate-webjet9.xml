@@ -2478,7 +2478,7 @@
                 <void property="desc"><string>create new table delivery_methods</string></void>
                 <void property="mysql">
                     <string>
-                        CREATE TABLE delivery_methods (
+                        CREATE TABLE basket_delivery_methods (
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             delivery_method_name VARCHAR(255) NOT NULL,
                             supported_countries VARCHAR(255) NOT NULL,
@@ -2503,7 +2503,7 @@
                 </void>
                 <void property="mssql">
                     <string>
-                        CREATE TABLE delivery_methods (
+                        CREATE TABLE basket_delivery_methods (
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             delivery_method_name NVARCHAR(255) NOT NULL,
                             supported_countries NVARCHAR(255) NOT NULL,
@@ -2528,7 +2528,7 @@
                 </void>
                 <void property="oracle">
                     <string>
-                        CREATE TABLE delivery_methods (
+                        CREATE TABLE basket_delivery_methods (
                             id INTEGER NOT NULL PRIMARY KEY,
                             delivery_method_name NVARCHAR2(255) NOT NULL,
                             supported_countries NVARCHAR2(255) NOT NULL,
@@ -2550,14 +2550,14 @@
                             domain_id INTEGER DEFAULT 1 NOT NULL
 
                         );
-                        CREATE SEQUENCE S_delivery_methods START WITH 1;
-                        CREATE TRIGGER T_delivery_methods BEFORE INSERT ON delivery_methods
+                        CREATE SEQUENCE S_basket_delivery_methods START WITH 1;
+                        CREATE TRIGGER T_basket_delivery_methods BEFORE INSERT ON basket_delivery_methods
                             FOR EACH ROW
                                 DECLARE
                                     val INTEGER|
                                 BEGIN
                                     IF :new.id IS NULL THEN
-                                        SELECT S_delivery_methods.nextval into val FROM dual|
+                                        SELECT S_basket_delivery_methods.nextval into val FROM dual|
                                         :new.id:= val|
                                     END IF|
                                 END|
@@ -2566,9 +2566,9 @@
                 </void>
                 <void property="pgsql">
                     <string>
-                        CREATE SEQUENCE S_delivery_methods START WITH 1;
-                        CREATE TABLE delivery_methods (
-                            id INT DEFAULT NEXTVAL('S_delivery_methods') PRIMARY KEY NOT NULL,
+                        CREATE SEQUENCE S_basket_delivery_methods START WITH 1;
+                        CREATE TABLE basket_delivery_methods (
+                            id INT DEFAULT NEXTVAL('S_basket_delivery_methods') PRIMARY KEY NOT NULL,
                             delivery_method_name VARCHAR(255) NOT NULL,
                             supported_countries VARCHAR(255) NOT NULL,
                             price decimal(10,2),
@@ -2596,11 +2596,41 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="date"><string>12.1.2026</string></void>
-                <void property="desc"><string>delivery_methods - add title columns</string></void>
-                <void property="mysql"><string>ALTER TABLE delivery_methods ADD title VARCHAR(255)</string></void>
-                <void property="mssql"><string>ALTER TABLE delivery_methods ADD title NVARCHAR(255)</string></void>
-                <void property="oracle"><string>ALTER TABLE delivery_methods ADD title NVARCHAR2(255)</string></void>
-                <void property="pgsql"><string>ALTER TABLE delivery_methods ADD title VARCHAR(255)</string></void>
+                <void property="desc"><string>basket_delivery_methods - add title columns</string></void>
+                <void property="mysql"><string>ALTER TABLE basket_delivery_methods ADD title VARCHAR(255)</string></void>
+                <void property="mssql"><string>ALTER TABLE basket_delivery_methods ADD title NVARCHAR(255)</string></void>
+                <void property="oracle"><string>ALTER TABLE basket_delivery_methods ADD title NVARCHAR2(255)</string></void>
+                <void property="pgsql"><string>ALTER TABLE basket_delivery_methods ADD title VARCHAR(255)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="date"><string>12.1.2026</string></void>
+                <void property="desc"><string>RENAME payment_methods TO basket_payment_methods</string></void>
+                <void property="mysql"><string>RENAME TABLE payment_methods TO basket_payment_methods</string></void>
+                <void property="mssql"><string>EXEC sp_rename 'payment_methods', 'basket_payment_methods'</string></void>
+                <void property="oracle"><string>
+                    RENAME payment_methods TO basket_payment_methods;
+                    RENAME S_payment_methods TO S_basket_payment_methods;
+                    DROP TRIGGER T_payment_methods;
+                    CREATE TRIGGER T_basket_payment_methods BEFORE INSERT ON basket_payment_methods
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_basket_payment_methods.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE payment_methods RENAME TO basket_payment_methods;
+                    ALTER SEQUENCE S_payment_methods RENAME TO S_basket_payment_methods;
+                    ALTER TABLE basket_payment_methods ALTER COLUMN id SET DEFAULT NEXTVAL('S_basket_payment_methods');
+                </string></void>
             </object>
         </void>
 

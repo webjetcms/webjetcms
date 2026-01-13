@@ -8,6 +8,8 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -32,7 +34,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 @Entity
-@Table(name = "delivery_methods")
+@Table(name = "basket_delivery_methods")
 @Getter
 @Setter
 @EntityListeners(AuditEntityListener.class)
@@ -42,6 +44,7 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     @Id //We do not use this ID, it's here just because it must be here
     @Column(name = "id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_basket_delivery_methods")
     private Long id;
 
     @Column(name = "delivery_method_name")
@@ -49,7 +52,6 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title = "components.basket.invoice_email.delivery_method",
-        className="dt-row-edit",
         editor = {
             @DataTableColumnEditor(
                 attr = {
@@ -63,7 +65,7 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
 
     @Column(name = "title")
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXT,
+        inputType = DataTableColumnType.OPEN_EDITOR,
         title = "components.basket.delivery_method.title"
     )
     private String title;

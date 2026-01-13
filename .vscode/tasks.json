@@ -459,7 +459,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "if ! docker ps | grep -q webjetcms-mssql; then docker compose -f docker-compose-mssql.yml up -d && echo 'Started MSSQL container'; else echo 'MSSQL container already running'; fi",
+            "command": "if ! docker ps | grep -q webjetcms-mssql; then docker compose -f docker-compose-mssql.yml up -d && echo 'Waiting for initialization' && sleep 30 && echo 'Started MSSQL container'; else echo 'MSSQL container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -485,7 +485,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "if ! docker ps | grep -q webjetcms-mariadb; then docker compose -f docker-compose-mariadb.yml up -d && echo 'Started MariaDB container'; else echo 'MariaDB container already running'; fi",
+            "command": "if ! docker ps | grep -q webjetcms-mariadb; then docker compose -f docker-compose-mariadb.yml up -d  && echo 'Waiting for initialization' && sleep 30 && echo 'Started MariaDB container'; else echo 'MariaDB container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -511,7 +511,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "if ! docker ps | grep -q webjetcms-pgsql; then docker compose -f docker-compose-pgsql.yml up -d && echo 'Started PgSQL container'; else echo 'PgSQL container already running'; fi",
+            "command": "if ! docker ps | grep -q webjetcms-pgsql; then docker compose -f docker-compose-pgsql.yml up -d  && echo 'Waiting for initialization' && sleep 30 && echo 'Started PgSQL container'; else echo 'PgSQL container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,
@@ -537,7 +537,7 @@
             "options": {
                 "cwd": ".devcontainer/db/"
             },
-            "command": "if ! docker ps | grep -q webjetcms-oracle; then docker compose -f docker-compose-oracle.yml up -d && echo 'Started Oracle container'; else echo 'Oracle container already running'; fi",
+            "command": "if ! docker ps | grep -q webjetcms-oracle; then docker compose -f docker-compose-oracle.yml up -d && echo 'Waiting for initialization' && sleep 30 && echo 'Started Oracle container'; else echo 'Oracle container already running'; fi",
             "group": "build",
             "presentation": {
                 "clear": true,

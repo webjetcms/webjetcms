@@ -175,7 +175,7 @@
 							<br/>
 							<br/>
 						   	<%
-								String deliveryMethod = DeliveryMethodsService.getDeliveryMethodLabel(invoice.getDeliveryMethod(), request);
+								String deliveryMethod = DeliveryMethodsService.getDeliveryMethodLabel(invoice.getDeliveryMethod(), null, request);
 								if (Tools.isNotEmpty(deliveryMethod)) { out.println(deliveryMethod); }
 							%>
 							<br/>

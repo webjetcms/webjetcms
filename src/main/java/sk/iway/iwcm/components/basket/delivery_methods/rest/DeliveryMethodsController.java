@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.components.basket.support.MethodDto;
 
+/**
+ * REST controller for delivery methods for order-form (public version)
+ */
 @RestController
 public class DeliveryMethodsController {
 

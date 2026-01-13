@@ -4,15 +4,12 @@ Aplikácia Spôsoby doručenia umožňuje nastaviť podporované spôsoby doruč
 
 ![](datatable.png)
 
-## Nový typ spôsobu doručenia
+## Konfigurácia spôsobu doručenia
 
-Zadefinovanie nového spôsobu doručenia nie je možné cez používateľské rozhranie, je možné iba naprogramovaním ```BackeEnd``` funkcionality. Bližšie informácie [pre programátora](../../../../custom-apps/apps/eshop/delivery-methods/README.md).
+Každý spôsob doručenia má minimálne tieto polia:
 
-## Konfigurácia spôsobu doručenia - Vytvorenie/Editácia zaznamu
-
-Pri vytváraní alebo editácii záznamu spôsobu doručenia, nevytvárate nový spôsob doručenia, ale iba pridávate podporu pre zvolenú krajinu. Každý spôsob doručenia má minimálne tieto polia:
-
-- **Spôsob doručenia**, nezmeniteľná hodnota reprezentujúca názov spôsobu doručenia. Podporované spôsoby doručenia sú definované programátorsky.
+- **Spôsob doručenia**, nezmeniteľná hodnota reprezentujúca typ spôsobu doručenia. Podporované spôsoby doručenia sú definované programátorsky.
+- **Názov**, názov zobrazený zákazníkovi počas objednávky. Môžete zadať prekladový kľúč. Ak ponecháte prázdne, použije sa spôsob doručenia.
 - **Podporované krajiny**, výber krajiny (alebo viacerých krajín), pre ktorú bude tento spôsob doručenia dostupný. Zoznam podporovaných krajín sa dá nastaviť konfiguračnou premenou `basketInvoiceSupportedCountries`.
 - **Cena bez DPH**, hodnota predstavujúca cenu doručenia bez DPH
 - **DPH `[%]`**, hodnota predstavujúca sadzbu DPH v percentách
@@ -31,4 +28,6 @@ Musíte zvoliť aspoň jednu krajinu, pre ktorú bude tento spôsob doručenia d
 
 Aj pri vytváraní/úprave záznamu spôsobu doručenia nezadáte hodnotu do poľa **Cena bez DPH** alebo **DPH `[%]`**, automatický sa doplní hodnota 0, čiže doručenie bude zadarmo.
 
-Systém neumožní vytvoriť/uložiť záznam spôsobu doručenia, ak už pre daný spôsob doručenia existuje záznam pre rovnakú krajinu.
+## Nový typ spôsobu doručenia
+
+Zadefinovanie nového spôsobu (typu) doručenia je možné naprogramovaním ```BackeEnd``` funkcionality. Bližšie informácie [pre programátora](../../../../custom-apps/apps/eshop/delivery-methods/README.md).
