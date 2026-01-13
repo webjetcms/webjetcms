@@ -1,4 +1,4 @@
-<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.JpaDB"%>
+<%@page import="java.math.BigDecimal"%><%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.JpaDB"%>
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
@@ -12,7 +12,7 @@
 <%@page import="sk.iway.iwcm.components.basket.support.MethodDto"%>
 
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*,java.math.BigDecimal" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*" %>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>

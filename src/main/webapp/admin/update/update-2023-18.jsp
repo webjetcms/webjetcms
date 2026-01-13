@@ -687,7 +687,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 
 			if(url.contains("basket") && fullUrl.contains(".jsp")) {
-				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false && content.contains("BigDecimal")) {
+				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false && content.replaceAll("java.math.BigDecimal", "xxx").contains("BigDecimal")) {
 					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
 				}
 
@@ -705,12 +705,14 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				content = Tools.replace(content, "itemTr itemTr", "itemTr");
 
 				if(fullUrl.contains("invoice_detail.jsp")) {
-					content = Tools.replace(content, //Add import
-						"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">",
-						"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">" + "\n<" + "%@page import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%" + ">"
-					);
+					if (content.contains("import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%")==false) {
+						content = Tools.replace(content, //Add import
+							"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">",
+							"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">" + "\n<" + "%@page import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%" + ">"
+						);
+					}
 
-					content = Tools.replace(content, "Prop prop = Prop.getInstance(lng);", "Prop prop = Prop.getInstance(lng);\n\tString invoiceCurrency = invoice.getCurrency();");
+					if (content.contains("String invoiceCurrency = invoice.getCurrency()")==false) content = Tools.replace(content, "Prop prop = Prop.getInstance(lng);", "Prop prop = Prop.getInstance(lng);\n\tString invoiceCurrency = invoice.getCurrency();");
 					content = Tools.replaceRegex(content, "<" + "%=[\\s]*invoice.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
 					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
 
@@ -734,10 +736,11 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
 					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
 					if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
-						if(content.contains("PageParams pageParams = new PageParams(request);") == true)
-							content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
-						else
-							content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+						if(content.contains("PageParams pageParams = new PageParams(request);") == true) {
+							if (content.contains("String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);")==false) content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+						} else {
+							if (content.contains("String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);")==false) content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+						}
 
 						if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {
 							//Add needed import

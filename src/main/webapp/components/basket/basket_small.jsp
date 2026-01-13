@@ -23,6 +23,7 @@
 
 
   PageParams pageParams = new PageParams(request);
+	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
   int orderFormDocId = pageParams.getIntValue("orderFormDocId", -1);
   int orderFormMainPageDocId = pageParams.getIntValue("orderFormMainPageDocId", -1);
 
@@ -58,7 +59,7 @@
 
     <span class='basketSmallPrice showBasketBlock'>
       <span>
-        <iway:curr currency="<%= EshopService.getDisplayCurrency(request) %>">
+        <iway:curr currency="<%=displayCurrency%>">
           <%= EshopService.getTotalLocalPriceVat(items, request) %>
         </iway:curr>
       </span>

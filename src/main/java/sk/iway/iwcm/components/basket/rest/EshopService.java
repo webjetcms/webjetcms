@@ -253,7 +253,7 @@ public class EshopService {
 			invoice.setLoggedUserId(userId);
 			invoice.setCreateDate(new Date(Tools.getNow()));
 			invoice.setStatusId(InvoiceStatus.INVOICE_STATUS_NEW.getValue());
-			invoice.setCurrency( BasketTools.getSystemCurrency() );
+			invoice.setCurrency(BasketTools.getSystemCurrency());
 			invoice.setUserLng(PageLng.getUserLng(request));
 
 			int deliveryMethodId = Tools.getIntValue(request.getParameter("deliveryMethod"),-1);
@@ -575,7 +575,7 @@ public class EshopService {
 				//nastavime domainId - v podstate mozeme vlozit cokolvek, setter je preimplementovany a vzdy sa vlozi aktualna domena.
 				basketItem.setDomainId(CloudToolsForCore.getDomainId());
 
-				basketItem.setItemsBasketInvoice( EshopService.getInstance().getInvoiceById(-1) );
+				basketItem.setItemsBasketInvoice( null );
 
 				//uloz aj nazov a PN, lebo sa moze stat, ze dokument sa vymaze
 				basketItem.setItemTitle(doc.getTitle());

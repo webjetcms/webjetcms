@@ -10,6 +10,9 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Base class for delivery/payment method entities with support for custom fields
+ */
 @Getter
 @Setter
 @MappedSuperclass

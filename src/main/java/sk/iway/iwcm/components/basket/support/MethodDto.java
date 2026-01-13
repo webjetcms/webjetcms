@@ -7,6 +7,9 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.Data;
 import sk.iway.iwcm.common.BasketTools;
 
+/**
+ * Data transfer object for delivery/payment methods
+ */
 @Data
 public class MethodDto {
     String id;
