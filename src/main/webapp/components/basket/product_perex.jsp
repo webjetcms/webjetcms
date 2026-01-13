@@ -21,6 +21,7 @@ String price = doc.getFieldK();
 String basketOrder = Tools.getStringValue(request.getParameter("basketAct"), "");
 boolean isbasketOrder = basketOrder.equals("orderform") || "saveorder".equals(request.getParameter("act"));
 PageParams pageParams = new PageParams(request);
+String displayCurrency = EshopService.getDisplayCurrency(request);
 %>
 
 <iwcm:write name="basketSmall"/>
@@ -284,7 +285,7 @@ else if (Tools.isNotEmpty(price)) {
 				</div>
 			</c:if>
 						</h5>
-			<h4 class="price">Cena: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=doc.getLocalPriceVat(request) %></iway:curr></span></h4>
+			<h4 class="price">Cena: <span><iway:curr currency="<%=displayCurrency%>"><%=doc.getLocalPriceVat(request) %></iway:curr></span></h4>
 
 						<div class="action">
 							 <a  class="addToBasket add-to-cart btn btn-default itemId_<%=doc.getDocId()%>" type="button"> <i class="fa fa-shopping-cart" aria-hidden="true"></i>
