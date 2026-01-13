@@ -66,7 +66,7 @@ public class DeliveryMethodsService {
             }
             return "";
         } catch(Exception e) {
-
+            //Ignore
         }
 
         return prop.getText(deliveryMethod);

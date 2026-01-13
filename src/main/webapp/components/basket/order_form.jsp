@@ -12,7 +12,7 @@
 <%@page import="sk.iway.iwcm.components.basket.support.MethodDto"%>
 
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*,java.math.BigDecimal" %>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -34,11 +34,11 @@
 		let contactCountry = $("#contactCountryId").val();
 		let deliveryCountry = $("#deliveryCountryId").val();
 
-		if(deliveryCountry == undefined || deliveryCountry == null || deliveryCountry === "") {
+		if(typeof deliveryCountry === "undefined" || deliveryCountry === null || deliveryCountry === "") {
 			deliveryCountry = contactCountry;
 		}
 
-		if(lastSelectedCountry == null || lastSelectedCountry == "" || lastSelectedCountry !== deliveryCountry) {
+		if(lastSelectedCountry === null || lastSelectedCountry === "" || lastSelectedCountry !== deliveryCountry) {
 			lastSelectedCountry = deliveryCountry;
 
 			$.ajax({

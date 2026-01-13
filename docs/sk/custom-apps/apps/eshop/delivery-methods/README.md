@@ -2,7 +2,7 @@
 
 Ide o špeciálnu tabuľku, ktorá je pre svoje fungovanie rozšírená o voliteľné polia. Týmto sme dosiahli modulárnosť editora, kde každý spôsob doručenia má okrem spoločných polí aj na mieru pripravené polia v editore.
 
-Základným prvkom je trieda [BaseDeliveryMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/delivery_methods/jpa/DeliveryMethodEntity.java), ktorá má voliteľné polia A-L.
+Základným prvkom je trieda [BaseDeliveryMethod](../../../../../../src/main/java/sk/iway/iwcm/components/basket/delivery_methods/rest/BaseDeliveryMethod.java), ktorá má voliteľné polia A-L.
 
 ## Pridanie nového spôsobu doručenia
 

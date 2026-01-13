@@ -441,7 +441,7 @@ public class EshopService {
 		basketItem.setLoggedUserId(userId);
 
 		basketItem.setItemId(0); // We do not reference any DOC
-		basketItem.setItemQty(1); // Allways one delivery
+		basketItem.setItemQty(1); // Always one delivery
 
 		basketItem.setItemPrice( dme.getPrice() );
 		basketItem.setItemVat( dme.getVat() );
