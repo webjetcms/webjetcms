@@ -10,7 +10,7 @@
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 
-	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	int itemId = Tools.getIntValue(request.getParameter("basketItemId"), -1);
 	if (itemId == -1) {

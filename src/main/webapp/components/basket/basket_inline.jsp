@@ -14,7 +14,7 @@
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
 
-  String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+  String displayCurrency = EshopService.getDisplayCurrency(request);
 
   DocDB docDB = DocDB.getInstance();
 

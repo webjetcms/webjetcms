@@ -737,9 +737,9 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
 					if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
 						if(content.contains("PageParams pageParams = new PageParams(request);") == true) {
-							if (content.contains("String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);")==false) content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+							if (content.contains("String displayCurrency = EshopService.getDisplayCurrency(request);")==false) content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getDisplayCurrency(request);");
 						} else {
-							if (content.contains("String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);")==false) content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getInstance().getDisplayCurrency(request);");
+							if (content.contains("String displayCurrency = EshopService.getDisplayCurrency(request);")==false) content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getDisplayCurrency(request);");
 						}
 
 						if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {

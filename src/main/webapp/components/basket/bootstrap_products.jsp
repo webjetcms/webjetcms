@@ -45,7 +45,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	String groupIds = pageParams.getValue("groupIds", (String)request.getAttribute("group_id"));
 	String style = pageParams.getValue("style", "01");
 
-	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	if(Tools.isEmpty(groupIds))
 	{

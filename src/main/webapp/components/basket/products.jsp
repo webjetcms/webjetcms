@@ -41,7 +41,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 
-	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	PageParams pageParams = new PageParams(request);
 

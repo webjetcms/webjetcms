@@ -75,7 +75,7 @@
 <%
 	Prop prop = Prop.getInstance(request);
 
-	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	//Vytvorenie objednavky
 	PageParams pageParams = new PageParams(request);

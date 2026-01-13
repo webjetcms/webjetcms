@@ -15,7 +15,7 @@
 
 	PageParams pageParams = new PageParams(request);
 
-	String displayCurrency = EshopService.getInstance().getDisplayCurrency(request);
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 	if (doc == null) return;
