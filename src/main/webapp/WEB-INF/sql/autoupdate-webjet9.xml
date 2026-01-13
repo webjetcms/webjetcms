@@ -2474,6 +2474,168 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>15.10.2025</string></void>
+                <void property="desc"><string>create new table delivery_methods</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE basket_delivery_methods (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            delivery_method_name VARCHAR(255) NOT NULL,
+                            supported_countries VARCHAR(255) NOT NULL,
+                            price decimal(10,2),
+                            vat INT,
+                            sort_priority INT,
+                            field_a VARCHAR(255),
+                            field_b VARCHAR(255),
+                            field_c VARCHAR(255),
+                            field_d VARCHAR(255),
+                            field_e VARCHAR(255),
+                            field_f VARCHAR(255),
+                            field_g VARCHAR(255),
+                            field_h VARCHAR(255),
+                            field_i VARCHAR(255),
+                            field_j VARCHAR(255),
+                            field_k VARCHAR(255),
+                            field_l VARCHAR(255),
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE basket_delivery_methods (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            delivery_method_name NVARCHAR(255) NOT NULL,
+                            supported_countries NVARCHAR(255) NOT NULL,
+                            price decimal(10,2),
+                            vat INT,
+                            sort_priority INT,
+                            field_a NVARCHAR(255),
+                            field_b NVARCHAR(255),
+                            field_c NVARCHAR(255),
+                            field_d NVARCHAR(255),
+                            field_e NVARCHAR(255),
+                            field_f NVARCHAR(255),
+                            field_g NVARCHAR(255),
+                            field_h NVARCHAR(255),
+                            field_i NVARCHAR(255),
+                            field_j NVARCHAR(255),
+                            field_k NVARCHAR(255),
+                            field_l NVARCHAR(255),
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE basket_delivery_methods (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            delivery_method_name NVARCHAR2(255) NOT NULL,
+                            supported_countries NVARCHAR2(255) NOT NULL,
+                            price decimal(10,2),
+                            vat INTEGER,
+                            sort_priority INTEGER,
+                            field_a NVARCHAR2(255),
+                            field_b NVARCHAR2(255),
+                            field_c NVARCHAR2(255),
+                            field_d NVARCHAR2(255),
+                            field_e NVARCHAR2(255),
+                            field_f NVARCHAR2(255),
+                            field_g NVARCHAR2(255),
+                            field_h NVARCHAR2(255),
+                            field_i NVARCHAR2(255),
+                            field_j NVARCHAR2(255),
+                            field_k NVARCHAR2(255),
+                            field_l NVARCHAR2(255),
+                            domain_id INTEGER DEFAULT 1 NOT NULL
+
+                        );
+                        CREATE SEQUENCE S_basket_delivery_methods START WITH 1;
+                        CREATE TRIGGER T_basket_delivery_methods BEFORE INSERT ON basket_delivery_methods
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_basket_delivery_methods.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_basket_delivery_methods START WITH 1;
+                        CREATE TABLE basket_delivery_methods (
+                            id INT DEFAULT NEXTVAL('S_basket_delivery_methods') PRIMARY KEY NOT NULL,
+                            delivery_method_name VARCHAR(255) NOT NULL,
+                            supported_countries VARCHAR(255) NOT NULL,
+                            price decimal(10,2),
+                            vat INT,
+                            sort_priority INT,
+                            field_a VARCHAR(255),
+                            field_b VARCHAR(255),
+                            field_c VARCHAR(255),
+                            field_d VARCHAR(255),
+                            field_e VARCHAR(255),
+                            field_f VARCHAR(255),
+                            field_g VARCHAR(255),
+                            field_h VARCHAR(255),
+                            field_i VARCHAR(255),
+                            field_j VARCHAR(255),
+                            field_k VARCHAR(255),
+                            field_l VARCHAR(255),
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="date"><string>12.1.2026</string></void>
+                <void property="desc"><string>basket_delivery_methods - add title columns</string></void>
+                <void property="mysql"><string>ALTER TABLE basket_delivery_methods ADD title VARCHAR(255)</string></void>
+                <void property="mssql"><string>ALTER TABLE basket_delivery_methods ADD title NVARCHAR(255)</string></void>
+                <void property="oracle"><string>ALTER TABLE basket_delivery_methods ADD title NVARCHAR2(255)</string></void>
+                <void property="pgsql"><string>ALTER TABLE basket_delivery_methods ADD title VARCHAR(255)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="date"><string>12.1.2026</string></void>
+                <void property="desc"><string>RENAME payment_methods TO basket_payment_methods</string></void>
+                <void property="mysql"><string>RENAME TABLE payment_methods TO basket_payment_methods</string></void>
+                <void property="mssql"><string>EXEC sp_rename 'payment_methods', 'basket_payment_methods'</string></void>
+                <void property="oracle"><string>
+                    RENAME payment_methods TO basket_payment_methods;
+                    RENAME S_payment_methods TO S_basket_payment_methods;
+                    DROP TRIGGER T_payment_methods;
+                    CREATE TRIGGER T_basket_payment_methods BEFORE INSERT ON basket_payment_methods
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_basket_payment_methods.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                </string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE payment_methods RENAME TO basket_payment_methods;
+                    ALTER SEQUENCE S_payment_methods RENAME TO S_basket_payment_methods;
+                    ALTER TABLE basket_payment_methods ALTER COLUMN id SET DEFAULT NEXTVAL('S_basket_payment_methods');
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="date"><string>14.10.2025</string></void>
                 <void property="desc"><string>url_redirect - add columns description, valid_to</string></void>
                 <void property="mysql"><string>ALTER TABLE url_redirect ADD description TEXT, ADD valid_to DATETIME NULL</string></void>

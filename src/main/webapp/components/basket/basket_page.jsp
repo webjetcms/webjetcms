@@ -17,6 +17,8 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
 
+  String displayCurrency = EshopService.getDisplayCurrency(request);
+
   DocDB docDB = DocDB.getInstance();
 
   PageParams pageParams = new PageParams(request);
@@ -45,7 +47,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
     %>
          <div style='display:none'>
         <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=displayCurrency%>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
         <script type="text/javascript">
         <!--
@@ -309,7 +311,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
           var result = "";
 
-          result += '<tr class="itemTr itemTr itemId_'+ options.id +' basketId_' + options.basketId + '">';
+          result += '<tr class="itemTr itemId_'+ options.id +' basketId_' + options.basketId + '">';
 
           result += '<td class="first w-5"><a class="newWindow" href="'+ options.link +'">'+ options.title +'</a></td>';
 
@@ -379,9 +381,9 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:beanWrite name="good" property="itemQty"/>">
                 <a href="javascript:void(0)" class="addItem"><span>add</span></a>
               </td>
-              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=displayCurrency%>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-              <td class="fL w-2"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+              <td class="fL w-2"><iway:curr currency="<%=displayCurrency%>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
               <%--td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td--%>
               <td class="delete w-1">
                 <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>"><span>Delete</span></a>
@@ -397,7 +399,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
             Celková cena
           </span>
           <span class="basketPrice">
-             <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+             <iway:curr currency="<%=displayCurrency%>">
                <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
              </iway:curr>
           </span>

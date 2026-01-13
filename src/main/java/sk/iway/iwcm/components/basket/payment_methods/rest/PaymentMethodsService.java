@@ -4,17 +4,14 @@ import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
@@ -26,10 +23,12 @@ import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
+import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
-import sk.iway.iwcm.components.basket.rest.InvoiceService;
+import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.basket.support.MethodDto;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -127,7 +126,7 @@ public class PaymentMethodsService {
 
             if(status == RefundationStatus.SUCCESS) {
                 //Update invoice status
-                InvoiceService.updateInvoiceStatus((long) paymentEntity.getInvoiceId());
+                ProductListService.updateInvoiceStats(paymentEntity.getInvoiceId(), true);
 
                 //Update status of refunded payment
                 paymentEntity.setPaymentStatus( result.getStatusAfterRefund().getCode() );
@@ -138,12 +137,10 @@ public class PaymentMethodsService {
         return result;
     }
 
-    // STATIC version for FE use, where I cant Autowire this service
-    public static final Map<String, String> getConfiguredPaymentMethodsMap(Prop prop) {
-        PaymentMethodRepository pmr = Tools.getSpringBean("paymentMethodRepository", PaymentMethodRepository.class);
-        List<PaymentMethodEntity> allMethods = pmr.findAllByDomainIdOrderBySortPriorityAsc(CloudToolsForCore.getDomainId());
+    public final List<LabelValue> getPaymentOptions(Prop prop) {
+        List<PaymentMethodEntity> allMethods = paymentMethodRepository.findAllByDomainIdOrderBySortPriorityAsc(CloudToolsForCore.getDomainId());
 
-        LinkedHashMap<String, String> configuredMethods = new LinkedHashMap<>();
+        LinkedList<LabelValue> configuredMethods = new LinkedList<>();
         for(PaymentMethodEntity paymentMethod : allMethods) {
             try {
                 BasePaymentMethod basePaymentMethod = getBasePaymentMethod(paymentMethod.getPaymentMethodName());
@@ -157,22 +154,14 @@ public class PaymentMethodsService {
         return configuredMethods;
     }
 
-    public static final List<LabelValue> getConfiguredPaymentMethodsLabels(Prop prop) {
-        Map<String, String> configuredMethods = getConfiguredPaymentMethodsMap(prop);
-        List<LabelValue> labelValues = new ArrayList<>();
-        for(Map.Entry<String, String> entry : configuredMethods.entrySet()) {
-            labelValues.add(new LabelValue(entry.getValue(), entry.getKey()));
-        }
-
-        return labelValues;
-    }
+    /* PRIVATE STATIC  */
 
     private static final BasePaymentMethod getBasePaymentMethod(String paymentMethod) throws Exception {
         if(Tools.isEmpty(paymentMethod)) return null;
 
         Class<?> pmClass = Class.forName(paymentMethod);
 
-        //Check taht class is child of BasePaymentMethod
+        //Check that class is child of BasePaymentMethod
         if(BasePaymentMethod.class.isAssignableFrom(pmClass)) {
             //Get payment method class
             Constructor<?> constructor = pmClass.getConstructor();
@@ -182,9 +171,29 @@ public class PaymentMethodsService {
         return null;
     }
 
-    public static final boolean isPaymentMethodConfigured(String paymentMethod, Prop prop) {
-        Map<String, String> configuredMethods = getConfiguredPaymentMethodsMap(prop);
-        return configuredMethods.containsKey(paymentMethod);
+    /* PUBLIC STATIC part */
+
+    public static final List<MethodDto> getConfiguredPaymentMethodsLabels(HttpServletRequest request, Prop prop) {
+        PaymentMethodRepository pmr = Tools.getSpringBean("paymentMethodRepository", PaymentMethodRepository.class);
+        List<PaymentMethodEntity> allMethods = pmr.findAllByDomainIdOrderBySortPriorityAsc(CloudToolsForCore.getDomainId());
+
+        LinkedList<MethodDto> configuredMethods = new LinkedList<>();
+        for(PaymentMethodEntity paymentMethod : allMethods) {
+            try {
+                BasePaymentMethod basePaymentMethod = getBasePaymentMethod(paymentMethod.getPaymentMethodName());
+                if(basePaymentMethod == null) continue;
+                basePaymentMethod.setToMapIfConfigured(paymentMethod, configuredMethods, request, prop);
+             } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return configuredMethods;
+    }
+
+    public static final boolean isPaymentMethodConfigured(String paymentMethod, HttpServletRequest request, Prop prop) {
+        if(Tools.isEmpty(paymentMethod)) return false;
+        return getConfiguredPaymentMethodsLabels(request, prop).stream().anyMatch(cpm -> cpm.getId().equals(paymentMethod));
     }
 
     public static final String getPaymentResponse(HttpServletRequest request) {
@@ -266,8 +275,8 @@ public class PaymentMethodsService {
 
             //If payment was successful
             if(status == PaymentStatus.SUCCESS) {
-                //Update invoice status
-                InvoiceService.updateInvoiceStatus(bipe.getInvoiceId());
+                //Update invoice stats
+                ProductListService.updateInvoiceStats(bipe.getInvoiceId(), true);
             }
 
             return paymentState;
@@ -284,7 +293,7 @@ public class PaymentMethodsService {
      * @param request
      * @return return id of new created invoice item (aka payment) or -1 if failed
      */
-    public static int createPaymentInvoiceItemAndReturnId(BasketInvoiceEntity invoiceEntity, HttpServletRequest request) {
+    public static int createPaymentInvoiceItemAndReturnId(BasketInvoiceEntity invoiceEntity, HttpServletRequest request, BasketInvoiceItemsRepository biir) {
         if(invoiceEntity == null) return -1;
 
         if(Tools.isEmpty(invoiceEntity.getPaymentMethod())) return -1;
@@ -308,7 +317,7 @@ public class PaymentMethodsService {
 
             Prop prop = Prop.getInstance(request);
             String title = "";
-            PaymentMethod annotation = payment.getClass().getAnnotation(PaymentMethod.class);
+            FieldsConfig annotation = payment.getClass().getAnnotation(FieldsConfig.class);
             if(annotation != null) title = prop.getText(annotation.nameKey());
             item.setItemTitle( title );
 
@@ -319,7 +328,6 @@ public class PaymentMethodsService {
 
             item = payment.getPaymentMethodCost(item, paymentMethod);
 
-            BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
             item = biir.save(item);
 
             return item.getId().intValue();
@@ -336,25 +344,13 @@ public class PaymentMethodsService {
             BasePaymentMethod payment = getBasePaymentMethod(paymentMethod);
             if(payment == null) return "";
 
-            PaymentMethod annotation = payment.getClass().getAnnotation(PaymentMethod.class);
+            FieldsConfig annotation = payment.getClass().getAnnotation(FieldsConfig.class);
             if(annotation == null) return "";
 
             return Prop.getInstance(request).getText(annotation.nameKey());
         } catch(Exception e) {
             return "";
         }
-    }
-
-    public static final Map<String, String> getAllowedCoutriesMap(Prop prop) {
-        String[] supprotedCountries = Constants.getArray("basketInvoiceSupportedCountries");
-        String defaultKeyPrefix = "stat.countries.tld";
-
-        Map<String, String> countriesMap = new HashMap<>();
-        for(String countryCode : supprotedCountries) {
-            countriesMap.putIfAbsent(countryCode, prop.getText(defaultKeyPrefix + countryCode));
-        }
-
-        return countriesMap;
     }
 
     public boolean isPaymentMethodEditableByAdmin(BasketInvoicePaymentEntity paymentEntity) {
