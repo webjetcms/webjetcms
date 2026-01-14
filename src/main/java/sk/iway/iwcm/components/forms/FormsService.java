@@ -1,5 +1,23 @@
 package sk.iway.iwcm.components.forms;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.criteria.Predicate;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
@@ -22,15 +40,18 @@ import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.form.FormAttributeDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
@@ -39,30 +60,54 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.persistence.criteria.Predicate;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 public class FormsService<R extends FormsRepositoryInterface<E>, E extends FormsEntityBasic> {
 
     private final R formsRepository;
 
+    public String getFormName(HttpServletRequest request) {
+        if(Tools.getBooleanValue(request.getParameter("detail"), false))
+            return Tools.getStringValue(request.getParameter("formName"), null);
+        return null;
+    }
+
+    public boolean isExport(HttpServletRequest request) { return "true".equals(request.getParameter("export")); }
+
     public FormsService(R formsRepository) {
         this.formsRepository = formsRepository;
+    }
+
+    public Page<E> getAllItems(Page<E> page, Pageable pageable, HttpServletRequest request, Identity user) {
+        String formName = getFormName(request);
+
+        if(formName != null) {
+            if (request.getParameter("size")==null) page = findInDataByColumns(formName, user, new HashMap<>(), null);
+            else page = findInDataByColumns(formName, user, new HashMap<>(), pageable);
+
+            if(page == null) return null;
+
+            if (isExport(request)) setExportDate(page.getContent());
+        } else page = new DatatablePageImpl<>(getFormsList(user));
+
+        return page;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Page<E> findByColumns(Map<String, String> params, Pageable pageable, E search, HttpServletRequest request, Identity user) {
+        String formName = getFormName(request);
+        if(formName != null) {
+            java.util.Enumeration<String> parameterNames = request.getParameterNames();
+            while (parameterNames.hasMoreElements()) {
+                String parameterName = parameterNames.nextElement();
+                Object value = request.getParameter(parameterName);
+                if(value != null) params.put(parameterName, String.valueOf(value));
+            }
+
+            Page<E> data = findInDataByColumns(formName, user, params, pageable);
+            if (isExport(request)) setExportDate(data.getContent());
+            return data;
+        }
+
+        return null;
     }
 
     public void prepareForm(E entity, int domainId) {
@@ -194,7 +239,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @param formName
      * @return
      */
-    public FormColumns getColumnNames(String formName, UserDetails user) {
+    public FormColumns getColumnNames(String formName, UserDetails user, FormSettingsRepository formSettingsRepository) {
 
         if (isFormAccessible(formName, user)==false) return null;
 
@@ -217,10 +262,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         FormColumns formColumns = new FormColumns();
         formColumns.setColumns(columns);
         formColumns.setCount(formsRepository.countAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId()));
-        Map<String, String> attributes = new FormAttributeDB().load(formName);
-        if (attributes != null) {
-            formColumns.setDoubleOptIn(attributes.containsKey("doubleOptIn") && attributes.get("doubleOptIn").equalsIgnoreCase("true"));
+
+        //
+        if(formSettingsRepository != null) {
+            formColumns.setDoubleOptIn(
+                Tools.isTrue( formSettingsRepository.isDoubleOptIn(formName, CloudToolsForCore.getDomainId()) )
+            );
         }
+
         return formColumns;
     }
 
@@ -461,7 +510,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @param id
      * @return
      */
-    public boolean deleteItem(E entity, long id) {
+    public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         try {
             String formName = entity.getFormName();
             E entityDb = getById(id);
@@ -474,6 +523,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             if (entityDb.getCreateDate()==null || count <= 2) {
                 //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
                 formsRepository.deleteByFormNameAndDomainId(formName, domainId);
+                // Ak ma, zmaz aj steps/items (multistep forms)
+                formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
+                formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
             } else {
                 formsRepository.deleteById(id);
             }
@@ -803,5 +855,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        }
 
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
+    }
+
+    public boolean isFormNameUnique(String formName) {
+        Integer count = formsRepository.countAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        return (count != null && count > 0) ? false : true;
     }
 }

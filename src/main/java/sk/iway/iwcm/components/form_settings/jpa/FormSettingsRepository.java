@@ -15,4 +15,7 @@ public interface FormSettingsRepository extends DomainIdRepository<FormSettingsE
 
     @Query("SELECT fse.rowView FROM FormSettingsEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
     Boolean isRowView(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fse.doubleOptIn FROM FormSettingsEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
+    Boolean isDoubleOptIn(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }

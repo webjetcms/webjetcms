@@ -2,9 +2,11 @@ package sk.iway.iwcm.components.multistep_form.jpa;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
@@ -22,4 +24,8 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
 
     @Query("SELECT COUNT(fse.id) FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
     public int getNumberOfSteps(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Transactional
+    @Modifying
+    void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
 }

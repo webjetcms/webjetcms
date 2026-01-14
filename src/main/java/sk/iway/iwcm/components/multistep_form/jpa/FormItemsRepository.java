@@ -30,6 +30,10 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     @Modifying
     void deleteAllByFormNameAndStepIdAndDomainId(String formName, Long stepId, Integer domainId);
 
+    @Transactional
+    @Modifying
+    void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
+
     @Query("SELECT fie FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.stepId = :stepId AND fie.domainId = :domainId")
     List<FormItemEntity> findItemsToDuplicate(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 }

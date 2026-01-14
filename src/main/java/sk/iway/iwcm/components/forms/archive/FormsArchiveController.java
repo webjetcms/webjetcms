@@ -1,27 +1,32 @@
 package sk.iway.iwcm.components.forms.archive;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormColumns;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.DatatableRequest;
-import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
-
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 
 @RestController
 @Datatable
@@ -30,56 +35,45 @@ import javax.servlet.http.HttpServletRequest;
 public class FormsArchiveController extends DatatableRestControllerV2<FormsArchiveEntity, Long> {
 
     private final FormsArchiveServiceImpl formsService;
+    private final FormSettingsRepository formSettingsRepository;
+    private final FormStepsRepository formStepsRepository;
+    private final FormItemsRepository formItemsRepository;
 
     @Autowired
-    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService) {
+    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         super(formsRepository);
         this.formsService = formsService;
+        this.formSettingsRepository = formSettingsRepository;
+        this.formStepsRepository = formStepsRepository;
+        this.formItemsRepository = formItemsRepository;
     }
 
     @Override
     public Page<FormsArchiveEntity> getAllItems(Pageable pageable) {
-        Page<FormsArchiveEntity> page = new DatatablePageImpl<>(formsService.getFormsList(getUser()));
+        Page<FormsArchiveEntity> page = null;
+        page = formsService.getAllItems(page, pageable, getRequest(), getUser());
+
+        if(page == null) {
+            addNotify(new NotifyBean(getProp().getText("admin.operationPermissionDenied"), getProp().getText("components.forms.permsDeniedNote"), NotifyType.ERROR, 15000));
+            return new DatatablePageImpl<>(new ArrayList<>());
+        }
+
         return page;
     }
 
     @GetMapping(path = "/columns/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
-        return formsService.getColumnNames(formName, getUser());
+        return formsService.getColumnNames(formName, getUser(), formSettingsRepository);
     }
 
-    @GetMapping(path = "/data/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<FormsArchiveEntity> getSubList(@PathVariable String formName, @RequestParam Map<String, String> params, Pageable pageable) {
-        Page<FormsArchiveEntity> data;
-        if (getRequest().getParameter("size")==null) data = formsService.findInDataByColumns(formName, getUser(), params, null);
-        else data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
-
-        if ("true".equals(getRequest().getParameter("export"))) {
-            formsService.setExportDate(data.getContent());
-        }
-
-        return data;
+    @Override
+    public Page<FormsArchiveEntity> findByColumns(Map<String, String> params, Pageable pageable, FormsArchiveEntity search) {
+        Page<FormsArchiveEntity> page = formsService.findByColumns(params, pageable, search, getRequest(), getUser());
+        if(page != null) return page;
+        return super.findByColumns(params, pageable, search);
     }
 
-    @GetMapping(path = "/data/{formName}/search/findByColumns")
-    public Page<FormsArchiveEntity> findInDataByColumns(@PathVariable String formName, @RequestParam Map<String, String> params, Pageable pageable, FormsArchiveEntity search) {
-
-        Page<FormsArchiveEntity> data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
-
-        if ("true".equals(getRequest().getParameter("export"))) {
-            formsService.setExportDate(data.getContent());
-        }
-
-        return data;
-    }
-
-    @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
-	@PostMapping(value = "/data/{formName}/editor", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DatatableResponse<FormsArchiveEntity>> handleEditorFormDetail(@PathVariable String formName, HttpServletRequest request, @RequestBody DatatableRequest<Long, FormsArchiveEntity> datatableRequest) {
-        return super.handleEditor(request, datatableRequest);
-    }
-
-    @GetMapping(path="/html")
+    @GetMapping(path="/html/")
     public String getHtml(@RequestParam long id) {
         FormsArchiveEntity entity = formsService.getById(id);
         if (entity == null || Tools.isEmpty(entity.getFormName())) return null;
@@ -94,15 +88,13 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
     @Override
     public FormsArchiveEntity editItem(FormsArchiveEntity entity, long id) {
         String note = entity.getNote();
-
         formsService.updateNote(note, id);
-
         return formsService.getById(id);
     }
 
     @Override
     public boolean deleteItem(FormsArchiveEntity entity, long id) {
-        return formsService.deleteItem(entity, id);
+        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository);
     }
 
     @Override

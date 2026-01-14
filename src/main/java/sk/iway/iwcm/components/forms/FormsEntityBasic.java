@@ -15,6 +15,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -50,6 +51,7 @@ public class FormsEntityBasic {
     private String preview;
 
     @Column(name = "form_name")
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title = "formslist.nazov_formularu", tab = "basic",

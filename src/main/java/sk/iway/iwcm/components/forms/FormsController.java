@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.forms;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -39,6 +39,8 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
@@ -61,40 +63,66 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         this.formItemsRepository = formItemsRepository;
     }
 
-    private String getFormName() {
-        if(Tools.getBooleanValue(getRequest().getParameter("detail"), false))
-            return Tools.getStringValue(getRequest().getParameter("formName"), null);
-        return null;
-    }
-
-    private boolean isExport() { return "true".equals(getRequest().getParameter("export")); }
-
     @Override
     public Page<FormsEntity> getAllItems(Pageable pageable) {
-        Page<FormsEntity> page;
-        String formName = getFormName();
-        Map<String, String> params = new HashMap<>();
+        Page<FormsEntity> page = null;
+        page = formsService.getAllItems(page, pageable, getRequest(), getUser());
 
-        if(formName != null) {
-            if (getRequest().getParameter("size")==null) page = formsService.findInDataByColumns(formName, getUser(), params, null);
-            else page = formsService.findInDataByColumns(formName, getUser(), params, pageable);
-
-            if (isExport()) formsService.setExportDate(page.getContent());
-        } else page = new DatatablePageImpl<>(formsService.getFormsList(getUser()));
+        if(page == null) {
+            addNotify(new NotifyBean(getProp().getText("admin.operationPermissionDenied"), getProp().getText("components.forms.permsDeniedNote"), NotifyType.ERROR, 15000));
+            return new DatatablePageImpl<>(new ArrayList<>());
+        }
 
         return page;
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormsEntity> target, Identity user, Errors errors, Long id, FormsEntity entity) {
-        // Check if form is trying save as rowView == false but got rowView items
-        String formName = entity.getFormName();
-        if(Tools.isEmpty(formName)) return;
+        if("remove".equals(target.getAction()) == false) {
+            // Check if form is trying save as rowView == false but got rowView items
+            String formName = entity.getFormName();
+            if(Tools.isEmpty(formName)) return;
 
-        formName = DocTools.removeChars(formName, true);
-        if(Tools.isTrue(formSettingsRepository.isRowView(formName, CloudToolsForCore.getDomainId()))) {
-            int count = formItemsRepository.countItemsThatHasType(formName, CloudToolsForCore.getDomainId(), MultistepFormsService.getRowViewItemTypes());
-            if(count > 0) errors.rejectValue("errorField.formSettings.rowView", null, getProp().getText("components.form_items.hasRowViewFields"));
+            formName = DocTools.removeChars(formName, true);
+            if(Tools.isTrue(formSettingsRepository.isRowView(formName, CloudToolsForCore.getDomainId()))) {
+                int count = formItemsRepository.countItemsThatHasType(formName, CloudToolsForCore.getDomainId(), MultistepFormsService.getRowViewItemTypes());
+                if(count > 0) errors.rejectValue("errorField.formSettings.rowView", null, getProp().getText("components.form_items.hasRowViewFields"));
+            }
+
+            // Check that selected name is unique
+            if(formsService.isFormNameUnique(formName) == false)
+                errors.rejectValue("errorField.formName", null, getProp().getText("editor.form.formName.must_be_unique_err"));
+        }
+    }
+
+    @Override
+    public FormsEntity insertItem(FormsEntity entity) {
+        // Create form pattern record
+        entity.setData("");
+        entity.setUserId(Long.valueOf(-1));
+        entity.setDocId(-1);
+        entity.setDomainId(CloudToolsForCore.getDomainId());
+        entity.setCreateDate(null);
+        return super.insertItem(entity);
+    }
+
+    @Override
+    public void afterSave(FormsEntity entity, FormsEntity saved) {
+        if(entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L) {
+            // Its new saved form
+
+            // save new settings
+            entity.getFormSettings().setFormName(entity.getFormName());
+            entity.getFormSettings().setDomainId(CloudToolsForCore.getDomainId());
+            formSettingsRepository.save(entity.getFormSettings());
+
+            // All new forms are multistep - add dsefault first step
+            FormStepEntity fse = new FormStepEntity();
+            fse.setSortPriority(10);
+            fse.setFormName(entity.getFormName());
+            fse.setStepName("DEFAULT");
+            fse.setDomainId(CloudToolsForCore.getDomainId());
+            formStepsRepository.save(fse);
         }
     }
 
@@ -106,7 +134,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             int domainId = CloudToolsForCore.getDomainId();
             formsService.prepareForm(entity, domainId);
 
-            if(getFormName() == null) {
+            if(formsService.getFormName(getRequest()) == null) {
                 // No formName set in request, its from-list -> add info about fomr settings
                 FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(entity.getFormName(), false), domainId);
                 FormSettingsService.prepareSettingsForEdit(formSettings);
@@ -118,31 +146,16 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Page<FormsEntity> findByColumns(Map<String, String> params, Pageable pageable, FormsEntity search) {
-
-        String formName = getFormName();
-        if(formName != null) {
-
-            java.util.Enumeration<String> parameterNames = getRequest().getParameterNames();
-            while (parameterNames.hasMoreElements()) {
-                String parameterName = parameterNames.nextElement();
-                Object value = getRequest().getParameter(parameterName);
-                if(value != null) params.put(parameterName, String.valueOf(value));
-            }
-
-            Page<FormsEntity> data = formsService.findInDataByColumns(formName, getUser(), params, pageable);
-            if (isExport()) formsService.setExportDate(data.getContent());
-            return data;
-        }
-
+        Page<FormsEntity> page = formsService.findByColumns(params, pageable, search, getRequest(), getUser());
+        if(page != null) return page;
         return super.findByColumns(params, pageable, search);
     }
 
     @Override
     public FormsEntity editItem(FormsEntity entity, long id) {
-        String formName = getFormName();
+        String formName = formsService.getFormName(getRequest());
         if(formName != null && entity.getCreateDate() != null) {
             // Edit of form detail, we can change ONLY note
             String note = entity.getNote();
@@ -160,7 +173,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public boolean deleteItem(FormsEntity entity, long id) {
-        return formsService.deleteItem(entity, id);
+        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository);
     }
 
     @Override
@@ -192,7 +205,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @GetMapping(path = "/columns/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
-        return formsService.getColumnNames(formName, getUser());
+        return formsService.getColumnNames(formName, getUser(), formSettingsRepository);
     }
 
     /**

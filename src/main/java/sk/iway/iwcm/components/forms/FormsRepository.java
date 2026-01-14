@@ -16,4 +16,7 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     @Modifying
     @Query("DELETE FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.userId = :userId AND fe.createDate IS NOT NULL")
     void deleteAllUserSubmitted(@Param("formName") String formName, @Param("domainId") Integer domainId, @Param("userId") Long userId);
+
+    @Query("SELECT COUNT(fe.id) FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId")
+    Integer countFormName(@Param("formName") String formName, @Param("domainId") Integer domainId);
 }
