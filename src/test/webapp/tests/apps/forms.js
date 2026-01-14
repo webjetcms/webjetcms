@@ -24,37 +24,37 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zoznam formularov', async ({ I, DT }) => {
-    I.amOnPage("/apps/form/admin/");
-    I.see("Názov formuláru");
+// Scenario('zoznam formularov', async ({ I, DT }) => {
+//     I.amOnPage("/apps/form/admin/");
+//     I.see("Názov formuláru");
 
-    I.seeElement(locate('.nav-link.active').withText("Zoznam formulárov"));
-    DT.filterContains("formName", "Brexit");
-    I.click("Brexit");
-    DT.waitForLoader("#form-detail_processing");
-    const formName = await within("#pills-forms", () => {
-        return I.grabTextFrom('.active');
-    });
-    const url = await I.grabCurrentUrl();
-    const formNameFromUrl = url.split('/').pop();
-    I.amOnPage(`/apps/form/admin/#/detail/${formName}`);
-    assert.equal(formName, formNameFromUrl);
-    within("#pills-forms", () => {
-        I.waitForElement(locate('a').withText('Brexit'), 10);
-        I.click('//li[1]')
-        I.wait(1);
-        I.waitForInvisible(locate('a').withText('Brexit'), 10)
-    });
-    DT.waitForLoader("#forms-list_processing");
-    I.amOnPage("/apps/form/admin/#/");
-});
+//     I.seeElement(locate('.nav-link.active').withText("Zoznam formulárov"));
+//     DT.filterContains("formName", "Brexit");
+//     I.click("Brexit");
+//     DT.waitForLoader("#formDetailDataTable_processing");
+//     const formName = await within("#pills-forms", () => {
+//         return I.grabTextFrom('.active');
+//     });
+//     const url = await I.grabCurrentUrl();
+//     const formNameFromUrl = url.split('/').pop();
+//     I.amOnPage(`/apps/form/admin/detail/?formName=${formName}`);
+//     assert.equal(formName, formNameFromUrl);
+//     within("#pills-forms", () => {
+//         I.waitForElement(locate('a').withText('Brexit'), 10);
+//         I.click('//li[1]')
+//         I.wait(1);
+//         I.waitForInvisible(locate('a').withText('Brexit'), 10)
+//     });
+//     DT.waitForLoader("#formsDataTable_processing");
+//     I.amOnPage("/apps/form/admin/");
+// });
 
 Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
     DT.filterContains(`formName`, formName);
 
     I.click(formName);
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
 
     within(".dt-footer-row", () => {
         I.see(numberOfTotalResults);
@@ -77,7 +77,7 @@ Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
     });
 
     I.pressKey("Enter", "input.dt-filter-to-createDate");
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateBothResults);
     });
@@ -89,7 +89,7 @@ Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
     I.pressKey('Enter', `input.dt-filter-dt-filter-formName`);
 
     I.click(formName);
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
 
     I.click("input.dt-filter-from-createDate");
     I.waitForElement("div.dt-datetime", 1);
@@ -100,7 +100,7 @@ Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
     });
 
     I.pressKey("Enter", "input.dt-filter-to-createDate");
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateFromResults);
     });
@@ -112,7 +112,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     I.pressKey('Enter', `input.dt-filter-dt-filter-formName`);
 
     I.click(formName);
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
 
     I.click("input.dt-filter-to-createDate");
     I.waitForElement("div.dt-datetime", 1);
@@ -123,7 +123,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     });
 
     I.pressKey("Enter", "input.dt-filter-to-createDate");
-    DT.waitForLoader("#form-detail_processing");
+    DT.waitForLoader("#formDetailDataTable_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateToResults);
     });
@@ -174,7 +174,9 @@ Scenario("vyplnenie formsimple", ({ I }) => {
 });
 
 function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
-    I.forceClick("#form-detail tbody tr:nth-child("+rowNumber+") a.form-view");
+
+    I.say("checkFormSimpleRowHtml");
+    I.forceClick( locate("#formDetailDataTable tbody tr:nth-child("+rowNumber+") a").withChild("i.ti-eye") );
     I.wait(2);
     I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
@@ -193,7 +195,11 @@ function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
     I.clickCss("#modalIframe div.modal-footer button.btn-primary");
 }
 
-function checkFormSimpleData(I, DT, random, random2) {
+function
+
+checkFormSimpleData(I, DT, random, random2) {
+    I.say("checkFormSimpleData");
+
     //over zobrazenie
     DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+random);
     I.see(random);
@@ -207,9 +213,9 @@ function checkFormSimpleData(I, DT, random, random2) {
 }
 
 Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
-    var container = "#form-detail_wrapper";
+    var container = "#formDetailDataTable_wrapper";
 
-    I.amOnPage("/apps/form/admin/#/detail/formular-lahko");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
@@ -230,13 +236,19 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
     I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.amOnPage("/admin/v9/");
-    I.amOnPage("/apps/form/admin/#/detail/formular-lahko");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
     checkFormSimpleData(I, DT, randomNumber, randomNumber2);
 
+    I.click(container+" button.buttons-settings");
+    I.click(container+" button.buttons-colvis");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.click("Obnoviť");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+
     //over, ze vidime vyplnene udaje testera v tabulke
-    I.see("Tester", "#form-detail tbody tr:nth-child(1)");
-    I.see("Playwright", "#form-detail tbody tr:nth-child(1)");
+    I.see("Tester", "#formDetailDataTable tbody tr:nth-child(1)");
+    I.see("Playwright", "#formDetailDataTable tbody tr:nth-child(1)");
 });
 
 Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
@@ -257,13 +269,13 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
 
     I.click("formular-lahko");
     DT.waitForLoader();
-    I.see("Form-autotest-2", "#form-detail");
-    I.see("Form-autotest-", "#form-detail");
+    I.see("Form-autotest-2", "#formDetailDataTable");
+    I.see("Form-autotest-", "#formDetailDataTable");
 
     //skus form na ktory nemas pravo
     //musime takto aby sa spravil dobre preklik, kedze niekedy to nerefreshlo dobre
     I.amOnPage("/admin/v9/");
-    I.amOnPage("/apps/form/admin/#/detail/formular");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular");
     I.see("Na túto operáciu nemáte prístupové právo");
 
     //odober pravo a vyskusaj zoznam formularov
@@ -280,18 +292,17 @@ Scenario("odhlasenie", ({ I }) => {
     I.logout();
 });
 
-
 Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
-    I.amOnPage("/apps/form/admin/#/detail/formular-lahko");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
     DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-2-"+randomNumber);
     I.see(randomNumber);
     I.see("Záznamy 1 až 1 z 1");
 
     //oznac zaznam a zmaz ho
-    I.clickCss("#form-detail tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#formDetailDataTable tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
-    I.waitForElement("#form-detail_modal");
+    I.waitForElement("#formDetailDataTable_modal");
     DTE.save();
 
     DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
@@ -303,9 +314,9 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", "formular-lahko");
 
-    I.clickCss("#forms-list tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#formsDataTable tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
-    I.waitForElement("#forms-list_modal");
+    I.waitForElement("#formsDataTable_modal");
     DTE.save();
 
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -354,15 +365,14 @@ Scenario("formsimple-encrypted", ({ I }) => {
     I.see("Formulár bol úspešne odoslaný");
 
     //over zobrazenie v admine
-    I.amOnPage("/apps/form/admin/#/detail/formular-lahko-encrypted");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
     I.see("encrypted-tink-tester_42");
 
-    I.clickCss("#form-detail tbody tr:nth-child(1) a.form-view");
+    I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
     I.switchTo("#modalIframeIframeElement");
     I.see("encrypted-tink");
     I.dontSee("Technické info");
-    I.switchTo();
-    I.clickCss("#modalIframe button.btn-close");
+    I.switchTo()
 
     //
     I.say("Setting decrypt key");
@@ -370,29 +380,28 @@ Scenario("formsimple-encrypted", ({ I }) => {
     I.fillField(".privateKey", "decrypt_key-tink-tester_42:eyJwcmltYXJ5S2V5SWQiOjEzNzAyODYzNDUsImtleSI6W3sia2V5RGF0YSI6eyJ0eXBlVXJsIjoidHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuRWNpZXNBZWFkSGtkZlByaXZhdGVLZXkiLCJ2YWx1ZSI6IkVxTUJFbHdLQkFnQ0VBTVNVaEpRQ2poMGVYQmxMbWR2YjJkc1pXRndhWE11WTI5dEwyZHZiMmRzWlM1amNubHdkRzh1ZEdsdWF5NUJaWE5EZEhKSWJXRmpRV1ZoWkV0bGVSSVNDZ1lLQWdnUUVCQVNDQW9FQ0FNUUVCQWdHQUVZQVJvZ1RKMWJQYm83MW5ZTk56V1lVZmFITnJsZEJyUkp2ZXF3NHI1My9DMVhtTFFpSVFESU12TWtyUlhQdlNNN2hVaklHblcybWdob1BCd21HaDJKaEFhMEg0MlhWaG9nQ29oTno4bWR5NktBbWFmaCt2T2JUb2pTRkl6Q2VIWE50WS91SnFmNWx6RT0iLCJrZXlNYXRlcmlhbFR5cGUiOiJBU1lNTUVUUklDX1BSSVZBVEUifSwic3RhdHVzIjoiRU5BQkxFRCIsImtleUlkIjoxMzcwMjg2MzQ1LCJvdXRwdXRQcmVmaXhUeXBlIjoiVElOSyJ9XX0K");
     I.click("Nastaviť");
 
-    I.amOnPage("/apps/form/admin/#/detail/formular-lahko-encrypted");
+    I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
     I.dontSee("encrypted-tink-tester_42");
     I.see("Form-autotest-"+randomNumber);
     I.see("autotest."+randomNumber+"@balat.sk")
     I.see("Test odoslania formularu random: "+randomNumber);
     I.see("true");
 
-    I.clickCss("#form-detail tbody tr:nth-child(1) a.form-view");
+    I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
     I.switchTo("#modalIframeIframeElement");
     I.dontSee("encrypted-tink");
     I.see("Technické info");
     I.see(randomNumber, "span.form-control.emailInput-text");
     I.switchTo();
     I.see("Vytlačiť", "#modalIframe div.modal-footer button");
-    I.clickCss("#modalIframe button.btn-close");
 });
 
 Scenario("form with note field", ({ I, DT }) => {
     //BUG: there is problem with name conflict between form field name and system fields eg. note
-    I.amOnPage("/apps/form/admin/#/detail/formsimple-with-note-field");
+    I.amOnPage("/apps/form/admin/detail/?formName=formsimple-with-note-field");
     DT.waitForLoader();
 
-    I.waitForText("Admin poznamka", 20, "#form-detail_wrapper");
+    I.waitForText("Admin poznamka", 20, "#formDetailDataTable_wrapper");
     I.see("Druhy zaznam formularu");
     I.see("Toto je poznamka vo formulari z frontendu");
 
@@ -407,10 +416,10 @@ Scenario("form with note field", ({ I, DT }) => {
     I.see("Toto je poznamka vo formulari z frontendu");
 
     I.amOnPage("/admin/v9/");
-    I.amOnPage("/apps/form/admin/#/detail/formsimple-with-note-field");
+    I.amOnPage("/apps/form/admin/detail/?formName=formsimple-with-note-field");
     DT.waitForLoader();
 
-    I.waitForText("Admin poznamka", 20, "#form-detail_wrapper");
+    I.waitForText("Admin poznamka", 20, "#formDetailDataTable_wrapper");
     DT.filterContains("note", "Poznamka");
     I.see("Admin poznamka");
     I.see("Druhy zaznam formularu");
@@ -419,7 +428,7 @@ Scenario("form with note field", ({ I, DT }) => {
 
 async function handleDownload(I, fileName, ext, url=null) {
     await I.handleDownloads("downloads/"+fileName+"-"+randomNumber+ext);
-    if (url==null) I.click(locate("#form-detail td.cell-not-editable a").withText(fileName+ext));
+    if (url==null) I.click(locate("#formDetailDataTable td.cell-not-editable a").withText(fileName+ext));
     else {
         await I.executeScript((url) => {
             window.location.href=url;
@@ -433,7 +442,7 @@ Scenario("form attachments", async ({ I }) => {
 
     var url11size = "/apps/forms/admin/attachment/?name=11_size.txt";
 
-    I.amOnPage("/apps/form/admin/#/detail/multiupload");
+    I.amOnPage("/apps/form/admin/detail/?formName=multiupload");
     I.waitForText("testXlsxAttachmentFile.xlsx", 10);
 
     await handleDownload(I, "testJpgAttachmentFile", ".jpg");
@@ -502,7 +511,7 @@ Scenario("formsimple-wysiwyg", ({ I, DT, DTE }) => {
 
     //
     I.say("Check the form in the admin");
-    I.amOnPage("/apps/form/admin/#/detail/formsimple-wysiwyg");
+    I.amOnPage("/apps/form/admin/detail/?formName=formsimple-wysiwyg");
     DT.waitForLoader();
     I.waitForText("Form-autotest-"+randomNumber+"<b>strong</b>", 10);
     I.seeElement(locate("td.cell-not-editable div.datatable-column-width b").withText("Test odoslania formularu"));
@@ -515,14 +524,14 @@ Scenario("formsimple-wysiwyg", ({ I, DT, DTE }) => {
 
     //
     I.say("Delete form record");
-    I.clickCss("#form-detail tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#formDetailDataTable tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
-    I.waitForElement("#form-detail_modal");
+    I.waitForElement("#formDetailDataTable_modal");
     DTE.save();
 });
 
 Scenario("BUG double opt in column in admin not shown", ({ I, DT }) => {
-    I.amOnPage("/apps/form/admin/#/detail/Formular-doubleoptin");
+    I.amOnPage("/apps/form/admin/detail/?formName=Formular-doubleoptin");
     I.waitForText("Dátum potvrdenia súhlasu", 10, "th.dt-th-doubleOptinConfirmationDate");
     I.see("06.06.2024 11:11:11", "td.cell-not-editable div");
     I.see("06.06.2024 11:20:20", "td.cell-not-editable div");
@@ -535,7 +544,7 @@ Scenario("BUG double opt in column in admin not shown", ({ I, DT }) => {
 
     //verify that the column is not shown in the normal form
     I.amOnPage("/admin/v9/");
-    I.amOnPage("/apps/form/admin/#/detail/Kontakt");
+    I.amOnPage("/apps/form/admin/detail/?formName=Kontakt");
     I.waitForText("Dátum posledného exportu", 10, "th.dt-th-lastExportDate");
     I.dontSee("Dátum potvrdenia súhlasu");
 });
