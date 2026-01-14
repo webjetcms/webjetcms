@@ -26,7 +26,10 @@
             container: 'body > article > div.container',
             formName: /*[[${formName}]]*/ "",
             stepId: /*[[${stepId}]]*/ "",
-            csrf: /*[[${csrf}]]*/ ""
+            csrf: /*[[${csrf}]]*/ "",
+            // Localized messages passed from server
+            successMessage: /*[[#{multistep_form.form_save_succ}]]*/ "",
+            errorMessage: /*[[#{multistep_form.step_saving_err}]]*/ ""
         }
     ).start();
 </script>

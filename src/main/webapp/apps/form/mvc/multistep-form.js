@@ -25,6 +25,10 @@ export class MultistepForm {
         this.stepId = options.stepId || '';
         this.csrf = options.csrf || '';
 
+        // Localized messages provided by the page (preferred), with safe fallbacks
+        this.successMessage = options.successMessage || 'Operation completed successfully.';
+        this.errorMessage = options.errorMessage || 'An error occurred while saving the step.';
+
         console.log('MultistepForm initialized with options: ', options);
 
         this._renderShell();
@@ -50,7 +54,8 @@ export class MultistepForm {
         success.className = 'alert alert-success';
         success.style.display = 'none';
         const succP = document.createElement('p');
-        succP.setAttribute('data-th-text', '#{multistep_form.form_save_succ}');
+        // Use provided localized success message
+        succP.textContent = this.successMessage;
         success.appendChild(succP);
 
         // error alert
@@ -58,7 +63,8 @@ export class MultistepForm {
         danger.className = 'alert alert-danger';
         danger.style.display = 'none';
         const errP = document.createElement('p');
-        errP.setAttribute('data-th-text', '#{multistep_form.step_saving_err}');
+        // Use provided localized error message
+        errP.textContent = this.errorMessage;
         const errUl = document.createElement('ul');
         errUl.style.margin = '0px';
         danger.appendChild(errP);
@@ -206,7 +212,7 @@ export class MultistepForm {
      * @returns {Promise<void>} Resolves after the UI is updated.
      */
     async showGlobalSuccess(message) {
-        const successMsg = message || 'Operation completed successfully.';
+        const successMsg = message || this.successMessage;
         const success = this.wrapper.querySelector('div.alert.alert-success');
         if (!success) return;
         success.style.display = '';
@@ -221,10 +227,12 @@ export class MultistepForm {
      * @returns {Promise<void>} Resolves after the UI is updated.
      */
     async showGlobalErr(response) {
-        const errorMsg = response.err_msg || 'Unknown error occurred.';
+        const errorMsg = response.err_msg || this.errorMessage;
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
         if (!danger) return;
         danger.style.display = '';
+        const p = danger.querySelector('p');
+        if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
     }
@@ -287,7 +295,7 @@ export class MultistepForm {
             if (stepId === -1 || stepId === '-1') {
                 const holder = this.wrapper.querySelector('#multistepStepContent');
                 if (holder) holder.remove();
-                await this.showGlobalSuccess('#{multistep_form.form_save_succ.js}' || null);
+                await this.showGlobalSuccess();
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';
