@@ -10,7 +10,7 @@
 
     window.openFormHtml = function (formName) {
         if(formName == undefined || formName == null) return;
-        window.location.href="/apps/form/admin/detail/?formName="+ formName;
+        window.location.href="/apps/form/admin/archived-detail/?formName="+ formName;
     }
 
     let filteredColumns = columns.filter(col => columnsToKeep.includes(col.data));

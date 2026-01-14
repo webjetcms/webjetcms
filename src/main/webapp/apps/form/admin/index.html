@@ -8,7 +8,7 @@
         { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
         { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
         { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
-        { id: 'settings-deprecated', title: /*[[#{deprecated}]]*/ '', selected: false },
+        { id: 'settings-deprecated', title: /*[[#{editor.form_setting.deprecated_tab}]]*/ '', selected: false },
     ];
 </script>
 
@@ -68,6 +68,9 @@
         // !! hide form steps tab link !! - show only in form detail view
         $("a.nav-link[href='/apps/form/admin/form-content/']").hide();
 
+        var order = [];
+        order.push([4, 'desc']);
+
         function initformsDataTable() {
             formsDataTable = WJ.DataTable({
                 url:  url,
@@ -75,14 +78,13 @@
                 id: 'formsDataTable',
                 serverSide: false,
                 tabs: tabs,
-                //
+                order: order,
                 idAutoOpener: true,
                 lastExportColumnName: 'lastExportDate',
                 byIdExportColumnName: 'id',
                 fetchOnEdit: true
             });
-            formsDataTable.hideButton('celledit');
-            formsDataTable.hideButton('import');
+            formsDataTable.hideButtons(['celledit', 'duplicate', 'import']);
 
             formsDataTable.button().add(4, {
                 extends: 'remove',
@@ -103,6 +105,19 @@
 
             formsDataTable.EDITOR.on('open', function (e, type, action) {
                 initEditor();
+
+                console.log("Action:", action);
+
+                if("create" === action) {
+                    formsDataTable.EDITOR.field("formName").enable();
+                    formsDataTable.EDITOR.field("count").hide();
+                    formsDataTable.EDITOR.field("createDate").hide();
+                    $(".DTE_Action_Create").find(".modal-title").text("[[#{editor.form_setting.add_multistep_form}]]");
+                } else {
+                    formsDataTable.EDITOR.field("formName").disable();
+                    formsDataTable.EDITOR.field("count").show();
+                    formsDataTable.EDITOR.field("createDate").show();
+                }
 
                 //Check if its multi step form
                 handleDeprecatedTab(formsDataTable.EDITOR, action);
