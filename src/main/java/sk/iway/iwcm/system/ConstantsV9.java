@@ -195,6 +195,10 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_sizes", "btn-lg,btn-sm", Constants.MOD_EDITOR, "CSS trieda pre veľkosť tlačidla.");
 		Constants.setString("ckeditor_button_types", "btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark", Constants.MOD_EDITOR, "CSS trieda pre farbu/typ tlačidla.");
 		Constants.setString("ckeditor_button_textHiddenClass", "visually-hidden", Constants.MOD_EDITOR, "CSS trieda pre schovanie textu tlačidla - zobrazí sa iba ikona.");
+		Constants.setString("ckeditor_button_allowedClasses", "", Constants.MOD_EDITOR, "Zoznam povolených CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota povolí všetky CSS triedy.");
+		Constants.setString("ckeditor_button_deniedClasses", "", Constants.MOD_EDITOR, "Zoznam zakázaných CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota nezakáže žiadne CSS triedy.");
+		Constants.setString("ckeditor_button_attrs", "data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label", Constants.MOD_EDITOR, "Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou.");
+
 	}
 
 	/**
