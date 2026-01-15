@@ -50,18 +50,6 @@ module.exports = {
     },
 
     /**
-     * Prihlási sa do TempMailu a zobrazí e-maily, nepouzije sa funkcia I.amOnPage.
-     * @param {string} name - Názov e-mailového účtu.
-     * @param {string} [emailDomain="fexpost.com"] - Doména e-mailového účtu, predvolene "fexpost.com".
-     */
-    async loginAsync(name, emailDomain = "fexpost.com"){
-        var provider = this.getTempmailProvider();
-        if (provider) {
-            return provider.loginAsync(name, emailDomain);
-        }
-    },
-
-    /**
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */

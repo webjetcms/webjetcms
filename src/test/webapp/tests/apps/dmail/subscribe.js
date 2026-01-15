@@ -33,7 +33,7 @@ Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     I.clickCss("input[name=bSubmit]");
 
     I.say("Checking confirmation email");
-    await TempMail.loginAsync("webjetcmsdmail");
+    await TempMail.login("webjetcmsdmail");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.see(userName);
@@ -82,7 +82,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     I.assertEqual(lineColor, "rgb(255, 75, 88)");
 
     I.say("Checking confirmation email");
-    await TempMail.loginAsync("webjetcmsdmailsimple");
+    await TempMail.login("webjetcmsdmailsimple");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.wait(2);

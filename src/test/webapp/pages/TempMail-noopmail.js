@@ -46,15 +46,6 @@ module.exports = {
     },
 
     /**
-     * Prihlási sa do TempMailu a zobrazí e-maily, nepouzije sa funkcia I.amOnPage.
-     * @param {string} name - Názov e-mailového účtu.
-     * @param {string} [emailDomain="noopmail.com"] - Doména e-mailového účtu, predvolene "noopmail.com".
-     */
-    async loginAsync(name, emailDomain = "noopmail.com"){
-        await this.login(name, emailDomain);
-    },
-
-    /**
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */
