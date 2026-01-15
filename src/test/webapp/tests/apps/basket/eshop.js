@@ -21,7 +21,7 @@ Scenario('Set config value to default', ({ Document }) => {
     Document.setConfigValue("basketInvoiceSupportedCountries", ".sk,.cz,.pl");
 });
 
-Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async ({ I, Document }) => {
+Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async ({ I, Document, TempMail }) => {
     const testerName = "autotest-noPay-" + randomNumber;
     const deliveryMethodTitle = "Štandardná pošta: 6,15 €"; //JSP title with info
     const paymentMethodTitle = "GoPay: 0,43 €"; //JSP title with info
@@ -37,7 +37,7 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
 
     //
     I.say("Filling out order details and selecting GoPay");
-    SL.fillDeliveryForm(I, testerName, deliveryMethodTitle, paymentMethodTitle);
+    SL.fillDeliveryForm(I, TempMail, testerName, deliveryMethodTitle, paymentMethodTitle);
     I.click(locate("input").withAttr({ name: "bSubmit" }));
     I.waitForText("Objednávka úspešne odoslaná", 20);
     I.see("Dakujeme za platbu GoPay-om");
@@ -57,7 +57,7 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.waitForElement(locate("h1").withText("Objednávky"), 10);
     seeInTable(I, 1, "15.19", "Nová (nezaplatená)");
     I.click(locate("tr").at(2));
-    verifyInvoice(I, testerName, SL.DeliveryMethods.byMailDelivery, SL.PaymentMethods.GoPay, "15.19");
+    verifyInvoice(I, TempMail, testerName, SL.DeliveryMethods.byMailDelivery, SL.PaymentMethods.GoPay, "15.19");
 
     //
     I.say("Check pdf invoice");
@@ -94,7 +94,7 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.waitForText("Platba prebehla úspešne.", 30);
 });
 
-Scenario("GoPay test", async ({ I, DT, DTE }) => {
+Scenario("GoPay test", async ({ I, DT, DTE, TempMail }) => {
   const testerName = "autotest-goPay-" + randomNumber;
 
   //
@@ -106,7 +106,7 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
 
   //
   I.say("Filling out order details and selecting GoPay");
-  SL.fillDeliveryForm(I, testerName, null, SL.PaymentMethods.GoPay);
+  SL.fillDeliveryForm(I, TempMail, testerName, null, SL.PaymentMethods.GoPay);
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
   I.see("Dakujeme za platbu GoPay-om");
@@ -179,12 +179,12 @@ Scenario("Test Orders for Logged-in and Unauthenticated User", async ({ I }) => 
   }
 );
 
-Scenario("Cash on delivery", async ({ I }) => {
+Scenario("Cash on delivery", async ({ I, TempMail }) => {
   I.amOnPage(SL.PRODUCTS);
   SL.addToBasket(I, "Ponožky");
   SL.openBasket(I);
   I.clickCss("#orderButton > a");
-  SL.fillDeliveryForm(I, "autotest-cash-" + randomNumber, null, SL.PaymentMethods.cashOnDelivery);
+  SL.fillDeliveryForm(I, TempMail, "autotest-cash-" + randomNumber, null, SL.PaymentMethods.cashOnDelivery);
 
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
@@ -192,12 +192,12 @@ Scenario("Cash on delivery", async ({ I }) => {
   I.dontSeeElement(locate("button.btn-primary").withText("Zaplatiť"));
 });
 
-Scenario("Bank transfer", async ({ I }) => {
+Scenario("Bank transfer", async ({ I, TempMail }) => {
   I.amOnPage(SL.PRODUCTS);
   SL.addToBasket(I, "Ponožky");
   SL.openBasket(I);
   I.clickCss("#orderButton > a");
-  SL.fillDeliveryForm(I, "autotest-transfer-" + randomNumber, null, "Prevod");
+  SL.fillDeliveryForm(I, TempMail, "autotest-transfer-" + randomNumber, null, "Prevod");
 
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
@@ -391,7 +391,7 @@ function openPayments(I, DT, DTE, testerName) {
   I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
 }
 
-function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, price) {
+function verifyInvoice(I, TempMail, testerName, deliveryMethodName, paymentMethodName, price) {
   const date = getCurrentDate();
   I.switchTo("#dataDiv");
   I.see("Potvrdenie objednávky", "td.invoiceHeader.alignRight");
@@ -404,7 +404,7 @@ function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, pri
   I.see("82105", "table.invoiceInnerTable");
   I.see(SL.Countries.sk, "table.invoiceInnerTable");
   I.see(deliveryMethodName);
-  I.see("webjetbasket@fexpost.com", "table.invoiceInnerTable");
+  I.see("webjetbasket"+TempMail.getTempMailDomain(), "table.invoiceInnerTable");
   I.see("0912345678", "table.invoiceInnerTable");
   I.see(paymentMethodName, ".invoiceDetailTable");
   I.see("Toto je poznamka k objednavke", 'td[colspan="2"]');

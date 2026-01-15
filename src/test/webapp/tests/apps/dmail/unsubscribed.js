@@ -63,8 +63,8 @@ async function handleTempMailSubmission(I, TempMail, email) {
 
 Scenario("Unsubscibed emails", async ({I, DT, DTE, Document, TempMail}) => {
     var random = I.getRandomText();
-    var email1 = "autotest-demo-"+random+"@fexpost.com";
-    var email2 = "autotest-test23-"+random+"@fexpost.com";
+    var email1 = "autotest-demo-"+random+TempMail.getTempMailDomain();
+    var email2 = "autotest-test23-"+random+TempMail.getTempMailDomain();
 
     await unsubscribeEmail(I, TempMail, "/newsletter/odhlasenie-z-newsletra.html", email1);
     I.amOnPage("/apps/dmail/admin/unsubscribed/");

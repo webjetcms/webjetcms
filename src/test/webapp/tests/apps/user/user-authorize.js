@@ -1,13 +1,13 @@
 Feature('apps.user.user-authorize');
 
 var randomText = null;
-var tempMailAddress = "webjetcms@fexpost.com";
+var tempMailAddress = null;
 let userName = "autotestApproveUser_";
 let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-Before(({ I }) => {
+Before(({ I, TempMail }) => {
     if (randomText == null) {
         randomText = I.getRandomTextShort();
 
@@ -16,6 +16,8 @@ Before(({ I }) => {
         lastName += randomText;
 
         password = "Pas!23"+randomText;
+
+        if (tempMailAddress==null) tempMailAddress = "webjetcms"+TempMail.getTempMailDomain();
     }
 });
 

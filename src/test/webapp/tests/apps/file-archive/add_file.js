@@ -141,7 +141,7 @@ Scenario('Add new file in the future and validate', async ({ I, DT, DTE, TempMai
     // 1. Pridanie nového súboru do archívu
     I.say("Phase1 - Adding new file to archive");
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(60), "webjetarchive@fexpost.com");
+    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(60), "webjetarchive"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
 
     // 2. Over že v tabuľke bude ako červený

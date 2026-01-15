@@ -125,7 +125,7 @@ Scenario('Remove all items from basket', async ({ I }) => {
     }
 });
 
-Scenario('Create and submit order', async ({ I, DT }) => {
+Scenario('Create and submit order', async ({ I, DT, TempMail }) => {
     I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
 
@@ -137,7 +137,7 @@ Scenario('Create and submit order', async ({ I, DT }) => {
     I.say('Opening basket and filling in delivery details');
     SL.openBasket(I);
     I.clickCss('#orderButton > a');
-    SL.fillDeliveryForm(I, testerName);
+    SL.fillDeliveryForm(I, TempMail, testerName);
 
     I.say('Selecting random delivery method');
     const deliveryMethodOptions = await I.grabTextFromAll('select[name="deliveryMethod"] option');

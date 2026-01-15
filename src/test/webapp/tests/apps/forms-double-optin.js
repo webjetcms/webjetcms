@@ -4,13 +4,14 @@ var username = 'name-autotest-' ;
 var text = 'Dobry den, toto je skusobny text';
 var randomNumber;
 var date;
+var email;
 
-Before(({ I }) => {
+Before(({ I, TempMail }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomTextShort();
         username += randomNumber;
         text += "-"+randomNumber;
-        email = username + '@fexpost.com';
+        email = username + TempMail.getTempMailDomain();
         date = I.formatDate(new Date().getTime());
     }
 });

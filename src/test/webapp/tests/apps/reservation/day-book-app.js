@@ -250,7 +250,7 @@ Scenario('Check emails - need approve', async ({ I, DT, DTE, TempMail }) => {
         I.fillField('#name', authorName);
         I.fillField('#phoneNumber', '0912345678');
         I.fillField('#purpose', 'Rekreácia');
-        I.fillField("#email", "webjetcustomer@fexpost.com");
+        I.fillField("#email", "webjetcustomer"+TempMail.getTempMailDomain());
 
         submitReservation(I, true);
 
@@ -307,7 +307,7 @@ Scenario('Check emails - DONT need approve', async ({ I, DT, DTE, TempMail }) =>
         I.fillField('#name', authorName);
         I.fillField('#phoneNumber', '0912345678');
         I.fillField('#purpose', 'Rekreácia');
-        I.fillField("#email", "webjetcustomer@fexpost.com");
+        I.fillField("#email", "webjetcustomer"+TempMail.getTempMailDomain());
 
         submitReservation(I, false);
 

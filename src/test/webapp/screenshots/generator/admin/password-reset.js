@@ -2,26 +2,26 @@ Feature('password-recovery');
 
 var basePath = "/redactor/admin/password-recovery/"
 
-Scenario('admin-password-recovery', ({ I, Document, TempMail }) => {
+Scenario('admin-password-recovery', async ({ I, Document, TempMail }) => {
     I.logout();
-    doScreens(I, Document, TempMail, true);
+    await doScreens(I, Document, TempMail, true);
 });
 
 Scenario('delete cache objects to prevent logon form wrong password counting, 4 @singlethread', ({ I, Document }) => {
     Document.deleteAllCacheObjects();
 });
 
-Scenario('user-password-recovery', ({ I, Document, TempMail }) => {
+Scenario('user-password-recovery', async ({ I, Document, TempMail }) => {
     I.wait(11);
-    doScreens(I, Document, TempMail, false);
+    await doScreens(I, Document, TempMail, false);
 });
 
 Scenario('password-recovery remove emails', async ({ TempMail }) => {
-    TempMail.login("sameMail");
+    await TempMail.login("sameMail");
     await TempMail.destroyInbox();
 });
 
-function doScreens(I, Document, TempMail, isAdmin) {
+async function doScreens(I, Document, TempMail, isAdmin) {
 
     let screensPrefix;
     let lostPasswordBtn;
@@ -68,7 +68,7 @@ function doScreens(I, Document, TempMail, isAdmin) {
     Document.screenshot(basePath + screensPrefix + "-recovery-page.png", 1080, 685);
     Document.screenshotElement("#register-submit-btn", basePath + screensPrefix + "-send-btn.png");
 
-    I.fillField('input[name="loginName"]', "sameMail@fexpost.com");
+    I.fillField('input[name="loginName"]', "sameMail"+TempMail.getTempMailDomain());
     I.clickCss('button#register-submit-btn');
 
     switch (confLng) {
@@ -81,7 +81,7 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     Document.screenshot(basePath + screensPrefix + "-recovery-page-notif.png", 1080, 685);
 
-    TempMail.login("sameMail");
+    await TempMail.login("sameMail");
     TempMail.openLatestEmail();
 
     Document.screenshotElement("#info", basePath + "email.png");
@@ -150,7 +150,7 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     I.clickCss(lostPasswordBtn);
     I.waitForVisible("#sendPasswd");
-    I.fillField('input[name="loginName"]', "sameMail@fexpost.com");
+    I.fillField('input[name="loginName"]', "sameMail"+TempMail.getTempMailDomain());
     I.clickCss('button#register-submit-btn');
 
     switch (confLng) {
@@ -163,7 +163,7 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     I.closeCurrentTab();
 
-    TempMail.login("sameMail");
+    await TempMail.login("sameMail");
     TempMail.openLatestEmail();
 
     switch (confLng) {

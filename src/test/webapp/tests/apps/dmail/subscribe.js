@@ -19,7 +19,7 @@ Scenario('Delete users', async ({ I, DT, TempMail }) => {
 Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     const userName = `autotest-name-${randomNumber}`;
     const userSurname = `autotest-surname-${randomNumber}`;
-    const userEmail = "webjetcmsdmail@fexpost.com";
+    const userEmail = "webjetcmsdmail"+TempMail.getTempMailDomain();
 
     I.say("Disabling CAPTCHA for testing");
     Document.setConfigValue("captchaComponents", "send_link");
@@ -61,7 +61,7 @@ Scenario('Revert - dmail', async ({ I, Document, DT}) => {
 });
 
 Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
-    const userEmail = "webjetcmsdmailsimple@fexpost.com";
+    const userEmail = "webjetcmsdmailsimple"+TempMail.getTempMailDomain();
 
     I.say("Navigating to simple newsletter registration page");
     I.amOnPage("/newsletter/registracia-do-newslettera-simple.html");
@@ -95,7 +95,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     I.say("Verifying user in subscribers");
     I.closeOtherTabs();
     openSubscribers(I, DT, DTE);
-    DT.checkTableRow("datatableFieldDTE_Field_usersList_wrapper", 1, ["", "", "webjetcmsdmailsimple", "@fexpost.com", "webjetcmsdmailsimple@fexpost.com"]);
+    DT.checkTableRow("datatableFieldDTE_Field_usersList_wrapper", 1, ["", "", "webjetcmsdmailsimple", TempMail.getTempMailDomain(), "webjetcmsdmailsimple"+TempMail.getTempMailDomain()]);
 });
 
 Scenario('Revert - dmail simple', async ({ I, DT}) => {

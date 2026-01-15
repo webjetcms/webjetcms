@@ -71,7 +71,7 @@ Scenario('forgotten password - administration - VIA login @singlethread', async 
 });
 
 const emailName = 'samemail';
-const email = `${emailName}@fexpost.com`;
+const email = emailName+TempMail.getTempMailDomain();
 const users = ['sameA','sameB', 'sameC', 'sameD'];
 
 Scenario('forgotten password - administration - VIA email @singlethread', async ({ I, Document, TempMail, DT}) => {
@@ -126,7 +126,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 2 
 
 Scenario('IF un-used email address by users is used, the email will not be sent @singlethread', async ({ I, TempMail }) => {
   const invalidEmailName = 'invalidwebjetcms';
-  const invalidEmail = `${invalidEmailName}@fexpost.com`;
+  const invalidEmail = invalidEmailName+TempMail.getTempMailDomain();
   I.logout();
   setValueToRecoverPassword(I, invalidEmail);
 
@@ -143,7 +143,7 @@ Scenario('IF un-used email address by users is used, the email will not be sent 
 Scenario('Make users not-valid for password reset @singlethread', async ({I, DT, DTE }) => {
   I.relogin('admin');
   I.amOnPage('/admin/v9/users/user-list/');
-  DT.filterContains("email", "samemail@fexpost.com");
+  DT.filterContains("email", "samemail"+TempMail.getTempMailDomain());
 
   I.say("user sameA - will be un-approved");
   I.click("sameA");
@@ -222,10 +222,10 @@ Scenario('forgotten password - administration - invalid users option test - VIA 
   checkUrlDoesNotWork(I, changePasswordUrl, true);
 });
 
-Scenario('Restoration of changes, approval of users @singlethread', async ({ I , DT, DTE}) => {
+Scenario('Restoration of changes, approval of users @singlethread', async ({ I , DT, DTE, TempMail }) => {
   I.relogin('admin');
   I.amOnPage('/admin/v9/users/user-list/');
-  DT.filterContains("email", "samemail@fexpost.com");
+  DT.filterContains("email", "samemail"+TempMail.getTempMailDomain());
 
   I.say("user sameA");
   I.click("sameA");

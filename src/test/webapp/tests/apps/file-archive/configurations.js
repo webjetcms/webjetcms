@@ -72,7 +72,7 @@ Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Doc
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2@fexpost.com");
+    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
     I.wait(30);
 

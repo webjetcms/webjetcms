@@ -53,14 +53,14 @@ module.exports = {
         I.wait(0.2);
     },
 
-    fillDeliveryForm(I, testerName, deliveryMethodName = null, paymentMethodName = null) {
+    fillDeliveryForm(I, TempMail, testerName, deliveryMethodName = null, paymentMethodName = null) {
         I.say("Filling delivery form");
         I.clickCss(".accordion-button[aria-controls=orderFormDeliveryInfo]");
         I.clickCss(".accordion-button[aria-controls=orderFormCompany]");
         I.fillField('#contactFirstNameId', testerName);
         I.fillField('#contactLastNameId', 'Playwright');
         I.clearField('#contactEmailId');
-        I.fillField('#contactEmailId', 'webjetbasket@fexpost.com');
+        I.fillField('#contactEmailId', 'webjetbasket'+TempMail.getTempMailDomain());
         I.fillField('#contactStreetId', "Mlynské Nivy 71");
         I.fillField("#contactCompanyId", "InterWay, a. s.");
         I.fillField("#contactPhoneId", "0912345678")
