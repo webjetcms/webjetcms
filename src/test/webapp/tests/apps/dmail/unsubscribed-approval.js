@@ -40,7 +40,7 @@ Scenario('Preparation - create random subscribers', async ({ I, DT, DTE, TempMai
 
     //wait for email from campaign to be sent
     I.wait(5);
-    TempMail.login(randomName_1);
+    await TempMail.login(randomName_1);
     TempMail.openLatestEmail();
     I.waitForText("testOfUnsucribed", 10, 'div.subject');
     await TempMail.destroyInbox(randomName_1);
@@ -86,7 +86,7 @@ Scenario('Email - unsubscribe without confirmation', async ({ I, Document, TempM
     I.closeOtherTabs();
     I.switchTo();
 
-    TempMail.login(randomName_3);
+    await TempMail.login(randomName_3);
     TempMail.openLatestEmail();
 
     I.click(locate('#info a').withText('odhlásenie'));
@@ -108,7 +108,7 @@ Scenario('Preparation - set confirmation to true', async ({ I, Apps, DTE }) => {
 
 Scenario('Email - unsubscribe with confirmation', async ({ I, Document, TempMail }) => {
     I.logout();
-    TempMail.login(randomName_4);
+    await TempMail.login(randomName_4);
     TempMail.openLatestEmail();
     I.click(locate('#info a').withText('odhlásenie'));
     await Document.waitForTab();
@@ -171,7 +171,7 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
 });
 
 async function handleTempMailSubmission(I, TempMail, login) {
-    TempMail.login(login);
+    await TempMail.login(login);
     TempMail.openLatestEmail();
     I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
     const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');

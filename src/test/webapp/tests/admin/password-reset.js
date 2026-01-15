@@ -131,7 +131,7 @@ Scenario('IF un-used email address by users is used, the email will not be sent 
   setValueToRecoverPassword(I, invalidEmail);
 
   I.say('Otvorenie e-mailu pre zmenu hesla');
-  TempMail.login(invalidEmailName);
+  await TempMail.login(invalidEmailName);
   if (!await TempMail.isInboxEmpty()){
     TempMail.openLatestEmail();
     I.dontSeeElement(locate('a').withText('Ak si chcete zmeniť heslo, kliknite sem do 30 minút.'));
@@ -199,7 +199,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 3 
 
 
 Scenario('forgotten password - administration - invalid users option test - VIA email @singlethread', async ({I, Document, TempMail }) => {
-  TempMail.login(emailName);
+  await TempMail.login(emailName);
   await TempMail.destroyInbox();
   I.logout();
   I.amOnPage("/admin/logon/");
@@ -260,7 +260,7 @@ Scenario('Verification of password reset completion and audit log removal @singl
 
   const lastId  = await checkAudit(I, DT);
 
-  TempMail.login(emailName);
+  await TempMail.login(emailName);
   TempMail.openLatestEmail();
 
   await cancelChangePassword(I, Document);
@@ -308,7 +308,7 @@ async function checkAudit(I, DT, lastId = null){
 
 async function changePasswordEmail(I, Document, TempMail, emailName, closeAndDestroy = true) {
   I.say('Opening the email for password reset');
-  TempMail.login(emailName);
+  await TempMail.login(emailName);
   TempMail.openLatestEmail();
   let openTabs = await I.grabNumberOfOpenTabs();
   I.click(locate('a').withText('Ak si chcete zmeniť heslo, kliknite sem do 30 minút.'));

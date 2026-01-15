@@ -76,7 +76,7 @@ Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Doc
     DTE.save('fileArchiveDataTable');
     I.wait(30);
 
-    TempMail.login("webjetarchive2");
+    await TempMail.login("webjetarchive2");
     TempMail.openLatestEmail();
     I.see(`<${email}>`, ".text-muted");
 });

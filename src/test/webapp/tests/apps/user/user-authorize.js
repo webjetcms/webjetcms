@@ -52,7 +52,7 @@ const RegistrationType = {
 /********  CASE A   ******/
 Scenario('Instant approval @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -83,7 +83,7 @@ Scenario('Instant approval @singlethread', async ({ I, DT, DTE, TempMail }) => {
 /********  CASE B   ******/
 Scenario('Email auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -126,7 +126,7 @@ Scenario('Email auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
 /********  CASE C   ******/
 Scenario('Admin auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -182,7 +182,7 @@ Scenario('remove all old fexpost users @singlethread', async ({ I, DT, DTE }) =>
 });
 
 Scenario('remove all old fexpost emails @singlethread', async ({ I, DT, TempMail }) => {
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
 });
 
@@ -219,7 +219,7 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
     DTE.save();
 
     //Open email - !! beware, can be false, depend is we call it already
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.openLatestEmail();
     I.see("Redaktori");
     I.see("Dobrý deň,");
@@ -228,7 +228,7 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
 });
 
 Scenario('Remove left over emails @singlethread', async ({ TempMail }) => {
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
 });
 
@@ -345,7 +345,7 @@ function register(I, isEmailUsed, registrationType) {
 async function checkVerifyEmail(I, TempMail, registrationType, phase=null) {
 
     //Open email
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.openLatestEmail();
 
     if(registrationType == RegistrationType.One) {

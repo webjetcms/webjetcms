@@ -8,7 +8,7 @@ Before(({ login }) => {
 
 Scenario("Clean fexpost mailbox", async ({ I, TempMail }) => {
     I.say("Cleaning fexpost mailbox");
-    TempMail.login("webjetarchive");
+    await TempMail.login("webjetarchive");
     await TempMail.destroyInbox();
     I.say("Mailbox cleaned");
 });
@@ -176,7 +176,7 @@ Scenario('Add new file in the future and validate', async ({ I, DT, DTE, TempMai
 
     // 6. Overenie v emaili
     I.say("Phase6 - Verification in email")
-    TempMail.login("webjetarchive");
+    await TempMail.login("webjetarchive");
     TempMail.openLatestEmail();
 
     I.say("Check mail content");

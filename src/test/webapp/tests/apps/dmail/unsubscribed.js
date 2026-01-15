@@ -52,7 +52,7 @@ function deleteUnsubscribed(I, DT, DTE, email) {
 }
 
 async function handleTempMailSubmission(I, TempMail, email) {
-    TempMail.login(email);
+    await TempMail.login(email);
     TempMail.openLatestEmail();
     I.waitForElement('#info > div > p > a[href*=".html"]', 10);
     const url = await I.grabAttributeFrom('#info > div > p > a[href*=".html"]', 'href');
