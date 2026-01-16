@@ -19,6 +19,8 @@ module.exports = {
      * UPDATE users SET email = REPLACE(email, '@noopmail.com', '@tempverify.com') WHERE email LIKE '%@noopmail.com';
      * UPDATE users SET email = REPLACE(email, '@tempverify.com', '@noopmail.com') WHERE email LIKE '%@tempverify.com';
      *
+     * UPDATE form_attributes SET value = REPLACE(value, '@fexpost.com', '@noopmail.com') WHERE value LIKE '%@fexpost.com';
+     *
      * @returns TempMail provider implementation
      */
     getTempmailProvider() {

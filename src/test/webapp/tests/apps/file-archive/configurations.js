@@ -78,7 +78,7 @@ Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Doc
 
     await TempMail.login("webjetarchive2");
     TempMail.openLatestEmail();
-    I.see(`<${email}>`, ".text-muted");
+    I.see(`<${email}>`);
 });
 
 Scenario('Set variable and Cronjob fileArchivFromMail to default', async ({ I, Document }) => {

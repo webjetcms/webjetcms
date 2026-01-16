@@ -1,6 +1,6 @@
 Feature('apps.forms-double-optin');
 
-var username = 'name-autotest-' ;
+var username = 'name.autotest.' ;
 var text = 'Dobry den, toto je skusobny text';
 var randomNumber;
 var date;
