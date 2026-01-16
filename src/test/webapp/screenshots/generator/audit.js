@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario("audit - screenshots", ({ I, DT, DTE, Document }) => {
+Scenario("audit - screenshots", async ({ I, DT, DTE, Document, TempMail }) => {
     I.amOnPage("/admin/v9/apps/audit-search/");
     Document.screenshot("/sysadmin/audit/audit-search.png");
     I.wait(1);
@@ -27,7 +27,7 @@ Scenario("audit - screenshots", ({ I, DT, DTE, Document }) => {
     const auditEvent = `UPDATE:
 id: ${docId}
 date_created: `;
-    const email = 'auditnotifi@fexpost.com';
+    const email = 'auditnotifi'+TempMail.getTempMailDomain();
     DTE.selectOption('adminlogType', 'SAVEDOC');
     DTE.fillField("text", auditEvent);
     DTE.fillField("email", email);

@@ -250,11 +250,11 @@ Scenario('Check emails - need approve', async ({ I, DT, DTE, TempMail }) => {
         I.fillField('#name', authorName);
         I.fillField('#phoneNumber', '0912345678');
         I.fillField('#purpose', 'Rekreácia');
-        I.fillField("#email", "webjetcustomer@fexpost.com");
+        I.fillField("#email", "webjetcustomer"+TempMail.getTempMailDomain());
 
         submitReservation(I, true);
 
-    TempMail.login("webjetcustomer");
+    await TempMail.login("webjetcustomer");
     TempMail.openLatestEmail();
 
     I.see("Vytvorenie rezervácie");
@@ -270,7 +270,7 @@ Scenario('Check emails - need approve', async ({ I, DT, DTE, TempMail }) => {
     I.clickCss("button.buttons-select-all");
     SL.changeReservationStatus(I, DT, DTE, '.btn-danger.reject', 'Zamietnuť rezerváciu', 'Ste si istý, že chcete zamietnuť túto rezerváciu ?', 'Zamietnutá');
 
-    TempMail.login("webjetcustomer");
+    await TempMail.login("webjetcustomer");
     TempMail.openLatestEmail();
     I.see("Zamietnutie rezervácie");
     I.see(`Dobrý deň ${authorName} Playwright2`);
@@ -307,12 +307,12 @@ Scenario('Check emails - DONT need approve', async ({ I, DT, DTE, TempMail }) =>
         I.fillField('#name', authorName);
         I.fillField('#phoneNumber', '0912345678');
         I.fillField('#purpose', 'Rekreácia');
-        I.fillField("#email", "webjetcustomer@fexpost.com");
+        I.fillField("#email", "webjetcustomer"+TempMail.getTempMailDomain());
 
         submitReservation(I, false);
 
     I.say("Terst mail");
-    TempMail.login("webjetcustomer");
+    await TempMail.login("webjetcustomer");
     TempMail.openLatestEmail();
 
     I.see("Vytvorenie rezervácie");
@@ -323,7 +323,7 @@ Scenario('Check emails - DONT need approve', async ({ I, DT, DTE, TempMail }) =>
 });
 
 Scenario('Revert', async ({ I }) => {
-    TempMail.login("webjetcustomer");
+    await TempMail.login("webjetcustomer");
     await TempMail.destroyInbox();
 });
 

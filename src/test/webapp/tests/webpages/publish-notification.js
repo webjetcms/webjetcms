@@ -55,7 +55,7 @@ Scenario('Publicable notification test + audit logs', async ({ I, DT, DTE, TempM
     let currentUrl = await I.grabCurrentUrl();
 
     I.say("Check send mail");
-    TempMail.login('webjetcmsNotif');
+    await TempMail.login('webjetcmsNotif');
     TempMail.openLatestEmail();
     I.see("Publikovaná stránka");
     I.see("Vaša stránka test_publish_notification (ID: 104831) bola práve publikovaná, podľa nastaveného termínu na " + date.format(format) + ". Pre zobrazenie stránky kliknite na nasledujúci odkaz:");
