@@ -27,11 +27,9 @@ module.exports = {
         var provider = process.env.CODECEPT_TEMPMAIL_PROVIDER;
         if (provider === "fexpost") {
             return fexPost;
-        }
-        else if (provider === "mailsac") {
+        } else if (provider === "mailsac") {
             return mailSac;
-        }
-        else if (provider === "noopmail") {
+        } else if (provider === "noopmail") {
             return noopmail;
         } else if (provider === "verify32") {
             return verify32;

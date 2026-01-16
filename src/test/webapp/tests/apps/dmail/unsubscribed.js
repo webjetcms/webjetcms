@@ -63,7 +63,8 @@ async function handleTempMailSubmission(I, TempMail, email) {
 
 Scenario("Unsubscibed emails", async ({I, DT, DTE, Document, TempMail}) => {
     var random = I.getRandomTextShort();
-    //replace - with . to avoid issues with some email providers
+    // Replace '-' with '.' because some temporary email providers
+    // do not accept local-parts containing hyphens; this ensures generated test addresses are valid.
     random = random.replace(/-/g, '.');
     var email1 = "autotest.demo."+random+TempMail.getTempMailDomain();
     var email2 = "autotest.test23."+random+TempMail.getTempMailDomain();

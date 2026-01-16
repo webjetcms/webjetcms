@@ -123,8 +123,12 @@ module.exports = {
         this._waitForRefresh();
         let numberOfEmails = await I.grabNumberOfVisibleElements("div.messages > div");
         I.say(`Nájdených e-mailov: ${numberOfEmails}`);
+        // Failsafe to prevent an infinite loop if the inbox view does not refresh correctly.
+        // 10 iterations is sufficient for typical test inbox sizes; when exceeded, the loop stops
+        // even if some emails remain, so that the test does not hang indefinitely.
+        const MAX_DELETE_ITERATIONS = 10;
         let failsafe = 0;
-        while(numberOfEmails > 0 && failsafe++ < 10) {
+        while(numberOfEmails > 0 && failsafe++ < MAX_DELETE_ITERATIONS) {
             await this.openLatestEmail();
             //this.deleteCurrentEmail();
             I.forceClick(locate("div.message-content button").withText("Delete"));

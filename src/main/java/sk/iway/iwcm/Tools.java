@@ -1246,8 +1246,9 @@ public class Tools
 			//priklad: x-forwarded-for: unknown, 195.168.35.4
 			String xForwardedForHeader = Constants.getString("xForwardedForHeader");
 			boolean useFirstIP = true;
-			if (xForwardedForHeader.endsWith("::last")) {
-				xForwardedForHeader = xForwardedForHeader.substring(0, xForwardedForHeader.length()-6);
+			String LAST_SUFFIX = "::last";
+			if (xForwardedForHeader.endsWith(LAST_SUFFIX)) {
+				xForwardedForHeader = xForwardedForHeader.substring(0, xForwardedForHeader.length()-LAST_SUFFIX.length());
 				useFirstIP = false;
 			}
 			String xForwardedFor = request.getHeader("x-forwarded-for");

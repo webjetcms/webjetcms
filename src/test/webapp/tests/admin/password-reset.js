@@ -35,7 +35,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 1 
 });
 
 
-Scenario('forgotten password - customer zone - VIA login @singlethread @current', async ({ I, Document, TempMail }) => {
+Scenario('forgotten password - customer zone - VIA login @singlethread', async ({ I, Document, TempMail }) => {
   I.logout();
   const randomPassword = 'password_Pľščťž' + I.getRandomText();
 
