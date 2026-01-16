@@ -80,7 +80,7 @@ module.exports = {
      */
     async destroyInbox(emailAddress = null) {
         if (emailAddress != null) {
-            this.login(emailAddress);
+            await this.login(emailAddress);
         }
 
         I.say('Vymazávam všetky e-maily');
@@ -93,8 +93,15 @@ module.exports = {
         I.waitForElement(".loading.m-auto", 60);
     },
 
+    getContentSelector() {
+        return "div#info > div";
+    },
+
+    getSubjectSelector() {
+        return "div.subject";
+    },
+
     /**
-     *
      * @returns domain name with @
      */
     getTempMailDomain() {

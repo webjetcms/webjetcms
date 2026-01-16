@@ -199,6 +199,8 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_deniedClasses", "", Constants.MOD_EDITOR, "Zoznam zakázaných CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota nezakáže žiadne CSS triedy.");
 		Constants.setString("ckeditor_button_attrs", "data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label", Constants.MOD_EDITOR, "Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou.");
 
+		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
+
 	}
 
 	/**

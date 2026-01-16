@@ -13,6 +13,14 @@ const withoutCapitalPassword = 'password_p123';
 const tooShortPassword = 'paS1';
 const user = 'user_slabeheslo';
 
+const emailName = 'samemail';
+let email = null;
+const users = ['sameA','sameB', 'sameC', 'sameD'];
+
+Before(({ TempMail }) => {
+  if (email == null) email = emailName+TempMail.getTempMailDomain();
+});
+
 function deleteCacheObjects(I) {
   I.relogin("admin");
   I.amOnPage("/admin/v9/settings/cache-objects/");
@@ -27,7 +35,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 1 
 });
 
 
-Scenario('forgotten password - customer zone - VIA login @singlethread', async ({ I, Document, TempMail }) => {
+Scenario('forgotten password - customer zone - VIA login @singlethread @current', async ({ I, Document, TempMail }) => {
   I.logout();
   const randomPassword = 'password_Pľščťž' + I.getRandomText();
 
@@ -69,10 +77,6 @@ Scenario('forgotten password - administration - VIA login @singlethread', async 
   I.clickCss('button[name="login-submit"]');
   I.waitForText("Vitajte,", 15, ".overview__dashboard__title h2");
 });
-
-const emailName = 'samemail';
-const email = emailName+TempMail.getTempMailDomain();
-const users = ['sameA','sameB', 'sameC', 'sameD'];
 
 Scenario('forgotten password - administration - VIA email @singlethread', async ({ I, Document, TempMail, DT}) => {
   I.logout();
@@ -140,7 +144,7 @@ Scenario('IF un-used email address by users is used, the email will not be sent 
   await TempMail.destroyInbox();
 });
 
-Scenario('Make users not-valid for password reset @singlethread', async ({I, DT, DTE }) => {
+Scenario('Make users not-valid for password reset @singlethread', async ({I, DT, DTE, TempMail }) => {
   I.relogin('admin');
   I.amOnPage('/admin/v9/users/user-list/');
   DT.filterContains("email", "samemail"+TempMail.getTempMailDomain());
@@ -311,7 +315,7 @@ async function changePasswordEmail(I, Document, TempMail, emailName, closeAndDes
   await TempMail.login(emailName);
   TempMail.openLatestEmail();
   let openTabs = await I.grabNumberOfOpenTabs();
-  I.click(locate('a').withText('Ak si chcete zmeniť heslo, kliknite sem do 30 minút.'));
+  I.click(locate('a').withText('Ak si chcete zmeniť heslo, kliknite sem do 30 minút.'), null, { modifiers: ['ControlOrMeta'] });
 
   if(closeAndDestroy === true) {
     TempMail.closeEmail();

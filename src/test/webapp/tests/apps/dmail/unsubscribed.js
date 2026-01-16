@@ -54,8 +54,8 @@ function deleteUnsubscribed(I, DT, DTE, email) {
 async function handleTempMailSubmission(I, TempMail, email) {
     await TempMail.login(email);
     TempMail.openLatestEmail();
-    I.waitForElement('#info > div > p > a[href*=".html"]', 10);
-    const url = await I.grabAttributeFrom('#info > div > p > a[href*=".html"]', 'href');
+    I.waitForElement( TempMail.getContentSelector() + ' > p > a[href*=".html"]', 10);
+    const url = await I.grabAttributeFrom( TempMail.getContentSelector() + ' > p > a[href*=".html"]', 'href');
     TempMail.deleteCurrentEmail();
     I.amOnPage(url.replace("https", "http"));
     I.waitForText("Email úspešne odhlásený.", 10);

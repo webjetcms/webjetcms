@@ -385,7 +385,7 @@ async function checkVerifyEmail_Two_Phase_1(I, TempMail) {
     I.see("Ďakujeme za registráciu na stránke");
     I.see("Váš účet je vytvorený a musí byť aktivovaný pred prvým použitím.");
 
-    let text = await I.grabTextFrom("#info > div.overflow-auto");
+    let text = await I.grabTextFrom( TempMail.getContentSelector() );
     if(text.includes("Pre aktiváciu účtu kliknite na nasledovný odkaz:")) {
         authLink = ( text.split("Pre aktiváciu účtu kliknite na nasledovný odkaz:")[1] ).split(" ").join("");
 
@@ -428,7 +428,7 @@ async function checkVerifyEmail_Three(I, TempMail) {
     I.see("Pre prihlásenie použite nasledovné údaje:");
     I.see("Prihlasovacie meno: " + userName);
 
-    let text = await I.grabTextFrom("#info > div.overflow-auto");
+    let text = await I.grabTextFrom( TempMail.getContentSelector() );
     if(text.includes("Heslo:")) {
         generatedPasswd = ( text.split("Heslo:")[1] ).split("http")[0];
         //remove whitespaces

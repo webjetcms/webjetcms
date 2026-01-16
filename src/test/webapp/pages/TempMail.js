@@ -3,6 +3,7 @@ const { I } = inject();
 const fexPost = require("./TempMail-fexpost");
 const mailSac = require("./TempMail-mailsac");
 const noopmail = require("./TempMail-noopmail");
+const verify32 = require("./TempMail-verify32");
 
 /**
  * Funkcie pre pracu s https://tempmail.plus
@@ -10,27 +11,42 @@ const noopmail = require("./TempMail-noopmail");
 
 module.exports = {
 
+    /**
+     * If you change TempMail provider, run this SQL to update users in database:
+     *
+     * UPDATE users SET email = REPLACE(email, '@fexpost.com', '@mailsac.com') WHERE email LIKE '%@fexpost.com';
+     * UPDATE users SET email = REPLACE(email, '@mailsac.com', '@noopmail.com') WHERE email LIKE '%@mailsac.com';
+     * UPDATE users SET email = REPLACE(email, '@noopmail.com', '@tempverify.com') WHERE email LIKE '%@noopmail.com';
+     * UPDATE users SET email = REPLACE(email, '@tempverify.com', '@noopmail.com') WHERE email LIKE '%@tempverify.com';
+     *
+     * @returns TempMail provider implementation
+     */
     getTempmailProvider() {
         var provider = process.env.CODECEPT_TEMPMAIL_PROVIDER;
         if (provider === "fexpost") {
             return fexPost;
         }
-        else if (provider === "mailSac") {
+        else if (provider === "mailsac") {
             return mailSac;
         }
         else if (provider === "noopmail") {
             return noopmail;
+        } else if (provider === "verify32") {
+            return verify32;
         }
         //default
-        return mailSac;
+        return noopmail;
     },
 
+    /**
+     * @returns domain name with @ sign, e.g. "@fexpost.com"
+     */
     getTempMailDomain() {
         var provider = this.getTempmailProvider();
         if (provider && provider.getTempMailDomain) {
             return provider.getTempMailDomain();
         }
-        return "fexpost.com";
+        return "@fexpost.com";
     },
 
     /**
@@ -86,10 +102,27 @@ module.exports = {
      * Delete currently opened email
      */
     deleteCurrentEmail() {
+        I.say('Mazem aktualny email');
         var provider = this.getTempmailProvider();
         if (provider) {
             return provider.deleteCurrentEmail();
         }
+    },
+
+    getContentSelector() {
+        var provider = this.getTempmailProvider();
+        if (provider && provider.getContentSelector) {
+            return provider.getContentSelector();
+        }
+        return "";
+    },
+
+    getSubjectSelector() {
+        var provider = this.getTempmailProvider();
+        if (provider && provider.getSubjectSelector) {
+            return provider.getSubjectSelector();
+        }
+        return "";
     },
 
     /**

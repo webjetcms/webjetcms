@@ -48,13 +48,15 @@ module.exports = {
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */
-    openLatestEmail(){
+    openLatestEmail(unblockLinksAndImages = true){
         I.say('Otvaram najnovsi mail');
         I.refreshPage();
         I.waitForElement("table.inbox-table td.inbox-subject-td", 240);
         I.clickCss("table.inbox-table tr:nth-of-type(2) td.inbox-subject-td");
         I.waitForElement("table.inbox-table tr:nth-of-type(2) td.active", 10);
         I.wait(1);
+        if (unblockLinksAndImages === true) I.click(locate("a.btn").withText("Unblock links and images"));
+        I.switchToNextTab();
     },
 
     /**
@@ -71,6 +73,8 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     closeEmail(){
+        //because of Unblock links we need to go back and delete last email
+        I.switchToPreviousTab();
         I.click(locate("button").withText("Close"));
     },
 
@@ -89,7 +93,7 @@ module.exports = {
      */
     async destroyInbox(emailAddress = null) {
         if (emailAddress != null) {
-            this.login(emailAddress);
+            await this.login(emailAddress);
         }
 
         I.say('Vymazávam všetky e-maily');
@@ -97,12 +101,20 @@ module.exports = {
         let numberOfEmails = await I.grabNumberOfVisibleElements("table.inbox-table tr.clickable");
         let failsafe = 0;
         while(numberOfEmails > 0 && failsafe++ < 10) {
-            this.openLatestEmail();
+            this.openLatestEmail(false);
             this.deleteCurrentEmail();
             numberOfEmails = await I.grabNumberOfVisibleElements("table.inbox-table tr.clickable");
         }
 
         I.wait(1);
+    },
+
+    getContentSelector() {
+        return "div#info"; //TODO: check if correct
+    },
+
+    getSubjectSelector() {
+        return "div.subject"; //TODO: check if correct
     },
 
     /**

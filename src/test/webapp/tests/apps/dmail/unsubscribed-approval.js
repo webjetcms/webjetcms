@@ -8,11 +8,14 @@ let linksFromEmail = [];
 Before(async ({ I, DT, login }) => {
     login('admin');
     if (typeof randomName_1 == "undefined") {
-        let randomNumber = I.getRandomText();
-        randomName_1 = `autotest-1-${randomNumber}`;
-        randomName_2 = `autotest-2-${randomNumber}`;
-        randomName_3 = `autotest-3-${randomNumber}`;
-        randomName_4 = `autotest-4-${randomNumber}`;
+        let randomNumber = I.getRandomTextShort();
+        //replace - with . to avoid issues with some email providers
+        randomNumber = randomNumber.replace(/-/g, '.');
+
+        randomName_1 = `autotest.1.${randomNumber}`;
+        randomName_2 = `autotest.2.${randomNumber}`;
+        randomName_3 = `autotest.3.${randomNumber}`;
+        randomName_4 = `autotest.4.${randomNumber}`;
         baseUrl = await I.grabCurrentUrl();
    }
    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
@@ -42,10 +45,9 @@ Scenario('Preparation - create random subscribers', async ({ I, DT, DTE, TempMai
     I.wait(5);
     await TempMail.login(randomName_1);
     TempMail.openLatestEmail();
-    I.waitForText("testOfUnsucribed", 10, 'div.subject');
+    I.waitForText("testOfUnsucribed", 10, TempMail.getSubjectSelector());
     await TempMail.destroyInbox(randomName_1);
 });
-
 
 Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I, TempMail }) => {
     await setUnsubscribeText(Apps, DTE, I, defaultText);
@@ -89,7 +91,7 @@ Scenario('Email - unsubscribe without confirmation', async ({ I, Document, TempM
     await TempMail.login(randomName_3);
     TempMail.openLatestEmail();
 
-    I.click(locate('#info a').withText('odhlásenie'));
+    I.click(locate(TempMail.getContentSelector() + ' a').withText('odhlásenie'));
     await Document.waitForTab();
     I.switchToNextTab();
 
@@ -110,7 +112,7 @@ Scenario('Email - unsubscribe with confirmation', async ({ I, Document, TempMail
     I.logout();
     await TempMail.login(randomName_4);
     TempMail.openLatestEmail();
-    I.click(locate('#info a').withText('odhlásenie'));
+    I.click(locate( TempMail.getContentSelector() + ' a').withText('odhlásenie'));
     await Document.waitForTab();
     I.switchToNextTab();
     await Document.fixLocalhostUrl(baseUrl);
@@ -160,7 +162,7 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
     DTE.waitForEditor('campaingsDataTable')
     I.clickCss('#pills-dt-campaingsDataTable-receivers-tab');
     DT.waitForLoader();
-    DT.filterContains('recipientEmail', 'autotest-');
+    DT.filterContains('recipientEmail', 'autotest');
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-select-all');
     I.click(DT.btn.recipients_delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -173,8 +175,8 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
 async function handleTempMailSubmission(I, TempMail, login) {
     await TempMail.login(login);
     TempMail.openLatestEmail();
-    I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
-    const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');
+    I.waitForElement( TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 10);
+    const url = await I.grabAttributeFrom(TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 'href');
     I.amOnPage(url.replace("https", "http"));
 }
 
