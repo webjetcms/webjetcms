@@ -34,7 +34,7 @@
             tabs: [
                 { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: !isArchived },
                 { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: isArchived },
-                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.admin_form.table_reg_exp.js'), active: false },
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false },
                 { url: '/apps/form/admin/form-content/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false }
             ]
         });
@@ -59,8 +59,8 @@
         const tabs = [
             { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true },
             { id: 'content', title: WJ.translate('components.forms.detail.tab.fields.js'), selected: false },
-            { id: 'personalInfo', title: WJ.translate('useredit.personal_info'), selected: false },
-            { id: 'contactTab', title: WJ.translate('components.users.contact'), selected: false },
+            { id: 'personalInfo', title: WJ.translate('components.form.personal_info.js'), selected: false },
+            { id: 'contactTab', title: WJ.translate('components.form.contact.js'), selected: false },
             { id: 'freeItems', title: WJ.translate('editor.tab.fields'), selected: false },
         ];
 
