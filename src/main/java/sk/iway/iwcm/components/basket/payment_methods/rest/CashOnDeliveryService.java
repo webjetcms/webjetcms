@@ -10,22 +10,23 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
-@PaymentMethod(
+@FieldsConfig(
     nameKey = "components.basket.editor.cash_on_delivery",
     fieldMap = {
-        @PaymentFieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
-        @PaymentFieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
+        @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
+        @FieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
 })
 public class CashOnDeliveryService extends BasePaymentMethod {
 

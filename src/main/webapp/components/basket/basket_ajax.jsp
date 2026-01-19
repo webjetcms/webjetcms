@@ -10,6 +10,8 @@
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 
+	String displayCurrency = EshopService.getDisplayCurrency(request);
+
 	int itemId = Tools.getIntValue(request.getParameter("basketItemId"), -1);
 	if (itemId == -1) {
 		out.print("{}");
@@ -36,9 +38,9 @@
 		%>{
 			"itemId": 					"<%= itemId %>",
 			"totalItems": 				"<%= EshopService.getTotalItems(items) %>",
-			"displayCurrency": 		"<%= EshopService.getDisplayCurrency(request) %>",
-			"totalLocalPrice": 	"<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= EshopService.getTotalLocalPrice(items,request) %></iway:curr>",
-			"totalLocalPriceVat": 	"<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= EshopService.getTotalLocalPriceVat(items,request) %></iway:curr>",
+			"displayCurrency": 		    "<%=displayCurrency%>",
+			"totalLocalPrice": 	        "<iway:curr currency="<%=displayCurrency%>"><%= EshopService.getTotalLocalPrice(items,request) %></iway:curr>",
+			"totalLocalPriceVat": 	    "<iway:curr currency="<%=displayCurrency%>"><%= EshopService.getTotalLocalPriceVat(items,request) %></iway:curr>",
 			"items": [
 				<%
 				boolean isFirst = true;
@@ -50,12 +52,12 @@
 				 		"basketId": "<%= item.getBasketItemId() %>",
 						"link": "<%= docDB.getDocLink(item.getItemIdInt()) %>",
 						"title": "<%= item.getItemTitle() %>",
-						"price": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceVat() %></iway:curr>",
-						"priceQty": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceQty() %></iway:curr>",
+						"price": "<iway:curr currency="<%=displayCurrency%>"><%= item.getLocalPriceVat(request) %></iway:curr>",
+						"priceQty": "<iway:curr currency="<%=displayCurrency%>"><%= item.getItemLocalPriceQty(request) %></iway:curr>",
 						"qty": "<%= item.getItemQty() %>",
 						"vat": "<%= Math.round(item.getItemVat()) %>",
 						"itemNote": "<%= item.getItemNote() %>",
-						"priceVatQty": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceVatQty() %></iway:curr>"
+						"priceVatQty": "<iway:curr currency="<%=displayCurrency%>"><%= item.getItemLocalPriceVatQty(request) %></iway:curr>"
 					}<%
 					isFirst=false;
 				}

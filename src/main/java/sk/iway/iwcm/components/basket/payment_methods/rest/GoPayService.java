@@ -28,35 +28,39 @@ import cz.gopay.api.v3.model.payment.support.PayerContact;
 import cz.gopay.api.v3.model.payment.support.PaymentInstrument;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
+import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState.RefundationStatus;
+import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
 import sk.iway.iwcm.editor.FieldType;
 
 @Service
-@PaymentMethod(
+@FieldsConfig(
     nameKey = "apps.eshop.payments.go_pay",
     fieldMap = {
-        @PaymentFieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.secret", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.url", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.NUMBER, fieldLabel = "apps.eshop.payments.go_id", isRequired = true),
-        @PaymentFieldMapAttr(fieldAlphabet = 'E', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'F', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
-        @PaymentFieldMapAttr(fieldAlphabet = 'G', fieldType = FieldType.TEXT, fieldLabel = "components.basket.invoice_payments.gopay.orderDescription", isRequired = false, defaultValue = ""),
-        @PaymentFieldMapAttr(fieldAlphabet = 'H', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
-        @PaymentFieldMapAttr(fieldAlphabet = 'I', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
+        @FieldMapAttr(fieldAlphabet = 'A', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.client_id", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'B', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.secret", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'C', fieldType = FieldType.TEXT, fieldLabel = "apps.eshop.payments.url", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'D', fieldType = FieldType.NUMBER, fieldLabel = "apps.eshop.payments.go_id", isRequired = true),
+        @FieldMapAttr(fieldAlphabet = 'E', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.price", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'F', fieldType = FieldType.NUMBER, fieldLabel = "components.basket.invoice_payments.vat", isRequired = true, defaultValue = "0"),
+        @FieldMapAttr(fieldAlphabet = 'G', fieldType = FieldType.TEXT, fieldLabel = "components.basket.invoice_payments.gopay.orderDescription", isRequired = false, defaultValue = ""),
+        @FieldMapAttr(fieldAlphabet = 'H', fieldType = FieldType.QUILL, fieldLabel = "components.payment_methods.mmoney_transfer_note", isRequired = false),
+        @FieldMapAttr(fieldAlphabet = 'I', fieldType = FieldType.BOOLEAN_TEXT, fieldLabel = "components.payment_methods.allow_admin_edit", isRequired = false, defaultValue = "false"),
 })
 public class GoPayService extends BasePaymentMethod {
     //Scope only for craeting payments
@@ -115,7 +119,7 @@ public class GoPayService extends BasePaymentMethod {
                 .build();
     }
 
-    private final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir) {
+    private final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
         Date currentDate = new Date();
 
         //Prepare payment builder
@@ -136,13 +140,19 @@ public class GoPayService extends BasePaymentMethod {
             );
         }
 
+        BigDecimal totalPayedPrice = ProductListService.getPayedPrice(bie.getId(), bipr);
+        totalPriceToPay = totalPriceToPay.subtract(totalPayedPrice);
+        if(totalPriceToPay.compareTo(BigDecimal.ZERO) < 1) return null;
+
+        totalPriceToPay = totalPriceToPay.setScale(2, java.math.RoundingMode.HALF_EVEN);
+
         //Retrun builded payment
         return
             payment
                 .order(
                     bie.getId().toString(),
                     bigDecimalPriceToLong( totalPriceToPay ),
-                    Currency.getByCode( bie.getCurrency().toUpperCase() ),
+                    Currency.getByCode( BasketTools.getSystemCurrency().toUpperCase() ),
                     paymentMethod.getFieldG()
                 ).build();
     }
@@ -151,6 +161,7 @@ public class GoPayService extends BasePaymentMethod {
     public String getPaymentResponse(Long invoiceId, String returnUrl, HttpServletRequest request) {
         BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
         BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+        BasketInvoicePaymentsRepository bipr = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
 
         BasketInvoiceEntity bie = bir.findById(invoiceId).orElse(null);
         if(bie == null) return adminLogError("BasketInvoiceEntity wasnt found by given invoiceId.", request);
@@ -164,7 +175,7 @@ public class GoPayService extends BasePaymentMethod {
         if(connector == null) return adminLogError("Cant init connector for GoPay.", request);
 
         //Prepare payment
-        BasePayment payment = getPayment(bie, returnUrl, paymentMethod, biir);
+        BasePayment payment = getPayment(bie, returnUrl, paymentMethod, biir, bipr);
         if(payment == null) return adminLogError("Cant init payment for GoPay.", request);
 
         try {

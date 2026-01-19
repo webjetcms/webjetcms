@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.basket.payment_methods.jpa;
+package sk.iway.iwcm.components.basket.support;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,7 +9,7 @@ import sk.iway.iwcm.editor.FieldType;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface PaymentFieldMapAttr {
+public @interface FieldMapAttr {
     public char fieldAlphabet();
     public FieldType fieldType() default FieldType.TEXT;
     public String fieldLabel() default "";

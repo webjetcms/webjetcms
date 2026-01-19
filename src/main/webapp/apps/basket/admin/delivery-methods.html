@@ -1,0 +1,87 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity')})]*/ '';
+    let url = "/admin/rest/eshop/delivery-methods";
+</script>
+
+<script type="text/javascript">
+    var deliveryMethodsDataTable;
+
+
+    WJ.breadcrumb({
+        id: "deliveries",
+        tabs: [
+            {
+                url: '/apps/basket/admin/delivery-methods/',
+                title: '[[#{apps.eshop.delivery_methods.title}]]',
+                active: true
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+
+        deliveryMethodsDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "deliveryMethodsDataTable",
+            fetchOnCreate: true,
+            fetchOnEdit: true,
+            customFieldsUpdateColumns: true,
+            customFieldsUpdateColumnsPreserveVisibility: true
+        });
+
+        //
+        $("div#select_wrapper").insertBefore("button.buttons-create");
+
+        //Init select
+        ChartTools.setSelect(url + "/supported-deliveries", null, "deliveryMethodSelect");
+
+        $("#deliveryMethodSelect").on("change", function() {
+            deliveryMethodsDataTable.setAjaxUrl(WJ.urlUpdateParam(url, "deliveryMethod", $('#deliveryMethodSelect').val()));
+        });
+
+    });
+
+    window.addEventListener('load', () => {
+        const maxIteration = 5;
+        let currentiteration = 0;
+        const interval = setInterval(() => {
+            currentiteration++;
+            let value =  $('#deliveryMethodSelect').val();
+            if(value != null && value !== "") {
+                deliveryMethodsDataTable.setAjaxUrl(WJ.urlUpdateParam(url, "deliveryMethod", value));
+                clearInterval(interval);
+            } else if(currentiteration === maxIteration) {
+                clearInterval(interval);
+            }
+        }, 300);
+    });
+</script>
+
+<style>
+    #select_wrapper {
+        width: auto;
+        padding-right: 5px;
+        background-color: #F3F3F6;
+        float: left;
+    }
+    #select_wrapper button {
+        max-height: 31px;
+        line-height: 21px;
+        font-size: 12px;
+        background-position: right 2px center !important;
+        background-size: 12px 9px;
+        border-color: #868EA5;
+    }
+    #select_wrapper button:hover {
+        border-color: #868EA5;
+        background-color: #F3F3F6;;
+    }
+</style>
+
+<div id="select_wrapper">
+    <select id="deliveryMethodSelect"></select>
+</div>
+
+<table id="deliveryMethodsDataTable" class="datatableInit table"></table>

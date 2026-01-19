@@ -64,7 +64,7 @@ if (query!=null && query.trim().length()>0)
 				sql = Tools.replace(sql, "&amp|", "&amp;");
 				sql = Tools.replace(sql, "px|", "px;");
 
-				if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL)
+				if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_PGSQL)
 				{
 					sql = Tools.replace(sql, "`", ""); //remove mysql backticks
 				}
@@ -117,7 +117,9 @@ if (query!=null && query.trim().length()>0)
 					sql = Tools.replace(sql, "|", ";");
 					sql = Tools.replace(sql, ";;", "|");
 					sql = Tools.replace(sql, "INSERT INTO _conf_", "INSERT INTO webjet_conf");
+					sql = Tools.replace(sql, "UPDATE _conf_", "UPDATE webjet_conf");
 					sql = Tools.replace(sql, "INSERT INTO _properties_", "INSERT INTO webjet_properties");
+					sql = Tools.replace(sql, "UPDATE _properties_", "UPDATE webjet_properties");
 
 					// Match datetime literals in format 'YYYY-MM-DD HH:mm:ss'
 					String pattern = ", '(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})'";

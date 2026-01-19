@@ -35,7 +35,7 @@ Scenario('Publish notification screens', async ({ I, DT, DTE, TempMail, Document
     I.amOnPage(testWebpageShow);
 
     I.say("Check send mail");
-    TempMail.login('webjetcmsnotif');
+    await TempMail.login('webjetcmsnotif');
     TempMail.openLatestEmail();
 
     Document.screenshotElement("div.letter", "/redactor/webpages/editor/publish-email-notification.png");

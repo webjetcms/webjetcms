@@ -3,7 +3,6 @@ package sk.iway.iwcm.components.basket.rest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +23,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
@@ -42,7 +42,6 @@ import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.tags.CurrencyTag;
 
@@ -84,29 +83,15 @@ public class ProductListService {
 
         String priceField = Constants.getString("basketPriceField");
 
-        Specification<DocDetails> spec = hasGroupIdIn(groupIds)
-                                                      .and(fieldStartsWithDigit(priceField));
+        Specification<DocDetails> spec = hasGroupIdIn(groupIds).and(fieldStartsWithDigit(priceField));
         Page<DocDetails> page = options.getDocDetailsRepository().findAll(spec, options.getPageable());
 
-        String currentCurrency =  Constants.getString("basketProductCurrency");
-
-        String wantedCurrency;
-        //Safety check
-        if(isCurrencySupported(options.getRequest().getParameter("currency")) == false) wantedCurrency = currentCurrency;
-        else wantedCurrency = options.getRequest().getParameter("currency");
-
+        String wantedCurrency = BasketTools.isCurrencySupported(options.getRequest().getParameter("currency")) == false ? BasketTools.getSystemCurrency() : options.getRequest().getParameter("currency");
         DatatablePageImpl<DocDetails> pageImpl = WebpagesService.preparePage(page, options);
         pageImpl.get().forEach(doc -> {
-            //Set currency
-            doc.setFieldI(currentCurrency);
+            doc.setFieldH( doc.getLocalPriceVat(options.getRequest(), wantedCurrency).toString() );
+            doc.setFieldK( doc.getLocalPrice(options.getRequest(), wantedCurrency).toString() );
 
-            if(currentCurrency.equals(wantedCurrency)) {
-                doc.setFieldH( doc.getPriceVat().toString() );
-                doc.setFieldK( doc.getPrice().toString() );
-            } else {
-                doc.setFieldH( doc.getLocalPriceVat(options.getRequest(), wantedCurrency).toString() );
-                doc.setFieldK( doc.getLocalPrice(options.getRequest(), wantedCurrency).toString() );
-            }
         });
 
         return pageImpl;
@@ -333,23 +318,6 @@ public class ProductListService {
         return correctGroups;
     }
 
-    public static boolean isCurrencySupported(String currency) {
-        if(Tools.isEmpty(currency) == true) return false;
-        List<String> supportedCurrencies = Arrays.asList( Constants.getString("supportedCurrencies").split(",") );
-        return supportedCurrencies.contains(currency);
-    }
-
-    public static List<LabelValue> getListOfSupportedCurrencies() {
-        List<String> supportedCurrencies = Arrays.asList( Constants.getString("supportedCurrencies").split(",") );
-        //you want it in order set in constants, not alphabetically Collections.sort(supportedCurrencies);
-
-        List<LabelValue> groupsList = new ArrayList<>();
-        for (String curr: supportedCurrencies)
-            groupsList.add( new LabelValue(curr, curr) );
-
-        return groupsList;
-    }
-
     public static void updateInvoiceStats(Long invoiceId, boolean updateStatus) {
         updateInvoiceStats(invoiceId, null, updateStatus);
     }
@@ -395,7 +363,7 @@ public class ProductListService {
         invoice.setBalanceToPay( priceToPayVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ) );
 
         if(updateStatus) {
-            //SAME time, it can chnage the status of invoice
+            //SAME time, it can change the status of invoice
             BigDecimal totalPayedPrice = getPayedPrice(invoice.getId(), bipr);
             invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice) );
         }

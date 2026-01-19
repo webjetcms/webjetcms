@@ -1,9 +1,9 @@
 package sk.iway.iwcm.components.basket.payment_methods.rest;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.math.BigDecimal;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,20 +20,24 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
-import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
+import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
+import sk.iway.iwcm.components.basket.support.FieldMapAttr;
+import sk.iway.iwcm.components.basket.support.MethodDto;
+import sk.iway.iwcm.components.basket.support.FieldsConfig;
+import sk.iway.iwcm.components.basket.support.SupportService;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Contain logic for payment methods. Once class extends this class and is annotated with PaymentMethod, it will be considered as payment method.
+ * Contain logic for payment methods. Once class extends this class and is annotated with SupportMethod, it will be considered as payment method.
  */
 public abstract class BasePaymentMethod {
 
@@ -89,7 +93,7 @@ public abstract class BasePaymentMethod {
      * @return
      */
     protected PaymentMethodEntity getPayment(Long id, PaymentMethodRepository paymentMethodRepositor, ProcessItemAction action, Prop prop) {
-        PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return null;
 
         PaymentMethodEntity paymentMethod = paymentMethodRepositor.findByPaymentMethodNameAndDomainId(this.getClass().getName(), CloudToolsForCore.getDomainId());
@@ -127,7 +131,7 @@ public abstract class BasePaymentMethod {
      * @return
      */
     protected PaymentMethodEntity savePaymentMethod(PaymentMethodEntity paymentMethod, PaymentMethodRepository paymentMethodRepositor, Prop prop) {
-        PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return null;
 
         beforeSave(paymentMethod, prop);
@@ -163,17 +167,10 @@ public abstract class BasePaymentMethod {
 
     @SuppressWarnings("all")
     protected void validateEditorValues(PaymentMethodEntity paymentMethod, Errors errors, Prop prop) {
-        PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return;
 
-        for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
-            if(fieldMapAttr.isRequired() == true) {
-                String fieldValue = getPaymentFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
-                if(Tools.isAnyEmpty(fieldValue) == true) {
-                    errors.rejectValue("errorField.field" + fieldMapAttr.fieldAlphabet(), null, prop.getText("javax.validation.constraints.NotBlank.message"));
-                }
-            }
-        }
+        SupportService.validateCustomFields(annotation, paymentMethod, errors, prop);
     }
 
     /**
@@ -191,36 +188,11 @@ public abstract class BasePaymentMethod {
      * @param paymentMethod
      * @param prop
      */
-    private void preparePayment(PaymentMethod annotation, PaymentMethodEntity paymentMethod, Prop prop) {
+    private void preparePayment(FieldsConfig annotation, PaymentMethodEntity paymentMethod, Prop prop) {
         BaseEditorFields pef = new BaseEditorFields();
         List<Field> fields = pef.getFields(paymentMethod, "payments", LAST_ALPHABET);
 
-        for (char alphabet = 'A'; alphabet <= LAST_ALPHABET; alphabet++) {
-            int index = alphabet - 'A';
-            if(index < 0 || index > fields.size() - 1) continue;
-
-            boolean found = false;
-            for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
-                if(alphabet == fieldMapAttr.fieldAlphabet()) {
-                    fields.get(index).setLabel( prop.getText(fieldMapAttr.fieldLabel()) );
-                    fields.get(index).setType( fieldMapAttr.fieldType().name().toLowerCase() );
-
-                    if( Tools.isEmpty(fields.get(index).getValue()) ) {
-                        fields.get(index).setValue( fieldMapAttr.defaultValue() );
-                    }
-
-                    found = true;
-                    break;
-                }
-            }
-
-            //'Not found' = 'not used', set them as NONE type
-            if(found == false) {
-                fields.get(index).setLabel("");
-                fields.get(index).setType("none");
-
-            }
-        }
+        SupportService.prepareFields(fields, annotation.fieldMap(), LAST_ALPHABET, prop);
 
         pef.setFieldsDefinition(fields);
         paymentMethod.setEditorFields(pef);
@@ -233,10 +205,10 @@ public abstract class BasePaymentMethod {
      * @param paymentMethod
      * @return
      */
-    private final boolean isPaymentMethodConfigured(PaymentMethod annotation, PaymentMethodEntity paymentMethod) {
-        for(PaymentFieldMapAttr fieldMapAttr : annotation.fieldMap()) {
+    private final boolean isPaymentMethodConfigured(FieldsConfig annotation, PaymentMethodEntity paymentMethod) {
+        for(FieldMapAttr fieldMapAttr : annotation.fieldMap()) {
             if(fieldMapAttr.isRequired() == true) {
-                String fieldValue = getPaymentFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
+                String fieldValue = SupportService.getFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
                 if(Tools.isAnyEmpty(fieldValue) == true) {
                     return false;
                 }
@@ -251,7 +223,7 @@ public abstract class BasePaymentMethod {
      * @return
      */
     protected final boolean isPaymentMethodConfigured(PaymentMethodEntity paymentMethod) {
-        PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return false;
         return isPaymentMethodConfigured(annotation, paymentMethod);
     }
@@ -262,36 +234,24 @@ public abstract class BasePaymentMethod {
      * @param paymentMethods
      * @param prop
      */
-    protected final void setToMapIfConfigured(PaymentMethodEntity paymentMethod, Map<String, String> paymentMethods, Prop prop) {
-        PaymentMethod annotation = this.getClass().getAnnotation(PaymentMethod.class);
+    protected final void setToMapIfConfigured(PaymentMethodEntity paymentMethod, LinkedList<LabelValue> paymentMethods, Prop prop) {
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
+        if(annotation == null) return;
+
+        if(isPaymentMethodConfigured(annotation, paymentMethod) == true)
+            paymentMethods.add( new LabelValue(prop.getText(annotation.nameKey()), paymentMethod.getPaymentMethodName()) );
+    }
+
+    protected final void setToMapIfConfigured(PaymentMethodEntity paymentMethod, LinkedList<MethodDto> paymentMethods, HttpServletRequest request, Prop prop) {
+        FieldsConfig annotation = this.getClass().getAnnotation(FieldsConfig.class);
         if(annotation == null) return;
 
         if(isPaymentMethodConfigured(annotation, paymentMethod) == true) {
-            paymentMethods.put(paymentMethod.getPaymentMethodName(), prop.getText(annotation.nameKey()));
-        }
-    }
+            //Little hack
+            BasketInvoiceItemEntity tmp = new BasketInvoiceItemEntity();
+            getPaymentMethodCost(tmp, paymentMethod);
 
-    /**
-     * Get payment field value by field alphabet.
-     * @param paymentMethod
-     * @param fieldAlphabet
-     * @return
-     */
-    private String getPaymentFieldValue(PaymentMethodEntity paymentMethod, char fieldAlphabet) {
-        switch(fieldAlphabet) {
-            case 'A': return paymentMethod.getFieldA();
-            case 'B': return paymentMethod.getFieldB();
-            case 'C': return paymentMethod.getFieldC();
-            case 'D': return paymentMethod.getFieldD();
-            case 'E': return paymentMethod.getFieldE();
-            case 'F': return paymentMethod.getFieldF();
-            case 'G': return paymentMethod.getFieldG();
-            case 'H': return paymentMethod.getFieldH();
-            case 'I': return paymentMethod.getFieldI();
-            case 'J': return paymentMethod.getFieldJ();
-            case 'K': return paymentMethod.getFieldK();
-            case 'L': return paymentMethod.getFieldL();
-            default: return null;
+            paymentMethods.add( new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getCustomerTitle(tmp.getItemPriceVat(), request, prop, annotation), tmp.getItemPriceVat()) );
         }
     }
 

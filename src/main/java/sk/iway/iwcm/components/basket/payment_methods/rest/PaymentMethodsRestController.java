@@ -59,5 +59,7 @@ public class PaymentMethodsRestController extends DatatableRestControllerV2<Paym
 
         //Optional fields CAN'T validate required fields, we need to do it manually
         paymentMethodsService.validateEditorValues(entity, errors, getProp());
+
+        super.validateEditor(request, target, user, errors, id, entity);
     }
 }

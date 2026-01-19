@@ -450,12 +450,16 @@ public class Constants {
 				"štandartne eur, určuje, v akej mene je cena tovaru, ak nie je žiadna mena zadaná.");
 		setString("basketDisplayCurrency", "eur", MOD_BASKET,
 				"štandartne eur, určuje, v akej mene sa tovar zobrazí v košíku, a pri objednávke. Toto zobrazovanie sa môže zmeniť lokálne podľa používateľa, ak to bude potrebné");
-		setString("kurz_eur_skk", "30.126", MOD_BASKET,
-				"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. napríklad konštanta kurz_eur_skk má hodnotu 30.126 . Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 
 		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
 
-		setString("supportedCurrencies", "skk,eur", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
+		setString("supportedCurrencies", "eur,czk,usd,gbp", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
+		setString("kurz_gbp_czk", "28.002", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_gbp_eur", "1.153", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_gbp_usd", "1.344", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_eur_usd", "1.166", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_eur_czk", "24.230", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_usd_czk", "20.842", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 
 		setInt("inquiryIpTimeout", 0, "inquiry",
 				"nastavenie dlzky uchovania objektu v cache pre kontrolu IP adries pre ankety, ak hodnota je < 1 tak sa kontrola vypusti");

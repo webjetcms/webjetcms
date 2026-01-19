@@ -124,7 +124,10 @@ CKEDITOR.editorConfig = function( config )
 		baseClass: "<%=Constants.getString("ckeditor_button_baseClass")%>",
 		sizes: "<%=Constants.getString("ckeditor_button_sizes")%>",
 		types: "<%=Constants.getString("ckeditor_button_types")%>",
-		textHiddenClass: "<%=Constants.getString("ckeditor_button_textHiddenClass")%>"
+		textHiddenClass: "<%=Constants.getString("ckeditor_button_textHiddenClass")%>",
+		allowedClasses: "<%=Constants.getString("ckeditor_button_allowedClasses")%>",
+		deniedClasses: "<%=Constants.getString("ckeditor_button_deniedClasses")%>",
+		attrs: "<%=Constants.getString("ckeditor_button_attrs")%>"
 	};
 
 	config.qtClass = "<%=Constants.getString("ckeditor_table_class")%>";

@@ -123,7 +123,6 @@
             });
         });
 
-
         function updateTable() {
             //set table filter params
             productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "groupId", $('#groupSelect').val()));
@@ -131,6 +130,11 @@
             //reload tables values
             productListDataTable.ajax.reload();
         }
+
+        window.onload = function() {
+            // Must be called after all elements are loaded - first value in select can be different currency that defautl currency for products
+            updateTable();
+        };
 
         //After addFolder action is executed, reload select with folders
         window.addEventListener('WJ.DT.executeAction', function (e) {

@@ -1,5 +1,10 @@
 const { I } = inject();
 
+const fexPost = require("./TempMail-fexpost");
+const mailSac = require("./TempMail-mailsac");
+const noopmail = require("./TempMail-noopmail");
+const verify32 = require("./TempMail-verify32");
+
 /**
  * Funkcie pre pracu s https://tempmail.plus
  */
@@ -7,43 +12,57 @@ const { I } = inject();
 module.exports = {
 
     /**
+     * If you change TempMail provider, run this SQL to update users in database:
+     *
+     * UPDATE users SET email = REPLACE(email, '@fexpost.com', '@mailsac.com') WHERE email LIKE '%@fexpost.com';
+     * UPDATE users SET email = REPLACE(email, '@mailsac.com', '@noopmail.com') WHERE email LIKE '%@mailsac.com';
+     * UPDATE users SET email = REPLACE(email, '@noopmail.com', '@tempverify.com') WHERE email LIKE '%@noopmail.com';
+     * UPDATE users SET email = REPLACE(email, '@tempverify.com', '@noopmail.com') WHERE email LIKE '%@tempverify.com';
+     *
+     * UPDATE form_attributes SET value = REPLACE(value, '@fexpost.com', '@noopmail.com') WHERE value LIKE '%@fexpost.com';
+     *
+     * @returns TempMail provider implementation
+     */
+    getTempmailProvider() {
+        var provider = process.env.CODECEPT_TEMPMAIL_PROVIDER;
+        if (provider === "fexpost") {
+            return fexPost;
+        } else if (provider === "mailsac") {
+            return mailSac;
+        } else if (provider === "noopmail") {
+            return noopmail;
+        } else if (provider === "verify32") {
+            return verify32;
+        }
+        //default
+        return noopmail;
+    },
+
+    /**
+     * @returns domain name with @ sign, e.g. "@fexpost.com"
+     */
+    getTempMailDomain() {
+        var provider = this.getTempmailProvider();
+        if (provider && provider.getTempMailDomain) {
+            return provider.getTempMailDomain();
+        }
+        return "@fexpost.com";
+    },
+
+    /**
      * Prihlási sa do TempMail a zobrazí e-maily.
      * @param {string} name - Názov e-mailového účtu.
      * @param {string} [emailDomain="fexpost.com"] - Doména e-mailového účtu, predvolene "fexpost.com".
      */
-    login(name, emailDomain = "fexpost.com"){
-        //if name contains '@' then split it and use the first part as name and the second part as emailDomain
-        if (name.includes('@')) {
-            const parts = name.split('@');
-            name = parts[0];
-            emailDomain = parts[1];
+    async login(name, emailDomain){
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            if (typeof emailDomain === 'undefined') {
+                emailDomain = provider.getTempMailDomain().substring(1); //remove leading '@'
+            }
+
+            return provider.login(name, emailDomain);
         }
-
-        I.say('Prihlasujem sa do TempMail-u');
-        I.amOnPage('https://tempmail.plus');
-        I.switchTo();
-        I.fillField('input#pre_button', name);
-        I.clickCss('button#domain');
-        I.click(locate("button.dropdown-item").withText(emailDomain));
-        I.wait(1);
-    },
-
-    /**
-     * Prihlási sa do TempMailu a zobrazí e-maily, nepouzije sa funkcia I.amOnPage.
-     * @param {string} name - Názov e-mailového účtu.
-     * @param {string} [emailDomain="fexpost.com"] - Doména e-mailového účtu, predvolene "fexpost.com".
-     */
-    async loginAsync(name, emailDomain = "fexpost.com"){
-        I.say('Prihlasujem sa do TempMail-u');
-        await I.executeScript(() => {
-            window.location.href = 'https://tempmail.plus';
-        });
-        await I.wait(5);
-        I.switchTo();
-        I.fillField('input#pre_button', name);
-        I.clickCss('button#domain');
-        I.click(locate("button.dropdown-item").withText(emailDomain));
-        I.wait(1);
     },
 
     /**
@@ -51,12 +70,10 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     openLatestEmail(){
-        I.say('Otvaram najnovsi mail');
-        I.waitForElement("div.inbox", 10);
-        I.waitForElement("div.inbox > div:nth-of-type(2) div.subj", 60);
-        I.clickCss("div.inbox > div:nth-of-type(2) div.subj");
-        I.waitForElement("div#info", 10);
-        I.wait(1);
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.openLatestEmail();
+        }
     },
 
     /**
@@ -64,8 +81,10 @@ module.exports = {
      * @returns {boolean} Vracia `true`, ak je e-mailová schránka prázdna (t.j. ak nie sú žiadne viditeľné e-maily na vymazanie); inak `false`.
      */
     async isInboxEmpty() {
-        const numberOfEmails = await I.grabNumberOfVisibleElements('#delete');
-        return numberOfEmails === 0;
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.isInboxEmpty();
+        }
     },
 
     /**
@@ -73,20 +92,37 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     closeEmail(){
-        I.clickCss("button#back");
-        I.waitForElement("div.inbox", 10);
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.closeEmail();
+        }
     },
 
     /**
      * Delete currently opened email
      */
     deleteCurrentEmail() {
-        I.clickCss("#delete_mail");
-        I.waitForElement("#modal-destroy-mail", 10);
-        I.waitForElement("#confirm_mail");
-        I.wait(1);
-        I.clickCss("#confirm_mail");
-        I.waitForInvisible("#modal-destroy-mail", 60);
+        I.say('Mazem aktualny email');
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.deleteCurrentEmail();
+        }
+    },
+
+    getContentSelector() {
+        var provider = this.getTempmailProvider();
+        if (provider && provider.getContentSelector) {
+            return provider.getContentSelector();
+        }
+        return "";
+    },
+
+    getSubjectSelector() {
+        var provider = this.getTempmailProvider();
+        if (provider && provider.getSubjectSelector) {
+            return provider.getSubjectSelector();
+        }
+        return "";
     },
 
     /**
@@ -94,17 +130,9 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     async destroyInbox(emailAddress = null) {
-        if (emailAddress != null) {
-            this.login(emailAddress);
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.destroyInbox(emailAddress);
         }
-
-        I.say('Vymazávam všetky e-maily');
-        let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
-        if(numberOfEmails > 0) {
-            I.clickCss("button#delete", );
-            I.clickCss("button#confirm");
-        }
-
-        I.waitForElement(".loading.m-auto", 60);
     },
 }

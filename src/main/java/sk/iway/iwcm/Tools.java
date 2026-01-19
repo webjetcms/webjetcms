@@ -1241,21 +1241,30 @@ public class Tools
 	public static String getRemoteIP(HttpServletRequest request)
 	{
 		String ip = request.getRemoteAddr();
-		//priklad: x-forwarded-for: unknown, 195.168.35.4
-		String xForwardedFor = request.getHeader("x-forwarded-for");
-		if (Constants.getBoolean("serverBeyoundProxy") && xForwardedFor != null && xForwardedFor.length()>4)
+		if (Constants.getBoolean("serverBeyoundProxy"))
 		{
-			if ("unknown".equals(xForwardedFor)==false && xForwardedFor.indexOf(".")!=-1)
-			{
-				String[] values = Tools.getTokens(xForwardedFor, ",", true);
-				for (String value : values)
-                {
-                    //ak tam nie je bodka, je to asi unknown a to ignorujeme
-                    if (value.indexOf(".")<1) continue;
-                    //bereme prvu hodnotu v poradi
-                    ip = value.trim();
-                    break;
-                }
+			//priklad: x-forwarded-for: unknown, 195.168.35.4
+			String xForwardedForHeader = Constants.getString("xForwardedForHeader");
+			boolean useFirstIP = true;
+			String LAST_SUFFIX = "::last";
+			if (xForwardedForHeader.endsWith(LAST_SUFFIX)) {
+				xForwardedForHeader = xForwardedForHeader.substring(0, xForwardedForHeader.length()-LAST_SUFFIX.length());
+				useFirstIP = false;
+			}
+			String xForwardedFor = request.getHeader("x-forwarded-for");
+			if (xForwardedFor != null && xForwardedFor.length()>4) {
+				if ("unknown".equals(xForwardedFor)==false && xForwardedFor.indexOf(".")!=-1)
+				{
+					String[] values = Tools.getTokens(xForwardedFor, ",", true);
+					for (String value : values)
+					{
+						//ak tam nie je bodka, je to asi unknown a to ignorujeme
+						if (value.indexOf(".")<1) continue;
+						ip = value.trim();
+						//bereme prvu hodnotu v poradi
+						if (useFirstIP) break;
+					}
+				}
 			}
 		}
 

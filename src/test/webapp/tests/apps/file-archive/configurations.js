@@ -72,13 +72,13 @@ Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Doc
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2@fexpost.com");
+    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
     I.wait(30);
 
-    TempMail.login("webjetarchive2");
+    await TempMail.login("webjetarchive2");
     TempMail.openLatestEmail();
-    I.see(`<${email}>`, ".text-muted");
+    I.see(`<${email}>`);
 });
 
 Scenario('Set variable and Cronjob fileArchivFromMail to default', async ({ I, Document }) => {

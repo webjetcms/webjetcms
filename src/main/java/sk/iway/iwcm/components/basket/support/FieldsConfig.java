@@ -1,15 +1,16 @@
-package sk.iway.iwcm.components.basket.payment_methods.rest;
+package sk.iway.iwcm.components.basket.support;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentFieldMapAttr;
-
+/**
+ * Annotation for configuration of fields mapping for delivery/payment methods
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface PaymentMethod {
+public @interface FieldsConfig {
     public String nameKey() default "";
-    public PaymentFieldMapAttr[] fieldMap() default {};
+    public FieldMapAttr[] fieldMap() default {};
 }
