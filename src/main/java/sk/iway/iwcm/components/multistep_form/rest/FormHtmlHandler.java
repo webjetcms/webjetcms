@@ -611,6 +611,14 @@ public class FormHtmlHandler {
         while (textareaMatcher.find())
             itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + getFieldValue(stepItem.getItemFormId()) + "</span>");
 
+        // Loop selects
+        String selectRegex = "(?s)<select.*?</select>";
+        Pattern selectPattern = Pattern.compile(selectRegex);
+        Matcher selectMatcher = selectPattern.matcher(itemHtml);
+
+        while (selectMatcher.find())
+            itemHtml = Tools.replace(itemHtml, selectMatcher.group(), "<span class=\"form-control emailInput-select\">" + getFieldValue(stepItem.getItemFormId()) + "</span>");
+
         // Remove help blocks
         itemHtml = Tools.replaceRegex(itemHtml, "<div class=\"help-block.*?<\\/div>", "", false);
 

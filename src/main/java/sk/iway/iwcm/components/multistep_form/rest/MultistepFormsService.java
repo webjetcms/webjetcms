@@ -71,6 +71,7 @@ public class MultistepFormsService {
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
+    private static final String ITEM_KEY_INPUT_PREFIX = "components.formsimple.input.";
 
     private final SaveFormService saveFormService;
     private final FormsRepository formsRepository;
@@ -172,8 +173,15 @@ public class MultistepFormsService {
         List<LabelValue> options = new ArrayList<>();
         Map<String, String> formsimpleFields = prop.getTextStartingWith(ITEM_KEY_LABEL_PREFIX);
 
-        for(Entry<String, String> entry : formsimpleFields.entrySet())
+        for(Entry<String, String> entry : formsimpleFields.entrySet()) {
+            // Get html code of this field type
+            String htmlCode = prop.getText(ITEM_KEY_INPUT_PREFIX + entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length()));
+            // Skip prohibited submit buttons
+            if(htmlCode != null && (htmlCode.toLowerCase().contains("type=\"submit\"") || htmlCode.toLowerCase().contains("type=\'submit\'")) )
+                continue;
+
             options.add(new LabelValue(entry.getValue(), entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length())));
+        }
 
         return options;
     }

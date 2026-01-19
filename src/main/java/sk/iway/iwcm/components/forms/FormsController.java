@@ -90,7 +90,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             }
 
             // Check that selected name is unique
-            if(formsService.isFormNameUnique(formName) == false)
+            if("create".equals(target.getAction()) && formsService.isFormNameUnique(formName) == false)
                 errors.rejectValue("errorField.formName", null, getProp().getText("editor.form.formName.must_be_unique_err"));
         }
     }
