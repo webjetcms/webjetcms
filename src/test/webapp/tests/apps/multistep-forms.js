@@ -32,7 +32,7 @@ Scenario('Check editor tabs', ({ I, DT, DTE }) => {
     checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"], ["settings-deprecated"]);
 });
 
-Scenario('Base multistep form ', ({ I, DT, DTE }) => {
+Scenario('Base multistep form', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/");
 
     checkNavigationTabVsibility(I, ["Zoznam formulárov", "Archív formulárov", "Regulárne výrazy"], ["Obsah formuláru"]);
@@ -135,7 +135,7 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.say("Test and submit step 1");
     I.clickCss("button[type='submit']");
     I.waitForText("Emailova adresa - povinné pole");
-    I.fillField("#email-1", "sivan@fexpost.com");
+    I.fillField("#email-1", "sivan@noopmail.com");
     // chebbox group
     I.clickCss("#checkboxgroup-1-0");
     I.clickCss("#checkboxgroup-1-1");
@@ -175,8 +175,7 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.waitForText("Formulár bol úspešne odoslaný");
 });
 
-Scenario('Test form detail and filled data', ({ I, DT, DTE }) => {
-
+Scenario('Test form detail and filled data ', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
 
     I.see("Záznamy 1 až 1 z 1");
@@ -184,7 +183,7 @@ Scenario('Test form detail and filled data', ({ I, DT, DTE }) => {
     const columnNames = [
         { name: "meno 1", value: "Tester" },
         { name: "priezvisko 1", value: "Playwright" },
-        { name: "email 1", value: "sivan@fexpost.com" },
+        { name: "email 1", value: "sivan@noopmail.com" },
         { name: "checkboxgroup 1", value: "A,B" },
         { name: "radiogroup 1", value: "F" },
         { name: "multiupload images 1 fileNames", value: "" },
@@ -214,13 +213,13 @@ Scenario('Test form detail and filled data', ({ I, DT, DTE }) => {
     DTE.cancel();
 
     const expectedHtml = `
-    <div class="form-step"> <p class="step-primaryHeader">1 - Primárny nadpis</p> <p class="step-secondaryHeader">1 - Sekundárny nadpis</p><div class="form-group mb-3"><label for="meno-1"><p>Vase meno</p>&nbsp;*:</label> <span class="form-control emailInput-text">Tester</span></div><div class="form-group mb-3"><label for="priezvisko-1"><p>Vase priezvisko</p>:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="email-1"><p>Emailova adresa</p>&nbsp;*:</label> <span class="form-control emailInput-text">sivan@fexpost.com</span></div><div class="form-group mb-3"><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label></div>
-    <div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label></div>
-    <div class="form-check"><span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label></div>
-    </div><div class="form-group mb-3"><label for="radiogroup-1">Skupina výberových polí:</label><div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label></div>
-    <div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label></div>
-    <div class="form-check"><span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label></div>
-    </div></div><div class="form-step"> <p class="step-primaryHeader">2 - Druhy krok</p> <p class="step-secondaryHeader">2 - Sekundárny nadpis druheho kroku</p><div class="form-group mb-3"><label for="multiupload_images-1"><p>Pridajte obrazky</p>:</label> <span class="form-control emailInput-text">164214_penguin.jpg</span> </div><div class="form-group mb-3"><label for="select-1"><p>Select pole</p>:</label><span class="form-control emailInput-select">C</span></div><div class="form-group mb-3"><label for="wysiwyg-1"><p>WYSIWYG</p>&nbsp;*:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
+        <div class="form-step"> <p class="step-primaryHeader">1 - Primárny nadpis</p> <p class="step-secondaryHeader">1 - Sekundárny nadpis</p><div class="form-group mb-3"><label for="meno-1">Vase meno&nbsp;*:</label> <span class="form-control emailInput-text">Tester</span></div>
+        <div class="form-group mb-3"><label for="priezvisko-1">Vase priezvisko:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="email-1">Emailova adresa&nbsp;*:</label> <span class="form-control emailInput-text">sivan@noopmail.com</span></div>
+        <div class="form-group mb-3"><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label></div>\n<div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label></div>
+        <div class="form-check"><span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label></div></div><div class="form-group mb-3"><label for="radiogroup-1">Skupina výberových polí:</label><div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label></div>
+        <div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label></div>\n<div class="form-check"><span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label></div>
+        </div></div><div class="form-step"> <p class="step-primaryHeader">2 - Druhy krok</p> <p class="step-secondaryHeader">2 - Sekundárny nadpis druheho kroku</p><div class="form-group mb-3"><label for="multiupload_images-1">Pridajte obrazky:</label> <span class="form-control emailInput-text">164261_penguin.jpg</span> </div><div class="form-group mb-3"><label for="select-1">Select pole:</label><span class="form-control emailInput-select">C</span></div>
+        <div class="form-group mb-3"><label for="wysiwyg-1">WYSIWYG&nbsp;*:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
     `;
 
     checkSubmitedFormPreview(I, expectedHtml);
@@ -303,7 +302,7 @@ function escapeCssId(id) {
 const nameRequiredError = "MENO - povinné pole";
 const nameMinLengthError = "MENO musí obsahovať minimálne 3 znakov";
 const formSendSuccessMessage = "Formulár bol úspešne odoslaný";
-Scenario('Insert and test multiple forms in one page - test apps impedepent behaviour', async ({ I }) => {
+Scenario('Insert and test multiple forms in one page - test apps independent behaviour', async ({ I }) => {
     I.amOnPage("/apps/multistep-formular/app-multi-insert-test.html");
 
     I.say("Test number of apps on the page");

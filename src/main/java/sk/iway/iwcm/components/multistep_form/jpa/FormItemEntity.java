@@ -69,7 +69,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String label;
 
     @Column(name = "value")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", className="dt-row-edit", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true)
     private String value;
 
     @Column(name = "placeholder")
