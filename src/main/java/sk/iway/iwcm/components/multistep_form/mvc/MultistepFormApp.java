@@ -40,10 +40,10 @@ import sk.iway.iwcm.users.UsersDB;
 @WebjetComponent("sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp")
 @WebjetAppStore(
     nameKey = "multistep_form.title",
-    descKey="multistep_form.desc",
+    descKey="components.multistep_form.desc",
     itemKey= "cmp_app-cookiebar",
     imagePath = "ti ti-route",
-    galleryImages = "",
+    galleryImages = "/components/multistep-form/",
     customHtml = "/apps/form/mvc/editor-component.html"
 )
 @Getter
@@ -62,7 +62,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     private static final String VIEW_PATH = "/apps/form/mvc/multistep-form"; //NOSONAR
     private static final String ERROR_PATH = "/apps/form/mvc/error"; //NOSONAR
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "formslist.nazov_formularu", tab = "basic")
     private String formName;
 
     @Autowired
