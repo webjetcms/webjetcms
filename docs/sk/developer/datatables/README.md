@@ -145,6 +145,8 @@ Minimálna konfigurácia:
 - ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
 - ```updateEditorAfterSave {boolean}``` - nastavením na ```true``` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
 - `onClose(TABLE, EDITOR, e)` - funkcia, volaná pri kliknutí na tlačidlo Zrušiť alebo zatvorenie editora. Parametre: `TABLE` - inštancia datatabuľky, `EDITOR` - inštancia editora, `e` - event objekt. Ak vráti `false` okno sa nezatvorí. Používa sa napríklad vo `web-pages-datatable.js` pre kontrolu zmien v editore pred zatvorením.
+- `toggleSelector` – CSS selektor určujúci, ktorý element spúšťa výber riadku v tabuľke. Predvolená hodnota je `td.dt-select-td`, čo znamená, že výber riadku sa vykoná iba kliknutím na bunku s touto triedou (typicky stĺpec s ID). Toto nastavenie môžete prepísať (napr. na hodnotu `tr`), aby bolo možné vybrať riadok kliknutím kdekoľvek na riadok.
+- `toggleStyle` – režim výberu riadkov. Predvolená hodnota je `multi` (možno vybrať viacero riadkov naraz). Nastavením na hodnotu `single` obmedzíte výber len na jeden riadok (vhodné, ak má byť naraz editovateľný iba jeden riadok).
 
 ```javascript
 let columns = [

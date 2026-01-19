@@ -101,3 +101,12 @@ Posledná časť sekcie **Obsah formuláru** je náhľad formuláru. Tento náh�
 Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**.
 
 !>**Upozornenie:** Náhľad formuláru sa vo výskedku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitom šablónovaní a štýloch danej stránky. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.X
+
+## Konfiguračné premenné
+
+Dostupné konfiguračné premenné pre viackrokové formuláre:
+
+- `multistepform_nameFields` - zoznam názvov polí, ktoré budú považované za polia pre meno. Medzi týmito poľami sa bude hľadať meno, ktoré by sa použilo ako oslovenie v emailoch. Použije sa iba **prvé** nájdene neprázdne meno.
+- `multistepform_emailFields` - zoznam názvov polí, ktoré budú považované za polia pre emailovú adresu. Medzi týmito poľami sa bude hľadať emailová adresa, na ktorú sa odošle potvrdenie o prijatí formuláru. Použije sa  **všetky** nájdene a validné emailové adresy.
+- `multistepform_attachmentDefaultName` - prednastavený názov prílohy v emailoch, ktorý sa použije ak sa nepodarí získať skutočný názov súboru prílohy.
+- `multistepform_subjectDefaultValue` - prednastavený predmet emailu, ktorý sa použije ak nie je zadaný predmet v nastaveniach/atribútoch formuláru.
