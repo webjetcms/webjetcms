@@ -11,6 +11,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
@@ -210,7 +211,7 @@ public class FormMailAction extends HttpServlet
 
 	public static HttpServletRequest fillRequestWithDatabaseOptions(String formName, HttpServletRequest request, List<UploadedFile> excelFile)
 	{
-		Map<String, String> options = new FormAttributeDB().load(formName);
+		Map<String, String> options = new FormSettingsService().load(formName);
 		IwcmRequest wrapped = new IwcmRequest(request);
 		for(Map.Entry<String, String> entry : options.entrySet())
 		{
@@ -934,7 +935,7 @@ public class FormMailAction extends HttpServlet
 		if ("public".equals(Constants.getString("clusterMyNodeType")) && Constants.getBoolean("formAllowOnlyExistingFormsOnPublicNode")==true)
 		{
 			//na public node umoznime odoslat len definovane formulare
-			int recordsCount = new SimpleQuery().forInt("select count(form_name) from form_attributes where form_name=?", formName);
+			int recordsCount = new SimpleQuery().forInt("select count(form_name) from form_settings where form_name=?", formName);
 			if (recordsCount < 1)
 			{
 				isFormNameOk = false;

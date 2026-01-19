@@ -10,7 +10,7 @@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <iwcm:checkLogon admin="true" perms="cmp_form"/>
 <%
-java.util.Map<String, String> attributes = new FormAttributeDB().load(Tools.getRequestParameter(request, "formname"));
+java.util.Map<String, String> attributes = new FormSettingsService().load(Tools.getRequestParameter(request, "formname"));
 
 Identity user = UsersDB.getCurrentUser(request);
 
@@ -21,7 +21,7 @@ if (Tools.isEmpty(attributes.get("recipients")) && user != null)
 
 request.setAttribute("formAttributes", attributes);
 %>
-<%@page import="sk.iway.iwcm.form.FormAttributeDB"%>
+<%@page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 
 <style type="text/css">

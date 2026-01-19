@@ -106,8 +106,6 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String forwardFail;
 
-
-
     /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", className = "form-deprecated", editor = {
@@ -227,10 +225,6 @@ public class FormSettingsEntity {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_width", className = "not-formsimple form-advanced")
     private Integer pictureWidth;
 
-
-
-
-
     @Column(name = "use_form_doc_id")
     private Integer useFormDocId;
 
@@ -240,7 +234,11 @@ public class FormSettingsEntity {
     @Column(name = "domain_id")
     private Integer domainId;
 
-
+    /**
+     * Converts snake_case to camelCase (pascalCase with lowercase first letter)
+     * @param input
+     * @return
+     */
     public static String toPascalCase(String input) {
         if(Tools.isEmpty(input)) return "";
         if (!input.contains("_")) return Character.toLowerCase(input.charAt(0)) + input.substring(1);
@@ -259,5 +257,18 @@ public class FormSettingsEntity {
         }
 
         return result.toString();
+    }
+
+    /**
+     * Converts camelCase to snake_case
+     * @param input
+     * @return
+     */
+    public static String toSnakeCase(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        return input
+                .replaceAll("([a-z])([A-Z])", "$1_$2")
+                .toLowerCase();
     }
 }

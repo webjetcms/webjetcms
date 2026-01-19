@@ -20,7 +20,7 @@ page import="java.net.URLDecoder" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.HashSet" %><%@
-page import="sk.iway.iwcm.form.FormAttributeDB" %><%@
+page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService" %><%@
 page import="java.util.Map" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
@@ -313,7 +313,7 @@ Prop prop = Prop.getInstance(lng);
 String requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
 
 boolean isEmailRender = request.getAttribute("renderingIncludes")!=null;
-Map<String, String> attributes = new FormAttributeDB().load(DocTools.removeChars(formName, true));
+Map<String, String> attributes = new FormSettingsService().load(DocTools.removeChars(formName, true));
 
 String recipients = "";
 if (attributes!=null && Tools.isNotEmpty(attributes.get("recipients"))) recipients = attributes.get("recipients");
