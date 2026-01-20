@@ -307,7 +307,7 @@
                     versionsDataTable = event.detail.conf.datatable;
 
                     versionsDataTable.EDITOR.on('open', function (e, type, action) {
-                        // Can edit hisotry version ONLY with required permission
+                        // Can edit history version ONLY with required permission
                         if(WJ.hasPermission("cmp_fileArchiv_history_metadata_edit") === true ) {
                             $(".DTE_nested_modal").find("button.btn-primary").show();
                         } else {
