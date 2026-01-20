@@ -66,7 +66,6 @@ public class FileArchiveApp extends WebjetComponentAbstract {
             this.downloadPath = virtualPath + "?v=" + file.getDateInsert().getTime();
         }
 
-
         private FileArchivatorDTO(FileArchivatorBean file, Prop prop) {
 
             this(file);

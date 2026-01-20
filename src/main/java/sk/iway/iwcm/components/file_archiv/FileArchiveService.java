@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.validation.Errors;
@@ -360,6 +359,9 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	private synchronized String uploadFile(UploadType uploadType) {
+		// Create requires perm to archive
+		if(currentUser.isEnabledItem("cmp_file_archiv") == false) return PERMISSION_DENIED;
+
 		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, getFileDirPath(), null);
 
 		//Create file, write content into file AND check if file exists
@@ -438,7 +440,6 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		fabOld.setId(null);
 		fabOld.setFileName(uniqueFileName);
 		fabOld.setReferenceId(referenceId);
-		fabOld.setDateInsert(new Date());
 		// File is now Historic version, turn off indexing of file
 		fabOld.setIndexFile(false);
 		if(fabOld.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION) == false) {
@@ -742,15 +743,15 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		String responseTxt = createWriteCheckFile( getFileDirPath() + uniqueFileName );
 		if(responseTxt != null) return "components.file_archiv.move_file_failed";
 
-		Long referenceIdKKs = fileMoveBelowBean.getReferenceId().longValue() == -1 ? fileMoveBelowBean.getId() : fileMoveBelowBean.getReferenceId();
+		Long moveBelowReferenceId = fileMoveBelowBean.getReferenceId().longValue() == -1 ? fileMoveBelowBean.getId() : fileMoveBelowBean.getReferenceId();
 
-		prepareFileArchivatorBean(getFileDirPath(), uniqueFileName, referenceIdKKs, true);
+		prepareFileArchivatorBean(getFileDirPath(), uniqueFileName, moveBelowReferenceId, true);
 		fab.setOrderId(-1);
 
 		if(fab.saveWithDebugLog(getClass(), MOVE_BEHIND) == false) return "components.file_archiv.record_saved_fail";
 
 		//inkrementujeme order id - only allready uploaded files aka -1
-		for(FileArchivatorBean archivBean : repository.findAllByReferenceIdAndUploadedAndDomainId(referenceIdKKs, -1, domainId)) {
+		for(FileArchivatorBean archivBean : repository.findAllByReferenceIdAndUploadedAndDomainId(moveBelowReferenceId, -1, domainId)) {
 			if(archivBean.getOrderId() > fileMoveBelowBean.getOrderId()) {
 				archivBean.setOrderId(archivBean.getOrderId() + 1);
 				archivBean.saveWithDebugLog(getClass(), MOVE_BEHIND);

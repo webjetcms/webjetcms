@@ -276,19 +276,19 @@ public abstract class FileArchivSupportMethodsService {
 	}
 
 	protected final boolean checkPerms() {
-		//For everything we needs this perm
+		// For everything we needs this perm
 		if(currentUser.isEnabledItem("cmp_file_archiv") == false) return false;
 
-		//For edit / delete / rollback
+		// For edit / delete / rollback
 		if(currentUser.isEnabledItem("cmp_fileArchiv_edit_del_rollback") == false) return false;
 
-		//For history upload
-		if(currentUser.isEnabledItem("cmp_fileArchiv_advanced_settings") == false) return false;
+		// For history upload
+		if(this.uploadType == UploadType.HISTORY_VERSION && currentUser.isEnabledItem("cmp_fileArchiv_advanced_settings") == false) return false;
 
-		//If we inserting new file we need this constant to be true
+		// If we inserting new file we need this constant to be true
 		if(this.uploadType != UploadType.NO_ACTION && Constants.getBoolean("fileArchivCanEdit") == false) return false;
 
-		//ELSE all good
+		// ELSE all good
 		return true;
 	}
 }
