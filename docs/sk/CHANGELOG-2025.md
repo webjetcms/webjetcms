@@ -107,6 +107,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Novinky - premenovaná hodnota usporiadať podľa priority na usporiadať podľa Poradia usporiadania (priority) pre zladenie s hodnotou v editore (#57667-16).
 - Formulár ľahko - pridaná možnosť nastaviť hodnotu `useFormDocId` pre vloženie formuláru napr. do pätičky stránky (#57667-16).
 
+- Manažér dokumentov - pridaná možnosť [upraviť metadáta historickej verzie dokumentu](redactor/files/file-archive/README.md#úprava-historickej-verzie-dokumentu-v-manažéri) v manažéri dokuementov (#58241).
+
 ### Oprava chýb
 
 - Značky - opravené duplikovanie priečinka v Zobraziť pre pri uložení značky, odstránený výber priečinka z ostatných domén, keďže značky sú už oddelené podľa domén (#58121).

@@ -43,10 +43,13 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
     private final FileArchiveRepository repository;
     private static final String REFERENCE_ID = "referenceId";
-    private static final String NOT_MAIN_FILE = "components.file_archiv.error.not_main_file";
 
+    private static final String NOT_MAIN_FILE = "components.file_archiv.error.not_main_file";
+    private static final String NOT_MAIN_FILE_PERMISSION_DENIED = "components.file_archiv.error.not_main_file_no_perms";
     private static final String PERMISSION_DENIED = "admin.operationPermissionDenied";
+
     private static final String EDIT_DEL_ROLLBACK_PERM = "cmp_fileArchiv_edit_del_rollback";
+    private static final String HISTORY_METADATA_EDIT_PERM = "cmp_fileArchiv_history_metadata_edit";
 
     @Autowired
     public FileArchiveRestController(FileArchiveRepository repository) {
@@ -162,8 +165,16 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
     @Override
     public void beforeSave(FileArchivatorBean entity) {
         //Now check, that we editing main page (exception if we are editing waiting file)
-        if(entity.getId() != null && entity.getId() > 0 && entity.getReferenceId() > -1 && isWaitingFile() == false)
-            throwError(NOT_MAIN_FILE);
+        if(entity.getId() != null && entity.getId() > 0 && entity.getReferenceId() > -1) {
+            if(isWaitingFile() == true) {
+                // Do nothing - we can edit waiting files that gonna be new versions in future
+            } else if(isListOfVersions() == true) {
+                // List of version can be edited only with special permission
+                if(getUser().isEnabledItem(HISTORY_METADATA_EDIT_PERM) == false)
+                    throwError(NOT_MAIN_FILE_PERMISSION_DENIED);
+            } else
+                throwError(NOT_MAIN_FILE);
+        }
     }
 
     @Override
@@ -172,9 +183,8 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         if("remove".equals(target.getAction())) return;
 
-        if("edit".equals(target.getAction()) &&  getUser().isEnabledItem(EDIT_DEL_ROLLBACK_PERM) == false) {
+        if("edit".equals(target.getAction()) &&  getUser().isEnabledItem(EDIT_DEL_ROLLBACK_PERM) == false)
             throwError(PERMISSION_DENIED);
-        }
 
         if(id != null && id > 0) {
             FileArchivatorBean originalDbVersion = getOne(id);
@@ -183,6 +193,11 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
         }
 
         processToEntity(entity, null);
+
+        if(isListOfVersions() == true) {
+            // Do nothing with file, because we edit only metadata of history versions
+            return;
+        }
 
         FileArchiveService fas = new FileArchiveService(user, getProp(), entity, repository);
         fas.checkFileProperties(errors);
@@ -214,6 +229,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         if(Tools.isNotEmpty(result))
             throwError(result);
+
         if(fas.getErrorList().isEmpty() == false)
             throwError(fas.getErrorList().get(0));
 
