@@ -35,7 +35,7 @@ module.exports = {
             return verify32;
         }
         //default
-        return noopmail;
+        return fexPost;
     },
 
     /**
