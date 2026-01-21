@@ -759,12 +759,12 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 							}
 							else
 							{
-								Logger.debug(getClass(), "FillTeplate classObject with name "+clazzName+" already contained.");
+								Logger.debug(getClass(), "FillTemplate classObject with name "+clazzName+" already contained.");
 							}
 						}
 						catch (ClassNotFoundException e)
 						{
-							Logger.debug(getClass(), "FillTeplate classObject to context failed, class "+clazzName+" not found.");
+							Logger.debug(getClass(), "FillTemplate classObject to context failed, class "+clazzName+" not found.");
 						}
 					}
 				}

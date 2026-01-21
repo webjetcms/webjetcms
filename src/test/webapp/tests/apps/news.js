@@ -408,7 +408,7 @@ Scenario("logout2", ({ I }) => {
 });
 
 /**
- * TEst that contextClasses from NewsApp (now hidden) will join with contextClasses from NewsTemplatesEntity
+ * Test that contextClasses from NewsApp (now hidden) will join with contextClasses from NewsTemplatesEntity
  */
 Scenario("Test contextClasses joining logic", ({ I, DT, Apps }) => {
     Apps.openAppEditor('128842');
@@ -422,7 +422,7 @@ Scenario("Test contextClasses joining logic", ({ I, DT, Apps }) => {
 
     // TODO Add time filter
 
-    DT.checkTableRow("datatableInit", 1, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testB not found."]);
-    DT.checkTableRow("datatableInit", 2, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testC not found."]);
-    DT.checkTableRow("datatableInit", 3, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testA not found."]);
+    DT.checkTableRow("datatableInit", 1, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testB not found."]);
+    DT.checkTableRow("datatableInit", 2, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testC not found."]);
+    DT.checkTableRow("datatableInit", 3, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testA not found."]);
 });
