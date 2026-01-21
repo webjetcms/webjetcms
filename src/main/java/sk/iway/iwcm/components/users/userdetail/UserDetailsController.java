@@ -225,7 +225,13 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         //Import setting
         if(isImporting()) {
-            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+            if(Tools.isEmpty(entity.getPassword())) {
+                if(entity.getId() == null || entity.getId() < 1)
+                    //vygeneruj heslo
+			        entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));
+                else
+                    entity.setPassword(UserTools.PASS_UNCHANGED);
+            }
 
             if (entity.getEditorFields()==null) {
                 UserDetailsEditorFields udef = new UserDetailsEditorFields();
