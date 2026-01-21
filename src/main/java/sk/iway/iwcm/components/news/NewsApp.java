@@ -157,7 +157,7 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.check_duplicty")
     protected boolean checkDuplicity;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses", className="ai-off")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", title="components.news.contextClasses", className="ai-off")
 	protected String contextClasses;
 
     @DataTableColumn(

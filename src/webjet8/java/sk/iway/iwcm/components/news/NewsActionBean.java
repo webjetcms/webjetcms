@@ -20,10 +20,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -726,7 +728,20 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				vc.put("pageParams", new PageParams(getRequest()));
 				vc.put("dateTool", new DateTool());
 
-				String[] contextClassesArray = getContextClassesArr();
+				// OLD context classes from NewsApp
+				String[] contextClassesArrOld = getContextClassesArr();
+
+				// NEW context classes from NewsTemplatesEntity
+				String[] contextClassesArrNew = newsEntity.getContextClassesArr();
+
+				// Combined context classes
+				Set<String> set = new HashSet<>();
+				if (contextClassesArrOld != null) set.addAll(Arrays.asList(contextClassesArrOld));
+    			if (contextClassesArrNew != null) set.addAll(Arrays.asList(contextClassesArrNew));
+
+				set.remove(null);
+				String[] contextClassesArray = set.toArray(new String[0]);
+
 				if (contextClassesArray != null && contextClassesArray.length > 0)
 				{
 					for (String clazzName : contextClassesArray)

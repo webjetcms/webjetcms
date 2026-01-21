@@ -35,7 +35,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.fillField("#DTE_Field_pageSize", 25);
         I.fillField("#DTE_Field_offset", 8);
         I.checkOption("#DTE_Field_checkDuplicity_0");
-        I.fillField("#DTE_Field_contextClasses", 'iway"sk", test ",pokus"');
 
     I.clickCss("#pills-dt-component-datatable-templates-tab");
         I.click( locate("label.custom-template").withChild(locate("span").withText("news01")) );
@@ -82,7 +81,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.see("filter[AUTHORID_le]=666,");
     I.see("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
-    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 
     Apps.switchEditor('standard');
     Apps.openAppEditor();
@@ -148,7 +146,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.dontSee("filter[AUTHORID_le]=666,");
     I.dontSee("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
-    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 });
 
 function addFilter(I, docField, operator, value) {
@@ -408,4 +405,24 @@ Scenario("BUG: news from other folders and docMode", ({ I, Apps }) => {
 Scenario("logout2", ({ I }) => {
     I.switchTo();
     I.logout();
+});
+
+/**
+ * TEst that contextClasses from NewsApp (now hidden) will join with contextClasses from NewsTemplatesEntity
+ */
+Scenario("Test contextClasses joining logic", ({ I, DT, Apps }) => {
+    Apps.openAppEditor('128842');
+    I.dontSeeElement("div.DTE_Field_Name_contextClasses");
+
+    I.say("Now check debug log with err");
+    I.amOnPage("/admin/v9/settings/in-memory-logging/");
+    I.fillField("input.dt-filter-loggerName", "sk.iway.iwcm.components.news.NewsActionBean");
+    I.clickCss("button.dt-filtrujem-loggerName");
+    DT.waitForLoader();
+
+    // TODO Add time filter
+
+    DT.checkTableRow("datatableInit", 1, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testB not found."]);
+    DT.checkTableRow("datatableInit", 2, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testC not found."]);
+    DT.checkTableRow("datatableInit", 3, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTeplate classObject to context failed, class testA not found."]);
 });
