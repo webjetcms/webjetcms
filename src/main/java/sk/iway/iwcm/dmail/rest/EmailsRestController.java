@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -259,6 +260,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 String selectedGroupsString = UserDetailsService.getUserGroupIds(emailIds, permissionIds);
                 int[] selectedGroups = Tools.getTokensInt(selectedGroupsString, ",");
                 int[] originalGroups = Tools.getTokensInt(campain.getUserGroupsIds(), ",");
+
+				Adminlog.add(Adminlog.TYPE_DMAIL, String.format("Recipients groups for Campaing: %d changed \n from %s \n to %s", campaingId, campain.getUserGroupsIds(), selectedGroupsString), getUser().getUserId(), -1);
+
                 DmailService.handleEmails(selectedGroups, originalGroups, campain, emailsRepository, userDetailsRepository, getRequest());
 
                 if(campaingId > 0) {

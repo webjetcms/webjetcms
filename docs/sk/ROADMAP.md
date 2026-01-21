@@ -46,7 +46,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
 - [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
 - [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
-- [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
+- [x] Hromadný email - auditovať zmeny v skupinách používateľov.
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
