@@ -261,7 +261,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 int[] selectedGroups = Tools.getTokensInt(selectedGroupsString, ",");
                 int[] originalGroups = Tools.getTokensInt(campain.getUserGroupsIds(), ",");
 
-				Adminlog.add(Adminlog.TYPE_DMAIL, String.format("Recipients groups for Campaing: %d changed \n from %s \n to %s", campaingId, campain.getUserGroupsIds(), selectedGroupsString), getUser().getUserId(), -1);
+				Adminlog.add(Adminlog.TYPE_DMAIL, String.format("Recipients groups for Campaign: %d changed \n from %s \n to %s", campaingId, campain.getUserGroupsIds(), selectedGroupsString), getUser().getUserId(), -1);
 
                 DmailService.handleEmails(selectedGroups, originalGroups, campain, emailsRepository, userDetailsRepository, getRequest());
 
