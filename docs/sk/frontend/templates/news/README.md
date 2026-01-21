@@ -17,6 +17,7 @@ Dostupné sú nasledovné polia:
 - **Názov šablóny** - povinné pole s **jedinečným** názov šablóny noviniek
 - **Obrázok šablóny** - pole pre výber ilustračného obrázka zobrazených noviniek (pre lepšiu orientáciu pri výbere šablóny v aplikácii novinky)
 - **Šablónovací nástroj** - výber šablónovacieho nástroja (zatiaľ podporovaný iba `Velocity`)
+- **Vlozit triedu do Velocity sablony** - pole pre vloženie názvu triedy, ktorá bude dostupná v šablóne (napr. pre zobrazenie diskusie je potrebné pridať triedu `sk.iway.iwcm.forum.ForumDB`)
 - **HTML kód** - kód šablóny
 - **Umiestnenie stránkovania** - miesto kam sa vloží stránkovanie
 - **HTML kód stránkovania** - kód stránkovania
