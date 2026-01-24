@@ -48,7 +48,7 @@ Preddefinované nadpisy sa aplikujú vždy na celý odsek. Nadpis vytvoríte kli
 
 Na každej web stránke by mal byť vždy iba jeden hlavný Nadpis 1, ktorým by sa mal text začínať. Nakoľko tento nadpis je na štandardne stránke automaticky vygenerovaný z názvu stránky (ak to tak šablóna definuje), nie je potrebné ho vkladať do tela stránky. Sekcie v rámci stránky sa oddeľujú Nadpisom 2, ich pod-sekcie Nadpisom 3, atď.
 
-V tejto ponuke sú aj ďalšie preddefinované štýly, ich použitie však vychádza z ich pomenovania, napríklad štýly obsahujúce text "tabuľka" sa používajú len na tabuľky a podobne. Kliknutím do ľubovoľného textu stránky v editore sa vám do poľa Štýl automaticky nastaví štýl použitý na danej pozícii kurzora. Aktuálne použitý štýl je označený šípkou v ľavej časti rozbaľovacej ponuky.
+V tejto ponuke sú aj ďalšie preddefinované štýly, ich použitie však vychádza z ich pomenovania, napríklad štýly obsahujúce text "tabuľka" sa používajú len na tabuľky a podobne. Kliknutím do ľubovoľného textu stránky v editore sa vám do poľa Štýl automaticky nastaví štýl použitý na danej pozícii kurzora. Aktuálne použitý štýl je zvýraznený podfarbením jeho názvu. Pre elementy typu `DIV,SECTION` je možné nastaviť viacero štýlov. Opakovaným zvolením už nastaveného štýlu sa tento štýl odstráni.
 
 Pokiaľ chcete zmeniť štýl takéhoto textu v rámci odseku, nesmiete text označovať. Stačí kliknúť do daného textu v stránke, štýl farby sa automaticky pred-nastaví v rozbaľovacej ponuke **Štýl** a následne ho môžete zmeniť na iný štýl.
 

@@ -39,6 +39,9 @@ table.table.table-bordered {
 section.test-section {
     background-color: orange;
 }
+section.test-section-green {
+    background-color: green;
+}
 div.container.test-container {
     background-color: blue;
 }
