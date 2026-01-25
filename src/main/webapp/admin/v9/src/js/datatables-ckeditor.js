@@ -1492,9 +1492,14 @@ export class DatatablesCkEditor {
 		var that = this;
 		//setneme len contents.css aby nam neloadlo defaultne /css/page.css,
 		//az ked sa loadne stranka sa natiahnu potrebne CSS podla sablony, pre init to nepotrebujeme
-		that.myWindow.webjetContentsCss = [
+		var webjetContentsCss = [
 		   '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css'
 		];
+		//sem nam to nastavi editor.jsp pre popup okno
+		if (typeof that.myWindow.webjetContentsCss !== "undefined") {
+			webjetContentsCss = that.myWindow.webjetContentsCss;
+		}
+		that.myWindow.webjetContentsCss = webjetContentsCss;
 
 	    //var editorElem = document.getElementById("trEditor");
 
@@ -1510,13 +1515,6 @@ export class DatatablesCkEditor {
         that.ckEditorObject.dtd.a.h5 = 1;
         that.ckEditorObject.dtd.a.h6 = 1;
         that.ckEditorObject.dtd.a.ul = 1;
-
-        //sem nam to nastavi editor.jsp pre popup okno
-        var webjetContentsCss = that.myWindow.webjetContentsCss;
-        if (webjetContentsCss == undefined)
-        {
-            webjetContentsCss = ['/css/page.css', '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css']
-        }
 
         this.ckEditorInstance = ckEditorInitFunction(ckEditorElementId, {
 
@@ -1544,9 +1542,9 @@ export class DatatablesCkEditor {
 						options.onReady(that.ckEditorInstance);
 					}
 
-				//console.log("Setting resize interval, that=", that);
-				that.myWindow.setTimeout(function() { that.resizeEditor(that); }, 100);
-				that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
+					//console.log("Setting resize interval, that=", that);
+					that.myWindow.setTimeout(function() { that.resizeEditor(that); }, 100);
+					that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
 				},
 
 				'getData' : function(e)

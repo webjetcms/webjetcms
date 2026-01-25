@@ -297,7 +297,7 @@ async function openRegisterForm(I, DTE) {
     I.switchTo("iframe.cke_wysiwyg_frame");
     I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
-    I.waitForElement("div.inlineComponentButtons > a:nth-child(1)", 10);
+    I.waitForElement("div.inlineComponentButtons > a:nth-child(1)", 20);
     I.wait(1);
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
@@ -432,11 +432,11 @@ async function checkVerifyEmail_Three(I, TempMail) {
     if(text.includes("Heslo:")) {
         generatedPasswd = ( text.split("Heslo:")[1] ).split("http")[0];
         //remove whitespaces
-        generatedPasswd = generatedPasswd.split(" ").join("");
+        generatedPasswd = generatedPasswd.split(" ").join("").trim();
 
         if(generatedPasswd === undefined || generatedPasswd === null || generatedPasswd.length != 8) {
             //Problem .... there must be 8 length passwd
-            I.say("ERROR");
+            I.say("ERROR, generatedPasswd=" + generatedPasswd);
             I.assertEqual("", "Password parse failed");
         }
     } else {
