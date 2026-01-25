@@ -260,6 +260,22 @@ span.more-info { /* Nice Editor Title */
 }
 ```
 
+Podporované je aj aplikovanie viacerých štýlov naraz. Použije sa, ak je v CSS definovaný aj element:
+
+```css
+p.paragraph-green {
+    color: green;
+}
+p.paragraph-red-border {
+    border: 1px solid red;
+}
+p.paragraph-yellow-background {
+    background-color: yellow;
+}
+```
+
+používateľ si môže zvoliť ľubovoľnú kombináciu týchto štýlov na element `p`. Ak je už štýl na elemente aplikovaný, opätovným zvolením sa štýl odstráni. Môžete tak jednoducho aplikovať viaceré štýly naraz.
+
 ## Tvorba PageBuilder blokov
 
 Ak potrebujete vytvoriť nový blok pre PageBuilder postupujte podľa tohto návodu.
