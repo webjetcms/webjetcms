@@ -158,10 +158,10 @@ body.modal-open {
                 white-space: nowrap;
                 @include show-scrollbar;
             }
-            &.wrap textarea {
+            &.wrap textarea, textarea.wrap {
                 white-space: pre-wrap;
             }
-            &.pre textarea, textarea.textarea-code {
+            &.pre textarea, textarea.textarea-code, textarea.pre {
                 white-space: pre;
             }
             &.required {
