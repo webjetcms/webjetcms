@@ -17,12 +17,4 @@ form.multistep-form {
     .verify-code-single::placeholder {
         letter-spacing: 1.5rem;
     }
-
-    div.form-group > label {
-        display: ruby;
-    }
-
-    div.form-content > div.form-group > label > p {
-        padding: 0px !important;
-    }
 }

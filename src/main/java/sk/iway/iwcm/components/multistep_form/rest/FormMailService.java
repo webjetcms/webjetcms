@@ -215,7 +215,7 @@ public class FormMailService {
 				try {
 					//este potrebujeme updatnut linky na subory
 					FormDetails formDetails = new FormDetails();
-					formDetails.setFiles( String.join(",", formFiles.getFileNames()) );
+					formDetails.setFiles( String.join(",", formFiles.getFileNames().keySet()) );
 
 					//updatni linky na attachementy
 					String baseHref = Tools.getBaseHref(request);

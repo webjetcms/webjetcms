@@ -343,8 +343,13 @@ public class FormHtmlHandler {
         formHtml = Tools.replaceRegex(formHtml, "<button.*type=\"submit\".*?><\\/button>", "", false);
 
         String formHtmlAsText;
-        if (this.formForceTextPlain || Constants.getBoolean("formMailSendPlainText"))
-            formHtmlAsText = SearchTools.htmlToPlain(formHtml.toString());
+        if (this.formForceTextPlain || Constants.getBoolean("formMailSendPlainText")) {
+            // First remove all SCRIPT's from HTML
+            if(formHtml != null) formHtml = Tools.replaceRegex(formHtml, "<\\s*script\\b[^>]*>.*?<\\s*/\\s*script\\s*>", "", true);
+
+            if(formHtml == null) formHtmlAsText = "";
+            else formHtmlAsText = SearchTools.htmlToPlain(formHtml.toString());
+        }
         else
             formHtmlAsText = SearchTools.removeCommands(formHtml.toString()); // odstranim z HTML riadiace bloky napr.: !INCLUDE(...)!, !PARAMETER(...)! - MULTISTEP form should not have this problem but just in case I leave it here
 

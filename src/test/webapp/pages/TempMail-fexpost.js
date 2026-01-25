@@ -106,5 +106,12 @@ module.exports = {
      */
     getTempMailDomain() {
         return "@fexpost.com";
+    },
+
+    checkAttachments(attachmentsNames = []) {
+        I.say("Checking attachments in email");
+        attachmentsNames.forEach(attachmentName => {
+            I.seeElement( locate("div.attachments").find( locate("a").withText(attachmentName) ) );
+        });
     }
 }
