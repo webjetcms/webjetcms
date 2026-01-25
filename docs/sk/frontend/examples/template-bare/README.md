@@ -276,6 +276,19 @@ p.paragraph-yellow-background {
 
 používateľ si môže zvoliť ľubovoľnú kombináciu týchto štýlov na element `p`. Ak je už štýl na elemente aplikovaný, opätovným zvolením sa štýl odstráni. Môžete tak jednoducho aplikovať viaceré štýly naraz.
 
+Ak chcete aby sa vo výberovom menu zobrazovali názvy vo vašom štýle, môžete v režime Page Builder pridať do hlavičky stránky definíciu CSS súborov štýlov pre editor:
+
+```html
+<script>
+    webjetContentsCss = [
+       '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+       '/templates/jet/assets/css/editor.css'
+    ];
+</script>
+```
+
+odporúčame pridať len minimálny štýl potrebný pre štýlovanie názvov.
+
 ## Tvorba PageBuilder blokov
 
 Ak potrebujete vytvoriť nový blok pre PageBuilder postupujte podľa tohto návodu.
