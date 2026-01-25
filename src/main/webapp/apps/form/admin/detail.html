@@ -2,6 +2,7 @@
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
     window.FormDetail.init({ columns: columns, isArchived: false });
+    WJ.selectMenuItem("/apps/form/admin/");
 </script>
 
 <table id="formDetailDataTable" class="datatableInit table"></table>
