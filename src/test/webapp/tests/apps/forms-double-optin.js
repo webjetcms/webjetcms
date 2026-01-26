@@ -1,21 +1,22 @@
 Feature('apps.forms-double-optin');
 
-var username = 'name-autotest-' ;
+var username = 'name.autotest.' ;
 var text = 'Dobry den, toto je skusobny text';
 var randomNumber;
 var date;
+var email;
 
-Before(({ I }) => {
+Before(({ I, TempMail }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomTextShort();
         username += randomNumber;
         text += "-"+randomNumber;
-        email = username + '@fexpost.com';
+        email = username + TempMail.getTempMailDomain();
         date = I.formatDate(new Date().getTime());
     }
 });
 
-Scenario("Formular @singlethread", ({ I, DT, TempMail}) => {
+Scenario("Formular @singlethread", async ({ I, DT, TempMail}) => {
     I.say('Fill formular with testing data');
     I.amOnPage("/apps/formular/formular-doubleoptin.html");
     I.waitForElement('form[name="formMailForm"]');
@@ -28,7 +29,7 @@ Scenario("Formular @singlethread", ({ I, DT, TempMail}) => {
     I.waitForText("Formulár bol odoslaný, na váš email sme odoslali správu, v ktorej je potrebné potvrdiť odoslanie kliknutím na odkaz", 10);
 
     I.say('Open webjet e-mail and check if fields were sent successfuly');
-    TempMail.login('webjetcms');
+    await TempMail.login('webjetcms');
     TempMail.openLatestEmail();
     I.see('Formulár-doubleoptin');
     I.see(username);
@@ -42,7 +43,7 @@ Scenario("Formular @singlethread", ({ I, DT, TempMail}) => {
 
     //
     I.say('Confirm e-mail');
-    confirmEmail(TempMail, I);
+    await confirmEmail(TempMail, I);
     I.waitForText('Potvrdenie súhlasu úspešné', 10);
     I.see("Vaše potvrdenie súhlasu so spracovaním osobných údajov bolo úšpešné");
 
@@ -52,14 +53,14 @@ Scenario("Formular @singlethread", ({ I, DT, TempMail}) => {
 
     //
     I.say('Try to confirm e-mail again');
-    confirmEmail(TempMail, I);
+    await confirmEmail(TempMail, I);
     I.waitForText('Potvrdenie súhlasu už bolo zaznamenané', 10);
     I.see("Vaše potvrdenie súhlasu so spracovaním osobných údajov už bolo zaznamenané");
 });
 
 
 Scenario("Delete testing data @singlethread", async ({ I, DT, DTE, TempMail }) => {
-    TempMail.login(username);
+    await TempMail.login(username);
     await TempMail.destroyInbox();
 
     I.relogin('admin');
@@ -75,8 +76,8 @@ Scenario("Delete testing data @singlethread", async ({ I, DT, DTE, TempMail }) =
     DT.waitForLoader();
 });
 
-function confirmEmail(TempMail, I) {
-    TempMail.login(username);
+async function confirmEmail(TempMail, I) {
+    await TempMail.login(username);
     TempMail.openLatestEmail();
     I.see('Stranka s textom e-mailu');
     I.clickCss('//a[text()="ODKAZ"]');

@@ -114,6 +114,9 @@ Tlačidlo sa často používa ako `call to action` prvok na webových stránkach
 - `ckeditor_button_sizes` - Dostupné veľkosti tlačidla oddelené čiarkou, štandardne `btn-lg,btn-sm`.
 - `ckeditor_button_types` - Dostupné farby/typy tlačidla oddelené čiarkou, štandardne `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
 - `ckeditor_button_textHiddenClass` - CSS trieda pre schovanie textu tlačidla - zobrazenie iba ikony, štandardne `visually-hidden`.
+- `ckeditor_button_allowedClasses` - Zoznam povolených CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota povolí všetky CSS triedy. Príklad `btn-primary,btn-secondary,btn-lg`.
+- `ckeditor_button_deniedClasses` - Zoznam zakázaných CSS tried oddelených čiarkou pre otvorenie dialógu nastavenia tlačidla. Prázdna hodnota nezakáže žiadne CSS triedy. Príklad `no-button,no-btn`.
+- `ckeditor_button_attrs` - Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou, predvolene `data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label`.
 
 Podporované sú aj SVG ikony, ktoré je možné vložiť do tlačidla, viď sekcia vyššie.
 
@@ -126,3 +129,5 @@ Možnosť vložiť tlačidlo sa zobrazuje vo výberovom menu pre vloženie formu
 CKEditor podporuje pridanie vlastných doplnkov (plugins). Po vytvorení vlastného doplnku je potrebné ho pridať do konfiguračnej premennej `ckeditor_extraPlugins` ako čiarkou oddelený zoznam. Viac informácií o vytváraní vlastných doplnkov nájdete v [dokumentácii CKEditora](https://ckeditor.com/docs/ckeditor4/latest/guide/plugin_sdk_intro.html).
 
 Výsledný plugin umiestnite do adresára `src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/` vášho projektu.
+
+Tlačidlo následne pridajte do konfiguračnej premennej `ckeditor_toolbar` na vhodné miesto.

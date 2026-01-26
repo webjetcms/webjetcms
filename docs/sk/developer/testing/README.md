@@ -846,6 +846,7 @@ INSERT INTO `_properties_` (`id`, `prop_key`, `prop_value`, `lng`, `update_date`
 VALUES
 	(39192, 'components.perex.field_b.type', 'boolean', 'sk', '2024-12-11 08:34:35');
 
+DELETE FROM `user_groups` WHERE user_group_id IN (2,3,4);
 INSERT INTO `user_groups` (`user_group_id`, `user_group_name`, `user_group_type`, `user_group_comment`, `require_approve`, `email_doc_id`, `allow_user_edit`, `require_email_verification`, `price_discount`)
 VALUES
 	(2, 'Obchodní partneri', 0, NULL, 0, -1, 0, NULL, 0);
@@ -881,10 +882,22 @@ VALUES
 INSERT INTO media VALUES
 	(62, 259, 'documents', 'www.sme.sk', NULL, NULL, NULL, 'www.sme.sk', '/images/bannery/banner-iwayday.png', 'Media Skupina 1', NULL, NULL, NULL, NULL, 20, '2020-12-28 17:29:45', 1, '', '', '', '', 'false', '');
 
-
 INSERT INTO `calendar_types` (`type_id`, `name`, `schvalovatel_id`, `domain_id`)
 VALUES
 	(434, 'DomainTest_Test23_type', -1, 83);
+
+INSERT INTO `basket_delivery_methods` (`id`, `delivery_method_name`, `supported_countries`, `price`, `vat`, `sort_priority`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `field_g`, `field_h`, `field_i`, `field_j`, `field_k`, `field_l`, `domain_id`, `title`)
+VALUES
+	(4, 'sk.iway.iwcm.components.basket.delivery_methods.rest.ByMailService', '.sk', 5.00, 23, 0, '', '', '', '', '', '', '', '', '', '', '', '', 1, 'Štandardná pošta');
+INSERT INTO `basket_delivery_methods` (`id`, `delivery_method_name`, `supported_countries`, `price`, `vat`, `sort_priority`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `field_g`, `field_h`, `field_i`, `field_j`, `field_k`, `field_l`, `domain_id`, `title`)
+VALUES
+	(5, 'sk.iway.iwcm.components.basket.delivery_methods.rest.InStoreService', '.sk+.cz+.pl', 0.00, 0, 0, '', '', '', '', '', '', '', '', '', '', '', '', 1, NULL);
+INSERT INTO `basket_delivery_methods` (`id`, `delivery_method_name`, `supported_countries`, `price`, `vat`, `sort_priority`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `field_g`, `field_h`, `field_i`, `field_j`, `field_k`, `field_l`, `domain_id`, `title`)
+VALUES
+	(6, 'sk.iway.iwcm.components.basket.delivery_methods.rest.ByMailService', '.sk', 12.00, 23, 0, '', '', '', '', '', '', '', '', '', '', '', '', 1, 'Express 24h');
+INSERT INTO `basket_delivery_methods` (`id`, `delivery_method_name`, `supported_countries`, `price`, `vat`, `sort_priority`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `field_g`, `field_h`, `field_i`, `field_j`, `field_k`, `field_l`, `domain_id`, `title`)
+VALUES
+	(7, 'sk.iway.iwcm.components.basket.delivery_methods.rest.ByMailService', '.sk', 12.00, 23, 0, '', '', '', '', '', '', '', '', '', '', '', '', 1, 'components.basket.order_form.delivery_courier');
 ```
 
 ## Testovanie REST služieb

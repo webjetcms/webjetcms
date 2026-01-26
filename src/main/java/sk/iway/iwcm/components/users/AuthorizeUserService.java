@@ -143,16 +143,16 @@ public class AuthorizeUserService {
 				String body = Constants.getString("approveEmailText");
 				if (Tools.isEmpty(body)) {
 
-					body = prop.getText("iwcm.users.authorize_action.vasa_ziadost")+"\n";
-					body += prop.getText("iwcm.users.authorize_action.pre_pristup_pouzite")+"\n\n";
-					body += "   " + prop.getText("iwcm.users.authorize_action.prihlasovacie_meno") + ": " + userToApprove.getLogin() + "\n";
+					body = "<p>"+prop.getText("iwcm.users.authorize_action.vasa_ziadost")+"<br/>\n";
+					body += prop.getText("iwcm.users.authorize_action.pre_pristup_pouzite")+"</p><p>\n\n";
+					body += prop.getText("iwcm.users.authorize_action.prihlasovacie_meno") + ": " + userToApprove.getLogin() + "<br/>\n";
 
 					if (!Constants.getBoolean("passwordUseHash"))
-						body += "   "+prop.getText("iwcm.users.authorize_action.heslo")+": " + userToApprove.getPassword() + "\n";
+						body += prop.getText("iwcm.users.authorize_action.heslo")+": " + userToApprove.getPassword() + "<br/>\n";
 					else if(Tools.isNotEmpty(password))
-						body += "   "+prop.getText("iwcm.users.authorize_action.heslo")+": " + password + "\n";
+						body += prop.getText("iwcm.users.authorize_action.heslo")+": " + password + "<br/>\n";
 
-					body += "\n\n\n" + url;
+					body += "</p><p><a href=\"" + url + "\">" + url + "</a></p>\n";
 				} else if (body.startsWith("docid=")) {
 					int docid = Integer.parseInt(body.substring(6));
 					if(userGroupDetails == null)

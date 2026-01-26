@@ -1,13 +1,13 @@
 Feature('apps.user.user-authorize');
 
 var randomText = null;
-var tempMailAddress = "webjetcms@fexpost.com";
+var tempMailAddress = null;
 let userName = "autotestApproveUser_";
 let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-Before(({ I }) => {
+Before(({ I, TempMail }) => {
     if (randomText == null) {
         randomText = I.getRandomTextShort();
 
@@ -16,6 +16,8 @@ Before(({ I }) => {
         lastName += randomText;
 
         password = "Pas!23"+randomText;
+
+        if (tempMailAddress==null) tempMailAddress = "webjetcms"+TempMail.getTempMailDomain();
     }
 });
 
@@ -52,7 +54,7 @@ const RegistrationType = {
 /********  CASE A   ******/
 Scenario('Instant approval @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -83,7 +85,7 @@ Scenario('Instant approval @singlethread', async ({ I, DT, DTE, TempMail }) => {
 /********  CASE B   ******/
 Scenario('Email auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -126,7 +128,7 @@ Scenario('Email auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
 /********  CASE C   ******/
 Scenario('Admin auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
@@ -182,7 +184,7 @@ Scenario('remove all old fexpost users @singlethread', async ({ I, DT, DTE }) =>
 });
 
 Scenario('remove all old fexpost emails @singlethread', async ({ I, DT, TempMail }) => {
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
 });
 
@@ -219,7 +221,7 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
     DTE.save();
 
     //Open email - !! beware, can be false, depend is we call it already
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.openLatestEmail();
     I.see("Redaktori");
     I.see("Dobrý deň,");
@@ -228,7 +230,7 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
 });
 
 Scenario('Remove left over emails @singlethread', async ({ TempMail }) => {
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.destroyInbox();
 });
 
@@ -295,7 +297,7 @@ async function openRegisterForm(I, DTE) {
     I.switchTo("iframe.cke_wysiwyg_frame");
     I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
-    I.waitForElement("div.inlineComponentButtons > a:nth-child(1)", 10);
+    I.waitForElement("div.inlineComponentButtons > a:nth-child(1)", 20);
     I.wait(1);
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
@@ -345,7 +347,7 @@ function register(I, isEmailUsed, registrationType) {
 async function checkVerifyEmail(I, TempMail, registrationType, phase=null) {
 
     //Open email
-    TempMail.login("WebJetCMS");
+    await TempMail.login("WebJetCMS");
     await TempMail.openLatestEmail();
 
     if(registrationType == RegistrationType.One) {
@@ -383,7 +385,7 @@ async function checkVerifyEmail_Two_Phase_1(I, TempMail) {
     I.see("Ďakujeme za registráciu na stránke");
     I.see("Váš účet je vytvorený a musí byť aktivovaný pred prvým použitím.");
 
-    let text = await I.grabTextFrom("#info > div.overflow-auto");
+    let text = await I.grabTextFrom( TempMail.getContentSelector() );
     if(text.includes("Pre aktiváciu účtu kliknite na nasledovný odkaz:")) {
         authLink = ( text.split("Pre aktiváciu účtu kliknite na nasledovný odkaz:")[1] ).split(" ").join("");
 
@@ -426,15 +428,15 @@ async function checkVerifyEmail_Three(I, TempMail) {
     I.see("Pre prihlásenie použite nasledovné údaje:");
     I.see("Prihlasovacie meno: " + userName);
 
-    let text = await I.grabTextFrom("#info > div.overflow-auto");
+    let text = await I.grabTextFrom( TempMail.getContentSelector() );
     if(text.includes("Heslo:")) {
         generatedPasswd = ( text.split("Heslo:")[1] ).split("http")[0];
         //remove whitespaces
-        generatedPasswd = generatedPasswd.split(" ").join("");
+        generatedPasswd = generatedPasswd.split(" ").join("").trim();
 
         if(generatedPasswd === undefined || generatedPasswd === null || generatedPasswd.length != 8) {
             //Problem .... there must be 8 length passwd
-            I.say("ERROR");
+            I.say("ERROR, generatedPasswd=" + generatedPasswd);
             I.assertEqual("", "Password parse failed");
         }
     } else {
