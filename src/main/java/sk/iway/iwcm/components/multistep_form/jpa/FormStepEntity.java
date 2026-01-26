@@ -42,7 +42,7 @@ public class FormStepEntity {
     private String formName;
 
     @Column(name = "step_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
     private String stepName;
 
     @Column(name = "step_sub_name")
