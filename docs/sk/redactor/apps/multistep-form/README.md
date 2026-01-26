@@ -100,7 +100,7 @@ Posledná časť sekcie **Obsah formuláru** je náhľad formuláru. Tento náh�
 
 Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**.
 
-!>**Upozornenie:** Náhľad formuláru sa vo výskedku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitom šablónovaní a štýloch danej stránky. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.X
+!>**Upozornenie:** Náhľad formuláru sa vo výsledku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitom šablónovaní a štýloch danej stránky. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.X
 
 ## Konfiguračné premenné
 
