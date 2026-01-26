@@ -3,6 +3,8 @@ package sk.iway.iwcm.editor.util;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -26,15 +28,39 @@ public class EditorUtils {
     /**
 	 * V HTML kode stranky nahradi medzeru za nedelitelnu medzeru pred spojkami.
 	 * Tie sa definuju v konf. premennej editorSingleCharNbsp.
+	 * Nahrada sa aplikuje len na textove casti HTML, nie na atributy ani tagy.
 	 * @param editedDoc
 	 */
 	public static void nonBreakingSpaceReplacement(DocDetails editedDoc) {
 
+		if (editedDoc == null) return;
+
 		String conjunctions = Constants.getString("editorSingleCharNbsp");
 		if (Tools.isNotEmpty(conjunctions)) {
-			editedDoc.setData(editedDoc.getData().replaceAll("(?i)(\\s|&nbsp;)(" + conjunctions.replace(',', '|') + ")\\s", "$1$2&nbsp;"));
-			//volame dva krat, pretoze sa nenahradzali 2 pismena za sebou, napr. Test a v case
-			editedDoc.setData(editedDoc.getData().replaceAll("(?i)(\\s|&nbsp;)(" + conjunctions.replace(',', '|') + ")\\s", "$1$2&nbsp;"));
+			String data = editedDoc.getData();
+			if (Tools.isNotEmpty(data)) {
+				// Spracovavame HTML podľa tagov a textovych casti
+				// Regex rozdeluje HTML na HTML tagy/komentare (<...>) a textove casti
+				// Pattern: <[^>]*>  - HTML tagy a komentare (< ... >)
+				//         |[^<]+     - textove casti (vsetko ostatne)
+				Pattern tagPattern = Pattern.compile("<[^>]*>|[^<]+");
+				Matcher matcher = tagPattern.matcher(data);
+				StringBuffer sb = new StringBuffer();
+				String conjunctionPattern = conjunctions.replace(',', '|');
+				String replacePattern = "(?i)(\\s|&nbsp;)(" + conjunctionPattern + ")\\s";
+
+				while (matcher.find()) {
+					String part = matcher.group();
+					// Aplikuj nahradu len na textove casti (ktore nezachinaju <)
+					if (!part.startsWith("<")) {
+						// Volame dva krat, pretoze sa nenahradzali 2 pismena za sebou, napr. Test a v case
+						part = part.replaceAll(replacePattern, "$1$2&nbsp;");
+						part = part.replaceAll(replacePattern, "$1$2&nbsp;");
+					}
+					sb.append(part);
+				}
+				editedDoc.setData(sb.toString());
+			}
 		}
 
 	}

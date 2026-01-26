@@ -137,7 +137,7 @@ $tooltip-bg: $sidebar-active-bg;
 .#{$prefix}-column__content {
 	position: relative;
 	padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
-	overflow: hidden;
+	//lebo potom nevidno magicline overflow: hidden;
 }
 
 //JURKOVE STYLY

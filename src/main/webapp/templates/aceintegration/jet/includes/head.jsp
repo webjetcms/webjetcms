@@ -78,6 +78,11 @@ ${ninja.webjet.insertJqueryFake}
     <iwcm:notEmpty name="docDetails" property="fieldQ">
     dataLayer.push({'pageCategory': '<c:out value="${docDetails.fieldQ}" />'});
     </iwcm:notEmpty>
+    webjetContentsCss = [
+       '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+       '/templates/aceintegration/jet/assets/css/ninja.min.css',
+       '/templates/aceintegration/jet/assets/css/editor.css'
+    ];
 </script>
 
 <iwcm:insertScript position="head"/>

@@ -19,7 +19,7 @@ Scenario('Delete users', async ({ I, DT, TempMail }) => {
 Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     const userName = `autotest-name-${randomNumber}`;
     const userSurname = `autotest-surname-${randomNumber}`;
-    const userEmail = "webjetcmsdmail@fexpost.com";
+    const userEmail = "webjetcmsdmail"+TempMail.getTempMailDomain();
 
     I.say("Disabling CAPTCHA for testing");
     Document.setConfigValue("captchaComponents", "send_link");
@@ -33,12 +33,12 @@ Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     I.clickCss("input[name=bSubmit]");
 
     I.say("Checking confirmation email");
-    await TempMail.loginAsync("webjetcmsdmail");
+    await TempMail.login("webjetcmsdmail");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.see(userName);
     I.see(userSurname);
-    I.click("#info > div > p > a");
+    I.click(TempMail.getContentSelector()+" > p > a");
     I.wait(2);
     I.switchToNextTab();
 
@@ -61,7 +61,7 @@ Scenario('Revert - dmail', async ({ I, Document, DT}) => {
 });
 
 Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
-    const userEmail = "webjetcmsdmailsimple@fexpost.com";
+    const userEmail = "webjetcmsdmailsimple"+TempMail.getTempMailDomain();
 
     I.say("Navigating to simple newsletter registration page");
     I.amOnPage("/newsletter/registracia-do-newslettera-simple.html");
@@ -82,11 +82,11 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     I.assertEqual(lineColor, "rgb(255, 75, 88)");
 
     I.say("Checking confirmation email");
-    await TempMail.loginAsync("webjetcmsdmailsimple");
+    await TempMail.login("webjetcmsdmailsimple");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.wait(2);
-    I.click("#info > div > p > a");
+    I.click( TempMail.getContentSelector()+" > p > a");
 
     I.switchToNextTab();
     I.waitForElement(locate(".modal-content > .modal-header > .modal-title").withText("Newsletter"), 10);
@@ -95,7 +95,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     I.say("Verifying user in subscribers");
     I.closeOtherTabs();
     openSubscribers(I, DT, DTE);
-    DT.checkTableRow("datatableFieldDTE_Field_usersList_wrapper", 1, ["", "", "webjetcmsdmailsimple", "@fexpost.com", "webjetcmsdmailsimple@fexpost.com"]);
+    DT.checkTableRow("datatableFieldDTE_Field_usersList_wrapper", 1, ["", "", "webjetcmsdmailsimple", TempMail.getTempMailDomain(), "webjetcmsdmailsimple"+TempMail.getTempMailDomain()]);
 });
 
 Scenario('Revert - dmail simple', async ({ I, DT}) => {

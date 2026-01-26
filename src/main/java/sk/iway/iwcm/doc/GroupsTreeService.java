@@ -194,7 +194,7 @@ public class GroupsTreeService {
         return items;
     }
 
-    private List<JsTreeItem> sortTreeBasedOnUserSettings(Identity user, List<GroupDetails> groups, boolean showPages, boolean checkGroupsPerms) {
+    public static List<GroupDetails> sortGroupsBasedOnUserSettings(Identity user, List<GroupDetails> groups) {
         String sortType = WebpagesService.getTreeSortType(user);
         boolean orderAsc = WebpagesService.isTreeSortOrderAsc(user);
 
@@ -215,6 +215,13 @@ public class GroupsTreeService {
 
         return groups.stream()
             .sorted(comparator)
+            .collect(Collectors.toList());
+    }
+
+    private List<JsTreeItem> sortTreeBasedOnUserSettings(Identity user, List<GroupDetails> groups, boolean showPages, boolean checkGroupsPerms) {
+        List<GroupDetails> groupsSorted = sortGroupsBasedOnUserSettings(user, groups);
+
+        return groupsSorted.stream()
             .map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))
             .collect(Collectors.toList());
     }

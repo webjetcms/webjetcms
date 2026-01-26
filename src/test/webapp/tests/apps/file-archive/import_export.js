@@ -11,7 +11,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('Upload a file, export that file, delete and try to import again', async ({ I, DTE, DT }) => {
+Scenario('Upload a file, export that file, delete and try to import again', async ({ I, DTE, DT, TempMail }) => {
 
     //cleanup
     I.closeOtherTabs();
@@ -37,7 +37,7 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
 
     I.say("Adding new file to archive in future");
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(futureUploadVirtualFileName, futureUploadFileName, null , null, null, SL.getFutureTimestamp(1000), "webjetfuture@fexpost.com");
+    SL.uploadFile(futureUploadVirtualFileName, futureUploadFileName, null , null, null, SL.getFutureTimestamp(1000), "webjetfuture"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
 
     // 2. Vyexportovanie

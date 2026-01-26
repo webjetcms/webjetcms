@@ -52,19 +52,22 @@ function deleteUnsubscribed(I, DT, DTE, email) {
 }
 
 async function handleTempMailSubmission(I, TempMail, email) {
-    TempMail.login(email);
+    await TempMail.login(email);
     TempMail.openLatestEmail();
-    I.waitForElement('#info > div > p > a[href*=".html"]', 10);
-    const url = await I.grabAttributeFrom('#info > div > p > a[href*=".html"]', 'href');
+    I.waitForElement( TempMail.getContentSelector() + ' > p > a[href*=".html"]', 10);
+    const url = await I.grabAttributeFrom( TempMail.getContentSelector() + ' > p > a[href*=".html"]', 'href');
     TempMail.deleteCurrentEmail();
     I.amOnPage(url.replace("https", "http"));
     I.waitForText("Email úspešne odhlásený.", 10);
 }
 
 Scenario("Unsubscibed emails", async ({I, DT, DTE, Document, TempMail}) => {
-    var random = I.getRandomText();
-    var email1 = "autotest-demo-"+random+"@fexpost.com";
-    var email2 = "autotest-test23-"+random+"@fexpost.com";
+    var random = I.getRandomTextShort();
+    // Replace '-' with '.' because some temporary email providers
+    // do not accept local-parts containing hyphens; this ensures generated test addresses are valid.
+    random = random.replace(/-/g, '.');
+    var email1 = "autotest.demo."+random+TempMail.getTempMailDomain();
+    var email2 = "autotest.test23."+random+TempMail.getTempMailDomain();
 
     await unsubscribeEmail(I, TempMail, "/newsletter/odhlasenie-z-newsletra.html", email1);
     I.amOnPage("/apps/dmail/admin/unsubscribed/");

@@ -21,7 +21,6 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.users.UsersDB;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -186,13 +185,21 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
                 return;
             }
 
-            List<GroupDetails> groups = groupsDB.getGroups(parent.getGroupId());
-            List<GroupDetails> collect = groups.stream().filter(g -> g.getGroupId() != groupById.getGroupId()).sorted(Comparator.comparing(GroupDetails::getSortPriority)).collect(Collectors.toList());
+            List<GroupDetails> groups = GroupsTreeService.sortGroupsBasedOnUserSettings(user, groupsDB.getGroups(parent.getGroupId()));
+            List<GroupDetails> collect = groups.stream().filter(g -> g.getGroupId() != groupById.getGroupId()).collect(Collectors.toList());
+            boolean sortAsc = WebpagesService.isTreeSortOrderAsc(user);
 
-            int sortPriority = collect.isEmpty()==false ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;
+            int sortPriority = parent.getSortPriority() * 10;
+            if (collect.isEmpty()==false) {
+                if (sortAsc) sortPriority = collect.get(0).getSortPriority();
+                else sortPriority = collect.get(collect.size() - 1).getSortPriority();
+            }
             collect.add(item.getPosition(), groupById);
 
-            for (GroupDetails groupDetails : collect) {
+            for (int i=0; i<collect.size(); i++) {
+                GroupDetails groupDetails;
+                if (sortAsc) groupDetails = collect.get(i);
+                else groupDetails = collect.get(collect.size() - 1 - i);
                 groupDetails.setSortPriority(sortPriority);
                 groupsDB.save(groupDetails);
                 sortPriority += Constants.getInt("sortPriorityIncrementGroup");
@@ -200,9 +207,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
 
             // refresh
             GroupsDB.getInstance(true);
-        }
-
-        else if (original.getType() == JsTreeItemType.PAGE) {
+        } else if (original.getType() == JsTreeItemType.PAGE) {
             GroupsDB groupsDB = GroupsDB.getInstance();
             DocDB docDB = DocDB.getInstance();
 

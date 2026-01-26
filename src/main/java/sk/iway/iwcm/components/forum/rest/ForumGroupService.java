@@ -70,6 +70,10 @@ public class ForumGroupService {
             forumGroupEntity.setDocId(docId);
             forumGroupEntity.setActive(true);
             forumGroupEntity.setHoursAfterLastMessage(0);
+            forumGroupEntity.setMessageBoard(Boolean.FALSE);
+            forumGroupEntity.setAdvertisementType(Boolean.FALSE);
+            forumGroupEntity.setMessageConfirmation(Boolean.FALSE);
+            forumGroupEntity.setNotifyPageAuthor(Boolean.FALSE);
 
             //Find out, if this is message board
             DocDetails doc = DocDB.getInstance().getDoc(docId);

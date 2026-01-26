@@ -10,6 +10,23 @@ module.exports = {
     red: 'rgb(255, 75, 88)',
     black: 'rgb(19, 21, 27)',
 
+    DeliveryMethods: {
+        inStoreDelivery: "Vyzdvihnutie v predajni",
+        byMailDelivery: "Štandardná pošta"
+    },
+
+    Countries: {
+        sk: "Slovensko",
+        cz: "Česká republika",
+        pl: "Poľsko"
+    },
+
+    PaymentMethods: {
+        cashOnDelivery: "Dobierka",
+        GoPay: "GoPay",
+        moneyTransfer: "Prevodom"
+    },
+
     clearBasket(I) {
         I.amOnPage(this.PRODUCTS+"?act=deleteall");
         I.amOnPage(this.PRODUCTS);
@@ -36,14 +53,14 @@ module.exports = {
         I.wait(0.2);
     },
 
-    fillDeliveryForm(I, testerName, deliveryMethodName = null, paymentMethodName = null) {
+    fillDeliveryForm(I, TempMail, testerName, deliveryMethodName = null, paymentMethodName = null) {
         I.say("Filling delivery form");
         I.clickCss(".accordion-button[aria-controls=orderFormDeliveryInfo]");
         I.clickCss(".accordion-button[aria-controls=orderFormCompany]");
         I.fillField('#contactFirstNameId', testerName);
         I.fillField('#contactLastNameId', 'Playwright');
         I.clearField('#contactEmailId');
-        I.fillField('#contactEmailId', 'webjetbasket@fexpost.com');
+        I.fillField('#contactEmailId', 'webjetbasket'+TempMail.getTempMailDomain());
         I.fillField('#contactStreetId', "Mlynské Nivy 71");
         I.fillField("#contactCompanyId", "InterWay, a. s.");
         I.fillField("#contactPhoneId", "0912345678")
@@ -116,4 +133,29 @@ module.exports = {
             I.waitForText("Platba sa nepodarila!", 20);
         }
     },
+
+    selectCurrency(I, currency) {
+        I.say("Selecting currency");
+        I.clickCss("button[data-id='currencySelect']");
+        I.waitForVisible( locate("#currencySelect_wrapper").find("div.dropdown-menu.show") );
+        within(locate("#currencySelect_wrapper").find("div.dropdown-menu.show"), () => {
+            I.click( locate("a.dropdown-item > span").withText(currency));
+        });
+    },
+
+    validateCurrencyOptions(I, wantSee, dontWantSee) {
+        I.say("Checking currency options");
+        I.clickCss("button[data-id='currencySelect']");
+        I.waitForVisible( locate("#currencySelect_wrapper").find("div.dropdown-menu.show") );
+        within(locate("#currencySelect_wrapper").find("div.dropdown-menu.show"), () => {
+            for(const currency of wantSee) {
+                I.seeElement( locate("a.dropdown-item > span").withText(currency));
+            }
+
+            for(const currency of dontWantSee) {
+                I.dontSeeElement( locate("a.dropdown-item > span").withText(currency));
+            }
+        });
+        I.pressKey('Escape');
+    }
 }
