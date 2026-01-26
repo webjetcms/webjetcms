@@ -76,44 +76,47 @@
         });
         formStepsDataTable.hideButtons(["import", "export", "celledit"]);
 
-
-        formStepsDataTable.on('select.dt.DT deselect.dt.DT', function () {
+        formStepsDataTable.on('select.dt.DT', function () {
             if(loadingStepItems === true) return;
             loadingStepItems = true;
 
-            //console.log("formStepsDataTable selection changed");
-            let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
-            if(selectedStep.length > 0) {
-                const stepId = selectedStep[0].getAttribute("id");
-                // reload form items table for current step
-                formItemsDataTable.setAjaxUrl(getActualPath(stepId));
-                formItemsDataTable.ajax.reload();
+            let selectedStep = null;
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max (50 * 100ms)
 
-                if(loadingPreview === false) {
-                    loadingPreview = true;
-                    // load step preview
+            const checkInterval = setInterval(() => {
+                selectedStep = $(`#formStepsDataTable tbody tr.selected`);
+                attempts++;
+
+                if(selectedStep.length > 0) {
+                    clearInterval(checkInterval);
+
+                    const stepId = selectedStep[0].getAttribute("id");
+                    // reload form items table for current step
+                    formItemsDataTable.setAjaxUrl(getActualPath(stepId));
+                    formItemsDataTable.ajax.reload();
+
                     loadStepPreview();
+                } else if(attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.log("Max attempts reached, no selected step found");
+                    loadingStepItems = false;
                 }
-            } else {
-                // clear step data
-                formItemsDataTable.setAjaxUrl(getActualPath(-1));
-                formItemsDataTable.ajax.reload();
+            }, 100);
+        });
+
+        formStepsDataTable.on('deselect.dt.DT', function () {
+            setTimeout(() => {
+                //Clear table only if no row is selected (deselect is called allso when another row is selected)
+                if (formStepsDataTable.rows({ selected: true }).any()) { return; }
+                // I dont want to call DRAW/reload to clear table, call cost performance
+                formItemsDataTable.clear();
+                $("table#formItemsDataTable tbody").html('<tr><td colspan="2" class="dt-empty">' + WJ.translate('datatables.defaults.empty_table.js') + '</td></tr>');
                 $("div.stepPreview").html("");
-            }
-
-            // Check if data loaded, then allow next load
-            formItemsDataTable.on('xhr.dt', function() {
-                loadingStepItems = false;
-            });
+            }, 0);
         });
 
-        formStepsDataTable.on("draw", function() {
-            if(loadingPreview === false) {
-                loadingPreview = true;
-                // load step preview
-                loadStepPreview();
-            }
-        });
+        formStepsDataTable.on("draw", function() { loadStepPreview(); });
 
         var order = [];
         order.push([1, 'desc']);
@@ -133,13 +136,10 @@
         });
         formItemsDataTable.hideButtons(["import", "export", "celledit"]);
 
-        formItemsDataTable.on("draw", function() {
-            if(loadingPreview === false) {
-                loadingPreview = true;
-                // load step preview
-                loadStepPreview();
-            }
-        });
+        formItemsDataTable.on("draw", function() { loadStepPreview(); });
+
+        // Check if data loaded, then allow next load
+        formItemsDataTable.on('xhr.dt', function() { loadingStepItems = false; });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
             $("#DTE_Field_fieldType").on("change", function() {
@@ -199,6 +199,9 @@
     });
 
     async function loadStepPreview() {
+        if(loadingPreview === false) { loadingPreview = true; }
+        else { return; }
+
         let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
         if(selectedStep.length === 0) {
             $("div.stepPreview").html("");
