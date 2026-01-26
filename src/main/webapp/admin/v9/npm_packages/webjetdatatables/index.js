@@ -739,6 +739,12 @@ export const dataTableInit = options => {
             }
             var fieldName = col.data.replace(/\./gi, "-");
             ths += `<th class="${col.renderFormat} dt-th-${fieldName}" data-dt-field-name="${fieldName}" data-format-link-template="${linkTemplate}">${col.title}</th>`;
+
+            //https://datatables.net/reference/option/columns.render
+            if (typeof col.renderFunction !== "undefined") {
+                //console.log("col.renderFunction=", col.renderFunction);
+                col.render = window[col.renderFunction];
+            }
         });
 
         $(dataTableInit).html("").append("<thead><tr>" + ths + "</tr></thead>");

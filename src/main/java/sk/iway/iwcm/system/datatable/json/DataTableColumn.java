@@ -55,6 +55,7 @@ public class DataTableColumn {
     private String renderFormat;
     private String renderFormatLinkTemplate;
     private String renderFormatPrefix;
+    private String renderFunction;
 
     private DataTableColumnEditor editor;
     private Boolean visible;
@@ -220,6 +221,10 @@ public class DataTableColumn {
 
         if (Tools.isNotEmpty(annotation.renderFormatPrefix())) {
             renderFormatPrefix = annotation.renderFormatPrefix();
+        }
+
+        if (Tools.isNotEmpty(annotation.renderFunction())) {
+            renderFunction = annotation.renderFunction();
         }
 
         boolean[] _visible = annotation.visible();

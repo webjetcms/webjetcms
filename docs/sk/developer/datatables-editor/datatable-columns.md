@@ -63,7 +63,6 @@ private String oldValue;
 })
 private Date updateDate;
 
-
 //GalleryEntity
 @Size(max = 255)
 @Column(name = "image_name")
@@ -104,6 +103,30 @@ private String imagePath;
 private Integer[] passwordProtected;
 ```
 
+Príklad vlastnej [render](https://datatables.net/reference/option/columns.render) funkcie:
+
+```javascript
+//@Column(name = "step_name")
+//@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
+//private String stepName;
+
+window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+                //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+                let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${meta.row + 1}</span>`;
+                let secondRow = "";
+                if(row.stepName && row.stepName.trim() !== "") {
+                        secondRow += `${row.stepName}`;
+                }
+                if (row.stepSubName && row.stepSubName.trim() !== "") {
+                        secondRow += ` (${row.stepSubName})`;
+                }
+                return displayName + (secondRow ? `<br/>${secondRow}` : "");
+        }
+        return data;
+};
+```
+
 ## Vlastnosti @DataTableColumn
 
 Pôvodná dokumentácia na stránke [datatables.net](https://datatables.net/reference/option/columns:)
@@ -133,6 +156,7 @@ Voliteľné polia:
 - ```renderFormat``` - https://datatables.net/reference/option/columns.renderFormat
 - ```renderFormatLinkTemplate``` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - ```renderFormatPrefix``` - https://datatables.net/reference/option/columns.renderFormatPrefix
+- `renderFunction` - meno funkcie v JavaScripte, ktorá sa použije pre vlastné vykreslenie hodnoty stĺpca. Viac na [stránke DataTables](https://datatables.net/reference/option/columns.render).
 - `sortAfter` - meno poľa za ktoré sa pridá toto pole v poradí
 - ```editor``` - objekt ```DataTableColumnEditor```
 - ```hidden``` - pole sa nezobrazí v datatabuľke a používateľ si ho na rozdiel od ```visible``` nemôže zobraziť, pole môže byť použité v editore

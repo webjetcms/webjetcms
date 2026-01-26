@@ -44,6 +44,22 @@
         return urlWithParams;
     }
 
+    window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+            //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+            let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${meta.row + 1}</span>`;
+            let secondRow = "";
+            if(row.stepName && row.stepName.trim() !== "") {
+                secondRow += `${row.stepName}`;
+            }
+            if (row.stepSubName && row.stepSubName.trim() !== "") {
+                secondRow += ` (${row.stepSubName})`;
+            }
+            return displayName + (secondRow ? `<br/>${secondRow}` : "");
+        }
+        return data;
+    }
+
     window.domReady.add(function () {
         formStepsDataTable = WJ.DataTable({
             url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
@@ -98,7 +114,7 @@
             fetchOnEdit: true,
             fetchOnCreate: true,
             idAutoOpener: false,
-            toggleStyle: "multi",
+            toggleStyle: "single",
             toggleSelector: "td",
             paging: false
         });
@@ -253,7 +269,7 @@
         padding: 15px;
         margin-left: -15px;
         margin-right: -15px;
-        overflow: scroll;
+        overflow: auto;
     }
     div.stepPreview input, div.stepPreview select, div.stepPreview textarea, div.stepPreview button, div.stepPreview input {
         pointer-events: none;
