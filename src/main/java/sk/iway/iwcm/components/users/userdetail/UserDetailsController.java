@@ -216,16 +216,20 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         if ("remove".equals(target.getAction())) return;
 
 		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword()))
-		{
-			//vygeneruj heslo
-			entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));
-		}
+			// generate password
+			entity.setPassword(generateUserPassword());
 
         Prop prop = Prop.getInstance(request);
 
         //Import setting
         if(isImporting()) {
-            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+            if(Tools.isEmpty(entity.getPassword())) {
+                if(entity.getId() == null || entity.getId() < 1)
+                    // generate password
+			        entity.setPassword(generateUserPassword());
+                else
+                    entity.setPassword(UserTools.PASS_UNCHANGED);
+            }
 
             if (entity.getEditorFields()==null) {
                 UserDetailsEditorFields udef = new UserDetailsEditorFields();
@@ -385,5 +389,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         entity.setRegDate(new Date(Tools.getNow()));
         entity.setLastLogonAsDate(null);
         super.beforeDuplicate(entity);
+    }
+
+    private final String generateUserPassword() {
+        return Password.generateStringHash(5) + Password.generatePassword(5);
     }
 }
