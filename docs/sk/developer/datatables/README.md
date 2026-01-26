@@ -810,3 +810,19 @@ Logika pre obsluhu koncového bodu `/sumAll` je v triede [DatatableRestControlle
 Nakoľko `footer` využíva dáta tabuľky (až na jeden prípad), výsledná hodnota stĺpca závisí na vy-filtrovaných dátach. Takto viete ľahko zistiť celkovú hodnotu stĺpcov pre špecifické parametre.
 
 !>**Upozornenie:** Ak tabuľka je nastavená ako `serverSide: true` a mód pätičky je `all`, spočítané hodnoty sa **nemenia** v závislosti od filtrovania v tabuľke.
+
+### Preusporiadanie riadkov
+
+Preusporiadanie riadkov umožňuje používateľovi meniť poradie záznamov v tabuľke pomocou drag & drop. Funkčnosť je implementovaná pomocou rozšírenia `RowReorder` z DataTables.
+
+**Použitie:**
+
+Pre aktiváciu preusporiadania riadkov je potrebné v `@DataTableColumn` anotácii mať nastavený atribút `inputType` na hodnotu `DataTableColumnType.ROW_REORDER`. Napríklad:
+
+```java
+@Column(name = "sort_priority")
+@DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false)
+private Integer sortPriority;
+```
+
+Pri zmene poradia riadkov sa automaticky vyvolá backend endpoint `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), ktorý aktualizuje hodnoty pre daný stĺpec označený ako `ROW_REORDER` a uloží zmeny do databázy. Ak uloženie bolo úspešné, tabuľka sa obnoví a zobrazí nové poradie riadkov, plus sa zobrazí notifikácia o úspešnom uložení zmien. V prípade chyby sa zobrazí chybová notifikácia.
