@@ -37,6 +37,7 @@
     var formStepsDataTable;
     var formItemsDataTable;
     var loadingPreview = false;
+    var loadingStepItems = false;
 
     function getActualPath(stepId) {
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
@@ -59,8 +60,12 @@
         });
         formStepsDataTable.hideButtons(["import", "export", "celledit"]);
 
+
         formStepsDataTable.on('select.dt.DT deselect.dt.DT', function () {
-            console.log("formStepsDataTable selection changed");
+            if(loadingStepItems === true) return;
+            loadingStepItems = true;
+
+            //console.log("formStepsDataTable selection changed");
             let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
             if(selectedStep.length > 0) {
                 const stepId = selectedStep[0].getAttribute("id");
@@ -79,6 +84,11 @@
                 formItemsDataTable.ajax.reload();
                 $("div.stepPreview").html("");
             }
+
+            // Check if data loaded, then allow next load
+            formItemsDataTable.on('xhr.dt', function() {
+                loadingStepItems = false;
+            });
         });
 
         formStepsDataTable.on("draw", function() {
@@ -209,7 +219,7 @@
 
             window.setTimeout(() => {
                 loadingPreview = false;
-            }, 500);
+            }, 100);
         } catch (error) {
             console.error("Error fetching step preview:", error);
             loadingPreview = false;
@@ -231,6 +241,17 @@
     function onResize() {
         let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight() - 10;
         $("div.stepPreview").css("height", height + "px");
+    }
+
+    // If any step exist, open the first one by default
+    window.onload = function() {
+        let steps = $("#formStepsDataTable tbody tr");
+        if(steps.length > 0) {
+            let tdS = $(steps[0]).find("td");
+            if(tdS.length > 0) {
+                $(tdS[1]).click();
+            }
+        }
     }
 </script>
 
@@ -256,6 +277,7 @@
     button.buttons-settings { display: none; }
     div.stepPreviewWrapper { background-color: #F3F3F6; }
     div.stepPreview {
+        background-color: #F3F3F6;;
         padding: 15px;
         margin-left: -15px;
         margin-right: -15px;

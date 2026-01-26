@@ -134,7 +134,12 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public FormsEntity getOneItem(long id) {
         FormsEntity entity = formsService.getById(id);
-        if (entity == null) return null;
+        if (entity == null) {
+            entity = new FormsEntity();
+            entity.setFormType( FormsService.FORM_TYPE.MULTISTEP.value() );
+            return entity;
+        }
+
         if (formsService.isFormAccessible(entity.getFormName(), getUser())) {
             int domainId = CloudToolsForCore.getDomainId();
             formsService.prepareForm(entity, domainId);
@@ -148,6 +153,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
             return processFromEntity(entity, ProcessItemAction.GETONE);
         }
+
         return null;
     }
 
@@ -247,8 +253,8 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public FormsEntity processFromEntity(FormsEntity entity, ProcessItemAction action) {
-        if(Tools.isEmpty(entity.getFormType())) entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
-        //entity.setFormTypeText( getProp().getText("components.form.form_type." + entity.getFormType()) );
+        if(Tools.isEmpty(entity.getFormType()))
+             entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
         return entity;
     }
 }

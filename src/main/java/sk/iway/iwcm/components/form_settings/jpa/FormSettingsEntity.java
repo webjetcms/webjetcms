@@ -39,13 +39,13 @@ public class FormSettingsEntity {
     private String formName;
 
     @Column(name = "recipients")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.formsimple.recipients", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.formsimple.recipients")
     @Size(max = 255)
     private String recipients;
 
     /* STYLES in multistep form */
         @Column(name = "row_view")
-        @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView", className = "form-advanced",
+        @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "components.formsimple.rowView", className = "not-form",
             editor = {
                 @DataTableColumnEditor(
                     attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.form.form_style") }
@@ -55,12 +55,12 @@ public class FormSettingsEntity {
         private Boolean rowView;
 
         @Column(name = "form_add_classes")
-        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "editor.form.add_classes", className = "not-formsimple form-advanced")
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "editor.form.add_classes", className = "not-formsimple not-form")
         @Size(max = 255)
         private String formAddClasses;
 
         @Column(name = "form_css")
-        @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "editor.form.add_css_styles", className = "not-formsimple form-advanced",
+        @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "editor.form.add_css_styles", className = "not-formsimple not-form",
             editor = {
                 @DataTableColumnEditor(
                     attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after") }
@@ -71,28 +71,28 @@ public class FormSettingsEntity {
         private String formCss;
 
     @Column(name = "cc_emails")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.cc_emails", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.cc_emails")
     @Size(max = 255)
     private String ccEmails;
 
     @Column(name = "bcc_emails")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.bcc_emails", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.bcc_emails")
     @Size(max = 255)
     private String bccEmails;
 
     @Column(name = "reply_to")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.reply_to_emails", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.reply_to_emails")
     @Size(max = 255)
     private String replyTo;
 
     @Column(name = "subject")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.subject", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.subject")
     @Size(max = 255)
     private String subject;
 
     /* Deprecated in multistep because we have field formName, so we dont need to use this field, that contained formName in the past */
     @Column(name = "savedb")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.savedb", className = "not-formsimple form-deprecated")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.savedb", className = "not-formsimple")
     @Size(max = 255)
     private String savedb;
 
@@ -108,7 +108,7 @@ public class FormSettingsEntity {
 
     /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", className = "form-deprecated", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", editor = {
         @DataTableColumnEditor(options = {
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.default", value = ""),
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.forward", value = "forward"),
@@ -119,15 +119,15 @@ public class FormSettingsEntity {
     private String forwardType;
 
     @Column(name = "force_text_plain")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.force_text_plain", className = "not-formsimple form-email")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.force_text_plain", className = "not-formsimple")
     private Boolean forceTextPlain;
 
     @Column(name = "form_mail_encoding")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.form_mail_encoding", className = "not-formsimple form-email")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.form_mail_encoding", className = "not-formsimple")
     private Boolean formMailEncoding;
 
     @Column(name = "add_tech_info")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.addTechInfo", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.addTechInfo", className = "not-form")
     private Boolean addTechInfo;
 
     @Column(name = "is_pdf")
@@ -157,13 +157,13 @@ public class FormSettingsEntity {
 
     /* This looks useless for us. Why set fields values to email headers. */
     @Column(name = "fields_email_header")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple form-deprecated")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple")
     @Size(max = 255)
     private String fieldsEmailHeader;
 
     /* We are re-using this in multistep forms (just using old value, but functionality is different) */
     @Column(name = "after_send_interceptor")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "form-advanced")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor")
     @Size(max = 255)
     private String afterSendInterceptor;
 
@@ -171,7 +171,7 @@ public class FormSettingsEntity {
     private Integer useFormMailDocId;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null form-deprecated")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")
     private transient DocDetailsDto useFormMailDoc;
 
     @Column(name = "encryption_key")
@@ -180,12 +180,12 @@ public class FormSettingsEntity {
     private String encryptKey;
 
     @Column(name = "email_text_before")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textBefore", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textBefore", className = "not-form")
     @Size(max = 1024)
     private String emailTextBefore;
 
     @Column(name = "email_text_after")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textAfter", className = "form-email")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textAfter", className = "not-form")
     @Size(max = 1024)
     private String emailTextAfter;
 
@@ -203,7 +203,7 @@ public class FormSettingsEntity {
 
     /* FILE PROPERTIES */
     @Column(name = "max_size_in_kilobytes")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.file_size_in_kilobytes", className = "not-formsimple form-advanced",
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.file_size_in_kilobytes", className = "not-formsimple",
         editor = {
 			@DataTableColumnEditor(
 				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.form.file_limits") }
@@ -213,16 +213,16 @@ public class FormSettingsEntity {
     private Integer maxSizeInKilobytes;
 
     @Column(name = "allowed_extensions")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple form-advanced")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "components.forms.file_restrictions.allowed_extensions", className = "not-formsimple")
     @Size(max = 255)
     private String allowedExtensions;
 
     @Column(name = "picture_height")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_height", className = "not-formsimple form-advanced")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_height", className = "not-formsimple")
     private Integer pictureHeight;
 
     @Column(name = "picture_width")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_width", className = "not-formsimple form-advanced")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title= "components.forms.file_restrictions.image_width", className = "not-formsimple")
     private Integer pictureWidth;
 
     @Column(name = "use_form_doc_id")
