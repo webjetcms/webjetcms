@@ -8,6 +8,7 @@
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
+- Bezpečnosť - zakázané presmerovanie na externé URL adresy po prihlásení cez prihlasovací formulár.
 - Dátové tabuľky - opravená chyba zobrazenia výberových polí pri zapnutí režimu Upraviť v zobrazení mriežky (#57657-16).
 - Dátové tabuľky - opravené uloženie nového záznamu cez klávesovú skratku `CTRL+S` - po uložení sa nastavia vrátené hodnoty nazad do editora aby sa správne nastavilo ID záznamu pre ďalšie úpravy (#57657-16).
 - Formuláre - upravené generovanie názvu poľa tak, aby neobsahovalo bodku (#57657-16).
