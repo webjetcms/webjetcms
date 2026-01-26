@@ -112,6 +112,11 @@
 
                 filteredColumns.forEach(function(column) {
                     if("formSettings.id" === column.data) { return; }
+                    if("formSettings.formName" === column.data) {
+                        //This column is used to join to forms, we do not fill it manually
+                        formsDataTable.EDITOR.field(column.data).hide();
+                        return;
+                    }
 
                     if(column.data.startsWith("formSettings.")) {
                         let className = column.className;
@@ -131,11 +136,13 @@
 
                 if("create" === action) {
                     formsDataTable.EDITOR.field("formName").enable();
+                    formsDataTable.EDITOR.field("formType").disable();
                     formsDataTable.EDITOR.field("count").hide();
                     formsDataTable.EDITOR.field("createDate").hide();
                     $(".DTE_Action_Create").find(".modal-title").text("[[#{editor.form_setting.add_multistep_form}]]");
                 } else {
                     formsDataTable.EDITOR.field("formName").disable();
+                    formsDataTable.EDITOR.field("formType").enable();
                     formsDataTable.EDITOR.field("count").show();
                     formsDataTable.EDITOR.field("createDate").show();
                 }
