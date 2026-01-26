@@ -11,7 +11,7 @@ import net.sourceforge.stripes.action.FileBean;
 
 /**
  *  IwayFileBean.java
- *  
+ *
  *  subclass of {@link FileBean} that overrides all the
  *  methods that rely on having a {@link File} present, to use the {@link FileItem}
  *  created by commons upload instead and is serializable
@@ -30,15 +30,15 @@ public class IwayFileBean extends FileBean implements Serializable
 	 * Comment for <code>serialVersionUID</code>
 	 */
 	private static final long serialVersionUID = 8501190073097050241L;
-	
+
 	FileItem item;
-	
+
 	public IwayFileBean(File file, FileItem item)
 	{
 		super(file, item.getContentType(), item.getName());
 		this.item = item;
 	}
-	
+
 	@Override public long getSize() { return item.getSize(); }
 
    @Override public InputStream getInputStream() throws IOException {
@@ -47,7 +47,7 @@ public class IwayFileBean extends FileBean implements Serializable
 
    @Override public void save(File toFile) throws IOException {
        try {
-           item.write(toFile);
+           item.write(toFile.toPath());
            delete();
        }
        catch (Exception e) {

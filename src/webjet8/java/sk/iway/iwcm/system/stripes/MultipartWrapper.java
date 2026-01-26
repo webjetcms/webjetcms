@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -13,13 +14,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemHeaders;
-import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileItemHeaders;
+import org.apache.commons.fileupload2.core.FileItemHeadersProvider;
+import org.apache.commons.fileupload2.core.FileUploadException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
 import net.sourceforge.stripes.action.FileBean;
 import net.sourceforge.stripes.controller.FileUploadLimitExceededException;
 import sk.iway.iwcm.Constants;
@@ -42,6 +44,7 @@ import sk.iway.upload.DiskMultiPartRequestHandler;
  *@created      Date: 26.3.2007 9:52:29
  *@modified     $Date: 2009/09/11 06:54:19 $
  */
+@SuppressWarnings("rawtypes")
 public class MultipartWrapper implements net.sourceforge.stripes.controller.multipart.MultipartWrapper //NOSONAR
 {
 	//in case of manual parsing of multipart request, we store parsed request here
@@ -376,35 +379,20 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public byte[] get() {
-			try {
-				try (InputStream is = part.getInputStream()) {
-					return is.readAllBytes();
-				}
-			} catch (IOException e) {
-				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani dat z FileItem", e);
-				return null;
+		public byte[] get() throws IOException {
+			try (InputStream is = part.getInputStream()) {
+				return is.readAllBytes();
 			}
 		}
 
 		@Override
-		public String getString(String charset) throws UnsupportedEncodingException {
-			try {
-				return new String(get(), charset);
-			} catch (IOException e) {
-				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani stringu z FileItem", e);
-				return null;
-			}
+		public String getString(Charset charset) throws IOException {
+			return new String(get(), charset);
 		}
 
 		@Override
-		public String getString() {
-			try {
-				return getString(SetCharacterEncodingFilter.getEncoding());
-			} catch (UnsupportedEncodingException e) {
-				Logger.error(MultipartWrapper.class, "Chyba pri ziskavani stringu z FileItem", e);
-				return null;
-			}
+		public String getString() throws IOException {
+			return getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()));
 		}
 
 		@Override
@@ -419,27 +407,27 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 
 		// Other required methods...
 		@Override
-		public void write(File file) throws IOException {
+		public FileItem write(Path file) throws IOException {
 			part.write(file.toString());
+			return this;
 		}
 
 		@Override
-		public void delete() {
-			try {
-				part.delete();
-			} catch (IOException e) {
-				Logger.error(MultipartWrapper.class, "Chyba pri mazani FileItem", e);
-			}
+		public FileItem delete() throws IOException {
+			part.delete();
+			return this;
 		}
 
 		@Override
-		public void setFieldName(String name) {
+		public FileItem setFieldName(String name) {
 			// Part doesn't support changing field name
+			return this;
 		}
 
 		@Override
-		public void setFormField(boolean state) {
+		public FileItem setFormField(boolean state) {
 			// Part doesn't support changing form field state
+			return this;
 		}
 
 		@Override
@@ -454,8 +442,9 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public void setHeaders(FileItemHeaders headers) {
+		public FileItemHeadersProvider setHeaders(FileItemHeaders headers) {
 			// Part doesn't support setting headers
+			return this;
 		}
 	}
 
