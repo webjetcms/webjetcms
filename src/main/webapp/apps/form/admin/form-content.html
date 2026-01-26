@@ -15,18 +15,20 @@
     const urlParams = new URLSearchParams(queryString);
     const urlFormName = urlParams.get('formName');
 
+    const isArchived = false;
+
     WJ.breadcrumb({
-        id: "form-content",
+        id: isArchived ? "form-details-archived" : "form-details",
         tabs: [
             {
-                url: '/apps/form/admin/form-content/?formName=' + urlFormName,
-                title: /*[[#{components.form_items.navbar_title.js}]]*/ '',
+                url: (isArchived ? "/apps/form/admin/archived/detail/?formName=" : "/apps/form/admin/detail/?formName=") + urlFormName,
+                title: urlFormName,
                 active: true
             }
         ],
         backlink: {
-            url: '/apps/form/admin/detail/?formName=' + urlFormName,
-            title: urlFormName,
+            url: isArchived ? "/apps/form/admin/archived/" : "/apps/form/admin/",
+            title: WJ.translate("forms.formsList.js"),
         }
     });
 </script>
@@ -52,7 +54,8 @@
             fetchOnCreate: true,
             idAutoOpener: false,
             toggleStyle: "single",
-            toggleSelector: "td"
+            toggleSelector: "td",
+            paging: false
         });
         formStepsDataTable.hideButtons(["import", "export", "celledit"]);
 
@@ -99,7 +102,8 @@
             fetchOnCreate: true,
             idAutoOpener: false,
             toggleStyle: "multi",
-            toggleSelector: "td"
+            toggleSelector: "td",
+            paging: false
         });
         formItemsDataTable.hideButtons(["import", "export", "celledit"]);
 
@@ -164,6 +168,8 @@
                 .catch(err => console.error(err));
             });
         });
+
+        onResize();
     });
 
     async function loadStepPreview() {
@@ -218,9 +224,13 @@
         }, 500);
     });
 
+    setInterval(() => {
+        onResize();
+    }, 2000);
+
     function onResize() {
-        let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight();
-        $("div.stepPreview").css("max-height", height + "px");
+        let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight() - 10;
+        $("div.stepPreview").css("height", height + "px");
     }
 </script>
 
@@ -246,11 +256,13 @@
     button.buttons-settings { display: none; }
     div.stepPreviewWrapper { background-color: #F3F3F6; }
     div.stepPreview {
-        padding-top: 15px;
-        padding-bottom: 15px;
-        overflow: auto;
+        padding: 15px;
+        margin-left: -15px;
+        margin-right: -15px;
+        overflow: scroll;
+    }
+    div.stepPreview input, div.stepPreview select, div.stepPreview textarea, div.stepPreview button, div.stepPreview input {
         pointer-events: none;
-        opacity: 0.9;
     }
     div.dt-scroll-head { display: none; }
 
@@ -259,6 +271,11 @@
 
     /* Fix row margin */
     div.form-step div.row { margin-right: 0px; }
+
+    /* hide pagination */
+    #formStepsDataTable_wrapper .dt-footer-row .select-info, #formItemsDataTable_wrapper .dt-footer-row .select-info {
+        display: none;
+    }
 </style>
 
 <div class="row">
@@ -274,8 +291,10 @@
         <div id="" class="dt-header-row clearfix">
             <div class="row">
                 <div class="col-auto">
-                    <div class="dt-buttons">
-                       <button class="btn btn-warning btn-preview" style="margin-right: 16px; margin-left: 0px;"><i class="ti ti-eye"></i> Náhľad</button>
+                    <div class="dt-buttons" style="height: 39px; max-height: none;">
+                        <div style="padding-top: 5px;">
+                            <i class="ti ti-eye"></i> Náhľad kroku
+                        </div>
                     </div>
                 </div>
             </div>

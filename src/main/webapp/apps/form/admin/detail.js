@@ -26,16 +26,16 @@
         url = WJ.urlUpdateParam(url, "formName", formName);
 
         // Title
-        WJ.setTitle(WJ.translate("forms.formsList.js"));
+        WJ.setTitle(WJ.translate("menu.forms"));
 
         // Header tabs
         WJ.headerTabs({
             id: 'tabsFilter',
             tabs: [
                 { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: !isArchived },
+                { url: '/apps/form/admin/form-content/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false },
                 { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: isArchived },
-                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false },
-                { url: '/apps/form/admin/form-content/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false }
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]
         });
 

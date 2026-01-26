@@ -94,7 +94,7 @@ module.exports = {
     },
 
     getContentSelector() {
-        return "div#info > div";
+        return "div#info > div.overflow-auto";
     },
 
     getSubjectSelector() {

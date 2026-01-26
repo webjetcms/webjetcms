@@ -355,10 +355,8 @@ public class FormMailAction extends HttpServlet
 		String email = "";
 		String meno = "";
 
-		GroupsDB groupsDB = GroupsDB.getInstance();
 		TemplatesDB tempDB = TemplatesDB.getInstance();
 		TemplateDetails temp = null;
-		GroupDetails group;
 
 		//fmeno sa pouzivalo volakedy, uz je depreaced
 		if (request.getParameter("fmeno") != null || request.getParameter("fname") != null)
@@ -550,7 +548,6 @@ public class FormMailAction extends HttpServlet
 						originalPageHtml = originalPageHtml + doc.getData();
 
 						temp = tempDB.getTemplate(doc.getTempId());
-						group = groupsDB.getGroup(doc.getGroupId());
 
 						if (doc.getData().contains("/components/formsimple/"))
 						{
@@ -2426,7 +2423,6 @@ public class FormMailAction extends HttpServlet
 	 * @param attachs
 	 * @param request
 	 */
-	@SuppressWarnings("unchecked")
 	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
 	{
 		DocDB docDB = DocDB.getInstance();

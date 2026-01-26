@@ -120,7 +120,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return page;
     }
 
-    @SuppressWarnings("unchecked")
     public Page<E> findByColumns(Map<String, String> params, Pageable pageable, E search, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
         if(formName != null) {
