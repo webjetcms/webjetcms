@@ -4,8 +4,30 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('forms', ({ I , DT, DTE, Document }) => {
-    I.amOnPage("/apps/form/admin/#/detail/Dotaznik-spokojnosti-externy");
+Scenario('forms @current', ({ I , DT, DTE, Document }) => {
+    I.amOnPage("/apps/form/admin/");
+    Document.screenshot("/redactor/apps/form/datatable.png");
+
+    DT.filterEquals("formName", "Dotaznik-spokojnosti-externy");
+    I.clickCss("td.dt-select-td");
+    I.click("button.buttons-edit");
+    DTE.waitForEditor("formsDataTable");
+
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-basic.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-basic.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-email.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-advanced-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-advanced.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-deprecated-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-deprecated.png");
+
+    I.amOnPage("/apps/form/admin/detail/?formName=Dotaznik-spokojnosti-externy");
     DT.waitForLoader();
 
     Document.screenshot("/redactor/apps/form/detail.png");
@@ -21,7 +43,6 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${I.getConfLng()}`);
     }
-
 
     Document.screenshot("/redactor/apps/form/detail-editnote.png");
 

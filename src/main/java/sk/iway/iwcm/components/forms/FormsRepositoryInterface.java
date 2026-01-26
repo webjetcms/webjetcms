@@ -16,6 +16,8 @@ import java.util.List;
 @NoRepositoryBean
 public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long> {
 
+    List<E> findAllByCreateDateIsNull();
+
     List<E> findAllByCreateDateIsNullAndDomainId(Integer domainId);
 
     int countAllByFormNameAndDomainId(String formName, Integer domainId);

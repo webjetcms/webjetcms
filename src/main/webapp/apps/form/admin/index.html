@@ -1,7 +1,11 @@
 <script data-th-inline="javascript">
     let url = "/admin/rest/forms-list/";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    const columnsToKeep = ["id", "formName", "count", "createDate"];
+    const formColumnsToKeep = ["id", "formName", "count", "createDate", "formType"];
+    const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc"];
+    const emailSettingColumns = ["recipients", "ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter"];
+    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "afterSendInterceptor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
+    const deprecatedSettingColumns = ["savedb", "forwardType", "fieldsEmailHeader", "useFormMailDoc"];
 
     var tabs = [
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
@@ -33,23 +37,15 @@
 
     let filteredColumns = [];
     columns.forEach(function(column) {
-        if(columnsToKeep.includes(column.data)) filteredColumns.push(column);
+        if(formColumnsToKeep.includes(column.data)) filteredColumns.push(column);
         else if(column.data.startsWith("formSettings.")) {
-            let classes = column.className != null ? column.className.split(" ") : [];
-
-            //Not show column
-            if(classes.includes("not-form")) return;
 
             column.hidden = true;
-            if(classes.includes("form-email")) {
-                column.editor.tab = "settings-email";
-            } else if(classes.includes("form-advanced")) {
-                column.editor.tab = "settings-advanced";
-            } else if(classes.includes("form-deprecated")) {
-                column.editor.tab = "settings-deprecated";
-            } else {
-                column.editor.tab = "settings-basic";
-            }
+            if(basicSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-basic"; }
+            else if(emailSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-email"; }
+            else if(advancedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-advanced"; }
+            else if(deprecatedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-deprecated"; }
+            else { column.editor.tab = "settings-basic"; } // Just in case, put it into basic tab
 
             filteredColumns.push(column);
         }
@@ -82,7 +78,8 @@
                 idAutoOpener: true,
                 lastExportColumnName: 'lastExportDate',
                 byIdExportColumnName: 'id',
-                fetchOnEdit: true
+                fetchOnEdit: true,
+                fetchOnCreate: true
             });
             formsDataTable.hideButtons(['celledit', 'duplicate', 'import']);
 
@@ -106,21 +103,49 @@
             formsDataTable.EDITOR.on('open', function (e, type, action) {
                 initEditor();
 
-                console.log("Action:", action);
+                let formType = formsDataTable.EDITOR.field('formType').get();
+                if("multistep" === formType) {
+                    $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
+                } else {
+                    $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
+                }
+
+                filteredColumns.forEach(function(column) {
+                    if("formSettings.id" === column.data) { return; }
+                    if("formSettings.formName" === column.data) {
+                        //This column is used to join to forms, we do not fill it manually
+                        formsDataTable.EDITOR.field(column.data).hide();
+                        return;
+                    }
+
+                    if(column.data.startsWith("formSettings.")) {
+                        let className = column.className;
+                        if(className) {
+                            let classNames = className.split(" ");
+
+                            if(formType === "simple" && classNames.includes("not-formsimple")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else if(formType === "basic" && classNames.includes("not-form")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else {
+                                formsDataTable.EDITOR.field(column.data).show();
+                            }
+                        }
+                    }
+                });
 
                 if("create" === action) {
                     formsDataTable.EDITOR.field("formName").enable();
+                    formsDataTable.EDITOR.field("formType").disable();
                     formsDataTable.EDITOR.field("count").hide();
                     formsDataTable.EDITOR.field("createDate").hide();
                     $(".DTE_Action_Create").find(".modal-title").text("[[#{editor.form_setting.add_multistep_form}]]");
                 } else {
                     formsDataTable.EDITOR.field("formName").disable();
+                    formsDataTable.EDITOR.field("formType").enable();
                     formsDataTable.EDITOR.field("count").show();
                     formsDataTable.EDITOR.field("createDate").show();
                 }
-
-                //Check if its multi step form
-                handleDeprecatedTab(formsDataTable.EDITOR, action);
             });
 
             function initEditor() {
@@ -135,31 +160,6 @@
                         }
                     });
                 }
-            }
-
-            function handleDeprecatedTab(editor, action) {
-                if(action === 'create') {
-                    $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
-                    return;
-                }
-
-                let formName = editor.field('formName').get();
-                fetch(`/admin/rest/forms-list/isMultistep?formName=${encodeURIComponent(formName)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': window.csrfToken
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(isMultistep => {
-                    if(true === isMultistep) {
-                        $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
-                    } else {
-                        $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
-                    }
-                })
             }
         }
 

@@ -150,7 +150,7 @@ export function typeQuill() {
     }
 
     window.isDtRowEdit = function(conf) {
-        console.log("isDtRowEdit conf=", conf);
+        //console.log("isDtRowEdit conf=", conf);
         if (!conf || !conf || typeof conf.className !== "string") {
             return false;
         }

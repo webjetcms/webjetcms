@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -60,7 +62,7 @@ public class SaveFormService {
 
     @Getter
     public static class FormFiles {
-        private final List<String> fileNames = new ArrayList<>();
+        private final Map<String, String> fileNames = new HashMap<>();
         private final StringBuilder fileNamesSendLater = new StringBuilder("");
         private final List<IwcmFile> attachs = new ArrayList<>();
     }
@@ -181,7 +183,7 @@ public class SaveFormService {
         if(Tools.isTrue(formSettings.getIsPdf())) {
 			pdfUrl = FormMailAction.saveFormAsPdf(htmlHandler.getFormPdfVersion(), form.getId().intValue(), request);
 			IwcmFile pdfFile =  new IwcmFile(pdfUrl);
-			formFiles.getFileNames().add(pdfFile.getName());
+			formFiles.getFileNames().put(pdfFile.getName(), pdfFile.getName());
 			formFiles.getFileNamesSendLater().append(FormMailAction.FORM_FILE_DIR).append(pdfFile.getName()).append(";").append(pdfFile.getName());
             formFiles.getAttachs().add(new IwcmFile(pdfUrl));
 		}
@@ -196,7 +198,7 @@ public class SaveFormService {
 			}
 
             // Set files into form
-            form.setFiles( String.join(",", formFiles.getFileNames()) );
+            form.setFiles( String.join(",", formFiles.getFileNames().keySet()) );
             formsRepository.save(form);
 
             if(attachFiles == false) {
@@ -243,7 +245,7 @@ public class SaveFormService {
                 //Save files
                 saveFiles(sessionValue, form.getId(), formFiles);
 
-                String value = formFiles.getFileNames().size() > 0 ? String.join(",", formFiles.getFileNames()) : "";
+                String value = formFiles.getFileNames().size() > 0 ? String.join(",", formFiles.getFileNames().values()) : "";
                 data.append(stepItem.getItemFormId()).append("-fileNames");
                 data.append("~").append(value).append("|");
 
@@ -289,7 +291,7 @@ public class SaveFormService {
                     file.renameTo(dest);
                     if (dest.exists()) {
 
-                        formFiles.getFileNames().add(dest.getName());
+                        formFiles.getFileNames().put(dest.getName(), fileName);
 
                         if ("false".equals(Constants.getString("useSMTPServer"))) {
 							formFiles.getFileNamesSendLater().append(";").append(dest.getVirtualPath()).append(";").append(dest.getName());
