@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
 public class FormStepEntity {
 
     @Id

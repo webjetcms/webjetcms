@@ -3063,6 +3063,66 @@ export const dataTableInit = options => {
                                 FooterSum.footerCallback(TABLE);
                             }, 100);
                         }
+                    })
+                    .on('row-reorder', function (e, diff, edit) {
+                        /**
+                         * Handle row reorder event by sending:
+                         * - column name that is source of reorder
+                         * - ids of involved row
+                         * - old values
+                         * - new values
+                         */
+                        const newUrl = DATA.url.split("?")[0] + "/row-reorder";
+                        const reorderData = {
+                            dataSrc: edit.dataSrc,
+                            values: diff.map(diffValue => ({
+                                id: diffValue.node.id,
+                                oldValue: diffValue.oldData,
+                                newValue: diffValue.newData
+                            }))
+                        };
+
+                        // Show processing indicator
+                        TABLE.buttons(".buttons-edit").processing(true);
+
+                        // Perform fetch POST to /row-reorder endpoint
+                        fetch(newUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': window.csrfToken
+                            },
+                            body: JSON.stringify(reorderData)
+                        })
+                        .then(response => {
+                            if (response.ok === false) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            //console.log("Row reorder success:", data);
+                            if(false == data) {
+                                WJ.notifyError(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.error.js"), 2000);
+                            } else {
+                               WJ.notifySuccess(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.success.js"), 2000);
+                            }
+
+                            // Reload table data to reflect changes
+                            TABLE.ajax.reload(null, false);
+                        })
+                        .catch(error => {
+                            //console.error("Row reorder error:", error);
+                            WJ.notifyError(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.error.js"), 2000);
+
+                            // Revert the reorder on error
+                            TABLE.ajax.reload(null, false);
+                        })
+                        .finally(() => {
+                            // Hide processing indicator
+                            TABLE.buttons(".buttons-edit").processing(false);
+                        });
+
                     });
             } else {
                 //src su skutocne data v JS objekte
