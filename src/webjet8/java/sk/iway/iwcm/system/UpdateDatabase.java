@@ -2609,20 +2609,20 @@ public class UpdateDatabase
 		// All forms (models not filled forms)
 		List<FormsEntity> allFormsList = formsRepository.findAllByCreateDateIsNull();
 
-		// Get multistep forms
-		List<FormsEntity> multistepForms = getFormsByType(FormsService.FORM_TYPE.MULTISTEP, allFormsList, docDetailsRepository);
-		multistepForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.MULTISTEP.value()); });
-		formsRepository.saveAll(multistepForms);
+		// Standard HTML /formmail.do form
+		List<FormsEntity> basicForms = getFormsByType(FormsService.FORM_TYPE.BASIC, allFormsList, docDetailsRepository);
+		basicForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.BASIC.value()); });
+		formsRepository.saveAll(basicForms);
 
-		//
+		// Form Simple App
 		List<FormsEntity> simpleForms = getFormsByType(FormsService.FORM_TYPE.SIMPLE, allFormsList, docDetailsRepository);
 		simpleForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.SIMPLE.value()); });
 		formsRepository.saveAll(simpleForms);
 
-		//
-		List<FormsEntity> basicForms = getFormsByType(FormsService.FORM_TYPE.BASIC, allFormsList, docDetailsRepository);
-		basicForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.BASIC.value()); });
-		formsRepository.saveAll(basicForms);
+		// MultiStep Form
+		List<FormsEntity> multistepForms = getFormsByType(FormsService.FORM_TYPE.MULTISTEP, allFormsList, docDetailsRepository);
+		multistepForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.MULTISTEP.value()); });
+		formsRepository.saveAll(multistepForms);
 
 		//
 		formsRepository.setUnknownFormType();
@@ -2644,7 +2644,7 @@ public class UpdateDatabase
 		if(FormsService.FORM_TYPE.MULTISTEP.equals(formType)) {
 			for(LabelValueInteger mv : getMultistepFormNames()) {
 				for(FormsEntity fe : allFormsList) {
-					if(fe.getFormName().equals(mv.getLabel()) && fe.getDomainId() == mv.getValue().intValue()) {
+					if(fe.getFormName().equalsIgnoreCase(mv.getLabel()) && fe.getDomainId() == mv.getValue().intValue()) {
 						formsList.add(fe);
 						break;
 					}
