@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,8 +37,10 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
@@ -45,6 +49,9 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.FormsEntity;
+import sk.iway.iwcm.components.forms.FormsRepository;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -52,6 +59,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -62,6 +70,7 @@ import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.update.DomainIdUpdateService;
 import sk.iway.iwcm.users.UserDetails;
@@ -139,6 +148,8 @@ public class UpdateDatabase
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
 		updateFormAttributesTable();
+
+		parseFormsByType();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -2579,5 +2590,129 @@ public class UpdateDatabase
 
 		//zapis do DB, ze je to aktualizovane
 		saveSuccessUpdate(note);
+	}
+
+	public static void parseFormsByType() {
+
+		String note = "25.01.2026 [sivan] zisti a nastav typ formularov (multistep, simple, basic)";
+		if (isAllreadyUpdated(note)) return;
+
+		FormsRepository formsRepository = Tools.getSpringBean("formsRepository", FormsRepository.class);
+		if(formsRepository == null) return;
+
+		FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
+		if(formSettingsRepository == null) return;
+
+		DocDetailsRepository docDetailsRepository = Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class);
+		if(docDetailsRepository == null) return;
+
+		// All forms (models not filled forms)
+		List<FormsEntity> allFormsList = formsRepository.findAllByCreateDateIsNull();
+
+		// Get multistep forms
+		List<FormsEntity> multistepForms = getFormsByType(FormsService.FORM_TYPE.MULTISTEP, allFormsList, docDetailsRepository);
+		multistepForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.MULTISTEP.value()); });
+		formsRepository.saveAll(multistepForms);
+
+		//
+		List<FormsEntity> simpleForms = getFormsByType(FormsService.FORM_TYPE.SIMPLE, allFormsList, docDetailsRepository);
+		simpleForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.SIMPLE.value()); });
+		formsRepository.saveAll(simpleForms);
+
+		//
+		List<FormsEntity> basicForms = getFormsByType(FormsService.FORM_TYPE.BASIC, allFormsList, docDetailsRepository);
+		basicForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.BASIC.value()); });
+		formsRepository.saveAll(basicForms);
+
+		//
+		formsRepository.setUnknownFormType();
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
+	}
+
+	/**
+	 * Get forms by type
+	 * @param formType
+	 * @param allFormsList
+	 * @param docDetailsRepository
+	 * @return
+	 */
+	private static List<FormsEntity> getFormsByType(FormsService.FORM_TYPE formType, List<FormsEntity> allFormsList, DocDetailsRepository docDetailsRepository) {
+		List<FormsEntity> formsList = new ArrayList<>();
+
+		if(FormsService.FORM_TYPE.MULTISTEP.equals(formType)) {
+			for(LabelValueInteger mv : getMultistepFormNames()) {
+				for(FormsEntity fe : allFormsList) {
+					if(fe.getFormName().equals(mv.getLabel()) && fe.getDomainId() == mv.getValue().intValue()) {
+						formsList.add(fe);
+						break;
+					}
+				}
+			}
+		} else if(FormsService.FORM_TYPE.SIMPLE.equals(formType) || FormsService.FORM_TYPE.BASIC.equals(formType)) {
+			String dataSelector = FormsService.FORM_TYPE.SIMPLE.equals(formType) ? "%!INCLUDE(/components/formsimple/form.jsp,%" : "%/formmail.do?savedb=%";
+			String patternRegex = FormsService.FORM_TYPE.SIMPLE.equals(formType) ? "(!INCLUDE\\(/components/formsimple/form\\.jsp[\\s\\S]*?\\)\\!)" : "action=\"/formmail\\.do\\?[^\\\"]*savedb=([^\\\"&]+)";
+			Pattern formPattern = Pattern.compile(patternRegex);
+
+			DocDB docDB = DocDB.getInstance();
+			Map<String, LabelValueInteger> formsMap = new HashMap<>();
+			for(DocDetails docDetails : docDetailsRepository.findByDataLike(dataSelector)) {
+
+				if(Tools.isNotEmpty(docDetails.getData())) {
+
+					String domain = docDB.getDomain(docDetails.getDocId());
+					Integer domainId = GroupsDB.getDomainId(domain);
+					if(domainId == -1) domainId = 1;
+
+					Matcher formMatcher = formPattern.matcher(docDetails.getData());
+					while (formMatcher.find()) {
+
+						String formName;
+						if(FormsService.FORM_TYPE.SIMPLE.equals(formType)) {
+							// SIMPLE FORM
+							PageParams pageParams = new PageParams( formMatcher.group(1) );
+							formName = pageParams.getValue("formName", "");
+							formName = DocTools.removeChars(formName, true);
+						} else {
+							// BASIC FORM
+							formName = formMatcher.group(1).trim();
+							formName = formName.replaceAll("'", "").replaceAll("\"", "").replaceAll("&quot;", "").replaceAll("&nbsp;", " ");
+							formName = DocTools.removeChars(formName, true);
+						}
+
+						String key = formName + "-" + domainId;
+						formsMap.putIfAbsent(key, new LabelValueInteger(formName, domainId));
+					}
+				}
+			}
+
+			for(LabelValueInteger lv : formsMap.values()) {
+				for(FormsEntity fe : allFormsList) {
+					if(fe.getFormName().equalsIgnoreCase(lv.getLabel()) && fe.getDomainId() == lv.getValue().intValue()) {
+						formsList.add(fe);
+						break;
+					}
+				}
+			}
+		}
+		return formsList;
+	}
+
+	/**
+	 * Get multistep form names from form_steps table
+	 * @return
+	 */
+	private static List<LabelValueInteger> getMultistepFormNames() {
+		String query = "SELECT UNIQUE form_name, domain_id FROM form_steps";
+		List<LabelValueInteger> values = new ArrayList<>();
+        new ComplexQuery().setSql(query).list(new Mapper<LabelValueInteger>() {
+			@Override
+			public LabelValueInteger map(ResultSet rs) throws SQLException {
+				values.add(new LabelValueInteger(rs.getString("form_name"), rs.getInt("domain_id")));
+                return null;
+			}
+		});
+		return values;
 	}
 }

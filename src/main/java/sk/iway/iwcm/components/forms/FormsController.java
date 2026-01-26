@@ -41,6 +41,7 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
@@ -70,10 +71,14 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
         if(page == null) {
             addNotify(new NotifyBean(getProp().getText("admin.operationPermissionDenied"), getProp().getText("components.forms.permsDeniedNote"), NotifyType.ERROR, 15000));
-            return new DatatablePageImpl<>(new ArrayList<>());
+            page = new DatatablePageImpl<>(new ArrayList<>());
         }
 
-        return page;
+        DatatablePageImpl<FormsEntity> pageImpl = new DatatablePageImpl<>(page);
+        pageImpl.addOptions("formType", FormsService.FORM_TYPE.getSelectOptions(getProp()), "label", "value", false);
+
+        processFromEntity(pageImpl, ProcessItemAction.GETALL);
+        return pageImpl;
     }
 
     @Override
@@ -141,7 +146,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
                 entity.setFormSettings(formSettings);
             }
 
-            return entity;
+            return processFromEntity(entity, ProcessItemAction.GETONE);
         }
         return null;
     }
@@ -240,10 +245,10 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         return html;
     }
 
-    @GetMapping(path="/isMultistep")
-    public boolean isFormMultistep(@RequestParam("formName") String formName) {
-        if(Tools.isEmpty(formName)) return false;
-        int count = formStepsRepository.getNumberOfSteps(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
-        return count > 0 ? true : false;
+    @Override
+    public FormsEntity processFromEntity(FormsEntity entity, ProcessItemAction action) {
+        if(Tools.isEmpty(entity.getFormType())) entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
+        //entity.setFormTypeText( getProp().getText("components.form.form_type." + entity.getFormType()) );
+        return entity;
     }
 }

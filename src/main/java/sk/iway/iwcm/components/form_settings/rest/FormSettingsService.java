@@ -73,12 +73,10 @@ public class FormSettingsService {
 
     public Map<String, String> load(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(formSettingsRepository == null) {
-            return null;
-        }
+        if(formSettingsRepository == null) return new HashMap<>();
 
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-        if(formSettings == null) return null;
+        if(formSettings == null) return new HashMap<>();
 
         return toAttributeMap(formSettings);
     }

@@ -60,7 +60,7 @@ public class MultistepFormsRestController {
         }
     }
 
-    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML)
+    @GetMapping(value="/get-step-preview", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML)
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback

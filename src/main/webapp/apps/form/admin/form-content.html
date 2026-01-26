@@ -65,8 +65,11 @@
                 formItemsDataTable.setAjaxUrl(getActualPath(stepId));
                 formItemsDataTable.ajax.reload();
 
-                // load step preview
-                loadStepPreview();
+                if(loadingPreview === false) {
+                    loadingPreview = true;
+                    // load step preview
+                    loadStepPreview();
+                }
             } else {
                 // clear step data
                 formItemsDataTable.setAjaxUrl(getActualPath(-1));
@@ -172,7 +175,7 @@
         }
 
         const stepId = selectedStep[0].getAttribute("id");
-        const getStepUrl = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        const getStepUrl = `/rest/multistep-form/get-step-preview?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
         try {
             const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json' } });
             if (!r.ok) {
@@ -197,11 +200,14 @@
                     });
                 }
             }, 100);
+
+            window.setTimeout(() => {
+                loadingPreview = false;
+            }, 500);
         } catch (error) {
             console.error("Error fetching step preview:", error);
+            loadingPreview = false;
         }
-
-        loadingPreview = false;
     }
 
     let resizeTimer;

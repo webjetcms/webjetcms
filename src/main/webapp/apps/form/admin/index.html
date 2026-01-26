@@ -1,7 +1,7 @@
 <script data-th-inline="javascript">
     let url = "/admin/rest/forms-list/";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    const columnsToKeep = ["id", "formName", "count", "createDate"];
+    const columnsToKeep = ["id", "formName", "count", "createDate", "formType"];
 
     var tabs = [
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
@@ -143,23 +143,12 @@
                     return;
                 }
 
-                let formName = editor.field('formName').get();
-                fetch(`/admin/rest/forms-list/isMultistep?formName=${encodeURIComponent(formName)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-Token': window.csrfToken
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(isMultistep => {
-                    if(true === isMultistep) {
-                        $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
-                    } else {
-                        $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
-                    }
-                })
+                let formType = editor.field('formType').get();
+                if("multistep" === formType) {
+                    $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
+                } else {
+                    $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
+                }
             }
         }
 

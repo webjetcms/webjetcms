@@ -62,6 +62,35 @@ import sk.iway.iwcm.utils.Pair;
 
 public class FormsService<R extends FormsRepositoryInterface<E>, E extends FormsEntityBasic> {
 
+    public enum FORM_TYPE {
+        SIMPLE("simple"),
+        MULTISTEP("multistep"),
+        BASIC("basic"),
+        UNKNOWN("unknown");
+
+        private final String value;
+        private static final String PREFIX = "components.form.form_type.";
+
+        FORM_TYPE(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        public static List<String> getAllValues() {
+            return Arrays.stream(FORM_TYPE.values()).map(FORM_TYPE::value).collect(Collectors.toList());
+        }
+
+        public static List<LabelValue> getSelectOptions(Prop prop) {
+            List<String> values = getAllValues();
+            List<LabelValue> options = new ArrayList<>();
+            for (String v : values) options.add(new LabelValue(prop.getText(PREFIX + v), v));
+            return options;
+        }
+    }
+
     private final R formsRepository;
 
     public String getFormName(HttpServletRequest request) {

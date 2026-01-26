@@ -22,9 +22,6 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
     @Query("SELECT COUNT(fse.id) FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.id = :id AND fse.domainId = :domainId")
     public int validationStepCount(@Param("formName") String formName, @Param("id") Long id, @Param("domainId") Integer domainId);
 
-    @Query("SELECT COUNT(fse.id) FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.domainId = :domainId")
-    public int getNumberOfSteps(@Param("formName") String formName, @Param("domainId") Integer domainId);
-
     @Transactional
     @Modifying
     void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
