@@ -15,6 +15,8 @@ Before(({ I, DT, login }) => {
 
 const baseAdminMail = "baseMultistepForm_admin";
 const baseUserMail = "baseMultistepForm_user";
+const appInsertTestPageId = 128791;
+const appMultiInsertTestPageId = 128792;
 
 Scenario('Check editor tabs', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/");
@@ -38,7 +40,7 @@ Scenario('Check editor tabs', ({ I, DT, DTE }) => {
 Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
     I.amOnPage("/apps/form/admin/");
 
-    checkNavigationTabVsibility(I, ["Zoznam formulárov", "Archív formulárov", "Regulárne výrazy"], ["Obsah formuláru"]);
+    checkNavigationTabVsibility(I, ["Zoznam formulárov", "Archív formulárov", "Regulárne výrazy"], ["Položky formuláru"]);
 
     I.say("Create new multistep form");
     I.click("button.buttons-create");
@@ -60,12 +62,12 @@ Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
     I.waitForVisible("#formDetailDataTable");
 
     I.say("Check form detail page");
-    checkNavigationTabVsibility(I, ["Zoznam formulárov", "Archív formulárov", "Regulárne výrazy", "Obsah formuláru"], []);
+    checkNavigationTabVsibility(I, ["Zoznam formulárov", "Položky formuláru", "Archív formulárov", "Regulárne výrazy"], []);
     I.seeElement( locate("#pills-form-details > li > a.nav-link.active").withText(newMultistepFormName) );
     I.see("Nenašli sa žiadne vyhovujúce záznamy"); // no filled answers yet
 
     I.say("Check default form content");
-    I.click( locate("ul.nav > li.nav-item > a.nav-link").withText("Obsah formuláru") );
+    I.click( locate("ul.nav > li.nav-item > a.nav-link").withText("Položky formuláru") );
     I.waitForVisible("div.stepPreviewWrapper");
 
     //Default step
@@ -97,9 +99,9 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "A,B,C", null, null);
     createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, null, "D,E,F", null, null);
 
-    //I.say("Test generated preview of the first step - using screenshot compare");
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
+    I.say("Test generated preview of the first step - using screenshot compare");
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
 
     I.say("Add second step");
     I.click(DT.btn.formSteps_add_button);
@@ -117,12 +119,12 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Select pole", "A,B,C,D", "zoznam tooltip", null);
     createAndFillFormItem(I, DT, DTE, 'Formátované textové pole', true, "WYSIWYG", "happy wysiwyg placeholder", "wysiwyg tooltip", null);
 
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-2.png", null, null, 5);
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-2.png", null, null, 5);
 });
 
 Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Apps }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=128791");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
 
     // Set new multistep form as form for the page
     DTE.waitForEditor();
@@ -134,8 +136,8 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     I.say("Test visual of step one");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-1.png", null, null, 5);
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-1.png", null, null, 5);
 
     I.say("Test and submit step 1");
     I.clickCss("button[type='submit']");
@@ -152,8 +154,8 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     I.say("Test visual of step one");
     I.waitForVisible("#multiupload_images-1-dropzone");
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
 
     I.say("Test and submit step 2 - final");
 
@@ -332,7 +334,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
 
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");
-    I.click("#editorAppDTE_Field_formSettings-useFormDoc button.btn-vue-jstree-item-edit");
+    I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-vue-jstree-item-edit");
     I.waitForVisible("#jsTree");
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multistep formulár').find('.jstree-icon.jstree-ocl'));
@@ -404,7 +406,7 @@ Scenario('Remove form and test it', ({ I, DT }) => {
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=128792");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appMultiInsertTestPageId);
     DTE.waitForEditor();
     DTE.waitForCkeditor();
 
@@ -427,7 +429,7 @@ Scenario('Insert and test multiple forms in one page - before clear page', ({ I,
  */
 Scenario('Insert and test multiple forms in one page - insert two same apps', ({ I, DTE, Apps }) => {
     I.say("Insert FIRST app");
-        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', 128792 , false);
+        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
 
         I.switchTo('.cke_dialog_ui_iframe');
         I.waitForElement('#editorComponent', 10);
@@ -441,7 +443,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         DTE.save();
 
     I.say("Insert SECOND app");
-        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', 128792 , false);
+        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
 
         I.switchTo('.cke_dialog_ui_iframe');
         I.waitForElement('#editorComponent', 10);
@@ -528,17 +530,18 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.waitForVisible("#formStepsDataTable_wrapper");
 
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Only step") );
-    I.waitForText("This form is used to check render of rowView multistep form", 5, locate("div.stepPreview"));
+    I.waitForElement(".form-step input#meno-1");
+    I.wait(3);
 
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-rowView.png", null, null, 5);
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-rowView.png", null, null, 5);
 
     I.say("Test visual of rowView form on page");
     I.amOnPage("/apps/multistep-formular/rowviewversion.html");
     I.waitForVisible("div.multistep-form-app");
 
-    //I.resizeWindow(1920, 1080);
-    //await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-rowView.png", null, null, 5);
+    I.resizeWindow(1920, 1080);
+    await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-rowView.png", null, null, 5);
 
     I.say("Submit rowView form, so we can test generated filled version");
     I.fillField("#meno-1", "Vlad");
@@ -556,9 +559,9 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     const expectedHtml = `
-    <div class="form-step"> <p class="step-primaryHeader">Only step</p> <p class="step-secondaryHeader">This form is used to check render of rowView multistep form</p><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1"><p>Meno</p>:</label> <span class="form-control emailInput-text">Vlad</span></div></div><div class="col">
-    <div class="form-group mb-3"><label for="priezvisko-1"><p>Priezvisko</p>:</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span></div></div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="email-1"><p>Email</p>:</label> <span class="form-control emailInput-text">test@balat.sk</span></div>
-    </div><div class="col">&nbsp;</div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="adresa-1"><p>Adresa</p>:</label> <span class="form-control emailInput-text">Askaban</span></div></div></div></div>
+        <div class="form-step"> <p class="step-primaryHeader">Only step</p> <p class="step-secondaryHeader">This form is used to check render of rowView multistep form</p><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1"><p>Meno</p>:</label> <span class="form-control emailInput-text">Vlad</span></div></div><div class="col">
+        <div class="form-group mb-3"><label for="priezvisko-1"><p>Priezvisko</p>:</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span></div></div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="email-1"><p>Email</p>:</label> <span class="form-control emailInput-text">test@balat.sk</span></div>
+        </div><div class="col">&nbsp;</div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="adresa-1"><p>Adresa</p>:</label> <span class="form-control emailInput-text">Askaban</span></div></div></div></div>
     `;
 
     checkSubmitedFormPreview(I, expectedHtml);
