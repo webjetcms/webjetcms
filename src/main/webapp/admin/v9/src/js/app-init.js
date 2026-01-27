@@ -803,6 +803,37 @@ window.WJ.DataTable.mergeColumns = function (columns, obj) {
     }
 };
 
+/**
+ * Move column name after column sortAfter
+ * @param {*} columns - list of columns
+ * @param {*} name - column name to sort
+ * @param {*} sortAfter - column name after which insert the column
+ */
+window.WJ.DataTable.moveColumn = function (columns, name, sortAfter) {
+
+    var col = null;
+    var newColumns = [];
+    //find column to insert
+    $.each(columns, function (i, v) {
+        if (v.name === name) {
+            col = v;
+            return true;
+        }
+    });
+    //create new columns array with column inserted after sortAfter
+    $.each(columns, function (i, v) {
+        if (v.name === name) {
+            return true;
+        }
+        newColumns.push(v);
+        if (v.name === sortAfter && col !== null) {
+            newColumns.push(col);
+            col = null;
+        }
+    });
+    return newColumns;
+}
+
 function fire(el, type, props = {}) {
   let ev;
   if (type.startsWith('key')) {

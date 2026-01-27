@@ -27,11 +27,18 @@ Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuál
 
 ![](export-advanced.png)
 
+## Karta Základné
+
+- **Názov formuláru** - unikátny názov formuláru.
+- **Email adresa príjemcu** - zoznam príjemcov emailu. Môže obsahovať viac príjemcov oddelených čiarkou.
+  - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky.
+- **Typ formuláru** - určuje detekovaný typ formuláru, podľa ktorého sa zobrazia dostupné možnosti nastavenia.
+
 ## Pokročilé možnosti nastavenia
 
 Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho spracovanie. Štandardne nie je potrebné špeciálne nastavovať ani jednu z týchto hodnôt.
 
-### Karta - Nastavenie formuláru
+### Karta - Nastavenia
 
 - **Presmerovanie po vyplnení** - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
 - **Presmerovanie po chybe** - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má ```forward```.
@@ -39,19 +46,17 @@ Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Prepíš staršie odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, bude jeho hodnota prepísaná novou verziou. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Vyžadovať potvrdenie súhlasu emailom**
-- **Posláť formulár ako prílohu do e-mailu**
+- **Poslať formulár ako prílohu do e-mailu**
   - **Názov prílohy formulára**
 - **Šifrovací kľúč**
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu ```docId``` niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
-
+- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
 
 ![](edit-tab-settings-basic.png)
 
-### Karta - Emailové nastavenia
+### Karta - Email
 
-- **Email adresa príjemcu** - zoznam príjemcov emailu. Môže obsahovať viac príjemcov oddelených čiarkou.
-  - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky.
 - **Príjemca kópie emailu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
 - **Neviditeľní príjemcovia** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
 - **Odpovedať na e-maily**
@@ -61,14 +66,24 @@ Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho
 - **Pridať technické informácie**
 - **Text na začiatku e-mailu**
 - **Text na konci e-mailu**
+- **Hlavička emailu** - ak má vygenerovaný email obsahovať špeciálnu hlavičku je možné do tohto poľa zadať čiarkou oddelený zoznam názvov polí, ktorých hodnoty sa nastavia do hlavičky.
 
 ![](edit-tab-settings-email.png)
+
+!>**Upozornenie:** formulár očakáva naslednovne pomenované polia pre správne nastavenie emailu odosielateľa a jeho mena:
+
+- ```email / e-mail``` - pole určujúce emailovú adresu odosielateľa emailu. Ak sa jedná o kontaktný formulár je ideálne ak sa takto volá priamo pole, kde návštevník stránky zadáva email.
+- ```name / firstname / lastname / meno / priezvisko / jmeno / prijmeni``` - pole určujúce meno odosielateľa emailu. Ak sa jedná o kontaktný formulár je ideálne ak sa takto volá priamo pole, kde návštevník stránky zadáva svoje meno.
 
 ### Karta - Pokročilé
 
 - **Riadkové zobrazenie**
 - **Pridať CSS triedy**
 - **Pridať CSS štýly**
+- **Spôsob presmerovania** - typ presmerovania po spracovaní formuláru.
+  - Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr.`formSend=true`).
+  - Hodnota ```forward``` znamená, že na cieľovú stránku sa vykoná interné presmerovanie. Cieľová stránka má tak prístup k identickým parametrom ako formulár a môže vykonať dodatočnú akciu. Keďže sa jedná o interné presmerovanie v adresnom riadku prehliadača zostane hodnota ```/formmail.do```.
+  - Hodnota ```addParams``` vykoná presmerovanie na cieľovú stránku s pridaním jednotlivých parametrov do URL. V takomto prípade presmerovanie vykoná prehliadač a v adresnom riadku zostane adresa cieľovej stránky. Keďže ale parametre sú pridané do URL adresy je limitovaný ich počet dĺžkou URL čo je štandardne 2048 znakov.
 - **Interceptor pred odoslaním emailu**
 - **Maximálna veľkosť súboru**
 - **Povolené prípony**
@@ -76,21 +91,6 @@ Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho
 - **Maximálna šírka (pre obrázky)**
 
 ![](edit-tab-settings-advanced.png)
-
-### Karta - Zastaralé
-
-- **Názov uloženého formuláru** - názov pod ktorým sa formulár uloží do databázy.
-- **Spôsob presmerovania** - typ presmerovania po spracovaní formuláru.
-  - Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr.` formSend=true`).
-  - Hodnota ```forward``` znamená, že na cieľovú stránku sa vykoná interné presmerovanie. Cieľová stránka má tak prístup k identickým parametrom ako formulár a môže vykonať dodatočnú akciu. Keďže sa jedná o interné presmerovanie v adresnom riadku prehliadača zostane hodnota ```/formmail.do```.
-  - Hodnota ```addParams``` vykoná presmerovanie na cieľovú stránku s pridaním jednotlivých parametrov do URL. V takomto prípade presmerovanie vykoná prehliadač a v adresnom riadku zostane adresa cieľovej stránky. Keďže ale parametre sú pridané do URL adresy je limitovaný ich počet dĺžkou URL čo je štandardne 2048 znakov.
-- **Hlavička emailu** - ak má vygenerovaný email obsahovať špeciálnu hlavičku je možné do tohto poľa zadať čiarkou oddelený zoznam názvov polí, ktorých hodnoty sa nastavia do hlavičky.
-- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
-
-![](edit-tab-settings-deprecated.png)
-
-- ```email / e-mail``` - pole určujúce emailovú adresu odosielateľa emailu. Ak sa jedná o kontaktný formulár je ideálne ak sa takto volá priamo pole, kde návštevník stránky zadáva email.
-- ```name / firstname / lastname / meno / priezvisko / jmeno / prijmeni``` - pole určujúce meno odosielateľa emailu. Ak sa jedná o kontaktný formulár je ideálne ak sa takto volá priamo pole, kde návštevník stránky zadáva svoje meno.
 
 ## Nastavenie potvrdenia emailovej adresy
 

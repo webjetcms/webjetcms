@@ -90,9 +90,9 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String subject;
 
-    /* Deprecated in multistep because we have field formName, so we dont need to use this field, that contained formName in the past */
+    /* Deprecated, that contained formName in the past */
     @Column(name = "savedb")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.savedb", className = "not-formsimple")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title= "editor.form.savedb")
     @Size(max = 255)
     private String savedb;
 
@@ -155,24 +155,11 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String messageAsAttachFileName;
 
-    /* This looks useless for us. Why set fields values to email headers. */
-    @Column(name = "fields_email_header")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple")
-    @Size(max = 255)
-    private String fieldsEmailHeader;
-
     /* We are re-using this in multistep forms (just using old value, but functionality is different) */
     @Column(name = "after_send_interceptor")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor")
     @Size(max = 255)
     private String afterSendInterceptor;
-
-    @Column(name = "use_form_mail_doc_id")
-    private Integer useFormMailDocId;
-
-    @Transient
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")
-    private transient DocDetailsDto useFormMailDoc;
 
     @Column(name = "encryption_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.form.encryptionKey")
@@ -188,6 +175,12 @@ public class FormSettingsEntity {
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.formsimple.textAfter", className = "not-form")
     @Size(max = 1024)
     private String emailTextAfter;
+
+    /* You can set special header in email eg. for Call Center email parsing */
+    @Column(name = "fields_email_header")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple")
+    @Size(max = 255)
+    private String fieldsEmailHeader;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html")
@@ -230,6 +223,13 @@ public class FormSettingsEntity {
 
     @Column(name = "formmail_send_user_info_doc_id")
     private Integer formMailSendUserInfoDocId;
+
+    @Column(name = "use_form_mail_doc_id")
+    private Integer useFormMailDocId;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_mail_doc_id", className="dt-tree-page-null")
+    private transient DocDetailsDto useFormMailDoc;
 
     @Column(name = "domain_id")
     private Integer domainId;

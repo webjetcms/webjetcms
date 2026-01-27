@@ -24,9 +24,6 @@ Scenario('forms @current', ({ I , DT, DTE, Document }) => {
     I.clickCss("#pills-dt-formsDataTable-settings-advanced-tab");
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-advanced.png");
 
-    I.clickCss("#pills-dt-formsDataTable-settings-deprecated-tab");
-    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-deprecated.png");
-
     I.amOnPage("/apps/form/admin/detail/?formName=Dotaznik-spokojnosti-externy");
     DT.waitForLoader();
 

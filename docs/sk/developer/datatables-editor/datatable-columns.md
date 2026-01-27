@@ -322,6 +322,12 @@ columns.push({
 });
 ```
 
+Ak potrebujete zmeniť poradie stĺpcov, môžete to spraviť pomocou funkcie ```WJ.DataTable.moveColumn```. V príklade sa stĺpec s názvom ```formSettings.recipients``` presunie za stĺpec s názvom ```formName```:
+
+```javascript
+filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+```
+
 ## Vnorené atribúty
 
 Často je potrebné k entite pridať pre editor doplnkové atribúty (napr. ```checkbox``` pre aplikovanie zmeny aj na podradené entity, doplnkové pole s informáciou atď). Pre tento účel je možné entitu rozšíriť o nový atribút (ktorý sa neukladá do databázy) obsahujúci doplnkové údaje. Typicky ho voláme ```editorFields``` a pre entitu implementujeme potrebnú triedu. Príklady sú v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) alebo [GroupEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). V triedach je následne len editorField atribút, napr. ```private DocEditorFields editorFields = null;```.

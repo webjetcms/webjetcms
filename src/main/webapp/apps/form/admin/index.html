@@ -1,18 +1,16 @@
 <script data-th-inline="javascript">
-    let url = "/admin/rest/forms-list/";
+    let url = "/admin/rest/forms-list";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
-    const formColumnsToKeep = ["id", "formName", "count", "createDate", "formType"];
-    const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc"];
-    const emailSettingColumns = ["recipients", "ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter"];
-    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "afterSendInterceptor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
-    const deprecatedSettingColumns = ["savedb", "forwardType", "fieldsEmailHeader", "useFormMailDoc"];
+    const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];
+    const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
+    const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
+    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 
     var tabs = [
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
         { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
         { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
-        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
-        { id: 'settings-deprecated', title: /*[[#{editor.form_setting.deprecated_tab}]]*/ '', selected: false },
+        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false }
     ];
 </script>
 
@@ -44,8 +42,7 @@
             if(basicSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-basic"; }
             else if(emailSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-email"; }
             else if(advancedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-advanced"; }
-            else if(deprecatedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-deprecated"; }
-            else { column.editor.tab = "settings-basic"; } // Just in case, put it into basic tab
+            else { column.editor.tab = "basic"; } // Just in case, put it into basic tab
 
             filteredColumns.push(column);
         }
@@ -57,6 +54,8 @@
         renderFormatLinkTemplate: "javascript:openFormHtml('{{formName}}');",
         renderFormatPrefix: '<i class="ti ti-eye"></i> '
     });
+
+    filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
     let columnsFetchPromise = Promise.resolve();
 
     var editorWasInitialized = false;
@@ -104,14 +103,9 @@
                 initEditor();
 
                 let formType = formsDataTable.EDITOR.field('formType').get();
-                if("multistep" === formType) {
-                    $("#pills-dt-formsDataTable-settings-deprecated-tab").hide();
-                } else {
-                    $("#pills-dt-formsDataTable-settings-deprecated-tab").show();
-                }
 
                 filteredColumns.forEach(function(column) {
-                    if("formSettings.id" === column.data) { return; }
+                    if("formSettings.id" === column.data || "formSettings.savedb" === column.data) { return; }
                     if("formSettings.formName" === column.data) {
                         //This column is used to join to forms, we do not fill it manually
                         formsDataTable.EDITOR.field(column.data).hide();
@@ -168,5 +162,11 @@
 
     });
 </script>
+
+<style type="text/css">
+    #pills-dt-formsDataTable-basic {
+        min-height: 400px;
+    }
+</style>
 
 <table id="formsDataTable" class="datatableInit table"></table>
