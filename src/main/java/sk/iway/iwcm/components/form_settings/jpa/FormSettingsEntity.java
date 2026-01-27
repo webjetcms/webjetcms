@@ -108,7 +108,7 @@ public class FormSettingsEntity {
 
     /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", className = "not-multistep", editor = {
         @DataTableColumnEditor(options = {
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.default", value = ""),
                 @DataTableColumnEditorAttr(key = "editor.form.forward_type.option.forward", value = "forward"),
@@ -178,7 +178,7 @@ public class FormSettingsEntity {
 
     /* You can set special header in email eg. for Call Center email parsing */
     @Column(name = "fields_email_header")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.fields_email_header", className = "not-formsimple not-multistep")
     @Size(max = 255)
     private String fieldsEmailHeader;
 

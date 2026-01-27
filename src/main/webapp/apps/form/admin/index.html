@@ -104,6 +104,22 @@
 
                 let formType = formsDataTable.EDITOR.field('formType').get();
 
+                if("multistep" === formType) {
+                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor label").html('[[#{components.mustistep.processor}]] <div data-dte-e="msg-label" class="DTE_Label_Info"></div>');
+                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor div button.btn-tooltip").attr('data-bs-original-title', '[[#{components.mustistep.processor.tooltip}]]');
+                } else {
+                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor label").html('[[#{editor.form.afterSendInterceptor}]] <div data-dte-e="msg-label" class="DTE_Label_Info"></div>');
+                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor div button.btn-tooltip").attr('data-bs-original-title', '[[#{editor.form.afterSendInterceptor.tooltip}]]');
+                }
+
+                if("simple" === formType) {
+                    let headlines = $("#panel-body-dt-formsDataTable-settings-advanced .row-headline");
+                    if(headlines && headlines.length > 0) { $(headlines[headlines.length - 1]).hide(); }
+                } else {
+                    let headlines = $("#panel-body-dt-formsDataTable-settings-advanced .row-headline");
+                    if(headlines && headlines.length > 0) { $(headlines[headlines.length - 1]).show(); }
+                }
+
                 filteredColumns.forEach(function(column) {
                     if("formSettings.id" === column.data || "formSettings.savedb" === column.data) { return; }
                     if("formSettings.formName" === column.data) {
@@ -117,7 +133,9 @@
                         if(className) {
                             let classNames = className.split(" ");
 
-                            if(formType === "simple" && classNames.includes("not-formsimple")) {
+                            if(formType === "multistep" && classNames.includes("not-multistep")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else if(formType === "simple" && classNames.includes("not-formsimple")) {
                                 formsDataTable.EDITOR.field(column.data).hide();
                             } else if(formType === "basic" && classNames.includes("not-form")) {
                                 formsDataTable.EDITOR.field(column.data).hide();
