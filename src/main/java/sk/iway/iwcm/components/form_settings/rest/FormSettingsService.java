@@ -57,7 +57,7 @@ public class FormSettingsService {
 
         if(formSettings.getUseFormDocId() != null) {
             DocDetails doc = DocDB.getInstance().getDoc( formSettings.getUseFormDocId() );
-            if(doc != null) formSettings.setFormmailSendUserInfoDoc( new DocDetailsDto(doc) );
+            if(doc != null) formSettings.setUseFormDoc( new DocDetailsDto(doc) );
         }
 
         if(formSettings.getUseFormMailDocId() != null) {
