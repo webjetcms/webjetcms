@@ -1191,6 +1191,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		this.getOptions(pageImpl);
 
 		pageImpl.setNotify(getThreadData().getNotify());
+		pageImpl.setRedirect(getThreadData().getRedirect());
 
 		return pageImpl;
 	}
@@ -1505,6 +1506,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
+		response.setRedirect(getThreadData().getRedirect());
 
 		if (datatableRequest.getData().size()>5) {
 			//aby nenastala chyba 429 pri importe musime spomalit download
@@ -1545,6 +1547,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
 		response.setForceReload(isForceReload());
+		response.setRedirect(getThreadData().getRedirect());
 
 		return ResponseEntity.ok(response);
 	}
@@ -1833,6 +1836,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				getThreadData().addNotify(notify);
 			}
 		}
+	}
+
+	/**
+	 * Redirect to page after save
+	 * @param redirect
+	 */
+	public static void setRedirect(String redirect) {
+		getThreadData().setRedirect(redirect);
 	}
 
 	/**

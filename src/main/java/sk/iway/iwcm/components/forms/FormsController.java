@@ -112,6 +112,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     }
 
     @Override
+    public void beforeSave(FormsEntity entity) {
+        entity.setFormName( DocTools.removeChars(entity.getFormName(), false) );
+    }
+
+    @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
         if(entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L) {
             // Its new saved form
@@ -125,9 +130,14 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             FormStepEntity fse = new FormStepEntity();
             fse.setSortPriority(10);
             fse.setFormName(entity.getFormName());
-            fse.setStepName("DEFAULT");
+            fse.setStepName("");
+            fse.setStepSubName("");
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
+
+            if ("multistep".equals(entity.getFormType())) {
+                setRedirect("/apps/form/admin/form-content/?formName=" + Tools.URLEncode(saved.getFormName()));
+            }
         }
     }
 

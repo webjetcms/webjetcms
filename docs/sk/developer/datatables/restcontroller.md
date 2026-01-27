@@ -957,6 +957,21 @@ Pre test exportu dát je možné volať metódu `isExporting()`, ktorá vráti h
 
 Pre import je možné modifikovať/validovať údaje implementáciou metódy `preImportDataEdit`. Táto metóda je volaná pred samotným importom a je možné v nej dáta modifikovať. Príklad je v triede [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
 
+## Presmerovanie po uložení
+
+Ak potrebujete presmerovať používateľa na inú stránku po úspešnom uložení záznamu je možné nastaviť URL adresu volaním `setRedirect(String redirect)`:
+
+```java
+    @Override
+    public void afterSave(FormsEntity entity, FormsEntity saved) {
+        if(entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L) {
+            if ("multistep".equals(entity.getFormType())) {
+                setRedirect("/apps/form/admin/form-content/?formName=" + Tools.URLEncode(saved.getFormName()));
+            }
+        }
+    }
+```
+
 ## Rozširujúce verzie
 
 Pre špeciálne prípady existujú rozširujúce triedy.

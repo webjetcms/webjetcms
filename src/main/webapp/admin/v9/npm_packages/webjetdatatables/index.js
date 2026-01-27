@@ -1391,6 +1391,12 @@ export const dataTableInit = options => {
                         showNotify(json.notify);
                     }
 
+                    if (typeof json.redirect !== "undefined" && json.redirect != null) {
+                        //presmeruj na novu URL
+                        //console.log("Redirecting to: ", json.redirect);
+                        window.location.href = json.redirect;
+                    }
+
                     //nastav checkboxy, toto treba ppo kazdom SUBMIT-e, pretoze sa nam menia moznosti select boxov
                     $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
                     $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
