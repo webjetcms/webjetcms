@@ -210,7 +210,7 @@
         }
 
         const stepId = selectedStep[0].getAttribute("id");
-        const getStepUrl = `/rest/multistep-form/get-step-preview?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        const getStepUrl = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
         try {
             const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json' } });
             if (!r.ok) {
@@ -302,7 +302,7 @@
         margin-right: -15px;
         overflow: auto;
     }
-    div.stepPreview input, div.stepPreview select, div.stepPreview textarea, div.stepPreview button, div.stepPreview input {
+    div.stepPreview form {
         pointer-events: none;
     }
     div.dt-scroll-head { display: none; }
