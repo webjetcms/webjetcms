@@ -27,16 +27,18 @@ Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuál
 
 ![](export-advanced.png)
 
-## Karta Základné
+## Vytvorenie formuláru
+
+Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením jeho základných parametrov v karte Základné. Vytvoríte tak nový formulár typu Viackrokový formulár. Následne môžete k formuláru pridať jednotlivé položky formuláru (textové polia, zaškrtávacie polia, výberové polia a podobne) kliknutím na názov vytvoreného formuláru v tabuľke a prechodom do karty [Položky formuláru](../multistep-form/README.md).
+
+### Karta Základné
 
 - **Názov formuláru** - unikátny názov formuláru.
 - **Email adresa príjemcu** - zoznam príjemcov emailu. Môže obsahovať viac príjemcov oddelených čiarkou.
   - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky.
 - **Typ formuláru** - určuje detekovaný typ formuláru, podľa ktorého sa zobrazia dostupné možnosti nastavenia.
 
-## Pokročilé možnosti nastavenia
-
-Formuláru je možné nastaviť niektoré skryté hodnoty, ktoré ovplyvnia jeho spracovanie. Štandardne nie je potrebné špeciálne nastavovať ani jednu z týchto hodnôt.
+Formuláru je možné nastaviť ďalšie skryté hodnoty, ktoré ovplyvnia jeho spracovanie. Štandardne nie je potrebné špeciálne nastavovať ani jednu z týchto hodnôt, stačí nastavenie v karte Základné.
 
 ### Karta - Nastavenia
 
