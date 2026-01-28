@@ -18,6 +18,8 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -777,69 +779,33 @@ public class FormDB
 	public static boolean isThereFileRestrictionFor(String formName)
 	{
 		return new SimpleQuery().forInt(
-			"SELECT COUNT(*) FROM form_attributes WHERE form_name = ? AND param_name = ? "+CloudToolsForCore.getDomainIdSqlWhere(true), formName, "maxSizeInKilobytes") > 0;
+			"SELECT COUNT(*) FROM form_settings WHERE form_name = ? AND max_size_in_kilobytes IS NOT NULL "+CloudToolsForCore.getDomainIdSqlWhere(true), formName) > 0;
 	}
 
-	public static FormFileRestriction getFileRestrictionFor(String formName)
-	{
-		FormFileRestriction restriction = new FormFileRestriction();
-		restriction.setFormName(formName);
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM form_attributes WHERE form_name = ? "+CloudToolsForCore.getDomainIdSqlWhere(true));
-			ps.setString(1, formName);
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				String paramName = rs.getString("param_name");
-				String value = rs.getString("value");
-				if ("allowedExtensions".equals(paramName))
-					restriction.setAllowedExtensions(value);
-				if ("maxSizeInKilobytes".equals(paramName))
-					restriction.setMaxSizeInKilobytes(Integer.parseInt(value));
-				if ("pictureHeight".equals(paramName))
-					restriction.setPictureHeight(Integer.parseInt(value));
-				if ("pictureWidth".equals(paramName))
-					restriction.setPictureWidth(Integer.parseInt(value));
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-			}
-		}
-
-		return restriction;
+	public static FormFileRestriction getFileRestrictionFor(String formName) {
+		return FormSettingsService.getFileRestriction(formName);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static List<String> getDistinctFormNames()
 	{
 		return new SimpleQuery().forList("SELECT DISTINCT(form_name) FROM forms WHERE create_date IS NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
+	}
+
+	public List<RegExpEntity> getAllRegularExpressionAsEntity() {
+		List<String[]> allAsArr = getAllRegularExpression();
+		List<RegExpEntity> allAsList = new ArrayList<>();
+
+		for(String[] regexArr : allAsArr) {
+			RegExpEntity regExp = new RegExpEntity();
+			regExp.setTitle(regexArr[0]);
+			regExp.setType(regexArr[1]);
+			regExp.setRegExp(regexArr[2]);
+			regExp.setId( Tools.getLongValue(regexArr[3], -1) );
+			allAsList.add(regExp);
+		}
+
+		return allAsList;
 	}
 
 	public List<String[]> getAllRegularExpression()
@@ -863,10 +829,11 @@ public class FormDB
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
-				regularExp = new String[3];
+				regularExp = new String[4];
 				regularExp[0] = DB.getDbString(rs, "title");
 				regularExp[1] = DB.getDbString(rs, "type");
 				regularExp[2] = DB.getDbString(rs, "reg_exp");
+				regularExp[3] = DB.getDbString(rs, "id");
 				newRegExpList.add(regularExp);
 			}
 			regExpList = newRegExpList;

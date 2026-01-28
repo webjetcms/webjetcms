@@ -1133,6 +1133,7 @@ html.in-iframe-show-table {
     background-color: #F3F3F6;
     border-color: #868EA5;
     opacity: 1;
+    pointer-events: none;
 }
 
 .DTE_Field.multiweb-noteditable .form-control {

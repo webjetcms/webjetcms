@@ -161,6 +161,10 @@ table.datatableInit {
     tbody > tr.selected,
     tbody > tr > .selected {
         background-color: $primary;
+
+        .text-muted {
+            color: $nice-gray-100 !important;
+        }
     }
 
     // tbody tr {

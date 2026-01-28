@@ -41,4 +41,4 @@ Pri vymazaní konfiguračnej premennej môžu nastať 2 situácie:
 - vymažeme hodnotu z tabuľky a **existuje prednastavená hodnota** k tejto konfiguračnej premennej, ktorá sa začne využívať (premenná stále existuje)
 - vymažeme hodnotu z tabuľky a **neexistuje prednastavená hodnota** k tejto konfiguračnej premennej (premenná už nebude existovať)
 
-!>**Upozornenie:** oproti vytváraniu/editácií, pri vymazaní sa nastaví prázdna hodnota. Ak má konfiguračná premenná prednastavenú hodnotu, tá sa prejaví **až po reštartovaní** aplikačného servera.
+!>**Upozornenie:** oproti vytváraniu/editácii, pri vymazaní sa nastaví prázdna hodnota. Ak má konfiguračná premenná prednastavenú hodnotu, tá sa prejaví **až po reštartovaní** aplikačného servera.

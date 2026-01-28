@@ -80,7 +80,9 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
         "sk.iway.iwcm.components.ai.jpa",
         "sk.iway.iwcm.components.ai.stat.jpa",
         "sk.iway.iwcm.components.formsimple",
-        "sk.iway.iwcm.components.basket.delivery_methods.jpa"
+        "sk.iway.iwcm.components.basket.delivery_methods.jpa",
+        "sk.iway.iwcm.components.multistep_form",
+        "sk.iway.iwcm.components.form_settings.jpa"
     }
 ) // package s repozitarmi
 public class V9JpaDBConfig {
@@ -149,7 +151,9 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.ai.jpa",
                             "sk.iway.iwcm.components.ai.stat.jpa",
                             "sk.iway.iwcm.components.formsimple",
-                            "sk.iway.iwcm.components.basket.delivery_methods.jpa"
+                            "sk.iway.iwcm.components.basket.delivery_methods.jpa",
+                            "sk.iway.iwcm.components.multistep_form",
+                            "sk.iway.iwcm.components.form_settings.jpa"
         );
 
         Properties properties = new Properties();

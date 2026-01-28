@@ -24,7 +24,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 		int pictureWidth = Tools.getIntValue(Tools.getRequestParameter(request, "attribute_pictureWidth"), 0);
 		String allowedExtensions = Tools.getRequestParameter(request, "attribute_allowedExtensions");
 
-		FormAttributeDB fadb = new FormAttributeDB();
+		FormSettingsService fadb = new FormSettingsService();
 		Map<String, String> parameters = fadb.load(formName);
 		parameters.put("maxSizeInKilobytes", String.valueOf(maxSizeInKilobytes));
 		parameters.put("pictureHeight", String.valueOf(pictureHeight));

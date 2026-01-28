@@ -1191,6 +1191,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		this.getOptions(pageImpl);
 
 		pageImpl.setNotify(getThreadData().getNotify());
+		pageImpl.setRedirect(getThreadData().getRedirect());
 
 		return pageImpl;
 	}
@@ -1505,6 +1506,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
+		response.setRedirect(getThreadData().getRedirect());
 
 		if (datatableRequest.getData().size()>5) {
 			//aby nenastala chyba 429 pri importe musime spomalit download
@@ -1545,6 +1547,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
 		response.setForceReload(isForceReload());
+		response.setRedirect(getThreadData().getRedirect());
 
 		return ResponseEntity.ok(response);
 	}
@@ -1836,6 +1839,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
+	 * Redirect to page after save
+	 * @param redirect
+	 */
+	public static void setRedirect(String redirect) {
+		getThreadData().setRedirect(redirect);
+	}
+
+	/**
 	 * Nastavi cislo importovaneho riadku (ak sa nachadza v datach)
 	 * @param lastImportedRow
 	 * @return
@@ -2117,5 +2128,43 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	public void setRequest(HttpServletRequest request) {
 		this.request = request;
+	}
+
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+		boolean allGood = true;
+
+		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
+
+		// Loop through entities and set new value to the column specified by dataSrc
+		for (T entity : entities) {
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				String idColumnName = getIdColumnName(entity);
+
+				// Get entity ID using id column name
+				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+
+				// Get new value for this entity
+				Integer newValue = rowReorderDto.getNewValueById(entityId);
+
+				if(newValue == null) {
+					allGood = false;
+					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
+					break;
+				}
+
+				// Use BeanWrapperImpl to set the property value
+				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
+				allGood = false;
+			}
+		}
+
+		this.repo.saveAll(entities);
+
+		return ResponseEntity.ok(allGood);
 	}
 }

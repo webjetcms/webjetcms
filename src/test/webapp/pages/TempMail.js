@@ -135,4 +135,11 @@ module.exports = {
             return provider.destroyInbox(emailAddress);
         }
     },
+
+    checkAttachments(attachmentsNames = []) {
+        var provider = this.getTempmailProvider();
+        if (provider) {
+            return provider.checkAttachments(attachmentsNames);
+        }
+    }
 }

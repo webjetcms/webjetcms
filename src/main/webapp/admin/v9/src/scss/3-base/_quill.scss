@@ -51,6 +51,9 @@
 }
 
 /** quill EDITOR CUSTOMIZATION */
+.ql-toolbar.ql-snow .ql-formats {
+  margin-right: 12px;
+}
 .ql-toolbar.ql-snow {
   border: 1px solid $nice-gray-300;
   border-top-left-radius: 6px;

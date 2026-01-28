@@ -51,6 +51,9 @@ public class ThreadBean {
     //Skip wrong data during import
     private boolean skipWrongData = false;
 
+    //set redirect after save
+    private String redirect = null;
+
     public void clear() {
         Logger.debug(ThreadBean.class, "clearing data, thread="+Thread.currentThread().getId());
         forceReload = false;
@@ -63,6 +66,7 @@ public class ThreadBean {
         importMode = null;
         invalidImportedRows = null;
         invalidImportedRowsErrors = null;
+        redirect = null;
     }
 
     public void addNotify(NotifyBean notify) {
