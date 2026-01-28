@@ -190,7 +190,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         String generatedTitle = "";
         if (Tools.isNotEmpty(entity.getLabel())) generatedTitle = entity.getLabel();
-        else generatedTitle = entity.getFieldType();
+        else generatedTitle = getProp().getText("components.formsimple.label." + entity.getFieldType());
 
         generatedTitle = Tools.html2text(generatedTitle);
         entity.setGeneratedTitle(generatedTitle);

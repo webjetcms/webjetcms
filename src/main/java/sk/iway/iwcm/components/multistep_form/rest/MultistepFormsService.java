@@ -585,8 +585,8 @@ public class MultistepFormsService {
                 if(needTovalidate == false) continue;
 
                 //need validation
-				String regex = Tools.replace(regExp.getRegExp(), "\\\\", "\\").toLowerCase();
-                String value = received.optString(itemFormId, "").toLowerCase();
+				String regex = Tools.replace(regExp.getRegExp(), "\\\\", "\\");
+                String value = received.optString(itemFormId, "");
 
                 if(value.matches(regex) == false) {
                     if (DocTools.testXss(value)) value = "";
