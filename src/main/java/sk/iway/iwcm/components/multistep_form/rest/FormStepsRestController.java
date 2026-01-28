@@ -6,14 +6,22 @@ import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
@@ -33,13 +41,15 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     private final FormItemsRepository formItemsRepository;
 
     private final MultistepFormsService multistepFormsService;
+    private final FormHtmlHandler formHtmlHandler;
 
     @Autowired
-    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService) {
+    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService, FormHtmlHandler formHtmlHandler) {
         super(formStepsRepository);
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
         this.multistepFormsService = multistepFormsService;
+        this.formHtmlHandler = formHtmlHandler;
     }
 
     @Override
@@ -112,5 +122,24 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
         // Now update form pattern
         multistepFormsService.updateFormPattern(entity.getFormName());
+    }
+
+    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML)
+    public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
+        String encoding = SetCharacterEncodingFilter.getEncoding();
+        if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
+        String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
+
+        try {
+            return ResponseEntity.ok()
+                .header("Content-Type", contentTypeWithCharset)
+                .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
+        } catch (Exception e) {
+            Logger.error(FormStepsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage());
+
+            return ResponseEntity.badRequest()
+                .header("Content-Type", contentTypeWithCharset)
+                .body("");
+        }
     }
 }

@@ -34,6 +34,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
 import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
@@ -271,6 +272,19 @@ public class MultistepFormsService {
         return formData;
     }
 
+    public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
+        if(Tools.isEmpty(formName)) return false;
+        if(currentStepId < 1L) return false;
+        boolean valid = formStepsRepository.validationStepCount(formName, currentStepId, CloudToolsForCore.getDomainId()) == 1; //must be EXACTLY ONE
+        if(valid == false) return false;
+        else {
+            Object permitted = request.getSession().getAttribute(getSessionKey(formName, request) + MultistepFormApp.PERMITTED);
+            if (permitted == null) return false;
+            if (permitted instanceof Boolean b) return b;
+            else return false;
+        }
+    }
+
     /* ********** PUBLIC - support methods ********** */
 
     /**
@@ -404,7 +418,7 @@ public class MultistepFormsService {
      * @throws IOException       when reading request body fails
      */
     public final void saveFormStep(String formName, Long stepId, HttpServletRequest request, JSONObject response) throws SaveFormException, IOException {
-        if(validateFormInfo(formName, stepId) == false) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
+        if(validateFormInfo(formName, stepId, request) == false) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
 
         String body = request.getReader().lines().collect(Collectors.joining());
         if (Tools.isEmpty(body)) throw new IllegalStateException("Empty request body.");
@@ -695,12 +709,6 @@ public class MultistepFormsService {
 
     /* ********** PRIVATE - support methods ********** */
 
-    private boolean validateFormInfo(String formName, Long currentStepId) {
-        if(Tools.isEmpty(formName)) return false;
-        if(currentStepId < 1L) return false;
-        return formStepsRepository.validationStepCount(formName, currentStepId, CloudToolsForCore.getDomainId()) == 1; //must be EXACTLY ONE
-    }
-
     private String[] asArray(String name, JSONObject received) {
         if(received.has(name) == false) return new String[0];
 
@@ -767,7 +775,7 @@ public class MultistepFormsService {
     private void prepareBeforeSave (String formName, HttpServletRequest request) {
         formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
 
-        iLastDocId = (int) request.getSession().getAttribute( getSessionKey(formName, request) );
+        iLastDocId = (int) request.getSession().getAttribute( getSessionKey(formName, request) + MultistepFormApp.DOC_ID );
 
         //niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
 		//sa mu musi presne povedat, kde sa ten formular nachadza

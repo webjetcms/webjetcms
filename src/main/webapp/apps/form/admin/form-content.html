@@ -210,9 +210,9 @@
         }
 
         const stepId = selectedStep[0].getAttribute("id");
-        const getStepUrl = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        const getStepUrl = `/admin/rest/form-steps/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
         try {
-            const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json' } });
+            const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json', "X-CSRF-Token": window.csrfToken } });
             if (!r.ok) {
                 const raw = await r.text();
                 try {

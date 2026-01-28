@@ -62,6 +62,10 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     private static final String VIEW_PATH = "/apps/form/mvc/multistep-form"; //NOSONAR
     private static final String ERROR_PATH = "/apps/form/mvc/error"; //NOSONAR
 
+    /* Its importtant, that we use "-" and not "_" */
+    public static final String DOC_ID = "-docid";
+    public static final String PERMITTED = "-permitted";
+
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "formslist.nazov_formularu", tab = "basic")
     private String formName;
 
@@ -102,7 +106,9 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         model.addAttribute("csrf", csrf);
 
         // Set docId of current page
-        request.getSession().setAttribute(MultistepFormsService.getNewSessionKey(formName, csrf), Tools.getIntValue(request.getParameter("docid"), -1));
+        String sessionKey = MultistepFormsService.getNewSessionKey(formName, csrf);
+        request.getSession().setAttribute(sessionKey + DOC_ID, Tools.getIntValue(request.getParameter("docid"), -1));
+        request.getSession().setAttribute(sessionKey + PERMITTED, Boolean.TRUE);
 
         //Get first step id
         List<FormStepEntity> steps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());

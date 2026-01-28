@@ -72,7 +72,7 @@ export class MultistepForm {
 
         // content holder
         const content = document.createElement('div');
-        content.id = 'multistepStepContent';
+        content.className = 'multistepStepContent';
 
         wrapper.appendChild(success);
         wrapper.appendChild(danger);
@@ -98,7 +98,7 @@ export class MultistepForm {
         }
         const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
         try {
-            const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'text/html,application/json' } });
+            const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'text/html,application/json', "X-CSRF-Token": this.csrf } });
             if (!r.ok) {
                 const raw = await r.text();
                 try {
@@ -113,7 +113,7 @@ export class MultistepForm {
             this.hideErrors();
 
             // inject HTML (exec any inline scripts) using jQuery when available
-            const holder = this.wrapper.querySelector('#multistepStepContent');
+            const holder = this.wrapper.querySelector('.multistepStepContent');
             if (holder) {
                 if (window.$) {
                     $(holder).html(html);
@@ -123,7 +123,7 @@ export class MultistepForm {
             }
 
             // attach submit
-            const form = this.wrapper.querySelector('#multistepStepContent > form');
+            const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
 
             // init cleditor if needed
@@ -194,7 +194,7 @@ export class MultistepForm {
                 }
                 const endTry = parsed.end_try || false;
                 if (endTry) {
-                    const holder = this.wrapper.querySelector('#multistepStepContent');
+                    const holder = this.wrapper.querySelector('.multistepStepContent');
                     if (holder) holder.innerHTML = '';
                 }
                 await this.showGlobalErr(parsed);
@@ -293,7 +293,7 @@ export class MultistepForm {
         const stepId = response['step-id'];
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
-                const holder = this.wrapper.querySelector('#multistepStepContent');
+                const holder = this.wrapper.querySelector('.multistepStepContent');
                 if (holder) holder.remove();
                 await this.showGlobalSuccess();
             } else {

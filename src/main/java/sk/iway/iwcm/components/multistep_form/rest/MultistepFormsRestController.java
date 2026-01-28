@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
@@ -67,6 +66,10 @@ public class MultistepFormsRestController {
         String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
 
         try {
+            // This is call from outside (no admin section) - check that csrf is valid for this form
+            if(multistepFormsService.validateFormInfo(formName, stepId, request) == false)
+                throw new IllegalStateException("Provided params to get stepHtml are invalid.");
+
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
                 .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
