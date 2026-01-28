@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormColumns;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
@@ -35,15 +34,13 @@ import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 public class FormsArchiveController extends DatatableRestControllerV2<FormsArchiveEntity, Long> {
 
     private final FormsArchiveServiceImpl formsService;
-    private final FormSettingsRepository formSettingsRepository;
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
 
     @Autowired
-    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
+    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         super(formsRepository);
         this.formsService = formsService;
-        this.formSettingsRepository = formSettingsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
     }
@@ -63,7 +60,7 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
 
     @GetMapping(path = "/columns/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
-        return formsService.getColumnNames(formName, getUser(), formSettingsRepository);
+        return formsService.getColumnNames(formName, getUser(), getProp());
     }
 
     @Override

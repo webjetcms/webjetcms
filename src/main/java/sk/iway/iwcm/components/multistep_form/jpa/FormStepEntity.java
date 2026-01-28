@@ -16,6 +16,8 @@ import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Entity
 @Table(name = "form_steps")
@@ -42,12 +44,24 @@ public class FormStepEntity {
     private String formName;
 
     @Column(name = "step_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName",
+        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
+    )
     private String stepName;
 
     @Column(name = "step_sub_name")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.secondaryHeader", hidden = true)
     private String stepSubName;
+
+    @Column(name = "next_step_btn_label")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", hidden = true,
+        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
+    )
+    private String nextStepBtnLabel;
+
+    @Column(name = "back_step_btn_label")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", hidden = true)
+    private String backStepBtnLabel;
 
     // When duplicationg step, we need it's original ID, so we can duplicate binded items too
     @Transient

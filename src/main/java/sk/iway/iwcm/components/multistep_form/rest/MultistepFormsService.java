@@ -272,6 +272,15 @@ public class MultistepFormsService {
         return formData;
     }
 
+    public static final String getFieldName (FormItemEntity stepItem, Prop prop) {
+        String fieldName = "";
+        if(Tools.isEmpty(stepItem.getLabel())) fieldName = prop.getText("components.formsimple.label." + stepItem.getFieldType());
+        else fieldName = new Html2Text( StringEscapeUtils.unescapeHtml4(stepItem.getLabel()) ).getText();
+        return fieldName;
+    }
+
+    /* ********** PUBLIC - support methods ********** */
+
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         if(Tools.isEmpty(formName)) return false;
         if(currentStepId < 1L) return false;
@@ -284,8 +293,6 @@ public class MultistepFormsService {
             else return false;
         }
     }
-
-    /* ********** PUBLIC - support methods ********** */
 
     /**
      * Build human-readable options for steps of a form suitable for selection inputs.
@@ -821,13 +828,6 @@ public class MultistepFormsService {
 
 		return true;
 	}
-
-    private String getFieldName (FormItemEntity stepItem, Prop prop) {
-        String fieldName = "";
-        if(Tools.isEmpty(stepItem.getLabel())) fieldName = prop.getText("components.formsimple.label." + stepItem.getFieldType());
-        else fieldName = new Html2Text( StringEscapeUtils.unescapeHtml4(stepItem.getLabel()) ).getText();
-        return fieldName;
-    }
 
     private boolean checkCsrf(HttpServletRequest request) {
 		String spamProtectionJavascript = Constants.getString("spamProtectionJavascript");
