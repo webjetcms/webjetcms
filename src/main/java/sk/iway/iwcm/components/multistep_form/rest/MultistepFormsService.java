@@ -258,7 +258,20 @@ public class MultistepFormsService {
         else return -1; //not found
     }
 
-    /* ********** PUBLIC - supprot methods ********** */
+    public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
+        Map<String, String> formData = new HashMap<>();
+        for(String fieldData : Tools.getTokens(form.getData(), "|")) {
+            String fieldDataArr[] = Tools.getTokens(fieldData, "~");
+            String fieldId = fieldDataArr[0];
+            if(fieldId.endsWith("-fileNames")) fieldId = fieldId.replace("-fileNames", "");
+            String fieldValue = fieldDataArr.length == 2 ? fieldDataArr[1] : "";
+
+            formData.put(fieldId, fieldValue);
+        }
+        return formData;
+    }
+
+    /* ********** PUBLIC - support methods ********** */
 
     /**
      * Build human-readable options for steps of a form suitable for selection inputs.

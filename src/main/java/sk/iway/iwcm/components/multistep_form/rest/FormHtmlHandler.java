@@ -313,15 +313,7 @@ public class FormHtmlHandler {
         formHtml.append( getFormStart(form.getFormName(), -1L, request) );
 
         // prepare data
-        this.formData = new HashMap<>();
-        for(String fieldData : Tools.getTokens(form.getData(), "|")) {
-            String fieldDataArr[] = Tools.getTokens(fieldData, "~");
-            String fieldId = fieldDataArr[0];
-            if(fieldId.endsWith("-fileNames")) fieldId = fieldId.replace("-fileNames", "");
-            String fieldValue = fieldDataArr.length == 2 ? fieldDataArr[1] : "";
-
-            this.formData.put(fieldId, fieldValue);
-        }
+        this.formData = MultistepFormsService.getFormDataAsMap(form);
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(form.getFormName(), CloudToolsForCore.getDomainId())) {
             formHtml.append( getStepHtml(form.getFormName(), formSteps.getId(), request) );
