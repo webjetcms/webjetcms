@@ -123,6 +123,7 @@ public class DocTools {
      */
     public static String removeChars(String ret, boolean lowerCase)
     {
+        if (ret == null) return null;
         //odstran HTML kod
         if (ret.indexOf("<")!=-1 && ret.indexOf(">")!=-1 && (ret.indexOf("/")!=-1 || ret.indexOf("-")!=-1))
         {

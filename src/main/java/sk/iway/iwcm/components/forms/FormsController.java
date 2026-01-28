@@ -118,7 +118,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
-        if(entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L) {
+        if(entity.getFormSettings() != null && (entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L)) {
             // Its new saved form
 
             // save new settings

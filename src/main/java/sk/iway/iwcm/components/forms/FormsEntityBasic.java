@@ -27,6 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @MappedSuperclass
 @Setter
@@ -99,7 +100,8 @@ public class FormsEntityBasic {
     private Date lastExportDate;
 
     @Lob
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="formslist.note", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title="formslist.note", tab = "basic")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String note;
 
     @Lob
