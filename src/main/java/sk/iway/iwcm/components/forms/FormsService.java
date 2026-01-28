@@ -132,6 +132,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     public Page<E> findByColumns(Map<String, String> params, Pageable pageable, E search, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
         if(formName != null) {
+            @SuppressWarnings("unchecked")
             java.util.Enumeration<String> parameterNames = request.getParameterNames();
             while (parameterNames.hasMoreElements()) {
                 String parameterName = parameterNames.nextElement();

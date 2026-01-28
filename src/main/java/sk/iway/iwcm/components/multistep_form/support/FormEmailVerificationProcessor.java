@@ -129,6 +129,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
         // If email is still empty, try find email in session
         String prefix = MultistepFormsService.getSessionKey(formName, request) + "_";
         if(Tools.isEmail(email) == false) {
+            @SuppressWarnings("unchecked")
             Enumeration<String> e = request.getSession().getAttributeNames();
             while(e.hasMoreElements()) {
                 String originalKey = e.nextElement();
