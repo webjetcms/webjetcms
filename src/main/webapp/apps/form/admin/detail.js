@@ -13,7 +13,7 @@
         const isArchived = !!(config && config.isArchived);
         const baseColumns = (config && config.columns) ? config.columns : [];
 
-        const columnsToKeep = ["id", "preview", "createDate", "lastExportDate", "note", "files"];
+        const columnsToKeep = ["id", "preview", "createDate", "lastExportDate", "note", "files", "formName"];
         const removeUserFields = ["admin", "apiKey", "password"];
 
         const queryString = window.location.search;
@@ -115,6 +115,11 @@
             // Remove all userDetails.editorFields columns
             filteredColumns = filteredColumns.filter(col => !(col.data && col.data.startsWith('userDetails.editorFields.')));
 
+            window.WJ.DataTable.mergeColumns(filteredColumns, {
+                name: "formName",
+                hidden: true
+            });
+
             // Set createDate as new row editor column
             window.WJ.DataTable.mergeColumns(filteredColumns, {
                 name: "createDate",
@@ -149,6 +154,12 @@
                     }
                     return htmlCode;
                 }
+            });
+
+            window.WJ.DataTable.mergeColumns(filteredColumns, {
+                name: "note",
+                renderFormat: "dt-format-text",
+                className: "allow-html td-note-column",
             });
 
             // Double Opt-In extra column
@@ -188,6 +199,9 @@
                 if (col.data === "userDetails.login") {
                     delete col.renderFormatLinkTemplate;
                     delete col.renderFormatPrefix;
+                }
+                if (col.data.indexOf("userDetails.") === 0) {
+                    col.visible = false;
                 }
                 if (col.data === "note") return;
 

@@ -201,17 +201,23 @@ public class FormHtmlHandler {
 
         // Form step wrapper start
         FormStepEntity formStep = formStepsRepository.getById(stepId);
-        String stepWrapperStart = prop.getText("components.mustistep.step.start");
-        stepWrapperStart = Tools.replace(stepWrapperStart, "${step-primaryHeader}",  formStep.getStepName() == null ? "" : formStep.getStepName());
-        stepWrapperStart = Tools.replace(stepWrapperStart, "${step-secondaryHeader}", formStep.getStepSubName() == null ? "" : formStep.getStepSubName());
+        StringBuilder stepWrapperStart = new StringBuilder();
+        stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
+
+        if (Tools.isNotEmpty(formStep.getStepName())) {
+            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.primaryHeader"), "${step-primaryHeader}", formStep.getStepName()));
+        }
+        if (Tools.isNotEmpty(formStep.getStepSubName())) {
+            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.secondaryHeader"), "${step-secondaryHeader}", formStep.getStepSubName()));
+        }
         formStepHtml.append(stepWrapperStart);
 
-        if (rowView) formStepHtml.append("<div class=\"row\">");
+        if (rowView) formStepHtml.append(prop.getText("components.mustistep.rowView.start"));
 
         // Into formStep we must insert step items
         formStepHtml.append( getStepItems(formName, stepId, request) );
 
-        if (rowView) formStepHtml.append("</div>");
+        if (rowView) formStepHtml.append( prop.getText("components.mustistep.rowView.end"));
 
         // Form step wrapper end
         formStepHtml.append( prop.getText("components.mustistep.step.end") );

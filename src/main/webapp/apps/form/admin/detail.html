@@ -1,8 +1,15 @@
 <script src="/apps/form/admin/detail.js"></script>
+
+<table id="formDetailDataTable" class="datatableInit table"></table>
+
+<style type="text/css">
+    .td-note-column p, .td-note-column ul {
+        margin-bottom: 0px;
+    }
+</style>
+
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
     window.FormDetail.init({ columns: columns, isArchived: false });
     WJ.selectMenuItem("/apps/form/admin/");
 </script>
-
-<table id="formDetailDataTable" class="datatableInit table"></table>

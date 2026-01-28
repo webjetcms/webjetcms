@@ -29,7 +29,7 @@ export class MultistepForm {
         this.successMessage = options.successMessage || 'Operation completed successfully.';
         this.errorMessage = options.errorMessage || 'An error occurred while saving the step.';
 
-        console.log('MultistepForm initialized with options: ', options);
+        //console.log('MultistepForm initialized with options: ', options);
 
         this._renderShell();
     }
