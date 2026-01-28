@@ -226,7 +226,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
     @GetMapping(path = "/columns/{formName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
-        return formsService.getColumnNames(formName, getUser(), formSettingsRepository);
+        return formsService.getColumnNames(formName, getUser(), getProp());
     }
 
     /**

@@ -41,8 +41,11 @@ import sk.iway.iwcm.components.enumerations.EnumerationTypeDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -92,6 +95,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     private final R formsRepository;
+    private final FormSettingsRepository formSettingsRepository;
+    private final FormStepsRepository formStepsRepository;
+    private final FormItemsRepository formItemsRepository;
 
     public String getFormName(HttpServletRequest request) {
         if(Tools.getBooleanValue(request.getParameter("detail"), false))
@@ -101,8 +107,11 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
     public boolean isExport(HttpServletRequest request) { return "true".equals(request.getParameter("export")); }
 
-    public FormsService(R formsRepository) {
+    public FormsService(R formsRepository, FormSettingsRepository formSettingsRepository, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository) {
         this.formsRepository = formsRepository;
+        this.formSettingsRepository = formSettingsRepository;
+        this.formStepsRepository = formStepsRepository;
+        this.formItemsRepository = formItemsRepository;
     }
 
     public Page<E> getAllItems(Page<E> page, Pageable pageable, HttpServletRequest request, Identity user) {
@@ -267,11 +276,32 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @param formName
      * @return
      */
-    public FormColumns getColumnNames(String formName, UserDetails user, FormSettingsRepository formSettingsRepository) {
+    public FormColumns getColumnNames(String formName, UserDetails user, Prop prop) {
 
         if (isFormAccessible(formName, user)==false) return null;
 
         E entity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());
+
+        Map<String, String> itemNames = new HashMap<>();
+        if(formItemsRepository!= null && entity instanceof FormsEntity fe) {
+            if(FORM_TYPE.MULTISTEP.value.equals(fe.getFormType())) {
+
+                int index = 1;
+                Map<Long, String> stepNames = new HashMap<>();
+                for(FormStepEntity fse : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
+                    if(Tools.isNotEmpty(fse.getStepName())) stepNames.put(fse.getId(), fse.getStepName());
+                    else stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + index);
+                    index++;
+                }
+
+                for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(fe.getFormName(), fe.getDomainId())) {
+                    StringBuilder itemName = new StringBuilder(MultistepFormsService.getFieldName(fie, prop));
+                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId().longValue())).append(")");
+                    itemNames.put(fie.getItemFormId(), itemName.toString());
+                }
+            }
+        }
+
         String[] formsColumns = entity.getData().split("~");
         List<LabelValue> columns = new ArrayList<>();
         for (String column : formsColumns) {
@@ -285,6 +315,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 columnNames[1] = Tools.replace(columnNames[1], "_", " ");
                 columnNames[1] = Tools.replace(columnNames[1], "e mail", "e-mail");
             }
+
+            if(itemNames != null && itemNames.size() > 0) {
+                if(columnNames[0].endsWith("-fileNames")) columnNames[0] = columnNames[0].substring(0, columnNames[0].length()-10);
+                columnNames[1] = itemNames.get(columnNames[0]);
+            }
+
             columns.add(new LabelValue(columnNames[1], columnNames[0]));
         }
         FormColumns formColumns = new FormColumns();
