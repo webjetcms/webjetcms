@@ -3,7 +3,6 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +40,7 @@ import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
@@ -602,7 +602,9 @@ public class FormHtmlHandler {
                     itemHtml = Tools.replace(itemHtml, originalValue, replacement);
                 }
             } else {
-                itemHtml = Tools.replace(itemHtml, originalValue, "<span class=\"form-control emailInput-text\">" + getFieldValue(stepItem.getItemFormId()) + "</span>");
+                String fieldValue = getFieldValue(stepItem.getItemFormId());
+                fieldValue = filterHtml(itemHtml, fieldValue);
+                itemHtml = Tools.replace(itemHtml, originalValue, "<span class=\"form-control emailInput-text\">" + fieldValue + "</span>");
             }
         }
 
@@ -611,21 +613,45 @@ public class FormHtmlHandler {
         Pattern textareaPattern = Pattern.compile(textareaRegex);
         Matcher textareaMatcher = textareaPattern.matcher(itemHtml);
 
-        while (textareaMatcher.find())
-            itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + getFieldValue(stepItem.getItemFormId()) + "</span>");
+        while (textareaMatcher.find()) {
+            String code = textareaMatcher.group();
+            String fieldValue = getFieldValue(stepItem.getItemFormId());
+            fieldValue = filterHtml(code, fieldValue);
+            if (isFilterHtml(code)) {
+                fieldValue = fieldValue.replaceAll("\\n", "<br/>");
+            }
+            itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + fieldValue + "</span>");
+        }
 
         // Loop selects
         String selectRegex = "(?s)<select.*?</select>";
         Pattern selectPattern = Pattern.compile(selectRegex);
         Matcher selectMatcher = selectPattern.matcher(itemHtml);
 
-        while (selectMatcher.find())
-            itemHtml = Tools.replace(itemHtml, selectMatcher.group(), "<span class=\"form-control emailInput-select\">" + getFieldValue(stepItem.getItemFormId()) + "</span>");
+        while (selectMatcher.find()) {
+            String code = selectMatcher.group();
+            String fieldValue = getFieldValue(stepItem.getItemFormId());
+            fieldValue = filterHtml(code, fieldValue);
+            itemHtml = Tools.replace(itemHtml, selectMatcher.group(), "<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
+        }
 
         // Remove help blocks
         itemHtml = Tools.replaceRegex(itemHtml, "<div class=\"help-block.*?<\\/div>", "", false);
 
         return itemHtml;
+    }
+
+    private boolean isFilterHtml(String code) {
+        if(code.contains("-wysiwyg")) return false;
+        return true;
+    }
+
+    private String filterHtml(String code, String fieldValue) {
+        if (isFilterHtml(code)) {
+            return ResponseUtils.filter(fieldValue);
+        }
+        //for wysiwyg fields (quill) filter at least unsafe HTML code
+        return AllowSafeHtmlAttributeConverter.sanitize(fieldValue);
     }
 
     private boolean isCheckboxOrRadioSelected(String itemHtml, String itemFormId) {
