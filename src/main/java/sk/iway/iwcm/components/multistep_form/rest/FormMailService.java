@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -127,6 +128,8 @@ public class FormMailService {
 
         String email = null;
         List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY);
+		//remove invalid emails
+		emailsList = emailsList.stream().filter(e -> Tools.isEmail(e)).collect(Collectors.toList());
         if(emailsList.size() > 0) email = emailsList.get(0);
 
 		String emailEncoding = SetCharacterEncodingFilter.getEncoding();
@@ -146,11 +149,11 @@ public class FormMailService {
 		if (sendUserInfoDocId > 0)
 			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
 
-		Logger.println(FormMailService.class,"FormMailAction recipients=" + recipients);
+		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);
 
-        if ("nobody@nowhere.com".equals(recipients)==false && recipients!=null && recipients.contains("@"))
+        if ("nobody@nowhere.com".equals(recipients) == false && recipients != null && recipients.contains("@"))
 		{
-			if (Tools.isEmail(email)) {
+			if (Tools.isEmail(email) == false) {
 				String emailProtectionSenderEmail = Constants.getString(SendMail.EMAIL_PROTECTION_SENDER_KEY);
 				if (Tools.isEmail(emailProtectionSenderEmail)) {
 					email = emailProtectionSenderEmail;
@@ -206,7 +209,7 @@ public class FormMailService {
 						props.put("mail.smtp.host", host);
 					else if (props.getProperty("mail.smtp.host") == null)
 						props.put("mail.smtp.host", InetAddress.getLocalHost().getHostName());
-				} catch (Exception ex) { Logger.error(FormMailAction.class, ex); }
+				} catch (Exception ex) { Logger.error(FormMailService.class, ex); }
 
 				Session session = SendMail.getSession(props);
 				MimeMessage msg = new MimeMessage(session);
@@ -235,7 +238,7 @@ public class FormMailService {
 							msg.setHeader("X-sender-userid", Integer.toString(user.getUserId()));
 							msg.setHeader("X-sender-fullname", DB.internationalToEnglish(user.getFullName()));
 						}
-					} catch (Exception ex) { Logger.error(FormMailAction.class, ex); }
+					} catch (Exception ex) { Logger.error(FormMailService.class, ex); }
 
 					toAddrs = InternetAddress.parse(recipients, false);
 					msg.setRecipients(Message.RecipientType.TO, toAddrs);
@@ -318,13 +321,32 @@ public class FormMailService {
 					}
 
 					Transport.send(msg);
-					Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne odoslany na email " + recipients, form.getDocId(), form.getId().intValue());
+
+					// Prepare Admninlog entry
+					StringBuilder sb = new StringBuilder();
+					sb.append("Form ").append(form.getFormName());
+					sb.append(" succesfully send to email ").append(recipients);
+
+					// add send parameters
+					sb.append("\n\n form parameters: \n");
+					Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
+					formData.forEach((key, value) -> {
+						sb.append("  ").append(key).append(": ").append(value).append("\n");
+					});
+
+					sb.append("\n\n formName: ").append(form.getFormName());
+					sb.append("\n from: ").append(from);
+					sb.append("\n to: ").append(recipients);
+					sb.append("\n subject: ").append(subject);
+					sb.append("\n");
+
+					Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), form.getDocId(), form.getId().intValue());
 				}
 				catch (Exception ex) {
-					Logger.error(FormMailAction.class, ex);
+					Logger.error(FormMailService.class, ex);
 					Adminlog.add(Adminlog.TYPE_FORMMAIL, "", form.getDocId(), form.getId().intValue());
 				}
 			}
-		} else { Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular " + form.getFormName() + " uspesne ulozeny do databazy", form.getDocId(), form.getId().intValue()); }
+		}
     }
 }
