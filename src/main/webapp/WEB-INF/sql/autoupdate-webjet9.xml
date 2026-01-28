@@ -2756,6 +2756,8 @@
                             form_name VARCHAR(255) NOT NULL,
                             step_name VARCHAR(255) NULL,
                             step_sub_name VARCHAR(255) NULL,
+                            next_step_btn_label VARCHAR(255) NULL,
+                            back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
@@ -2768,6 +2770,8 @@
                             form_name NVARCHAR(255) NOT NULL,
                             step_name NVARCHAR(255) NULL,
                             step_sub_name NVARCHAR(255) NULL,
+                            next_step_btn_label NVARCHAR(255) NULL,
+                            back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             domain_id int DEFAULT 1 NOT NULL
                         );
@@ -2780,6 +2784,8 @@
                             form_name NVARCHAR(255) NOT NULL,
                             step_name NVARCHAR(255) NULL,
                             step_sub_name NVARCHAR(255) NULL,
+                            next_step_btn_label NVARCHAR(255) NULL,
+                            back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INTEGER NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
@@ -2805,6 +2811,8 @@
                             form_name VARCHAR(255) NOT NULL,
                             step_name VARCHAR(255) NULL,
                             step_sub_name VARCHAR(255) NULL,
+                            next_step_btn_label VARCHAR(255) NULL,
+                            back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -271,11 +272,9 @@ public class FormHtmlHandler {
      * @return HTML builder with form end content
      */
     private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request) {
-        String submitButtonString = "";
-        if(isLastStep(formName, stepId)) submitButtonString = prop.getText("components.mustistep.form.save_form");
-        else submitButtonString = prop.getText("components.mustistep.form.next_step");
+        Pair<String, String> buttonsLabels = getButtonsLabels(formName, stepId);
 
-        return getFormEnd(formName, submitButtonString, request);
+        return getFormEnd(formName, buttonsLabels.getSecond(), request);
     }
 
     /**
@@ -642,14 +641,34 @@ public class FormHtmlHandler {
         return value;
     }
 
-    /**
-     * Checks whether the given step is the last step of the form.
-     *
-     * @param formName form identifier
-     * @param currentStepId current step ID
-     * @return true if there is no next step, otherwise false
-     */
-    private boolean isLastStep(String formName, Long currentStepId) {
-        return MultistepFormsService.getNextStep(formName, currentStepId, formStepsRepository) == null;
+    private Pair<String, String> getButtonsLabels(String formName, Long currentStepId) {
+        int stepIndex = 0;
+        FormStepEntity actualStep = null;
+
+        List<FormStepEntity> formSteps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
+        for(FormStepEntity formStep : formSteps) {
+            if(formStep.getId().equals(currentStepId)) {
+                actualStep = formStep;
+                break;
+            }
+            stepIndex++;
+        }
+
+        if(actualStep == null) throw new IllegalStateException("getButtonsLabels() - form step was not found by provided params");
+
+        String backBtnLabel;
+        if(Tools.isNotEmpty(actualStep.getBackStepBtnLabel())) backBtnLabel = actualStep.getBackStepBtnLabel();
+        else backBtnLabel = prop.getText("components.mustistep.form.back_step");
+
+        String nextBtnLabel;
+        if(Tools.isNotEmpty(actualStep.getNextStepBtnLabel())) nextBtnLabel = actualStep.getNextStepBtnLabel();
+        else {
+            if(stepIndex == (formSteps.size() - 1)) // last step
+                nextBtnLabel = prop.getText("components.mustistep.form.save_form");
+            else // not last step
+                nextBtnLabel = prop.getText("components.mustistep.form.next_step");
+        }
+
+        return new Pair<String,String>(backBtnLabel, nextBtnLabel);
     }
 }
