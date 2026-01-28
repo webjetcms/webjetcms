@@ -194,8 +194,6 @@
                 .catch(err => console.error(err));
             });
         });
-
-        onResize();
     });
 
     async function loadStepPreview() {
@@ -224,6 +222,8 @@
             const html = await r.text();
 
             $("div.stepPreview").html(html);
+
+            onResize();
 
             // init wysiwyg inside preview
             window.setTimeout(() => {
