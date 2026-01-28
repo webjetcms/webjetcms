@@ -42,7 +42,7 @@ public class MultistepFormsRestController {
         }
 
         catch (SaveFormException sfe) {
-            Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + sfe.getLocalizedMessage());
+            Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + sfe.getLocalizedMessage(), sfe);
             response.put("err_msg", sfe.getLocalizedMessage());
             response.put("end_try", sfe.isEndUserTry());
 
@@ -53,7 +53,7 @@ public class MultistepFormsRestController {
         }
 
         catch (Exception e) {
-            Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage());
+            Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + e.getLocalizedMessage(), e);
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
             return ResponseEntity.badRequest().body(response.toString());
         }
@@ -74,7 +74,7 @@ public class MultistepFormsRestController {
                 .header("Content-Type", contentTypeWithCharset)
                 .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
         } catch (Exception e) {
-            Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage());
+            Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage(), e);
             JSONObject response = new JSONObject();
             response.put("err_msg", Prop.getInstance(request).getText("datatable.error.unknown"));
             return ResponseEntity.badRequest()
