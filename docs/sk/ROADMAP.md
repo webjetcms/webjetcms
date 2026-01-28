@@ -19,6 +19,7 @@ Vysvetlenie použitých piktogramov:
 - Migrácia na Spring Boot projekt.
 - Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
 - Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
+- Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
 
 ## 2025
 

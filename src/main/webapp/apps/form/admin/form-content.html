@@ -6,6 +6,7 @@
 <script data-th-inline="javascript">
 
     let itemsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemTabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
     let itemUrl = "/admin/rest/form-items";
 
     let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
@@ -125,6 +126,7 @@
             url: getActualPath(-1),
             serverSide: true,
             columns: itemsColumns,
+            tabs: itemTabs,
             order: order,
             id: "formItemsDataTable",
             fetchOnEdit: true,
