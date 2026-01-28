@@ -2759,6 +2759,7 @@
                             next_step_btn_label VARCHAR(255) NULL,
                             back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+                            step_bonus_html TEXT NULL,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2773,6 +2774,7 @@
                             next_step_btn_label NVARCHAR(255) NULL,
                             back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+                            step_bonus_html NTEXT NULL,
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2787,6 +2789,7 @@
                             next_step_btn_label NVARCHAR(255) NULL,
                             back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INTEGER NOT NULL,
+                            step_bonus_html CLOB NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_steps START WITH 1;
@@ -2814,6 +2817,7 @@
                             next_step_btn_label VARCHAR(255) NULL,
                             back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
+                            step_bonus_html TEXT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

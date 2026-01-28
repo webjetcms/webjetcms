@@ -274,7 +274,11 @@ public class FormHtmlHandler {
     private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request) {
         Pair<String, String> buttonsLabels = getButtonsLabels(formName, stepId);
 
-        return getFormEnd(formName, buttonsLabels.getSecond(), request);
+        StringBuilder formEndHtml =  getFormEnd(formName, buttonsLabels.getSecond(), request);
+
+        if(isEmailRender == false) formEndHtml.append( formStepsRepository.getStepBonusHtml(stepId, CloudToolsForCore.getDomainId()) );
+
+        return formEndHtml;
     }
 
     /**

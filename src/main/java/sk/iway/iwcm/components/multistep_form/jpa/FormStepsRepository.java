@@ -25,4 +25,7 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
     @Transactional
     @Modifying
     void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
+
+    @Query("SELECT fse.stepBonusHtml FROM FormStepEntity fse WHERE fse.id = :id AND fse.domainId = :domainId")
+    public String getStepBonusHtml(@Param("id") Long id, @Param("domainId") Integer domainId);
 }

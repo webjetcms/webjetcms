@@ -11,6 +11,10 @@
 
     let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
     let stepUrl = "/admin/rest/form-steps";
+    let stepTabs = [
+        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
+    ];
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -72,6 +76,7 @@
             url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
             serverSide: true,
             columns: stepColumns,
+            tabs: stepTabs,
             id: "formStepsDataTable",
             fetchOnEdit: true,
             fetchOnCreate: true,
@@ -330,6 +335,9 @@
     #formStepsDataTable_wrapper .dt-footer-row .select-info, #formItemsDataTable_wrapper .dt-footer-row .select-info {
         display: none;
     }
+
+    #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Name_stepBonusHtml label { display: none; }
+    #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Type_textarea .col-sm-7 { width: 99%; }
 </style>
 
 <div class="row">
