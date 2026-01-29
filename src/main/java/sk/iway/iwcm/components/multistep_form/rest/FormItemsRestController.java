@@ -75,7 +75,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         page.addOptions("fieldType", MultistepFormsService.getFieldTypes(getRequest()), "label", "value", false);
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
-        page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest())), "label", "value", false);
+        page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
 
         processFromEntity(page, ProcessItemAction.GETALL);

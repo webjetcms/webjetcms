@@ -184,6 +184,9 @@ public class MultistepFormsService {
             options.add(new LabelValue(entry.getValue(), entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length())));
         }
 
+        //sort by label
+        options.sort((o1, o2) -> o1.getLabel().compareToIgnoreCase(o2.getLabel()));
+
         return options;
     }
 
@@ -300,14 +303,20 @@ public class MultistepFormsService {
      * @param formName logical form name
      * @return list of label/value pairs ordered by step sorting
      */
-    public final List<LabelValue> getFormStepsOptions(String formName) {
+    public final List<LabelValue> getFormStepsOptions(String formName, Prop prop) {
         List<LabelValue> options = new ArrayList<>();
 
         if(Tools.isEmpty(formName)) return options;
 
         int counter = 1;
         for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
-            options.add(new LabelValue(step.getStepName() + " (" + counter++ + ")", step.getId() + ""));
+            StringBuilder label = new StringBuilder();
+            label.append(prop.getText("components.form_items.step_title")).append(" ").append(counter);
+            if (Tools.isNotEmpty(step.getStepName())) label.append(" - ").append(step.getStepName());
+            if (Tools.isNotEmpty(step.getStepSubName())) label.append(" (").append(step.getStepSubName()).append(")");
+
+            options.add(new LabelValue(label.toString(), step.getId() + ""));
+            counter++;
         }
 
         return options;
