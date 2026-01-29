@@ -251,7 +251,6 @@ dependencies {
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-    providedCompile "javax.servlet:servlet-api:2.5"
     providedCompile "javax.servlet.jsp:javax.servlet.jsp-api:2.3.3"
     providedCompile 'javax.el:javax.el-api:3.0.0'
     providedCompile 'javax.annotation:jsr250-api:1.0'
