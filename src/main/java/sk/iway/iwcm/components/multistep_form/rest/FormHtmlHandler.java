@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -206,11 +205,8 @@ public class FormHtmlHandler {
         StringBuilder stepWrapperStart = new StringBuilder();
         stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
 
-        if (Tools.isNotEmpty(formStep.getStepName()))
-            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.primaryHeader"), "${step-primaryHeader}", formStep.getStepName()));
-
-        if (Tools.isNotEmpty(formStep.getStepSubName()))
-            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.secondaryHeader"), "${step-secondaryHeader}", formStep.getStepSubName()));
+        if (Tools.isNotEmpty(formStep.getHeader()))
+            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.primaryHeader"), "${step-header}", formStep.getHeader()));
 
         formStepHtml.append(stepWrapperStart);
 
@@ -274,13 +270,13 @@ public class FormHtmlHandler {
      * @return HTML builder with form end content
      */
     private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request, FormStepEntity formStep) {
-        Pair<String, String> buttonsLabels = getButtonsLabels(formName, stepId);
+        Pair<String, String> buttonsLabels = getButtonsLabels(stepId);
 
         StringBuilder formEndHtml =  getFormEnd(formName, buttonsLabels.getSecond(), request);
 
         if(isEmailRender == false) {
             if(formStep.getStepBonusHtml() == null) formEndHtml.append("");
-            formEndHtml.append(formStep.getStepBonusHtml());
+            else formEndHtml.append(formStep.getStepBonusHtml());
         }
 
         return formEndHtml;
@@ -675,18 +671,8 @@ public class FormHtmlHandler {
         return value;
     }
 
-    private Pair<String, String> getButtonsLabels(String formName, Long currentStepId) {
-        int stepIndex = 0;
-        FormStepEntity actualStep = null;
-
-        List<FormStepEntity> formSteps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
-        for(FormStepEntity formStep : formSteps) {
-            if(formStep.getId().equals(currentStepId)) {
-                actualStep = formStep;
-                break;
-            }
-            stepIndex++;
-        }
+    private Pair<String, String> getButtonsLabels(Long currentStepId) {
+        FormStepEntity actualStep = formStepsRepository.findById(currentStepId).orElse(null);
 
         if(actualStep == null) throw new IllegalStateException("getButtonsLabels() - form step was not found by provided params");
 
@@ -697,7 +683,7 @@ public class FormHtmlHandler {
         String nextBtnLabel;
         if(Tools.isNotEmpty(actualStep.getNextStepBtnLabel())) nextBtnLabel = actualStep.getNextStepBtnLabel();
         else {
-            if(stepIndex == (formSteps.size() - 1)) // last step
+            if(actualStep.isLastStep()) // last step
                 nextBtnLabel = prop.getText("components.mustistep.form.save_form");
             else // not last step
                 nextBtnLabel = prop.getText("components.mustistep.form.next_step");

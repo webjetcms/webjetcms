@@ -75,10 +75,12 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
     @Override
     public void afterSave(FormStepEntity entity, FormStepEntity saved) {
-        // After save ensure that form pattern is updated
+        // After save ensure that form pattern is updated, and all step positions
         // !! do not call, when action was duplication
-        if(entity.getId().equals(entity.getIdForDuplication()) == false)
+        if(entity.getId().equals(entity.getIdForDuplication())) {
             multistepFormsService.updateFormPattern(entity.getFormName());
+            multistepFormsService.updateStepsPositions(entity.getFormName());
+        }
     }
 
     @Override
@@ -90,6 +92,12 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     public void afterDelete(FormStepEntity entity, long id) {
         // After delete remove all step items binded to this form step
         formItemsRepository.deleteAllByStepIdAndDomainId(id, CloudToolsForCore.getDomainId());
+
+        // Now update form pattern
+        multistepFormsService.updateFormPattern(entity.getFormName());
+
+        // Now update steps positions
+        multistepFormsService.updateStepsPositions(entity.getFormName());
     }
 
     @Override
@@ -122,6 +130,9 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
         // Now update form pattern
         multistepFormsService.updateFormPattern(entity.getFormName());
+
+        // Now update step positions
+        multistepFormsService.updateStepsPositions(entity.getFormName());
     }
 
     @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML)

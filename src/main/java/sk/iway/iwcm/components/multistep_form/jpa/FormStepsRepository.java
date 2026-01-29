@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.jpa;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,13 +20,16 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
     @Query("SELECT DISTINCT fse.formName FROM FormStepEntity fse WHERE fse.domainId = :domainId")
     public List<String> getMultistepFormNames(@Param("domainId") Integer domainId);
 
-    @Query("SELECT COUNT(fse.id) FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.id = :id AND fse.domainId = :domainId")
-    public int validationStepCount(@Param("formName") String formName, @Param("id") Long id, @Param("domainId") Integer domainId);
-
     @Transactional
     @Modifying
     void deleteAllByFormNameAndDomainId(String formName, Integer domainId);
 
-    @Query("SELECT fse.stepBonusHtml FROM FormStepEntity fse WHERE fse.id = :id AND fse.domainId = :domainId")
-    public String getStepBonusHtml(@Param("id") Long id, @Param("domainId") Integer domainId);
+    @Query("SELECT fse.id FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.currentPosition = 1 AND fse.domainId = :domainId")
+    Optional<Long> getFirstStepId(@Param("formName") String formName, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fse FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.id = :stepId AND fse.domainId = :domainId")
+    Optional<FormStepEntity> getValidStep(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fse FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.currentPosition = :currentPosition AND fse.domainId = :domainId")
+    Optional<FormStepEntity> getStepByPosition(@Param("formName") String formName, @Param("currentPosition") Integer currentPosition, @Param("domainId") Integer domainId);
 }

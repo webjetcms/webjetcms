@@ -8,7 +8,7 @@ Scenario('forms @current', ({ I , DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/");
     Document.screenshot("/redactor/apps/form/datatable.png");
 
-    DT.filterEquals("formName", "Dotaznik-spokojnosti-externy");
+    DT.filterEquals("formName", "Brexit");
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");

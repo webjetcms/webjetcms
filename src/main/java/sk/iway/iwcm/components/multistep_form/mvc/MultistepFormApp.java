@@ -23,7 +23,6 @@ import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsRepository;
-import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
@@ -110,12 +109,8 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         request.getSession().setAttribute(sessionKey + DOC_ID, Tools.getIntValue(request.getParameter("docid"), -1));
         request.getSession().setAttribute(sessionKey + PERMITTED, Boolean.TRUE);
 
-        //Get first step id
-        List<FormStepEntity> steps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
-        if(steps == null || steps.size() < 1)
-            model.addAttribute("stepId", -1L);
-        else
-            model.addAttribute("stepId", steps.get(0).getId());
+        //Get and set first step id
+        model.addAttribute("stepId", formStepsRepository.getFirstStepId(formName, CloudToolsForCore.getDomainId()).orElse(-1L));
 
         return VIEW_PATH;
     }

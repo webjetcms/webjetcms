@@ -85,8 +85,6 @@ public class MultistepFormsService {
     private Integer iLastDocId = null;
     private boolean spamProtectionEnabled = true;
 
-    private DocDB docDB = DocDB.getInstance();
-
     @Autowired
     public MultistepFormsService(SaveFormService saveFormService, FormsRepository formsRepository, FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository) {
         this.saveFormService = saveFormService;
@@ -222,45 +220,16 @@ public class MultistepFormsService {
      * @return next step entity or {@code null} if current step is the last
      * @throws IllegalStateException when the provided step does not belong to the form/domain
      */
-    public static final FormStepEntity getNextStep(String formName, Long currentStepId, FormStepsRepository repo) {
-        List<FormStepEntity> steps = repo.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
+    public static final FormStepEntity getNextStep(String formName, FormStepEntity currentStep, FormStepsRepository repo) {
+        // Return null indicating its last step and there are no more steps
+        if(currentStep.isLastStep()) return null;
 
-        for(int i = 0; i < steps.size(); i++) {
-            if(steps.get(i).getId() == currentStepId) {
-                //This step is current - set next one if is there
-                if((i + 1) < steps.size()) return steps.get(i + 1);
-                else return null; // there is no next step
-            }
-        }
-
-        throw new IllegalStateException("Give currentStepId: " + currentStepId + " for form " + formName + " does NOT exist");
+        return repo.getStepByPosition(formName, currentStep.getCurrentPosition() + 1, CloudToolsForCore.getDomainId())
+            .orElseThrow(() -> new IllegalStateException("Given currentStepId: " + currentStep.getId() + " for form " + formName + " does NOT exist") );
     }
 
     public static final List<String> getRowViewItemTypes() {
         return List.of("novy-riadok", "prazdny-stlpec");
-    }
-
-    /**
-     * Determine the position of a step within the ordered form sequence.
-     *
-     * @param formName logical form name
-     * @param stepId   step identifier
-     * @param repo     repository used to fetch ordered steps
-     * @return index if found, otherwise -1
-     */
-    public static int getStepPositionIndex(String formName, Long stepId, FormStepsRepository repo) {
-        int index = 1;
-        boolean found = false;
-        for(FormStepEntity formStep : repo.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
-            if(stepId.equals(formStep.getId())) {
-                found = true;
-                break;
-            }
-            index++;
-        }
-
-        if(found) return index;
-        else return -1; //not found
     }
 
     public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
@@ -285,17 +254,22 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - support methods ********** */
 
-    public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
-        if(Tools.isEmpty(formName)) return false;
-        if(currentStepId < 1L) return false;
-        boolean valid = formStepsRepository.validationStepCount(formName, currentStepId, CloudToolsForCore.getDomainId()) == 1; //must be EXACTLY ONE
-        if(valid == false) return false;
+    private final FormStepEntity getValidStepEntity(String formName, Long currentStepId, HttpServletRequest request) {
+        if(Tools.isEmpty(formName)) return null;
+        if(currentStepId < 1L) return null;
+        FormStepEntity validStep = formStepsRepository.getValidStep(formName, currentStepId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(validStep == null) return null;
         else {
             Object permitted = request.getSession().getAttribute(getSessionKey(formName, request) + MultistepFormApp.PERMITTED);
-            if (permitted == null) return false;
-            if (permitted instanceof Boolean b) return b;
-            else return false;
+            if (permitted == null) return null;
+            if (permitted instanceof Boolean b)
+                return Tools.isTrue(b) ? validStep : null;
+            else return null;
         }
+    }
+
+    public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
+        return getValidStepEntity(formName, currentStepId, request) != null;
     }
 
     /**
@@ -313,8 +287,6 @@ public class MultistepFormsService {
         for(FormStepEntity step : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
             StringBuilder label = new StringBuilder();
             label.append(prop.getText("components.form_items.step_title")).append(" ").append(counter);
-            if (Tools.isNotEmpty(step.getStepName())) label.append(" - ").append(step.getStepName());
-            if (Tools.isNotEmpty(step.getStepSubName())) label.append(" (").append(step.getStepSubName()).append(")");
 
             options.add(new LabelValue(label.toString(), step.getId() + ""));
             counter++;
@@ -435,7 +407,8 @@ public class MultistepFormsService {
      * @throws IOException       when reading request body fails
      */
     public final void saveFormStep(String formName, Long stepId, HttpServletRequest request, JSONObject response) throws SaveFormException, IOException {
-        if(validateFormInfo(formName, stepId, request) == false) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
+        FormStepEntity validStepEntity = getValidStepEntity(formName, stepId, request);
+        if(validStepEntity == null) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
 
         String body = request.getReader().lines().collect(Collectors.joining());
         if (Tools.isEmpty(body)) throw new IllegalStateException("Empty request body.");
@@ -461,17 +434,17 @@ public class MultistepFormsService {
         FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId);
 
         // STEP VALIDATION
-        customStepValidation(formProcessor, formName, stepId, received, request, errors);
+        customStepValidation(formProcessor, formName, validStepEntity, received, request, errors);
 
         if(errors == null || errors.size() < 1) {
             // RUN STEP INTERCEPTOR
-            customStepInterceptor(formProcessor, formName, stepId, received, request, errors);
+            customStepInterceptor(formProcessor, formName, validStepEntity, received, request, errors);
 
             //Save step of form - its LOCAL save into session, NOT db save
             saveStepData(formName, stepId, received, request);
 
             // Validation success
-            FormStepEntity nextStep = getNextStep(formName, stepId, formStepsRepository);
+            FormStepEntity nextStep = getNextStep(formName, validStepEntity, formStepsRepository);
 
             String forwardOk = null;
             if(nextStep == null) {
@@ -519,27 +492,27 @@ public class MultistepFormsService {
         return null;
     }
 
-    private void customStepValidation(FormProcessorInterface formProcessor, String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    private void customStepValidation(FormProcessorInterface formProcessor, String formName, FormStepEntity stepEntity, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(formProcessor != null) {
             try {
-                formProcessor.validateStep(formName, stepId, received, request, errors);
+                formProcessor.validateStep(formName, stepEntity, received, request, errors);
             } catch (SaveFormException sfe) {
                 throw sfe;
             } catch (Exception e) {
-                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed step validation. Cause: " + e.getLocalizedMessage());
+                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepEntity.getId() + " failed step validation. Cause: " + e.getLocalizedMessage());
                 throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
     }
 
-    private void customStepInterceptor(FormProcessorInterface formProcessor, String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    private void customStepInterceptor(FormProcessorInterface formProcessor, String formName, FormStepEntity stepEntity, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(formProcessor != null) {
             try {
-                formProcessor.runStepInterceptor(formName, stepId, received, request, errors);
+                formProcessor.runStepInterceptor(formName, stepEntity, received, request, errors);
             } catch (SaveFormException sfe) {
                 throw sfe;
             } catch (Exception e) {
-                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepId + " failed run step interceptor. Cause: " + e.getLocalizedMessage());
+                Logger.error(MultistepFormsService.class, "FormName: " + formName + " stepId:" + stepEntity.getId() + " failed run step interceptor. Cause: " + e.getLocalizedMessage());
                 throw new SaveFormException(Prop.getInstance(request).getText("datatable.error.unknown"), false, null);
             }
         }
@@ -580,8 +553,7 @@ public class MultistepFormsService {
         List<RegExpEntity> allRegExps = FormDB.getInstance().getAllRegularExpressionAsEntity();
 
         for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
-
-            //
+            // multiupload fields are validated in method validateFileFields()
             if(stepItem.getFieldType().startsWith(MULTIUPLOAD_PREFIX)) continue;
 
             String itemFormId = stepItem.getItemFormId();
@@ -800,7 +772,7 @@ public class MultistepFormsService {
 			iLastDocId = formSettings.getUseFormDocId();
 
 		if (iLastDocId != null) {
-            DocDetails doc = docDB.getDoc(iLastDocId, -1, false);
+            DocDetails doc = DocDB.getInstance().getDoc(iLastDocId, -1, false);
             if (doc != null) {
                 TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
                 if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection() == false;
@@ -848,4 +820,25 @@ public class MultistepFormsService {
 		//return if is correct
 		return CSRF.verifyTokenAjax(request.getSession(), request.getHeader("X-CSRF-Token"));
 	}
+
+    public void updateStepsPositions(String formName) {
+        if(Tools.isEmpty(formName)) return;
+
+        List<FormStepEntity> steps = formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId());
+        List<FormStepEntity> stepsToUpdate = new ArrayList<>();
+
+        int currentPosition = 1;
+        int maxPosition = steps.size();
+
+        for(FormStepEntity stepEntity : steps) {
+            if(stepEntity.getCurrentPosition() != currentPosition || stepEntity.getMaxPosition() != maxPosition) {
+                stepEntity.setCurrentPosition(currentPosition);
+                stepEntity.setMaxPosition(maxPosition);
+                stepsToUpdate.add(stepEntity);
+            }
+            currentPosition++;
+        }
+
+        if(stepsToUpdate.size() > 0) formStepsRepository.saveAll(stepsToUpdate);
+    }
 }

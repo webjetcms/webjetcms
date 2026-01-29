@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
 
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 
 /**
  * Defines the contract for custom processing hooks used by multistep forms.
@@ -26,7 +27,7 @@ public interface FormProcessorInterface {
      * @param errors mutable map to collect field or general error messages (key → message)
      * @throws SaveFormException when validation fails in a way that should stop processing
      */
-    public void validateStep(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
+    public void validateStep(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
 
     /**
      * Executes an optional interceptor after a step is submitted, for example sending
@@ -39,7 +40,7 @@ public interface FormProcessorInterface {
      * @param errors mutable map to collect error messages produced by the interceptor
      * @throws SaveFormException to abort the flow when the interceptor detects blocking issues
      */
-    public void runStepInterceptor(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
+    public void runStepInterceptor(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException;
 
     /**
      * Performs custom final save logic for the form. The return value controls

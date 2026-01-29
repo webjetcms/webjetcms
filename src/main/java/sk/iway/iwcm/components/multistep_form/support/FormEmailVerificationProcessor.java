@@ -15,7 +15,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
-import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.i18n.Prop;
@@ -51,17 +51,12 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      * @param errors map to collect validation errors (not used in this step)
      * @throws SaveFormException if email cannot be determined or email sending fails
      */
-    public void runStepInterceptor(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
-        FormStepsRepository fsr = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
-        if(fsr == null) throw new IllegalStateException("Could not obtain FormStepsRepository.");
+    public void runStepInterceptor(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+        if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
-        int stepIndex = MultistepFormsService.getStepPositionIndex(formName, currentStepId, fsr);
-        if(stepIndex == -1) throw new IllegalStateException("Invalid combination of formName:" + formName + " and stepId:" + currentStepId);
-
-        if(stepIndex == 1) {
+        if(stepEntity.getCurrentPosition() == 1)
             // We want to send verification email at end of first step
             verifyEmailInterceptor(formName, stepData, request);
-        }
     }
 
     @Override
@@ -80,17 +75,12 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      * @param errors map to collect validation errors when the code is invalid
      * @throws SaveFormException when verification code attempts exceed the allowed maximum
      */
-    public void validateStep(String formName, Long currentStepId, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
-        FormStepsRepository fsr = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
-        if(fsr == null) throw new IllegalStateException("Could not obtain FormStepsRepository.");
+    public void validateStep(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+        if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
-        int stepIndex = MultistepFormsService.getStepPositionIndex(formName, currentStepId, fsr);
-        if(stepIndex == -1) throw new IllegalStateException("Invalid combination of formName:" + formName + " and stepId:" + currentStepId);
-
-        if(stepIndex == 2) {
+        if(stepEntity.getCurrentPosition() == 2)
             // We want to validate email code in step two
             emaiCodeValidation(formName, stepData, request, errors);
-        }
     }
 
     @Override
