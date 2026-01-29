@@ -166,6 +166,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
 
+    @Override
+    public void afterDelete(FormItemEntity entity, long id) {
+        // After save ensure that form pattern is updated
+        multistepFormsService.updateFormPattern(entity.getFormName());
+    }
+
     private void setItemPreview(FormItemEntity stepItem) {
         JSONObject item = new JSONObject(stepItem);
         String fieldType = item.getString("fieldType");

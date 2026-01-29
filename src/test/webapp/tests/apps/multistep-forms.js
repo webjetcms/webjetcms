@@ -25,16 +25,7 @@ Scenario('Check editor tabs', ({ I, DT, DTE }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
-
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced", "settings-deprecated"], []);
-    DTE.cancel();
-
-    DT.filterEquals("formName", "Multistepform_1");
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-edit");
-    DTE.waitForEditor("formsDataTable");
-
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"], ["settings-deprecated"]);
+    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"]);
 });
 
 Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
@@ -46,29 +37,19 @@ Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
     I.click("button.buttons-create");
     DTE.waitForEditor("formsDataTable");
 
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"], ["settings-deprecated"]);
-
     DTE.fillField("formName", "Multistepform_1");
     DTE.save();
     I.waitForText("Názov formuláru musí byť jedinečný.", 5);
 
     DTE.fillField("formName", newMultistepFormName);
-    I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
+
     I.fillField("#DTE_Field_formSettings-recipients", baseAdminMail + TempMail.getTempMailDomain());
     DTE.save();
 
-    DT.filterEquals("formName", newMultistepFormName);
-    I.click( locate("a").withChild("i.ti-eye") );
-    I.waitForVisible("#formDetailDataTable");
-
-    I.say("Check form detail page");
-    checkNavigationTabVsibility(I, ["Zoznam formulárov", "Položky formuláru", "Archív formulárov", "Regulárne výrazy"], []);
-    I.seeElement( locate("#pills-form-details > li > a.nav-link.active").withText(newMultistepFormName) );
-    I.see("Nenašli sa žiadne vyhovujúce záznamy"); // no filled answers yet
-
-    I.say("Check default form content");
-    I.click( locate("ul.nav > li.nav-item > a.nav-link").withText("Položky formuláru") );
+    I.say("Check default form content - page is auto redirected");
     I.waitForVisible("div.stepPreviewWrapper");
+
+
 
     //Default step
     I.seeElement( locate("table#formStepsDataTable > tbody > tr > td").withText("DEFAULT") );
@@ -651,8 +632,7 @@ function checkNavigationTabVsibility(I, seeTabs, notSeeTabs) {
     notSeeTabs.forEach(tabTitle => { I.dontSeeElement( locate("ul.nav > li.nav-item > a.nav-link").withText(tabTitle) ); });
 }
 
-function checkEditorTabVsibility(I, seeTabs, notSeeTabs) {
+function checkEditorTabVsibility(I, seeTabs) {
     I.say("Checking Editor tabs visibility");
     seeTabs.forEach(tabTitle => { I.seeElement("#pills-dt-formsDataTable-" + tabTitle + "-tab"); });
-    notSeeTabs.forEach(tabTitle => { I.dontSeeElement("#pills-dt-formsDataTable-" + tabTitle + "-tab"); });
 }

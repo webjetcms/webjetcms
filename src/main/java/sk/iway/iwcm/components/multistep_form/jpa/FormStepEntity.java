@@ -18,8 +18,6 @@ import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
@@ -46,24 +44,17 @@ public class FormStepEntity {
     @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.forms.file_restrictions.form_name", tab = "main", hidden = true)
     private String formName;
 
-    @Column(name = "step_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", tab = "main", renderFunction = "renderStepName",
-        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
-    )
-    private String stepName;
-
-    @Column(name = "step_sub_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.secondaryHeader", tab = "main", hidden = true)
-    private String stepSubName;
+    @Lob
+    @Column(name = "header")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.banner.primaryHeader", tab = "main", renderFunction = "renderStepName")
+    private String header;
 
     @Column(name = "next_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "main", hidden = true,
-        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
-    )
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true)
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "main", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob
@@ -72,6 +63,14 @@ public class FormStepEntity {
     @DataTableColumn(inputType=DataTableColumnType.TEXTAREA, tab="stepBonusHtml", title="components.insert_script.body", className = "textarea-code show-html", hidden = true)
     private String stepBonusHtml;
 
+    @Column(name = "current_position")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer currentPosition;
+
+    @Column(name = "max_position")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer maxPosition;
+
     // When duplicationg step, we need it's original ID, so we can duplicate binded items too
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
@@ -79,4 +78,8 @@ public class FormStepEntity {
 
     @Column(name = "domain_id")
     private Integer domainId;
+
+    public boolean isLastStep() {
+        return currentPosition == maxPosition;
+    }
 }

@@ -289,8 +289,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 int index = 1;
                 Map<Long, String> stepNames = new HashMap<>();
                 for(FormStepEntity fse : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(formName, CloudToolsForCore.getDomainId())) {
-                    if(Tools.isNotEmpty(fse.getStepName())) stepNames.put(fse.getId(), fse.getStepName());
-                    else stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + index);
+                    stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + index);
                     index++;
                 }
 

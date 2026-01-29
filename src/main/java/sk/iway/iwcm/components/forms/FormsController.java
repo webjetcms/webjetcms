@@ -130,8 +130,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             FormStepEntity fse = new FormStepEntity();
             fse.setSortPriority(10);
             fse.setFormName(entity.getFormName());
-            fse.setStepName("");
-            fse.setStepSubName("");
+            fse.setHeader("");
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
 

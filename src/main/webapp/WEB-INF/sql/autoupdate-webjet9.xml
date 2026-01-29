@@ -2754,12 +2754,13 @@
                         CREATE TABLE form_steps (
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
-                            step_name VARCHAR(255) NULL,
-                            step_sub_name VARCHAR(255) NULL,
+                            header TEXT NULL,
                             next_step_btn_label VARCHAR(255) NULL,
                             back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             step_bonus_html TEXT NULL,
+                            current_position INT(11) NOT NULL,
+                            max_position INT(11) NOT NULL,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2769,12 +2770,13 @@
                         CREATE TABLE form_steps (
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             form_name NVARCHAR(255) NOT NULL,
-                            step_name NVARCHAR(255) NULL,
-                            step_sub_name NVARCHAR(255) NULL,
+                            header NTEXT NULL,
                             next_step_btn_label NVARCHAR(255) NULL,
                             back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             step_bonus_html NTEXT NULL,
+                            current_position INT NOT NULL,
+                            max_position INT NOT NULL,
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2784,12 +2786,13 @@
                         CREATE TABLE form_steps (
                             id INTEGER NOT NULL PRIMARY KEY,
                             form_name NVARCHAR(255) NOT NULL,
-                            step_name NVARCHAR(255) NULL,
-                            step_sub_name NVARCHAR(255) NULL,
+                            header CLOB NULL,
                             next_step_btn_label NVARCHAR(255) NULL,
                             back_step_btn_label NVARCHAR(255) NULL,
                             sort_priority INTEGER NOT NULL,
                             step_bonus_html CLOB NULL,
+                            current_position INTEGER NOT NULL,
+                            max_position INTEGER NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_steps START WITH 1;
@@ -2812,12 +2815,13 @@
                         CREATE TABLE form_steps (
                             id INT DEFAULT NEXTVAL('S_form_steps') PRIMARY KEY NOT NULL,
                             form_name VARCHAR(255) NOT NULL,
-                            step_name VARCHAR(255) NULL,
-                            step_sub_name VARCHAR(255) NULL,
+                            header TEXT NULL,
                             next_step_btn_label VARCHAR(255) NULL,
                             back_step_btn_label VARCHAR(255) NULL,
                             sort_priority INT NOT NULL,
                             step_bonus_html TEXT NULL,
+                            current_position INT NOT NULL,
+                            max_position INT NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>
