@@ -40,7 +40,6 @@ import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
@@ -605,7 +604,6 @@ public class FormHtmlHandler {
                 }
             } else {
                 String fieldValue = getFieldValue(stepItem.getItemFormId());
-                fieldValue = filterHtml(itemHtml, fieldValue);
                 itemHtml = Tools.replace(itemHtml, originalValue, "<span class=\"form-control emailInput-text\">" + fieldValue + "</span>");
             }
         }
@@ -618,8 +616,7 @@ public class FormHtmlHandler {
         while (textareaMatcher.find()) {
             String code = textareaMatcher.group();
             String fieldValue = getFieldValue(stepItem.getItemFormId());
-            fieldValue = filterHtml(code, fieldValue);
-            if (isFilterHtml(code)) {
+            if (SaveFormService.isFilterHtml(code)) {
                 if (fieldValue != null) fieldValue = fieldValue.replaceAll("\\n", "<br/>");
             }
             itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + fieldValue + "</span>");
@@ -631,9 +628,7 @@ public class FormHtmlHandler {
         Matcher selectMatcher = selectPattern.matcher(itemHtml);
 
         while (selectMatcher.find()) {
-            String code = selectMatcher.group();
             String fieldValue = getFieldValue(stepItem.getItemFormId());
-            fieldValue = filterHtml(code, fieldValue);
             itemHtml = Tools.replace(itemHtml, selectMatcher.group(), "<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
         }
 
@@ -641,19 +636,6 @@ public class FormHtmlHandler {
         itemHtml = Tools.replaceRegex(itemHtml, "<div class=\"help-block.*?<\\/div>", "", false);
 
         return itemHtml;
-    }
-
-    private boolean isFilterHtml(String code) {
-        if(code.contains("-wysiwyg")) return false;
-        return true;
-    }
-
-    private String filterHtml(String code, String fieldValue) {
-        if (isFilterHtml(code)) {
-            return ResponseUtils.filter(fieldValue);
-        }
-        //for wysiwyg fields (quill) filter at least unsafe HTML code
-        return AllowSafeHtmlAttributeConverter.sanitize(fieldValue);
     }
 
     private boolean isCheckboxOrRadioSelected(String itemHtml, String itemFormId) {

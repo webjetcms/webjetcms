@@ -33,7 +33,9 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -233,6 +235,7 @@ public class SaveFormService {
 
         CryptoFactory cryptoFactory = new CryptoFactory();
 		String publicKey = formSettings.getEncryptKey();
+        Prop prop = Prop.getInstance(request);
 
         //Fields in order
         for(FormItemEntity stepItem : MultistepFormsService.getFormItemsForValidation(formName)) {
@@ -241,11 +244,17 @@ public class SaveFormService {
             String sessionValue = String.valueOf(request.getSession().getAttribute(prefix + stepItem.getItemFormId()));
             if(sessionValue == null) sessionValue = "";
 
+            //escape HTML code if needed
+            String code = prop.getText("components.formsimple.input." + stepItem.getFieldType());
+            sessionValue = filterHtml(code, sessionValue);
+            //disable pipe as it is used as separator
+            sessionValue = Tools.replace(sessionValue, "|", "&#124;");
+
             if(stepItem.getFieldType().startsWith(MultistepFormsService.MULTIUPLOAD_PREFIX)) {
                 //Save files
-                saveFiles(sessionValue, form.getId(), formFiles);
+                List<String> savedFileNames = saveFiles(sessionValue, form.getId(), formFiles);
 
-                String value = formFiles.getFileNames().size() > 0 ? String.join(",", formFiles.getFileNames().values()) : "";
+                String value = savedFileNames.size() > 0 ? String.join(",", savedFileNames) : "";
                 data.append(stepItem.getItemFormId()).append("-fileNames");
                 data.append("~").append(value).append("|");
 
@@ -263,6 +272,19 @@ public class SaveFormService {
         form.setData( data.toString() );
     }
 
+    public static boolean isFilterHtml(String code) {
+        if(code != null && code.contains("-wysiwyg")) return false;
+        return true;
+    }
+
+    public static String filterHtml(String code, String fieldValue) {
+        if (isFilterHtml(code)) {
+            return ResponseUtils.filter(fieldValue);
+        }
+        //for wysiwyg fields (quill) filter at least unsafe HTML code
+        return AllowSafeHtmlAttributeConverter.sanitize(fieldValue);
+    }
+
     /**
      * Moves uploaded temporary files into the form directory and renames them using the form ID.
      * <p>
@@ -273,9 +295,12 @@ public class SaveFormService {
      * @param keysString semicolon-separated list of temporary upload keys; may be empty
      * @param formId     current form ID used for renaming persisted files
      * @param formFiles  container updated with file names, virtual paths and attachments
+     * @return list of original file names that were successfully saved for keysString provided
      */
-    private final void saveFiles(String keysString, Long formId, FormFiles formFiles) {
-        if(Tools.isEmpty(keysString)) return;
+    private final List<String> saveFiles(String keysString, Long formId, FormFiles formFiles) {
+        List<String> savedFileNames = new ArrayList<>();
+
+        if(Tools.isEmpty(keysString)) return savedFileNames;
 
         String baseDirName = PathFilter.getRealPath(FormMailAction.FORM_FILE_DIR + "/");
 		IwcmFile dir = new IwcmFile(baseDirName);
@@ -292,6 +317,7 @@ public class SaveFormService {
                     if (dest.exists()) {
 
                         formFiles.getFileNames().put(dest.getName(), fileName);
+                        savedFileNames.add(fileName);
 
                         if ("false".equals(Constants.getString("useSMTPServer"))) {
 							formFiles.getFileNamesSendLater().append(";").append(dest.getVirtualPath()).append(";").append(dest.getName());
@@ -305,5 +331,7 @@ public class SaveFormService {
                 //
             }
         }
+
+        return savedFileNames;
     }
 }

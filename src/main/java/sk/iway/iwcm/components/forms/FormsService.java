@@ -316,8 +316,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             }
 
             if(itemNames != null && itemNames.size() > 0) {
-                if(columnNames[0].endsWith("-fileNames")) columnNames[0] = columnNames[0].substring(0, columnNames[0].length()-10);
-                columnNames[1] = itemNames.get(columnNames[0]);
+                String key = columnNames[0];
+                if(key.endsWith("-fileNames")) key = key.substring(0, key.length()-10);
+                columnNames[1] = itemNames.get(key);
             }
 
             columns.add(new LabelValue(columnNames[1], columnNames[0]));
