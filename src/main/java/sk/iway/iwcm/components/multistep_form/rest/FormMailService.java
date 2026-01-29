@@ -328,6 +328,8 @@ public class FormMailService {
 					Transport.send(msg);
 
 					sb.append(" succesfully send to email ").append(recipients);
+
+					Adminlog.add(Adminlog.TYPE_SENDMAIL, "email from:" + from + " to:" + recipients + " subject:" + subject, (long)form.getDocId(), form.getId());
 				}
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
@@ -342,15 +344,16 @@ public class FormMailService {
 		sb.append("\n\n form parameters: \n");
 		Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
 		formData.forEach((key, value) -> {
+			if (value != null) value = value.replaceAll("\\n", "\\n    ");
 			sb.append("  ").append(key).append(": ").append(value).append("\n");
 		});
 
-		sb.append("\n\n formName: ").append(form.getFormName());
+		sb.append("\n formName: ").append(form.getFormName());
 		if (from != null) sb.append("\n from: ").append(from);
 		if (Tools.isNotEmpty(recipients)) sb.append("\n to: ").append(recipients);
 		if (Tools.isNotEmpty(recipients)) sb.append("\n subject: ").append(subject);
 		sb.append("\n");
 
-		Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), form.getDocId(), form.getId().intValue());
+		Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), (long)form.getDocId(), form.getId());
     }
 }

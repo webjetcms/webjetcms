@@ -317,7 +317,7 @@ public class FormHtmlHandler {
     public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
         StringBuilder formHtml = new StringBuilder("");
 
-        formHtml.append(ResponseUtils.filter(emailTextBefore).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextBefore)) formHtml.append(ResponseUtils.filter(emailTextBefore).replaceAll("\\n", "<br/>")).append("<br/>");
 
         //
         setSupportValues(form.getFormName(), request, true);
@@ -334,7 +334,7 @@ public class FormHtmlHandler {
         // End form
         formHtml.append( getFormEnd(form.getFormName(), "", request) );
 
-        formHtml.append("<br/>").append(ResponseUtils.filter(emailTextAfter).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextAfter)) formHtml.append("<br/>").append(ResponseUtils.filter(emailTextAfter).replaceAll("\\n", "<br/>")).append("<br/>");
 
         String techInfo = "";
         if(this.addTechInfo) {
@@ -624,7 +624,7 @@ public class FormHtmlHandler {
             String fieldValue = getFieldValue(stepItem.getItemFormId());
             fieldValue = filterHtml(code, fieldValue);
             if (isFilterHtml(code)) {
-                fieldValue = fieldValue.replaceAll("\\n", "<br/>");
+                if (fieldValue != null) fieldValue = fieldValue.replaceAll("\\n", "<br/>");
             }
             itemHtml = Tools.replace(itemHtml, textareaMatcher.group(), "<span class=\"form-control emailInput-textarea\" style=\"height: auto;\">" + fieldValue + "</span>");
         }

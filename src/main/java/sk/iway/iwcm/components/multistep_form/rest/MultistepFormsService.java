@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -263,7 +264,7 @@ public class MultistepFormsService {
     }
 
     public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
-        Map<String, String> formData = new HashMap<>();
+        Map<String, String> formData = new LinkedHashMap<>();
         for(String fieldData : Tools.getTokens(form.getData(), "|")) {
             String fieldDataArr[] = Tools.getTokens(fieldData, "~");
             String fieldId = fieldDataArr[0];
