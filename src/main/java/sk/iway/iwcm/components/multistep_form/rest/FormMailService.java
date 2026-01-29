@@ -151,6 +151,11 @@ public class FormMailService {
 
 		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);
 
+		// Prepare Admninlog entry
+		StringBuilder sb = new StringBuilder();
+		sb.append("Form ").append(form.getFormName());
+		String from = null;
+
         if ("nobody@nowhere.com".equals(recipients) == false && recipients != null && recipients.contains("@"))
 		{
 			if (Tools.isEmail(email) == false) {
@@ -255,7 +260,7 @@ public class FormMailService {
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
 
-					String from = email;
+					from = email;
 					msg.setFrom(new InternetAddress(FormMailAction.getFirstEmail(email), meno));
 
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
@@ -322,31 +327,30 @@ public class FormMailService {
 
 					Transport.send(msg);
 
-					// Prepare Admninlog entry
-					StringBuilder sb = new StringBuilder();
-					sb.append("Form ").append(form.getFormName());
 					sb.append(" succesfully send to email ").append(recipients);
-
-					// add send parameters
-					sb.append("\n\n form parameters: \n");
-					Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
-					formData.forEach((key, value) -> {
-						sb.append("  ").append(key).append(": ").append(value).append("\n");
-					});
-
-					sb.append("\n\n formName: ").append(form.getFormName());
-					sb.append("\n from: ").append(from);
-					sb.append("\n to: ").append(recipients);
-					sb.append("\n subject: ").append(subject);
-					sb.append("\n");
-
-					Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), form.getDocId(), form.getId().intValue());
 				}
 				catch (Exception ex) {
 					Logger.error(FormMailService.class, ex);
-					Adminlog.add(Adminlog.TYPE_FORMMAIL, "", form.getDocId(), form.getId().intValue());
+					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
 				}
 			}
+		} else {
+			sb.append(" successfully saved");
 		}
+
+		// add send parameters
+		sb.append("\n\n form parameters: \n");
+		Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
+		formData.forEach((key, value) -> {
+			sb.append("  ").append(key).append(": ").append(value).append("\n");
+		});
+
+		sb.append("\n\n formName: ").append(form.getFormName());
+		if (from != null) sb.append("\n from: ").append(from);
+		if (Tools.isNotEmpty(recipients)) sb.append("\n to: ").append(recipients);
+		if (Tools.isNotEmpty(recipients)) sb.append("\n subject: ").append(subject);
+		sb.append("\n");
+
+		Adminlog.add(Adminlog.TYPE_FORMMAIL,  sb.toString(), form.getDocId(), form.getId().intValue());
     }
 }

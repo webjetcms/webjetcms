@@ -45,8 +45,7 @@ export class MultistepForm {
      */
     _renderShell() {
         // Create wrapper that holds everything
-        const wrapper = document.createElement('div');
-        wrapper.id = 'multistep-form-wrapper-' + this.csrf;
+        const wrapper = document.getElementById('multistep-form-wrapper-' + this.csrf);
         wrapper.className = 'multistep-form-app';
 
         // success alert
@@ -78,10 +77,6 @@ export class MultistepForm {
         wrapper.appendChild(danger);
         wrapper.appendChild(content);
 
-        // Prefer to mount inside Bootstrap's container if available, fallback to provided root/body
-        const container = document.querySelector(this.mountSelector) || document.querySelector('div.container');
-        const mountParent = container || document.body;
-        mountParent.appendChild(wrapper);
         this.wrapper = wrapper;
     }
 
