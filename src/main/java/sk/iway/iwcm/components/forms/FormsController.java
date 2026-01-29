@@ -146,6 +146,9 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         FormsEntity entity = formsService.getById(id);
         if (entity == null) {
             entity = new FormsEntity();
+            FormSettingsEntity formSettings = new FormSettingsEntity();
+            formSettings.setRecipients(getUser().getEmail());
+            entity.setFormSettings(formSettings);
             entity.setFormType( FormsService.FORM_TYPE.MULTISTEP.value() );
             return entity;
         }
