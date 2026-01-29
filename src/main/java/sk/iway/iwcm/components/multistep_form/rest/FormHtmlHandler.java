@@ -153,15 +153,16 @@ public class FormHtmlHandler {
         setSupportValues(formName, request, false);
 
         StringBuilder stepHtml = new StringBuilder();
+        FormStepEntity formStep = formStepsRepository.getById(stepId);
 
         // Form start
         stepHtml.append( getFormStart(formName, stepId, request) );
 
         // Form fields for selected step (aka step items)
-        stepHtml.append( getStepHtml(formName, stepId, request) );
+        stepHtml.append( getStepHtml(formName, request, formStep) );
 
         // From end
-        stepHtml.append( getFormEnd(formName, stepId, request) );
+        stepHtml.append( getFormEnd(formName, stepId, request, formStep) );
 
         return stepHtml.toString();
     }
@@ -197,26 +198,26 @@ public class FormHtmlHandler {
      * @param request HTTP request
      * @return HTML builder with step content
      */
-    private StringBuilder getStepHtml(String formName, Long stepId, HttpServletRequest request) {
+    private StringBuilder getStepHtml(String formName, HttpServletRequest request, FormStepEntity formStep) {
         StringBuilder formStepHtml = new StringBuilder();
 
         // Form step wrapper start
-        FormStepEntity formStep = formStepsRepository.getById(stepId);
+
         StringBuilder stepWrapperStart = new StringBuilder();
         stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
 
-        if (Tools.isNotEmpty(formStep.getStepName())) {
+        if (Tools.isNotEmpty(formStep.getStepName()))
             stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.primaryHeader"), "${step-primaryHeader}", formStep.getStepName()));
-        }
-        if (Tools.isNotEmpty(formStep.getStepSubName())) {
+
+        if (Tools.isNotEmpty(formStep.getStepSubName()))
             stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.secondaryHeader"), "${step-secondaryHeader}", formStep.getStepSubName()));
-        }
+
         formStepHtml.append(stepWrapperStart);
 
         if (rowView) formStepHtml.append(prop.getText("components.mustistep.rowView.start"));
 
         // Into formStep we must insert step items
-        formStepHtml.append( getStepItems(formName, stepId, request) );
+        formStepHtml.append( getStepItems(formName, formStep.getId(), request) );
 
         if (rowView) formStepHtml.append( prop.getText("components.mustistep.rowView.end"));
 
@@ -272,12 +273,15 @@ public class FormHtmlHandler {
      * @param request HTTP request
      * @return HTML builder with form end content
      */
-    private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request) {
+    private StringBuilder getFormEnd(String formName, Long stepId, HttpServletRequest request, FormStepEntity formStep) {
         Pair<String, String> buttonsLabels = getButtonsLabels(formName, stepId);
 
         StringBuilder formEndHtml =  getFormEnd(formName, buttonsLabels.getSecond(), request);
 
-        if(isEmailRender == false) formEndHtml.append( formStepsRepository.getStepBonusHtml(stepId, CloudToolsForCore.getDomainId()) );
+        if(isEmailRender == false) {
+            if(formStep.getStepBonusHtml() == null) formEndHtml.append("");
+            formEndHtml.append(formStep.getStepBonusHtml());
+        }
 
         return formEndHtml;
     }
@@ -324,9 +328,8 @@ public class FormHtmlHandler {
         // prepare data
         this.formData = MultistepFormsService.getFormDataAsMap(form);
 
-        for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(form.getFormName(), CloudToolsForCore.getDomainId())) {
-            formHtml.append( getStepHtml(form.getFormName(), formSteps.getId(), request) );
-        }
+        for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(form.getFormName(), CloudToolsForCore.getDomainId()))
+            formHtml.append( getStepHtml(form.getFormName(), request, formSteps) );
 
         // End form
         formHtml.append( getFormEnd(form.getFormName(), "", request) );
