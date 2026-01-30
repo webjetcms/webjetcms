@@ -2,8 +2,14 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.users.*,java.util.*"%>
 <%@ page import="sk.iway.iwcm.tags.WriteTag" %>
+<%@ page import="org.springframework.security.oauth2.client.registration.ClientRegistration" %>
+<%@ page import="org.springframework.security.oauth2.client.registration.ClientRegistrationRepository" %>
+<%@ page import="org.springframework.core.ResolvableType" %>
+<%@ page import="org.springframework.web.context.WebApplicationContext" %>
+<%@ page import="org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
 PageParams pageParams = new PageParams(request);
 //TODO: joruz - pridat to do komponenty pre vkladanie
@@ -22,6 +28,42 @@ if(Tools.isEmpty(googleKey) || Tools.isEmpty(googleSecret)) { google = "false"; 
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
+
+// OAuth2 support
+boolean isOAuth2Enabled = Tools.isNotEmpty(Constants.getString("oauth2_clients"));
+pageContext.setAttribute("isOAuth2Enabled", isOAuth2Enabled);
+
+if (isOAuth2Enabled) {
+	// Označ že ide o user sekciu (nie admin)
+	session.removeAttribute("oauth2_is_admin_section");
+
+	Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
+	String authorizationRequestBaseUri = "/oauth2/authorization";
+
+	try {
+		WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(request.getServletContext());
+		if (context != null) {
+			ClientRegistrationRepository clientRegistrationRepository = context.getBean(ClientRegistrationRepository.class);
+			if (clientRegistrationRepository != null) {
+				Iterable<ClientRegistration> clientRegistrations = null;
+				ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
+				if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
+					clientRegistrations = (Iterable<ClientRegistration>) clientRegistrationRepository;
+				}
+				if (clientRegistrations != null) {
+					for (ClientRegistration registration : clientRegistrations) {
+						oauth2AuthenticationUrls.put(registration.getClientName(),
+							authorizationRequestBaseUri + "/" + registration.getRegistrationId());
+					}
+					request.setAttribute("urls", oauth2AuthenticationUrls);
+					Logger.debug(this.getClass(), "OAuth2 URLs set for user logon: " + oauth2AuthenticationUrls);
+				}
+			}
+		}
+	} catch (Exception e) {
+		Logger.error(this.getClass(), "Error getting OAuth2 client registrations", e);
+	}
+}
 
 if(request.getParameter("loginName") != null)
 {
@@ -290,6 +332,18 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</fieldset>
 			</div>
 
+			<c:if test="${isOAuth2Enabled}">
+				<p class="text-center">
+					<iwcm:text key="button.oauth2Login"/>
+				</p>
+				<div class="text-center">
+					<c:forEach var="url" items="${urls}">
+						<a href="${url.value}" class="btn btn-primary">
+							${url.key}
+						</a>
+					</c:forEach>
+				</div>
+			</c:if>
 
 		</iwcm:notPresent>
 

@@ -126,6 +126,38 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
+		// OAuth2 konfiguračné premenné
+		Constants.setString("oauth2_clients", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
+		Constants.setString("oauth2_clientsWithPermissions", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
+
+		// Google OAuth2
+		Constants.setString("oauth2_googleClientId", "", Constants.MOD_SECURITY, "Google OAuth2 Client ID");
+		Constants.setString("oauth2_googleClientSecret", "", Constants.MOD_SECURITY, "Google OAuth2 Client Secret");
+
+		// Facebook OAuth2
+		Constants.setString("oauth2_facebookClientId", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client ID");
+		Constants.setString("oauth2_facebookClientSecret", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client Secret");
+
+		// GitHub OAuth2
+		Constants.setString("oauth2_githubClientId", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client ID");
+		Constants.setString("oauth2_githubClientSecret", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client Secret");
+
+		// Okta OAuth2
+		Constants.setString("oauth2_oktaClientId", "", Constants.MOD_SECURITY, "Okta OAuth2 Client ID");
+		Constants.setString("oauth2_oktaClientSecret", "", Constants.MOD_SECURITY, "Okta OAuth2 Client Secret");
+
+		// Keycloak OAuth2 (custom provider)
+		Constants.setString("oauth2_keycloakClientId", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client ID");
+		Constants.setString("oauth2_keycloakClientSecret", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client Secret");
+		Constants.setString("oauth2_keycloakAuthorizationUri", "", Constants.MOD_SECURITY, "Keycloak Authorization URI");
+		Constants.setString("oauth2_keycloakTokenUri", "", Constants.MOD_SECURITY, "Keycloak Token URI");
+		Constants.setString("oauth2_keycloakUserInfoUri", "", Constants.MOD_SECURITY, "Keycloak User Info URI");
+		Constants.setString("oauth2_keycloakJwkSetUri", "", Constants.MOD_SECURITY, "Keycloak JWK Set URI");
+		Constants.setString("oauth2_keycloakIssuerUri", "", Constants.MOD_SECURITY, "Keycloak Issuer URI");
+		Constants.setString("oauth2_keycloakUserNameAttributeName", "email", Constants.MOD_SECURITY, "Keycloak User Name Attribute Name");
+		Constants.setString("oauth2_keycloakScopes", "openid,profile,email", Constants.MOD_SECURITY, "Keycloak OAuth2 Scopes");
+		Constants.setString("oauth2_keycloakClientName", "Keycloak", Constants.MOD_SECURITY, "Keycloak Client Display Name");
+
 		Constants.setString("reservationAllDayStartTime", "14:00", "reservations", "Hodina, od ktorej sa začína celodenná rezervácia");
 		Constants.setString("reservationAllDayEndTime", "10:30", "reservations", "Hodina, do ktorej sa končí celodenná rezervácia");
 
