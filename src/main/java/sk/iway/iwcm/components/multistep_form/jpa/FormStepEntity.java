@@ -46,7 +46,7 @@ public class FormStepEntity {
 
     @Lob
     @Column(name = "header")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.banner.primaryHeader", tab = "main", renderFunction = "renderStepName")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
     private String header;
 
     @Column(name = "next_step_btn_label")

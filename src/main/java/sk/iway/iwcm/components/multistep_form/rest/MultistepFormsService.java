@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -68,7 +69,7 @@ public class MultistepFormsService {
      */
 
     public static final String SESSION_PREFIX = "MultistepForm_";
-    public static final String MULTIUPLOAD_PREFIX = "multiupload_";
+    public static final String MULTIUPLOAD_PREFIX = "multiupload";
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
@@ -228,7 +229,7 @@ public class MultistepFormsService {
     }
 
     public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
-        Map<String, String> formData = new HashMap<>();
+        Map<String, String> formData = new LinkedHashMap<>();
         for(String fieldData : Tools.getTokens(form.getData(), "|")) {
             String fieldDataArr[] = Tools.getTokens(fieldData, "~");
             String fieldId = fieldDataArr[0];
@@ -762,7 +763,7 @@ public class MultistepFormsService {
      * @return list of simplified {@code FormItemEntity} containing id, label, type, regex, required
      */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
-        String sql = "SELECT DISTINCT(item_form_id), label, field_type, regex_validation, required FROM form_items WHERE form_name = ? AND domain_id = ?";
+        String sql = "SELECT item_form_id, label, field_type, regex_validation, required FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC;";
 
         List<FormItemEntity> values = new ArrayList<>();
         new ComplexQuery().setSql(sql).setParams(formName, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
