@@ -23,12 +23,10 @@ import sk.iway.iwcm.i18n.Prop;
 public class MultistepFormsRestController {
 
     private final MultistepFormsService multistepFormsService;
-    private final FormHtmlHandler formHtmlHandler;
 
     @Autowired
-    public MultistepFormsRestController(MultistepFormsService multistepFormsService, FormHtmlHandler formHtmlHandler) {
+    public MultistepFormsRestController(MultistepFormsService multistepFormsService) {
        this.multistepFormsService = multistepFormsService;
-       this.formHtmlHandler = formHtmlHandler;
     }
 
     @PostMapping(value = "/save-form", params={"form-name", "step-id"}, consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
@@ -70,9 +68,11 @@ public class MultistepFormsRestController {
             if(multistepFormsService.validateFormInfo(formName, stepId, request) == false)
                 throw new IllegalStateException("Provided params to get stepHtml are invalid.");
 
+            FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
+
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
-                .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
+                .body( formHtmlHandler.getFormStepHtml(stepId, request) );
         } catch (Exception e) {
             Logger.error(MultistepFormsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage(), e);
             JSONObject response = new JSONObject();

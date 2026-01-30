@@ -89,7 +89,10 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             if(Tools.isEmpty(formName)) return;
 
             formName = DocTools.removeChars(formName, true);
-            if(Tools.isTrue(formSettingsRepository.isRowView(formName, CloudToolsForCore.getDomainId()))) {
+            boolean wasRowView = Tools.isTrue(formSettingsRepository.isRowView(formName, CloudToolsForCore.getDomainId()));
+            boolean isRowView = Tools.isTrue(entity.getFormSettings().getRowView());
+            if(wasRowView == true && isRowView == false) {
+                //Trying switch from from rowView to NOT rowView, check if he was same rowView required fields
                 int count = formItemsRepository.countItemsThatHasType(formName, CloudToolsForCore.getDomainId(), MultistepFormsService.getRowViewItemTypes());
                 if(count > 0) errors.rejectValue("errorField.formSettings.rowView", null, getProp().getText("components.form_items.hasRowViewFields"));
             }
@@ -126,11 +129,13 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             entity.getFormSettings().setDomainId(CloudToolsForCore.getDomainId());
             formSettingsRepository.save(entity.getFormSettings());
 
-            // All new forms are multistep - add dsefault first step
+            // All new forms are multistep - add default first step
             FormStepEntity fse = new FormStepEntity();
             fse.setSortPriority(10);
             fse.setFormName(entity.getFormName());
             fse.setHeader("");
+            fse.setCurrentPosition(1);
+            fse.setMaxPosition(1);
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
 

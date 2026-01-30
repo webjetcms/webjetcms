@@ -41,15 +41,13 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     private final FormItemsRepository formItemsRepository;
 
     private final MultistepFormsService multistepFormsService;
-    private final FormHtmlHandler formHtmlHandler;
 
     @Autowired
-    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService, FormHtmlHandler formHtmlHandler) {
+    public FormStepsRestController(FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, MultistepFormsService multistepFormsService) {
         super(formStepsRepository);
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
         this.multistepFormsService = multistepFormsService;
-        this.formHtmlHandler = formHtmlHandler;
     }
 
     @Override
@@ -86,6 +84,9 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     @Override
     public void beforeSave(FormStepEntity entity) {
         if(entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());
+        // We set default values 1/1 but after save action will replace this values
+        entity.setCurrentPosition(1);
+        entity.setMaxPosition(1);
     }
 
     @Override
@@ -142,9 +143,10 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
 
         try {
+            FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)
-                .body( formHtmlHandler.getFormStepHtml(formName, stepId, request) );
+                .body( formHtmlHandler.getFormStepHtml(stepId, request) );
         } catch (Exception e) {
             Logger.error(FormStepsRestController.class, "getFormStepHtml() failed. " + e.getLocalizedMessage());
 

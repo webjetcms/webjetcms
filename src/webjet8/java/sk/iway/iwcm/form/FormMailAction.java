@@ -676,7 +676,7 @@ public class FormMailAction extends HttpServlet
 
 						if (htmlData.length() > 10) {
 							hasHtmlData = true;
-							Pair<String, String> cssDataLink = FormHtmlHandler.getCssDataLink(iLastDocIdMail, forceTextPlain, docDB);
+							Pair<String, String> cssDataLink = FormHtmlHandler.getCssDataLink(iLastDocIdMail, forceTextPlain);
 							cssData = cssDataLink.first;
 							cssLink = cssDataLink.second;
 						}

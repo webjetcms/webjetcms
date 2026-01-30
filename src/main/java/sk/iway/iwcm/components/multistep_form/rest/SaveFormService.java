@@ -48,14 +48,11 @@ public class SaveFormService {
      * - Handles uploaded files (attachments) and optional PDF generation
      * - Sends the final email with rendered HTML and attachments when allowed
      */
-
-    private FormHtmlHandler htmlHandler;
     private FormsRepository formsRepository;
     private FormMailService formMailService;
 
     @Autowired
-    public SaveFormService(FormHtmlHandler htmlHandler, FormsRepository formsRepository, FormMailService formMailService) {
-        this.htmlHandler = htmlHandler;
+    public SaveFormService(FormsRepository formsRepository, FormMailService formMailService) {
         this.formMailService = formMailService;
         this.formsRepository = formsRepository;
     }
@@ -131,6 +128,7 @@ public class SaveFormService {
      * @throws IOException       when file operations fail
      */
     private final String saveFormAnswers(String formName, FormSettingsEntity formSettings, int docId, String subject, HttpServletRequest request) throws SaveFormException, IOException {
+        FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
 
         String recipients = null;
 		if (Tools.isNotEmpty(formSettings.getRecipients()))
@@ -172,7 +170,7 @@ public class SaveFormService {
         setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
 
         // set html
-        htmlHandler.setFormHtml(form, request, docId);
+        formHtmlHandler.setFormHtml(form, request, docId);
 
         form = formsRepository.save(form);
 
@@ -181,7 +179,7 @@ public class SaveFormService {
         // NEW PART
         String pdfUrl = "";
         if(Tools.isTrue(formSettings.getIsPdf())) {
-			pdfUrl = FormMailAction.saveFormAsPdf(htmlHandler.getFormPdfVersion(), form.getId().intValue(), request);
+			pdfUrl = FormMailAction.saveFormAsPdf(formHtmlHandler.getFormPdfVersion(), form.getId().intValue(), request);
 			IwcmFile pdfFile =  new IwcmFile(pdfUrl);
 			formFiles.getFileNames().put(pdfFile.getName(), pdfFile.getName());
 			formFiles.getFileNamesSendLater().append(FormMailAction.FORM_FILE_DIR).append(pdfFile.getName()).append(";").append(pdfFile.getName());
@@ -208,7 +206,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, htmlHandler.getCssDataPair().getFirst(), new StringBuilder(htmlHandler.getFormHtmlBeforeCss()), request);
+        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, formHtmlHandler.getCssDataPair().getFirst(), new StringBuilder(formHtmlHandler.getFormHtmlBeforeCss()), request);
 
         return null;
     }

@@ -99,25 +99,25 @@ public class FormMailService {
         return foundValues;
     }
 
-		/**
-		 * Sends a notification email for the given form submission.
-		 * <p>
-		 * Behavior overview:
-		 * - Determines sender name/email from form data using configuration keys
-		 * - Applies form settings (encoding, reply-to/cc/bcc, delayed sending, attachments handling)
-		 * - Inlines CSS into HTML body when sending as HTML unless forced to plain text
-		 * - Optionally attaches message HTML as a separate file when configured
-		 * - Sends immediately via SMTP or schedules for later when SMTP is disabled
-		 *
-		 * @param form       form entity with metadata and serialized field data
-		 * @param recipients comma‑separated list of recipient emails
-		 * @param subject    email subject
-		 * @param formFiles  uploaded files container to optionally attach
-		 * @param attachFiles when true attaches uploaded files to the email
-		 * @param cssData    inline <style> block or CSS links already made absolute
-		 * @param htmlData   rendered form body HTML (will be transformed as needed)
-		 * @param request    current HTTP request used for context and headers
-		 */
+	/**
+	 * Sends a notification email for the given form submission.
+	 * <p>
+	 * Behavior overview:
+	 * - Determines sender name/email from form data using configuration keys
+	 * - Applies form settings (encoding, reply-to/cc/bcc, delayed sending, attachments handling)
+	 * - Inlines CSS into HTML body when sending as HTML unless forced to plain text
+	 * - Optionally attaches message HTML as a separate file when configured
+	 * - Sends immediately via SMTP or schedules for later when SMTP is disabled
+	 *
+	 * @param form       form entity with metadata and serialized field data
+	 * @param recipients comma‑separated list of recipient emails
+	 * @param subject    email subject
+	 * @param formFiles  uploaded files container to optionally attach
+	 * @param attachFiles when true attaches uploaded files to the email
+	 * @param cssData    inline <style> block or CSS links already made absolute
+	 * @param htmlData   rendered form body HTML (will be transformed as needed)
+	 * @param request    current HTTP request used for context and headers
+	 */
     public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) {
 		Prop prop = Prop.getInstance(request);
 		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());

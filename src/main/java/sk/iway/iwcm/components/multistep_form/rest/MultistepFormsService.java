@@ -80,10 +80,6 @@ public class MultistepFormsService {
     private final FormStepsRepository formStepsRepository;
     private final FormSettingsRepository formSettingsRepository;
 
-    private FormSettingsEntity formSettings = null;
-    private Integer iLastDocId = null;
-    private boolean spamProtectionEnabled = true;
-
     @Autowired
     public MultistepFormsService(SaveFormService saveFormService, FormsRepository formsRepository, FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository) {
         this.saveFormService = saveFormService;
@@ -253,20 +249,6 @@ public class MultistepFormsService {
 
     /* ********** PUBLIC - support methods ********** */
 
-    private final FormStepEntity getValidStepEntity(String formName, Long currentStepId, HttpServletRequest request) {
-        if(Tools.isEmpty(formName)) return null;
-        if(currentStepId < 1L) return null;
-        FormStepEntity validStep = formStepsRepository.getValidStep(formName, currentStepId, CloudToolsForCore.getDomainId()).orElse(null);
-        if(validStep == null) return null;
-        else {
-            Object permitted = request.getSession().getAttribute(getSessionKey(formName, request) + MultistepFormApp.PERMITTED);
-            if (permitted == null) return null;
-            if (permitted instanceof Boolean b)
-                return Tools.isTrue(b) ? validStep : null;
-            else return null;
-        }
-    }
-
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         return getValidStepEntity(formName, currentStepId, request) != null;
     }
@@ -417,20 +399,22 @@ public class MultistepFormsService {
 
         Map<String, String> errors = new HashMap<>();
 
-        /*  */
-        prepareBeforeSave(formName, request);
+        /* Prepare support values */
+        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        Integer iLastDocId = getiLastDocId(formName, request, formSettings);
+        boolean spamProtectionEnabled = getSpamProtectionEnabled(iLastDocId);
 
         /* check like CRSF and Cookies */
-        beforeStepSaveCheck(request);
+        beforeStepSaveCheck(spamProtectionEnabled, request);
 
         /* validate required / captcha / XSS (for names and values) */
-        validateFields(formName, stepId, received, request, errors);
+        validateFields(formName, stepId, received, spamProtectionEnabled, request, errors);
 
         /* Separe validate file fields */
         validateFileFields(formName, received, errors, request);
 
         // GET form processor that can have custom validation / interceptor / form save
-        FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId);
+        FormProcessorInterface formProcessor = getFormProcessor(request, formName, stepId, formSettings);
 
         // STEP VALIDATION
         customStepValidation(formProcessor, formName, validStepEntity, received, request, errors);
@@ -451,7 +435,7 @@ public class MultistepFormsService {
                 if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
 
                 // HERE we can run custom saving of form
-                boolean continueWithSaving = customFormSave(formProcessor, formName, request);
+                boolean continueWithSaving = customFormSave(formProcessor, formName, request, formSettings, iLastDocId);
 
                 if(continueWithSaving) {
                     // REAL form save into DB (will join all the steps and save it)
@@ -468,7 +452,7 @@ public class MultistepFormsService {
 
     /* ********** PRIVATE - main logic methods ********** */
 
-    private FormProcessorInterface getFormProcessor(HttpServletRequest request, String formName, Long stepId) throws SaveFormException {
+    private FormProcessorInterface getFormProcessor(HttpServletRequest request, String formName, Long stepId, FormSettingsEntity formSettings) throws SaveFormException {
         String className = formSettings.getAfterSendInterceptor();
         if (Tools.isEmpty(className)) return null;
 
@@ -522,7 +506,7 @@ public class MultistepFormsService {
      *  TRUE - continue with WebJET basic save
      *  FALSE - skip basic save
      */
-    private boolean customFormSave(FormProcessorInterface formProcessor, String formName, HttpServletRequest request) throws SaveFormException {
+    private boolean customFormSave(FormProcessorInterface formProcessor, String formName, HttpServletRequest request, FormSettingsEntity formSettings, Integer iLastDocId) throws SaveFormException {
         if(formProcessor != null) {
             try {
                 return formProcessor.handleFormSave(formName, formSettings, iLastDocId, request);
@@ -547,7 +531,7 @@ public class MultistepFormsService {
         }
     }
 
-    private void validateFields(String formName, Long stepId, JSONObject received, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    private void validateFields(String formName, Long stepId, JSONObject received, boolean spamProtectionEnabled, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         Prop prop = Prop.getInstance(request);
         List<RegExpEntity> allRegExps = FormDB.getInstance().getAllRegularExpressionAsEntity();
 
@@ -697,6 +681,48 @@ public class MultistepFormsService {
 
     /* ********** PRIVATE - support methods ********** */
 
+    private final Integer getiLastDocId(String formName, HttpServletRequest request, FormSettingsEntity formSettings) {
+        Integer iLastDocId = (Integer) request.getSession().getAttribute( getSessionKey(formName, request) + MultistepFormApp.DOC_ID );
+
+        //niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
+        //sa mu musi presne povedat, kde sa ten formular nachadza
+        if (formSettings.getUseFormDocId() != null && formSettings.getUseFormDocId() > 0)
+            iLastDocId = formSettings.getUseFormDocId();
+
+        return iLastDocId;
+    }
+
+    private final boolean getSpamProtectionEnabled(Integer iLastDocId) {
+        boolean spamProtectionEnabled = true;
+
+        if (iLastDocId != null) {
+            DocDetails doc = DocDB.getInstance().getDoc(iLastDocId, -1, false);
+            if (doc != null) {
+                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+                if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection() == false;
+            }
+        }
+
+        //conf value overrides everything
+        if (Constants.getBoolean("spamProtection") == false) spamProtectionEnabled = false;
+
+        return spamProtectionEnabled;
+    }
+
+    private final FormStepEntity getValidStepEntity(String formName, Long currentStepId, HttpServletRequest request) {
+        if(Tools.isEmpty(formName)) return null;
+        if(currentStepId < 1L) return null;
+        FormStepEntity validStep = formStepsRepository.getValidStep(formName, currentStepId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(validStep == null) return null;
+        else {
+            Object permitted = request.getSession().getAttribute(getSessionKey(formName, request) + MultistepFormApp.PERMITTED);
+            if (permitted == null) return null;
+            if (permitted instanceof Boolean b)
+                return Tools.isTrue(b) ? validStep : null;
+            else return null;
+        }
+    }
+
     private String[] asArray(String name, JSONObject received) {
         if(received.has(name) == false) return new String[0];
 
@@ -760,29 +786,7 @@ public class MultistepFormsService {
         return fe;
     }
 
-    private void prepareBeforeSave (String formName, HttpServletRequest request) {
-        formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-
-        iLastDocId = (int) request.getSession().getAttribute( getSessionKey(formName, request) + MultistepFormApp.DOC_ID );
-
-        //niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
-		//sa mu musi presne povedat, kde sa ten formular nachadza
-		if (formSettings.getUseFormDocId() != null && formSettings.getUseFormDocId() > 0)
-			iLastDocId = formSettings.getUseFormDocId();
-
-		if (iLastDocId != null) {
-            DocDetails doc = DocDB.getInstance().getDoc(iLastDocId, -1, false);
-            if (doc != null) {
-                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
-                if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection() == false;
-            }
-        }
-
-        //conf value overrides everything
-		if (Constants.getBoolean("spamProtection") == false) spamProtectionEnabled = false;
-    }
-
-    private void beforeStepSaveCheck(HttpServletRequest request) throws SaveFormException {
+    private void beforeStepSaveCheck(boolean spamProtectionEnabled, HttpServletRequest request) throws SaveFormException {
         Prop prop = Prop.getInstance(request);
 
         //test na cookies (spameri zvycajne nemaju nastavene)
