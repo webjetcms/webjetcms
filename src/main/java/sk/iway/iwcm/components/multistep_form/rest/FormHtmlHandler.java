@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 
 import sk.iway.iwcm.Constants;
@@ -198,7 +199,7 @@ public class FormHtmlHandler {
         stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
 
         if (Tools.isNotEmpty(formStep.getHeader()))
-            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.primaryHeader"), "${step-header}", formStep.getHeader()));
+            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.header"), "${step-header}", StringEscapeUtils.unescapeHtml4(formStep.getHeader()) ));
 
         formStepHtml.append(stepWrapperStart);
 
@@ -317,7 +318,10 @@ public class FormHtmlHandler {
         this.formData = MultistepFormsService.getFormDataAsMap(form);
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
-            formHtml.append( getStepHtml(request, formSteps) );
+            formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");
+
+        // Remove last <hr> tag
+        formHtml.delete(formHtml.length() - 4, formHtml.length());
 
         // End form
         formHtml.append( getFormEnd("", request) );

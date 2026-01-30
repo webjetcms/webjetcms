@@ -297,11 +297,16 @@ public class MultistepFormsService {
             baseFormId = StringEscapeUtils.unescapeHtml4(baseFormId);
 
             String itemFormId = "";
-            String placeholder = entity.getPlaceholder();
-            if (Tools.isNotEmpty(placeholder)) {
-                placeholder = ResponseUtils.filter(placeholder);
-                if(Tools.isEmpty(baseFormId)) itemFormId = placeholder + postfix;
-            } else itemFormId = baseFormId + postfix;
+            String label = entity.getLabel();
+            if (Tools.isNotEmpty(label)) {
+                label = ResponseUtils.filter(label);
+                if(Tools.isEmpty(baseFormId)) itemFormId = label + postfix;
+            }
+
+            if(Tools.isEmpty(baseFormId))
+                baseFormId = ResponseUtils.filter( entity.getFieldType() );
+
+            else itemFormId = baseFormId + postfix;
 
             return DocTools.removeChars(itemFormId, true);
         }
@@ -769,7 +774,14 @@ public class MultistepFormsService {
         new ComplexQuery().setSql(sql).setParams(formName, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
 			@Override
 			public FormItemEntity map(ResultSet rs) throws SQLException {
-                values.add( resultSetToEntity(rs) );
+                FormItemEntity stepItem = resultSetToEntity(rs);
+
+                // Radio's act like separe items but if they have same itemFormId AND are one after another they are GROUP (so as only one note in DB)
+                String previous = values.size() > 0 ? values.get( values.size() - 1).getItemFormId() : "";
+                if("radio".equals(stepItem.getFieldType()) &&  previous.equals(stepItem.getItemFormId())) return null;
+
+                values.add(stepItem);
+
                 return null;
 			}
 		});
