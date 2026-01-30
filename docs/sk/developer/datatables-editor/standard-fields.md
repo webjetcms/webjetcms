@@ -486,6 +486,15 @@ Všimnite si použitie konvertora ```@javax.persistence.Convert(converter = Allo
 
 ![](../../redactor/apps/tooltip/tooltip-editor.png)
 
+Ak nastavíte CSS triedu ```quill-oneline``` zobrazí sa zjednodušený editor bez možnosti vytvárania odsekov:
+
+```java
+    @Column(name = "tooltip")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String tooltip;
+```
+
 ## WYSIWYG
 
 Zobrazí plnohodnotný editor HTML ako sa používa pre editáciu web stránok.

@@ -31,7 +31,7 @@ export function typeQuill() {
 
     ];
 
-    var toolbarOptionsRow = [
+    var toolbarOptionsOneline = [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
         [
             'bold', 'italic', 'underline', 'strike',
@@ -149,14 +149,19 @@ export function typeQuill() {
         return htmlCode;
     }
 
-    window.isDtRowEdit = function(conf) {
-        //console.log("isDtRowEdit conf=", conf);
+    /**
+     * Test if the editor is one line (without P tags)
+     * @param {*} conf - datatanle column config
+     * @returns
+     */
+    function isOneLine(conf) {
+        //console.log("isOneLine conf=", conf);
         if (!conf || !conf || typeof conf.className !== "string") {
             return false;
         }
         var classNames = conf.className.split(/\s+/);
         for (var i = 0; i < classNames.length; i++) {
-            if (classNames[i] === "dt-row-edit") {
+            if (classNames[i] === "quill-oneline") {
                 return true;
             }
         }
@@ -207,7 +212,7 @@ export function typeQuill() {
             conf._quill = new Quill(input.find('.editor')[0], $.extend(true, {
                 theme: 'snow',
                 modules: {
-                    toolbar: window.isDtRowEdit(conf) === true ? toolbarOptionsRow : toolbarOptions,
+                    toolbar: isOneLine(conf) === true ? toolbarOptionsOneline : toolbarOptions,
                     htmlEditButton: {
                         msg: WJ.translate("datatables.quill.htmlButton.tooltip.js"), //Custom message to display in the editor, default: Edit HTML here, when you click "OK" the quill editor's contents will be replaced
                         okText: '<i class="ti ti-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
@@ -250,7 +255,7 @@ export function typeQuill() {
 
             var html = window.quillToHtmlFormat(htmlCode);
 
-            if(window.isDtRowEdit(conf) === true) {
+            if(isOneLine(conf) === true) {
                 // Remove <p></p> wrapper if present
                 if (typeof html === 'string') {
                     // Remove single empty <p></p> or <p><br></p>

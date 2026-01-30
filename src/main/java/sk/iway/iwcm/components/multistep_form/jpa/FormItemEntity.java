@@ -74,7 +74,7 @@ public class FormItemEntity extends BaseEditorFields {
     private transient Integer[] regexValidationArr;
 
     @Column(name = "label")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="dt-row-edit", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="quill-oneline", hidden = true)
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
 
@@ -87,7 +87,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String placeholder;
 
     @Column(name = "tooltip")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", hidden = true, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
 
