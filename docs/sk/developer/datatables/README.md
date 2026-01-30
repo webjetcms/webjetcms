@@ -811,13 +811,13 @@ Nakoľko `footer` využíva dáta tabuľky (až na jeden prípad), výsledná ho
 
 !>**Upozornenie:** Ak tabuľka je nastavená ako `serverSide: true` a mód pätičky je `all`, spočítané hodnoty sa **nemenia** v závislosti od filtrovania v tabuľke.
 
-### Preusporiadanie riadkov
+### Poradie usporiadania riadkov
 
-Preusporiadanie riadkov umožňuje používateľovi meniť poradie záznamov v tabuľke pomocou drag & drop. Funkčnosť je implementovaná pomocou rozšírenia `RowReorder` z DataTables.
+Funkcia poradie usporiadania riadkov umožňuje používateľovi meniť poradie záznamov v tabuľke pomocou drag & drop. Funkčnosť je implementovaná pomocou rozšírenia `RowReorder` z DataTables.
 
 **Použitie:**
 
-Pre aktiváciu preusporiadania riadkov je potrebné v `@DataTableColumn` anotácii mať nastavený atribút `inputType` na hodnotu `DataTableColumnType.ROW_REORDER`. Napríklad:
+Pre aktiváciu je potrebné v `@DataTableColumn` anotácii mať nastavený atribút `inputType` na hodnotu `DataTableColumnType.ROW_REORDER`. Napríklad:
 
 ```java
 @Column(name = "sort_priority")

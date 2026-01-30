@@ -38,7 +38,7 @@ export function typeQuill() {
             { 'align': [] },
             { 'script': 'sub'}, { 'script': 'super' }, // superscript/subscript
             { 'color': [] }, { 'background': [] },          // dropdown with defaults from theme
-            'clean'                                         // remove formatting button
+            'link'
         ]
     ];
 

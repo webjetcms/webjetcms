@@ -19,6 +19,7 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
 @Table(name = "form_steps")
@@ -47,6 +48,7 @@ public class FormStepEntity {
     @Lob
     @Column(name = "header")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String header;
 
     @Column(name = "next_step_btn_label")

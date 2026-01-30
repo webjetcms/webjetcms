@@ -76,8 +76,8 @@
   - [Formulár ľahko](/redactor/apps/formsimple/README.md)
   - Formuláre
     - [Zoznam formulárov](/redactor/apps/form/README.md)
+    - [Položky formuláru](/redactor/apps/multistep-form/README.md)
     - [Regulárne výrazy](/redactor/apps/form/regexps.md)
-    - [Viackrokové formuláre](/redactor/apps/multistep-form/README.md)
   - Fórum/Diskusia
     - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
     - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)

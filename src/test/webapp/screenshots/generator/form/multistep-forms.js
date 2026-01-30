@@ -36,3 +36,8 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/multistep-form/form-item-editor.png");
     DTE.cancel();
 });
+
+Scenario('App screenshots', ({ I, Apps, Document }) => {
+    Apps.openAppEditor(156109);
+    Document.screenshot("/redactor/apps/multistep-form/app-editor.png");
+});
