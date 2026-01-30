@@ -510,7 +510,29 @@ static {
 	replaces.add(new OptionDto("sk.iway.iwcm.components.news.NewsTemplateBean", "sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity", null));
 
 	//404.jsp
-	replaces.add("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp");
+	replaces.add(new OptionDto("StatDB.addError(statPath, referer);", "StatDB.addError(statPath, referer, request);", ".jsp"));
+
+	//commons.lang. v2 to v3
+	replaces.add(new OptionDto("org.apache.commons.lang.StringEscapeUtils", "org.apache.commons.text.StringEscapeUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.WordUtils", "org.apache.commons.text.WordUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.math.IntRange", "org.apache.commons.lang3.IntegerRange", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.math.Range", "org.apache.commons.lang3.Range", ".jsp,.java"));
+	replaces.add(new OptionDto("StringEscapeUtils.escapeXml(", "StringEscapeUtils.escapeXml10(", ".jsp,.java"));
+	replaces.add(new OptionDto("StringEscapeUtils.unescapeHtml(", "StringEscapeUtils.unescapeHtml4(", ".jsp,.java"));
+	replaces.add(new OptionDto("StringUtils.chomp(", "org.apache.commons.lang3.Strings.CS.removeEnd(", ".jsp,.java"));
+	replaces.add(new OptionDto("RandomStringUtils.randomAlphanumeric(", "RandomStringUtils.secure().nextAlphanumeric(", ".jsp,.java"));
+	replaces.add(new OptionDto("Range pagingFilter = new IntRange(", "IntegerRange pagingFilter = IntegerRange.of(", ".jsp,.java"));
+	replaces.add(new OptionDto("if (pagingFilter.containsInteger(", "if (pagingFilter.contains(", ".jsp,.java"));
+	replaces.add(new OptionDto("new IntRange(", "IntegerRange.of(", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.commons.lang.", "org.apache.commons.lang3.", ".jsp,.java"));
+	replaces.add(new OptionDto("RandomStringUtils.random(", "RandomStringUtils.secure().next(", ".jsp,.java"));
+
+	//multipart update
+	replaces.add(new OptionDto("org.springframework.web.multipart.MultipartFile", "org.springframework.web.multipart.MultipartFile", ".jsp,.java"));
+	replaces.add(new OptionDto("MultipartFile", "MultipartFile", ".jsp,.java"));
+	replaces.add(new OptionDto(".getFileItem().getSize()", ".getSize()", ".jsp,.java"));
+	replaces.add(new OptionDto(".getFileItem().getName()", ".getOriginalFilename()", ".jsp,.java"));
+	replaces.add(new OptionDto("@{"+"$"+"{request.getAttribute('ninja').page.urlPath}(\\_\\_forceParse=1,\\_\\_setf=1)}", "$"+"{"+"request.getAttribute('ninja').page.urlPath}", ".html"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -530,7 +552,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	{
 		if (f.isDirectory())
 		{
-			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) return;
+			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) continue;
 			checkDir(url+f.getName()+"/", saveFile, compileFile, out, request, response);
 		}
 		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html") || f.getName().endsWith(".java"))
@@ -541,7 +563,8 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			if ("/admin/update/update-2023-18.jsp".equals(fullUrl)) continue;
 			if ("/admin/update/ldap-conn-test.jsp".equals(fullUrl)) continue;
 
-			System.out.println(fullUrl);
+			//System.out.println(fullUrl);
+			Logger.debug(sk.iway.iwcm.system.UpdateDatabase.class, "Processing file: " + fullUrl);
 			out.println(Tools.escapeHtml(fullUrl));
 			out.flush();
 
@@ -664,8 +687,9 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 
 			if(url.contains("basket") && fullUrl.contains(".jsp")) {
-				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
+				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false && content.replaceAll("java.math.BigDecimal", "xxx").contains("BigDecimal")) {
 					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
+				}
 
 				if(content.contains("sk.iway.iwcm.components.basket.*")) {
 					//Just replace it
@@ -676,6 +700,58 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 				//REPLACE double with BigDecimal when needed
 				content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+
+				//Fix duplicity
+				content = Tools.replace(content, "itemTr itemTr", "itemTr");
+
+				if(fullUrl.contains("invoice_detail.jsp")) {
+					if (content.contains("import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%")==false) {
+						content = Tools.replace(content, //Add import
+							"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">",
+							"import=\"sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService\"%" + ">" + "\n<" + "%@page import=\"sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService\"%" + ">"
+						);
+					}
+
+					if (content.contains("String invoiceCurrency = invoice.getCurrency()")==false) content = Tools.replace(content, "Prop prop = Prop.getInstance(lng);", "Prop prop = Prop.getInstance(lng);\n\tString invoiceCurrency = invoice.getCurrency();");
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*invoice.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=invoiceCurrency%" + ">", false);
+
+					content = Tools.replace(content, "uhradene", "payedPrice");
+					content = Tools.replace(content, "doplatit", "toBePaid");
+					content = Tools.replace(content, "totalPriceVat.setScale(2,BigDecimal.ROUND_HALF_UP);", "totalPriceVat.setScale(2, java.math.RoundingMode.HALF_EVEN);");
+					content = Tools.replace(content,
+						"<iwcm:beanWrite name=\"invoice\" property=\"deliveryMethod\"/>",
+						"<" + "%\n" + "String deliveryMethod = DeliveryMethodsService.getDeliveryMethodLabel(invoice.getDeliveryMethod(), request);\n" + "if (Tools.isNotEmpty(deliveryMethod)) { out.println(deliveryMethod); }\n" + "%" + ">"
+					);
+				} else {
+					//Swap price with local price
+					content = Tools.replace(content, "getItemPriceVat()", "getLocalPriceVat(request)");
+					content = Tools.replace(content, "getItemPriceQty()", "getItemLocalPriceQty(request)");
+					content = Tools.replace(content, "getItemPriceVatQty()", "getItemLocalPriceVatQty(request)");
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)\\)[\\s]*%" + ">", "<" + "%=doc.getLocalPriceVat(request)%" + ">", false);
+					content = Tools.replaceRegex(content, "doc\\.getPrice\\(\\)", "doc\\.getLocalPrice\\(request\\)", false);
+					content = Tools.replaceRegex(content, "%=doc\\.getLocalPriceVat\\(request,[\\s]*doc\\.getCurrency\\(\\)[\\s]*\\)[\\s]*%", "%=doc\\.getLocalPriceVat\\(request\\)%", false);
+
+					// Handle getting valid basket currency and using it
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*EshopService\\.getDisplayCurrency\\(request\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+					content = Tools.replaceRegex(content, "<" + "%=[\\s]*doc\\.getCurrency\\(\\)[\\s]*%" + ">", "<" + "%=displayCurrency%" + ">", false);
+					if(content.contains("<" + "%=displayCurrency%" + ">") == true) {
+						if(content.contains("PageParams pageParams = new PageParams(request);") == true) {
+							if (content.contains("String displayCurrency = EshopService.getDisplayCurrency(request);")==false) content = Tools.replace(content, "PageParams pageParams = new PageParams(request);", "PageParams pageParams = new PageParams(request);\n\tString displayCurrency = EshopService.getDisplayCurrency(request);");
+						} else {
+							if (content.contains("String displayCurrency = EshopService.getDisplayCurrency(request);")==false) content = Tools.replace(content, "pageContext.setAttribute(\"lng\", lng);", "pageContext.setAttribute(\"lng\", lng);\n\tString displayCurrency = EshopService.getDisplayCurrency(request);");
+						}
+
+						if(content.contains("import=\"sk.iway.iwcm.components.basket.rest.EshopService\"") == false) {
+							//Add needed import
+							content = Tools.replace(content, "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\"");
+							content = Tools.replace(content, "<" + "%@ taglib prefix=\"iwcm\"", "<" + "%@page import=\"sk.iway.iwcm.components.basket.rest.EshopService\"%" + ">\n" + "<" + "%@ taglib prefix=\"iwcm\"");
+						}
+					}
+				}
+
+				// add request param into isPaymentMethodConfigured
+				content = Tools.replace(content, "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, prop)", "PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, request, prop)");
 
 				hasChange = true;
 			}
@@ -688,6 +764,17 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			}
 
 			if (fullUrl.endsWith("FileArchivatorBean.java")) {
+				//verify duplicity of public void setReferenceId(Long referenceId)
+				int i1 = content.indexOf("public void setReferenceId(Long referenceId)");
+				if (i1 > 0) {
+					int i2 = content.indexOf("public void setReferenceId(Long referenceId)", i1+1);
+					if (i2 > i1) {
+						//revert second one to public void setReferenceId(int referenceId)
+						content = content.substring(0, i2) + "public void setReferenceId(int referenceId)" + content.substring(i2 + "public void setReferenceId(Long referenceId)".length());
+						hasChange = true;
+					}
+				}
+
 				if (content.contains("public void setReferenceId(int referenceId)")==false) {
 					int lastBracket = content.lastIndexOf("}");
 					if (lastBracket > 0) {
@@ -879,6 +966,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	<div style="white-space: pre"><%
 		if ("java".equals(subdir)) {
 			checkDir("/../java/", saveFile, false, out, request, response);
+			checkDir("/../../webjet8/", saveFile, false, out, request, response);
 			checkDir("/../java-update/", saveFile, false, out, request, response);
 		} else {
 			if (Tools.isEmpty(subdir) || "*".equals(subdir)) {

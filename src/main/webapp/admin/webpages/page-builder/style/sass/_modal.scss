@@ -17,6 +17,12 @@
     box-shadow: $modal-box-shadow;
     transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
 
+    input {
+        font-family: $font-family-base;
+        font-size: 14px;
+        line-height: 24px;
+    }
+
     &__header {
         position: relative;
         overflow: hidden;
@@ -178,6 +184,15 @@
                     color: $secondary;
                 }
 
+                input[type=number] {
+                    &[disabled] {
+                        background-color: $nice-gray-100;
+                        color: $dark-60;
+                    }
+                }
+                input[data-changed="true"] {
+                    border-color: $primary;
+                }
 
                 .ui-spinner.ui-widget.ui-widget-content {
                     width: 100%;
@@ -255,11 +270,12 @@
             .#{$prefix}-style-input-group-four-in-row {
                 overflow: hidden;
                 position: relative;
+                padding-bottom: 3px;
 
                 .#{$prefix}-style-input-wrapper {
                     float: left;
-                    width: 22.75%;
-                    margin-right: 3%;
+                    width: 21%;
+                    margin-right: 5.3%;
 
                     &:last-child {
                         margin-right: 0;
@@ -268,14 +284,14 @@
 
                 .#{$prefix}-style-input-group-four-in-row-tools {
                     position: absolute;
-                    bottom: 0;
+                    bottom: 1px;
                     width: 100%;
                     border-bottom: 1px solid $nice-gray-300;
                     margin-bottom: 5px;
 
                     .#{$prefix}-style-input-group-four-in-row-checkbox {
                         position: absolute;
-                        bottom: 10px;
+                        bottom: 12px;
                         z-index: 9;
 
                         &.#{$prefix}-style-input-group-four-in-row-all {
@@ -284,10 +300,10 @@
                             transform: translateX(-50%);
                         }
                         &.#{$prefix}-style-input-group-four-in-row-first-second {
-                            left: 22.5%;
+                            left: 21.7%;
                         }
                         &.#{$prefix}-style-input-group-four-in-row-third-fourth {
-                            right: 22.5%;
+                            right: 21.9%;
                         }
                     }
                 }
@@ -435,6 +451,12 @@
         overflow: hidden;
         margin-right: 8px;
         margin-bottom: 8px;
+    }
+
+    .minicolors.no-color-picker {
+        .minicolors-slider, .minicolors-opacity-slider, .minicolors-grid {
+            display: none;
+        }
     }
 
     .tab-menu {

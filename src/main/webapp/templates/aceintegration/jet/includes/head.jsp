@@ -37,7 +37,6 @@ DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 GroupsDB groupsDB = GroupsDB.getInstance();
 String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -1, "fieldA");
 
-    InlineEditor.setEditingMode(InlineEditor.EditingMode.pageBuilder, request);
 %>
 
 <c:choose>
@@ -49,6 +48,7 @@ String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -
     <c:otherwise>
         <iwcm:combine type="css" set="">
             ${ninja.temp.basePathCss}ninja.min.css
+            ${ninja.temp.basePathCss}editor.css
             ${ninja.temp.basePathCss}shame.css
         </iwcm:combine>
     </c:otherwise>
@@ -58,8 +58,8 @@ String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -
 <link href="/templates/aceintegration/jet/assets/fontawesome/css/solid.css" rel="stylesheet" type="text/css">
 
 <iwcm:combine type="js" set="">
-    ${ninja.temp.basePathJs}plugins/jquery.min.js
-    ${ninja.temp.basePathJs}plugins/jquery.cookie.js
+    /components/_common/javascript/jquery.min.js
+    /components/_common/javascript/jquery.cookie.js
     ${ninja.temp.basePathJs}plugins/modernizr-custom.js
     ${ninja.temp.basePathJs}plugins/bootstrap.bundle.min.js
     ${ninja.temp.basePathJs}global-functions.min.js
@@ -78,6 +78,11 @@ ${ninja.webjet.insertJqueryFake}
     <iwcm:notEmpty name="docDetails" property="fieldQ">
     dataLayer.push({'pageCategory': '<c:out value="${docDetails.fieldQ}" />'});
     </iwcm:notEmpty>
+    webjetContentsCss = [
+       '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+       '/templates/aceintegration/jet/assets/css/ninja.min.css',
+       '/templates/aceintegration/jet/assets/css/editor.css'
+    ];
 </script>
 
 <iwcm:insertScript position="head"/>

@@ -135,6 +135,7 @@ export const dataTableInit = options => {
     DATA.hideButtons = options.hideButtons ? options.hideButtons : null;
     DATA.onEdit = options.onEdit ? options.onEdit : null;
     DATA.onRowCallback = options.onRowCallback ? options.onRowCallback : null;
+    DATA.onClose = options.onClose ? options.onClose : null;
     DATA.forceVisibleColumns = options.forceVisibleColumns ? options.forceVisibleColumns : null;
     DATA.updateColumnsFunction = options.updateColumnsFunction ? options.updateColumnsFunction : null;
     DATA.idAutoOpener = (typeof options.idAutoOpener !== "undefined") ? options.idAutoOpener : true;
@@ -891,8 +892,9 @@ export const dataTableInit = options => {
                 ),
                 close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-x"></i>')
             }
+            dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {
-                dte.close('icon');
+                //we are using handler down below dte.close('icon');
             });
             dte._bootstrapDisplay = {
                 dom: dom,
@@ -921,7 +923,10 @@ export const dataTableInit = options => {
                 .attr('title', dte.i18n.close)
                 .off('click.dte-bs5')
                 .on('click.dte-bs5', function () {
-                    dte.close('icon');
+                    //we are using handler down below dte.close('icon');
+                    WJ.dispatchEvent('WJ.DTE.close', {
+                        dte: dte
+                    });
                 })
                 .appendTo($('div.modal-header', append));
 
@@ -1745,8 +1750,7 @@ export const dataTableInit = options => {
                         //console.log("Initializing btn-close-editor handler id=", "#"+DATA.id+"_modal", " el=", $("#"+DATA.id+"_modal .btn-close-editor"));
                         //musi byt bindnute dynamicky, kedze button.btn-close-editor sa dynamicky pridava/odobera
                         $("#" + DATA.id + "_modal").on("click", ".btn-close-editor", function (e) {
-
-                            //console.log("Close click, e=", e);
+                            //console.log("Close click, e=", e, "DATA.onClose=", DATA.onClose);
                             var dted = $(e.target).closest(".DTED");
                             //console.log("dted=", dted);
                             //pri mediach je vnoreny dalsi modal, toto zabezpeci ze sa nezavriet editacia stranky ale len modalu a ostane zachovana funkcnost
@@ -1757,6 +1761,15 @@ export const dataTableInit = options => {
                                     dted.modal('hide').hide().removeClass("show");
                                 }
                             } else {
+                                if (DATA.onClose!=null && typeof DATA.onClose == "function") {
+                                    var allowClose = DATA.onClose(TABLE, EDITOR, e);
+                                    if (allowClose === false) {
+                                        //console.log("Close prevented by onClose callback");
+                                        e.preventDefault();
+                                        return;
+                                    }
+                                }
+
                                 //console.log("Closing EDITOR");
                                 EDITOR.close();
                                 //ked som klikol na editor web stranky, zrusil, potom na editor adresara, zrusil a potom na editor web starnky a zrusil zostal backdrop
@@ -3185,7 +3198,7 @@ export const dataTableInit = options => {
                             let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.")+".show input";
                             let element = $(selector);
                             //console.log("Done, selector=", selector, " element=", element);
-                            if (element.length>0) {
+                            if (element.length>0 && (element[0].type === "text" || element[0].type === "textarea")) {
                                 try {
                                     element[0].focus();
                                     element[0].setSelectionRange(0,0);
@@ -3196,6 +3209,19 @@ export const dataTableInit = options => {
                         var liner = $("div.DTE_Bubble_Liner");
                         if (liner.find("div.DTE_Field_Type_quill").length>0) liner.addClass("type_quill");
                         else liner.removeClass("type_quill");
+
+                        if (liner.find("div.DTE_Field_Type_select").length>0) {
+                            //initialize/refresh BS select
+                            if (liner.find(".bootstrap-select").length>0) {
+                                liner.find("div.DTE_Field_Type_select select").selectpicker("refresh");
+                            } else {
+                                liner.find("div.DTE_Field_Type_select select").selectpicker(DT_SELECTPICKER_OPTS_EDITOR);
+                            }
+                        }
+                        //initialize checkboxes
+                        liner.find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
+                        liner.find('input[type="checkbox"]').addClass("form-check-input");
+                        liner.find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
 
                         EDITOR.bubblePosition();
 

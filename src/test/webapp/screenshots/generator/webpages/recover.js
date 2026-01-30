@@ -1,4 +1,4 @@
-Feature('webpages.recover-action');
+Feature('webpages.recover');
 
 Before(({ I }) => {
     I.relogin("admin");
@@ -18,17 +18,17 @@ Scenario('recover screens', ({ I, DT, DTE, Document, i18n }) => {
         case "sk":
             I.click('Zmazať');
             DTE.waitForLoader();
-            I.see("Nenašli sa žiadne vyhovujúce záznamy");
+            I.see("Nenašli sa žiadne vyhovujúce záznamy", "#datatableInit_wrapper .dt-scroll-body");
             break;
         case "en":
             I.click('Delete');
             DTE.waitForLoader();
-            I.see("No matching records found");
+            I.see("No matching records found", "#datatableInit_wrapper .dt-scroll-body");
             break;
         case "cs":
             I.click('Smazat');
             DTE.waitForLoader();
-            I.see("Nenašly se žádné vyhovující záznamy");
+            I.see("Nenašly se žádné vyhovující záznamy", "#datatableInit_wrapper .dt-scroll-body");
             break;
         default:
             throw new Error("Unknown language: " + confLng);

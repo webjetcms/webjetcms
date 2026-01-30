@@ -7,9 +7,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -66,5 +71,9 @@ public class ContactEntity {
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.contact.property.phone")
     private String phone;
+
+    @Transient
+    @JsonIgnore
+    private MultipartFile document;
 
 }

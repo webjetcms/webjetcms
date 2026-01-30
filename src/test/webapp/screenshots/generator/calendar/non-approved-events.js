@@ -22,6 +22,7 @@ Scenario('calendar non-approved events screens', async ({I, DT, DTE, Document}) 
     DTE.selectOption("typeId", "ApproveByTester");
     DTE.save();
 
+    I.wait(3);
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("calendarEventsDataTable");
     I.fillField("#DTE_Field_title", eventNameB);

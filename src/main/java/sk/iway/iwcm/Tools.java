@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
@@ -758,6 +758,9 @@ public class Tools
 
 	public static String join(String[] array, String glue)
 	{
+		if (array == null) {
+            return null;
+        }
 		StringBuilder result = new StringBuilder();
 		for(int i = 0; i < array.length; i++)
 		{
@@ -1042,6 +1045,18 @@ public class Tools
 	}
 
 	/**
+	 * Get parameter value from request. If value is null, return empty string.
+	 * Value is filtered for XSS.
+	 * @param request
+	 * @param name
+	 * @return
+	 */
+	public static String getParameterNotNull(HttpServletRequest request, String name) {
+		String value = getParameter(request, name);
+		return (value != null) ? value : "";
+	}
+
+	/**
 	 * Ziska string hodnotu z request objektu podla mena, ak neexistuje alebo je prazdne vrati defaultValue
 	 * @param request
 	 * @param name
@@ -1226,21 +1241,30 @@ public class Tools
 	public static String getRemoteIP(HttpServletRequest request)
 	{
 		String ip = request.getRemoteAddr();
-		//priklad: x-forwarded-for: unknown, 195.168.35.4
-		String xForwardedFor = request.getHeader("x-forwarded-for");
-		if (Constants.getBoolean("serverBeyoundProxy") && xForwardedFor != null && xForwardedFor.length()>4)
+		if (Constants.getBoolean("serverBeyoundProxy"))
 		{
-			if ("unknown".equals(xForwardedFor)==false && xForwardedFor.indexOf(".")!=-1)
-			{
-				String[] values = Tools.getTokens(xForwardedFor, ",", true);
-				for (String value : values)
-                {
-                    //ak tam nie je bodka, je to asi unknown a to ignorujeme
-                    if (value.indexOf(".")<1) continue;
-                    //bereme prvu hodnotu v poradi
-                    ip = value.trim();
-                    break;
-                }
+			//priklad: x-forwarded-for: unknown, 195.168.35.4
+			String xForwardedForHeader = Constants.getString("xForwardedForHeader");
+			boolean useFirstIP = true;
+			String LAST_SUFFIX = "::last";
+			if (xForwardedForHeader.endsWith(LAST_SUFFIX)) {
+				xForwardedForHeader = xForwardedForHeader.substring(0, xForwardedForHeader.length()-LAST_SUFFIX.length());
+				useFirstIP = false;
+			}
+			String xForwardedFor = request.getHeader("x-forwarded-for");
+			if (xForwardedFor != null && xForwardedFor.length()>4) {
+				if ("unknown".equals(xForwardedFor)==false && xForwardedFor.indexOf(".")!=-1)
+				{
+					String[] values = Tools.getTokens(xForwardedFor, ",", true);
+					for (String value : values)
+					{
+						//ak tam nie je bodka, je to asi unknown a to ignorujeme
+						if (value.indexOf(".")<1) continue;
+						ip = value.trim();
+						//bereme prvu hodnotu v poradi
+						if (useFirstIP) break;
+					}
+				}
 			}
 		}
 
@@ -1431,8 +1455,26 @@ public class Tools
 			retInt[i] = Tools.getIntValue(retStr[i], 0);
 
 		}
-		return(retInt);
+		return retInt;
+	}
 
+	/**
+	 * Vrati pole typu long s jednotlivymi polozkami v retazci
+	 * @param groups
+	 * @param delimiter
+	 * @return
+	 */
+	public static long[] getTokensLong(String groups, String delimiter)
+	{
+		if (Tools.isEmpty(groups)) return new long[0];
+		String[] retStr = getTokens(groups, delimiter, true);
+		long[] retLong = new long[retStr.length];
+		for (int i=0; i<retLong.length; i++)
+		{
+			retLong[i] = Tools.getLongValue(retStr[i], 0);
+
+		}
+		return retLong;
 	}
 
 	/**
@@ -2887,6 +2929,8 @@ public class Tools
 	 * @return
 	 */
 	public static String convertToHtmlTags(String text){
+
+		//notice: &#47; is / and this is replaced to avoid problems with jstree path separator
 
 		if (text.contains("*||")) text = Tools.replace(text, "*||", "</");
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");

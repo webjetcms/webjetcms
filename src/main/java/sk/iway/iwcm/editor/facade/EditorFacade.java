@@ -276,6 +276,10 @@ public class EditorFacade {
 
         if (Tools.isEmpty(title)) title = group.getGroupName();
 
+		//replace &#47; back to / - this is special char because in folders we use / to split levels
+		//but in title we want to have normal /
+		title = Tools.replace(title, "&#47;", "/");
+
         doc.setTitle(title);
         doc.setNavbar(title);
 

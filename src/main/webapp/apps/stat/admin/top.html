@@ -46,7 +46,12 @@
             id: "topDataTable",
             idAutoOpener: false,
             defaultSearch: ChartTools.getSearchCriteria(),
-            autoHeight: false
+            autoHeight: false,
+            summary: {
+                mode: "all",
+                columns: ["visits", "sessions", "uniqueUsers"],
+                title: "[[#{components.summary.total_title}]]",
+            }
         });
 
         //window.appModule.initGroupIdSelect();

@@ -185,10 +185,11 @@ public class DmailService {
         //Set create values
         if (campaign == null || campaign.getId()==null || campaign.getId().longValue()<1) {
             email.setCampainId((long)-loggedUserId);
-            email.setUrl("");
-            email.setSubject("");
-            email.setSenderName("");
-            email.setSenderEmail("");
+            //oracle does not allow null values in varchar fields - set default values
+            email.setUrl("-");
+            email.setSubject("-");
+            email.setSenderName("-");
+            email.setSenderEmail("-");
             email.setCreatedByUserId(loggedUserId);
         } else {
             email.setCampainId(campaign.getId());

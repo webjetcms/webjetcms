@@ -3,6 +3,8 @@ package sk.iway.iwcm.stripes;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import sk.iway.iwcm.tags.support.ResponseUtils;
+
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
@@ -104,7 +106,7 @@ public class SyncArchiveActionBean implements ActionBean
 				//new IwcmFile(outFile.getPath()).setLastModified(entry.getTime());//nastavime lastModified podla suboru zo zip archivu
 			}
 			zis.close();
-			context.getRequest().setAttribute("syncDir",virtualDir);
+			context.getRequest().setAttribute("syncDir", ResponseUtils.filter(virtualDir));
 
 			context.getRequest().setAttribute("compareBy", Tools.getParameter(context.getRequest(), "compareBy"));
 		}

@@ -23,6 +23,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
 import jakarta.servlet.ServletException;
 
 
@@ -111,6 +112,13 @@ public class DiskMultiPartRequestHandler
 				List<String> valueList = me.getValue();
 				if (valueList.size()<1) continue;
 				wrapped.setParameterValues(name, valueList.toArray(new String[0]));
+			}
+
+			// Add parts to the wrapped request
+			for (FileItem item : files)
+			{
+				Part part = new FileItemPart(item);
+                wrapped.addPart(part);
 			}
 		}
 

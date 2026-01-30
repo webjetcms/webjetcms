@@ -10,13 +10,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -124,17 +126,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title="components.basket.mode_of_transport",
-		hiddenEditor = true,
-		editor = {
-			@DataTableColumnEditor(
-				options = {
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_personally", value = "components.basket.order_form.delivery_personally"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_post", value = "components.basket.order_form.delivery_post"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery_courier", value = "components.basket.order_form.delivery_courier"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.delivery", value = "components.basket.order_form.delivery")
-				}
-			)
-		}
+		hiddenEditor = true
     )
 	private String deliveryMethod;
 
@@ -183,7 +175,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	private BigDecimal balanceToPay;
 
 	@Column(name="currency")
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.basket.invoice.currency", hiddenEditor = true)
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	private String currency;
 
 	/****** CONTACT ******/
@@ -372,34 +364,6 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	// @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	// private String htmlCode;
 
-	public BigDecimal getTotalPriceVatIn(String currency) {
-		try {
-			String constantName = "kurz_" + currency + "_" + getCurrency();
-			BigDecimal rate;
-
-			// nasli sme bezny kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName))) {
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return rate.multiply( getPriceToPayVat() );
-			}
-
-			// nevyslo, skusime opacnu konverziu
-			constantName = "kurz_" + getCurrency() + "_" + currency;
-
-			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
-			// 1/kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName))) {
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return (BigDecimal.valueOf(1).divide(rate)).multiply( getPriceToPayVat() );
-			}
-		} catch (NumberFormatException e) {
-			sk.iway.iwcm.Logger.error(e);
-			throw new IllegalStateException("Malformed constant format for currencies " + getCurrency() + " and " + currency);
-		}
-
-		return getPriceToPayVat();
-	}
-
 	/**
 	 * Vypocita autorizacny token k objednavke. Ako autorizacny token
 	 * sa vezme retazec "INV"+id objednavky+Constants.getInstallName()
@@ -426,25 +390,24 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 		return this.id == null ? -1 : this.id.intValue();
 	}
 
-	public List<BasketInvoiceItemEntity> getBasketItems() {
-		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
-	}
-
-
-	//
-	public BigDecimal getTotalPriceVat() {
-		return priceToPayVat == null ? BigDecimal.ZERO : priceToPayVat;
-	}
-
-	public BigDecimal getTotalPrice() {
-		return priceToPayNoVat == null ? BigDecimal.ZERO : priceToPayNoVat;
-	}
-
 	public int getInvoiceId() {
 		return this.id == null ? -1 : this.id.intValue();
 	}
 	public void setInvoiceId(int invoiceId) {
 		this.id = Long.valueOf(invoiceId);
 	}
+
+	/* Used in JSP */
+
+	@JsonIgnore
+	public List<BasketInvoiceItemEntity> getBasketItems() {
+		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+	}
+
+	@JsonIgnore
+	public BigDecimal getTotalPriceVat() { return priceToPayVat == null ? BigDecimal.ZERO : priceToPayVat; }
+
+	@JsonIgnore
+	public BigDecimal getTotalPrice() { return priceToPayNoVat == null ? BigDecimal.ZERO : priceToPayNoVat; }
 }

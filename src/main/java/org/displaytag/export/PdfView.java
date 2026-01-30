@@ -72,6 +72,7 @@ import org.displaytag.model.TableModel;
  * @author Fabrizio Giustina
  * @version $Revision: 1.3 $ ($Author: jeeff $)
  */
+@SuppressWarnings("unused")
 public class PdfView implements BinaryExportView
 {
 
@@ -235,7 +236,6 @@ public class PdfView implements BinaryExportView
      * Generates the header cells, which persist on every page of the PDF document.
      * @throws BadElementException IText exception
      */
-    @SuppressWarnings("unchecked")
 	protected void generateHeaders() //throws BadElementException
     {
         /*

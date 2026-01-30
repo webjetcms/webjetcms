@@ -46,18 +46,20 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
     });
 });
 
-Scenario('verify all domains selection for available groups', ({I, DT, DTE}) => {
+Scenario('verify only current domain selection for available groups', ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/webpages/perex/");
-    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.dontSee(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see("/Newsletter", "#perexDataTable td.dt-style-json");
     DT.filterContains("perexGroupName", "PerexWithGroup_");
-    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.dontSee(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see("/Newsletter", "#perexDataTable td.dt-style-json");
     I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
     I.click("PerexWithGroup_B");
     DTE.waitForEditor("perexDataTable");
     I.click("button.btn-vue-jstree-add");
     I.waitForElement("#jsTree");
-    I.waitForText(I.getDefaultDomainName(), 5, "#jsTree a.jstree-anchor");
-    I.waitForText("mirroring.tau27.iway.sk", 5, "#jsTree a.jstree-anchor");
+    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.dontSee("mirroring.tau27.iway.sk", "#jsTree a.jstree-anchor");
     I.click("a.close-custom-modal");
     DTE.cancel();
 });
@@ -464,3 +466,80 @@ Scenario('Verify domain_id groups', ({ I, DT, Document }) => {
 Scenario('Verify domain_id groups-logout', ({ I }) => {
     I.logout();
 });
+
+Scenario("BUG: duplicate available groups in perex group on save", async ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/perex/");
+
+    var perexGroupName = "PerexWithGroup_A";
+
+    DT.filterContains("perexGroupName", perexGroupName);
+    I.click(perexGroupName);
+    DTE.waitForEditor("perexDataTable");
+    I.click("button.btn-vue-jstree-add");
+    I.waitForElement("#jsTree");
+    I.waitForText("Jet portal 4", 5, "#jsTree a.jstree-anchor");
+    I.click("a.close-custom-modal");
+    DTE.save();
+
+    //verify no duplicates
+    I.click(perexGroupName);
+    DTE.waitForEditor("perexDataTable");
+    var rows = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-availableGroups div.dt-tree-container div.form-group button.btn-vue-jstree-item-edit");
+    I.assertEqual(rows, 1, "Expected 1 available group, but found " + rows);
+});
+
+Scenario("Feature: perexGroups with same names are distinquised by id perexGroupName", ({ I, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150903");
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.waitForVisible(".DTE_Field_Name_perexGroups");
+
+    checkPerexGroups(true, I);
+
+    //
+    I.say("Checking perex groups in news app");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+    Apps.openAppEditor();
+    I.waitForElement("#pills-dt-component-datatable-perex-tab", 10);
+    I.clickCss("#pills-dt-component-datatable-perex-tab");
+
+    checkPerexGroups(false, I, ".DTE_Field_Name_perexGroup");
+    checkPerexGroups(false, I, ".DTE_Field_Name_perexGroupNot");
+
+    Apps.cancel();
+    I.switchTo();
+    DTE.cancel();
+
+    //
+    I.say("Checking perex groups in gallery app");
+    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236");
+    DTE.waitForEditor("galleryTable");
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+    I.waitForVisible(".DTE_Field_Name_editorFields\\.perexGroupsIds");
+
+    checkPerexGroups(false, I, ".DTE_Field_Name_editorFields\\.perexGroupsIds");
+
+    DTE.cancel();
+});
+
+function checkPerexGroups(isGroupIdFiltered, I, parentSelector = ".DTE_Field_Name_perexGroups") {
+    checkPerexEditor(I, 624, "PerexWithoutGroup", parentSelector);
+    if (isGroupIdFiltered) I.dontSee("Newsletter perex skupina", parentSelector);
+    else checkPerexEditor(I, 10, "Newsletter perex skupina", parentSelector);
+
+    I.say("Z_Duplicity-Unique show no id NOR perexGroupName, because returned string is unique");
+    checkPerexEditor(I, 1968, "Z_Duplicity-Unique", parentSelector);
+
+    I.say("Z_DUPLICITY show only id, because lng text and perexGroupName are same, so not logic to add it");
+    checkPerexEditor(I, 1969, "Z_DUPLICITY (1969)", parentSelector);
+
+    I.say("Z_Duplicity-a show id AND perexGroupName, because this values are different, so for better distinquise.");
+    checkPerexEditor(I, 1970, "Z_Dupľičity (1970:Z_Duplicity-A)", parentSelector);
+
+    I.say("Z_Duplicity-a same as Z_Duplicity-b");
+    checkPerexEditor(I, 1971, "Z_Duplicity (1971:Z_Duplicity-b)", parentSelector);
+}
+
+function checkPerexEditor(I, id, name, parentSelector) {
+    I.seeElement( locate( locate(parentSelector + " div.custom-control.form-switch").withChild( locate("input.form-check-input[value='" + id + "']") ).find( locate("label.form-check-label").withText(name) ) ) );
+}

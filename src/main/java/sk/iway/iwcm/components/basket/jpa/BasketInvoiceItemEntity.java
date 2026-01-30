@@ -144,7 +144,7 @@ public class BasketInvoiceItemEntity {
 	}
 
 	public boolean itemAlreadyPurchased() {
-		return getId() > 0;
+		return (getInvoiceId() != null && getInvoiceId() > 0);
 	}
 
 	/**

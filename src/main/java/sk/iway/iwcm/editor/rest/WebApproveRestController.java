@@ -71,7 +71,7 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
         pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), "title", "docId", false);
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", "userGroupId", false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
-        pageImpl.addOptions("perexGroups", ws.getPerexGroups(false), "perexGroupName", "perexGroupId", false);
+        pageImpl.addOptions("perexGroups", ws.getPerexGroups(false), "label", "value", false);
 
         return pageImpl;
     }

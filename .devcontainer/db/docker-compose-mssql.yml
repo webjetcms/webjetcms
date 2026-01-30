@@ -1,0 +1,18 @@
+services:
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-mssql
+    container_name: webjetcms-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${WEBJET_DB_PASS}"
+      MSSQL_PID: "Developer"
+      MSSQL_COLLATION: "Latin1_General_CI_AI"
+    ports:
+      - "11433:1433"
+    volumes:
+      - webjetcms-mssqldata:/var/opt/mssql
+
+volumes:
+  webjetcms-mssqldata:

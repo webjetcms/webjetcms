@@ -4,11 +4,17 @@
     width: $plus-button-size;
     height: $plus-button-size;
     z-index: $plus-button-index;
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6ODU1M0Q0RUZGNkQ5MTFFOEE2OENFN0FCRDlFNEIxMkUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6ODU1M0Q0RjBGNkQ5MTFFOEE2OENFN0FCRDlFNEIxMkUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4NTUzRDRFREY2RDkxMUU4QTY4Q0U3QUJEOUU0QjEyRSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4NTUzRDRFRUY2RDkxMUU4QTY4Q0U3QUJEOUU0QjEyRSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PosleX0AAADXSURBVHja7NrfDYIwEMfxahyAUXACZQNG6kbtBuIEstHZS/oqrXqAwveXHPBwSfN54M8BTkSccTWpgrxOyD2m6x50Y5xHqrbQM6Y6Wy56NEb0FQiXe/pfhrQz9S4OWS1AgAABAgQIECBAgOwHcvpgKJrK5c1e/+V6OmlGPdBRt0n7m/Wgs2AU0ykkWI+dKyQqRDjZgQAB8leQuAFH3NQN0foR5VrZO6S6Wz2iWH9S8FIfb7k2Vy0gQIAAAQIECBAgQHYPGWfqLYbfnCbSFV5oxNxjmqcAAwB9sGqmjwunUgAAAABJRU5ErkJggg=="); /*/admin/webpages/page-builder/images/plus.png*/;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: auto $plus-button-icon-size;
-    transition: background-color 0.3s ease-in-out;
+    > span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: $icon-plus;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: auto $plus-button-icon-size;
+        transition: background-color 0.3s ease-in-out;
+        pointer-events: none;
+    }
 
     &:hover {
         opacity: 1 !important;
@@ -20,21 +26,25 @@
 .#{$prefix}-column > .#{$prefix}-plus-button {
     top: 50%;
     margin-top: -($plus-button-size/2);
-    background-color: $color-column;
+    background: linear-gradient(to left, $color-column, $color-column-g);
+
+    &.#{$prefix}-prepend {
+        background: linear-gradient(to right, $color-column, $color-column-g);
+    }
 
     &:hover {
-        background-color: darken($color-column,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
-        left: $highlighter-size;
+        left: $highlighter-size*3;
         border-top-right-radius: $plus-button-radius;
         border-bottom-right-radius: $plus-button-radius;
         box-shadow: 4px 0 25px 2px rgba(50, 50, 50, 0.25);
     }
 
     &.#{$prefix}-append {
-        right: $highlighter-size;
+        right: $highlighter-size*3;
         border-top-left-radius: $plus-button-radius;
         border-bottom-left-radius: $plus-button-radius;
         box-shadow: -4px 0 25px 2px rgba(50, 50, 50, 0.25);
@@ -42,14 +52,17 @@
 }
 
 .#{$prefix}-container > .#{$prefix}-plus-button {
-    background-color: $color-container;
+    background: linear-gradient(to bottom, $color-container, $color-container-g);
+    &.#{$prefix}-append {
+        background: linear-gradient(to top, $color-container, $color-container-g);
+    }
 
     &:hover {
-        background-color: darken($color-container,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
-        top: $highlighter-size;
+        top: $highlighter-size*2;
         left: 50%;
         margin-left: $highlighter-size;
         border-bottom-right-radius: $plus-button-radius;
@@ -58,7 +71,7 @@
     }
 
     &.#{$prefix}-append {
-        bottom: $highlighter-size;
+        bottom: $highlighter-size*2;
         right: 50%;
         margin-right: $highlighter-size;
         border-top-right-radius: $plus-button-radius;
@@ -68,10 +81,13 @@
 }
 
 .#{$prefix}-section > .#{$prefix}-plus-button {
-    background-color: $color-section;
+    background: linear-gradient(to bottom, $color-section, $color-section-g);
+    &.#{$prefix}-append {
+        background: linear-gradient(to top, $color-section, $color-section-g);
+    }
 
     &:hover {
-        background-color:darken($color-section,15%);
+        filter: brightness(1.1);
     }
 
     &.#{$prefix}-prepend {
@@ -143,11 +159,15 @@
                 z-index: $plus-button-moving-index;
 
                 &.#{$prefix}-prepend {
-                    background-image: url("/admin/webpages/page-builder/images/move-left.png");
+                    span {
+                        background-image: $icon-move-left;
+                    }
                 }
 
                 &.#{$prefix}-append {
-                    background-image: url("/admin/webpages/page-builder/images/move-right.png");
+                    span {
+                        background-image: $icon-move-right;
+                    }
                 }
             }
         }
@@ -160,7 +180,6 @@
         &.#{$prefix}-is-moving-container {
             .#{$prefix}-container > .#{$prefix}-plus-button,
             .#{$prefix}-section > .#{$prefix}-plus-button {
-                width: $plus-button-moving-size;
                 border-radius: $plus-button-radius;
                 z-index: $plus-button-moving-index;
                 margin-top: - $highlighter-size;
@@ -170,7 +189,6 @@
         &.#{$prefix}-is-moving-section {
             .#{$prefix}-container > .#{$prefix}-plus-button,
             .#{$prefix}-section > .#{$prefix}-plus-button {
-                width: $plus-button-moving-size;
                 border-radius: $plus-button-radius;
                 z-index: $plus-button-moving-index;
                 margin-bottom: - $highlighter-size;
@@ -178,30 +196,30 @@
         }
 
         &.#{$prefix}-is-moving-container {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("/admin/webpages/page-builder/images/move-top.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend span {
+                background-image: $icon-move-up;
             }
         }
 
         &.#{$prefix}-is-moving-section {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend {
-                background-image: url("/admin/webpages/page-builder/images/move-top.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-prepend span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-prepend span {
+                background-image: $icon-move-up;
             }
         }
 
         &.#{$prefix}-is-moving-container {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append span {
+                background-image: $icon-move-down;
             }
         }
 
         &.#{$prefix}-is-moving-section {
-            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append,
-            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append {
-                background-image: url("/admin/webpages/page-builder/images/move-bottom.png");
+            .#{$prefix}-container > .#{$prefix}-plus-button.#{$prefix}-append span,
+            .#{$prefix}-section > .#{$prefix}-plus-button.#{$prefix}-append span {
+                background-image: $icon-move-down;
             }
         }
 

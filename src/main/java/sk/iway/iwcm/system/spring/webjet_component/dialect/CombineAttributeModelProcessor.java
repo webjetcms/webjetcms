@@ -174,7 +174,7 @@ public class CombineAttributeModelProcessor extends AbstractIwcmAttributeModelPr
             }
 
             if (Tools.isNotEmpty(basePath) && (l.endsWith(".js") || l.endsWith(".css"))) {
-                if (l.startsWith(basePath)==false && l.startsWith("/templates/")==false) l = basePath + l;
+                if (l.startsWith(basePath)==false && l.startsWith("/templates/")==false && l.startsWith("/components/")==false) l = basePath + l;
             }
 
             if (l.contains("page_functions")) {

@@ -4,6 +4,175 @@ Before(({ login }) => {
     login('admin');
 });
 
+Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Novinky', '#components-news-title', null, false);
+
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.say('Check tabs');
+        I.seeElement("#pills-dt-component-datatable-basic-tab");
+        I.seeElement("#pills-dt-component-datatable-templates-tab");
+        I.seeElement("#pills-dt-component-datatable-perex-tab");
+        I.seeElement("#pills-dt-component-datatable-filter-tab");
+        I.seeElement("#pills-dt-component-datatable-news-tab");
+        I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
+
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+        I.clickCss("button.btn-vue-jstree-add");
+        I.waitForVisible("div#jsTree");
+        I.click(locate('a.jstree-anchor').withText("Jet portal 4"));
+        I.waitForInvisible("div#jsTree");
+
+        I.clickCss("button.btn-vue-jstree-add");
+        I.waitForVisible("div#jsTree");
+        I.click(locate('a.jstree-anchor').withText("Newsletter"));
+        I.waitForInvisible("div#jsTree");
+
+        I.checkOption("#DTE_Field_alsoSubGroups_0");
+        DTE.selectOption("publishType", "Nasledujúce (začiatok je v budúcnosti)");
+        DTE.selectOption("order", "Ratingu");
+        I.fillField("#DTE_Field_pageSize", 25);
+        I.fillField("#DTE_Field_offset", 8);
+        I.checkOption("#DTE_Field_checkDuplicity_0");
+        I.fillField("#DTE_Field_contextClasses", 'iway"sk", test ",pokus"');
+
+    I.clickCss("#pills-dt-component-datatable-templates-tab");
+        I.click( locate("label.custom-template").withChild(locate("span").withText("news01")) );
+
+    I.clickCss("#pills-dt-component-datatable-perex-tab");
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
+
+    I.clickCss("#pills-dt-component-datatable-filter-tab");
+        addFilter(I, "AUTHOR_ID", "<=", "666");
+        addFilter(I, "DATE_CREATED", "=", "05.05.2025");
+        addFilter(I, "DATA", "Končí na", 'Kokos, "je", king"');
+        addFilter(I, "AVAILABLE", "=", "false");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const checkParams1 = {
+        groupIds: '1+27',
+        alsoSubGroups: 'true',
+        publishType: 'next',
+        order: 'rating',
+        ascending: 'true',
+        paging: 'false',
+        pageSize: '25',
+        offset: '8',
+        perexNotRequired: 'false',
+        loadData: 'false',
+        checkDuplicity: 'true',
+        docMode: '0',
+        template: 'news01',
+        perexGroup: '3+794',
+        perexGroupNot: '1+2',
+    };
+
+    await Apps.assertParams(checkParams1);
+
+    //Check filter values .. because of format I cant use assertParams
+    Apps.switchEditor('html');
+    I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
+    I.see("filter[AUTHORID_le]=666,");
+    I.see("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
+    I.see("filter[AVAILABLE_eq]=false");
+    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
+
+    Apps.switchEditor('standard');
+    Apps.openAppEditor();
+
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Jet portal 4']") );
+        I.seeElement( locate(".DTE_Field_Name_groupIds").find("input[value='/Newsletter']") );
+
+        //Remove first folder
+        I.click( locate(".DTE_Field_Name_groupIds").find("button.btn-vue-jstree-item-remove") );
+
+    I.clickCss("#pills-dt-component-datatable-perex-tab");
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("ďalšia perex skupina") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
+        I.seeCheckboxIsChecked( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("podnikanie") ));
+
+        //Uncheck
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("kalendar-udalost") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("investícia") ));
+
+        //Check new one
+        I.click( locate(".DTE_Field_Name_perexGroup").find( locate("label").withText("PerexWithGroup_A") ));
+        I.click( locate(".DTE_Field_Name_perexGroupNot").find( locate("label").withText("PerexWithGroup_B") ));
+
+    I.clickCss("#pills-dt-component-datatable-filter-tab");
+        checkFilter(I, 1, "AUTHOR_ID", "<=", "666");
+        checkFilter(I, 2, "DATE_CREATED", "=", "2025-05-05");
+        checkFilter(I, 3, "DATA", "Končí na", 'Kokos, "je", king"');
+        checkFilter(I, 4, "AVAILABLE", "false", null);
+
+        I.say("Remove some filters");
+            I.click( locate("#filtersTable > tbody > tr:nth-child(1)").find("input.filter-row-select"));
+            I.click( locate("#filtersTable > tbody > tr:nth-child(2)").find("input.filter-row-select"));
+            I.click( locate("#filtersDiv").find("button.btn-danger") );
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const checkParams2 = {
+        groupIds: '27',
+        alsoSubGroups: 'true',
+        publishType: 'next',
+        order: 'rating',
+        ascending: 'true',
+        paging: 'false',
+        pageSize: '25',
+        offset: '8',
+        perexNotRequired: 'false',
+        loadData: 'false',
+        checkDuplicity: 'true',
+        docMode: '0',
+        template: 'news01',
+        perexGroup: '3+625',
+        perexGroupNot: '626+2'
+    };
+
+    await Apps.assertParams(checkParams2);
+
+    //Check filter values .. because of format I cant use assertParams
+    Apps.switchEditor('html');
+    I.see('filter[DATA_ew]=&quot;Kokos, \\&quot;je\\&quot;, king\\&quot;&quot;,');
+    I.dontSee("filter[AUTHORID_le]=666,");
+    I.dontSee("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
+    I.see("filter[AVAILABLE_eq]=false");
+    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
+});
+
+function addFilter(I, docField, operator, value) {
+    I.say("Adding filter");
+    I.clickCss("button.btn-success");
+    I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("select.fieldSelect") , docField);
+    I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.operatorTd > select") , operator);
+    if(value != null) {
+        if ("true" === value || "false" === value) {
+            I.selectOption( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > select") , value);
+        } else {
+            I.fillField( locate("#filtersTable > tbody > tr:last-child").find("td.valueTd > input") , value);
+        }
+    }
+
+}
+
+function checkFilter(I, position, docField, operator, value) {
+    I.say("Checking filter");
+    I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("select.fieldSelect"),  docField);
+    I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.operatorTd > select"),  operator);
+    if(value != null) { I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.valueTd > input"),  value); }
+}
+
 Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
 
     I.amOnPage("/apps/news/admin/");
@@ -44,7 +213,7 @@ Scenario('logoff', ({ I }) => {
     I.logout();
 });
 
-Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
+Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=10");
     DTE.waitForEditor();
 
@@ -62,14 +231,13 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.waitForElement("#tabLink1")
+    I.waitForElement("#pills-dt-component-datatable-basic-tab")
     I.wait(3);
 
     //
     I.say("check pages only from group 24");
-    I.switchTo("#componentIframeWindowTab");
-    I.waitForElement("th.dt-th-title input", 20);
-
+    I.clickCss("#pills-dt-component-datatable-news-tab");
+    I.switchTo("#newsListIframe");
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
     I.dontSee("Produktová stránka - B verzia");
@@ -81,51 +249,26 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.clickCss("#tabLink1");
-    I.fillField("#groupIds", "24,25");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+    I.clickCss("button.btn-vue-jstree-add");
+    I.waitForVisible("div#jsTree");
+    I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
+    I.click(locate('a.jstree-anchor').withText("Produktová stránka"));
+    I.waitForInvisible("div#jsTree");
 
     //
     I.say("check pages from group 24 and 25");
-    I.clickCss("#tabLink5");
+    I.clickCss("#pills-dt-component-datatable-news-tab");
     I.wait(3);
-    I.switchTo("#componentIframeWindowTab");
+    I.switchTo("#newsListIframe");
     I.waitForElement("th.dt-th-title input", 20);
 
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
-    I.see("Produktová stránka - B verzia")
-
-    I.switchTo();
-});
-
-Scenario('show perex groups by selected groupIds pageParams', async ({ I, DT, DTE, Document }) => {
-    //perex groups may be show only on selected folders
-    //when you setup news component it will show it by current folder
-    //they should be dependent also on selected groupIds by pageParams
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=10");
-    DTE.waitForEditor();
-
-    Document.editorComponentOpen();
-
-    I.waitForElement("#tabLink3")
-    I.clickCss("#tabLink3"); //znacky
-    let options = await I.grabHTMLFrom('#disabledItemsLeft1');
-    I.assertContain(options, "podnikanie (id:2)");
-    I.assertNotContain(options, "Newsletter perex skupina (id:10)");
-
-    I.clickCss("#tabLink1"); //parametre aplikacie
-    I.fillField("#groupIds", "24,27");
-
-    I.say("Updating news component pageParams");
-    Document.editorComponentOk();
-
-    Document.editorComponentOpen();
-
-    I.waitForElement("#tabLink3");
-    I.clickCss("#tabLink3"); //znacky
-    options = await I.grabHTMLFrom('#disabledItemsLeft1');
-    I.assertContain(options, "podnikanie (id:2)");
-    I.assertContain(options, "Newsletter perex skupina (id:10)");
+    I.dontSee("Produktová stránka - B verzia");
+    I.see("/Jet portal 4/Zo sveta financií", "#groupIdFilterSelect option");
+    I.dontSee("/Newsletter", "#groupIdFilterSelect option");
+    I.see("/Jet portal 4/Produktová stránka", "#groupIdFilterSelect option");
 
     I.switchTo();
 });
@@ -169,18 +312,24 @@ Scenario("logout", ({ I }) => {
     I.logout();
 });
 
-function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
+function verifyDocMode(docMode, subGroupsDepth, I, Apps, checkNewsMain = false) {
 
-    Apps.openAppEditor(null, "componentsWindowTableMainDiv");
-    I.clickCss('#tabLink1');
-    I.selectOption('docMode', ""+docMode) //Zobraziť všetky stránky vrátane hlavných stránok priečinkov
-    I.fillField('subGroupsDepth', ""+subGroupsDepth);
+    let option = "";
+    if(docMode === 0) { option = "Zobraziť všetky stránky vrátane hlavných stránok priečinkov"; }
+    else if(docMode === 1) { option = "Zobraziť iba hlavné stránky priečinkov"; }
+    else if(docMode === 2) { option = "Vylúčiť hlavné stránky priečinkov"; }
+
+    Apps.openAppEditor(null, "pills-dt-component-datatable-basic");
+    I.clickCss('#pills-dt-component-datatable-basic');
+    I.selectOption('#DTE_Field_docMode', option);
+    I.fillField('#DTE_Field_subGroupsDepth', subGroupsDepth);
     Apps.confirm();
 
     I.switchTo(".cke_wysiwyg_frame.cke_reset");
     I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
 
+    const newsMainPerex = "Novinky main page perex";
     const newsPage = "Novinka 2025-01";
     const newsPageSubfolderLevel2 = "Novinka 2025Q2-01";
     const mainFolder = "2025 folder";
@@ -190,14 +339,17 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
         //all pages include main
         I.waitForText(newsPage, 10, "h3 a");
         I.see(mainFolder, "p");
+        if (checkNewsMain) I.see(newsMainPerex, "p");
     } else if (docMode == 1) {
         //only main pages
         I.waitForText(mainFolder, 10, "p");
         I.dontSee(newsPage, "h3 a");
+        if (checkNewsMain) I.see(newsMainPerex, "p");
     } else if (docMode == 2) {
         //no main pages
         I.waitForText(newsPage, 10, "h3 a");
         I.dontSee(mainFolder, "p");
+        if (checkNewsMain) I.dontSee(newsMainPerex, "p");
     }
 
     //test subGroupsDepth
@@ -227,7 +379,7 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
     I.switchTo();
 }
 
-Scenario("docMode and subGroupsDepth", ({ I, DT, DTE, Apps }) => {
+Scenario("docMode and subGroupsDepth", ({ I, Apps }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=146543");
 
@@ -238,6 +390,19 @@ Scenario("docMode and subGroupsDepth", ({ I, DT, DTE, Apps }) => {
     verifyDocMode(1, -1, I, Apps);
     //no main pages
     verifyDocMode(2, -1, I, Apps);
+});
+
+Scenario("BUG: news from other folders and docMode", ({ I, Apps }) => {
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150415");
+
+    //all pages include main
+    verifyDocMode(0, -1, I, Apps, true);
+    verifyDocMode(0, 1, I, Apps, true);
+    //only main pages
+    verifyDocMode(1, -1, I, Apps, true);
+    //no main pages
+    verifyDocMode(2, -1, I, Apps, true);
 });
 
 Scenario("logout2", ({ I }) => {

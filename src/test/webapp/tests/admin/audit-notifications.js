@@ -4,14 +4,16 @@ const docId = 164;
 const auditEvent = `UPDATE:
 id: ${docId}
 date_created: `;
-const email = 'auditnotification@fexpost.com';
+var email = null;
 
-Before(({ I, login }) => {
+Before(({ I, login, TempMail }) => {
     login('admin');
+
+    if (email == null) email = 'auditnotification'+TempMail.getTempMailDomain();
 });
 
 Scenario('Test for Event Notification and Cache Handling in Audit Notifications', async ({ I, DT, DTE, TempMail}) => {
-    TempMail.login('auditnotification');
+    await TempMail.login('auditnotification');
     await TempMail.destroyInbox();
     savePage(I, DTE);
     await verifyEmailNotification(I, TempMail, false);
@@ -50,7 +52,7 @@ function savePage(I, DTE) {
 }
 
 async function verifyEmailNotification(I, TempMail, expectNotification){
-    TempMail.login('auditnotification');
+    await TempMail.login('auditnotification');
     if (expectNotification) I.waitForText('Notifikácia akcie:SAVEDOC', 20);
 
     if (!await TempMail.isInboxEmpty())

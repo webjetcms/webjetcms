@@ -320,7 +320,7 @@ Scenario("sending notifications to email", async ({I, DTE, TempMail, Document}) 
     I.waitForText("Toto je VLASTNA odpoved na testovaci prispevok. "+random, 10)
 
     I.say('Checking if the dialog was NOT received');
-    TempMail.login('webjetcms1');
+    await TempMail.login('webjetcms1');
     if (!await TempMail.isInboxEmpty()){
         TempMail.openLatestEmail();
         I.dontSee(subject);
@@ -334,7 +334,7 @@ Scenario("sending notifications to email", async ({I, DTE, TempMail, Document}) 
     I.clickCss("div.ui-dialog button.btn.btn-primary");
 
     I.say('Checking if the dialog was received');
-    TempMail.login('webjetcms1');
+    await TempMail.login('webjetcms1');
     TempMail.openLatestEmail();
     I.see('Do diskusie bola pridaná odpoveď na váš príspevok');
     I.see(subject);

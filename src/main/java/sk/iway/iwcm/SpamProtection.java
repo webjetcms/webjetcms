@@ -1,9 +1,7 @@
 package sk.iway.iwcm;
 
-import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.ConfDetails;
-
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -91,75 +89,83 @@ public class SpamProtection
 		{
 			public void run()
 			{
-				Set<String> allIps;
-				Set<String> allIpsInMinit;
-				long now = System.currentTimeMillis();
-				long hourAgo = now - 60 * 1000 * 60;
-				long fiveMinitAgo = now - 60 * 1000 * 5;
-
-				allIps = lastAccessedTime.keySet();
-				allIpsInMinit = lastAccessedTimeInMinit.keySet();
-
-				for (String ip : allIps)
-				{
-					int hashCode = ip.hashCode();
-					if (hashCode < 0)
-						hashCode *= -1;
-					synchronized (locks[hashCode % LOCKS_COUNT])
-					{
-						if (lastAccessedTime.get(ip).longValue() < hourAgo)
-						{
-							userTracking.remove(ip);
-							lastAccessedTime.remove(ip);
-						}
-					}
-				}
-
-				for (String ip : allIpsInMinit)
-				{
-					int hashCode = ip.hashCode();
-					if (hashCode < 0)
-						hashCode *= -1;
-					synchronized (locks[hashCode % LOCKS_COUNT])
-					{
-						if (lastAccessedTimeInMinit.get(ip).longValue() < fiveMinitAgo)
-						{
-							userMinitTracking.remove(ip);
-							lastAccessedTimeInMinit.remove(ip);
-						}
-					}
-				}
-
-				allIps = userTracking.keySet();
-				for (String ip : allIps)
-				{
-					int hashCode = ip.hashCode();
-					if (hashCode < 0)
-						hashCode *= -1;
-					synchronized (locks[hashCode % LOCKS_COUNT])
-					{
-						Map<String, UserTrackRecord> moduleRecords = userTracking.get(ip);
-						for (UserTrackRecord r : moduleRecords.values())
-							r.cleanOldRecords();
-					}
-				}
-
-				allIpsInMinit = userMinitTracking.keySet();
-				for (String ip : allIpsInMinit)
-				{
-					int hashCode = ip.hashCode();
-					if (hashCode < 0)
-						hashCode *= -1;
-					synchronized (locks[hashCode % LOCKS_COUNT])
-					{
-						Map<String, UserTrackMinitRecord> moduleRecords = userMinitTracking.get(ip);
-						for (UserTrackMinitRecord r : moduleRecords.values())
-							r.cleanOldRecords();
-					}
-				}
+				clearOldData();
 			}
 		};
 		return clearer;
+	}
+
+	protected static void clearOldData() {
+		try {
+			Set<String> allIps;
+			Set<String> allIpsInMinit;
+			long now = System.currentTimeMillis();
+			long hourAgo = now - 60 * 1000 * 60;
+			long fiveMinitAgo = now - 60 * 1000 * 5;
+
+			allIps = lastAccessedTime.keySet();
+			allIpsInMinit = lastAccessedTimeInMinit.keySet();
+
+			for (String ip : allIps)
+			{
+				int hashCode = ip.hashCode();
+				if (hashCode < 0)
+					hashCode *= -1;
+				synchronized (locks[hashCode % LOCKS_COUNT])
+				{
+					if (lastAccessedTime.get(ip).longValue() < hourAgo)
+					{
+						userTracking.remove(ip);
+						lastAccessedTime.remove(ip);
+					}
+				}
+			}
+
+			for (String ip : allIpsInMinit)
+			{
+				int hashCode = ip.hashCode();
+				if (hashCode < 0)
+					hashCode *= -1;
+				synchronized (locks[hashCode % LOCKS_COUNT])
+				{
+					if (lastAccessedTimeInMinit.get(ip).longValue() < fiveMinitAgo)
+					{
+						userMinitTracking.remove(ip);
+						lastAccessedTimeInMinit.remove(ip);
+					}
+				}
+			}
+
+			allIps = userTracking.keySet();
+			for (String ip : allIps)
+			{
+				int hashCode = ip.hashCode();
+				if (hashCode < 0)
+					hashCode *= -1;
+				synchronized (locks[hashCode % LOCKS_COUNT])
+				{
+					Map<String, UserTrackRecord> moduleRecords = userTracking.get(ip);
+					for (UserTrackRecord r : moduleRecords.values())
+						r.cleanOldRecords();
+				}
+			}
+
+			allIpsInMinit = userMinitTracking.keySet();
+			for (String ip : allIpsInMinit)
+			{
+				int hashCode = ip.hashCode();
+				if (hashCode < 0)
+					hashCode *= -1;
+				synchronized (locks[hashCode % LOCKS_COUNT])
+				{
+					Map<String, UserTrackMinitRecord> moduleRecords = userMinitTracking.get(ip);
+					for (UserTrackMinitRecord r : moduleRecords.values())
+						r.cleanOldRecords();
+				}
+			}
+		} catch (Exception e) {
+			Logger.error(SpamProtection.class, "Error in SpamProtection clearer thread: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -228,9 +234,7 @@ public class SpamProtection
 	}
 
 	/**
-	 * Momentalne kvoli ing insurance
-	 * Systém CMS dovolí prepísať profil maximálne 3x za sebou v priebehu jednej minúty, v takom
-	 * prípade povolí zápis až 5 minút od posledného zápisu
+	 * Kontrola počtu zápisov za minútu
 	 * @param module
 	 * @param request
 	 * @return
@@ -336,6 +340,11 @@ public class SpamProtection
 		}
 	}
 
+	protected static void fakeFirstPostTimeForTesting(String module, String ip, long time) {
+		UserTrackRecord trackRecord = UserTrackRecord.getTrackRecordsFor(ip, module);
+		trackRecord.records.add(0, time);
+	}
+
 
 	private static class UserTrackRecord
 	{
@@ -401,7 +410,11 @@ public class SpamProtection
 
 			if (records.size() >= hourlyLimit){
 				long wait = getFirstPostTime() + 60*1000*60 - now + 1;	//napr. 40 sekund => 0 minut -> preto +1
-				return wait;
+				if (wait > 0L) return wait;
+				else if (wait < -1000L) {
+					//cleaner thread is not working, there is old records, clean them now
+					SpamProtection.clearOldData();
+				}
 			}
 			return 0;
 		}
@@ -441,7 +454,7 @@ public class SpamProtection
 
 		private UserTrackMinitRecord(String module,String userIp)
 		{
-			this.records = new ArrayList<>(getMinitPostLimit(module));
+			this.records = new ArrayList<>();
 		}
 
 		static UserTrackMinitRecord getTrackRecordsFor(String ip,String module)
@@ -516,7 +529,7 @@ public class SpamProtection
 
 		private UserTrackMinuteRecord(String module,String userIp)
 		{
-			this.records = new ArrayList<>(getMinutePostLimit(module));
+			this.records = new ArrayList<>();
 		}
 
 		static UserTrackMinuteRecord getTrackRecordsFor(String ip,String module)
@@ -534,27 +547,27 @@ public class SpamProtection
 			return theRecord;
 		}
 
-		/*public void cleanOldRecords()
+		public void cleanOldRecords()
 		{
 			long now = System.currentTimeMillis();
-			long fiveMinuteAgo = now - 60 * 1000 * 5;
+			long minuteAgo = now - 60 * 1000;
 
 			while(!records.isEmpty())
 			{
-				if (records.get(0) < fiveMinuteAgo)
+				if (records.get(0) < minuteAgo)
 					records.remove(0);
 				else
 					break;
 			}
-		}*/
+		}
 
 		public boolean getToken(String module)
 		{
 			if (records.size() >= getMinutePostLimit(module))
 				return false;
 			long now = System.currentTimeMillis();
-			long MinuteAgo = now - 60 * 1000;
-			if(this.getFirstPostTime() < MinuteAgo)	records.clear();
+			long minuteAgo = now - 60 * 1000;
+			if(this.getFirstPostTime() < minuteAgo)	records.clear();
 			records.add(now);
 			return true;
 		}
@@ -562,8 +575,11 @@ public class SpamProtection
 		public long getWaitTime(String module){
 			long now = System.currentTimeMillis();
 			if (records.size() >= getMinutePostLimit(module)){
-				long wait = getLastPostTime() + 60*1000*5 - now;
-				return wait;
+				long wait = getLastPostTime() + 60*1000 - now;
+				if (wait > 0L) return wait;
+				else if (wait < 0L) {
+					cleanOldRecords();
+				}
 			}
 			return 0;
 		}
@@ -586,9 +602,9 @@ public class SpamProtection
 
 	public static int getMinutePostLimit(String module)
 	{
-		ConfDetails cd = ConfDB.getVariable(MINUTE_LIMIT_KEY+"-"+module);
-		int minuteLimit = Integer.parseInt(cd.getValue());
-		//if (minuteLimit < 1 && minuteLimit >= -1) minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY);
+		int minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY+"-"+module);
+		//-1 returns when constant does not exist, use default
+		if (minuteLimit == -1) minuteLimit = Constants.getInt(MINUTE_LIMIT_KEY);
 		return minuteLimit;
 	}
 

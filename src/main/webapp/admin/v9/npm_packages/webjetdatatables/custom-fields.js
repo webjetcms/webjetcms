@@ -27,6 +27,11 @@ function getFieldValue(value, action, fieldType) {
         value = value.replaceAll(/&lt;/gi, "<");
         value = value.replaceAll(/&gt;/gi, ">");
         return value;
+    } else if(fieldType === "textarea") {
+        //do not replace & or other html entities except < and >, they are allready handled
+        return value
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
     } else {
         value = value.replace(/"/gi, "&quot;");
         if(action === "create") return getEmptyStringFieldValue();
@@ -119,7 +124,7 @@ export function update(EDITOR, action) {
 
     //pomen mena poli
     var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
-    var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control">{value}</textarea>';
+    var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';

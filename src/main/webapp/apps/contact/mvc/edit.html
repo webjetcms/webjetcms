@@ -1,7 +1,7 @@
 <h3 data-th-text="#{components.contact.dialog_title}">Kontakt</h3>
 
 <!--/* https://spring.io/guides/gs/handling-form-submission/ */-->
-<form data-th-action="${request.getAttribute('ninja').page.urlPath}" data-th-object="${entity}" method="post">
+<form data-th-action="${request.getAttribute('ninja').page.urlPath}" data-th-object="${entity}" method="post" enctype="multipart/form-data">
     <div data-th-if="${error!=null}" class="alert alert-danger">
         <!--/* https://www.baeldung.com/spring-thymeleaf-error-messages */-->
         <p data-th-text="#{chat.form_fill_error}"></p>
@@ -46,6 +46,10 @@
     <div class="mb-3">
         <label class="form-label" data-th-text="#{components.contact.property.phone}"></label>
         <input type="text" class="form-control" data-th-field="*{phone}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{form.document.not_null}"></label>
+        <input type="file" class="form-control" data-th-field="*{document}">
     </div>
     <button type="submit" class="btn btn-primary" data-th-text="#{button.submit}" name="saveForm">Submit</button>
     <input type="hidden" name="id" data-th-field="*{id}"/>

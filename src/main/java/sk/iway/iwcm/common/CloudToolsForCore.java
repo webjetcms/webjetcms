@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import cvu.html.HTMLTokenizer;
 import cvu.html.TagToken;

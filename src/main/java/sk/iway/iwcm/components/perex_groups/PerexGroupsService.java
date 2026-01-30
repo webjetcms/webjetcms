@@ -23,6 +23,7 @@ public class PerexGroupsService {
 
     /**
      * Get all perex groups via repo
+     * DO NOT USE IN CODE instead use DocDB.getPerexGroups() method which caches the data
      * @return
      */
     public static List<PerexGroupsEntity> getPerexGroups() {
@@ -146,7 +147,7 @@ public class PerexGroupsService {
                 //filter available groups from only current domain
 
                 if(Tools.isEmpty(availableGroups)) {
-                    availableGroups = CloudToolsForCore.getDomainId() + "";
+                    availableGroups = String.valueOf(CloudToolsForCore.getDomainId());
                 } else {
                     Logger.debug(PerexGroupsService.class, " Removing availableGroups [ "+availableGroups+" ] from other domains");
                     GroupDetails gd = null;
@@ -234,19 +235,7 @@ public class PerexGroupsService {
             //Logger.println(this,"UPDATE: " +groupName+ "  " +groupId);
 
             if (!found) {
-                // FIX - sivan, fix aby bolo mozne pri edite perexGroups pridat availableGroups
-                if(InitServlet.isTypeCloud() == false) {
-                    if (entity.getEditorFields() != null) {
-                        List<GroupDetails> availableGroupsList = entity.getEditorFields().getAvailableGroups();
-                        if(availableGroupsList != null && availableGroupsList.size() > 0) {
-                            for(GroupDetails group : availableGroupsList) {
-                                entity.addAvailableGroup(group.getGroupId());
-                            }
-                        }
-                    }
-                } else {
-                    entity.setAvailableGroups(availableGroups);
-                }
+                entity.setAvailableGroups(availableGroups);
                 saved = perexGroupsRepository.save(entity);
                 docDB.getPerexGroups(true);
             } else {

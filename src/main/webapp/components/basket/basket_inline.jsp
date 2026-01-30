@@ -14,6 +14,8 @@
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
 
+  String displayCurrency = EshopService.getDisplayCurrency(request);
+
   DocDB docDB = DocDB.getInstance();
 
   PageParams pageParams = new PageParams(request);
@@ -35,7 +37,7 @@
     %>
          <div style='display:none'>
         <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=displayCurrency%>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
         <script type="text/javascript">
         <!--
@@ -278,7 +280,7 @@
 
           var result = "";
 
-          result += '<tr class="itemTr itemTr itemId_'+ options.id +'">';
+          result += '<tr class="itemTr itemId_'+ options.id +'">';
 
           result += '<td class="first"><a class="newWindow" href="'+ options.link +'">'+ options.title +'</a></td>';
 
@@ -346,9 +348,9 @@
                  <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:beanWrite name="good" property="itemQty"/>">
                  <a href="javascript:void(0)" class="addItem">Add item</a>
                </td>
-               <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+               <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=displayCurrency%>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-               <td class="fL" style="text-align: right; padding-right: 150px;"><span class="mob">/</span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+               <td class="fL" style="text-align: right; padding-right: 150px;"><span class="mob">/</span><iway:curr currency="<%=displayCurrency%>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
                <td class="delete">
                   <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>">Delete</a>
                  </td>
@@ -372,7 +374,7 @@
                 </a>
               </span>
              <span class="basketPrice">
-               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+               <iway:curr currency="<%=displayCurrency%>">
                  <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span>

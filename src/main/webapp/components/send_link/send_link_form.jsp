@@ -345,7 +345,7 @@ else
 							</div>
 						</div>
 
-						<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("send_link")) { %>
+						<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("send_link", request)) { %>
 						<div class="row form-group">
 							<div class="col-md-3">
 								<label for="wjcaptcha1"><iwcm:text key="captcha.enterTextFromImage"/>:</label>

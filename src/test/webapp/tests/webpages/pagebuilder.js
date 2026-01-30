@@ -176,16 +176,7 @@ Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
     DTE.cancel();
 });
 
-Scenario('check toolbar elements', ({I, DTE, Document}) => {
-    //reset PB settings
-    //Document.resetPageBuilderMode();
-
-    //stranka s PB
-    I.resizeWindow(1280, 960);
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
-    DTE.waitForEditor();
-    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
-
+function openStyleModal(I, colSelector=".col-3") {
     I.waitForElement("div.exit-inline-editor", 10);
     I.seeElement("div.exit-inline-editor");
     I.seeElement("#trEditor div.wysiwyg");
@@ -202,16 +193,37 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.waitForElement("#wjInline-docdata.pb-wrapper", 10);
     I.say("Click on col toolbar");
     I.seeElementInDOM("section:nth-child(1) aside.pb-toolbar");
-    I.forceClick({css: "section:nth-child(1) .container .row .col-3:nth-child(1) aside.pb-toolbar"});
-    I.seeElement("section:nth-child(1) .container .row .col-3:nth-child(1) aside.pb-highlighter__top");
+    I.forceClick({css: "section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-toolbar"});
+    I.seeElement("section:nth-child(1) .container .row "+colSelector+":nth-child(1) aside.pb-highlighter__top");
 
     //
     I.say("Open style modal");
     I.forceClick({css: "aside.pb-is-toolbar-active span.pb-toolbar-button__style"});
     I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
+}
 
+function closeStyleModal(I) {
     I.forceClick({css: "#wjInline-docdata.pb-is-modal-open div.pb-modal .pb-modal__footer .pb-modal__footer__button-close"});
     I.dontSeeElement("#wjInline-docdata div.pb-modal");
+}
+
+function saveStyleModal(I) {
+    I.forceClick({css: "#wjInline-docdata.pb-is-modal-open div.pb-modal .pb-modal__footer .pb-modal__footer__button-save"});
+    I.dontSeeElement("#wjInline-docdata div.pb-modal");
+}
+
+Scenario('check toolbar elements', ({I, DTE, Document}) => {
+    //reset PB settings
+    //Document.resetPageBuilderMode();
+
+    //stranka s PB
+    I.resizeWindow(1280, 960);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
+
+    openStyleModal(I);
+    closeStyleModal(I);
 
     //
     I.say("check styleCombo options");
@@ -220,6 +232,9 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.switchTo("iframe.cke_panel_frame");
     I.see("Nadpis 1");
     I.see("baretest1");
+    I.see("Bare TEST 02 bold");
+    I.see("Bare TEST 03");
+    I.see("Bare TEST 04");
     I.switchTo();
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.pressKey(['Escape']);
@@ -363,4 +378,211 @@ Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({
 
     DTE.cancel();
 
+});
+
+function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
+    I.closeOtherTabs();
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    openStyleModal(I, colSelector);
+
+    var color = "0, 116, 217";
+    var columnSelector = "column-content";
+    //
+    if (isCustom) {
+        color = "255, 0, 0";
+        columnSelector = "osk-content";
+        I.say("Check CUSTOM color swatches");
+        I.seeElement({css: '.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]'});
+        I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
+        I.dontSeeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
+        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
+    } else {
+        I.say("Check DEFAULT color picker");
+        I.seeElement({css: '.pb-modal div.minicolors .minicolors-slider'});
+        I.seeElement({css: '.pb-modal div.minicolors .minicolors-grid'});
+        I.clickCss('.pb-modal span.minicolors-swatch-color[style="background-color: rgb('+color+');"]');
+        I.pressKey('Enter');
+    }
+
+    var textToCheck = "div."+columnSelector+"{background-color:rgba("+color+", 1);}";
+
+    saveStyleModal(I);
+
+    //
+    I.say("Check HTML code for applied style");
+    I.switchTo();
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+    I.seeInSource(textToCheck);
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    //
+    I.say("Check mode switching");
+    Apps.switchEditor('html');
+
+    I.seeElement(locate(".CodeMirror span.cm-qualifier").withText(columnSelector));
+    I.seeElement(locate(".CodeMirror span.cm-property").withText("background-color"));
+
+    //split colors and check values
+    var colors = color.split(", ");
+    colors.forEach(function(c, index){
+        I.seeElement(locate(".CodeMirror span.cm-number").withText(c));
+    });
+}
+
+Scenario("custom PB settings", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    checkStyleModal(150095, ".col-md-12", true, I, DTE, Apps);
+    checkStyleModal(147174, ".col-md-3", false, I, DTE, Apps);
+});
+
+Scenario("filtering and tags", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(3);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+
+    I.waitForElement(".library-template-block--section", 10);
+
+    var baseHarmonika = locate(".library-tab-item-button__toggler").withText("Harmonika");;
+    var baseKontakt = locate(".library-tab-item-button__toggler").withText("Kontakt");
+    var subHarmonika = locate(".library-full-width-item").withText("Harmonika");;
+    var subKontakt = locate(".library-full-width-item").withText("Kontaktný formulár");
+    var subKontaktOSK = locate(".library-tab-item-button__toggler").withText("OSK-case3").find(".library-full-width-item").withText("form");
+
+    //
+    I.say("Check main items are present");
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+
+    //
+    I.say("Check main items are not opened");
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Open Harmonika");
+    I.click(baseHarmonika);
+    I.seeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Filter by tag 'form'");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.say("Clear filter");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Search form");
+    I.fillField(".library-filter-block input.library-filter-input", "form");
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.say("Search notfound something");
+    I.fillField(".library-filter-block input.library-filter-input", "notfound");
+    I.wait(1);
+    I.dontSeeElement("div.library-tab-item-button__toggler");
+    I.dontSeeElement("div.library-full-width-item");
+
+    //
+    I.say("Search form + tags");
+    I.fillField(".library-filter-block input.library-filter-input", "form");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.wait(1);
+    I.dontSeeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.seeElement(subKontakt);
+    I.seeElement(subKontaktOSK);
+    I.dontSeeElement(subHarmonika);
+    I.click(locate("label.library-tag-item-btn").withText("Kontakt"));
+    I.dontSeeElement(baseHarmonika);
+    I.dontSeeElement(baseKontakt);
+    I.dontSeeElement(subKontakt);
+    I.seeElement(subKontaktOSK);
+    I.dontSeeElement(subHarmonika);
+
+    //
+    I.click(locate("label.library-tag-item-btn").withText("Kontakt")); //unclick kontakt tag
+    I.fillField(".library-filter-block input.library-filter-input", "harmon");
+    I.seeElement(baseHarmonika);
+    I.dontSeeElement(baseKontakt);
+    I.seeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.say("Clear search");
+    I.fillField(".library-filter-block input.library-filter-input", "");
+    I.wait(1);
+    I.seeElement(baseHarmonika);
+    I.seeElement(baseKontakt);
+    I.dontSeeElement(subHarmonika);
+    I.dontSeeElement(subKontakt);
+
+    //
+    I.switchTo();
+});
+
+Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(3);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+    I.waitForElement(".library-template-block--section", 10);
+
+    //
+    I.say("Inserting contact form block");
+    I.click(locate("label.library-tag-item-btn").withText("Formulár"));
+    I.click(locate(".library-full-width-item").withText("Kontaktný formulár"));
+
+    I.waitForElement(locate("section.pb-section h2.text-center").withText("Contact us"), 10);
+    //check data-pb-id attribute
+    I.seeElement(locate('section[data-pb-id="c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY="]'));
+
+    //
+    I.say("Inserting standard section block");
+    I.click(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+    I.waitForElement(".library-template-block--section", 10);
+    I.click(".pb-library--section .library-tab-link:nth-child(1)"); //first tab
+    I.click('.library-template-block--section .library-tab-item-button[data-library-item-id="pb-basic-2.4"]');
+
+    I.waitForElement(locate("section.pb-section div.col-2.pb-column").withText("Text"), 10);
+
+    I.switchTo();
+    I.resizeWindow(1280, 1200);
+
+    Apps.switchEditor('html');
+    I.seeElement(locate(".CodeMirror-line").withText("!INCLUDE(/components/formsimple/form.jsp"));
+    I.seeElement(locate(".CodeMirror-line").withText('Text'));
+    I.seeElement(locate(".CodeMirror-line .cm-string").withText('col-2'));
+    I.seeElement(locate(".CodeMirror-line .cm-string").withText('c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY'));
+
+    I.wjSetDefaultWindowSize();
 });

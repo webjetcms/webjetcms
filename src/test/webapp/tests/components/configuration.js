@@ -21,7 +21,7 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.see("Predvolená hodnota (default value)");
 });
 
-Scenario('pridanie konfiguracnej premennej', ({ I, DT, DTE }) => {
+Scenario('pridanie konfiguracnej premennej @baseTest', ({ I, DT, DTE }) => {
 
     I.click("button.buttons-create");
     I.click("Pridať");
@@ -47,7 +47,7 @@ Scenario('pridanie konfiguracnej premennej', ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
-Scenario('vyhladanie konfiguracnej premennej', ({ I, DT }) => {
+Scenario('vyhladanie konfiguracnej premennej @baseTest', ({ I, DT }) => {
 
     //hladanie podla mena
     I.fillField("input.dt-filter-name", randomNumber);
@@ -62,7 +62,7 @@ Scenario('vyhladanie konfiguracnej premennej', ({ I, DT }) => {
     I.see(value);
 });
 
-Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
+Scenario("upravenie konfiguracnej premennej @baseTest", ({ I, DTE }) => {
 
     I.fillField("input.dt-filter-name", name);
     I.pressKey('Enter', "input.dt-filter-name");
@@ -89,7 +89,7 @@ Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
 
 //chyba v nastaveni id
 //detto pri editacii existujuceho, ked sa ulozilo a dalo sa znova editovat padlo
-Scenario("overenie nastavenia ID-edit", ({ I, DT, DTE }) => {
+Scenario("overenie nastavenia ID-edit @baseTest", ({ I, DT, DTE }) => {
 
     DT.filterContains("name", name)
     I.click(name);
@@ -104,7 +104,7 @@ Scenario("overenie nastavenia ID-edit", ({ I, DT, DTE }) => {
     I.dontSee("JSON parse error");
 });
 
-Scenario("zmazanie konfiguracnej premennej", ({ I, DT }) => {
+Scenario("zmazanie konfiguracnej premennej @baseTest", ({ I, DT }) => {
 
     I.fillField("input.dt-filter-value", value);
     I.pressKey('Enter', "input.dt-filter-name");
@@ -186,6 +186,71 @@ Scenario("overenie prav editacie vsetkych premennych", ({ I, DT, DTE }) => {
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty.");
 
     DTE.cancel();
+});
+
+Scenario("logout", ({ I }) => {
+    I.logout();
+});
+
+const testConfiguration = "smsSendMaxlength";
+Scenario("check setting oldValue after delete", async ({ I, DT, DTE }) => {
+    const oldValue = 140;
+    const newValue = 299792;
+
+    I.amOnPage("/admin/v9/settings/configuration/");
+
+    I.say("Check actual and default value");
+        I.click(DT.btn.config_add_button);
+        DTE.waitForEditor("configurationDatatable");
+
+        DTE.fillField("name", testConfiguration);
+        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+
+        I.seeInField("#DTE_Field_value", oldValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
+
+    I.say("Change value and check that value stay changed. But original value of not changed.");
+        DTE.fillField("value", newValue);
+        DTE.save();
+
+        DT.filterEquals("name", testConfiguration);
+        I.click(testConfiguration);
+        DTE.waitForEditor("configurationDatatable");
+
+        I.seeInField("#DTE_Field_value", newValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
+        DTE.cancel();
+
+    I.say("Delete value from DB.");
+        I.clickCss("td.dt-select-td");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.dontSee(testConfiguration);
+
+    I.say("Check, that after delete values are back.");
+        I.clickCss("button.buttons-create");
+        DTE.waitForEditor("configurationDatatable");
+
+        DTE.fillField("name", testConfiguration);
+        I.waitForVisible( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+        I.click( locate("div.ui-menu-item-wrapper").withText(testConfiguration) );
+
+        I.seeInField("#DTE_Field_value", oldValue);
+        I.seeInField("#DTE_Field_oldValue", oldValue);
+});
+
+Scenario("Post delete", async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/settings/configuration/");
+    DT.filterEquals("name", testConfiguration);
+    const rowCount = await I.grabNumberOfVisibleElements('#configurationDatatable > tbody > tr > td.dt-row-edit');
+    if(rowCount > 0) {
+        I.clickCss("td.dt-select-td");
+        I.clickCss("button.buttons-remove");
+        I.click("Zmazať", "div.DTE_Action_Remove");
+        DT.waitForLoader();
+        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    }
 });
 
 Scenario("odhlasenie", ({ I }) => {

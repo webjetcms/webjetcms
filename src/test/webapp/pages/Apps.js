@@ -1,6 +1,7 @@
 const { I } = inject();
 const DTE = require("./DTE");
 const DT = require("./DT");
+const i18n = require("./i18n");
 /**
  * Functions for interacting with the application
  */
@@ -109,6 +110,11 @@ module.exports = {
         }
         DTE.waitForEditor();
         //I.wait(5);
+
+        this.openCurrentAppEditor(modalId, editIcon);
+    },
+
+    openCurrentAppEditor(modalId = "component-datatable_modal", editIcon = false) {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
@@ -150,6 +156,15 @@ module.exports = {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
 
+        this.openAppForInsert(applicationName, applicationSelector);
+
+        I.switchTo();
+        I.switchTo();
+        if (shouldClickOkButton)
+            I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    openAppForInsert(applicationName, applicationSelector) {
         I.clickCss('#pills-dt-datatableInit-content-tab');
         I.clickCss('.cke_button.cke_button__components.cke_button_off');
         I.switchTo('.cke_dialog_ui_iframe');
@@ -164,12 +179,8 @@ module.exports = {
         I.clickCss(applicationSelector); //I.clickCss('div.menu-app[data-app-action^="sk.iway"]')
         I.waitForInvisible("div.appStore > div.block-header", 30);
         I.wait(1);
-        I.click("Vložiť do stránky"); //I.clickCss('a.buy');
+        I.click(i18n.get("Add to page")); //I.clickCss('a.buy');
         DTE.waitForEditor("component-datatable");
-        I.switchTo();
-        I.switchTo();
-        if (shouldClickOkButton)
-            I.clickCss('.cke_dialog_ui_button_ok');
     },
 
     /**
@@ -178,6 +189,16 @@ module.exports = {
     confirm() {
         I.switchTo();
         I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_ok");
+        //wait for component preview to load
+        I.wait(3);
+    },
+
+    /**
+     * Click on the Cancel button in the Editor App dialog to discard app settings changes
+     */
+    cancel() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_cancel");
         //wait for component preview to load
         I.wait(3);
     },

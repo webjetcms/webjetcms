@@ -2,6 +2,7 @@
     <div>
         <webjet-overview-dashboard-mini-app-users
             v-bind:overviewadmins="overviewadmins"
+            v-bind:overviewcurrentsessions="overviewcurrentsessions"
         ></webjet-overview-dashboard-mini-app-users>
         <webjet-overview-dashboard-mini-app-todo
             v-bind:overviewtodo="overviewtodo"
@@ -28,7 +29,7 @@ export default {
     WebjetOverviewDashboardMiniAppTodo,
     WebjetOverviewDashboardMiniAppUsers
   },
-  props: ['overviewadmins', 'overviewtodo'],
+  props: ['overviewadmins', 'overviewtodo', 'overviewcurrentsessions'],
 
 }
 </script>
@@ -101,7 +102,7 @@ export default {
 
             li {
                 font-size: 14px;
-                padding-left: 50px;
+                padding-left: 40px;
                 position: relative;
                 min-height: 40px;
                 padding-top: 10px;
@@ -119,14 +120,21 @@ export default {
                     margin-left: 0px;
                 }
 
-                img {
+                img, span.no-photo {
                     border-radius: 50%;
-                    width: 40px;
+                    width: 30px;
                     position: absolute;
                     left: 0;
                     top: 0;
                     bottom: 0;
                     margin: auto;
+                }
+                img {
+                    height: 30px;
+                }
+                span.no-photo {
+                    left: 0px;
+                    top: 6px;
                 }
                 &.show-more {
                     a {

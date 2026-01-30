@@ -9,14 +9,14 @@ const adminlogPublishMsg = "publishStatus: Webpage was published";
 
 let randomNumber;
 
-Before(({ I, login }) => {
-    login('admin');
+Before(({ I }) => {
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
     }
 });
 
 Scenario('Publish notification screens', async ({ I, DT, DTE, TempMail, Document }) => {
+    I.relogin("publishNotification");
     I.say("Set publish action");
     I.amOnPage(testWebpageAdmin);
     DTE.waitForEditor();
@@ -35,7 +35,7 @@ Scenario('Publish notification screens', async ({ I, DT, DTE, TempMail, Document
     I.amOnPage(testWebpageShow);
 
     I.say("Check send mail");
-    TempMail.login('webjetcms');
+    await TempMail.login('webjetcmsnotif');
     TempMail.openLatestEmail();
 
     Document.screenshotElement("div.letter", "/redactor/webpages/editor/publish-email-notification.png");
@@ -49,4 +49,8 @@ Scenario('Publish notification screens', async ({ I, DT, DTE, TempMail, Document
     DT.filterContains("description", adminlogPublishMsg);
 
     Document.screenshot("/redactor/webpages/editor/publish-audit-logs.png");
+});
+
+Scenario('logout', async ({ I }) => {
+    I.logout();
 });

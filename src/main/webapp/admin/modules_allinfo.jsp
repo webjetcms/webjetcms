@@ -206,7 +206,7 @@ String key = null;
 	<display:setProperty name="export.xml.filename" value="modules.xml" />
 	<display:setProperty name="export.pdf.filename" value="modules.pdf" />
 
-	<display:column title="Modul"><%
+	<display:column title="Modul" sortable="true"><%
 		String value = mi.getNameKey();
 		key = null;
 		if (value.startsWith("webjet_cmp_"))
@@ -243,8 +243,8 @@ String key = null;
 
 		out.print(value);
 	%></display:column>
-	<display:column property="nameKey"/>
-	<display:column title="Popis"><%
+	<display:column property="nameKey" sortable="true"/>
+	<display:column title="Popis" sortable="true"><%
 		String descKey = Tools.replace(key, ".title", ".desc");
 		String test = prop.getText(descKey);
 		if (test.equals(descKey)) {
@@ -259,7 +259,7 @@ String key = null;
 			else out.println("<span style='color: red;'>"+descKey+"</span>");
 		}
 	%></display:column>
-	<display:column property="group"/>
+	<display:column property="group" sortable="true"/>
 	<display:column class="center" title="Basic"><% if (mi.getWjVersions().indexOf("B")!=-1) { out.print("X"); basicCount++; } %></display:column>
 	<display:column class="center" title="Professional"><% if (mi.getWjVersions().indexOf("P")!=-1) { out.print("X"); proCount++; } %></display:column>
 	<display:column class="center" title="Enterprise"><% if (mi.getWjVersions().indexOf("E")!=-1) { out.print("X"); entCount++; } %></display:column>

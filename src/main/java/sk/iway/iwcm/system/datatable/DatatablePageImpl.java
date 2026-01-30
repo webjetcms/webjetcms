@@ -87,8 +87,6 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
     public void addOptions(String field, List options, String labelProperty, String valueProperty, boolean includeOriginalObject) {
         List<OptionDto> fieldOptions = getFieldOptions(field);
         for (Object o : options) {
-            BeanWrapperImpl bw = new BeanWrapperImpl(o);
-
             String label;
             String value;
 
@@ -96,6 +94,7 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
                 label = (String)o;
                 value = (String)o;
             } else {
+                BeanWrapperImpl bw = new BeanWrapperImpl(o);
                 label = String.valueOf(bw.getPropertyValue(labelProperty));
                 value = String.valueOf(bw.getPropertyValue(valueProperty));
             }
@@ -103,6 +102,11 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
             Object original;
             if (includeOriginalObject) original = o;
             else original = null;
+
+            //Oracle sees "" as NULL, in select options we usualy want empty string instead of null
+            if (label == null) label = "";
+            if (value == null) value = "";
+
             fieldOptions.add(new OptionDto(label, value, original));
         }
     }

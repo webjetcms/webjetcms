@@ -3,7 +3,20 @@
 }
 
 .baretest2 {
-background-color: yellow;
+    background-color: yellow;
+    /* Bare TEST 02 */
+    font-weight: bold;
+    /* editor title: Bare TEST 02 bold */
+}
+
+.baretest4 { /* Bare TEST 04 */
+    color: red;
+}
+
+span.baretest3 {
+    /* Bare TEST 03 */
+    background-color: pink;
+    /* editor title: Bare TEST 03 */
 }
 
 a.btn.btn-primary {
@@ -13,12 +26,32 @@ a.btn.btn-secondary {
 /*bootstrap default*/
 }
 
-table.table.table.table-dark {
+table.table.table-dark {
 /*bootstrap default*/
 }
-table.table.table.table-striped {
+table.table.table-striped {
 /*bootstrap default*/
 }
 table.table.table-bordered {
 /*bootstrap default*/
+}
+
+section.test-section {
+    background-color: orange;
+}
+section.test-section-green {
+    background-color: green;
+}
+div.container.test-container {
+    background-color: blue;
+}
+
+p.paragraph-green {
+    color: green;
+}
+p.paragraph-red-border {
+    border: 1px solid red;
+}
+p.paragraph-yellow-background {
+    background-color: yellow;
 }

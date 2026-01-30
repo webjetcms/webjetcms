@@ -52,5 +52,6 @@ public class UploadExampleListener extends AbstractUploadListener<Form> {
         //...spravte s formularom co potrebujete
         //
         model.addAttribute("importedFileName", form.getDocument().getOriginalFilename());
+        model.addAttribute("importedFileSize", form.getDocument().getSize());
     }
 }

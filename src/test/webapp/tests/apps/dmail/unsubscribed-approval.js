@@ -8,17 +8,20 @@ let linksFromEmail = [];
 Before(async ({ I, DT, login }) => {
     login('admin');
     if (typeof randomName_1 == "undefined") {
-        let randomNumber = I.getRandomText();
-        randomName_1 = `autotest-1-${randomNumber}`;
-        randomName_2 = `autotest-2-${randomNumber}`;
-        randomName_3 = `autotest-3-${randomNumber}`;
-        randomName_4 = `autotest-4-${randomNumber}`;
+        let randomNumber = I.getRandomTextShort();
+        //replace - with . to avoid issues with some email providers
+        randomNumber = randomNumber.replace(/-/g, '.');
+
+        randomName_1 = `autotest.1.${randomNumber}`;
+        randomName_2 = `autotest.2.${randomNumber}`;
+        randomName_3 = `autotest.3.${randomNumber}`;
+        randomName_4 = `autotest.4.${randomNumber}`;
         baseUrl = await I.grabCurrentUrl();
    }
    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
 });
 
-Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
+Scenario('Preparation - create random subscribers', async ({ I, DT, DTE, TempMail }) => {
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor('campaingsDataTable')
     I.clickCss('#pills-dt-campaingsDataTable-receivers-tab');
@@ -27,7 +30,7 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
     [randomName_1, randomName_2, randomName_3, randomName_4].forEach(randomName => {
         I.click(DT.btn.recipients_add_button);
         DTE.waitForEditor('datatableFieldDTE_Field_recipientsTab')
-        DTE.fillField('recipientEmail', randomName + '@fexpost.com');
+        DTE.fillField('recipientEmail', randomName + TempMail.getTempMailDomain());
         DTE.save('datatableFieldDTE_Field_recipientsTab');
 
         DT.filterContains('recipientEmail', randomName);
@@ -37,15 +40,21 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
         I.clickCss('[id^="confirmationYes"]', "#toast-container-webjet");
     });
     DTE.save('campaingsDataTable');
-});
 
+    //wait for email from campaign to be sent
+    I.wait(5);
+    await TempMail.login(randomName_1);
+    TempMail.openLatestEmail();
+    I.waitForText("testOfUnsucribed", 10, TempMail.getSubjectSelector());
+    await TempMail.destroyInbox(randomName_1);
+});
 
 Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I, TempMail }) => {
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
     I.waitForElement('.ly-content .container', 10);
-    I.fillField('#unsubscribeEmail', randomName_1+'@fexpost.com');
+    I.fillField('#unsubscribeEmail', randomName_1+TempMail.getTempMailDomain());
     I.seeElement(locate('a').withText('Nie, chcem zostať'));
     I.see(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
@@ -56,7 +65,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     await setUnsubscribeText(Apps, DTE, I, '');
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
     I.waitForElement('.ly-content .container', 10);
-    I.fillField('#unsubscribeEmail', randomName_2+'@fexpost.com');
+    I.fillField('#unsubscribeEmail', randomName_2+TempMail.getTempMailDomain());
     I.dontSeeElement(locate('a').withText('Nie, chcem zostať'));
     I.dontSee(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
@@ -79,10 +88,10 @@ Scenario('Email - unsubscribe without confirmation', async ({ I, Document, TempM
     I.closeOtherTabs();
     I.switchTo();
 
-    TempMail.login(randomName_3);
+    await TempMail.login(randomName_3);
     TempMail.openLatestEmail();
 
-    I.click(locate('#info a').withText('odhlásenie'));
+    I.click(locate(TempMail.getContentSelector() + ' a').withText('odhlásenie'));
     await Document.waitForTab();
     I.switchToNextTab();
 
@@ -101,9 +110,9 @@ Scenario('Preparation - set confirmation to true', async ({ I, Apps, DTE }) => {
 
 Scenario('Email - unsubscribe with confirmation', async ({ I, Document, TempMail }) => {
     I.logout();
-    TempMail.login(randomName_4);
+    await TempMail.login(randomName_4);
     TempMail.openLatestEmail();
-    I.click(locate('#info a').withText('odhlásenie'));
+    I.click(locate( TempMail.getContentSelector() + ' a').withText('odhlásenie'));
     await Document.waitForTab();
     I.switchToNextTab();
     await Document.fixLocalhostUrl(baseUrl);
@@ -115,18 +124,18 @@ Scenario('Email - unsubscribe with confirmation', async ({ I, Document, TempMail
     I.waitForText('Email úspešne odhlásený.', 10);
 });
 
-Scenario('Verify if the emails are in unsubscribed mails', ({ Apps, DT, I }) => {
+Scenario('Verify if the emails are in unsubscribed mails', ({ Apps, DT, I, TempMail }) => {
     Apps.openAppEditor('87513');
     I.clickCss('#pills-dt-component-datatable-unsubscribed-tab');
     DT.waitForLoader();
     [randomName_1, randomName_2, randomName_3, randomName_4].forEach(randomName => {
-        DT.filterContains('email', randomName + '@fexpost.com');
+        DT.filterContains('email', randomName + TempMail.getTempMailDomain());
         I.waitForText('Záznamy 1 až 1 z 1', 20);
-        DT.checkTableCell('datatableFieldDTE_Field_unsubscribedEmails', 1, 2, randomName + '@fexpost.com');
+        DT.checkTableCell('datatableFieldDTE_Field_unsubscribedEmails', 1, 2, randomName + TempMail.getTempMailDomain());
     });
 });
 
-Scenario('Check if unsubscription can be reverted', ({ I, Apps, DT }) => {
+Scenario('Check if unsubscription can be reverted', ({ I, Apps, DT, TempMail }) => {
     I.logout();
     I.say("Revert unsubscription, linksFromEmail.length=" + linksFromEmail.length);
     linksFromEmail.forEach((linkFromEmail) => {
@@ -142,18 +151,18 @@ Scenario('Check if unsubscription can be reverted', ({ I, Apps, DT }) => {
     I.clickCss('#pills-dt-component-datatable-unsubscribed-tab');
     DT.waitForLoader();
     [randomName_3, randomName_4].forEach(randomName => {
-        DT.filterContains('email', randomName + '@fexpost.com');
+        DT.filterContains('email', randomName + TempMail.getTempMailDomain());
         I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 20);
     });
 
 });
 
-Scenario('Revert - remove autotest subscribers and set default unsubscribe text', async ({ I, Apps, DT, DTE }) => {
+Scenario('Revert - remove autotest subscribers and set default unsubscribe text', async ({ I, Apps, DT, DTE, TempMail }) => {
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor('campaingsDataTable')
     I.clickCss('#pills-dt-campaingsDataTable-receivers-tab');
     DT.waitForLoader();
-    DT.filterContains('recipientEmail', 'autotest-');
+    DT.filterContains('recipientEmail', 'autotest');
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-select-all');
     I.click(DT.btn.recipients_delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -164,10 +173,10 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
 });
 
 async function handleTempMailSubmission(I, TempMail, login) {
-    TempMail.login(login);
+    await TempMail.login(login);
     TempMail.openLatestEmail();
-    I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
-    const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');
+    I.waitForElement( TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 10);
+    const url = await I.grabAttributeFrom(TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 'href');
     I.amOnPage(url.replace("https", "http"));
 }
 

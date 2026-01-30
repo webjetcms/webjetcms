@@ -8,7 +8,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => {
+Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE, TempMail }) => {
     Apps.insertApp('Používatelia', '#menu-users');
 
     const defaultParams = {
@@ -47,7 +47,7 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
         groupIdsEditable: "4",
         emailUnique: "true",
         successDocId: "141",
-        infoemail: "webjeteditor@fexpost.com",
+        infoemail: "webjeteditor"+TempMail.getTempMailDomain(),
         requireEmailVerification: "false",
         notAuthorizedEmailDocId: "141",
         loginNewUser: "true",
@@ -95,7 +95,7 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
 
     I.checkOption("#DTE_Field_emailUnique_0");
 
-    DTE.fillField("infoemail", "webjeteditor@fexpost.com");
+    DTE.fillField("infoemail", "webjeteditor"+TempMail.getTempMailDomain());
     I.uncheckOption("#DTE_Field_requireEmailVerification_0", )
 
 

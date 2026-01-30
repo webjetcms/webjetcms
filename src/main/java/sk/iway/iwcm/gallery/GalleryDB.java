@@ -51,7 +51,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;

@@ -34,6 +34,7 @@ import com.octo.captcha.service.CaptchaServiceException;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.i18n.Prop;
 
 /**
@@ -50,6 +51,7 @@ import sk.iway.iwcm.i18n.Prop;
 public class Captcha
 {
 	private static String captchaDiv = "<div class=\"g-recaptcha\"id=\"wjReCaptcha\"></div><script src=\"https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit\"async defer></script><script type=\"text/javascript\">var reCaptchaWidgetId=-1;function isReCaptchaValid(){return serverRequest(false)}function serverRequest(setId){var isValid=false;var captchaId=$('#g-recaptcha-response').val();var url='/components/form/re_captcha_ajax.jsp';if(setId)url='/components/form/set_re_catpcha_ajax.jsp';$.ajax({type:'POST',url:url,data:{capchaId:captchaId},success:function(data){if(data.trim()=='OK')isValid=true;else grecaptcha.reset(reCaptchaWidgetId)},async:false});return isValid}var verifyCallback=function(response){serverRequest(true)};var onloadCallback=function(){reCaptchaWidgetId=grecaptcha.render('wjReCaptcha',{'sitekey':'"+Constants.getString("reCaptchaSiteKey")+"','callback':verifyCallback,'theme':'light'})};</script>";
+
 	/**
 	 * Vrati true ak je pre zadanu komponentu vyzadovana captcha (nastavuje sa konfiguracnou premennou captchaComponents ako zoznam oddeleny medzerami)
 	 * @param component
@@ -57,6 +59,28 @@ public class Captcha
 	 */
 	public static boolean isRequired(String component)
 	{
+		return isRequired(component, null);
+	}
+
+	/**
+	 * Vrati true ak je pre zadanu komponentu vyzadovana captcha (nastavuje sa konfiguracnou premennou captchaComponents ako zoznam oddeleny medzerami)
+	 * @param component - meno komponenty OR null to test if captcha is enabled at all
+	 * @param request - ak je zadany request, tak sa skontroluje ci nema sablona vypnutu ochranu proti spamu
+	 * @return
+	 */
+	public static boolean isRequired(String component, HttpServletRequest request)
+	{
+		if ("none".equals(Constants.getString("captchaType"))) {
+			return false;
+		}
+
+		if (request != null) {
+			TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
+			if(temp != null && temp.isDisableSpamProtection()){
+				return false;
+			}
+		}
+
 		if (Tools.isEmpty(component)) return true;
 
 		if ((" "+Constants.getString("captchaComponents")+" ").indexOf(" "+component+" ")!=-1 || (","+Constants.getString("captchaComponents")+",").indexOf(","+component+",")!=-1) return true;
@@ -72,9 +96,13 @@ public class Captcha
 	 */
 	public static boolean validateResponse(HttpServletRequest httpServletRequest, String response, String component)
 	{
+		if (isRequired(null, httpServletRequest)==false) {
+			return true;
+		}
+
 		try
 		{
-			if (component != null && isRequired(component)==false)
+			if (component != null && isRequired(component, httpServletRequest)==false)
 				return true;
 			if("invisible".equals(Constants.getString("captchaType"))) {
 				if (response == null) response = httpServletRequest.getParameter("g-recaptcha-response");
@@ -241,6 +269,10 @@ public class Captcha
 	 */
 	public static boolean isReponseCorrect(HttpServletRequest httpServletRequest, String response)
 	{
+		if (isRequired(null, httpServletRequest)==false) {
+			return true;
+		}
+
 		if (Tools.isEmpty(response)) return false;
 
 		Boolean isResponseCorrect = Boolean.FALSE;

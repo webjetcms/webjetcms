@@ -1,6 +1,5 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.lang.StringUtils;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -123,7 +122,7 @@ public class Constants {
 	}
 
 	public static String mods(String... mod) {
-		return StringUtils.join(mod, ";");
+		return Tools.join(mod, ";");
 	}
 
 	public static void clearValues() {
@@ -200,6 +199,8 @@ public class Constants {
 				"true || false - ak je nastavené na true bude sa vykonávať kontrola práv na zaheslované stránky aj administrátorom (štandardne sa nekontroluje, administrátor má prístup ku všetkým stránkam)");
 		setBoolean("adminRequireSSL", false, MOD_SECURITY,
 				"ak je nastavené na true a na serveri je nastavené SSL pre prístup do admin časti bude vyžadovaný httpS protokol");
+		setString("pathFilterBlockedPaths", ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./", MOD_SECURITY,
+				"zoznam reťazcov oddelených čiarkami, ktoré ak sa nachádzajú v URL ceste budú blokované (vrátené 404). Používa sa na zabránenie odhalenia metadát súborov a adresárov ako .DS_Store, .git, .svn, Thumbs.db, /WEB-INF./web.xml a podobne");
 
 		// server pre aktualizaciu WebJETu
 		setString("updateRemoteServer", "http://license.interway.sk");
@@ -284,7 +285,7 @@ public class Constants {
 				"Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: @interway.sk,podpora@demo.webjet.sk. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu");
 
 		setBoolean("disableWebJETToolbar", false, "editor;webpages",
-				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na false, tak sa to zobrazovať nebude.");
+				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na true, tak sa to zobrazovať nebude.");
 
 		setString("imageMagickDir", "/usr/bin", "editor;performance;gallery",
 				"Ak je nastavene pouzije sa na resize obrazkov prikaz convert z balika ImageMagick");
@@ -449,12 +450,16 @@ public class Constants {
 				"štandartne eur, určuje, v akej mene je cena tovaru, ak nie je žiadna mena zadaná.");
 		setString("basketDisplayCurrency", "eur", MOD_BASKET,
 				"štandartne eur, určuje, v akej mene sa tovar zobrazí v košíku, a pri objednávke. Toto zobrazovanie sa môže zmeniť lokálne podľa používateľa, ak to bude potrebné");
-		setString("kurz_eur_skk", "30.126", MOD_BASKET,
-				"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. napríklad konštanta kurz_eur_skk má hodnotu 30.126 . Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 
 		setString("mapGoogleLicense", "", "map", "predvoleny licencny kluc pre google mapy");
 
-		setString("supportedCurrencies", "skk,eur", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
+		setString("supportedCurrencies", "eur,czk,usd,gbp", MOD_BASKET, "ake meny rozpoznava a dokaze prepocitat");
+		setString("kurz_gbp_czk", "28.002", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_gbp_eur", "1.153", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_gbp_usd", "1.344", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_eur_usd", "1.166", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_eur_czk", "24.230", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
+		setString("kurz_usd_czk", "20.842", MOD_BASKET,"kurz_AAA_BBB - určuje, akým kurzom sa prepočítava mena AAA na menu BBB. Ak táto konštanta nie je uvedená, tak systém nevie prepočítať tovary v mene AAA na menu BBB, a ako kurz berie hodnotu 1");
 
 		setInt("inquiryIpTimeout", 0, "inquiry",
 				"nastavenie dlzky uchovania objektu v cache pre kontrolu IP adries pre ankety, ak hodnota je < 1 tak sa kontrola vypusti");
@@ -860,6 +865,8 @@ public class Constants {
 				"Určuje počet dní platnosti hesla pre administrátora. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
 
 		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", MOD_CONFIG,
+				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
+		setString("stripes.MultipartWrapperFactory.Class", "sk.iway.iwcm.system.stripes.MultipartWrapperFactory", MOD_CONFIG,
 				"Vlastná implementácia Multipart, keďže pôvodný pri Stripes nie je možné použiť, potom by nefungovali veci v admin časti WebJETu (používajúce Struts).");
 		setString("stripes.LocalizationBundleFactory.Class", "sk.iway.iwcm.system.stripes.LocalizationBundleFactory",
 				MOD_CONFIG, "Factory trieda pre prácu s IwayResourceBundle.");
@@ -1462,7 +1469,7 @@ public class Constants {
 
 		setBoolean("reCaptchaEnabled", false, MOD_CAPTCHA,
 				"nastavenim na true, prepne defaultnu WJ captchu na reCaptchu");
-		setString("captchaType", "internal", MOD_CAPTCHA, "Typ capthy. internal / reCaptcha / reCaptchaV3 / invisible");
+		setString("captchaType", "internal", MOD_CAPTCHA, "Typ captchy: internal / reCaptcha / reCaptchaV3 / invisible alebo none pre vypnutie captchy");
 		setBoolean("captchaLoadAfterFocus", true, MOD_CAPTCHA,
 				"Nacitavanie JS pre captchu az po kliknuti do pola formularu");
 
@@ -1523,7 +1530,7 @@ public class Constants {
 				"Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe). Prejavy sa az po restarte wj.");
 
 		setString("editorMagiclineElements",
-				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1",
+				"table: 1, hr: 1, div: 1, ul: 1, ol: 1, dl: 1, form: 1, blockquote: 1, iframe: 1, p: 1, img: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, section: 1, pre: 1, hr: 1, address: 1, article: 1, aside: 1, footer: 1, nav: 1",
 				MOD_EDITOR, "Zoznam elementov pre ktore sa zobrazuje magicline v editore");
 
 		setBoolean("usersBigList", false, MOD_PERFORMANCE,
@@ -1962,6 +1969,10 @@ public class Constants {
 				"Prefix pre PageBuilder, musi voci nemu korespondovat aj CSS PageBuildera (napr. pre CSS PREFIX-column-text-wrapper, predvolene pb-column-text-wrapper)");
 		setString("pageBuilderGrid", "", MOD_EDITOR,
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
+		setInt("pagebuilderFilterAutoOpenItems", 10, MOD_EDITOR,
+				"Počet automaticky otvorených položiek v zozname komponentov PageBuildera pri filtrovaní.");
+		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
+				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
 
 		setString("analyticsTrackerConf", "", MOD_CONFIG,
 				"Slúži na konfiguráciu trackovania analytics eventov z backendu. Uvádajú sa dvojice vzorUrl:trieda oddelené ;. Napr: '/files/filearchiv/:sk.iway.iwcm.FileArchiveAnalytics;/images/trackovane/:sk.iway.iwcm.TrackujObrazok'");

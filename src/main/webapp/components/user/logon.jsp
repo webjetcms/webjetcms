@@ -300,7 +300,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 						</div>
 					</div>
 				</fieldset>
-				<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("usrlogonform")) {%>
+				<% if(sk.iway.iwcm.system.captcha.Captcha.isRequired("usrlogonform", request)) {%>
 					<jsp:include page="/components/form/captcha.jsp" />
 				<%}%>
 			</form>

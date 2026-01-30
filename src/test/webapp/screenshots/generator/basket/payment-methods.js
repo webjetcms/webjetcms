@@ -4,13 +4,13 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Payment methods logic tests', ({I, DT, DTE, Document}) => {
+Scenario('Payment methods logic tests', ({I, DT, DTE, Document, i18n}) => {
     I.amOnPage('/apps/basket/admin/payment-methods/');
 
     Document.screenshot("/redactor/apps/eshop/payment-methods/datatable.png");
 
-    DT.filterEquals("paymentMethodName", "Prevodom");
-    I.click("Prevodom");
+    DT.filterEquals("paymentMethodName", i18n.get("Money Transfer"));
+    I.click(i18n.get("Money Transfer"));
     DTE.waitForEditor("paymentMethodsDataTable");
 
     Document.screenshotElement("#paymentMethodsDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/payment-methods/editor_A.png");

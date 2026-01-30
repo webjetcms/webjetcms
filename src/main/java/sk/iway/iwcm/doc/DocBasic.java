@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.beanutils.BeanUtils;
 
 import sk.iway.iwcm.*;
+import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
 import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.gallery.GalleryDB;
@@ -35,6 +36,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -70,13 +72,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			tab = "basic",
 			editor = {
 					@DataTableColumnEditor(attr = {
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String title;
 
 	@Column(name = "navbar")
@@ -88,13 +89,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 			editor = {
 					@DataTableColumnEditor(attr = {
 							@DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
-							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true"),
-							@DataTableColumnEditorAttr(key = "data-dt-escape-slash", value = "true")
+							@DataTableColumnEditorAttr(key = "data-dt-validation", value = "true")
 					})
 			}
 	)
 	@NotBlank
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String navbar;
 
 	@Column(name = "virtual_path")
@@ -105,7 +105,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			visible = false,
 			className = "DTE_Field_Has_Checkbox"
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String virtualPath = "";
 
 	@Column(name = "editor_virtual_path ")
@@ -174,7 +174,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 					)
 			}
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String externalLink = "";
 
 	@Column(name = "available")
@@ -689,7 +689,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		},
 		renderFormat = "dt-format-image"
 	)
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String perexImage = "";
 
 	@Transient
@@ -757,7 +757,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//Must be change from Transient to Column, because we need save this method
 	// @Size(max = 255)
 	@Column(name = "file_name")
-	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String fileName;
 
 	@Transient
@@ -833,15 +833,15 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@JsonIgnore
 	public String getCurrency()
 	{
-		String itemCurrency = "skk";
+		String itemCurrency = "eur";
 		try
 		{
 			itemCurrency = BeanUtils.getProperty(this, Constants.getString("basketCurrencyField"));
 			if (Tools.isEmpty(itemCurrency))
-				itemCurrency = Constants.getString("basketProductCurrency");
-			//ak sme stale nic nezistili, ideme na zaloznu moznost...skk
+				itemCurrency = BasketTools.getSystemCurrency();
+			//ak sme stale nic nezistili, ideme na zaloznu moznost...eur
 			if (Tools.isEmpty(itemCurrency))
-				itemCurrency = "skk";
+				itemCurrency = "eur";
 		}
 		catch (Exception ex)
 		{
@@ -853,7 +853,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	/**
 	 * Prepocita zadanu cenu z meny vedenej u vyrobku na menu zadanu ako paramater.
 	 * Mena sa zadava v jej medzinarodnom kodovom oznaceni. Najpouzivanejsie meny
-	 * slovenska koruna - skk , ceska - czk, euro - eur, britska libra - gbp, americky dolar - usd.
+	 * ceska - czk, euro - eur, britska libra - gbp, americky dolar - usd.
 	 * AK VYROBOK MOZE MAT VIAC CIEN, zalezajucich od skupiny, v ktorej sa
 	 * pouzivatel nachadza, POUZITE METODU getLocalPrice()
 	 *
@@ -863,31 +863,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal calculateLocalPrice(BigDecimal basePrice, String userCurrency)
 	{
-		String itemCurrency = getCurrency();
-		userCurrency = userCurrency.toLowerCase();
-		// samotny prepocet mien
-		if (!itemCurrency.equalsIgnoreCase(userCurrency))
-		{
-			String constantName = "kurz_" + itemCurrency + "_" + userCurrency;
-			BigDecimal rate;
-			// nasli sme bezny kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName)))
-			{
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return basePrice.multiply(rate);
-			}
-			// nevyslo, skusime opacnu konverziu
-			constantName = "kurz_" + userCurrency + "_" + itemCurrency;
-			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
-			// 1/kurz
-			if (Tools.isNotEmpty(Constants.getString(constantName)))
-			{
-				rate = new BigDecimal( Constants.getString(constantName) );
-				return  ( (VALUE_OF_1).divide(rate) ).multiply(basePrice);
-			}
-		}
-		// nedopracovali sme sa k vysledku, vraciame povodnu cenu
-		return basePrice;
+		return BasketTools.convertCurrency(basePrice, getCurrency(), userCurrency);
 	}
 
 	/**

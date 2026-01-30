@@ -227,6 +227,14 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
 
     I.amOnPage("/zo-sveta-financii/?NO_WJTOOLBAR=true");
     Document.screenshot("/redactor/webpages/perex-groups-news.png");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150903");
+    DTE.waitForEditor();
+    I.resizeWindow(800, 450);
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.waitForVisible(".DTE_Field_Name_perexGroups");
+    I.scrollTo("div.DTE_Field_Name_perexGroups");
+    Document.screenshotElement(".DTE.DTE_Action_Edit.modal-content", "/redactor/webpages/perex-duplicity-values.png");
 });
 
 Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
@@ -553,14 +561,30 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
         pbElement.addClass("pb-has-toolbar-active");
         pbElement.children("aside.pb-toolbar").first().trigger("click");
         pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
-        mainWindow.$(".library-tab-link[data-library-type='library']").trigger("click");
-        mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
+        //mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
     });
+
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.wait(1);
+    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
+    I.wait(1);
+    I.switchTo();
 
     Document.screenshot("/redactor/webpages/pagebuilder-library.png");
 
     I.switchTo();
     Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
+    DTE.waitForEditor();
+    I.wait(5);
+
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.moveCursorTo(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
+
+    Document.screenshot("/redactor/webpages/pagebuilder-plusbutton.png");
+
+    I.switchTo();
 });
 
 Scenario('welcome', ({ I, Document }) => {
@@ -584,6 +608,60 @@ Scenario('welcome', ({ I, Document }) => {
     I.wait(2);
     Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
 
+});
+
+Scenario ("welcome - logins", ({ I, Document }) => {
+
+    //open multiple sessions
+    session('first user', () => {
+        I.relogin("tester3");
+        I.wait(5);
+    });
+
+    session('second user', () => {
+        I.relogin("tester3");
+        I.wait(9);
+    });
+
+    session('segal user', () => {
+        I.relogin("stevensegal");
+    });
+
+    I.relogin("tester3");
+    I.amOnPage("/admin/v9/");
+    I.waitForElement("div.overview-logged__sessions");
+
+    //since change browser to firefox in session block doestn work, change text in UI to Firefox using executeScript
+    I.executeScript(function() {
+        let el = $('div.overview-logged__sessions > ul > li:nth-child(3) .active-session-entry');
+        let value = el.text();
+        //value is like 11:06:25 (Chrome 142, 127.0.0.1) replace chrome with version to Firefox 144
+        value = value.replace(/(Chrome )\d+/, 'Firefox 144');
+        el.text(value);
+    });
+
+    I.resizeWindow(1920, 1080);
+    Document.screenshotElement("div.overview-logged.users", "/redactor/admin/sessions.png");
+
+    I.moveCursorTo("div.overview-logged__sessions > ul > li:nth-child(2)");
+    Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
+
+    session('first user', () => {
+        I.logout();
+    });
+    session('second user', () => {
+        I.logout();
+    });
+    session('segal user', () => {
+        I.logout();
+    });
+
+    I.switchTo();
+    I.logout();
+});
+
+Scenario("logout", ({ I, Document }) => {
+    I.logout();
 });
 
 Scenario('webpages-temp-edit-btn', ({ I, DTE, Document }) => {
@@ -635,30 +713,31 @@ Scenario('jstree-search', ({ I, Document }) => {
     Document.screenshotElement("div.tree-col", "/redactor/webpages/jstree-search-result.png", 1360, 400);
 });
 
-Scenario('formsimple', ({ I, DTE, Document }) => {
+Scenario('formsimple', ({ I, DT, DTE, Apps, Document }) => {
     let confLng = I.getConfLng();
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=26180");
-    DTE.waitForEditor();
-    I.wait(5);
 
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    DT.addContext("simpleformItems", "#datatableFieldDTE_Field_editorData_wrapper");
 
-    I.click("iframe.wj_component");
-
+    Apps.openAppEditor('26180');
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-basic.png");
 
-    I.switchTo();
-    I.wait(2);
-    I.switchTo(".cke_dialog_ui_iframe");
-    I.wait(2);
-    I.switchTo("#editorComponent");
-    I.wait(2);
-    I.clickCss("#tabLink2");
+    I.clickCss("#pills-dt-component-datatable-advanced-tab");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-advanced.png");
 
-    I.clickCss("#tabLink3");
+    I.clickCss("#pills-dt-component-datatable-items-tab");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items.png");
 
+    I.click("Poznámka", "#datatableFieldDTE_Field_editorData");
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_1.png");
+    DTE.save("datatableFieldDTE_Field_editorData");
+
+
+    I.click("Odoslať", "#datatableFieldDTE_Field_editorData");
+    Document.screenshot("/redactor/apps/formsimple/editor-dialog-items_edit_2.png");
+    DTE.save("datatableFieldDTE_Field_editorData");
+
+
+    I.switchTo();
     I.switchTo();
 
     //aby na screenshote nebolo meno usera

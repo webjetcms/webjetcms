@@ -1,4 +1,4 @@
-<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.JpaDB"%>
+<%@page import="java.math.BigDecimal"%><%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.JpaDB"%>
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
@@ -8,7 +8,8 @@
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity"%>
-<%@page import="sk.iway.iwcm.system.datatable.json.LabelValue"%>
+
+<%@page import="sk.iway.iwcm.components.basket.support.MethodDto"%>
 
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,java.util.*,java.math.BigDecimal" %>
@@ -26,9 +27,55 @@
 
 <iwcm:script type="text/javascript" src="/components/basket/jscript.jsp"></iwcm:script>
 <iwcm:script type="text/javascript">
+
+	let lastSelectedCountry = null;
+
+	function updateDeliveryMethod() {
+		let contactCountry = $("#contactCountryId").val();
+		let deliveryCountry = $("#deliveryCountryId").val();
+
+		if(typeof deliveryCountry === "undefined" || deliveryCountry === null || deliveryCountry === "") {
+			deliveryCountry = contactCountry;
+		}
+
+		if(lastSelectedCountry === null || lastSelectedCountry === "" || lastSelectedCountry !== deliveryCountry) {
+			lastSelectedCountry = deliveryCountry;
+
+			$.ajax({
+				type: "GET",
+				url: "/rest/apps/eshop/modeOfTransports",
+				dataType: 'json',
+				data: {
+					"country": deliveryCountry
+				},
+				success: function(response) {
+					const $select = $('#deliveryMethodId');
+    				$select.empty();
+
+					$.each(response, function (i, modeOfTransport) {
+						const $option = $('<option>', {
+							value: modeOfTransport.id,
+							text: modeOfTransport.title,
+							'data-value': modeOfTransport.priceVat
+						});
+						$select.append($option);
+					});
+
+					//after change of country, delivery method could be changed .... so compute the total price again
+					countPrice();
+				},
+				error: function(xhr, status, error) {
+					console.error("Error fetching delivery methods: " + error);
+				}
+			});
+		}
+	}
+
 </iwcm:script>
 <%
 	Prop prop = Prop.getInstance(request);
+
+	String displayCurrency = EshopService.getDisplayCurrency(request);
 
 	//Vytvorenie objednavky
 	PageParams pageParams = new PageParams(request);
@@ -44,7 +91,7 @@
 	List<BasketInvoiceItemEntity> basketItems = null;
 
 	//New logic
-	List<LabelValue> displayedPaymentMethods = PaymentMethodsService.getConfiguredPaymentMethodsLabels(prop);
+	List<MethodDto> displayedPaymentMethods = PaymentMethodsService.getConfiguredPaymentMethodsLabels(request, prop);
 
 	String thanksUrl = pageParams.getValue("thanksUrl", null);
 
@@ -55,7 +102,7 @@
 
 		if(deliveryMethod > 0)
 		{
-			EshopService.getInstance().setItemFromDoc(request, deliveryMethod, 1, prop.getText("components.basket.invoice_email.delivery_method"));
+			EshopService.getInstance().addDeliveryMethod(request, deliveryMethod, prop);
 		}
 
 		BasketInvoiceEntity invoice = EshopService.getInstance().saveOrder(request);
@@ -155,7 +202,7 @@
 	}
 
 	String paymentResponse  = "";
-	if ( PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, prop) )
+	if ( PaymentMethodsService.isPaymentMethodConfigured(paymentMethod, request, prop) )
 	{
 		request.setAttribute("invoiceId", invoice.getBasketInvoiceId());
 
@@ -185,7 +232,7 @@
 
 <div style='display:none'>
 	<span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
-	<span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+	<span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=displayCurrency%>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
 </div>
 <%
 }
@@ -286,7 +333,7 @@ else {%>
 							</div>
 							<div class="form-group col-sm-12 col-md-6 col-xl-3">
 								<label class="form-label " for="contactCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
-								<select name="contactCountry" id="contactCountryId" class="form-control">
+								<select name="contactCountry" id="contactCountryId" class="form-control" onchange="updateDeliveryMethod();">
 									<%for (String countryTld : Constants.getArray("basketInvoiceSupportedCountries")) {%>
 										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld" + countryTld)%></option>
 									<%}%>
@@ -334,33 +381,33 @@ else {%>
 						<div class="row">
 							<div class="form-group col-md-12 col-xl-4">
 								<label class="form-label " for="deliveryCompanyId"><iwcm:text key="components.basket.invoice_email.company"/>:</label>
-								<input type="text " name="deliveryCompany" id="deliveryCompanyId" class="form-control" size="25" maxlength="255"/>
+								<input type="text " name="deliveryCompany" id="deliveryCompanyId" autocomplete="off" class="form-control" size="25" maxlength="255"/>
 							</div>
 							<div class="form-group col-md-6 col-xl-4">
 								<label class="form-label " for="deliveryNameId"><iwcm:text key="components.basket.invoice_email.name"/>:</label>
-								<input type="text " name="deliveryName" id="deliveryNameId" class="form-control" size="25" maxlength="255"/>
+								<input type="text " name="deliveryName" id="deliveryNameId" autocomplete="off" class="form-control" size="25" maxlength="255"/>
 							</div>
 							<div class="form-group col-md-6 col-xl-4">
 								<label class="form-label " for="deliverySurNameId"><iwcm:text key="reguser.lastname"/>:</label>
-								<input type="text " name="deliverySurName" id="deliverySurNameId" class="form-control" size="25" maxlength="255"/>
+								<input type="text " name="deliverySurName" id="deliverySurNameId" autocomplete="off" class="form-control" size="25" maxlength="255"/>
 							</div>
 						</div>
 						<div class="row">
 							<div class="form-group col-sm-12 col-md-6 col-xl-3">
 								<label class="form-label " for="deliveryStreetId"><iwcm:text key="components.basket.invoice_email.street"/>:</label>
-								<input type="text " name="deliveryStreet" id="deliveryStreetId" class="form-control" size="25" maxlength="255"/>
+								<input type="text " name="deliveryStreet" id="deliveryStreetId" autocomplete="off" class="form-control" size="25" maxlength="255"/>
 							</div>
 							<div class="form-group col-sm-12 col-md-6 col-xl-3">
 								<label class="form-label " for="deliveryCityId"><iwcm:text key="components.basket.invoice_email.city"/>:</label>
-								<input type="text " name="deliveryCity" id="deliveryCityId" class="form-control" size="25" maxlength="255"/>
+								<input type="text " name="deliveryCity" id="deliveryCityId" autocomplete="off" class="form-control" size="25" maxlength="255"/>
 							</div>
 							<div class="form-group col-sm-12 col-md-6 col-xl-3">
 								<label class="form-label " for="deliveryZipId"><iwcm:text key="components.basket.invoice_email.ZIP"/>:</label>
-								<input type="text " name="deliveryZip" id="deliveryZipId" class="form-control numbers" size="5" maxlength="5"/>
+								<input type="text " name="deliveryZip" id="deliveryZipId" autocomplete="off" class="form-control numbers" size="5" maxlength="5"/>
 							</div>
 							<div class="form-group col-sm-12 col-md-6 col-xl-3">
 								<label class="form-label " for="deliveryCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
-								<select name="deliveryCountry" class="form-control">
+								<select name="deliveryCountry" id="deliveryCountryId" autocomplete="off" class="form-control" onchange="updateDeliveryMethod();">
 									<option value="">-</option>
 									<%for (String countryTld : Constants.getArray("basketInvoiceSupportedCountries")) {%>
 										<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld" + countryTld)%></option>
@@ -372,6 +419,7 @@ else {%>
 				</div>
 			</div>
 
+			<%-- Payment and delivery selection (and user note) --%>
 			<div class="accordion-item">
 				<h2 class="accordion-header">
 					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#orderFormPaymentInfo" aria-expanded="true" aria-controls="orderFormPaymentInfo">
@@ -383,57 +431,51 @@ else {%>
 						<div class="row">
 							<div class="form-group col-sm-12">
 								<label class="form-label " for="deliveryMethodId"><iwcm:text key="components.basket.invoice_email.delivery_method"/>:</label>
-								<%List<DocDetails> modeOfTransports = EshopService.getInstance().getModeOfTransports(request);
+								<%List<MethodDto> modeOfTransports = EshopService.getInstance().getModeOfTransports(request, Constants.getArray("basketInvoiceSupportedCountries")[0]);
 
 								if(modeOfTransports != null && modeOfTransports.size() > 0)
 									{%>
 								<select name="deliveryMethod" id="deliveryMethodId" class="form-control"><%
-									for(DocDetails transport:modeOfTransports)
+									for(MethodDto transport:modeOfTransports)
 									{
-								%><option data-currency="<%= CurrencyTag.getLabelFromCurrencyCode(transport.getCurrency()) %>" data-value="<%= transport.getPriceVat() %>" value="<%=transport.getDocId()%>"><%=transport.getTitle()%>: <%= CurrencyTag.formatNumber(transport.getPriceVat()) + " " + CurrencyTag.getLabelFromCurrencyCode(transport.getCurrency()) %></option>
+								%><option data-value="<%= transport.getLocalPriceVat(request) %>" value="<%=transport.getId()%>"><%=transport.getTitle()%></option>
 									<%}%>
 								</select>
 
 								<iwcm:script type="text/javascript">
 									$("document").ready(function() {
-										$('select#deliveryMethodId').on('change', function () {
-											countPrice();
-										});
+										$('select#deliveryMethodId').on('change', function () { countPrice(); });
+										$('select#paymentMethodId').on('change', function () { countPrice(); });
 										countPrice();
 									});
 
 									function countPrice() {
-										var optionSelected = $("select#deliveryMethodId option:selected"),
-										deliveryPrice = +optionSelected.data("value"),
-										currency = optionSelected.data("currency"),
+										var deliveryOptionSelected = $("select#deliveryMethodId option:selected"),
+										deliveryPrice = +deliveryOptionSelected.data("value"),
+
 										span = $("span.totalOrderPrice"),
 										price = +span.data("value");
 
-										var totalPrice = Number(price + deliveryPrice).toFixed(2) + " " + currency;
+										var paymentOptionSelected = $("select#paymentMethodId option:selected"),
+										paymentPrice = +paymentOptionSelected.data("value");
+
+										var totalPrice = Number(price + deliveryPrice + paymentPrice).toFixed(2) + " " + "<%=displayCurrency%>";
 										totalPrice = totalPrice.replace(".", ",");
 										span.text(totalPrice);
 									}
 								</iwcm:script><%
-							}
-							else
-							{%>
-								<select name="deliveryMethod" id="deliveryMethodId" class="form-control">
-									<option value="<iwcm:text key="components.basket.order_form.delivery_personally"/>"><iwcm:text key="components.basket.order_form.delivery_personally"/></option>
-									<option value="<iwcm:text key="components.basket.order_form.delivery_post"/>"><iwcm:text key="components.basket.order_form.delivery_post"/></option>
-									<option value="<iwcm:text key="components.basket.order_form.delivery_courier"/>"><iwcm:text key="components.basket.order_form.delivery_courier"/></option>
-									<option value="<iwcm:text key="components.basket.order_form.delivery"/>"><iwcm:text key="components.basket.order_form.delivery"/></option>
-								</select>
-								<%} %>
+							} %>
 							</div>
 
 							<div class="form-group col-sm-12">
 								<label class="form-label " for="paymentMethodId"><iwcm:text key="components.basket.invoice.payment_method"/>:</label>
 								<select name="paymentMethod" id="paymentMethodId" class="form-control">
-									<%for (LabelValue paymentMethod : displayedPaymentMethods) {
-										String label = paymentMethod.getLabel();
-										String value = paymentMethod.getValue();
+									<%for (MethodDto paymentMethod : displayedPaymentMethods) {
+										String label = paymentMethod.getTitle();
+										String value = paymentMethod.getId();
+										BigDecimal priceVat = paymentMethod.getLocalPriceVat(request);
 									%>
-										<option value="<%=value%>"> <%=label%> </option>
+										<option value="<%=value%>" data-value="<%=priceVat%>"> <%=label%> </option>
 									<%
 										}
 									%>
@@ -466,7 +508,7 @@ else {%>
 					}
 					%>
 					<span class="totalOrderPrice" data-value="<%= EshopService.getTotalLocalPriceVat(basketItems,request) %>" style="font-weight: bold;">
-						<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr>
+						<iway:curr currency="<%=displayCurrency%>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr>
 					</span>
 					<input type="hidden" name="totalPrice" id="totalPrice" value="<%=CurrencyTag.formatNumber(EshopService.getTotalLocalPriceVat(basketItems,request))%>" />
 				</h3>

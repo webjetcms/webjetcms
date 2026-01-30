@@ -51,3 +51,6 @@ cp -R -p release/ckeditor/ $WJ_PATH/dist
 cp -R -p ../../plugins/webjetcomponents/samples $WJ_PATH/dist/plugins/webjetcomponents
 cp -R -p ../../plugins/webjetcomponents/icons $WJ_PATH/dist/plugins/webjetcomponents
 cp -R -p ../../plugins/webjettooltip/icons $WJ_PATH/dist/plugins/webjettooltip
+cp -R -p ../../plugins/webjetpicture/icons $WJ_PATH/dist/plugins/webjetpicture
+cp -R -p ../../plugins/webjetformbutton/icons $WJ_PATH/dist/plugins/webjetformbutton
+rm -rf $WJ_PATH/dist/.vscode

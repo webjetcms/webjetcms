@@ -35,7 +35,11 @@ public class Html2Text
 	public static String html2text(String html)
 	{
 		if (html == null) return("");
-		return new Html2Text(html).getText();
+		if (html.contains("<") && html.contains(">")) {
+			return new Html2Text(html).getText();
+		} else {
+			return html;
+		}
 	}
 
 	/**

@@ -1,4 +1,10 @@
 export function typeWysiwyg() {
+
+    var DIRTY_CHECK_DELAY_MS = 5000;
+    function getThisField(conf) {
+        return conf.EDITOR.field(conf.data);
+    }
+
     return {
         create: function ( conf ) {
 
@@ -15,6 +21,7 @@ export function typeWysiwyg() {
 
             //console.log("Creating WYSIWYG field, conf=", conf, "datatable=", conf.datatable, "editor=", this);
             let EDITOR = this;
+            conf.EDITOR = EDITOR;
             var id = $.fn.dataTable.Editor.safeId( conf.id );
             conf._id = id;
 
@@ -132,12 +139,14 @@ export function typeWysiwyg() {
                 $("#"+id+"-pageBuilderIframe").attr("src", "about:blank");
             });
 
-            window.switchEditorType = function(select, e) {
-                //console.log("Switch editor type to:", select.value, "conf=", conf.wjeditor, "e=", e);
-                let editorType = select.value;
-                conf.wjeditor.switchEditingMode(editorType);
-                window.editorTypeForced = editorType;
-                if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+            if (typeof window.switchEditorType == "undefined") {
+                window.switchEditorType = function(select, e) {
+                    //console.log("Switch editor type to:", select.value, "conf=", conf, "e=", e);
+                    let editorType = select.value;
+                    conf.wjeditor.switchEditingMode(editorType, true);
+                    window.editorTypeForced = editorType;
+                    if ("html"!=editorType) window.WJ.setAdminSetting("editorTypeForced", editorType);
+                }
             }
 
             window.pbSetWindowSize = function(size) {
@@ -153,6 +162,16 @@ export function typeWysiwyg() {
                 } else if ('phone'==size) {
                     maxWidth = "576px";
                 }
+
+                //console.log("iframeElement=", iframeElement[0].contentWindow);
+                try {
+                    if (iframeElement.length > 0 && iframeElement[0].contentWindow && typeof iframeElement[0].contentWindow.pbGetWindowSize === "function") {
+                        maxWidth = iframeElement[0].contentWindow.pbGetWindowSize(size);
+                    }
+                } catch (e) {
+                    console.error("pbSetWindowSize error:", e);
+                }
+
                 //console.log("Setting width: ", maxWidth);
                 iframeElement.css("max-width", maxWidth);
             }
@@ -192,6 +211,9 @@ export function typeWysiwyg() {
                 conf.wjeditor.setData(val);
             }
             conf._input.val(val);
+
+            // reset dirty status
+            getThisField(conf).resetDirty(conf);
         },
 
         enable: function ( conf ) {
@@ -204,6 +226,35 @@ export function typeWysiwyg() {
 
         canReturnSubmit: function ( conf, node ) {
             return false;
+        },
+
+        isDirty: function ( conf ) {
+            try
+            {
+                var now = new Date().getTime();
+                var timeDiff = now - conf.editorLastResetDirty;
+                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
+                {
+                    return false;
+                }
+                var currentData = getThisField(conf).get(conf);
+                if (currentData != conf.dirtyDataOriginal) {
+                    //console.log("isDirty check, currentData=", currentData, "dirtyDataOriginal=", conf.dirtyDataOriginal);
+                    return true;
+                }
+            }
+            catch (e) {  }
+            return false;
+        },
+
+        resetDirty: function ( conf ) {
+            conf.editorLastResetDirty = new Date().getTime();
+            //get current data to compare
+            setTimeout(() => {
+                conf.dirtyDataOriginal = getThisField(conf).get(conf);
+                //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
+            }, DIRTY_CHECK_DELAY_MS);
         }
+
     }
 }

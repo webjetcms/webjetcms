@@ -10,14 +10,16 @@ import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MultipartResolver;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -34,6 +36,7 @@ import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
+import sk.iway.iwcm.system.stripes.MultipartWrapperFactory;
 import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
@@ -51,6 +54,10 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
     // vykonava komponentu cez prisluchajucu triedu
     @Autowired
     WebjetComponentResolver componentResolver;
+
+    //this allows to process multipart spring components with MultipartFile fields
+    @Autowired
+    private MultipartResolver multipartResolver;
 
     private static final String INCLUDE_START = "!INCLUDE(";
 	private static final String INCLUDE_END = ")!";
@@ -138,7 +145,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             }
 
             // unescape pretoze html kod moze obsahovat &quote;
-            String unescapedGroup = StringEscapeUtils.unescapeHtml(group);
+            String unescapedGroup = StringEscapeUtils.unescapeHtml4(group);
 
             if (components.containsKey(group)) {
                 continue;
@@ -207,6 +214,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
         }
 
         boolean writePerfStat = "true".equals(request.getParameter("_writePerfStat"));
+        // Check if we need to wrap the request for multipart handling
+        HttpServletRequest processedRequest = processMultipartRequest(request);
 
         for (Map.Entry<String, WebjetComponentInterface> entry : components.entrySet()) {
             String key = entry.getKey();
@@ -253,7 +262,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                 //If cache logic wasn't executed, render html code
                 if(rendered == null) {
                     // render html kodu z triedy
-                    rendered = componentResolver.render(request, response, v, pageParams);
+                    rendered = componentResolver.render(processedRequest, response, v, pageParams);
 
                     // ak navratova hodnota obsahuje redirect
                     if (isRedirected(response)) {
@@ -286,6 +295,9 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                 html = Tools.replace(html, key, "");
             }
         }
+
+        // Cleanup multipart request if needed
+        cleanupMultipartRequest(processedRequest);
 
         return html;
     }
@@ -447,5 +459,37 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      */
     private Identity getUser(HttpServletRequest request) {
         return UsersDB.getCurrentUser(request);
+    }
+
+    /**
+     * Process multipart request if needed (was not previously parsed with Stripes app)
+     * @param request
+     * @return
+     */
+    private HttpServletRequest processMultipartRequest(HttpServletRequest request) {
+        if (multipartResolver != null && multipartResolver.isMultipart(request) && MultipartWrapperFactory.isStripesMultipartParsed(request)==false) {
+            if (!(request instanceof MultipartHttpServletRequest)) {
+                try {
+                    return multipartResolver.resolveMultipart(request);
+                } catch (Exception e) {
+                    Logger.error(WebjetComponentParser.class, "Failed to resolve multipart request", e);
+                }
+            }
+        }
+        return request;
+    }
+
+    /**
+     * Cleanup multipart request if needed
+     * @param request
+     */
+    private void cleanupMultipartRequest(HttpServletRequest request) {
+            if (multipartResolver != null && request instanceof MultipartHttpServletRequest && MultipartWrapperFactory.isStripesMultipartParsed(request)==false) {
+                try {
+                multipartResolver.cleanupMultipart((MultipartHttpServletRequest) request);
+            } catch (Exception e) {
+                Logger.error(WebjetComponentParser.class, "Failed to cleanup multipart request", e);
+            }
+        }
     }
 }

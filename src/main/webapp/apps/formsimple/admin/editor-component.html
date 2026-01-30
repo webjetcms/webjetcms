@@ -1,0 +1,119 @@
+<script>
+
+    var innerTable = null;
+    var visibilityOptions = [];
+    var fields = ["required", "label", "value", "placeholder", "tooltip"];
+
+    function getFieldOption(field) {
+        for (var i = 0; i < visibilityOptions.length; i++) {
+            var option = visibilityOptions[i];
+            if(option.value === field) {
+                return option.label;
+            }
+        }
+        return "";
+    }
+
+    window.datatableLocalJsonUpdate = function(val, conf) {
+        //console.log("updating json data, val=", val);
+        //add value to every row if missing
+        for (let i=0; i<val.length; i++) {
+            if (typeof val[i]['fieldType'] === "undefined") {
+                val[i]['fieldType'] = "";
+            }
+            if (typeof val[i]['required'] === "undefined") {
+                val[i]['required'] = "false";
+            }
+            if (typeof val[i]['label'] === "undefined") {
+                val[i]['label'] = "";
+            }
+            if (typeof val[i]['value'] === "undefined") {
+                val[i]['value'] = "";
+            }
+            if (typeof val[i]['placeholder'] === "undefined") {
+                val[i]['placeholder'] = "";
+            }
+            if (typeof val[i]['tooltip'] === "undefined") {
+                val[i]['tooltip'] = "";
+            }
+        }
+        return val;
+    };
+
+    async function appAfterInit(response, datatable) {
+        //Set visibility options
+        visibilityOptions = response.options.optionsTypeVisibility;
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+
+            if("DTE_Field_editorData" === event.detail.conf.id) {
+                if(innerTable != null) return;
+                innerTable = event.detail.conf.datatable;
+
+                innerTable.EDITOR.on( 'open', function( e, mode, action ) {
+                    $("#DTE_Field_fieldType").on('change', function() {
+
+                        const value = innerTable.EDITOR.field("fieldType").val();
+                        let fieldOption = getFieldOption(value);
+
+                        var hideFields = fieldOption.split(",");
+                        fields.forEach(function(fieldName) {
+                            if(hideFields.includes(fieldName)) {
+                                innerTable.EDITOR.field(fieldName).hide();
+                                innerTable.EDITOR.field(fieldName).val("");
+                            } else {
+                                innerTable.EDITOR.field(fieldName).show();
+                            }
+                        });
+
+                    });
+                });
+            }
+        });
+    }
+
+    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+        // Prepare include FIRST !!
+        let include = "!INCLUDE(" + componentPath;
+        include += ", formName=" + params.formName;
+        include += ", rowView=" + params.rowView;
+
+        //calling just to get editor data
+        let defaultInclude = convertObjectToInludeParams(params);
+        let defaulParams = defaultInclude.split(",");
+        defaulParams.forEach(function(param) {
+            param = param.trim();
+            if(param.startsWith("editorData=")) {
+                if(param.split("=")[1] !== "") {
+                    include += ", " + param;
+                } else {
+                    include += ", editorData=JTVCJTVE";
+                }
+            }
+        });
+        include += ")!";
+
+        // Now save attributes
+        params.device = "";
+        params.editorData = "";
+        for (const key in params) {
+            if (Array.isArray(params[key])) {
+                if (params[key].length > 0) {
+                    params[key][0] === true ? params[key] = true : params[key] = false;
+                }
+            }
+        }
+
+        fetch("/admin/rest/apps/simpleform/save_attributes", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": window.csrfToken
+            },
+            body: JSON.stringify(params)
+        });
+
+        return include;
+    }
+
+</script>

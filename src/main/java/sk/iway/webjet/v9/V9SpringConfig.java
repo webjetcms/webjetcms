@@ -2,7 +2,6 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
@@ -33,7 +32,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableSpringDataWebSupport
 @Configuration
 @EnableWebMvc
-@MultipartConfig
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -146,7 +144,10 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.carouselslider",
     "sk.iway.iwcm.components.ai.rest",
     "sk.iway.iwcm.components.ai.providers",
-    "sk.iway.iwcm.components.ai.stat.rest"
+    "sk.iway.iwcm.components.ai.stat.rest",
+    "sk.iway.iwcm.components.formsimple",
+    "sk.iway.iwcm.components.upload",
+    "sk.iway.iwcm.components.basket.delivery_methods.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
@@ -169,7 +170,6 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
     @Bean(name = "multipartResolver")
     public StandardServletMultipartResolver multipartResolver() {
         StandardServletMultipartResolver multipartResolver = new StandardServletMultipartResolver();
-        
         return multipartResolver;
     }
 

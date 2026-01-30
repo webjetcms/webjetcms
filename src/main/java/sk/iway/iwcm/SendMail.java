@@ -1163,6 +1163,12 @@ public class SendMail
 			}
 			props.setProperty("mail.smtp.auth", "true");
 
+            String smtpMechanism = Constants.getString("smtpAuthMechanism");
+            if (Tools.isNotEmpty(smtpMechanism)) {
+				//you can set mechanisms default "LOGIN PLAIN DIGEST-MD5 NTLM", but if you want to force only one, e.g. "NTLM", set only that
+                props.put("mail.smtp.auth.mechanisms", smtpMechanism);
+            }
+
 			//ziskanie getDefaultInstance nam na Exchange vracalo chybu INFO: java.lang.SecurityException: Access to default session denied
 			ms = Session.getInstance(props, new WJAuthenticator());
 		}
