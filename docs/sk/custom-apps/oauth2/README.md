@@ -112,6 +112,38 @@ oauth2_keycloakScopes=openid,profile,email
 oauth2_keycloakClientName=Keycloak
 ```
 
+### Podporované OAuth2 atribúty
+
+WebJET CMS pri OAuth2 autentifikácii extrahuje nasledujúce atribúty z OAuth2/OIDC providera:
+
+#### Základné používateľské atribúty
+
+- `email` - **Povinný** - Email používateľa (musí byť jedinečný)
+- `given_name` - Krstné meno používateľa
+- `family_name` - Priezvisko používateľa
+- `preferred_username` - **Preferovaný** atribút pre login (štandardný OIDC atribút)
+
+#### Atribúty pre skupiny a práva
+
+Pre synchronizáciu skupín (iba pre nakonfigurovaných providerov v `oauth2_clientsWithPermissions`):
+
+- `groups` - Jednoduchý zoznam skupín
+- `roles` - Jednoduchý zoznam rolí
+- `group_membership` - Alternatívny názov pre skupiny
+- `resource_access.<client>.roles` - Keycloak client-specific roles
+- `realm_access.roles` - Keycloak realm roles
+- Spring Security authorities - Automaticky extrahované z autentifikácie
+
+**Pravidlá pre extrakciu loginu:**
+
+1. **Prednostný atribút**: `preferred_username` - ak je poskytnutý OAuth2 providerom, použije sa pre login
+2. **Fallback**: Časť emailu pred zavináčom - ak `preferred_username` nie je dostupný
+
+**Príklady:**
+
+- Keycloak poskytuje `preferred_username: "john.doe"` → login bude `john.doe`
+- Google neposkytuje `preferred_username` → login bude časť pred @ z emailu (napr. `john.doe` z `john.doe@gmail.com`)
+
 ### Redirect URI
 
 Pre všetkých poskytovateľov sa automaticky nastavuje redirect URI:
@@ -128,9 +160,9 @@ Príklad: `https://your-webjet-domain.com/login/oauth2/code/google`
 
 Keď sa používateľ prihlási prvýkrát cez OAuth2:
 
-1. **Extrakcia údajov** - Z OAuth2 atribútov sa extrahuje email, meno a priezvisko
+1. **Extrakcia údajov** - Z OAuth2 atribútov sa extrahuje email, meno, priezvisko a login (username)
 2. **Vytvorenie používateľa** - Vytvorí sa nový používateľ v WebJET databáze
-3. **Nastavenie loginu** - Login sa nastaví ako časť emailu pred zavináčom
+3. **Nastavenie loginu** - Login sa nastaví prednostne z atribútu `preferred_username`, ak nie je dostupný použije sa časť emailu pred zavináčom
 4. **Autorizácia** - Používateľ sa označí ako autorizovaný
 
 Vytvorenie používateľa prebieha v `AbstractOAuth2SuccessHandler.createNewUserFromOAuth2()`:
@@ -140,16 +172,30 @@ UserDetails userDetails = new UserDetails();
 userDetails.setEmail(email);
 userDetails.setFirstName(givenName);
 userDetails.setLastName(familyName);
-userDetails.setLogin(email.substring(0, email.indexOf("@")));
+
+// Nastav login - prednostne z username atribútu, inak použij email pred zavináčom
+String username = oauth2User.getAttribute("preferred_username");
+String login;
+if (username != null && !username.trim().isEmpty()) {
+    login = username;
+} else {
+    login = email.substring(0, email.indexOf("@"));
+}
+userDetails.setLogin(login);
 userDetails.setAuthorized(true);
 boolean isUserSaved = UsersDB.saveUser(userDetails);
 ```
+
+**Podporované atribúty pre login:**
+- `preferred_username` - Štandardný OIDC atribút (prednostný)
+- Fallback: časť emailu pred zavináčom
 
 ### Aktualizácia existujúceho používateľa
 
 Pre existujúcich používateľov sa aktualizujú:
 
 - Meno a priezvisko (ak sa zmenili v OAuth2 provideri)
+- Login (ak OAuth2 provider poskytuje `preferred_username` a ten sa zmenil)
 - Skupinové priradenia (iba pre nakonfigurovaných providerov v `oauth2_clientsWithPermissions`)
 
 Aktualizácia prebieha v `AbstractOAuth2SuccessHandler.updateExistingUserFromOAuth2()`.
