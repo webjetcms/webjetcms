@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('forms @current', ({ I , DT, DTE, Document }) => {
+Scenario('forms', ({ I , DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/");
     Document.screenshot("/redactor/apps/form/datatable.png");
 

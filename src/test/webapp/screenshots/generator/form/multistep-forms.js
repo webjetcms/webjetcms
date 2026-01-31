@@ -3,25 +3,32 @@ Feature('apps.multistep-forms');
 Before(({ I, DT, login }) => {
     login('admin');
 
+    DT.addContext("forms", "#formsDataTable_wrapper");
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
     DT.addContext("formItems", "#formItemsDataTable_wrapper");
 });
 
 Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
-    I.resizeWindow(1300, 530);
+    I.resizeWindow(1280, 530);
 
     I.amOnPage("/apps/form/admin/");
     Document.screenshot("/redactor/apps/multistep-form/forms-list.png");
 
-    I.amOnPage("/apps/form/admin/detail/?formName=Multistepform_rowView");
-    Document.screenshot("/redactor/apps/multistep-form/form-detail.png", null, null, "div.md-tabs > ul.nav > li:nth-child(4) > a");
+    I.resizeWindow(1280, 760);
+    I.click(DT.btn.forms_add_button);
+    DTE.waitForEditor("formsDataTable");
+    DTE.fillField("formSettings-recipients", "");
+    Document.screenshot("/redactor/apps/multistep-form/form-create-dialog.png");
+    DTE.cancel();
 
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_1");
+    I.amOnPage("/apps/form/admin/detail/?formName=Registracia-na-online-kurz");
+    Document.screenshot("/redactor/apps/multistep-form/form-detail.png", null, null, "div.md-tabs > ul.nav > li:nth-child(2) > a");
+
+    I.amOnPage("/apps/form/admin/form-content/?formName=Registracia-na-online-kurz");
     Document.screenshot("/redactor/apps/multistep-form/default-form.png");
 
-    I.resizeWindow(1500, 720)
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_docs");
-    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok jedna") );
+    I.resizeWindow(1360, 720)
+    I.amOnPage("/apps/form/admin/form-content/?formName=Registracia-na-online-kurz");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/multistep-form/real-form.png");
 

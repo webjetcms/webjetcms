@@ -44,6 +44,7 @@
     var formItemsDataTable;
     var loadingPreview = false;
     var loadingStepItems = false;
+    var firstLoad = true;
 
     function getActualPath(stepId) {
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
@@ -84,7 +85,22 @@
             idAutoOpener: false,
             toggleStyle: "single",
             toggleSelector: "td",
-            paging: false
+            paging: false,
+            onXhr: function() {
+                loadingStepItems = false;
+                if (firstLoad === true) {
+                    firstLoad = false;
+                    setTimeout(() => {
+                        let steps = $("#formStepsDataTable tbody tr");
+                        if(steps.length > 0) {
+                            let tdS = $(steps[0]).find("td");
+                            if(tdS.length > 0) {
+                                $(tdS[1]).click();
+                            }
+                        }
+                    }, 200);
+                }
+            }
         });
         formStepsDataTable.hideButtons(["import", "export", "celledit"]);
 
@@ -145,14 +161,14 @@
             idAutoOpener: false,
             toggleStyle: "single",
             toggleSelector: "td",
-            paging: false
+            paging: false,
+            onXhr: function() {
+                loadingStepItems = false;
+            }
         });
         formItemsDataTable.hideButtons(["import", "export", "celledit"]);
 
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
-
-        // Check if data loaded, then allow next load
-        formItemsDataTable.on('xhr.dt', function() { loadingStepItems = false; });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
             $("#DTE_Field_fieldType").on("change", function() {
@@ -273,17 +289,6 @@
     function onResize() {
         let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight() - 10;
         $("div.stepPreview").css("height", height + "px");
-    }
-
-    // If any step exist, open the first one by default
-    window.onload = function() {
-        let steps = $("#formStepsDataTable tbody tr");
-        if(steps.length > 0) {
-            let tdS = $(steps[0]).find("td");
-            if(tdS.length > 0) {
-                $(tdS[1]).click();
-            }
-        }
     }
 </script>
 

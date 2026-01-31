@@ -1,6 +1,6 @@
 # Položky formuláru
 
-Novým druhom formulárov v systéme WebJet CMS sú viackrokové formuláre. Tieto formuláre umožňujú rozdelenie dlhých formulárov na viacero krokov, čo zlepšuje používateľskú skúsenosť a zvyšuje prehľadnosť.
+Cez kartu položky formulára viete vytvárať viackrokové formuláre. Tieto formuláre umožňujú rozdelenie formulárov na viacero krokov, čo zlepšuje používateľskú skúsenosť a zvyšuje prehľadnosť. Samozrejme môžete vytvárať aj jednoduché formuláre iba s jedným krokom.
 
 ## Vytvorenie formulára
 
@@ -8,19 +8,25 @@ Formulár môžete vytvoriť v sekcii **Aplikácie > Formuláre**, presnejšie v
 
 ![](forms-list.png)
 
-## Karta - Obsah formuláru
+Kliknutím na pridať sa zobrazí dialóg pre [vytvorenie nového formulára](../form/README.md#vytvorenie-formuláru).
 
-V zozname odoslaných formulárov sa pre formulár typu viackrokový zobrazuje karta **Obsah formuláru**.
+![](form-create-dialog.png)
+
+Musíte zadať unikátny názov formulára a ak chcete odosielať odpovede na email aj vašu email adresu. Viac informácii k poliam formulára nájdete v sekcii [Vytvorenie formulára](../form/README.md#vytvorenie-formuláru).
+
+## Karta - Položky formuláru
+
+V zozname odoslaných formulárov sa pre formulár typu viackrokový zobrazuje karta **Položky formuláru**.
 
 ![](form-detail.png)
 
-Kliknutím na túto kartu sa dostaneme do sekcie, kde môžeme formuláru pridávať položky a kroky.
+Kliknutím na túto kartu sa zobrazí sekcia, kde môžeme formuláru pridávať položky a kroky.
 
 ![](default-form.png)
 
-## Zloženie karty - Obsah formuláru
+## Zloženie karty - Položky formuláru
 
-Karta **Obsah formuláru** je rozdelená na tri stĺpce:
+Karta **Položky formuláru** je rozdelená na tri stĺpce:
 
 - **Kroky formuláru** - tabuľka obsahujúca zoznam krokov formuláru.
 - **Položky formuláru** - tabuľka obsahujúca zoznam položiek (jednotlivé formulárové polia) formuláru patriacich do práve vybraného kroku.
@@ -30,11 +36,11 @@ Karta **Obsah formuláru** je rozdelená na tri stĺpce:
 
 ## Kroky formuláru
 
-Prvá tabuľka obsahuje zoznam krokov formuláru. V tejto tabuľke môžeme pridávať, duplikovať, mazať, upravovať a meniť poradie krokov formuláru. Každý vytvorený krok teda predstavuje reálný krok vo formulári, ktorý sa zobrazí používateľovi. K jednotlivým krokom môžete pridávať položky formuláru, ktoré sa zobrazia v danom kroku.
+Prvý stĺpec zobrazuje zoznam krokov formuláru. V tomto zozname môžeme pridávať, duplikovať, mazať, upravovať a meniť poradie krokov formuláru. Každý vytvorený krok teda predstavuje reálný krok vo formulári, ktorý sa zobrazí používateľovi. K jednotlivým krokom môžete pridávať položky formuláru, ktoré sa zobrazia v danom kroku.
 
 ![](form-step-editor.png)
 
-!>**Upozornenie:** tabuľka umožňuje zvoliť súčasne len jeden krok formuláru, nakoľko od kroku závisia položky formuláru, ktoré sa zobrazia v druhej tabuľke ako aj náhľad formuláru.
+Môžete vyplniť Úvodný text, ktorý sa zobrazí na začiatku kroku. V karte Pokročilé môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formuláru, ak ide o posledný krok).
 
 ### Duplikovanie
 
@@ -73,9 +79,11 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 
 Môžete sa stretnúť so situáciou, kedy Vám editor nedovolí pridať zvolenú položku. Môže to nastať ak ide o špeciálnu položku určenú pre riadkové zobrazenie formulára (vo všeobecnosti maju tieto položky v názve "riadkové zobrazenie"). Kým formulár nebude v režime riadkového zobrazenia, tieto položky síce vo výbere uvidíte ale nebudete ich môcť použiť.
 
+Formulár prepnete do režimu riadkového zobrazenia v [nastaveniach formuláru](../form/README.md#vytvorenie-formuláru).
+
 ### Značky
 
-Ak chcete v položke formuláru použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno, email, atď.), môžete použiť špeciálne značky. Tieto značky sa automatický nahradia príslušnými hodnotami pri zobrazení formuláru používateľovi. Pre neprihlásených používateľov budú tieto značky nahradené prázdnou hodnotou. Hodnotu zadajte do poľa Predvyplnená hodnota položky formuláru.
+Ak chcete v položke formuláru použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno, email, atď.), môžete použiť špeciálne značky. Tieto značky sa automatický nahradia príslušnými hodnotami pri zobrazení formuláru používateľovi. Pre neprihlásených používateľov budú tieto značky nahradené prázdnou hodnotou. Hodnotu zadajte do poľa **Predvyplnená hodnota** položky formuláru.
 
 Dostupné značky sú:
 
