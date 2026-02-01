@@ -4,14 +4,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.test.BaseWebjetTest;
 
 /**
  * Test pre EditorUtils - hlavne pre nonBreakingSpaceReplacement funkcionalitu
  */
-class EditorUtilsTest {
+@Execution(ExecutionMode.SAME_THREAD)
+class EditorUtilsTest extends BaseWebjetTest {
 
     private DocDetails docDetails;
 
@@ -123,20 +128,6 @@ class EditorUtilsTest {
     }
 
     @Test
-    @DisplayName("Žiadne konfiguračné spojky")
-    void testNoConjunctionsConfigured() {
-        Constants.setString("editorSingleCharNbsp", "");
-        docDetails.setData("Text a obsah s rôznymi spojkami.");
-        EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Text a obsah s rôznymi spojkami.", docDetails.getData());
-
-        Constants.setString("editorSingleCharNbsp", null);
-        docDetails.setData("Text a obsah s rôznymi spojkami.");
-        EditorUtils.nonBreakingSpaceReplacement(docDetails);
-        assertEquals("Text a obsah s rôznymi spojkami.", docDetails.getData());
-    }
-
-    @Test
     @DisplayName("HTML komentáre")
     void testHtmlComments() {
         docDetails.setData("<!-- komentár a poznámka --> Text a obsah.");
@@ -178,5 +169,17 @@ class EditorUtilsTest {
         docDetails.setData("koniec textu a ");
         EditorUtils.nonBreakingSpaceReplacement(docDetails);
         assertEquals("koniec textu a&nbsp;", docDetails.getData());
+    }
+
+    @Test
+    @DisplayName("Žiadne konfiguračné spojky")
+    void testNoConjunctionsConfigured() {
+        Constants.setString("editorSingleCharNbsp", "");
+        docDetails.setData("Text a obsah s rôznymi spojkami.");
+        EditorUtils.nonBreakingSpaceReplacement(docDetails);
+        assertEquals("Text a obsah s rôznymi spojkami.", docDetails.getData());
+
+        Constants.clearValues();
+		ConstantsV9.clearValuesWebJet9();
     }
 }

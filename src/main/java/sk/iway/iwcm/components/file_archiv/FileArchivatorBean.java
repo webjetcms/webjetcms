@@ -81,6 +81,21 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
     )
 	private String fileName;
 
+	@Column(name="date_insert")
+	@Temporal(TemporalType.TIMESTAMP)
+	@DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title="components.file_archiv.date_insert",
+		tab = "basic",
+		className = "hideOnCreate",
+		editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
+	private Date dateInsert;
+
 	@Column(name="valid_from")
 	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
@@ -166,7 +181,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Column(name="priority")
 	@DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
-        title="editor.sort_order",
+        title="components.banner.priority",
 		tab = "advanced"
     )
 	private Integer priority;
@@ -293,10 +308,6 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Column(name="user_id")
 	private Integer userId;
 
-	@Column(name="date_insert")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date dateInsert;
-
 	@Column(name="domain")
 	private String domain;
 
@@ -384,8 +395,10 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Override
 	public boolean save()
 	{
-		if(dateInsert == null)
+		if(dateInsert == null) {
 			dateInsert = new Date();
+		}
+
 		//musim tu vymazat cache
 		FileArchivatorKit.deleteFileArchiveCache();
 
