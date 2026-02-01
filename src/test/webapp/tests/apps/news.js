@@ -35,7 +35,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
         I.fillField("#DTE_Field_pageSize", 25);
         I.fillField("#DTE_Field_offset", 8);
         I.checkOption("#DTE_Field_checkDuplicity_0");
-        I.fillField("#DTE_Field_contextClasses", 'iway"sk", test ",pokus"');
 
     I.clickCss("#pills-dt-component-datatable-templates-tab");
         I.click( locate("label.custom-template").withChild(locate("span").withText("news01")) );
@@ -82,7 +81,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.see("filter[AUTHORID_le]=666,");
     I.see("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
-    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 
     Apps.switchEditor('standard');
     Apps.openAppEditor();
@@ -148,7 +146,6 @@ Scenario('Test editor logic', async ({ I, DTE, Apps }) => {
     I.dontSee("filter[AUTHORID_le]=666,");
     I.dontSee("filter[DATECREATED_eq]=&quot;2025-05-05&quot;,");
     I.see("filter[AVAILABLE_eq]=false");
-    I.see('contextClasses=&quot;iway\\&quot;sk\\&quot;, test \\&quot;,pokus\\&quot;&quot;,');
 });
 
 function addFilter(I, docField, operator, value) {

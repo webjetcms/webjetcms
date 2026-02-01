@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.news.NewsActionBean.PublishType;
@@ -157,7 +156,7 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.check_duplicty")
     protected boolean checkDuplicity;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses", className="ai-off")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", title="components.news.contextClasses", className="ai-off")
 	protected String contextClasses;
 
     @DataTableColumn(
@@ -211,9 +210,4 @@ public class NewsApp extends WebjetComponentAbstract  {
 
         return options;
     }
-
-    public String[] getContextClassesArr()
-	{
-		return contextClasses == null ? new String[0] : Tools.getTokens(contextClasses, ",;+|");
-	}
 }

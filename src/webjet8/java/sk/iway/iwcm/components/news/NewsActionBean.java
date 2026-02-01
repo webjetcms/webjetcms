@@ -701,10 +701,10 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 		if (template != null)
 		{
-			NewsTemplatesEntity newsEntity = NewsTemplatesService.getTemplateByName(template);
-			if (newsEntity == null) return;
+			NewsTemplatesEntity newsTemplate = NewsTemplatesService.getTemplateByName(template);
+			if (newsTemplate == null) return;
 
-			String templateCode = newsEntity.getTemplateCode();
+			String templateCode = newsTemplate.getTemplateCode();
 			if (Tools.isNotEmpty(templateCode))
 			{
 				VelocityEngine ve = new VelocityEngine();
@@ -715,6 +715,8 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 				Prop prop = Prop.getInstance(PageLng.getUserLng(getRequest()));
 
+				vc.put("docDetails", doc);
+				vc.put("currentUser", user);
 				vc.put("news", newsList);
 				vc.put("actionBean", this);
 				vc.put("context", this);
@@ -726,10 +728,11 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				vc.put("pageParams", new PageParams(getRequest()));
 				vc.put("dateTool", new DateTool());
 
-				String[] contextClassesArray = getContextClassesArr();
-				if (contextClassesArray != null && contextClassesArray.length > 0)
+				List<String> contextClassesList = getContextClassesArr(newsTemplate);
+
+				if (contextClassesList != null && contextClassesList.size() > 0)
 				{
-					for (String clazzName : contextClassesArray)
+					for (String clazzName : contextClassesList)
 					{
 						//uz pridavame implicitne
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;
@@ -744,12 +747,12 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 							}
 							else
 							{
-								Logger.debug(getClass(), "FillTeplate classObject with name "+clazzName+" already contained.");
+								Logger.debug(getClass(), "FillTemplate classObject with name "+clazzName+" already contained.");
 							}
 						}
 						catch (ClassNotFoundException e)
 						{
-							Logger.debug(getClass(), "FillTeplate classObject to context failed, class "+clazzName+" not found.");
+							Logger.debug(getClass(), "FillTemplate classObject to context failed, class "+clazzName+" not found.");
 						}
 					}
 				}
@@ -781,17 +784,17 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				htmlOut = swOut.toString();
 			}
 
-			String pagingCode = newsEntity.getPagingCode();
+			String pagingCode = newsTemplate.getPagingCode();
 			if (isPaging() && Tools.isNotEmpty(pagingCode))
 			{
 				String pagingHtml = getPaging(pagingCode);
 				if (Tools.isNotEmpty(pagingHtml))
 				{
-					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
+					if (newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE.ordinal() || newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut = pagingHtml + htmlOut;
 					}
 
-					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.AFTER.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
+					if (newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.AFTER.ordinal() || newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut += pagingHtml;
 					}
 				}
@@ -1635,5 +1638,32 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void removeIncludeRequestWrapper()
 	{
 		removeIncludeRequestWrapper(context);
+	}
+
+	/**
+	 * Joins context classes from NewsApp (deprecated way) and NewsTemplatesEntity into one list without duplicates
+	 * @param newsEntity
+	 * @return
+	 */
+	public List<String> getContextClassesArr(NewsTemplatesEntity newsEntity) {
+		//old context classes for NewsApp
+		String delimiter = ",;+|\n";
+		String[] contextClassesNewsApp = Tools.getTokens(getContextClasses(), delimiter);
+		//new context classes for NewsTemplatesEntity
+		String[] contextClassesNewsTemplate = Tools.getTokens(newsEntity.getContextClasses(), delimiter);
+
+		List<String> set = new ArrayList<>();
+		for (String clazzName : contextClassesNewsApp) {
+			if (!set.contains(clazzName)) {
+				if (Tools.isNotEmpty(clazzName)) set.add(clazzName);
+			}
+		}
+		for (String clazzName : contextClassesNewsTemplate) {
+			if (!set.contains(clazzName)) {
+				if (Tools.isNotEmpty(clazzName)) set.add(clazzName);
+			}
+		}
+
+		return set;
 	}
 }

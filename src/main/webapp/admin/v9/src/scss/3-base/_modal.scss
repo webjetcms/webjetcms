@@ -140,6 +140,10 @@ body.modal-open {
                 }
             }
         }
+        .DTE_Field_Type_textarea {
+            &.full-width .col-sm-7 { width: 99%; }
+            textarea { width: 100%; }
+        }
         .form-group.row.DTE_Field_Type_wysiwyg {
             margin-top: 0px;
             margin-bottom: 0px;
@@ -186,10 +190,10 @@ body.modal-open {
                 height: 30rem;
             }
 
-            &.wrap textarea {
+            &.wrap textarea, textarea.wrap {
                 white-space: pre-wrap;
             }
-            &.pre textarea, textarea.textarea-code {
+            &.pre textarea, textarea.textarea-code, textarea.pre {
                 white-space: pre;
             }
             &.required {

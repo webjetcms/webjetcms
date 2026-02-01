@@ -77,7 +77,7 @@ public class NewsTemplatesEntity {
         tab = "code",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
-                @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
+                @DataTableColumnEditorAttr(key = "class", value = "textarea-code full-width")
             })
         }
 	)
@@ -115,7 +115,7 @@ public class NewsTemplatesEntity {
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXTAREA,
 		title = "components.news.template_paging_html",
-		className = "wrap",
+		className = "wrap full-width",
         tab = "paging",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
@@ -134,6 +134,10 @@ public class NewsTemplatesEntity {
     )
     @Size(max = 255)
     private String engine;
+
+    @Column(name = "context_classes")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title="components.news.contextClasses", className="ai-off")
+	protected String contextClasses;
 
     @Column(name = "domain_id")
     private Integer domainId;

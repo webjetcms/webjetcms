@@ -194,3 +194,30 @@ function testSubMenu(I, id, fieldId, submenuItems) {
         I.seeElement(locate("a").withText(item));
     });
 }
+
+Scenario("contextClasses", async ({ I, DT, DTE }) => {
+    //cleanup
+    I.amOnPage("/admin/v9/templates/news/?id=111");
+    DTE.waitForEditor();
+    DTE.fillField("contextClasses", "");
+    DTE.save();
+
+    I.amOnPage("/zo-sveta-financii/");
+    dataXls = await I.grabAttributeFrom("section.md-news-subpage.v2", "data-xls");
+    I.assertEqual(dataXls, '$FileTools.getFileIcon("xls")');
+    dataForum = await I.grabAttributeFrom("section.md-news-subpage.v2", "data-forum");
+    I.assertEqual(dataForum, "$ForumDB.isActive($docDetails.getDocId())");
+
+    //check contextClasses is generated into template
+    I.amOnPage("/admin/v9/templates/news/?id=111");
+    DTE.waitForEditor();
+    DTE.fillField("contextClasses", "sk.iway.iwcm.FileTools\nsk.iway.iwcm.forum.ForumDB");
+    DTE.save();
+
+    //verify attributes are generated into page
+    I.amOnPage("/zo-sveta-financii/");
+    var dataXls = await I.grabAttributeFrom("section.md-news-subpage.v2", "data-xls");
+    I.assertEqual(dataXls, "/components/_common/mime/xls.gif");
+    var dataForum = await I.grabAttributeFrom("section.md-news-subpage.v2", "data-forum");
+    I.assertEqual(dataForum, "true");
+});
