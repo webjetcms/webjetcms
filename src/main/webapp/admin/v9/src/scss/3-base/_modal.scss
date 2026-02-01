@@ -141,8 +141,10 @@ body.modal-open {
             }
         }
         .DTE_Field_Type_textarea {
-            &.full-width .col-sm-7 { width: 99%; }
-            textarea { width: 100%; }
+            &.full-width {
+                .col-sm-7 { width: 99%; }
+                textarea { width: 100%; }
+            }
         }
         .form-group.row.DTE_Field_Type_wysiwyg {
             margin-top: 0px;

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
@@ -195,7 +196,13 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
     @Override
     public boolean beforeDelete(EmailsEntity entity) {
         statClicksRepository.deleteByEmailId( entity.getId() );
+        Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelogDelete(entity.getId(), entity), entity.getId(), -1L);
         return true;
+    }
+
+    @Override
+    public void afterSave(EmailsEntity entity, EmailsEntity saved) {
+        Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelog(saved.getId(), saved, null), saved.getId(), -1L);
     }
 
     @Override
@@ -249,6 +256,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                     // For savety reason, we must remove ALL emails that have recipient_user_id
                     emailsRepository.deleteByCampainIdAndDomainIdWhereRecipientUserIsSet(-getUser().getUserId() , CloudToolsForCore.getDomainId());
                 }
+                String oldUserGroups = campain.getUserGroupsIds();
 
                 //This prefixes are used in FE to distinguish between emails and permissions (FE cut them out but just to be sure)
                 if(Tools.isNotEmpty(emailsString)) emailsString = emailsString.replace("email_", "");
@@ -261,14 +269,34 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 int[] selectedGroups = Tools.getTokensInt(selectedGroupsString, ",");
                 int[] originalGroups = Tools.getTokensInt(campain.getUserGroupsIds(), ",");
 
-				Adminlog.add(Adminlog.TYPE_DMAIL, String.format("Recipients groups for Campaign: %d changed \n from %s \n to %s", campaingId, campain.getUserGroupsIds(), selectedGroupsString), getUser().getUserId(), -1);
-
                 DmailService.handleEmails(selectedGroups, originalGroups, campain, emailsRepository, userDetailsRepository, getRequest());
 
                 if(campaingId > 0) {
                     //Update campain user groups (if campain is allready created)
                     campaingsRepository.updateUserGroups(selectedGroupsString, campaingId, CloudToolsForCore.getDomainId());
                 }
+
+                //concert userGroupIds to names
+                UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();
+                StringBuilder selectedGroupsNames = new StringBuilder();
+                for (int groupId : selectedGroups) {
+                    String groupName = userGroupsDB.getUserGroupName(groupId);
+                    if (groupName != null) {
+                        if (selectedGroupsNames.length() > 0) selectedGroupsNames.append(", ");
+                        selectedGroupsNames.append(groupName);
+                    }
+                }
+                StringBuilder oldUserGroupsNames = new StringBuilder();
+                for (int groupId : originalGroups) {
+                    String groupName = userGroupsDB.getUserGroupName(groupId);
+                    if (groupName != null) {
+                        if (oldUserGroupsNames.length() > 0) oldUserGroupsNames.append(", ");
+                        oldUserGroupsNames.append(groupName);
+                    }
+                }
+
+                RequestBean.addAuditValue("campaignId", ""+campaingId);
+                Adminlog.add(Adminlog.TYPE_DMAIL, String.format("Recipients groups for campaign: %s changed\nfrom %s\nto %s", (campain != null ? campain.getSubject() : ""+campaingId), oldUserGroups + " - " + oldUserGroupsNames, selectedGroupsString + " - " + selectedGroupsNames ), campaingId, -1L);
 
             } catch (Exception ex) {
                 sk.iway.iwcm.Logger.error(ex);

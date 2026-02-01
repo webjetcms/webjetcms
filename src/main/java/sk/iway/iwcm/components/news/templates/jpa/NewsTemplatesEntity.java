@@ -115,7 +115,7 @@ public class NewsTemplatesEntity {
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXTAREA,
 		title = "components.news.template_paging_html",
-		className = "wrap full-width",
+		className = "wrap",
         tab = "paging",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {

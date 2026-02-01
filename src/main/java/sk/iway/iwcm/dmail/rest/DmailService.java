@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
@@ -57,6 +58,7 @@ public class DmailService {
 
         //Get all unsubscribed emails
         Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
+        int count = 0;
 
         for(String recipientEmail : recpientEmails) {
             //Unsubcribed check
@@ -75,10 +77,13 @@ public class DmailService {
 
                 //Save record in DB
                 emailsRepository.save(emailToAdd);
+                count++;
             } else {
                 return;
             }
         }
+
+        RequestBean.addAuditValue("addedEmailCount", ""+count);
     }
 
     //Add and/or remove emails which belongs to campain by ceratin user group
@@ -129,7 +134,7 @@ public class DmailService {
             mustContainUserId.add(uid);
         }
 
-        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, campaing.getId(), emailsRepository, userDetailsRepository);
+        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, campaing, emailsRepository, userDetailsRepository);
         if(groupsAdded.isEmpty()==false) addEmails(groupsAdded, campaing, emailsRepository, userDetailsRepository, request);
     }
 
@@ -138,9 +143,9 @@ public class DmailService {
      * (user moze byt vo viacerych skupinach, takze moze byt v tej co musi zostat zachovane)
      * @param groupsRemoved
      * @param mustContainUserId
-     * @param campainId
+     * @param campain
      */
-    private static void removeEmails(List<Integer> groupsRemoved, Set<Integer> mustContainUserId, Long campainId, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository) {
+    private static void removeEmails(List<Integer> groupsRemoved, Set<Integer> mustContainUserId, CampaingsEntity campain, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository) {
 
         List<Integer> userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsRemoved);
         List<Integer> filteredUserIds = new ArrayList<>();
@@ -151,7 +156,8 @@ public class DmailService {
         }
 
         //Delete all emails under removed user group
-        emailsRepository.deleteCampainEmail(campainId, filteredUserIds, CloudToolsForCore.getDomainId());
+        int deleted = emailsRepository.deleteCampainEmail(campain.getId(), filteredUserIds, CloudToolsForCore.getDomainId());
+        RequestBean.addAuditValue("removedEmailCount", ""+deleted);
     }
 
     /**
