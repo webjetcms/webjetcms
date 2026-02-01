@@ -50,7 +50,6 @@ public class BaseWebjetTest
 		Constants.setString("smtpServer", "mxrelay.dev.iway.sk");
 	}
 
-
 	protected SimpleQuery query = new SimpleQuery();
 
 	/**

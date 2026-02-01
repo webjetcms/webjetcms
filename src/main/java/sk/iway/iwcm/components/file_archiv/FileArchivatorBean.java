@@ -181,7 +181,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Column(name="priority")
 	@DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
-        title="components.file_archiv.priority",
+        title="components.banner.priority",
 		tab = "advanced"
     )
 	private Integer priority;
