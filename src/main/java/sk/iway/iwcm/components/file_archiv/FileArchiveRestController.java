@@ -170,10 +170,12 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
                 // Do nothing - we can edit waiting files that gonna be new versions in future
             } else if(isListOfVersions() == true) {
                 // List of version can be edited only with special permission
-                if(getUser().isEnabledItem(HISTORY_METADATA_EDIT_PERM) == false)
+                if(getUser().isEnabledItem(HISTORY_METADATA_EDIT_PERM) == false) {
                     throwError(NOT_MAIN_FILE_PERMISSION_DENIED);
-            } else
+                }
+            } else {
                 throwError(NOT_MAIN_FILE);
+            }
         }
     }
 
