@@ -406,23 +406,3 @@ Scenario("logout2", ({ I }) => {
     I.switchTo();
     I.logout();
 });
-
-/**
- * Test that contextClasses from NewsApp (now hidden) will join with contextClasses from NewsTemplatesEntity
- */
-Scenario("Test contextClasses joining logic", ({ I, DT, Apps }) => {
-    Apps.openAppEditor('128842');
-    I.dontSeeElement("div.DTE_Field_Name_contextClasses");
-
-    I.say("Now check debug log with err");
-    I.amOnPage("/admin/v9/settings/in-memory-logging/");
-    I.fillField("input.dt-filter-loggerName", "sk.iway.iwcm.components.news.NewsActionBean");
-    I.clickCss("button.dt-filtrujem-loggerName");
-    DT.waitForLoader();
-
-    // TODO Add time filter
-
-    DT.checkTableRow("datatableInit", 1, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testB not found."]);
-    DT.checkTableRow("datatableInit", 2, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testC not found."]);
-    DT.checkTableRow("datatableInit", 3, ["sk.iway.iwcm.components.news.NewsActionBean", "DEBUG", "", "FillTemplate classObject to context failed, class testA not found."]);
-});

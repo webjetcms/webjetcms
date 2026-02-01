@@ -715,6 +715,8 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 				Prop prop = Prop.getInstance(PageLng.getUserLng(getRequest()));
 
+				vc.put("docDetails", doc);
+				vc.put("currentUser", user);
 				vc.put("news", newsList);
 				vc.put("actionBean", this);
 				vc.put("context", this);

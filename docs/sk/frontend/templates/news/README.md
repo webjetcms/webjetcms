@@ -17,7 +17,7 @@ Dostupné sú nasledovné polia:
 - **Názov šablóny** - povinné pole s **jedinečným** názov šablóny noviniek
 - **Obrázok šablóny** - pole pre výber ilustračného obrázka zobrazených noviniek (pre lepšiu orientáciu pri výbere šablóny v aplikácii novinky)
 - **Šablónovací nástroj** - výber šablónovacieho nástroja (zatiaľ podporovaný iba `Velocity`)
-- **Vložiť triedy do Velocity šablóny** - pole pre vloženie názvu triedy, ktorá bude dostupná v šablóne, napr. pre zobrazenie diskusie je potrebné pridať triedu `sk.iway.iwcm.forum.ForumDB`. Triedy môžete oddeliť čiarkou alebo novým riadkom.
+- **Vložiť triedy do Velocity šablóny** - pole pre vloženie názvu triedy, ktorá bude dostupná v šablóne, napr. pre zobrazenie diskusie je potrebné pridať triedu `sk.iway.iwcm.forum.ForumDB`. Triedy môžete oddeliť čiarkou alebo novým riadkom. V kóde potom môžete použiť napr. `$ForumDB.isActive($doc.getDocId())` pre prístup k metódam triedy.
 - **HTML kód** - kód šablóny
 - **Umiestnenie stránkovania** - miesto kam sa vloží stránkovanie
 - **HTML kód stránkovania** - kód stránkovania
@@ -123,3 +123,22 @@ $doc.lastUpdateDate $doc.lastUpdateTime
 //datum a cas vytvorenia
 $doc.publishStartString
 ```
+
+Dostupné sú štandardne nasledovné objekty:
+
+```java
+vc.put("docDetails", doc);
+vc.put("currentUser", user);
+vc.put("news", newsList);
+vc.put("actionBean", this);
+vc.put("context", this);
+vc.put("prop", prop);
+vc.put("Tools", Tools.class);
+vc.put("DocDB", sk.iway.iwcm.doc.DocDB.class);
+vc.put("GroupsDB", sk.iway.iwcm.doc.GroupsDB.class);
+vc.put("MediaDB", sk.iway.spirit.MediaDB.class);
+vc.put("pageParams", new PageParams(getRequest()));
+vc.put("dateTool", new DateTool());
+```
+
+Ak potrebujete, môžete do šablóny pridať ďalšie triedy pomocou poľa **Vložiť triedy do Velocity šablóny** v editore šablóny noviniek.
