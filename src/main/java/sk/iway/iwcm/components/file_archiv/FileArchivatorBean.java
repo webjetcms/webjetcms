@@ -395,8 +395,9 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@Override
 	public boolean save()
 	{
-		if(dateInsert == null)
+		if(dateInsert == null) {
 			dateInsert = new Date();
+		}
 
 		//musim tu vymazat cache
 		FileArchivatorKit.deleteFileArchiveCache();

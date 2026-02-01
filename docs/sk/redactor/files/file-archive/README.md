@@ -91,9 +91,9 @@ K automatickému nahratiu dokumentu slúži vytvorená [Automatizovaná úloha](
 
 ## Úprava historickej verzie dokumentu v manažéri
 
-Pre úpravu historickej verzie dokumentu v manažéri, potrebujete mať právo `cmp_fileArchiv_history_metadata_edit`. Historické verzie je možné upravovať iba z hľadiska metadát, čiže nie je možné meniť fyzický súbor reprezentujúci dokument, jeho názov atď. Tieto zmeny sa dajú vykonať iba vo vnorenej tabuľke karte **Verzie** hlavného dokumentu.
+Pre úpravu historickej verzie dokumentu v manažéri, potrebujete mať právo Editácia metadát historickej verzie (`cmp_fileArchiv_history_metadata_edit`). Historické verzie je možné upravovať iba z hľadiska metadát, čiže nie je možné meniť fyzický súbor reprezentujúci dokument, jeho názov atď. Tieto zmeny sa dajú vykonať iba vo vnorenej tabuľke karte **Verzie** hlavného dokumentu.
 
-!>**Upozornenie:** ak právo `cmp_fileArchiv_history_metadata_edit` nemáte, môžete otvoriť editor, pozrieť si uložené hodnoty, ale vaše zmeny nebudete schopný uložiť.
+!>**Upozornenie:** ak právo Editácia metadát historickej verzie nemáte, môžete otvoriť editor, pozrieť si uložené hodnoty, ale vaše zmeny nebudete schopný uložiť.
 
 ## Úprava aktuálnej verzie dokumentu v manažéri
 

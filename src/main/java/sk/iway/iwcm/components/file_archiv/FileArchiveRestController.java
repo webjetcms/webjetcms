@@ -183,8 +183,9 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         if("remove".equals(target.getAction())) return;
 
-        if("edit".equals(target.getAction()) &&  getUser().isEnabledItem(EDIT_DEL_ROLLBACK_PERM) == false)
+        if("edit".equals(target.getAction()) &&  getUser().isEnabledItem(EDIT_DEL_ROLLBACK_PERM) == false) {
             throwError(PERMISSION_DENIED);
+        }
 
         if(id != null && id > 0) {
             FileArchivatorBean originalDbVersion = getOne(id);
@@ -227,11 +228,11 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
         FileArchiveService fas = new FileArchiveService(getUser(), getProp(), entity, repository);
         String result = fas.saveFile();
 
-        if(Tools.isNotEmpty(result))
+        if(Tools.isNotEmpty(result)) {
             throwError(result);
-
-        if(fas.getErrorList().isEmpty() == false)
+        } else if(fas.getErrorList().isEmpty() == false) {
             throwError(fas.getErrorList().get(0));
+        }
 
         return entity;
     }
