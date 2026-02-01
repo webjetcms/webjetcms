@@ -1641,7 +1641,7 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	}
 
 	/**
-	 * Joins context classes from NewsApp and NewsTemplatesEntity into one list without duplicates
+	 * Joins context classes from NewsApp (deprecated way) and NewsTemplatesEntity into one list without duplicates
 	 * @param newsEntity
 	 * @return
 	 */
