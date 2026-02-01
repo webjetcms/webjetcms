@@ -20,12 +20,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -703,10 +701,10 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 
 		if (template != null)
 		{
-			NewsTemplatesEntity newsEntity = NewsTemplatesService.getTemplateByName(template);
-			if (newsEntity == null) return;
+			NewsTemplatesEntity newsTemplate = NewsTemplatesService.getTemplateByName(template);
+			if (newsTemplate == null) return;
 
-			String templateCode = newsEntity.getTemplateCode();
+			String templateCode = newsTemplate.getTemplateCode();
 			if (Tools.isNotEmpty(templateCode))
 			{
 				VelocityEngine ve = new VelocityEngine();
@@ -728,23 +726,11 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				vc.put("pageParams", new PageParams(getRequest()));
 				vc.put("dateTool", new DateTool());
 
-				// OLD context classes from NewsApp
-				String[] contextClassesArrOld = getContextClassesArr();
+				List<String> contextClassesList = getContextClassesArr(newsTemplate);
 
-				// NEW context classes from NewsTemplatesEntity
-				String[] contextClassesArrNew = newsEntity.getContextClassesArr();
-
-				// Combined context classes
-				Set<String> set = new HashSet<>();
-				if (contextClassesArrOld != null) set.addAll(Arrays.asList(contextClassesArrOld));
-    			if (contextClassesArrNew != null) set.addAll(Arrays.asList(contextClassesArrNew));
-
-				set.remove(null);
-				String[] contextClassesArray = set.toArray(new String[0]);
-
-				if (contextClassesArray != null && contextClassesArray.length > 0)
+				if (contextClassesList != null && contextClassesList.size() > 0)
 				{
-					for (String clazzName : contextClassesArray)
+					for (String clazzName : contextClassesList)
 					{
 						//uz pridavame implicitne
 						if ("sk.iway.iwcm.doc.DocDB".equals(clazzName)) continue;
@@ -796,17 +782,17 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 				htmlOut = swOut.toString();
 			}
 
-			String pagingCode = newsEntity.getPagingCode();
+			String pagingCode = newsTemplate.getPagingCode();
 			if (isPaging() && Tools.isNotEmpty(pagingCode))
 			{
 				String pagingHtml = getPaging(pagingCode);
 				if (Tools.isNotEmpty(pagingHtml))
 				{
-					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
+					if (newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE.ordinal() || newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut = pagingHtml + htmlOut;
 					}
 
-					if (newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.AFTER.ordinal() || newsEntity.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
+					if (newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.AFTER.ordinal() || newsTemplate.getPagingPosition() == NewsTemplatesEntity.PagingPosition.BEFORE_AND_AFTER.ordinal()) {
 						htmlOut += pagingHtml;
 					}
 				}
@@ -1650,5 +1636,32 @@ public class NewsActionBean extends NewsApp implements ActionBean, IncludeReques
 	public void removeIncludeRequestWrapper()
 	{
 		removeIncludeRequestWrapper(context);
+	}
+
+	/**
+	 * Joins context classes from NewsApp and NewsTemplatesEntity into one list without duplicates
+	 * @param newsEntity
+	 * @return
+	 */
+	public List<String> getContextClassesArr(NewsTemplatesEntity newsEntity) {
+		//old context classes for NewsApp
+		String delimiter = ",;+|\n";
+		String[] contextClassesNewsApp = Tools.getTokens(getContextClasses(), delimiter);
+		//new context classes for NewsTemplatesEntity
+		String[] contextClassesNewsTemplate = Tools.getTokens(newsEntity.getContextClasses(), delimiter);
+
+		List<String> set = new ArrayList<>();
+		for (String clazzName : contextClassesNewsApp) {
+			if (!set.contains(clazzName)) {
+				if (Tools.isNotEmpty(clazzName)) set.add(clazzName);
+			}
+		}
+		for (String clazzName : contextClassesNewsTemplate) {
+			if (!set.contains(clazzName)) {
+				if (Tools.isNotEmpty(clazzName)) set.add(clazzName);
+			}
+		}
+
+		return set;
 	}
 }

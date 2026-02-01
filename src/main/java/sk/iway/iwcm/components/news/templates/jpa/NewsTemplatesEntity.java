@@ -13,7 +13,6 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -78,7 +77,7 @@ public class NewsTemplatesEntity {
         tab = "code",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
-                @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
+                @DataTableColumnEditorAttr(key = "class", value = "textarea-code full-width")
             })
         }
 	)
@@ -116,7 +115,7 @@ public class NewsTemplatesEntity {
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXTAREA,
 		title = "components.news.template_paging_html",
-		className = "wrap",
+		className = "wrap full-width",
         tab = "paging",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
@@ -137,13 +136,9 @@ public class NewsTemplatesEntity {
     private String engine;
 
     @Column(name = "context_classes")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.news.contextClasses", className="ai-off")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, tab = "basic", title="components.news.contextClasses", className="ai-off")
 	protected String contextClasses;
 
     @Column(name = "domain_id")
     private Integer domainId;
-
-    public String[] getContextClassesArr() {
-		return contextClasses == null ? new String[0] : Tools.getTokens(contextClasses, ",;+|");
-	}
 }

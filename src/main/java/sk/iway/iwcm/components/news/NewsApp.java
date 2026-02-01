@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.news.NewsActionBean.PublishType;
@@ -211,9 +210,4 @@ public class NewsApp extends WebjetComponentAbstract  {
 
         return options;
     }
-
-    public String[] getContextClassesArr()
-	{
-		return contextClasses == null ? new String[0] : Tools.getTokens(contextClasses, ",;+|");
-	}
 }
