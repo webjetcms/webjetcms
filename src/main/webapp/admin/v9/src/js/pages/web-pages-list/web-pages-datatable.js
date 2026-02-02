@@ -544,9 +544,12 @@ export class WebPagesDatatable {
                 });
                 $("#DTE_Field_urlInheritGroup_0").on("change", function() { self.#showHideUrlAddress("urlInheritGroup"); });
                 $("#DTE_Field_generateUrlFromTitle_0").on("change", function() { self.#showHideUrlAddress("generateUrlFromTitle"); });
+
+                $("#DTE_Field_editorFields-publishAfterStart_0").on("change", function() { self.#publishAfterStartChanged(); });
             }
 
             self.#showHideUrlAddress();
+            self.#publishAfterStartChanged();
         });
         this.webpagesDatatable.EDITOR.on('open', function (e, mode, action) {
             //console.log("Open, e=", e, "mode=", mode, "action=", action);
@@ -663,6 +666,17 @@ export class WebPagesDatatable {
             this.webpagesDatatable.EDITOR.field("virtualPath").show();
             this.webpagesDatatable.EDITOR.field("editorVirtualPath").hide();
             $("#DTE_Field_virtualPath").attr("disabled", "disabled");
+        }
+    }
+
+    #publishAfterStartChanged() {
+        var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
+        console.log("publishAfterStartChanged, publishAfterStart=", publishAfterStart);
+        //set editor submit button to save or plan according to checkbox state
+        if (publishAfterStart === true) {
+            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.plan"));
+        } else {
+            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-check"></i> ' + WJ.translate('button.save'));
         }
     }
 
