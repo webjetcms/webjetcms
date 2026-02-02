@@ -24,30 +24,30 @@ Before(({ I, login }) => {
     }
 });
 
-// Scenario('zoznam formularov', async ({ I, DT }) => {
-//     I.amOnPage("/apps/form/admin/");
-//     I.see("Názov formuláru");
+Scenario('zoznam formularov', async ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
+    I.see("Názov formuláru");
 
-//     I.seeElement(locate('.nav-link.active').withText("Zoznam formulárov"));
-//     DT.filterContains("formName", "Brexit");
-//     I.click("Brexit");
-//     DT.waitForLoader("#formDetailDataTable_processing");
-//     const formName = await within("#pills-forms", () => {
-//         return I.grabTextFrom('.active');
-//     });
-//     const url = await I.grabCurrentUrl();
-//     const formNameFromUrl = url.split('/').pop();
-//     I.amOnPage(`/apps/form/admin/detail/?formName=${formName}`);
-//     assert.equal(formName, formNameFromUrl);
-//     within("#pills-forms", () => {
-//         I.waitForElement(locate('a').withText('Brexit'), 10);
-//         I.click('//li[1]')
-//         I.wait(1);
-//         I.waitForInvisible(locate('a').withText('Brexit'), 10)
-//     });
-//     DT.waitForLoader("#formsDataTable_processing");
-//     I.amOnPage("/apps/form/admin/");
-// });
+    I.seeElement(locate('.nav-link.active').withText("Zoznam formulárov"));
+    DT.filterContains("formName", "Brexit");
+    I.click("Brexit");
+    DT.waitForLoader("#formDetailDataTable_processing");
+    const formName = await within("#pills-form-details", () => {
+        return I.grabTextFrom('.active');
+    });
+    const url = await I.grabCurrentUrl();
+    const formNameFromUrl = url.split('/?formName=').pop();
+    I.amOnPage(`/apps/form/admin/detail/?formName=${formName}`);
+    assert.equal(formName, formNameFromUrl);
+    within("#pills-form-details", () => {
+        I.waitForElement(locate('a').withText('Brexit'), 10);
+        I.click('//li[1]')
+        I.wait(1);
+        I.waitForInvisible(locate('a').withText('Brexit'), 10)
+    });
+    DT.waitForLoader("#formsDataTable_processing");
+    I.amOnPage("/apps/form/admin/");
+});
 
 Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
