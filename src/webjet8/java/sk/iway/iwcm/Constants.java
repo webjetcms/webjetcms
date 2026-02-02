@@ -285,7 +285,7 @@ public class Constants {
 				"Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: @interway.sk,podpora@demo.webjet.sk. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu");
 
 		setBoolean("disableWebJETToolbar", false, "editor;webpages",
-				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na false, tak sa to zobrazovať nebude.");
+				"ak je redaktor prihlásený v admin časti a zobrazí si stránku tak v pravej hornej časti sa zobrazí informácia o stránke a možnosť editácie stránky. Ak túto hodnotu nastavíte na true, tak sa to zobrazovať nebude.");
 
 		setString("imageMagickDir", "/usr/bin", "editor;performance;gallery",
 				"Ak je nastavene pouzije sa na resize obrazkov prikaz convert z balika ImageMagick");

@@ -34,8 +34,8 @@ module.exports = {
         } else if (provider === "verify32") {
             return verify32;
         }
-        //default
-        return noopmail;
+        //default - do not forget update DB with SQL above
+        return fexPost;
     },
 
     /**
