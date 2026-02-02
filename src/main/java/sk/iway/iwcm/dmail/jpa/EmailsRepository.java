@@ -19,7 +19,7 @@ public interface EmailsRepository extends DomainIdRepository<EmailsEntity, Long>
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM EmailsEntity WHERE campainId = :campainId AND recipientUserId IN :userIds AND domainId = :domainId")
-    public void deleteCampainEmail(@Param("campainId")Long campainId, @Param("userIds")List<Integer> userIds, @Param("domainId")Integer domainId);
+    public int deleteCampainEmail(@Param("campainId")Long campainId, @Param("userIds")List<Integer> userIds, @Param("domainId")Integer domainId);
 
     @Query(value = "SELECT ee.recipientEmail FROM EmailsEntity ee WHERE ee.campainId = :campainId AND ee.domainId = :domainId")
     List<String> getAllCampainEmails(@Param("campainId")Long campainId, @Param("domainId")Integer domainId);

@@ -130,28 +130,28 @@
                         task='sk.iway.iwcm.components.seo.SeoManager';
 
                         UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
-                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
-                        task='sk.iway.iwcm.doc.GroupPublisher;
+                        task='sk.iway.iwcm.doc.GroupPublisher';
 
                         UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
-                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner';
 
                         UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
-                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+                        task='sk.iway.iwcm.stat.StatWriteBuffer';
 
                         UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
-                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer';
 
                         UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
-                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
-                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher';
 
                         UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
-                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater';
                     </string>
                 </void>
                 <void property="oracle">
@@ -163,28 +163,28 @@
                         task='sk.iway.iwcm.components.seo.SeoManager';
 
                         UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
-                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
-                        task='sk.iway.iwcm.doc.GroupPublisher;
+                        task='sk.iway.iwcm.doc.GroupPublisher';
 
                         UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
-                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner';
 
                         UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
-                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+                        task='sk.iway.iwcm.stat.StatWriteBuffer';
 
                         UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
-                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer';
 
                         UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
-                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
-                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher';
 
                         UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
-                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater';
                     </string>
                 </void>
             </object>
@@ -3133,6 +3133,38 @@
                 <void property="mssql"><string>ALTER TABLE forms ADD form_type NVARCHAR(255) NULL;</string></void>
                 <void property="oracle"><string>ALTER TABLE forms ADD (form_type NVARCHAR2(255) NULL);</string></void>
                 <void property="pgsql"><string>ALTER TABLE forms ADD COLUMN form_type VARCHAR(255) NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.01.2026</string></void>
+                <void property="desc"><string>Pridanie stlpca context_classes do tabulky news_templates</string></void>
+                <void property="mysql"><string>ALTER TABLE news_templates ADD context_classes VARCHAR(255) NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE news_templates ADD context_classes NVARCHAR(255) NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE news_templates ADD context_classes NVARCHAR2(255);</string></void>
+                <void property="pgsql"><string>ALTER TABLE news_templates ADD COLUMN context_classes VARCHAR(255);</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>01.02.2026</string></void>
+                <void property="desc"><string>cron - disable auditing of running jobs</string></void>
+                <void property="mysql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="mssql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="oracle"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="pgsql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
             </object>
         </void>
 

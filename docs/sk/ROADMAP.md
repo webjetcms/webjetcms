@@ -20,6 +20,7 @@ Vysvetlenie použitých piktogramov:
 - Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
 - Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 - Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
+- Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 
 ## 2025
 
@@ -42,12 +43,12 @@ Vysvetlenie použitých piktogramov:
 - [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
 - [x] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru (#58161).
 - [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
-- [ ] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.
+- [x] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je posielaný stav `authorized` nastaviť na `true` (#58253).
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
 - [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
 - [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
-- [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
+- [x] Hromadný email - auditovať zmeny v skupinách používateľov (#58249).
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
@@ -86,10 +87,9 @@ Vysvetlenie použitých piktogramov:
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
 - [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
 - [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
-- [ ] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu.
+- [x] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu (#58245).
 - [ ] +Vnorené datatabuľky - nastaviť počet záznamov v režime `auto` podľa veľkosti oblasti vnorenej datatabuľky.
 - [ ] +Funkcia odoslať email neskôr používa `sendMailSaveEmailPath`, ktoré nevie uložiť súbor podľa aktuálnej domény, zamyslieť sa nad riešením. Možno je to tak kvôli tomu, že sa emaily posielajú na pozadí kde doména nemusí byť známa.
-
 
 ## 2024
 
