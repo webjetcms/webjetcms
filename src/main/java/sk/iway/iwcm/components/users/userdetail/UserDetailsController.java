@@ -248,6 +248,8 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
             //By default not admin
             if(entity.getAdmin() == null) entity.setAdmin(false);
+            //authorize user if not set from import
+            if (entity.getAuthorized() == null) entity.setAuthorized(true);
         }
 
         boolean allowWeakPassword = false;
