@@ -215,20 +215,22 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if ("remove".equals(target.getAction())) return;
 
-		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword()))
+		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword())) {
 			// generate password
 			entity.setPassword(generateUserPassword());
+        }
 
         Prop prop = Prop.getInstance(request);
 
         //Import setting
         if(isImporting()) {
             if(Tools.isEmpty(entity.getPassword())) {
-                if(entity.getId() == null || entity.getId() < 1)
-                    // generate password
+                if(entity.getId() == null || entity.getId() < 1L) {
+                    // generate password for new users
 			        entity.setPassword(generateUserPassword());
-                else
+                } else {
                     entity.setPassword(UserTools.PASS_UNCHANGED);
+                }
             }
 
             if (entity.getEditorFields()==null) {
