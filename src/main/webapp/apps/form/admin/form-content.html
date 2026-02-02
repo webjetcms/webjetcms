@@ -44,7 +44,8 @@
     var formItemsDataTable;
     var loadingPreview = false;
     var loadingStepItems = false;
-    var firstLoad = true;
+    var stepsFirstLoad = true;
+    var itemsFirstLoad = true;
 
     function getActualPath(stepId) {
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
@@ -88,8 +89,8 @@
             paging: false,
             onXhr: function() {
                 loadingStepItems = false;
-                if (firstLoad === true) {
-                    firstLoad = false;
+                if (stepsFirstLoad === true) {
+                    stepsFirstLoad = false;
                     setTimeout(() => {
                         let steps = $("#formStepsDataTable tbody tr");
                         if(steps.length > 0) {
@@ -171,57 +172,59 @@
         formItemsDataTable.on("draw", function() { loadStepPreview(); });
 
         formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
-            $("#DTE_Field_fieldType").on("change", function() {
-                const selectedFieldType = $(this).val();
-                const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+            if(itemsFirstLoad === true) {
+                itemsFirstLoad = false;
 
-                let fieldsToHide = [];
-                for(let i = 0; i < hiddenFieldsByType.length; i++) {
-                    if(hiddenFieldsByType[i].value == selectedFieldType) {
-                        const hideFieldsStr = hiddenFieldsByType[i].label;
-                        fieldsToHide = hideFieldsStr.split(",").map(field => field.trim());
-                        break;
-                    }
-                }
+                $("#DTE_Field_fieldType").on("change", function() {
+                    const selectedFieldType = $(this).val();
+                    const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
 
-                const allwaysHidden = hiddenFieldsByType
-                    .find(field => field.value === "allwaysHidden")
-                    ?.label
-                    .split(',')
-                    .map(s => s.trim());
-
-                formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
-                    if(fieldsToHide.includes(fieldName)) {
-                        formItemsDataTable.EDITOR.field(fieldName).hide();
-                    } else if(allwaysHidden.includes(fieldName) == false) {
-                        formItemsDataTable.EDITOR.field(fieldName).show();
+                    let fieldsToHide = [];
+                    for(let i = 0; i < hiddenFieldsByType.length; i++) {
+                        if(hiddenFieldsByType[i].value == selectedFieldType) {
+                            const hideFieldsStr = hiddenFieldsByType[i].label;
+                            fieldsToHide = hideFieldsStr.split(",").map(field => field.trim());
+                            break;
+                        }
                     }
 
-                    if(allwaysHidden.includes(fieldName)) {
-                        // like id or formName
-                        formItemsDataTable.EDITOR.field(fieldName).hide();
+                    const allwaysHidden = hiddenFieldsByType
+                        .find(field => field.value === "allwaysHidden")
+                        ?.label
+                        .split(',')
+                        .map(s => s.trim());
+
+                    formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
+                        if(fieldsToHide.includes(fieldName)) {
+                            formItemsDataTable.EDITOR.field(fieldName).hide();
+                        } else if(allwaysHidden.includes(fieldName) == false) {
+                            formItemsDataTable.EDITOR.field(fieldName).show();
+                        }
+
+                        if(allwaysHidden.includes(fieldName)) {
+                            // like id or formName
+                            formItemsDataTable.EDITOR.field(fieldName).hide();
+                        }
+                    });
+
+                    if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
+                        // Call only on real change
+                        fetch(`/admin/rest/form-items/default-regex?fieldType=${selectedFieldType}`, {
+                            method: "GET",
+                            headers: { "X-CSRF-Token": window.csrfToken }
+                        })
+                        .then(res => res.json())
+                        .then(regexIds => {
+                            formItemsDataTable.EDITOR.field("regexValidationArr").val([]);
+                            if(regexIds != null && Array.isArray(regexIds) && regexIds.length > 0) {
+                                // regexIds is now an array of Long values
+                                formItemsDataTable.EDITOR.field("regexValidationArr").val(regexIds)
+                            }
+                        })
+                        .catch(err => console.error(err));
                     }
                 });
-            });
-
-            $("#pills-dt-formItemsDataTable-strings-tab").on("click", function() {
-                const data = formItemsDataTable.EDITOR.currentJson;
-                const qs = new URLSearchParams(data).toString();
-
-                fetch(`/admin/rest/form-items/field-preview?${qs}`, {
-                        method: "GET",
-                        headers: {
-                            "X-CSRF-Token": window.csrfToken
-                        },
-                    }
-                )
-                .then(res => res.text())
-                .then(str => {
-                    const kks = $("#panel-body-dt-formItemsDataTable-strings");
-                    kks.html(str);
-                })
-                .catch(err => console.error(err));
-            });
+            }
         });
     });
 

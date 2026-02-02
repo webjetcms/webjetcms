@@ -1,8 +1,11 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -17,7 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
@@ -207,4 +212,30 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return entity;
     }
 
+    @GetMapping("/default-regex")
+    public List<Long> getDefaultRegex(@RequestParam("fieldType") String fieldType) {
+        List<Long> regexIds = new ArrayList<>();
+        if(Tools.isEmpty(fieldType)) return regexIds;
+
+        String ITEM_KEY_INPUT_PREFIX = "components.formsimple.input.";
+        String fieldHtml = getProp().getText(ITEM_KEY_INPUT_PREFIX + fieldType);
+        if(Tools.isEmpty(fieldHtml)) return regexIds;
+
+        Pattern classesPattern = Pattern.compile("<input\\s*class=\"([^\"]*)\"", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+		Matcher classesMatcher = classesPattern.matcher(fieldHtml);
+
+        List<String> inputClasses = new ArrayList<>();
+        while(classesMatcher.find()) {
+            String classAttr = classesMatcher.group(1);
+            classAttr = Tools.replace(classAttr, "${classes}", "");
+            String[] classes = classAttr.split("\\s+");
+            for(String cls : classes) {
+                if(!inputClasses.contains(cls) && "form-control".equalsIgnoreCase(cls) == false)
+                    inputClasses.add(cls);
+            }
+        }
+
+        if(inputClasses == null || inputClasses.size() < 1) return regexIds;
+        else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
+    }
 }
