@@ -671,11 +671,16 @@ export class WebPagesDatatable {
 
     #publishAfterStartChanged() {
         var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
+        var primaryButton= $("#" + this.webpagesDatatable.DATA.id + "_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary");
         //set editor submit button to save or plan according to checkbox state
-        if (publishAfterStart === true) {
-            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.schedule"));
-        } else {
-            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-check"></i> ' + WJ.translate('button.save'));
+        var currentHtml = primaryButton.html();
+        //only change when is is save or schedule, it also can be delete or duplicate
+        if (currentHtml.indexOf(WJ.translate("button.schedule"))>=0 || currentHtml.indexOf(WJ.translate('button.save'))>=0) {
+            if (publishAfterStart === true) {
+                primaryButton.html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.schedule"));
+            } else {
+                primaryButton.html('<i class="ti ti-check"></i> ' + WJ.translate('button.save'));
+            }
         }
     }
 
