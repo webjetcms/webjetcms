@@ -13,12 +13,15 @@ Before(({ I, DT, login }) => {
     DT.addContext("formItems", "#formItemsDataTable_wrapper");
 });
 
-const baseAdminMail = "baseMultistepForm_admin";
-const baseUserMail = "baseMultistepForm_user";
-const appInsertTestPageId = 128791;
-const appMultiInsertTestPageId = 128792;
+const baseAdminMail = "wjmultistep.admin";
+const baseUserMail = "wjmultistep.user";
+const appInsertTestPageId = 156277;
+const appMultiInsertTestPageId = 156272;
 
-Scenario('Check editor tabs', ({ I, DT, DTE }) => {
+Scenario('Check editor tabs', async ({ I, DT, DTE, TempMail }) => {
+    await TempMail.destroyInbox(baseAdminMail);
+    await TempMail.destroyInbox(baseUserMail);
+
     I.amOnPage("/apps/form/admin/");
 
     DT.filterEquals("formName", "Kontaktny_formular");
@@ -61,7 +64,7 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     I.say("Edit first default step");
     I.waitForVisible("#formStepsDataTable_wrapper");
 
-    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 1") );
+    I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
     I.click(DT.btn.formSteps_edit_button);
     DTE.waitForEditor("formStepsDataTable");
 
@@ -76,8 +79,6 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, null, "D,E,F", null, null);
 
     I.say("Test generated preview of the first step - using screenshot compare");
-    I.resizeWindow(1920, 1080);
-    await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
 
     I.say("Add second step");
     I.click(DT.btn.formSteps_add_button);
@@ -86,14 +87,18 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     DTE.fillQuill("header", "2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku");
     DTE.save();
 
-
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
     I.say("Add elements to the second step");
     createAndFillFormItem(I, DT, DTE, 'Nahrať obrázky', null, "Pridajte obrazky", null, null, null);
     createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Select pole", "A,B,C,D", "zoznam tooltip", null);
     createAndFillFormItem(I, DT, DTE, 'Formátované textové pole', true, "WYSIWYG", "happy wysiwyg placeholder", "wysiwyg tooltip", null);
 
-    I.resizeWindow(1920, 1080);
+    I.resizeWindow(1360, 850);
+
+    //compare screenshots
+    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 1") );
+    await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
+    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-2.png", null, null, 5);
 });
 
@@ -110,7 +115,6 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     I.say("Test visual of step one");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
-    I.resizeWindow(1920, 1080);
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-1.png", null, null, 5);
 
     I.say("Test and submit step 1");
@@ -128,7 +132,6 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     I.say("Test visual of step one");
     I.waitForVisible("#multiupload_images-1-dropzone");
-    I.resizeWindow(1920, 1080);
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
 
     I.say("Test and submit step 2 - final");
@@ -228,7 +231,7 @@ Scenario('Test send email', async ({ I, TempMail }) => {
     checkEmailWithForm(I, expectedHtml);
     TempMail.checkAttachments(["penguin.jpg"]);
     TempMail.closeEmail();
-    await TempMail.destroyInbox();
+    await TempMail.destroyInbox(baseAdminMail);
 });
 
 Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail }) => {
@@ -308,14 +311,14 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     I.see("Pozrite si priložený súbor");
     TempMail.checkAttachments(["penguin.jpg", "filled_form"]);
     TempMail.closeEmail();
-    await TempMail.destroyInbox();
+    await TempMail.destroyInbox(baseAdminMail);
 
     // TODO, check file with form ?
 });
 
 Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail }) => {
-    I.say("to fast - sometimes spam proble -> wait 60 sec");
-    I.wait(60);
+    I.say("too fast - sometimes spam proble -> wait 35 sec");
+    I.wait(35);
 
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", newMultistepFormName);
@@ -371,7 +374,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
 
     TempMail.checkAttachments(["penguin.jpg"]);
     TempMail.closeEmail();
-    await TempMail.destroyInbox();
+    await TempMail.destroyInbox(baseAdminMail);
 
     I.say("Check allso send user email");
     await TempMail.login(baseUserMail);
@@ -380,7 +383,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.see("YOUR FORM WAS SAVED");
 
     TempMail.closeEmail();
-    await TempMail.destroyInbox();
+    await TempMail.destroyInbox(baseUserMail);
 });
 
 Scenario('Remove form and test it', ({ I, DT }) => {
@@ -420,7 +423,7 @@ Scenario('Insert and test multiple forms in one page - before clear page', ({ I,
  */
 Scenario('Insert and test multiple forms in one page - insert two same apps', ({ I, DTE, Apps }) => {
     I.say("Insert FIRST app");
-        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
+        Apps.insertApp('Formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
 
         I.switchTo('.cke_dialog_ui_iframe');
         I.waitForElement('#editorComponent', 10);
@@ -434,7 +437,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         DTE.save();
 
     I.say("Insert SECOND app");
-        Apps.insertApp('Viackrokový formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
+        Apps.insertApp('Formulár', '#multistep_form-title', appMultiInsertTestPageId , false);
 
         I.switchTo('.cke_dialog_ui_iframe');
         I.waitForElement('#editorComponent', 10);
@@ -516,25 +519,23 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
 });
 
 Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
-    I.say("to fast - sometimes spam proble -> wait 60 sec");
-    I.wait(60);
+    I.say("too fast - sometimes spam proble -> wait 35 sec");
+    I.wait(35);
 
     I.say("Test generated preview");
     I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_rowView");
     I.waitForVisible("#formStepsDataTable_wrapper");
 
-    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 1") );
+    I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
     I.waitForElement(".form-step input#meno-1");
     I.wait(3);
 
-    I.resizeWindow(1920, 1080);
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-rowView.png", null, null, 5);
 
     I.say("Test visual of rowView form on page");
     I.amOnPage("/apps/multistep-formular/rowviewversion.html");
     I.waitForVisible("div.multistep-form-app");
 
-    I.resizeWindow(1920, 1080);
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-rowView.png", null, null, 5);
 
     I.say("Submit rowView form, so we can test generated filled version");

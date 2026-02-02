@@ -156,7 +156,7 @@ Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document,
     }, 800, 600);
 
     // MULTISTEP FORM
-    Apps.insertApp('Viackrokový formulár', '#multistep_form-title', 128794 , false);
+    Apps.insertApp('Viackrokový formulár', '#multistep_form-title', 156274 , false);
     Document.screenshotElement(".cke_dialog_ui_iframe", basePath+"/components/multistep-form/screenshot-1"+lngSuffix+".jpg");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
     I.resizeWindow(1920, 1080);

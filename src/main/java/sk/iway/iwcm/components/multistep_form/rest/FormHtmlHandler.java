@@ -101,17 +101,19 @@ public class FormHtmlHandler {
         this.firstTimeHeadingSet = new HashSet<String>();
 
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
-        this.rowView = Tools.isTrue(formSettings.getRowView());
-        this.recipients = formSettings.getRecipients();
-        this.addTechInfo = Tools.isTrue(formSettings.getAddTechInfo());
-        this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
-        this.publicKey = formSettings.getEncryptKey();
-        this.formCss = formSettings.getFormCss();
-        this.emailTextBefore = formSettings.getEmailTextBefore();
-        this.emailTextAfter = formSettings.getEmailTextAfter();
+        if (formSettings != null) {
+            this.rowView = Tools.isTrue(formSettings.getRowView());
+            this.recipients = formSettings.getRecipients();
+            this.addTechInfo = Tools.isTrue(formSettings.getAddTechInfo());
+            this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
+            this.publicKey = formSettings.getEncryptKey();
+            this.formCss = formSettings.getFormCss();
+            this.emailTextBefore = formSettings.getEmailTextBefore();
+            this.emailTextAfter = formSettings.getEmailTextAfter();
 
-        this.formAddClasses = formSettings.getFormAddClasses();
-        if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
+            this.formAddClasses = formSettings.getFormAddClasses();
+            if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
+        }
     }
 
     /**
