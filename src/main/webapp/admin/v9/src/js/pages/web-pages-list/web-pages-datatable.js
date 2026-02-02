@@ -671,10 +671,9 @@ export class WebPagesDatatable {
 
     #publishAfterStartChanged() {
         var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
-        console.log("publishAfterStartChanged, publishAfterStart=", publishAfterStart);
         //set editor submit button to save or plan according to checkbox state
         if (publishAfterStart === true) {
-            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.plan"));
+            $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.schedule"));
         } else {
             $("#"+this.webpagesDatatable.DATA.id+"_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary").html('<i class="ti ti-check"></i> ' + WJ.translate('button.save'));
         }
