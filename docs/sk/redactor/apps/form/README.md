@@ -39,8 +39,8 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Prepíš staršie odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, bude jeho hodnota prepísaná novou verziou. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Vyžadovať potvrdenie súhlasu emailom** - aktivuje režim [potvrdenia emailovej adresy](#nastavenie-potvrdenia-emailovej-adresy).
-- **Poslať formulár ako prílohu do e-mailu** - zapnutím sa formulár do emailu priloží ako príloha vo formáte PDF.
-  - **Názov prílohy formulára** - názov prílohy vo formáte PDF.
+- **Poslať formulár ako prílohu do e-mailu** - zapnutím sa formulár do emailu priloží ako príloha vo formáte HTML.
+  - **Názov prílohy formulára** - názov prílohy vo formáte HTML.
 - **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
@@ -53,7 +53,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Príjemca kópie emailu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
 - **Neviditeľní príjemcovia** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
 - **Odpovedať na e-maily** - emailová adresa, na ktorú má byť zaslaná odpoveď na email (nastavuje email hlavičku `Reply-To`).
-- **Predmet emailu** - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.
+- **Predmet emailu** - predmet emailu odoslaného formuláru pre administrátora. Ak nie je vyplnené automaticky sa použije podľa mena web stránky na ktorej sa formulár nachádza.
 - **Odoslať email ako text bez formátovania** - ak zaškrtnete je email odoslaný ako neformátovaná text verzia (vo formáte meno poľa: hodnota), inak je odoslaný ako formátovaný HTML text v podobe ako je zobrazený na web stránke.
 - **Odstráň diakritiku** - štandardne sa použije kódovanie znakov rovnaké ako má web stránka. Zapnutím sa diakritika odstráni a text emailu bude bez diakritiky.
 - **Pridať technické informácie** - ak zaškrtnete pridajú sa do emailu aj technické informácie (názov stránky, adresa stránky, dátum a čas odoslania, informácia o prehliadači).
@@ -77,7 +77,8 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
   - Ak nie je hodnota zadaná tak sa formulár spracuje a následne sa vykoná presmerovanie na zadanú stránku s nastaveným parametrom stavu odoslania (napr.`formSend=true`).
   - Hodnota ```forward``` znamená, že na cieľovú stránku sa vykoná interné presmerovanie. Cieľová stránka má tak prístup k identickým parametrom ako formulár a môže vykonať dodatočnú akciu. Keďže sa jedná o interné presmerovanie v adresnom riadku prehliadača zostane hodnota ```/formmail.do```.
   - Hodnota ```addParams``` vykoná presmerovanie na cieľovú stránku s pridaním jednotlivých parametrov do URL. V takomto prípade presmerovanie vykoná prehliadač a v adresnom riadku zostane adresa cieľovej stránky. Keďže ale parametre sú pridané do URL adresy je limitovaný ich počet dĺžkou URL čo je štandardne 2048 znakov.
-- **Interceptor pred odoslaním emailu** - hodnota je názov triedy, ktorá **musí implementovať interface `AfterSendInterceptor`**. Po odoslaní email-u sa vykoná kód z tejto triedy.
+- **Interceptor pred odoslaním emailu** - hodnota je názov triedy, ktorá **musí implementovať interface `AfterSendInterceptor`**. Po odoslaní email-u sa vykoná kód z tejto triedy. Používa sa pri staršej verzii formulárov odosielaných na URL adresu `/formMailAction.do`.
+- **Spracovateľ formulárov** - hodnota je názov triedy, ktorá musí implementovať interface [FormProcessorInterface](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormProcessorInterface.java). Trieda zabezpečí spracovanie krokov formuláru podľa vlastnej logiky. Príkladom je trieda [FormEmailVerificationProcessor](../../../../../src/main/java/sk/iway/iwcm/components/multistep_form/support/FormEmailVerificationProcessor.java), ktorá zabezpečí odoslanie overovacieho kódu na email a jeho verifikáciu v druhom kroku formuláru. Používa sa pri viackrokových formulároch.
 - **Maximálna veľkosť súboru** - maximálna veľkosť nahrávaného súboru v bajtoch.
 - **Povolené prípony** - čiarkou oddelený zoznam povolených prípon nahrávaných súborov, napr. `jpg,png,pdf,docx`.
 - **Maximálna výška (pre obrázky)** - maximálna výška nahrávaného obrázku v pixeloch.

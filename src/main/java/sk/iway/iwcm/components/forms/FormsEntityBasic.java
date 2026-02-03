@@ -56,6 +56,7 @@ public class FormsEntityBasic {
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title = "formslist.nazov_formularu", tab = "basic",
+        export = false,
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
@@ -122,7 +123,7 @@ public class FormsEntityBasic {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @DataTableColumnNested
+    @DataTableColumnNested(sortPrefix = "userDetails.")
     private UserDetailsEntity userDetails;
 
     @Column(name = "doc_id")

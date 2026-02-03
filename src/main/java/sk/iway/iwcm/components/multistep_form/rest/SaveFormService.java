@@ -83,27 +83,30 @@ public class SaveFormService {
      */
     public final void saveFormAnswers(String formName, FormSettingsEntity formSettings, Integer iLastDocId, HttpServletRequest request) throws SaveFormException, IOException {
 
+        Prop prop = Prop.getInstance(request);
         String forwardFail = null;
 		if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
 
         if (!SpamProtection.canPost("form", null, request))
-                throw new SaveFormException(Prop.getInstance(request).getText("send_mail_error.probablySpamBot"), false, forwardFail);
+                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, forwardFail);
 
-        String subject = Constants.getString("multistepform_subjectDefaultValue");
-		if (Tools.isNotEmpty(formSettings.getSubject()))
-			subject = formSettings.getSubject();
+        String subject = null;
+        //form settings has highest priority
+		if (Tools.isNotEmpty(formSettings.getSubject())) subject = formSettings.getSubject();
 
 		int docId = -1;
         DocDB docDB = DocDB.getInstance();
         if (iLastDocId != null) {
-            DocDetails doc = docDB.getDoc(iLastDocId, -1, false);
-            docId = iLastDocId.intValue();
-
+            DocDetails doc = docDB.getBasicDocDetails(iLastDocId, false);
             if(doc != null) {
-                if(Tools.isEmpty(formSettings.getSubject()))
-                    subject = doc.getTitle();
+                docId = iLastDocId.intValue();
+                //use webpage title as subject if not set in form settings
+                if(Tools.isEmpty(subject)) subject = doc.getTitle();
             }
         }
+
+        //if not found in settings or webpage title, use default
+        if (Tools.isEmpty(subject)) subject = prop.getText(Constants.getString("multistepform_subjectDefaultValue"), formName);
 
         try {
             saveFormAnswers(formName, formSettings, docId, subject, request);

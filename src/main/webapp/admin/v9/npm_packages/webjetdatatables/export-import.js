@@ -285,7 +285,7 @@ export function bindExportButton(TABLE, DATA) {
 
                     let rowData = c;
 
-                    if (DATA.id === 'form-detail') {
+                    if (DATA.id === 'formDetailDataTable') {
                         //console.log("c.columnNamesAndValues=", c.columnNamesAndValues);
                         //pre formulare su data v columnNamesAndValues
                         if(c.columnNamesAndValues != undefined && c.columnNamesAndValues != null) {

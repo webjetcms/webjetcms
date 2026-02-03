@@ -311,6 +311,13 @@ public class DataTableColumn {
             }
         }
 
+        boolean[] exportable = annotation.export();
+        if (exportable.length > 0) {
+            if (exportable[0]==false) {
+                addClassName("not-export");
+            }
+        }
+
         boolean[] disabled = annotation.disabled();
         if (disabled.length > 0) {
             if (disabled[0]==true) {

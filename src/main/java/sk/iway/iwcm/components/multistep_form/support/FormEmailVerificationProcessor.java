@@ -54,9 +54,10 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     public void runStepInterceptor(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
-        if(stepEntity.getCurrentPosition() == 1)
+        if(stepEntity.getCurrentPosition() == 1) {
             // We want to send verification email at end of first step
             verifyEmailInterceptor(formName, stepData, request);
+        }
     }
 
     @Override
@@ -78,9 +79,10 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     public void validateStep(String formName, FormStepEntity stepEntity, JSONObject stepData, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         if(stepEntity == null) throw new IllegalStateException("FormStepEntity was not provided");
 
-        if(stepEntity.getCurrentPosition() == 2)
+        if(stepEntity.getCurrentPosition() == 2) {
             // We want to validate email code in step two
             emaiCodeValidation(formName, stepData, request, errors);
+        }
     }
 
     @Override
@@ -134,8 +136,9 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
             }
         }
 
-        if(Tools.isEmail(email) == false)
+        if(Tools.isEmail(email) == false) {
             throw new SaveFormException(Prop.getInstance(request).getText("form_email_verification_processor.no_valid_email_found"), false, null);
+        }
 
         String verifyCode = Password.generatePassword(5);
         request.getSession().setAttribute(prefix + SESSION_VERIFY_CODE_KEY, verifyCode);

@@ -56,4 +56,7 @@ public @interface DataTableColumn {
      * orderProperty = "contactFirstName,deliveryName"
      */
     String orderProperty() default "";
+
+    //set export to false to exclude column from exports
+    boolean[] export() default {};
 }

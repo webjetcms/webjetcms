@@ -3321,6 +3321,15 @@ public class Tools
 		return m.replaceAll(newStr);
 	}
 
+	/**
+	 * Replace all occurrences of regex pattern in source StringBuilder with newStr, eg:
+	 * content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+	 * @param source
+	 * @param regexPattern
+	 * @param newStr
+	 * @param isCaseInsensitive
+	 * @return
+	 */
 	public static StringBuilder replaceRegex(StringBuilder source, String regexPattern, String newStr, boolean isCaseInsensitive) {
 		if(source == null) return null;
 

@@ -172,6 +172,7 @@ Voliteľné polia:
 - `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty zachovajú a skopírujú z existujúceho objektu v databáze. Pre polia typu dátum/čas to neplatí, tie sa prepíšu automaticky. Ak potrebujete toto použiť aj pre iný typ poľa a preniesť aj `null` hodnotu nastavte atribút na `true`, prípadne na `false` ak nechcete automatický prepis pre dátumové polia.
 - `ai` - nastavením na hodnotu `false` je možné vypnúť zobrazenie AI ikony pre všeobecné možnosti (preložiť, opraviť gramatiku...). AI ikona sa zobrazí len ak je asistent nastavený pre toto konkrétne pole.
 - `disabled` - nastavením na `false` sa vstupnému poľu v editore nastaví atribút `disabled="disabled"`.
+- `export` - nastavením na hodnotu `false` sa pole nebude exportovať.
 
 ## Vlastnosti @DataTableColumnEditor
 
@@ -413,6 +414,25 @@ Pre nastavenie údajov medzi entitou a ```editorFields``` v REST controlleri je 
         }
         return entity;
     }
+```
+
+Ak ako vnorený atribút máme inú entitu je vhodné nastaviť aj atribút `sortPrefix` na hodnotu mena atribútu. Automaticky sa na atribútoch vnorenej entity pridá tento prefix do poľa `sortAfter`, inak by sa vám zmiešali názvy polí z rôznych entít.
+
+```java
+public class FormsEntityBasic {
+
+    // Numeric value of the same column (user_id)
+    @Column(name = "user_id")
+    private Long userId;
+
+    // Relation to users table; load lazily, only readable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @DataTableColumnNested(sortPrefix = "userDetails.")
+    private UserDetailsEntity userDetails;
+
+}
 ```
 
 ## Sortovanie poradia polí

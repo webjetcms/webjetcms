@@ -42,7 +42,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/form-items")
-@PreAuthorize("@WebjetSecurityService.hasPermission('menuInquiry')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_form')")
 @Datatable
 public class FormItemsRestController extends DatatableRestControllerV2<FormItemEntity, Long> {
 

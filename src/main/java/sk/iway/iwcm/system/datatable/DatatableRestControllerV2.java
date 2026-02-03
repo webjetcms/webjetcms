@@ -1259,6 +1259,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
 			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
+		boolean isDuplicate = false;
+		setDuplicate(false);
 
 		DatatableResponse<T> response = new DatatableResponse<>();
 
@@ -1317,8 +1319,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			}
 
-			boolean isDuplicate = false;
-			setDuplicate(false);
 			if (datatableRequest.isInsert()) {
 				try {
 					if (id>0) {
@@ -1644,6 +1644,51 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		} else {
 			return "";
 		}
+	}
+
+
+	/**
+	 * Reorder rows based on RowReorderDto input.
+	 * @param request
+	 * @param rowReorderDto
+	 * @return
+	 */
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+		boolean allGood = true;
+
+		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
+
+		// Loop through entities and set new value to the column specified by dataSrc
+		for (T entity : entities) {
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				String idColumnName = getIdColumnName(entity);
+
+				// Get entity ID using id column name
+				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+
+				// Get new value for this entity
+				Integer newValue = rowReorderDto.getNewValueById(entityId);
+
+				if(newValue == null) {
+					allGood = false;
+					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
+					break;
+				}
+
+				// Use BeanWrapperImpl to set the property value
+				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
+				allGood = false;
+			}
+		}
+
+		this.repo.saveAll(entities);
+
+		return ResponseEntity.ok(allGood);
 	}
 
 	public JpaRepository<T, Long> getRepo() {
@@ -2142,43 +2187,5 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	public void setRequest(HttpServletRequest request) {
 		this.request = request;
-	}
-
-	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
-	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
-		boolean allGood = true;
-
-		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
-
-		// Loop through entities and set new value to the column specified by dataSrc
-		for (T entity : entities) {
-			try {
-				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
-				String idColumnName = getIdColumnName(entity);
-
-				// Get entity ID using id column name
-				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
-
-				// Get new value for this entity
-				Integer newValue = rowReorderDto.getNewValueById(entityId);
-
-				if(newValue == null) {
-					allGood = false;
-					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
-					break;
-				}
-
-				// Use BeanWrapperImpl to set the property value
-				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
-			} catch (Exception e) {
-				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
-				allGood = false;
-			}
-		}
-
-		this.repo.saveAll(entities);
-
-		return ResponseEntity.ok(allGood);
 	}
 }

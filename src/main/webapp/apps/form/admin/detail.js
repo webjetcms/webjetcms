@@ -58,7 +58,7 @@
         // Tabs in row editor
         const tabs = [
             { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true },
-            { id: 'content', title: WJ.translate('components.forms.detail.tab.fields.js'), selected: false },
+            { id: 'content', title: WJ.translate('components.form_items.navbar_title.js'), selected: false },
             { id: 'personalInfo', title: WJ.translate('components.form.personal_info.js'), selected: false },
             { id: 'contactTab', title: WJ.translate('components.form.contact.js'), selected: false },
             { id: 'freeItems', title: WJ.translate('editor.tab.fields'), selected: false },
@@ -199,9 +199,19 @@
                 if (col.data === "userDetails.login") {
                     delete col.renderFormatLinkTemplate;
                     delete col.renderFormatPrefix;
+                    col.hidden = false;
+                    col.hiddenEditor = false;
+                }
+                if (col.data === "userDetails.id") {
+                    col.editor.tab = "personalInfo";
                 }
                 if (col.data.indexOf("userDetails.") === 0) {
                     col.visible = false;
+
+                    //export only columns which is possible to see in datatable
+                    if (typeof col.hidden === "boolean" && col.hidden === true) {
+                        col.className = (col.className ? col.className + " " : "") + " not-export";
+                    }
                 }
                 if (col.data === "note") return;
 
