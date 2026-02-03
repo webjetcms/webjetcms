@@ -14,7 +14,7 @@ Kliknutím na pridať sa zobrazí dialóg pre [vytvorenie nového formulára](..
 
 Musíte zadať unikátny názov formulára a ak chcete odosielať odpovede na email aj vašu email adresu. Viac informácii k poliam formulára nájdete v sekcii [Vytvorenie formulára](../form/README.md#vytvorenie-formuláru).
 
-## Karta - Položky formuláru
+## Položky formuláru
 
 V zozname odoslaných formulárov sa pre formulár typu viackrokový zobrazuje karta **Položky formuláru**.
 
@@ -23,8 +23,6 @@ V zozname odoslaných formulárov sa pre formulár typu viackrokový zobrazuje k
 Kliknutím na túto kartu sa zobrazí sekcia, kde môžeme formuláru pridávať položky a kroky.
 
 ![](default-form.png)
-
-## Zloženie karty - Položky formuláru
 
 Karta **Položky formuláru** je rozdelená na tri stĺpce:
 
@@ -40,7 +38,7 @@ Prvý stĺpec zobrazuje zoznam krokov formuláru. V tomto zozname môžeme prid�
 
 ![](form-step-editor.png)
 
-Môžete vyplniť Úvodný text, ktorý sa zobrazí na začiatku kroku. V karte Pokročilé môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formuláru, ak ide o posledný krok).
+Môžete vyplniť Úvodný text, ktorý sa zobrazí na začiatku kroku. V karte Pokročilé môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formuláru, ak ide o posledný krok). V karte Kód skriptu môžete vložiť vlastný HTML/JavaScript kód, ktorý sa vloží a vykoná pri zobrazení kroku.
 
 ### Duplikovanie
 
@@ -81,6 +79,8 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 
 Môžete sa stretnúť so situáciou, kedy Vám editor nedovolí pridať zvolenú položku. Môže to nastať ak ide o špeciálnu položku určenú pre riadkové zobrazenie formulára (vo všeobecnosti maju tieto položky v názve "riadkové zobrazenie"). Kým formulár nebude v režime riadkového zobrazenia, tieto položky síce vo výbere uvidíte ale nebudete ich môcť použiť.
 
+![](row-view.png)
+
 Formulár prepnete do režimu riadkového zobrazenia v [nastaveniach formuláru](../form/README.md#vytvorenie-formuláru).
 
 ### Značky
@@ -114,7 +114,9 @@ Dostupné značky sú:
 
 Tretí stĺpec sekcie **Obsah formuláru** je náhľad formuláru. Tento náhľad zobrazuje aktuálny krok formuláru tak, podobne ako ho uvidí používateľ. Náhľad sa aktualizuje vždy, keď nastane nejaká zmena v tabuľke kroky alebo položky formuláru. Týmto spôsobom môžete orientačne vidieť, ako bude formulár vyzerať po vykonaní zmien.
 
-Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**.
+Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**. Text tlačidla môžete zmeniť v nastavení kroku, napríklad na **Pokračovať** alebo **Registrovať sa**.
+
+![](real-form.png)
 
 !>**Upozornenie:** Náhľad formuláru sa vo výsledku môže graficky líšiť od skutočného zobrazenia vo webovej aplikácii, nakoľko záleží na použitej šablóne a štýloch stránky v ktorej bude formulár vložený. Náhľad slúži hlavne na predstavu o rozložení a obsahu formuláru.
 

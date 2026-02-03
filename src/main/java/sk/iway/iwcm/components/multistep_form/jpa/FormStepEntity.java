@@ -18,6 +18,8 @@ import lombok.experimental.Accessors;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
@@ -52,11 +54,16 @@ public class FormStepEntity {
     private String header;
 
     @Column(name = "next_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.app-cookiebar.buttonText") }
+			)
+	    }
+    )
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob

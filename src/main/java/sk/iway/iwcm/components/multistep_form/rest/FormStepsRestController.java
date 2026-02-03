@@ -75,7 +75,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     public void afterSave(FormStepEntity entity, FormStepEntity saved) {
         // After save ensure that form pattern is updated, and all step positions
         // !! do not call, when action was duplication
-        if(entity.getId().equals(entity.getIdForDuplication()) == false) {
+        if(isDuplicate() == false) {
             multistepFormsService.updateFormPattern(entity.getFormName());
             multistepFormsService.updateStepsPositions(entity.getFormName());
         }

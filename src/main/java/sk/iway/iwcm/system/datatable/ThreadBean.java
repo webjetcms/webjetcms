@@ -54,6 +54,9 @@ public class ThreadBean {
     //set redirect after save
     private String redirect = null;
 
+    //duplicate mode
+    private boolean duplicate = false;
+
     public void clear() {
         Logger.debug(ThreadBean.class, "clearing data, thread="+Thread.currentThread().getId());
         forceReload = false;
@@ -67,6 +70,7 @@ public class ThreadBean {
         invalidImportedRows = null;
         invalidImportedRowsErrors = null;
         redirect = null;
+        duplicate = false;
     }
 
     public void addNotify(NotifyBean notify) {

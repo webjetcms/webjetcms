@@ -14,19 +14,6 @@ V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evid
 
 ![](detail-editnote.png)
 
-## Export údajov
-
-Formulárové záznamy je možné exportovať do formátu ```xlsx``` a ```csv```. V karte Pokročilé je možné nastaviť nasledovné možnosti exportu:
-
-- Aktuálne vyfiltrované dáta - ak máte v tabuľke dáta filtrované podľa určitého stĺpca exportujú sa iba tieto údaje.
-- Všetky dáta - exportujú sa všetky dáta bez ohľadu na nastavený filter v zobrazenej tabuľke.
-- Zatiaľ neexportované dáta - exportujú sa len dáta, ktoré zatiaľ neboli exportované (majú prázdnu hodnotu v stĺpci Dátum posledného exportu). Môžete tak jednoducho postupne exportovať len novo pridané dáta.
-- Iba označené riadky - exportujú sa iba označené riadky v tabuľke.
-
-Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuálny dátum a čas.
-
-![](export-advanced.png)
-
 ## Vytvorenie formuláru
 
 Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením jeho základných parametrov v karte Základné. Vytvoríte tak nový formulár typu [Viackrokový formulár](../multistep-form/README.md). Následne môžete k formuláru pridať jednotlivé položky formuláru (textové polia, zaškrtávacie polia, výberové polia a podobne) kliknutím na názov vytvoreného formuláru v tabuľke a prechodom do karty [Položky formuláru](../multistep-form/README.md).
@@ -37,7 +24,7 @@ Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením 
 
 - **Názov formuláru** - unikátny názov formuláru.
 - **Email adresa príjemcu** - zoznam príjemcov emailu. Môže obsahovať viac príjemcov oddelených čiarkou.
-  - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky alebo v nastaveniach formuláru. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky v ktorej je formulár vložený.
+  - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky, alebo v nastaveniach formuláru. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky v ktorej je formulár vložený.
 - **Typ formuláru** - určuje detekovaný typ formuláru, podľa ktorého sa zobrazia dostupné možnosti nastavenia. Pre nové formuláre je vždy nastavený typ Viackrokový formulár.
 
 Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia jeho spracovanie.
@@ -51,10 +38,10 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Ulož kópiu ako PDF** - ak je nastavené na true, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Prepíš staršie odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, bude jeho hodnota prepísaná novou verziou. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
-- **Vyžadovať potvrdenie súhlasu emailom**
-- **Poslať formulár ako prílohu do e-mailu**
-  - **Názov prílohy formulára**
-- **Šifrovací kľúč**
+- **Vyžadovať potvrdenie súhlasu emailom** - aktivuje režim [potvrdenia emailovej adresy](#nastavenie-potvrdenia-emailovej-adresy).
+- **Poslať formulár ako prílohu do e-mailu** - zapnutím sa formulár do emailu priloží ako príloha vo formáte PDF.
+  - **Názov prílohy formulára** - názov prílohy vo formáte PDF.
+- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
 - **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
@@ -65,13 +52,13 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 
 - **Príjemca kópie emailu** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná kópia emailu.
 - **Neviditeľní príjemcovia** - zoznam email adries oddelených čiarkami na ktoré má byť zaslaná skrytá kópia emailu.
-- **Odpovedať na e-maily**
+- **Odpovedať na e-maily** - emailová adresa, na ktorú má byť zaslaná odpoveď na email (nastavuje email hlavičku `Reply-To`).
 - **Predmet emailu** - predmet emailu. Ak nie je vyplnené automaticky sa použije podľa web stránky.
-- **Odoslať email ako text bez formátovania** - ak parameter existuje je email odoslaný ako ```text/plain``` verzia, inak je odoslaný ako ```multipart```.
-- **Odstráň diakritiku** - typ kódovania znakov emailu. Štandardne sa použije kódovanie rovnaké ako má web stránka. Ak je ako hodnota nastavené ASCII tak je z textu odstránená diakritika.
-- **Pridať technické informácie**
-- **Text na začiatku e-mailu**
-- **Text na konci e-mailu**
+- **Odoslať email ako text bez formátovania** - ak zaškrtnete je email odoslaný ako neformátovaná text verzia (vo formáte meno poľa: hodnota), inak je odoslaný ako formátovaný HTML text v podobe ako je zobrazený na web stránke.
+- **Odstráň diakritiku** - štandardne sa použije kódovanie znakov rovnaké ako má web stránka. Zapnutím sa diakritika odstráni a text emailu bude bez diakritiky.
+- **Pridať technické informácie** - ak zaškrtnete pridajú sa do emailu aj technické informácie (názov stránky, adresa stránky, dátum a čas odoslania, informácia o prehliadači).
+- **Text na začiatku e-mailu** - text, ktorý sa pridá do emailu pred polia formuláru.
+- **Text na konci e-mailu** - text, ktorý sa pridá do emailu za polia formuláru.
 - **Hlavička emailu** - ak má vygenerovaný email obsahovať špeciálnu hlavičku je možné do tohto poľa zadať čiarkou oddelený zoznam názvov polí, ktorých hodnoty sa nastavia do hlavičky.
 
 !>**Upozornenie:** formulár očakáva naslednovne pomenované polia pre správne nastavenie emailu odosielateľa a jeho mena:
@@ -110,6 +97,22 @@ Po kliknutí na odkaz v emaile sa vo formulári nastaví pole Dátum potvrdenia 
 
 ![](forms-list.png)
 
+## Nastavenie potvrdenia zaslaným kódom
+
+Pre ochranu formulárov je možné nastaviť aj potvrdenie zaslaným kódom. Po vyplnení prvého kroku formuláru je na zadanú emailovú adresu odoslaný kód, ktorý je potrebné zadať v druhom kroku formuláru pre jeho úspešné odoslanie.
+
+V nastavení formuláru v karte Pokročilé je potrebné do poľa Spracovateľ formulárov zadať hodnotu `sk.iway.iwcm.components.multistep_form.support.FormEmailVerificationProcessor`. Tento zabezpečí odoslanie kódu na email a jeho verifikáciu v druhom kroku.
+
+![](form-step-email-verification-advanced.png)
+
+V položkách formuláru v prvom kroku zadajte polia, ktoré potrebujete pre vyplnenie formuláru vrátane poľa pre emailovú adresu.
+
+![](form-step-email-verification-1.png)
+
+Následne v druhom kroku pridáte položku typu Overovací kód, ktorá zabezpečí zobrazenie vstupného poľa pre zadanie kódu a jeho verifikáciu pri odoslaní formuláru.
+
+![](form-step-email-verification-2.png)
+
 ## Udalosť pri odoslaní formuláru
 
 Po odoslaní formuláru cez AJAX je publikovaná udalosť `WJ.formSubmit`, na ktorú je možné počúvať, napr. ako:
@@ -117,6 +120,19 @@ Po odoslaní formuláru cez AJAX je publikovaná udalosť `WJ.formSubmit`, na kt
 ```javascript
     window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
 ```
+
+## Export údajov
+
+Formulárové záznamy je možné exportovať do formátu ```xlsx``` a ```csv```. V karte Pokročilé je možné nastaviť nasledovné možnosti exportu:
+
+- Aktuálne vyfiltrované dáta - ak máte v tabuľke dáta filtrované podľa určitého stĺpca exportujú sa iba tieto údaje.
+- Všetky dáta - exportujú sa všetky dáta bez ohľadu na nastavený filter v zobrazenej tabuľke.
+- Zatiaľ neexportované dáta - exportujú sa len dáta, ktoré zatiaľ neboli exportované (majú prázdnu hodnotu v stĺpci Dátum posledného exportu). Môžete tak jednoducho postupne exportovať len novo pridané dáta.
+- Iba označené riadky - exportujú sa iba označené riadky v tabuľke.
+
+Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuálny dátum a čas.
+
+![](export-advanced.png)
 
 ## Možné konfiguračné premenné
 

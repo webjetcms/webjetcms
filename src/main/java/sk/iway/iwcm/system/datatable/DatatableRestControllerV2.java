@@ -1318,6 +1318,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 
 			boolean isDuplicate = false;
+			setDuplicate(false);
 			if (datatableRequest.isInsert()) {
 				try {
 					if (id>0) {
@@ -1373,6 +1374,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						}
 
 						isDuplicate = true;
+						setDuplicate(true);
 						beforeDuplicate(entity);
 					}
 
@@ -1800,6 +1802,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	private void setImporting(boolean importing) {
 		getThreadData().setImporting(importing);
+	}
+
+	/**
+	 * Indicate that the operation is duplicate of existing record
+	 * @return
+	 */
+	public boolean isDuplicate() {
+		return getThreadData().isDuplicate();
+	}
+
+	private void setDuplicate(boolean duplicate) {
+		getThreadData().setDuplicate(duplicate);
 	}
 
 	/**
