@@ -10,7 +10,7 @@ Naviac, všetky formuláre sa ukladajú do databázy, v administračnej časti W
 
 Kliknutím na ikonu oka môžete formulár zobraziť do podoby, v akej je na web stránke a vytlačiť ho.
 
-V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evidovať spracovanie/stav formuláru). Jednotlivé vyplnené polia sú len na čítanie, nie je možné ich po odoslaní meniť. V karte údaje sú jednotlivé položky vyplneného formuláru, v karte Prihlásený používateľ údaje používateľa, ktorý formulár odoslal (ak bol pri jeho odoslaní prihlásený).
+V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evidovať spracovanie/stav formuláru). Jednotlivé vyplnené polia sú len na čítanie, nie je možné ich po odoslaní meniť. V karte Položky formuláru sú jednotlivé položky vyplneného formuláru, v karte Osobné údaje, Kontaktné údaje a Voliteľné polia sú údaje používateľa, ktorý formulár odoslal (ak bol pri jeho odoslaní prihlásený).
 
 ![](detail-editnote.png)
 
