@@ -164,7 +164,7 @@
 
             // Double Opt-In extra column
             if (data.doubleOptIn === true) {
-                filteredColumns.push({
+                filteredColumns.splice(6, 0, {
                     data: "doubleOptinConfirmationDate",
                     name: "doubleOptinConfirmationDate",
                     title: WJ.translate('formslist.doubleOptInDate.js'),

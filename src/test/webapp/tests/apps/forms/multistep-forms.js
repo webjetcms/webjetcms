@@ -1,4 +1,4 @@
-Feature('apps.multistep-forms');
+Feature('apps.forms.multistep-forms');
 
 var randomNumber;
 var newMultistepFormName;

@@ -1,4 +1,4 @@
-Feature('apps.multistep-forms.email-verification');
+Feature('apps.forms.multistep-forms-email-verification');
 
 /**
  * Test email verification using FormEmailVerificationProcessor.java in multistep forms.

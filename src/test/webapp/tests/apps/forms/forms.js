@@ -1,4 +1,4 @@
-Feature('apps.forms');
+Feature('apps.forms.forms');
 
 var yearFrom = "2013";
 var monthFrom = "September";
@@ -239,12 +239,6 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
     checkFormSimpleData(I, DT, randomNumber, randomNumber2);
-
-    I.click(container+" button.buttons-settings");
-    I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-    I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     //over, ze vidime vyplnene udaje testera v tabulke
     I.see("Tester", "#formDetailDataTable tbody tr:nth-child(1)");

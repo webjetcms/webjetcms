@@ -26,6 +26,7 @@ module.exports = {
         await I.wait(5);
         I.switchTo();
         I.fillField('input#pre_button', name);
+        I.pressKey("Enter");
         I.clickCss('button#domain');
         I.click(locate("button.dropdown-item").withText(emailDomain));
         I.wait(1);

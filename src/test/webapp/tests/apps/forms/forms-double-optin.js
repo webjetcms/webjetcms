@@ -1,4 +1,4 @@
-Feature('apps.forms-double-optin');
+Feature('apps.forms.forms-double-optin');
 
 var username = 'name.autotest.' ;
 var text = 'Dobry den, toto je skusobny text';
