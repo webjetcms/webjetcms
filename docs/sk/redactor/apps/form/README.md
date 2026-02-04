@@ -152,5 +152,5 @@ Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuál
 - ```formmailShowClassicErrorMessage``` - Ak je nastavene na ```true``` bude zobrazovať klasické validačné hlásenie formuláru hore nad formulárom namiesto hlásenia pri jednotlivých poliach.
 - ```formmailScrollTopAfterSend``` - Ak je nastavene na ```true``` posunie sa stránka po odoslaní na vrch formuláru (aby bolo vidno hlásenie o odoslaní).
 - ```formmailResetFormAfterSend``` - Ak je nastavene na ```true``` po úspešnom odoslaní sa vyčistí formulár.
-- ```formmailSendUserInfoSenderName``` - Pošle sa ako meno odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formmail_sendUserInfoDocId```. Ak je prázdne, pošle sa meno autora stránky, ktorej obsah sa posiela do e-mailu.
-- ```formmailSendUserInfoSenderEmail``` - Pošle sa ako e-mail odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formmail_sendUserInfoDocId```. Ak je prázdne, pošle sa e-mail autora stránky, ktorej obsah sa posiela do e-mailu.
+- ```formmailSendUserInfoSenderName``` - Pošle sa ako meno odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formMailSendUserInfoDocId```. Ak je prázdne, pošle sa meno autora stránky, ktorej obsah sa posiela do e-mailu.
+- ```formmailSendUserInfoSenderEmail``` - Pošle sa ako e-mail odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formMailSendUserInfoDocId```. Ak je prázdne, pošle sa e-mail autora stránky, ktorej obsah sa posiela do e-mailu.

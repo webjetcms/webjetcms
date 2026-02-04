@@ -78,9 +78,6 @@ public class FormSimpleApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.formsimple.formName")
     private String formName;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.formsimple.rowView")
-    private Boolean rowView;
-
     /* TAB ADVANCED */
 
     @DataTableColumnNested

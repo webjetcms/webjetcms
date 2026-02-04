@@ -68,7 +68,7 @@ function setPage(document)
 	else if (lastPressed == $('#use_form_mail_doc_id_button').get(0))
 		$("input[name='attribute_useFormMailDocId']").val(document[0])
 	else
-		$("input[name='attribute_formmailSendUserInfoDocId']").val(document[0])
+		$("input[name='attribute_formMailSendUserInfoDocId']").val(document[0])
 }
 
 function saveAttributes(that)

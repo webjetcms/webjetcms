@@ -16,7 +16,7 @@
 
     function appAfterXhr(response) {
         const formSettingsBasicTabCols = ["recipients", "emailTextBefore", "emailTextAfter", "forceTextPlain", "addTechInfo"];
-        const formSettingsAdvancedTabCols = ["ccEmails", "bccEmails", "replyTo", "subject", "forward", "forwardFail", "forwardType", "useFormMailDoc", "formmailSendUserInfoDoc", "afterSendInterceptor", "encryptKey", "encrypKeyInfo"];
+        const formSettingsAdvancedTabCols = ["ccEmails", "bccEmails", "replyTo", "subject", "forward", "forwardFail", "forwardType", "useFormMailDoc", "useFormDoc", "formmailSendUserInfoDoc", "afterSendInterceptor", "encryptKey", "encrypKeyInfo"];
 
         let filteredColumns = [];
         response.columns.forEach(function(column) {
@@ -71,6 +71,9 @@
 
             return 0;
         });
+
+        console.log("Filtered Columns:", filteredColumns);
+        filteredColumns = WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
 
         response.columns = filteredColumns;
     }
@@ -136,7 +139,6 @@
         // Prepare include FIRST !!
         let include = "!INCLUDE(" + componentPath;
         include += ", formName=" + params.formName;
-        include += ", rowView=" + params.rowView;
 
         //calling just to get editor data
         let defaultInclude = convertObjectToInludeParams(params);

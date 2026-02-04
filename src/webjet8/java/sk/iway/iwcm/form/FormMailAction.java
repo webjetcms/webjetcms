@@ -99,9 +99,9 @@ public class FormMailAction extends HttpServlet
 	 *  <INPUT type="hidden" name="body" value="Formular palivove karty z
 	 *  www.slovnaft.sk"><br>
 	 *
-	 *  formmail_sendUserInfoDocId - docId stranky, ktorej text sa posle emailom odosielatelovi formularu (jeho email je v poli email)
-	 *  formmail_overwriteOldForms - ak je nastavene na true a je prihlaseny pouzivatel tak sa predtym vyplneny formular prepise novym
-	 *  formmail_allowOnlyOneSubmit - ak je nastavene na true a je prihlaseny pouzivatel a uz vyplnil formular, nezapise sa znova do DB a formfail sa nastavi na formIsAllreadySubmitted
+	 *  formMailSendUserInfoDocId - docId stranky, ktorej text sa posle emailom odosielatelovi formularu (jeho email je v poli email)
+	 *  overwriteOldForms - ak je nastavene na true a je prihlaseny pouzivatel tak sa predtym vyplneny formular prepise novym
+	 *  allowOnlyOneSubmit - ak je nastavene na true a je prihlaseny pouzivatel a uz vyplnil formular, nezapise sa znova do DB a formfail sa nastavi na formIsAllreadySubmitted
 	 *
 	 *
 	 *
@@ -216,6 +216,8 @@ public class FormMailAction extends HttpServlet
 		for(Map.Entry<String, String> entry : options.entrySet())
 		{
 			String paramName = entry.getKey();
+			String value = entry.getValue();
+			if (Tools.isEmpty(value)) continue;
 			//nastaveny parameter useFormDocId ma prioritu z databazy (lebo WriteTag ho vzdy nastavi podla aktualnej stranky)
 			if (wrapped.hasParameter(paramName)==false || "useFormDocId".equals(paramName))
 			{
@@ -224,8 +226,8 @@ public class FormMailAction extends HttpServlet
 					wrapped.setParameter("useFormDocIdOriginal", request.getParameter("useFormDocId"));
 					Logger.debug(FormMailAction.class, "fillRequestWithDatabaseOptions, setting: useFormDocIdOriginal with value from useFormDocId="+request.getParameter("useFormDocId"));
 				}
-				Logger.debug(FormMailAction.class, "fillRequestWithDatabaseOptions, setting:"+paramName+"="+entry.getValue());
-				wrapped.setParameter(paramName, entry.getValue());
+				Logger.debug(FormMailAction.class, "fillRequestWithDatabaseOptions, setting:"+paramName+"="+value);
+				wrapped.setParameter(paramName, value);
 				wrapped.setAttribute("DB"+paramName, "true");
 			}
 		}
@@ -332,7 +334,13 @@ public class FormMailAction extends HttpServlet
 		String formMailEncodingParam = request.getParameter("formMailEncoding");
 		if (Tools.isNotEmpty(formMailEncodingParam))
 		{
-			emailEncoding = formMailEncodingParam;
+			if ("true".equalsIgnoreCase(formMailEncodingParam)) {
+				emailEncoding = "ASCII";
+			} else if ("false".equalsIgnoreCase(formMailEncodingParam)) {
+				//use constants value
+			} else {
+				emailEncoding = formMailEncodingParam;
+			}
 		}
 
 		String host = Constants.getString("smtpServer");
@@ -1041,7 +1049,7 @@ public class FormMailAction extends HttpServlet
 						Logger.error(FormMailAction.class, ex);
 					}
 
-					if (userId > 0 && "true".equals(request.getParameter("formmail_overwriteOldForms")))
+					if (userId > 0 && ("true".equals(request.getParameter("overwriteOldForms")) || "true".equals(request.getParameter("formmail_overwriteOldForms")) ))
 					{
 						ps = db_conn.prepareStatement("DELETE FROM forms WHERE form_name=? AND user_id=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
 						ps.setString(1, formName);
@@ -1052,7 +1060,7 @@ public class FormMailAction extends HttpServlet
 
 					boolean allowInsert = true;
 
-					if (userId > 0 && "true".equals(request.getParameter("formmail_allowOnlyOneSubmit")))
+					if (userId > 0 && ("true".equals(request.getParameter("allowOnlyOneSubmit")) || "true".equals(request.getParameter("formmail_allowOnlyOneSubmit"))))
 					{
 						ps = db_conn.prepareStatement("SELECT * FROM forms WHERE form_name=? AND user_id=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
 						ps.setString(1, formName);
@@ -1143,7 +1151,7 @@ public class FormMailAction extends HttpServlet
 						String pdfUrl = "";
 						attachs = new ArrayList<>();
 
-						if("true".equals(request.getParameter("isPdfVersion")))
+						if("true".equals(request.getParameter("isPdf")) || "true".equals(request.getParameter("isPdfVersion")))
 						{
 							pdfUrl = saveFormAsPdf(appendStyle(htmlData.toString(), cssData, null, forceTextPlain), formId, request);
 							IwcmFile pdfFile =  new IwcmFile(pdfUrl);
@@ -1318,7 +1326,8 @@ public class FormMailAction extends HttpServlet
 				}
 			}
 
-			int sendUserInfoDocId = Tools.getIntValue(request.getParameter("formmail_sendUserInfoDocId"), -1);
+			int sendUserInfoDocId = Tools.getIntValue(request.getParameter("formMailSendUserInfoDocId"), -1);
+			if (sendUserInfoDocId < 0) sendUserInfoDocId = Tools.getIntValue(request.getParameter("formmail_sendUserInfoDocId"), -1);
 			Logger.debug(FormMailAction.class,"sendUserInfoDocId="+sendUserInfoDocId+" email="+email);
 			if (sendUserInfoDocId>0)
 			{
@@ -2416,7 +2425,7 @@ public class FormMailAction extends HttpServlet
 	}
 
 	/**
-	 * Odoslanie notifikacie na email navstevnika, ktory ho vyplnil, zadane v poli formmail_sendUserInfoDocId
+	 * Odoslanie notifikacie na email navstevnika, ktory ho vyplnil, zadane v poli formMailSendUserInfoDocId
 	 * @param sendUserInfoDocId
 	 * @param formId
 	 * @param email

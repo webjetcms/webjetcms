@@ -305,7 +305,11 @@ String formName = sanitizeFieldId(pageParams.getValue("formName", ""));
 
 if (Tools.isEmpty(formName)) formName = "form-simple";
 
+Map<String, String> attributes = new FormSettingsService().load(DocTools.removeChars(formName, true));
 boolean rowView = pageParams.getBooleanValue("rowView", false);
+if (rowView == false && attributes.containsKey("rowView")) {
+   rowView = "true".equals(attributes.get("rowView"));
+}
 
 //out.println("formName="+formName+" recipients="+recipients+" ppFormName="+pageParams.getValue("formName", "Form Simple")+" includePP="+(String)request.getAttribute("includePageParams"));
 
@@ -313,7 +317,7 @@ Prop prop = Prop.getInstance(lng);
 String requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
 
 boolean isEmailRender = request.getAttribute("renderingIncludes")!=null;
-Map<String, String> attributes = new FormSettingsService().load(DocTools.removeChars(formName, true));
+
 
 String recipients = "";
 if (attributes!=null && Tools.isNotEmpty(attributes.get("recipients"))) recipients = attributes.get("recipients");

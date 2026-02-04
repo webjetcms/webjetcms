@@ -187,7 +187,7 @@ public class FormSettingsEntity {
     private transient String encrypKeyInfo;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_doc_id", className="not-formsimple dt-tree-page-null")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="editor.form.use_form_doc_id", className="dt-tree-page-null")
     private transient DocDetailsDto useFormDoc;
 
     @Transient

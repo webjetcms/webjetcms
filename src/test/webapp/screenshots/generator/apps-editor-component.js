@@ -156,15 +156,11 @@ Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document,
     }, 800, 600);
 
     // MULTISTEP FORM
-    Apps.insertApp('Viackrokový formulár', '#multistep_form-title', 156274 , false);
+    Apps.insertApp('Formulár', '#multistep_form-title', 156274 , false);
     Document.screenshotElement(".cke_dialog_ui_iframe", basePath+"/components/multistep-form/screenshot-1"+lngSuffix+".jpg");
-    I.amOnPage("/apps/multistep-formular/app-insert-test.html");
-    I.resizeWindow(1920, 1080);
-    I.waitForVisible("button[type='submit']");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Registracia-na-online-kurz");
     Document.screenshotElement(".ly-content .container", basePath+"/components/multistep-form/screenshot-2"+lngSuffix+".jpg");
-    I.fillField("#email-1", "sivan@noopmail.com");
-    I.clickCss("button[type='submit']");
-    I.waitForVisible("#multiupload_images-1-dropzone");
+    I.amOnPageLng("/apps/formular/registracia-online-kurz.html");
     Document.screenshotElement(".ly-content .container", basePath+"/components/multistep-form/screenshot-3"+lngSuffix+".jpg");
 
     screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);

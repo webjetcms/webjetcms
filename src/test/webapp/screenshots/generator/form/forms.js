@@ -63,7 +63,7 @@ Scenario('forms email confirmation', ({ I , DT, DTE, Document }) => {
     Document.screenshotElement('.cke_dialog_body', '/redactor/apps/form/advanced-settings.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(label[for="attribute-doubleOptIn"])', '/redactor/apps/form/checkbox-confirmation.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[id="attribute_recipients_id"])', '/redactor/apps/form/input-recipient.png');
-    Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[name="attribute_formmail_sendUserInfoDocId"])', '/redactor/apps/form/input-docid.png');
+    Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[name="attribute_formMailSendUserInfoDocId"])', '/redactor/apps/form/input-docid.png');
 
     I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
     DT.waitForLoader();
