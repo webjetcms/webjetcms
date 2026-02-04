@@ -28,8 +28,8 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
-import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -187,6 +187,12 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
      * @param entity
      */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
+        //Get email recipient(user) using email
+        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
+        return prepareEmailForInsert(campaign, loggedUserId, entity, recipient);
+    }
+
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity, UserDetails recipient) {
 
         //trimni email adresu
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
@@ -194,8 +200,6 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         //sprav lower case
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());
 
-        //Get email recipient(user) using email
-        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
         if(recipient == null) {
             entity.setRecipientUserId(-1);
             if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName("- -");

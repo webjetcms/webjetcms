@@ -113,6 +113,7 @@
 - Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
 - Galéria - doplnené chýbajúce značky (#57837).
 - Značky - opravené nastavenie priečinkov existujúcej značky v sekcii Zobraziť pre (#57837).
+- Hromadný e-mail - opravené pridávanie príjemcov cez email, v prípade že existuje viac používateľov s rovnakou emailovou adresou (#58217).
 
 ### Bezpečnosť
 

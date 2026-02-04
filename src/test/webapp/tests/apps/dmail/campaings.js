@@ -7,7 +7,7 @@ var opensWrapper = "#datatableFieldDTE_Field_opensTab_wrapper";
 
 var excelFile = "tests/apps/dmail/emails-import.xlsx";
 
-Before(({ I, login }) => {
+Before(({ I, DT, login }) => {
     login('admin');
     I.amOnPage("/apps/dmail/admin/");
 
@@ -17,6 +17,8 @@ Before(({ I, login }) => {
         entityNameOriginal = "name-autotest-" + randomNumber;
         console.log(entityNameOriginal);
     }
+
+    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
 });
 
 Scenario('campaings-zakladne testy @baseTest', ({I, DTE}) => {
@@ -896,4 +898,76 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('BUG multiple users same email', ({I, DT, DTE}) => {
+    I.amOnPage("/apps/dmail/admin/?id=-1");
+
+    const usersEmail = "test_campaign@balat.sk";
+    let entityName = "sameMailBug_" + randomNumber + "_autotest";
+
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.fillField("#DTE_Field_subject", entityName);
+
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
+    I.click('Testovaci newsletter');
+    DTE.save();
+
+    DT.filterEquals("subject", entityName);
+    I.click(entityName);
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
+    I.click("CampaingnTestBug", "div.DTE_Field_Name_editorFields\\.permisions");
+    DTE.save();
+
+    DT.filterEquals("subject", entityName);
+    I.click(entityName);
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    DT.filterEquals("recipientEmail", usersEmail);
+
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_info");
+    I.see("First Campaign");
+
+    I.click(DT.btn.recipients_add_button);
+    DTE.waitForEditor('datatableFieldDTE_Field_recipientsTab')
+    DTE.fillField('recipientEmail', usersEmail);
+    DTE.save('datatableFieldDTE_Field_recipientsTab');
+
+    I.waitForElement("#toast-container-webjet > div.toast-warning");
+    I.waitForElement( locate("#toast-container-webjet > div.toast-warning > div.toast-message").withText("Zadaný email je duplicitný alebo už existuje: " + usersEmail) );
+    I.toastrClose();
+
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_info");
+    I.see("First Campaign");
+
+    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
+    I.click("CampaingnTestBug", "div.DTE_Field_Name_editorFields\\.permisions");
+    DTE.save();
+
+    DT.filterEquals("subject", entityName);
+    I.click(entityName);
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+
+    I.click(DT.btn.recipients_add_button);
+    DTE.waitForEditor('datatableFieldDTE_Field_recipientsTab')
+    DTE.fillField('recipientEmail', usersEmail);
+    DTE.save('datatableFieldDTE_Field_recipientsTab');
+
+    I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_recipientsTab_info");
+    I.see("Third Campaign");
+    DTE.cancel();
+
+    I.say("Remove entity");
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.dontSee(entityName);
 });
