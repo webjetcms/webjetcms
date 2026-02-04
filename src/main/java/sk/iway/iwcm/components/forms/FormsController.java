@@ -140,7 +140,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             formStepsRepository.save(fse);
 
             if ("multistep".equals(entity.getFormType())) {
-                setRedirect("/apps/form/admin/form-content/?formName=" + Tools.URLEncode(saved.getFormName()));
+                setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));
             }
         }
     }

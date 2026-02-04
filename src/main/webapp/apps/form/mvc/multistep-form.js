@@ -1,13 +1,11 @@
-// ES module for Multistep Form app
-// Exports class `MultistepForm` which encapsulates all logic and DOM rendering
 /**
  * Multistep Form application controller.
  *
  * Renders the shell, loads individual steps from server, submits data,
  * and handles success/error UI states.
  */
-
 export class MultistepForm {
+
     /**
      * Create a new MultistepForm instance.
      * @param {Object} [options] - Initialization options.

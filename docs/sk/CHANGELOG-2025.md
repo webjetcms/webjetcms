@@ -6,7 +6,7 @@
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
-> Nový nástroj pre tvorbu formulárov umožňuje vytvárať viac krokové formuláre s pokročilými funkciami ako **podmienené zobrazenie polí**, **podmienená validácia** a **prispôsobené správy po odoslaní**.
+> Nový nástroj pre tvorbu formulárov umožňuje ľahko vytvárať viac krokové formuláre s možnosťou programovej validácie jednotlivých krokov a možnosťou potvrdenia platnosti emailovej adresy pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
 
 ### Prelomové zmeny
 

@@ -24,11 +24,11 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=Registracia-na-online-kurz");
     Document.screenshot("/redactor/apps/multistep-form/form-detail.png", null, null, "div.md-tabs > ul.nav > li:nth-child(2) > a");
 
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_1");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_1");
     Document.screenshot("/redactor/apps/multistep-form/default-form.png");
 
     I.resizeWindow(1360, 720)
-    I.amOnPage("/apps/form/admin/form-content/?formName=Registracia-na-online-kurz");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Registracia-na-online-kurz");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/multistep-form/real-form.png");
 
@@ -43,7 +43,7 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/multistep-form/form-item-editor.png");
     DTE.cancel();
 
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_rowView");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_rowView");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/multistep-form/row-view.png");
 
@@ -56,7 +56,7 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/form-step-email-verification-advanced.png");
     DTE.cancel();
 
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_emailVerification");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_emailVerification");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/form/form-step-email-verification-1.png");
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );

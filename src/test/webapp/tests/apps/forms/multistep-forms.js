@@ -59,7 +59,7 @@ Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
 });
 
 Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
-    I.amOnPage("/apps/form/admin/form-content/?formName=" + newMultistepFormName);
+    I.amOnPage("/apps/form/admin/form-steps/?formName=" + newMultistepFormName);
 
     I.say("Edit first default step");
     I.waitForVisible("#formStepsDataTable_wrapper");
@@ -523,7 +523,7 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.wait(35);
 
     I.say("Test generated preview");
-    I.amOnPage("/apps/form/admin/form-content/?formName=Multistepform_rowView");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_rowView");
     I.waitForVisible("#formStepsDataTable_wrapper");
 
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -87,9 +88,12 @@ public class FormSettingsService {
             return;
         }
 
-        Long formSettingsId = formSettingsRepository.findId(formName, CloudToolsForCore.getDomainId());
-        FormSettingsEntity formSettings = new FormSettingsEntity();
-        formSettings.setId(formSettingsId);
+        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        if(formSettings == null) {
+            formSettings = new FormSettingsEntity();
+            formSettings.setFormName(formName);
+            formSettings.setDomainId(CloudToolsForCore.getDomainId());
+        }
 
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String key = entry.getKey();
@@ -102,18 +106,78 @@ public class FormSettingsService {
                 if (fieldType == String.class) {
                     field.set(formSettings, value);
                 } else if (fieldType == Integer.class) {
-                    field.set(formSettings, value != null ? Integer.valueOf(value) : null);
+                    field.set(formSettings, getIntegerValue(value));
                 } else if (fieldType == Long.class) {
-                    field.set(formSettings, value != null ? Long.valueOf(value) : null);
+                    field.set(formSettings, getLongValue(value));
                 } else if (fieldType == Boolean.class) {
-                    field.set(formSettings, value != null ? Boolean.valueOf(value) : null);
+                    field.set(formSettings, getBooleanValue(value));
                 }
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException("Failed to set field: " + key + " with value: " + value, e);
+            } catch (Exception e) {
+                Logger.error(this, "Failed to set field: " + key + " with value: " + value, e);
             }
         }
 
         formSettingsRepository.save(formSettings);
+    }
+
+    private Integer getIntegerValue(String value)
+	{
+        if (value == null) {
+            return null;
+        }
+		Integer ret = null;
+		try
+		{
+			if (value!=null)
+			{
+				ret = Integer.parseInt(value.trim());
+			}
+		}
+		catch (Exception ex)
+		{
+
+		}
+		return(ret);
+	}
+
+    private Long getLongValue(String value)
+    {
+        if (value == null) {
+            return null;
+        }
+        Long ret = null;
+        try
+        {
+            if (value!=null)
+            {
+                ret = Long.parseLong(value.trim());
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+        return(ret);
+    }
+
+    private Boolean getBooleanValue(String value)
+    {
+        if (value == null) {
+            return null;
+        }
+        Boolean ret = null;
+        try
+        {
+            if (value!=null)
+            {
+                ret = Boolean.parseBoolean(value.trim());
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+        return(ret);
     }
 
     private static Map<String, String> toAttributeMap(Object entity) {

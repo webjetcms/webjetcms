@@ -2406,7 +2406,6 @@ export const dataTableInit = options => {
             //     rightColumns: 0
             // },
 
-            // KOKOS
             select: {
                 style: DATA.toggleStyle,
                 selector: DATA.toggleSelector
