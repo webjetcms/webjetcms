@@ -65,7 +65,7 @@ Scenario('forms email confirmation', ({ I , DT, DTE, Document }) => {
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[id="attribute_recipients_id"])', '/redactor/apps/form/input-recipient.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[name="attribute_formMailSendUserInfoDocId"])', '/redactor/apps/form/input-docid.png');
 
-    I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
+    I.amOnPage('/apps/form/admin/detail/?formName=Formular-doubleoptin');
     DT.waitForLoader();
     Document.screenshotElement('#forms-list-app .dt-scroll', '/redactor/apps/form/forms-list.png', 1280, 350);
     I.wjSetDefaultWindowSize();

@@ -162,23 +162,6 @@
                 className: "allow-html td-note-column",
             });
 
-            // Double Opt-In extra column
-            if (data.doubleOptIn === true) {
-                filteredColumns.splice(6, 0, {
-                    data: "doubleOptinConfirmationDate",
-                    name: "doubleOptinConfirmationDate",
-                    title: WJ.translate('formslist.doubleOptInDate.js'),
-                    renderFormat: "dt-format-date-time",
-                    orderable: true,
-                    className: "cell-not-editable",
-                    editor: {
-                        type: "datetime",
-                        attr: { disabled: true },
-                        tab: "basic"
-                    }
-                });
-            }
-
             // Add form fields as columns
             if (Array.isArray(data.columns)) {
                 data.columns.forEach(col => {
@@ -235,6 +218,23 @@
                 const tabB = (b.editor && b.editor.tab) ? b.editor.tab : 'personalInfo';
                 return (tabOrder[tabA] || 99) - (tabOrder[tabB] || 99);
             });
+
+            // Double Opt-In extra column
+            if (data.doubleOptIn === true) {
+                filteredColumns.splice(4, 0, {
+                    data: "doubleOptinConfirmationDate",
+                    name: "doubleOptinConfirmationDate",
+                    title: WJ.translate('formslist.doubleOptInDate.js'),
+                    renderFormat: "dt-format-date-time",
+                    orderable: true,
+                    className: "cell-not-editable",
+                    editor: {
+                        type: "datetime",
+                        attr: { disabled: true },
+                        tab: "basic"
+                    }
+                });
+            }
         })
         .catch(err => { console.error(err); });
 
@@ -259,7 +259,7 @@
                         }
 
                         // set class for not confirmed double opt-in forms
-                        if (typeof j.doubleOptinHash !== "undefined" && j.doubleOptinHash) {
+                        if (typeof j.doubleOptinHash !== "undefined" && j.doubleOptinHash != null && j.doubleOptinHash != "") {
                             if (typeof j.doubleOptinConfirmationDate !== "undefined" && j.doubleOptinConfirmationDate == null) {
                                 j.editorFields = { rowClass: "is-disabled" };
                             }

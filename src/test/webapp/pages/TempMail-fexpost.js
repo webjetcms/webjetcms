@@ -25,6 +25,7 @@ module.exports = {
         });
         await I.wait(5);
         I.switchTo();
+        I.waitForElement('input#pre_button', 40);
         I.fillField('input#pre_button', name);
         I.pressKey("Enter");
         I.clickCss('button#domain');
@@ -42,7 +43,9 @@ module.exports = {
         I.waitForElement("div.inbox > div:nth-of-type(2) div.subj", 60);
         I.clickCss("div.inbox > div:nth-of-type(2) div.subj");
         I.waitForElement("div#info", 10);
+        I.waitForElement("div.subject.mb-20", 60);
         I.wait(1);
+
     },
 
     /**
@@ -85,11 +88,9 @@ module.exports = {
         }
 
         I.say('Vymazávam všetky e-maily');
-        let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
-        if(numberOfEmails > 0) {
-            I.clickCss("button#delete", );
-            I.clickCss("button#confirm");
-        }
+        I.click(locate("button").withText("Destroy inbox"));
+        I.waitForElement("div.modal-flex.flex-md-row");
+        I.click("button#confirm");
 
         I.waitForElement(".loading.m-auto", 60);
     },

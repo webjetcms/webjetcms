@@ -2555,6 +2555,9 @@ public class UpdateDatabase
 			String formName = key.substring(0, idx);
 			int domainId = Integer.parseInt( key.substring(idx + 1) );
 
+			//delete old record if exists (so we can run this multiple times)
+			formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
+
 			FormSettingsEntity newSettings = new FormSettingsEntity();
 			newSettings.setId(null);
 			newSettings.setFormName(formName);
@@ -2565,6 +2568,16 @@ public class UpdateDatabase
 				String paramName = attr.getFirst();
 				paramName = FormSettingsEntity.toPascalCase(paramName);
 				String value = attr.getSecond();
+
+				if ("formmailSenduserinfodocid".equals(paramName)) paramName = "formMailSendUserInfoDocId";
+				else if ("source".equals(paramName)) continue; //skip reserved word
+				else if ("formmailAllowonlyonesubmit".equals(paramName)) paramName = "allowOnlyOneSubmit";
+				else if ("formmailOverwriteoldforms".equals(paramName)) paramName = "overwriteOldForms";
+				else if ("isPdfVersion".equals(paramName)) paramName = "isPdf";
+
+				if ("formMailEncoding".equals(paramName) && "ASCII".equalsIgnoreCase(value)) {
+					value = "true"; //old default was ASCII, new  is boolean
+				}
 
 				try {
 					Field field = type.getDeclaredField(paramName);
@@ -2577,6 +2590,7 @@ public class UpdateDatabase
 						field.set(newSettings, Boolean.valueOf(value));
 					}
 				} catch (Exception e) {
+					Logger.error(UpdateDatabase.class, "Error setting form attribute: " + paramName + " for form: " + formName + ", domainId: " + domainId + " - " + e.getMessage());
 					continue; // err
 				}
 			}

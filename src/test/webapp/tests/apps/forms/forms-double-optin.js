@@ -64,7 +64,7 @@ Scenario("Delete testing data @singlethread", async ({ I, DT, DTE, TempMail }) =
     await TempMail.destroyInbox();
 
     I.relogin('admin');
-    I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
+    I.amOnPage('/apps/form/admin/detail/?formName=Formular-doubleoptin');
     DT.waitForLoader();
     DT.filterStartsWith("col_meno", username);
     I.clickCss('.buttons-select-all');
@@ -87,15 +87,15 @@ async function confirmEmail(TempMail, I) {
 
 function checkEmailConfirmation(I, DT, isConfirmed) {
     I.relogin('admin');
-    I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
+    I.amOnPage('/apps/form/admin/detail/?formName=Formular-doubleoptin');
     DT.waitForLoader();
     DT.filterStartsWith("col_meno", username);
     if (isConfirmed) {
         // if div is present e-mail was confirmed
         I.seeElement(locate('tr > td:nth-child(4) > div.datatable-column-width').withText(date));
-        I.dontSeeElement("#form-detail tr.is-disabled");
+        I.dontSeeElement("#formDetailDataTable tr.is-disabled");
     } else {
-        I.seeElement("#form-detail tr.is-disabled");
+        I.seeElement("#formDetailDataTable tr.is-disabled");
         I.dontSeeElement('tr > td:nth-child(4) > div');
     }
 }
