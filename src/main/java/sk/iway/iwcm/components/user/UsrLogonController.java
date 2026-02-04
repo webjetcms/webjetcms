@@ -101,7 +101,9 @@ public class UsrLogonController extends WebjetComponentAbstract {
                     if (request.getAttribute("successUrl")!=null){
                         succesUrl = request.getAttribute("successUrl").toString();
                     }
-                    if (Tools.isNotEmpty(succesUrl))
+
+                    //security: allow only forwards to local addresses, if requested to external address use redirect set in webpage
+                    if (Tools.isNotEmpty(succesUrl) && succesUrl.startsWith("/") && succesUrl.contains("//")==false)
                     {
                         url = new StringBuilder(succesUrl);
                         //we must redirect, because we are allready in Struts action and the mapping to docid will not work
