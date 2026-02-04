@@ -246,12 +246,12 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
         Set<String> usedEmails = new HashSet<>();
-        Map<Integer, UserDetails> campaingnUsersTable = new Hashtable<>();
+        Map<Integer, UserDetails> campaignUsersTable = new Hashtable<>();
         if (entity.getId() != null && entity.getId().longValue()>0) {
             for(Integer userId : emailsRepository.getAllCampainUserIds( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
                 UserDetails recipient = UsersDB.getUser(userId);
                 if(recipient != null) {
-                    campaingnUsersTable.putIfAbsent(recipient.getUserId(), recipient);
+                    campaignUsersTable.putIfAbsent(recipient.getUserId(), recipient);
                     usedEmails.add(recipient.getEmail().toLowerCase());
                 }
             }
@@ -263,11 +263,11 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         //Get all unsubscribed emails
         Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
 
-        Map<Integer, UserDetails> addCampaingnUsersTable = new Hashtable<>();
-        for(Integer recpientId : recpientIds) {
+        Map<Integer, UserDetails> addCampaignUsersTable = new Hashtable<>();
+        for(Integer recipientId : recpientIds) {
 
-            UserDetails recipient = campaingnUsersTable.get(recpientId);
-            if(recipient == null) recipient = UsersDB.getUser(recpientId);
+            UserDetails recipient = campaignUsersTable.get(recipientId);
+            if(recipient == null) recipient = UsersDB.getUser(recipientId);
             else continue;
 
             if(recipient == null) continue;
@@ -279,7 +279,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             if(unsubscribedEmails.contains(recipient.getEmail().toLowerCase()) == true) continue;
             
             //
-            addCampaingnUsersTable.put(recpientId, recipient);
+            addCampaignUsersTable.put(recipientId, recipient);
             usedEmails.add(recipient.getEmail().toLowerCase());
 
             //Check validity then continue
