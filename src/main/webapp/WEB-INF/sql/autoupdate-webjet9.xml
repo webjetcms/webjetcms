@@ -2784,12 +2784,12 @@
                     <string>
                         CREATE TABLE form_steps (
                             id INTEGER NOT NULL PRIMARY KEY,
-                            form_name NVARCHAR(255) NOT NULL,
-                            header CLOB NULL,
-                            next_step_btn_label NVARCHAR(255) NULL,
-                            back_step_btn_label NVARCHAR(255) NULL,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            header CLOB,
+                            next_step_btn_label NVARCHAR2(255),
+                            back_step_btn_label NVARCHAR2(255),
                             sort_priority INTEGER NOT NULL,
-                            step_bonus_html CLOB NULL,
+                            step_bonus_html CLOB,
                             current_position INTEGER NOT NULL,
                             max_position INTEGER NOT NULL,
                             domain_id INT DEFAULT 1 NOT NULL
@@ -2878,11 +2878,11 @@
                             form_name NVARCHAR2(255) NOT NULL,
                             field_type NVARCHAR2(255) NOT NULL,
                             required SMALLINT NULL,
-                            label NVARCHAR2(255) NOT NULL,
-                            value NVARCHAR2(255) NOT NULL,
-                            placeholder NVARCHAR2(255) NOT NULL,
-                            tooltip NVARCHAR2(255) NOT NULL,
-                            regex_validation NVARCHAR2(255) NULL,
+                            label NVARCHAR2(255),
+                            value NVARCHAR2(255),
+                            placeholder NVARCHAR2(255),
+                            tooltip NVARCHAR2(255),
+                            regex_validation NVARCHAR2(255),
                             item_form_id NVARCHAR2(255) NOT NULL,
                             step_id INTEGER NOT NULL,
                             sort_priority INTEGER NOT NULL,
@@ -3018,17 +3018,17 @@
                     <string>
                         CREATE TABLE form_settings (
                             id INTEGER NOT NULL PRIMARY KEY,
-                            form_name NVARCHAR(255) NOT NULL,
-                            recipients NVARCHAR(255) NULL,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            recipients NVARCHAR2(255) NULL,
                             row_view SMALLINT NULL,
-                            cc_emails NVARCHAR(255) NULL,
-                            bcc_emails NVARCHAR(255) NULL,
-                            reply_to NVARCHAR(255) NULL,
-                            subject NVARCHAR(255) NULL,
-                            savedb NVARCHAR(255) NULL,
-                            forward NVARCHAR(255) NULL,
-                            forward_fail NVARCHAR(255) NULL,
-                            forward_type NVARCHAR(255) NULL,
+                            cc_emails NVARCHAR2(255) NULL,
+                            bcc_emails NVARCHAR2(255) NULL,
+                            reply_to NVARCHAR2(255) NULL,
+                            subject NVARCHAR2(255) NULL,
+                            savedb NVARCHAR2(255) NULL,
+                            forward NVARCHAR2(255) NULL,
+                            forward_fail NVARCHAR2(255) NULL,
+                            forward_type NVARCHAR2(255) NULL,
                             use_form_doc_id INTEGER NULL,
                             use_form_mail_doc_id INTEGER NULL,
                             force_text_plain SMALLINT NULL,
@@ -3039,19 +3039,19 @@
                             message_as_attach SMALLINT NULL,
                             double_opt_in SMALLINT NULL,
                             add_tech_info SMALLINT NULL,
-                            message_as_attach_file_name NVARCHAR(255) NULL,
+                            message_as_attach_file_name NVARCHAR2(255) NULL,
                             formmail_send_user_info_doc_id INTEGER NULL,
-                            fields_email_header NVARCHAR(255) NULL,
-                            after_send_interceptor NVARCHAR(255) NULL,
-                            encryption_key NVARCHAR(1024) NULL,
+                            fields_email_header NVARCHAR2(255) NULL,
+                            after_send_interceptor NVARCHAR2(255) NULL,
+                            encryption_key NVARCHAR2(1024) NULL,
                             max_size_in_kilobytes INTEGER NULL,
-                            allowed_extensions NVARCHAR(255) NULL,
+                            allowed_extensions NVARCHAR2(255) NULL,
                             picture_height INTEGER NULL,
                             picture_width INTEGER NULL,
-                            email_text_before NVARCHAR(1024) NULL,
-                            email_text_after NVARCHAR(1024) NULL,
-                            form_add_classes NVARCHAR(255) NULL,
-                            form_css NVARCHAR(1024) NULL,
+                            email_text_before NVARCHAR2(1024) NULL,
+                            email_text_after NVARCHAR2(1024) NULL,
+                            form_add_classes NVARCHAR2(255) NULL,
+                            form_css NVARCHAR2(1024) NULL,
                             domain_id INTEGER DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_form_settings START WITH 1;
@@ -3059,8 +3059,8 @@
                             FOR EACH ROW
                                 BEGIN
                                     IF :NEW.id IS NULL THEN
-                                        SELECT S_form_settings.NEXTVAL INTO :NEW.id FROM dual;
-                                    END IF;
+                                        SELECT S_form_settings.NEXTVAL INTO :NEW.id FROM dual|
+                                    END IF|
                                 END|
                         ;
                     </string>

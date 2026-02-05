@@ -426,7 +426,7 @@ block content
 
                     let groupsDatatableEventsBinded = false;
                     groupsDatatable.EDITOR.on('open', function (e, type) {
-                        $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+                        $("#groups-datatable_modal > div.modal-dialog").addClass("modal-xl");
                         //zobrazovat-pole-pre-zadanie-domeny-len-pre-korenove-priecinky
                         //console.log("open e=", e);
                         if (typeof e.target.currentJson != "undefined") {

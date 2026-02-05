@@ -233,9 +233,10 @@ public class FormHtmlHandler {
             JSONObject item = new JSONObject(stepItem);
             String fieldType = item.getString("fieldType");
 
-            item.put("labelOriginal", item.getString("label"));
-            if (Tools.isEmpty(item.getString("label")))
+            item.put("labelOriginal", stepItem.getLabel());
+            if (Tools.isEmpty(stepItem.getLabel())) {
                 item.put("label", prop.getText("components.formsimple.label." + fieldType));
+            }
 
             String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), this.formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
 

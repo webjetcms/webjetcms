@@ -181,14 +181,16 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         JSONObject item = new JSONObject(stepItem);
         String fieldType = item.getString("fieldType");
 
-        item.put("labelOriginal", item.getString("label"));
-        if (Tools.isEmpty(item.getString("label")))
+        item.put("labelOriginal", stepItem.getLabel());
+        if (Tools.isEmpty(stepItem.getLabel())) {
             item.put("label", getProp().getText("components.formsimple.label." + fieldType));
+        }
 
         String itemHtml = FormsService.replaceFields(getProp().getText("components.formsimple.input." + fieldType), stepItem.getFormName(), "", item, getProp().getText("components.formsimple.requiredLabelAdd"), false, false, new HashSet<>(), getProp(), getRequest());
 
-        if(itemHtml.contains("!INCLUDE"))
-                itemHtml = EditorToolsForCore.renderIncludes(itemHtml, false, getRequest());
+        if(itemHtml.contains("!INCLUDE")) {
+            itemHtml = EditorToolsForCore.renderIncludes(itemHtml, false, getRequest());
+        }
 
         stepItem.setGeneratedItem(itemHtml);
     }

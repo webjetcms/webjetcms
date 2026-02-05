@@ -1211,3 +1211,8 @@ div.tooltip.show {
         }
     }
 }
+
+//last DTE_Field_Type_quill in tab needs space below for link dialog
+.panel-body .DTE_Field.DTE_Field_Type_quill:last-child {
+  margin-bottom: 20px;
+}
