@@ -4,13 +4,10 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.persistence.Column;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -22,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -120,8 +118,7 @@ public class FormsEntityBasic {
     private Long userId;
 
     // Relation to users table; load lazily, only readable
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @Transient
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @DataTableColumnNested(sortPrefix = "userDetails.")
     private UserDetailsEntity userDetails;
@@ -141,4 +138,8 @@ public class FormsEntityBasic {
 
     @Transient
     private Map<String, String> columnNamesAndValues;
+
+    public UserDetailsEntity getUserDetails() {
+        return UserDetailsService.getUserDetailsCached(userId);
+    }
 }

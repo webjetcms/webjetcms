@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import org.springframework.validation.Errors;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
@@ -30,6 +32,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.AuthorizeAction;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.PasswordsHistoryBean;
@@ -42,6 +45,8 @@ import sk.iway.iwcm.users.UsersDB;
 
 @Service
 public class UserDetailsService {
+
+    private static final String CACHE_KEY = "UserDetailsService.users";
 
     /**
      * Metoda vykona kroky nastavujuce dodatocne udaje po ulozeni hlavnej entity
@@ -621,4 +626,54 @@ public class UserDetailsService {
 
         return false;
     }
+
+    /**
+     * Provide cache for user details. Cache contains map with key = userId and value = UserDetailsEntity. Cache is created if not exists and has TTL 10 minutes.
+     * @return
+     */
+    private static Map<Long, UserDetailsEntity> getUserCache() {
+		Cache cache = Cache.getInstance();
+		@SuppressWarnings("unchecked")
+		Map<Long, UserDetailsEntity> cachedUsers = (Map<Long, UserDetailsEntity>)cache.getObject(CACHE_KEY);
+		if (cachedUsers == null)
+		{
+			cachedUsers = new Hashtable<>();
+			cache.setObject(CACHE_KEY, cachedUsers, 10*60);
+		}
+
+		return cachedUsers;
+	}
+
+    /**
+     * Returns UserDetailsEntity from cache if exists, if not, load it from DB, put into cache and return it. If userId is null or less than 1, return null.
+     * @param userId
+     * @return
+     */
+    public static UserDetailsEntity getUserDetailsCached(Long userId) {
+        if (userId == null || userId < 1L) return null;
+
+        Map<Long, UserDetailsEntity> cachedUsers = getUserCache();
+
+		UserDetailsEntity user = cachedUsers.get(userId);
+		if (user == null)
+		{
+			UserDetailsRepository udr = Tools.getSpringBean("userDetailsRepository", UserDetailsRepository.class);
+            UserDetailsEntity userDetailsEntity = udr.findById(userId).orElse(null);
+			if (userDetailsEntity != null) {
+                //copy properties to new instance, because we need detach entity from hibernate session
+                user = new UserDetailsEntity();
+                NullAwareBeanUtils.copyProperties(userDetailsEntity, user);
+
+                cachedUsers.put(userId, user);
+            }
+		}
+
+        return user;
+    }
+
+    public static void removeUserFromCache(Long userId)
+	{
+		Map<Long, UserDetailsEntity> cachedUsers = getUserCache();
+		cachedUsers.remove(userId);
+	}
 }

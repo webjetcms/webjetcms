@@ -2649,6 +2649,8 @@ public class UsersDB
 	{
 		Map<Integer, UserDetails> cachedUsers = UsersDB.getUserCache();
 		cachedUsers.remove(userId);
+
+		UserDetailsService.removeUserFromCache((long)userId);
 	}
 
 	/**
