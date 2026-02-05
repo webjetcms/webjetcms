@@ -365,7 +365,7 @@ public class EditorService {
 		}
 
 		/*Odoslanie schvalovani a notifikacii*/
-		approveService.sendEmails(editedDoc, historyId);
+		approveService.sendEmails(editedDoc, historyId, docRepo);
 		dt.diff("after sendApproveNotifyEmail");
 
 		if(isNewPage || wasApproved || disableHistory) {
@@ -1417,7 +1417,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean approveAction() {
-		return approveService.approveAction(historyRepo, this);
+		return approveService.approveAction(historyRepo, docRepo, this);
 	}
 
 	/**

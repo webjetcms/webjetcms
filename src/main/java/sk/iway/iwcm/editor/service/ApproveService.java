@@ -26,6 +26,8 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -220,7 +222,7 @@ public class ApproveService {
 	 * @param editorService
 	 * @return return true if approve was success
 	 */
-	public boolean approveAction(DocHistoryRepository docHistoryRepo, EditorService editorService) {
+	public boolean approveAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepository, EditorService editorService) {
 
 		//Get and check historyId
 		int historyId = Tools.getIntValue(request.getParameter("historyid"), -1);
@@ -281,7 +283,7 @@ public class ApproveService {
 
 			String approverNames = getApproveUserNames();
 
-			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes);
+			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes, docDetailsRepository);
 			request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
 
 			//posli info email autorovi
@@ -518,11 +520,11 @@ public class ApproveService {
 	 * @param editedDoc
 	 * @param historyId
 	 */
-    public void sendEmails(DocDetails editedDoc, int historyId) {
+    public void sendEmails(DocDetails editedDoc, int historyId, DocDetailsRepository docDetailsRepository) {
         //Posielanie ziadosti o schvaleni web stranky
 		if (approveByTable != null && approveByTable.size() > 0) {
 			//Posielanie ziadosti o schvaleni web stranky
-			sendWebpageApproveRequestEmail(editedDoc, historyId, currentUser.getUserId(), null);
+			sendWebpageApproveRequestEmail(editedDoc, historyId, currentUser.getUserId(), null, docDetailsRepository);
 		} else if (notifyTable != null && notifyTable.size() > 0) {
 			//Posielanie notifikacii o zmene vo web stranke, neposiela sa, ak sa stranka musi schvalit, preto v else podmienke
 			sendWebpageChangeNotification(editedDoc);
@@ -538,7 +540,7 @@ public class ApproveService {
 	 * @param senderUserId
 	 * @param comment
 	 */
-    public void sendWebpageApproveRequestEmail(DocBasic editedDoc, int historyId, int senderUserId, String comment) {
+    public void sendWebpageApproveRequestEmail(DocBasic editedDoc, int historyId, int senderUserId, String comment, DocDetailsRepository docDetailsRepository) {
 
         if (approveByTable == null || approveByTable.isEmpty()) return;
 
@@ -569,6 +571,22 @@ public class ApproveService {
 		if (Tools.isNotEmpty(comment)) { message.append(comment).append("<br><br>\n\n"); }
 
 		message.append(senderUser.getFullName()).append(" &lt;").append(senderUser.getEmail()).append("&gt;");
+
+		if(editedDoc != null) {
+			DocDetails originalDoc = docDetailsRepository.findById( editedDoc.getDocId() );
+
+			if(originalDoc != null) {
+				// Add to message comapare with chnaged values
+				message.append("<br><br>\n\n").append(prop.getText("doc.approve.changed_params")).append(" : ");
+
+				BeanDiff diff = new BeanDiff().setNew(editedDoc).setOriginal(originalDoc);
+				diff.blacklist("data", "dataAsc");
+
+				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
+				adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+				message.append( adminlogChanges );
+			}
+		}
 
 		String subject = prop.getText("approve.subject") + ": " + title;
 		SendMail.send(senderUser.getFullName(), senderUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
@@ -651,9 +669,6 @@ public class ApproveService {
 	 * @param docHistory - change represented by docHistory entity that was approved/rejected
 	 */
 	private void sendWebpageApproveNotification(boolean isApproved, DocHistory docHistory) {
-		//If there is no one to notify, return
-		if(!needNotification()) return;
-
 		if(isApproved) {
 			//DocHistory Create/Edit action - APPROVED
 
