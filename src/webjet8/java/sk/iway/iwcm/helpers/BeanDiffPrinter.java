@@ -1,11 +1,16 @@
 package sk.iway.iwcm.helpers;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 /**
  *  BeanDiffPrinter.java
@@ -33,7 +38,11 @@ public class BeanDiffPrinter
 	}
 
 	@Override
-	public String toString()
+	public String toString() {
+		return toString(null);
+	}
+
+	public String toString(Prop prop)
 	{
 		try
 		{
@@ -41,21 +50,49 @@ public class BeanDiffPrinter
 			if (changes.size() == 0)
 				return " Žiadne zmeny";
 
-			StringBuilder output = new StringBuilder();
-			for (Entry<String, PropertyDiff> change : changes.entrySet())
-			{
-				output.append('\n').
-					append(change.getKey()).
-					append(": ");
+			// Try prepare Map with column names and translated column titles (stored in DataTableColumn annotation)
+			Map<String, String> translated = new HashMap<>();
+			String className = diff.getNewClassName();
+			if(prop != null && Tools.isNotEmpty(className)) {
+				try {
+					Class<?> entityClass = Class.forName(className);
+					while (entityClass != null) {
+						for (Field field : entityClass.getDeclaredFields()) {
+							field.setAccessible(true);
+							if (field.isAnnotationPresent(DataTableColumn.class)) {
+								DataTableColumn dtcAnn = field.getAnnotation(DataTableColumn.class);
+								if (dtcAnn == null) continue;
+								translated.put(field.getName(), prop.getText( dtcAnn.title()) );
+							}
+						}
 
-				if (diff.hasOriginal()) {
-					output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
-					append(" -> ").
-					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
-				} else {
-					output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+						entityClass = entityClass.getSuperclass();
+					}
+				} catch (Exception ex) {
+					// If something went wrong, deleete whole map
+					translated = null;
 				}
 			}
+
+		StringBuilder output = new StringBuilder();
+		for (Entry<String, PropertyDiff> change : changes.entrySet())
+		{
+			String key = "";
+			if(translated != null && translated.size() > 0) key = translated.get( change.getKey() );
+			if(Tools.isEmpty(key)) key = change.getKey();
+
+			output.append('\n').
+				append( key ).
+				append(": ");
+
+			if (diff.hasOriginal()) {
+				output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
+				append(" -> ").
+				append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+			} else {
+				output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+			}
+		}
 
 			return output.toString();
 		} catch (Exception ex) {
