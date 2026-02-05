@@ -3269,6 +3269,33 @@ public class Tools
 		if (Tools.isEmpty(text)) return "";
 		return Base64.getEncoder().encodeToString(text.getBytes());
 	}
+	
+	/**
+	 * Replace all occurrences of regex pattern in source string with newStr, eg:
+	 * content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+	 * @param source
+	 * @param regexPattern
+	 * @param newStr
+	 * @param isCaseInsensitive
+	 * @return
+	 */
+	public static String replaceRegex(String source, String regexPattern, String newStr, boolean isCaseInsensitive) {
+		if (source == null)
+			return (null);
+
+		//nemozeme pouzit Tools.isEmpty, pretoze to nam trimne medzery aj crlf a podmienka bude zla
+		if (regexPattern == null || regexPattern.isEmpty()) return source;
+
+		Pattern pattern;
+
+		if(isCaseInsensitive)
+			pattern = Pattern.compile(regexPattern, Pattern.CASE_INSENSITIVE);
+		else
+			pattern = Pattern.compile(regexPattern);
+
+		Matcher m = pattern.matcher(source);
+		return m.replaceAll(newStr);
+	}
 
 	/**
 	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException

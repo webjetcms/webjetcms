@@ -163,6 +163,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             notify.addButton(new NotifyButton(getProp().getText("menu.logout"), "btn btn-primary", "ti ti-logout", "window.location.href=$('.js-logout-toggler').attr('href')"));
             addNotify(notify);
         }
+
+        // Remove user from cache
+        UsersDB.removeUserFromCache(entity.getId().intValue());
     }
 
     @Override
