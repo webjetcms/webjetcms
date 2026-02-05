@@ -2730,7 +2730,7 @@ public class UpdateDatabase
 	 * @return
 	 */
 	private static List<LabelValueInteger> getMultistepFormNames() {
-		String query = "SELECT UNIQUE form_name, domain_id FROM form_steps";
+		String query = "SELECT DISTINCT form_name, domain_id FROM form_steps";
 		List<LabelValueInteger> values = new ArrayList<>();
         new ComplexQuery().setSql(query).list(new Mapper<LabelValueInteger>() {
 			@Override

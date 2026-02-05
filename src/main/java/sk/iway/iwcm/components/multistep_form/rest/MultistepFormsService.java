@@ -126,7 +126,7 @@ public class MultistepFormsService {
      */
     public static final String getFormName(Map<String, String> params) {
         String formName = Tools.getStringValue(params.get("formName"), "");
-        return DocTools.removeChars(formName, true);
+        return DocTools.removeChars(formName, false);
     }
 
     /**
@@ -137,7 +137,7 @@ public class MultistepFormsService {
      */
     public static final String getFormName(HttpServletRequest request) {
         String formName = Tools.getStringValue(request.getParameter("formName"), "");
-        return DocTools.removeChars(formName, true);
+        return DocTools.removeChars(formName, false);
     }
 
     /**
