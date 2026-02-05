@@ -4540,7 +4540,7 @@ INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") V
 INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.safeChars', 'safeChars', '^[0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_ ]{1,}$', 23);
 INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.safeChars2', 'safeChars2', '^[0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_\\-]{1,}$', 24);
 INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.time', 'time', '^[0-9]{1,2}[:][0-9]{1,2}$', 25);
-INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.trim', 'trim', '^[^ \f\n\r\t\v]+[.]*', 26);
+INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.trim', 'trim', '^[^ \f\\n\r\t\v]+[.]*', 26);
 INSERT INTO "webjet_cms"."form_regular_exp" ("title", "type", "reg_exp", "id") VALUES ('checkform.title.url', 'url', '^http[s]?:\/\/[a-zA-Z0-9]+([-_\.]?[a-zA-Z0-9])*\.[a-zA-Z]{2,4}([:0-9]*)(\/{1}[%-_~&=\?\.:a-z0-9]*)*$', 27);
 
 

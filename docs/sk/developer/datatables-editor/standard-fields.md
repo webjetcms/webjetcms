@@ -165,7 +165,6 @@ Výberové pole, nastavuje sa typom ```DataTableColumnType.SELECT```.
 
 ![](../../frontend/webpages/customfields/webpages-select.png)
 
-
 Dôležité je definovať možnosti výberového poľa:
 
 ### Prenosom údajov z REST služby
@@ -288,7 +287,6 @@ Jednotlivé možnosti môžete priamo vymenovať pomocou zoznamu ```@DataTableCo
 ```
 
 Všimnite si, že aj keď hodnoty do value zadávate ako reťazec korektne sa pretypujú na číslo (technicky v HTML kóde je všetko reťazec, ale pri odoslaní aj zobrazení to Spring korektne konvertuje).
-
 
 ## MULTISELECT
 
@@ -485,6 +483,15 @@ Všimnite si použitie konvertora ```@javax.persistence.Convert(converter = Allo
 ```
 
 ![](../../redactor/apps/tooltip/tooltip-editor.png)
+
+Ak nastavíte CSS triedu ```quill-oneline``` zobrazí sa zjednodušený editor bez možnosti vytvárania odsekov:
+
+```java
+    @Column(name = "tooltip")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String tooltip;
+```
 
 ## WYSIWYG
 

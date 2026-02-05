@@ -6,13 +6,14 @@
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
-> Nový nástroj pre tvorbu formulárov umožňuje vytvárať viac krokové formuláre s pokročilými funkciami ako **podmienené zobrazenie polí**, **podmienená validácia** a **prispôsobené správy po odoslaní**.
+> Nový nástroj pre tvorbu formulárov umožňuje ľahko vytvárať viac krokové formuláre s možnosťou programovej validácie jednotlivých krokov a možnosťou potvrdenia platnosti emailovej adresy pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
 
 ### Prelomové zmeny
 
 - Aktualizované knižnice `commons-lang,displaytag`, viac v [sekcii pre programátora](#pre-programátora) (#58153).
 - Zmenené správanie ikony Bloky v režime Page Builder - [textové bloky integrované](frontend/page-builder/blocks.md) do priečinka `content` podobne ako sú bloky pre `section, container, column` (#58165).
-- Upravené spracovanie nahrávania súborov `multipart/form-data`, viac v [sekcii pre programátora](#pre-programátora) (#57793-3).
+- Upravené spracovanie **nahrávania súborov** `multipart/form-data`, viac v [sekcii pre programátora](#pre-programátora) (#57793-3).
+- Odporúčame **skontrolovať funkčnosť všetkých formulárov** z dôvodu úprav ich spracovania, viac informácií v sekcii [pre programátora](#pre-programátora) (#58161).
 
 ### Webové stránky
 
@@ -64,6 +65,21 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Formulár ľahko](redactor/apps/formsimple/README.md)
 
 ![](redactor/apps/formsimple/editor-dialog-items.png)
+
+### Formuláre
+
+- Nový spôsob vytvárania formulárov, ktoré môžu obsahovať [viac krokov](redactor/apps/multistep-form/README.md) s pokročilými funkciami. V zozname formulárov viete vytvoriť nový formulár, ktorému následne pridáte jednotlivé položky a prípadne viaceré kroky. Karta položky formuláru je viditeľná v detaile formuláru typu Viackrokový formulár (#58161).
+
+![](redactor/apps/multistep-form/real-form.png)
+
+- Zoznam formulárov - celá sekcia bola prerobená z technológie `Vue.js` na štandardné `Html + JavaScript` pre lepšiu integráciu do WebJET CMS a zjednodušenie úprav (#58161).
+- Zoznam formulárov - umožnené vytváranie formuláru, ktorý je automaticky typu [viackrokový formulár](redactor/apps/multistep-form/README.md) (#58161).
+- Zoznam formulárov - umožnené nastavovanie parametrov/atribútov všetkých typov formulárov priamo v editore formuláru (#58161).
+- Zoznam formulárov - pole poznámka umožňuje vkladať formátovaný text, viete tak lepšie evidovať doplnkové informácie k formuláru (#58161).
+- Detail formuláru - pridaná možnosť zobrazenie všetkých údajov prihláseného používateľa, údaje sa aj exportujú do Excelu (#58161).
+- Overovací kód - pridaná možnosť odoslať formulár až po zadaní [overovacieho kódu](redactor/apps/form/README.md#nastavenie-potvrdenia-zaslaným-kódom) zaslaného na email adresu. Viete tak lepšie chrániť formuláre pred SPAM-om (#58161).
+
+![](redactor/apps/form/form-step-email-verification-2.png)
 
 ### Presmerovania
 
@@ -139,6 +155,15 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Doplnená možnosť vytvorenia [projektových kópií súborov](frontend/customize-apps/README.md) Spring aplikácii. Stačí vytvoriť vlastnú verziu súboru v priečinku `/apps/INSTALL_NAME/` podobne ako sa používa pre JSP súbory. WebJET CMS najskôr hľadá súbor v projektovom priečinku a ak nie je nájdený použije štandardný súbor z `/apps/` priečinka (#58073).
 - Doplnená možnosť nastaviť [meno pre CSS štýl](frontend/examples/template-bare/README.md) v CSS súbore cez komentár `/* editor title: Style Name */`. Meno sa zobrazí v zozname štýlov v editore (#58209).
 - Editor - upravený dialóg pre nastavenie `a.btn` - zrušené nastavenie farieb a veľkostí, [používajú sa už len CSS triedy](frontend/setup/ckeditor.md#tlačidlo) rovnako ako pr `button` (#57657-16).
+- Dátové tabuľky - možnosť zobrazenia iba ikony bez poradia pre `rowReorder` ak danému stĺpcu pridáme triedu `icon-only` (#58161).
+- Dátové tabuľky - nové možnosti pre výber riadkov v tabuľke `toggleSelector` a `toggleStyle`, viac v [sekcii dátových tabuliek](developer/datatables/README.md#možnosti-konfigurácie) (#58161).
+- Dátové tabuľky - nová možnosť vlastnej [render](developer/datatables-editor/datatable-columns.md) funkcie pomocou anotácie `@DataTableColumn(...renderFunction = "renderStepName")`. Umožní vám zobraziť v stĺpci zložené hodnoty z viacerých polí a podobne (#58161).
+- Dátové tabuľky - pridaná možnosť [presmerovať používateľa](developer/datatables/restcontroller.md#presmerovanie-po-uložení) na inú stránku po uložení záznamu volaním metódy `setRedirect(String redirect)` (#58161).
+- Formuláre - Upravené zobrazenie zoznamu formulárov, zrušená trieda `FormAttributesDB`, nahradená triedou `FormService`. Nastavenie formulárov zmenené z tabuľky `form_attributes` na tabuľku `form_settings`. Odporúčame po aktualizácii overiť funkčnosť všetkých formulárov na web stránke (#58161).
+- Formuláre - vytvorenie novej tabuľky `form_settings` ako náhradu za tabuľku `form_attributes`, kde sa ukladajú vlastnosti formulárov. Jednotlivé atribúty (nastavenia) sú teraz uložené v samostatných stĺpcoch ako jeden záznam na riadok. Dáta boli do novej tabuľky konvertované pomocou `UpdateDatabase.java` (#58161).
+- Prechod na novú tabuľku `form_settings` pre vlastnosti formulárov v `.jsp` súboroch. Je potrebné si spustiť aktualizačný skript `update-2025-0.jsp`, ktorý upraví potrebné `.jsp` (#58161).
+- Zoznam formulárov - nastavovanie parametrov/atribútov všetkých typov formulárov presmerované z tabuľky `form_attributes` do novej tabuľky `form_settings` (#58161).
+- Dátové tabuľky - pridaná BE podpora pre `row-reorder`, kedy je možné meniť poradie záznamov priamo v dátovej tabuľke pomocou drag&drop (#58161).
 
 ### Testovanie
 

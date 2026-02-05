@@ -7,7 +7,7 @@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %>
 <%@page import="sk.iway.iwcm.Tools"%><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@page import="sk.iway.iwcm.form.FormAttributeDB"%><%@page import="java.util.Map"%>
+<%@page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService"%><%@page import="java.util.Map"%>
 <iwcm:checkLogon admin="true" perms="cmp_form"/><%
 
 if (Tools.getRequestParameter(request, "form_name") != null)
@@ -18,7 +18,7 @@ if (Tools.getRequestParameter(request, "form_name") != null)
        formName = DocTools.removeChars(formName, true);
    }
 
-	Map<String, String> parameters = new FormAttributeDB().filterAttributes(request.getParameterMap());
-	new FormAttributeDB().save(formName, parameters);
+	Map<String, String> parameters = new FormSettingsService().filterAttributes(request.getParameterMap());
+	new FormSettingsService().save(formName, parameters);
 }
 %>

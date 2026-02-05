@@ -53,6 +53,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.system.adminlog",
     "sk.iway.iwcm.system.monitoring.rest",
     "sk.iway.iwcm.system.jpa",
+    "sk.iway.iwcm.system.jpaconverters",
     "sk.iway.iwcm.system.ntlm",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.users",
@@ -147,7 +148,9 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.ai.stat.rest",
     "sk.iway.iwcm.components.formsimple",
     "sk.iway.iwcm.components.upload",
-    "sk.iway.iwcm.components.basket.delivery_methods.rest"
+    "sk.iway.iwcm.components.basket.delivery_methods.rest",
+    "sk.iway.iwcm.components.multistep_form",
+    "sk.iway.iwcm.components.form_settings.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

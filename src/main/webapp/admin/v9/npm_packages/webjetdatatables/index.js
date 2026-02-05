@@ -172,6 +172,11 @@ export const dataTableInit = options => {
     DATA.isLocalJson = false;
     if (typeof DATA.src !== "undefined" && DATA.src != null) DATA.isLocalJson = true;
 
+    // row toggle
+    DATA.toggleSelector = options.toggleSelector ? options.toggleSelector : "td.dt-select-td";
+    DATA.toggleStyle = options.toggleStyle ? options.toggleStyle : "multi";
+    if("multi" !== options.toggleStyle && "single" !== options.toggleStyle) options.toggleStyle = "multi";
+
     //console.log("options=", options);
 
     //pre podporu multi tabuliek a editora potrebujeme mat unikatne ID pre kazdu DT a editor
@@ -734,6 +739,12 @@ export const dataTableInit = options => {
             }
             var fieldName = col.data.replace(/\./gi, "-");
             ths += `<th class="${col.renderFormat} dt-th-${fieldName}" data-dt-field-name="${fieldName}" data-format-link-template="${linkTemplate}">${col.title}</th>`;
+
+            //https://datatables.net/reference/option/columns.render
+            if (typeof col.renderFunction !== "undefined") {
+                //console.log("col.renderFunction=", col.renderFunction);
+                col.render = window[col.renderFunction];
+            }
         });
 
         $(dataTableInit).html("").append("<thead><tr>" + ths + "</tr></thead>");
@@ -1378,6 +1389,12 @@ export const dataTableInit = options => {
 
                     if(typeof json.notify != "undefined" && json.notify != null) {
                         showNotify(json.notify);
+                    }
+
+                    if (typeof json.redirect !== "undefined" && json.redirect != null) {
+                        //presmeruj na novu URL
+                        //console.log("Redirecting to: ", json.redirect);
+                        window.location.href = json.redirect;
                     }
 
                     //nastav checkboxy, toto treba ppo kazdom SUBMIT-e, pretoze sa nam menia moznosti select boxov
@@ -2390,8 +2407,8 @@ export const dataTableInit = options => {
             // },
 
             select: {
-                style: 'multi',
-                selector: 'td.dt-select-td'
+                style: DATA.toggleStyle,
+                selector: DATA.toggleSelector
             },
 
             //buttons
@@ -3051,6 +3068,66 @@ export const dataTableInit = options => {
                                 FooterSum.footerCallback(TABLE);
                             }, 100);
                         }
+                    })
+                    .on('row-reorder', function (e, diff, edit) {
+                        /**
+                         * Handle row reorder event by sending:
+                         * - column name that is source of reorder
+                         * - ids of involved row
+                         * - old values
+                         * - new values
+                         */
+                        const newUrl = DATA.url.split("?")[0] + "/row-reorder";
+                        const reorderData = {
+                            dataSrc: edit.dataSrc,
+                            values: diff.map(diffValue => ({
+                                id: diffValue.node.id,
+                                oldValue: diffValue.oldData,
+                                newValue: diffValue.newData
+                            }))
+                        };
+
+                        // Show processing indicator
+                        TABLE.buttons(".buttons-edit").processing(true);
+
+                        // Perform fetch POST to /row-reorder endpoint
+                        fetch(newUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': window.csrfToken
+                            },
+                            body: JSON.stringify(reorderData)
+                        })
+                        .then(response => {
+                            if (response.ok === false) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            //console.log("Row reorder success:", data);
+                            if(false == data) {
+                                WJ.notifyError(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.error.js"), 2000);
+                            } else {
+                               WJ.notifySuccess(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.success.js"), 2000);
+                            }
+
+                            // Reload table data to reflect changes
+                            TABLE.ajax.reload(null, false);
+                        })
+                        .catch(error => {
+                            //console.error("Row reorder error:", error);
+                            WJ.notifyError(WJ.translate('datatables.row_reorder.title.js'), WJ.translate("datatables.row_reorder.error.js"), 2000);
+
+                            // Revert the reorder on error
+                            TABLE.ajax.reload(null, false);
+                        })
+                        .finally(() => {
+                            // Hide processing indicator
+                            TABLE.buttons(".buttons-edit").processing(false);
+                        });
+
                     });
             } else {
                 //src su skutocne data v JS objekte
