@@ -317,25 +317,18 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.see("Záznamy 0 až 0 z 0");
 });
 
-Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT }) => {
+Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT, Document }) => {
     I.amOnPage("/apps/form/admin/");
-    I.resizeWindow(1280, 1110);
     I.amOnPage("/apps/form/admin/");
 
-    I.see("Dotaznik-spokojnosti-externy");
+    I.see("formular-lahko-encrypted");
     I.dontSee("OPLZ");
     DT.filterContains("formName", "OPLZ");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.see("Záznamy 0 až 0 z 0");
 
     //prepni domenu
-    I.click("div.js-domain-toggler div.bootstrap-select button");
-    I.wait(1);
-    //I.click(locate('.dropdown-item').withText("test23.tau27.iway.sk"));
-    I.clickCss("#bs-select-1-1");
-    I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
-    I.wait(1);
+    Document.switchDomain("test23.tau27.iway.sk");
 
     I.dontSee("Dotaznik-spokojnosti-externy");
     I.see("OPLZ");

@@ -86,11 +86,14 @@ module.exports = {
         if (emailAddress != null) {
             await this.login(emailAddress);
         }
-
+        I.waitForElement("p.title-p", 10);
         I.say('Vymazávam všetky e-maily');
-        I.click(locate("button").withText("Destroy inbox"));
-        I.waitForElement("div.modal-flex.flex-md-row");
-        I.click("button#confirm");
+        let numberOfElements = await I.grabNumberOfVisibleElements(locate("button").withText("Destroy inbox"));
+        if (numberOfElements > 0) {
+            I.click(locate("button").withText("Destroy inbox"));
+            I.waitForElement("div.modal-flex.flex-md-row");
+            I.click("button#confirm");
+        }
 
         I.waitForElement(".loading.m-auto", 60);
     },

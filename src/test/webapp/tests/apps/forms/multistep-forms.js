@@ -554,7 +554,7 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>Only step</p></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1">Meno:</label> <span class="form-control emailInput-text">Vlad</span></div></div>
+        <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1">Meno:</label> <span class="form-control emailInput-text">Vlad</span></div></div>
         <div class="col"><div class="form-group mb-3"><label for="priezvisko-1">Priezvisko:</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span></div></div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="email-1">Email:</label> <span class="form-control emailInput-text">test@balat.sk</span></div>
         </div><div class="col">&nbsp;</div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="adresa-1">Adresa:</label> <span class="form-control emailInput-text">Askaban</span></div></div></div></div>
     `;
