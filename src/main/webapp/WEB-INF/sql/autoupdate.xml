@@ -3306,7 +3306,7 @@
 				INSERT INTO form_regular_exp (title, type, reg_exp) VALUES ('checkform.title.minLen16', 'minLen16', '.................*');
 				INSERT INTO form_regular_exp (title, type, reg_exp) VALUES ('checkform.title.minLen8', 'minLen8', '.........*');
 				INSERT INTO form_regular_exp (title, type, reg_exp) VALUES ('checkform.title.postalCode', 'postalCode', '^(([0-9]{5})|([0-9]{3} [0-9]{2})|([0-9]{2} [0-9]{3}))$');
-				INSERT INTO form_regular_exp (title, type, reg_exp) VALUES ('checkform.title.trim', 'trim', '^[^ \f\n\r\t\v]+[.]*');
+				INSERT INTO form_regular_exp (title, type, reg_exp) VALUES ('checkform.title.trim', 'trim', '^[^ \f\\n\r\t\v]+[.]*');
 				]]>
      </string>
     </void>

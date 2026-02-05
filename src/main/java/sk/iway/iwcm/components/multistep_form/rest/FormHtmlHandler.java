@@ -647,7 +647,7 @@ public class FormHtmlHandler {
 
     private String getFieldValue(String itemFormId) {
         String value = this.formData.get(itemFormId);
-        if(value == null) value = "";
+        if(Tools.isEmpty(value)) value = "&nbsp;";
         return value;
     }
 
