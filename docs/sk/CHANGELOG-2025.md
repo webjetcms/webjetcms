@@ -15,6 +15,7 @@
 - Hromadný email - upravené tlačidlá pre spustenie/zastavenie odosielania hromadného emailu na lepšie zrozumiteľné `play` a `stop` (#54273-81).
 - Hromadný email - opravené ukladanie v Oracle databáze, pole predmet nastavené ako povinné (#54273-81).
 - Hromadný email - Doménové limity - opravené načítanie limitov pre domény z databázy (#54273-81).
+- Hromadný e-mail - opravené nastavenie ID používateľa pri pridaní skupiny, ak existuje viac používateľov s rovnakým emailom (#58217).
 - Spam ochrana - opravená chyba kontroly časového rozmedzia medzi odoslaniami formuláru/vyhľadávania (#57657-16).
 - Webové stránky - opravené usporiadanie stromovej štruktúry pri presune položiek cez `Drag&Drop` v prípade nastavenia zostupného usporiadania (#MF-1199).
 
@@ -113,7 +114,6 @@
 - Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
 - Galéria - doplnené chýbajúce značky (#57837).
 - Značky - opravené nastavenie priečinkov existujúcej značky v sekcii Zobraziť pre (#57837).
-- Hromadný e-mail - opravené pridávanie príjemcov cez email, v prípade že existuje viac používateľov s rovnakou emailovou adresou (#58217).
 
 ### Bezpečnosť
 

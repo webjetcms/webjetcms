@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -246,40 +244,23 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
         Set<String> usedEmails = new HashSet<>();
-        Map<Integer, UserDetails> campaignUsersTable = new Hashtable<>();
         if (entity.getId() != null && entity.getId().longValue()>0) {
-            for(Integer userId : emailsRepository.getAllCampainUserIds( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
-                UserDetails recipient = UsersDB.getUser(userId);
-                if(recipient != null) {
-                    campaignUsersTable.putIfAbsent(recipient.getUserId(), recipient);
-                    usedEmails.add(recipient.getEmail().toLowerCase());
-                }
+            for(String email : emailsRepository.getAllCampainEmails( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
+                usedEmails.add(email.toLowerCase());
             }
         }
+        //Get all unsubscribed emails
+        usedEmails.addAll(DmailUtil.getUnsubscribedEmails());
 
         //Get all emails under selected user groups
         List<Integer> recpientIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsAdded);
-
-        //Get all unsubscribed emails
-        Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
-
-        Map<Integer, UserDetails> addCampaignUsersTable = new Hashtable<>();
         for(Integer recipientId : recpientIds) {
 
-            UserDetails recipient = campaignUsersTable.get(recipientId);
-            if(recipient == null) recipient = UsersDB.getUser(recipientId);
-            else continue;
-
+            UserDetails recipient = UsersDB.getUser(recipientId);
             if(recipient == null) continue;
 
             // Duplicity check
             if(usedEmails.contains( recipient.getEmail().toLowerCase() )) continue;
-
-            //Unsubcribed check
-            if(unsubscribedEmails.contains(recipient.getEmail().toLowerCase()) == true) continue;
-            
-            //
-            addCampaignUsersTable.put(recipientId, recipient);
             usedEmails.add(recipient.getEmail().toLowerCase());
 
             //Check validity then continue
@@ -288,11 +269,6 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
                 EmailsEntity emailToAdd = new EmailsEntity( recipient.getEmail() );
                 boolean prepareSuccess = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd, recipient);
                 if(prepareSuccess == false) continue; //Email is not valid
-
-                emailToAdd.setSubject(entity.getSubject());
-                emailToAdd.setUrl(entity.getUrl());
-
-                emailToAdd.setDomainId( CloudToolsForCore.getDomainId() );
 
                 //Save record in DB
                 emailsRepository.save(emailToAdd);

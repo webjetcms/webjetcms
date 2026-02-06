@@ -220,16 +220,16 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             entity.setSubject("-");
             entity.setSenderName("-");
             entity.setSenderEmail("-");
-            entity.setCreatedByUserId(loggedUserId);
+
         } else {
             entity.setCampainId(campaign.getId());
             entity.setUrl(campaign.getUrl());
             entity.setSubject(campaign.getSubject());
             entity.setSenderName(campaign.getSenderName());
             entity.setSenderEmail(campaign.getSenderEmail());
-            entity.setCreatedByUserId(loggedUserId);
         }
 
+        entity.setCreatedByUserId(loggedUserId);
         entity.setCreateDate(new Date());
         entity.setRetry(0);
 

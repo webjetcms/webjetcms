@@ -908,11 +908,11 @@ Scenario('BUG multiple users same email', ({I, DT, DTE}) => {
 
     DTE.waitForEditor("campaingsDataTable");
 
-    I.fillField("#DTE_Field_subject", entityName);
-
     I.clickCss("button.btn-vue-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Testovaci newsletter');
+
+    I.fillField("#DTE_Field_subject", entityName);
     DTE.save();
 
     DT.filterEquals("subject", entityName);
