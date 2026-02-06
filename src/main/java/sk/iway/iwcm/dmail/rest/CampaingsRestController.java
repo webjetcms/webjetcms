@@ -249,7 +249,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
                 usedEmails.add(email.toLowerCase());
             }
         }
-        //Get all unsubscribed emails
+        //add all unsubscribed emails
         usedEmails.addAll(DmailUtil.getUnsubscribedEmails());
 
         //Get all emails under selected user groups

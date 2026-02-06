@@ -192,6 +192,14 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         return prepareEmailForInsert(campaign, loggedUserId, entity, recipient);
     }
 
+    /**
+     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
+     * @param campaign
+     * @param loggedUserId
+     * @param entity
+     * @param recipient
+     * @return
+     */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity, UserDetails recipient) {
 
         //trimni email adresu
