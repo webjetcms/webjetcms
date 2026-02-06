@@ -576,15 +576,17 @@ public class ApproveService {
 			DocDetails originalDoc = docDetailsRepository.findById( editedDoc.getDocId() );
 
 			if(originalDoc != null) {
-				// Add to message comapare with chnaged values
-				message.append("<br><br>\n\n").append(prop.getText("doc.approve.changed_params")).append(" : ");
-
 				BeanDiff diff = new BeanDiff().setNew(editedDoc).setOriginal(originalDoc);
 				diff.blacklist("data", "dataAsc");
 
-				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
-				adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
-				message.append( adminlogChanges );
+				if(diff.diff().size() > 0) {
+					// Add to message comapare with chnaged values
+					message.append("<br><br>\n\n").append(prop.getText("doc.approve.changed_params")).append(" : ");
+
+					String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
+					adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+					message.append( adminlogChanges );
+				}
 			}
 		}
 
@@ -705,9 +707,6 @@ public class ApproveService {
 	 * @param docHistory
 	 */
 	private void sendWebpageApproveDelNotification(boolean isApproved, DocHistory docHistory) {
-		//If there is no one to notify, return
-		if(!needNotification()) return;
-
 		StringBuilder message;
 		String subject;
 		String url = Tools.getBaseHref(request) + "/showdoc.do?docid=" + docHistory.getDocId();
