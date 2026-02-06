@@ -116,7 +116,7 @@ class FulltextSearchTest extends BaseWebjetTest
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			fail();
 		}
 	}
