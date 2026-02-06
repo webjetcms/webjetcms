@@ -381,9 +381,9 @@ public class Documents extends Indexed
 					}
 				}
 			}
-			catch (IOException|InterruptedException e)
+			catch (Exception|AssertionError e)
 			{
-				sk.iway.iwcm.Logger.error(e);
+				sk.iway.iwcm.Logger.error(Documents.class, "Error indexing document: " + e.getMessage());
 			}
 			finally{
 				indexed.proccessed();
