@@ -323,6 +323,8 @@ Scenario('Webpages - Future publication validation and deletion', async ({ I, DT
 
      // Mazanie stránky
      DT.filterContains('title', "title-autotest");
+     I.wait(1);
+     DT.waitForLoader();
      I.clickCss("#datatableInit_wrapper .buttons-select-all");
      I.click(DT.btn.delete_button);
      I.click("Zmazať", "div.DTE_Action_Remove");
