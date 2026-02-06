@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.fulltext.indexed;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
 
-import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

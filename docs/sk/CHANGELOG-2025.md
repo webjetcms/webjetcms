@@ -541,12 +541,14 @@ Iné zmeny:
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
+- Bezpečnosť - zakázané presmerovanie na externé URL adresy po prihlásení cez prihlasovací formulár.
 - Dátové tabuľky - opravená chyba zobrazenia výberových polí pri zapnutí režimu Upraviť v zobrazení mriežky (#57657-16).
 - Dátové tabuľky - opravené uloženie nového záznamu cez klávesovú skratku `CTRL+S` - po uložení sa nastavia vrátené hodnoty nazad do editora aby sa správne nastavilo ID záznamu pre ďalšie úpravy (#57657-16).
 - Formuláre - upravené generovanie názvu poľa tak, aby neobsahovalo bodku (#57657-16).
 - Hromadný email - upravené tlačidlá pre spustenie/zastavenie odosielania hromadného emailu na lepšie zrozumiteľné `play` a `stop` (#54273-81).
 - Hromadný email - opravené ukladanie v Oracle databáze, pole predmet nastavené ako povinné (#54273-81).
 - Hromadný email - Doménové limity - opravené načítanie limitov pre domény z databázy (#54273-81).
+- Hromadný e-mail - opravené nastavenie ID používateľa pri pridaní skupiny, ak existuje viac používateľov s rovnakým emailom (#58217).
 - Spam ochrana - opravená chyba kontroly časového rozmedzia medzi odoslaniami formuláru/vyhľadávania (#57657-16).
 - Webové stránky - opravené usporiadanie stromovej štruktúry pri presune položiek cez `Drag&Drop` v prípade nastavenia zostupného usporiadania (#MF-1199).
 
