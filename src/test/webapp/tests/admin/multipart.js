@@ -31,9 +31,9 @@ function verifyForm(formName, text, I, DT, DTE) {
     DT.addContext("form", "#formDetailDataTable_wrapper");
     I.click(DT.btn.form_select_all_button);
     I.click(DT.btn.form_delete_button);
-    DTE.waitForEditor("form-detail");
-    DTE.save("form-detail");
-    DTE.waitForModalClose("form-detail_modal");
+    DTE.waitForEditor("formDetailDataTable");
+    DTE.save("formDetailDataTable");
+    DTE.waitForModalClose("formDetailDataTable_modal");
 }
 
 function submitForm(I, DT, DTE) {
