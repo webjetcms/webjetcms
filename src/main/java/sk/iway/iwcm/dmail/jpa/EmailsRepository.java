@@ -23,6 +23,9 @@ public interface EmailsRepository extends DomainIdRepository<EmailsEntity, Long>
 
     @Query(value = "SELECT ee.recipientEmail FROM EmailsEntity ee WHERE ee.campainId = :campainId AND ee.domainId = :domainId")
     List<String> getAllCampainEmails(@Param("campainId")Long campainId, @Param("domainId")Integer domainId);
+    
+    @Query(value = "SELECT ee.recipientUserId FROM EmailsEntity ee WHERE ee.campainId = :campainId AND ee.domainId = :domainId")
+    List<Integer> getAllCampainUserIds(@Param("campainId")Long campainId, @Param("domainId")Integer domainId);
 
     //campaigns recipients - page
     Page<EmailsEntity> findAllByCampainIdAndDomainId(Long campaingId, Integer domainId, Pageable pageable);

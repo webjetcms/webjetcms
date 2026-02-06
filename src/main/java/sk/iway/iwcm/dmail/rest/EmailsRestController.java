@@ -28,8 +28,8 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
-import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -187,6 +187,20 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
      * @param entity
      */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
+        //Get email recipient(user) using email
+        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
+        return prepareEmailForInsert(campaign, loggedUserId, entity, recipient);
+    }
+
+    /**
+     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
+     * @param campaign
+     * @param loggedUserId
+     * @param entity
+     * @param recipient
+     * @return
+     */
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity, UserDetails recipient) {
 
         //trimni email adresu
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
@@ -194,8 +208,6 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         //sprav lower case
         if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());
 
-        //Get email recipient(user) using email
-        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
         if(recipient == null) {
             entity.setRecipientUserId(-1);
             if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName("- -");
@@ -216,16 +228,16 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             entity.setSubject("-");
             entity.setSenderName("-");
             entity.setSenderEmail("-");
-            entity.setCreatedByUserId(loggedUserId);
+
         } else {
             entity.setCampainId(campaign.getId());
             entity.setUrl(campaign.getUrl());
             entity.setSubject(campaign.getSubject());
             entity.setSenderName(campaign.getSenderName());
             entity.setSenderEmail(campaign.getSenderEmail());
-            entity.setCreatedByUserId(loggedUserId);
         }
 
+        entity.setCreatedByUserId(loggedUserId);
         entity.setCreateDate(new Date());
         entity.setRetry(0);
 
