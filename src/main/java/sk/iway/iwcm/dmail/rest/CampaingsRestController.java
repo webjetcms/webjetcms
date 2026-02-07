@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,8 +38,8 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
-import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -245,44 +243,38 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         Identity user = UsersDB.getCurrentUser(getRequest());
 
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
-        Map<String, Integer> emailsTable = new Hashtable<>();
+        Set<String> usedEmails = new HashSet<>();
         if (entity.getId() != null && entity.getId().longValue()>0) {
-            for (String email : emailsRepository.getAllCampainEmails( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
-                emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);
+            for(String email : emailsRepository.getAllCampainEmails( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
+                usedEmails.add(email.toLowerCase());
             }
         }
+        //add all unsubscribed emails
+        usedEmails.addAll(DmailUtil.getUnsubscribedEmails());
 
         //Get all emails under selected user groups
-        List<String> recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);
+        List<Integer> recpientIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsAdded);
+        for(Integer recipientId : recpientIds) {
 
-        //Get all unsubscribed emails
-        Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
+            UserDetails recipient = UsersDB.getUser(recipientId);
+            if(recipient == null) continue;
 
-        for(String recipientEmail : recpientEmails) {
-            //Unsubcribed check
-            if(unsubscribedEmails.contains(recipientEmail.toLowerCase()) == true) continue;
-
-            //Check duplicity (if this emial alreadry belongs to campain)
-            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;
-            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);
+            // Duplicity check
+            if(usedEmails.contains( recipient.getEmail().toLowerCase() )) continue;
+            usedEmails.add(recipient.getEmail().toLowerCase());
 
             //Check validity then continue
-            if (Tools.isEmail(recipientEmail) == true) {
+            if (Tools.isEmail(recipient.getEmail()) == true) {
                 //Prepare and save email
-                EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
-                boolean prepareSuccess = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
+                EmailsEntity emailToAdd = new EmailsEntity( recipient.getEmail() );
+                boolean prepareSuccess = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd, recipient);
                 if(prepareSuccess == false) continue; //Email is not valid
-
-                emailToAdd.setSubject(entity.getSubject());
-                emailToAdd.setUrl(entity.getUrl());
-
-                emailToAdd.setDomainId( CloudToolsForCore.getDomainId() );
 
                 //Save record in DB
                 emailsRepository.save(emailToAdd);
             } else {
-                if (getLastImportedRow()!=null) addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("datatable.error.importRow", String.valueOf(getLastImportedRow().intValue()+1), "`"+recipientEmail)+"` "+getProp().getText("components.dmail.emailIsNotValid"), NotifyType.ERROR));
-                else addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("components.dmail.unsubscribe.email.error", "`"+recipientEmail+"`"), NotifyType.ERROR));
+                if (getLastImportedRow()!=null) addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("datatable.error.importRow", String.valueOf(getLastImportedRow().intValue()+1), "`" + recipient.getEmail()) + "` "+getProp().getText("components.dmail.emailIsNotValid"), NotifyType.ERROR));
+                else addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("components.dmail.unsubscribe.email.error", "`" + recipient.getEmail() + "`"), NotifyType.ERROR));
             }
         }
     }

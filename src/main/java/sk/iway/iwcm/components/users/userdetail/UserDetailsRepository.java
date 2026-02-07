@@ -19,8 +19,8 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
 
     List<UserDetailsEntity> findAllByAdmin(Boolean isAdmin);
 
-    @Query(value = "SELECT user_id FROM users WHERE user_groups LIKE ?1 OR user_groups LIKE ?2 OR user_groups LIKE ?3 OR user_groups LIKE ?4", nativeQuery=true)
-    List<Integer> getUserIdsByUserGroupsIds(String groupId1, String groupId2, String groupId3, String groupId4);
+    @Query(value = "SELECT ude.id FROM UserDetailsEntity ude WHERE ude.userGroupsIds LIKE :groupId1 OR ude.userGroupsIds LIKE :groupId2 OR ude.userGroupsIds LIKE :groupId3 OR ude.userGroupsIds LIKE :groupId4 ORDER BY ude.admin ASC, ude.id DESC")
+    List<Integer> getUserIdsByUserGroupsIds(@Param("groupId1") String groupId1, @Param("groupId2") String groupId2, @Param("groupId3") String groupId3, @Param("groupId4") String groupId4);
 
     @Query(value = "SELECT email FROM users WHERE user_groups LIKE ?1 OR user_groups LIKE ?2 OR user_groups LIKE ?3 OR user_groups LIKE ?4", nativeQuery=true)
     List<String> getUserEmailsByUserGroupsIds(String groupId1, String groupId2, String groupId3, String groupId4);
