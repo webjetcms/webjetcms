@@ -44,13 +44,17 @@ public class BeanDiffPrinter
 
 	public String toString(Prop prop)
 	{
+		//to distinguish between system and custom prop, we need to use different variable
+		Prop systemProp = prop;
+		if (systemProp == null) systemProp = Prop.getInstance();
+
 		try
 		{
-			if (prop == null) prop = Prop.getInstance();
+
 
 			Map<String, PropertyDiff> changes = diff.diff();
 			if (changes.size() == 0)
-				return " " + prop.getText("beandiff.no_diff");
+				return " " + systemProp.getText("beandiff.no_diff");
 
 			// Try prepare Map with column names and translated column titles (stored in DataTableColumn annotation)
 			Map<String, String> translated = new HashMap<>();
@@ -99,6 +103,6 @@ public class BeanDiffPrinter
 		} catch (Exception ex) {
 			Logger.error(BeanDiffPrinter.class, ex);
 		}
-		return " " + Prop.getInstance().getText("beandiff.error_getting_changes");
+		return " " + systemProp.getText("beandiff.error_getting_changes");
 	}
 }
