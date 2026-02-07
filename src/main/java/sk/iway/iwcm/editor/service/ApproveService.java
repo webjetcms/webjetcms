@@ -581,7 +581,7 @@ public class ApproveService {
 
 				if(diff.diff().size() > 0) {
 					// Add to message comapare with chnaged values
-					message.append("<br><br>\n\n").append(prop.getText("doc.approve.changed_params")).append(" : ");
+					message.append("<br>\n<br>\n").append(prop.getText("doc.approve.changed_params")).append(": ");
 
 					String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
 					adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
