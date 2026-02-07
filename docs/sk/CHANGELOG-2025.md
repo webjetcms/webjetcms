@@ -551,6 +551,8 @@ Iné zmeny:
 - Hromadný e-mail - opravené nastavenie ID používateľa pri pridaní skupiny, ak existuje viac používateľov s rovnakým emailom (#58217).
 - Spam ochrana - opravená chyba kontroly časového rozmedzia medzi odoslaniami formuláru/vyhľadávania (#57657-16).
 - Webové stránky - opravené usporiadanie stromovej štruktúry pri presune položiek cez `Drag&Drop` v prípade nastavenia zostupného usporiadania (#MF-1199).
+- Webové stránky - opravené vyhľadávanie priečinka v karte Kôš (#58081).
+- Webové stránky - opravené posielanie notifikácie o schválení/neschválení stránky ak neexistuje žiadny schvaľovateľ s notifikáciou, doplnený zoznam zmien v rôznych poliach web stránky (#58007).
 
 ## 2025.0.50
 
