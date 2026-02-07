@@ -60,7 +60,6 @@ public class BeanDiffPrinter
 					Class<?> entityClass = Class.forName(className);
 					while (entityClass != null) {
 						for (Field field : entityClass.getDeclaredFields()) {
-							field.setAccessible(true);
 							if (field.isAnnotationPresent(DataTableColumn.class)) {
 								DataTableColumn dtcAnn = field.getAnnotation(DataTableColumn.class);
 								if (dtcAnn == null) continue;
@@ -71,8 +70,8 @@ public class BeanDiffPrinter
 						entityClass = entityClass.getSuperclass();
 					}
 				} catch (Exception ex) {
-					// If something went wrong, deleete whole map
-					translated = null;
+					// If something went wrong, delete whole map
+					// If something went wrong, delete whole map
 				}
 			}
 

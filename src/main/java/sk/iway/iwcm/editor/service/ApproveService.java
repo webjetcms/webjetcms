@@ -580,7 +580,7 @@ public class ApproveService {
 				diff.blacklist("data", "dataAsc");
 
 				if(diff.diff().size() > 0) {
-					// Add to message comapare with chnaged values
+					// Add to message compare with changed values
 					message.append("<br>\n<br>\n").append(prop.getText("doc.approve.changed_params")).append(": ");
 
 					String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
