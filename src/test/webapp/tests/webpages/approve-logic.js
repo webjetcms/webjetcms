@@ -4,10 +4,17 @@ var randomNumber;
 var deletePrefix = "[DELETE] ";
 var changePostfix = "_change";
 var awaitingApproveFolderLink = "/admin/v9/webpages/web-pages-list/?groupid=5343";
+var testerEmail;
+var tester2Email;
+var emailDomain;
 
-Before(({ I }) => {
+Before(({ I, TempMail }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        var randomShort = I.getRandomTextShort();
+        testerEmail = "wjtester." + randomShort
+        tester2Email = "wjtester2." + randomShort;
+        emailDomain = "@fexpost.com";
     }
 });
 
@@ -15,7 +22,22 @@ function jstreBaseFolder(I) {
     I.jstreeNavigate(["Test stavov", "Čakajúce na schválenie-zmena titulku"]);
 }
 
-Scenario('creating/editing pages that need to be approved - logic', async ({I, DTE, Document, DT}) => {
+function setUserEmail(login, email, I, DT, DTE) {
+    I.amOnPage("/admin/v9/users/user-list/");
+    DT.filterContains("login", login);
+    I.click(login);
+    DTE.waitForEditor();
+    DTE.fillField("email", email);
+    DTE.save();
+}
+
+Scenario('prepare users for approve logic tests', ({I, DT, DTE}) => {
+    I.relogin("admin");
+    setUserEmail("tester", testerEmail + emailDomain, I, DT, DTE);
+    setUserEmail("tester2", tester2Email + emailDomain, I, DT, DTE);
+});
+
+Scenario('creating/editing pages that need to be approved - logic', async ({I, DTE, Document, DT, TempMail}) => {
     var pageNameA = "onelevel-approve-autotest-" + randomNumber;
     var pageNameB = pageNameA + changePostfix;
 
@@ -34,6 +56,14 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
         //Save
         DTE.save();
         Document.notifyCheckAndClose("Žiadosť o schválenie vytvorenia novej web stránky dostal: Tester Playwright");
+
+    //verify email notification to approver
+    await TempMail.login(testerEmail);
+    await TempMail.openLatestEmail();
+    I.see("Žiadosť o schválenie web stránky: "+pageNameA);
+    await TempMail.deleteCurrentEmail();
+
+    I.amOnPage(awaitingApproveFolderLink);
 
     I.say("Until we are logged, we must see page");
         DT.filterContains("title", pageNameA);
@@ -54,6 +84,13 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
     I.click(pageNameA);
 
     approvePage(I, pageNameA);
+
+    //check notify to author about approve
+    await TempMail.login(tester2Email);
+    await TempMail.openLatestEmail();
+    I.see("Stránka schválená: "+pageNameA);
+    I.see("Suhlasim");
+    await TempMail.deleteCurrentEmail();
 
     I.amOnPage(awaitingApproveFolderLink);
     checkWaitingTab(I, DT, pageNameA, false);
@@ -120,6 +157,13 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
     I.say("Go Dis-Approved page");
         I.click(pageNameB);
         disApprovePage(I, pageNameB);
+
+    //check notify to author about disapprove
+    await TempMail.login(tester2Email);
+    await TempMail.openLatestEmail();
+    I.see("Pripomienkovanie web stránky: "+pageNameA);
+    I.see("Zamietam");
+    await TempMail.deleteCurrentEmail();
 
     I.amOnPage(awaitingApproveFolderLink);
     checkWaitingTab(I, DT, pageNameB, false);
@@ -931,4 +975,16 @@ Scenario("webpage or group in trash - should not be able to approve it", async (
 Scenario("logoff 2", ({I}) => {
     I.switchTo();
     I.logout();
+});
+
+Scenario('rever user emails', async ({I, DT, DTE, TempMail}) => {
+    I.relogin("admin");
+    setUserEmail("tester", "tester@balat.sk", I, DT, DTE);
+    setUserEmail("tester2", "tester2@balat.sk", I, DT, DTE);
+
+    await TempMail.login(testerEmail);
+    await TempMail.destroyInbox();
+
+    await TempMail.login(tester2Email);
+    await TempMail.destroyInbox();
 });
