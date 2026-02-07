@@ -67,7 +67,11 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         boolean showPages = true;
 
         String click = getRequest().getParameter("click");
-        if (click!=null && GroupsTreeService.isTrashRequested(click)) showPages = false;
+        if (click!=null && click.contains("dt-tree-group")) showPages = false;
+
+        //do not show pages for tree search because they dont have proper parent set
+        String treeSearchValue = getRequest().getParameter("treeSearchValue");
+        if (Tools.isNotEmpty(treeSearchValue)) showPages = false;
 
         List<JsTreeItem> items = new ArrayList<>();
 

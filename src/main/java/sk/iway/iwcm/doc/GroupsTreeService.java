@@ -382,7 +382,7 @@ public class GroupsTreeService {
      * @param click
      * @return
      */
-    public static boolean isTrashRequested(String click) {
+    private static boolean isTrashRequested(String click) {
         return ("dt-tree-group-trash".equals(click) || "dt-tree-trash".equals(click));
     }
 
