@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.fulltext.indexed;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
 
+import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -380,7 +381,7 @@ public class Documents extends Indexed
 					}
 				}
 			}
-			catch (Exception|AssertionError e)
+			catch (IOException|InterruptedException|AssertionError e)
 			{
 				sk.iway.iwcm.Logger.error(Documents.class, "Error indexing document: " + e.getMessage());
 			}
