@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
+import org.springframework.stereotype.Component;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Constants;
@@ -34,6 +35,7 @@ import sk.iway.iwcm.i18n.Prop;
  * Session keys are namespaced per form to avoid collisions between multiple forms
  * processed in the same session.
  */
+@Component
 public class FormEmailVerificationProcessor implements FormProcessorInterface {
 
     public static final String SESSION_VERIFY_CODE_KEY = "MULTISTEP_FORM_EMAIL_VERIFY_CODE";

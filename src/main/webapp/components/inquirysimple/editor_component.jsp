@@ -45,7 +45,7 @@ taglib prefix="iway"
 	String active = pageParams.getValue("active", "true");
 	String multiAnswer = pageParams.getValue("multiAnswer", "false");
 
-	java.util.Map<String, String> attributes = new FormSettingsService().load(DocTools.removeChars(name, true));
+	java.util.Map<String, String> attributes = FormSettingsService.load(DocTools.removeChars(name, true));
 %>
 
 <jsp:include page="/components/top.jsp"/>

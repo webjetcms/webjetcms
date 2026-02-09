@@ -145,7 +145,7 @@ public class FormSimpleApp extends WebjetComponentAbstract {
         }
 
         //
-        FormSettingsService.prepareSettingsForEdit(formSettings);
+        FormSettingsService.prepareSettingsForEdit(formSettings, null);
 
         super.initAppEditor(componentRequest, request);
     }
