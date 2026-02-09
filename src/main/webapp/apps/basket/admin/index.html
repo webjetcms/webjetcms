@@ -194,8 +194,6 @@
                 if("edit" === e.detail.action) {
                     if($("#dataDiv").length > 0) {
                         $("#dataDiv")[0].src = "/components/basket/invoice_email.jsp?invoiceId=" + e.detail.dte.currentJson['id'] + "&auth=" + e.detail.dte.currentJson['authorizationToken'];
-
-                        setInvoiceIframeIntoOrderFields();
                     }
 
                     $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(); });
@@ -240,19 +238,7 @@
         function refreshIframeAndSetValues() {
             if($("#dataDiv").length > 0) {
                 $( '#dataDiv' ).attr( 'src', function ( i, val ) { return val; });
-                setInvoiceIframeIntoOrderFields();
             }
-        }
-
-        function setInvoiceIframeIntoOrderFields() {
-            setTimeout(() => {
-                var editorValues = basketInvoiceDataTable.EDITOR.val();
-                //Replace orderRecap values
-                editorValues["editorFields.orderRecapBody"] = $("#dataDiv").contents().find("body").prop('outerHTML');
-                editorValues["editorFields.orderRecapHead"] = $("#dataDiv").contents().find("head").prop('outerHTML');
-                //Set values back
-                basketInvoiceDataTable.EDITOR.val(editorValues);
-            }, 500);
         }
 
         function setPaymentsFooter() {
