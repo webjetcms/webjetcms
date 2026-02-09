@@ -265,9 +265,9 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return ProductListService.getPriceToPay(invoiceId, biir);
     }
 
-    @GetMapping("/getPayedPrice")
-    public BigDecimal getPayedPrice(@RequestParam("invoiceId") Long invoiceId) {
-        return ProductListService.getPayedPrice(invoiceId, bipr);
+    @GetMapping("/getPriceInfo")
+    public Map<String, String> getPriceInfo(@RequestParam("invoiceId") Long invoiceId) {
+        return ProductListService.getPriceInfo(invoiceId, biir, bipr);
     }
 
     private String normalizeValueForSearch(String value) {

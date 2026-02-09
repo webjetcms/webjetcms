@@ -7,6 +7,8 @@ let paymentDataTable = "#datatableFieldDTE_Field_editorFields-payments_wrapper";
 let itemsDataTable = "#datatableFieldDTE_Field_editorFields-items_wrapper";
 let editorItems = "datatableFieldDTE_Field_editorFields-items";
 
+let testerName;
+
 Before(({ I, DT, login }) => {
     login('admin');
 
@@ -14,14 +16,23 @@ Before(({ I, DT, login }) => {
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        testerName = "Tester_" + randomNumber + "-autotest";
     }
 });
 
-Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
+const basketUserEmail = "basketNotifyUser";
+
+Scenario('Eshop - Switch domain and empty email inbox', async ({I, Document, TempMail}) => {
+    I.say("Change domain");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("shop.tau27.iway.sk");
 
-    let testerName = "Tester_" + randomNumber + "-autotest";
+    I.say("empty email inbox");
+    await TempMail.login(basketUserEmail + TempMail.getTempMailDomain());
+    await TempMail.destroyInbox();
+});
+
+Scenario('Eshop - create new invoice', async ({I, TempMail}) => {
     I.say("First create new INVOICE");
 
     I.say("Add 2 phone's");
@@ -43,10 +54,24 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
     I.fillField("#contactZipId", "08005");
     I.fillField("#userNoteId", "This is nooote");
 
+    I.seeInField("#contactEmailId", "tester@balat.sk");
+    I.fillField("#contactEmailId", basketUserEmail + TempMail.getTempMailDomain());
+
     I.say("Confirm new invoice");
     I.click({css: 'div.form-group > input[type=submit]'});
     I.waitForText("Objednávka úspešne odoslaná", 10);
+});
 
+Scenario('Eshop - check created invoice email notification', async ({I, TempMail}) => {
+    await TempMail.login(basketUserEmail + TempMail.getTempMailDomain());
+    TempMail.openLatestEmail();
+    I.waitForText("Nová objednávka", 10, TempMail.getSubjectSelector());
+    I.see("potvrdzujeme prijatie vašej objednávky číslo");
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
+});
+
+Scenario('Eshop invoice tests', async ({I, DT, DTE, Document, TempMail}) => {
     I.say("Check that invoice was created");
     I.amOnPage(SL.BASKET_ADMIN);
     DT.filterEquals("editorFields.firstName", testerName);
@@ -73,6 +98,9 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
         I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
         I.seeElement( locate("div.col-sum").withText("Zaplatená suma: 0,00 eur zo sumy: 3 126,36 eur") );
 
+        I.say("I need allready prepared, not confirmed payment for whole sum");
+        DT.checkTableRow("datatableFieldDTE_Field_editorFields-payments_wrapper", 1, ["", "", "3 126,36", "eur", "Nie", "Neznámy stav"]);
+
         I.say("Check inner table functionality + footer update");
             I.seeElement(paymentDataTable);
             I.say('Test valid price value - MIN');
@@ -81,8 +109,16 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
                 payment(I, DTE, 100000, false, false, true);
             I.say("Create new payment");
                 payment(I, DTE, 100, false, false, false);
+
+            DT.filterSelect("confirmed", "Áno");
+            DT.waitForLoader();
+
             I.say("Edit new payment");
                 payment(I, DTE, 200, true, false, false);
+
+            //Deselect
+            I.click( locate(paymentDataTable).find("#dt-filter-labels-link-confirmed > i.ti-x") );
+            I.click( locate(paymentDataTable).find("button.buttons-select-all") );
 
     I.say("Check items tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
@@ -104,7 +140,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
                 I.seeElement( locate("div.col-sum").withText("Suma k zaplateniu: 4 145,04 eur") );
             I.say("Delete item");
                 DT.filterEquals("itemTitle", "iPhone X 128GB");
-                I.click( locate(itemsDataTable).find("button.buttons-select-all") );
+                I.click( locate(itemsDataTable).find("td.sorting_1") );
                 I.click( locate(itemsDataTable).find("button.buttons-remove") );
                 I.waitForElement(".DTE_Action_Remove");
                 I.click("Zmazať", "div.DTE_Action_Remove");
@@ -115,11 +151,13 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
         I.waitForElement("#pills-dt-basketInvoiceDataTable-order_status-tab");
         I.waitForElement("iframe#dataDiv", 3);
 
+    I.say("Also - send change email notification");
+    I.clickCss("#pills-dt-basketInvoiceDataTable-basic-tab");
+    I.checkOption("#DTE_Field_editorFields-sendNotification_0");
     DTE.save();
 
     I.say("Status was updated");
-        I.see("Čiastočne zaplatená");
-
+        DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", "", "Čiastočne zaplatená", "Dobierka", "Vyzdvihnutie v predajni", "5", "2 546,70", "3 056,04", "2 856,04"]);
 
     I.say("Add bonus statuses to config");
         Document.setConfigValue("basketInvoiceBonusStatuses", "9|not_here\n10|here_A\n20|here_B");
@@ -129,25 +167,43 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
         Document.setConfigValue("basketInvoiceBonusStatuses", "");
         I.say("Check that bonus options are gone.");
         checkBonusOptions(I, DT, DTE, testerName, false);
+});
 
+Scenario('Eshop invoice change status email test', async ({I, TempMail}) => {
+    I.say("Previous test updated status, go check email format and content");
+
+    await TempMail.login(basketUserEmail + TempMail.getTempMailDomain());
+    TempMail.openLatestEmail();
+    I.waitForText("Zmena stavu objednavky", 10, TempMail.getSubjectSelector());
+    I.see("Nastala zmena stavu objednávky.");
+    I.see("Vaša objednávka je aktuálne v stave Čiastočne zaplatená.");
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
+});
+
+Scenario('Eshop - remove invoice', ({I, DT, DTE}) => {
     I.say("Test delete logic");
-        I.clickCss("button.buttons-remove");
-        I.waitForElement(".DTE_Action_Remove");
-        I.click("Zmazať", "div.DTE_Action_Remove");
 
-        I.see("Zmazanie objednávky nie je možné, pretože sa nenachádza v stave Stornovaná.");
-        I.click("Zrušiť", "div.DTE_Action_Remove");
+    I.amOnPage(SL.BASKET_ADMIN);
+    DT.filterEquals("editorFields.firstName", testerName);
+    I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
-        I.click("button.buttons-edit");
-        DTE.waitForEditor("basketInvoiceDataTable");
-        DTE.selectOption("statusId", "Stornovaná");
-        DTE.save();
+    I.clickCss("td.dt-select-td");
+    I.clickCss("button.buttons-remove");
+    I.waitForElement(".DTE_Action_Remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.see("Zmazanie objednávky nie je možné, pretože sa nenachádza v stave Stornovaná.");
+    I.click("Zrušiť", "div.DTE_Action_Remove");
 
-        I.clickCss("button.buttons-remove");
-        I.waitForElement(".DTE_Action_Remove");
-        I.click("Zmazať", "div.DTE_Action_Remove");
+    I.click("button.buttons-edit");
+    DTE.waitForEditor("basketInvoiceDataTable");
+    DTE.selectOption("statusId", "Stornovaná");
+    DTE.save();
 
-        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    I.clickCss("button.buttons-remove");
+    I.waitForElement(".DTE_Action_Remove");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
 Scenario('Currency convertion', ({I, DT, DTE, Document}) => {
@@ -220,7 +276,7 @@ function checkBonusOptions(I, DT, DTE, testerName, seeOptions) {
 
 function payment(I, DTE, price, isEdit, minErr, maxErr) {
     if(isEdit) {
-        I.click( locate(paymentDataTable).find("button.buttons-select-all") );
+        I.click( locate(paymentDataTable).find("td.sorting_1") );
         I.click( locate(paymentDataTable).find("button.buttons-edit") );
     } else {
         I.click( locate(paymentDataTable).find("button.buttons-create") );
