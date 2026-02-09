@@ -130,6 +130,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Používatelia - pri importe ak stĺpec v Exceli neobsahuje pole heslo, tak sa pre nových používateľov vygeneruje náhodné heslo. Ak nie je v Exceli zadaný stav Schválený používateľ, tak sa nastaví na hodnotu `true` (#58253).
 - MultiWeb - doplnené zobrazenie domény v bočnej lište (#58317-0).
 - MultiWeb - doplnená možnosť nastaviť doménu presmerovania aby bolo možné zadať `https://` prefix (#58317-0).
+- MultiWeb - doplnená kontrola práv pre skupiny médií a značky (#58317-0).
 
 ### Oprava chýb
 
