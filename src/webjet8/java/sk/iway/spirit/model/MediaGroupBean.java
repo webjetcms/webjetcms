@@ -89,20 +89,10 @@ public class MediaGroupBean extends ActiveRecordRepository implements Serializab
 	}
 
 	public MediaGroupEditorFields getEditorFields() {
-		if(editorFields == null) {
-			//call fromMediaGroupBean to inicialize MediaGroupEditorFields.availableGroups
-			editorFields = new MediaGroupEditorFields();
-			editorFields.fromMediaGroupBean(this);
-		}
 		return editorFields;
 	}
 
 	public void setEditorFields(MediaGroupEditorFields editorFields) {
-		if(editorFields != null) {
-			//call toMediaGroupBean to return String of group id's, separeted by "," and set this AvailableGroups
-			String newGroupIds = editorFields.toMediaGroupBean(this);
-			this.setAvailableGroups(newGroupIds);
-		}
 		this.editorFields = editorFields;
 	}
 
