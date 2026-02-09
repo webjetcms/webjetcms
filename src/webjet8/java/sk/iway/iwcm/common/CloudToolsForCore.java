@@ -1,7 +1,9 @@
 package sk.iway.iwcm.common;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +47,8 @@ public class CloudToolsForCore {
     public static final String CLOUD_TEXT_KEY_PREFIX = "cloud.template.";
 	public static final Pattern CLOUD_TEXT_PATTERN = Pattern.compile(CLOUD_TEXT_KEY_PREFIX+"[a-zA-Z0-9\\._-]+");
 
-    //disabled items form "cloud"==Constants.INSTALL_NAME
-    private static final String[] DISABLED_ITEMS_CLOUD = new String[] {
+    //disabled items for "cloud"==Constants.INSTALL_NAME
+    private static final Set<String> DISABLED_ITEMS_CLOUD = new HashSet<>(Arrays.asList(
         "menuSync",
 
         "menuConfig",
@@ -76,10 +78,10 @@ public class CloudToolsForCore {
         "prop.show_all_texts",
         "cmp_mirroring",
         "menuTemplatesGroup"
-    };
+    ));
 
     //disabled items for multiweb/InitServlet.isTypeCloud()
-    private static final String[] DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN = new String[] {
+    private static final Set<String> DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN = new HashSet<>(Arrays.asList(
         "menuConfig",
         "modUpdate",
         "cmp_adminlog",
@@ -105,15 +107,15 @@ public class CloudToolsForCore {
         "conf.show_all_variables",
         "prop.show_all_texts",
         "menuTemplatesGroup"
-    };
-    private static final String[] DISABLED_ITEMS_MULTIWEB_ALL = new String[] {
+    ));
+    private static final Set<String> DISABLED_ITEMS_MULTIWEB_ALL = new HashSet<>(Arrays.asList(
         "make_zip_archive",
         "cmp_attributes",
         "export_offline",
         "cmp_clone_structure",
         "cmp_stat_seeallgroups",
         "cmp_mirroring"
-    };
+    ));
 
     protected CloudToolsForCore() {
         //utility class
@@ -445,26 +447,19 @@ public class CloudToolsForCore {
     public static boolean isModuleDisabled(String moduleKey) {
         if (InitServlet.isTypeCloud() == false) return false;
         if ("cloud".equals(Constants.getInstallName())) {
-            for (String item : DISABLED_ITEMS_CLOUD)
-            {
-                if (item.equals(moduleKey)) {
-                    return true;
-                }
+            if (DISABLED_ITEMS_CLOUD.contains(moduleKey)) {
+                return true;
             }
         } else {
             if (isControllerDomain()) {
                 //prvemu hostu a iway || webactive user povolime niektore systemove moduly
             } else {
-                for (String item : DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN) {
-                    if (item.equals(moduleKey)) {
-                        return true;
-                    }
-                }
-            }
-            for (String item : DISABLED_ITEMS_MULTIWEB_ALL) {
-                if (item.equals(moduleKey)) {
+                if (DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN.contains(moduleKey)) {
                     return true;
                 }
+            }
+            if (DISABLED_ITEMS_MULTIWEB_ALL.contains(moduleKey)) {
+                return true;
             }
         }
         return false;

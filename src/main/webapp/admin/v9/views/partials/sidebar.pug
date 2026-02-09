@@ -27,5 +27,5 @@ div.menu-wrapper(data-scrollbar)
         option(data-th-each="domain : ${layout.header.domains}" data-th-text="${domain}" data-th-value="${domain}" data-icon="ti-device-desktop")
 
 .js-domain-toggler(data-th-if="${layout.isTypeCloud()==true}")
-    select(data-live-search="false" class="domain-toggler-select")
+    select(disabled data-th-aria-label="${layout.header.currentDomain}" data-live-search="false" class="domain-toggler-select")
         option(data-th-text="${layout.header.currentDomain}" data-th-value="${layout.header.currentDomain}" data-icon="ti-device-desktop")
