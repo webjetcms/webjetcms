@@ -128,6 +128,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Manažér dokumentov - pridaná možnosť [upraviť metadáta historickej verzie dokumentu](redactor/files/file-archive/README.md#úprava-historickej-verzie-dokumentu-v-manažéri) v manažéri dokumentov (#58241).
 - Hromadný email - upravené auditovanie zmien v kampani. Ak sa pridá skupina neaudituje sa celý zoznam príjemcov (bolo to zbytočne veľa záznamov v audite), zapíše sa len zoznam zmenených skupín. Pri manuálnom pridaní emailov sa naďalej audituje meno aj emailová adresa (#58249).
 - Používatelia - pri importe ak stĺpec v Exceli neobsahuje pole heslo, tak sa pre nových používateľov vygeneruje náhodné heslo. Ak nie je v Exceli zadaný stav Schválený používateľ, tak sa nastaví na hodnotu `true` (#58253).
+- Zoznam formulárov - nastavenie spracovateľa formulárov, pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
 
 ### Oprava chýb
 
@@ -135,6 +136,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Web stránky - opravené vkladanie tvrdej medzery za spojky tak, aby sa aplikovalo iba na text stránky a nie na atribúty alebo HTML značky (#OSK235).
 - Datatables - opravené spracovanie udalosti `Enter` pri vybraných vstupných poliach filtrov tabuľky (#58313).
 - Datatables - opravené filtrovanie kedy sa viacero `serverSide:false` tabuliek na stránke navzájom ovplyvňovalo pri filtrovaní (#58313).
+- Elektronický obchod - opravené pripravovanie a odosielanie emailu notifikácie, pri zmene stavu objednávky (#58313).
+- Elektronický obchod - opravené automatické nastavenie stavu objednávky po zmene platieb (#58313).
 
 ### Dokumentácia
 
