@@ -347,6 +347,8 @@ public class CloudToolsForCore {
         }
         else
         {
+            UsersDB.loadDisabledItemsFromDB(user);
+
             if (isControllerDomain())
             {
                 //prvemu hostu a iway || webactive user povolime niektore systemove moduly
@@ -390,8 +392,6 @@ public class CloudToolsForCore {
                     user.removeDisabledItem(special);
                 }
             }
-
-            UsersDB.loadDisabledItemsFromDB(user);
         }
     }
 

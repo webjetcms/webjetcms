@@ -25,3 +25,7 @@ div.menu-wrapper(data-scrollbar)
 .js-domain-toggler(data-th-if="${layout.isTypeCloud()==false && (layout.getConstantBoolean('enableStaticFilesExternalDir') || layout.getConstantBoolean('multiDomainEnabled'))}")
     select(data-th-field="${layout.header.currentDomain}" onchange="WJ.changeDomain(this);" data-th-data-previous="${layout.header.currentDomain}" data-live-search="false" class="domain-toggler-select")
         option(data-th-each="domain : ${layout.header.domains}" data-th-text="${domain}" data-th-value="${domain}" data-icon="ti-device-desktop")
+
+.js-domain-toggler(data-th-if="${layout.isTypeCloud()==true}")
+    select(data-live-search="false" class="domain-toggler-select")
+        option(data-th-text="${layout.header.currentDomain}" data-th-value="${layout.header.currentDomain}" data-icon="ti-device-desktop")
