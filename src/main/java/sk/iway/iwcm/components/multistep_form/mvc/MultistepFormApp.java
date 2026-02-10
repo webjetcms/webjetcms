@@ -40,7 +40,7 @@ import sk.iway.iwcm.users.UsersDB;
 @WebjetAppStore(
     nameKey = "multistep_form.title",
     descKey="components.multistep_form.desc",
-    itemKey= "cmp_app-cookiebar",
+    itemKey= "cmp_form",
     imagePath = "ti ti-route",
     galleryImages = "/components/multistep-form/",
     customHtml = "/apps/form/mvc/editor-component.html"

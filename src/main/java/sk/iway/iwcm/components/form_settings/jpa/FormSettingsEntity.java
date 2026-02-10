@@ -119,7 +119,7 @@ public class FormSettingsEntity {
     private String forwardType;
 
     @Column(name = "force_text_plain")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.force_text_plain", className = "not-formsimple")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title= "editor.form.force_text_plain")
     private Boolean forceTextPlain;
 
     @Column(name = "form_mail_encoding")

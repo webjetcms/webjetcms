@@ -1323,6 +1323,9 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
     I.jstreeFilter('Pätičky');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Pätičky'));
+    I.jstreeFilter("Aktualita_");
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('Aktualita_A'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('Aktualita_B'));
 
     I.say("5. When filtering in the Folders tab and switching to the Trash tab, the filter must be cleared and the input should be empty.");
     I.jstreeFilter(pageName);
@@ -1349,6 +1352,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('test');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Kôš'));
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest'));
 });
 Scenario('Set default ordering setting before', ({ I }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/');

@@ -1,8 +1,8 @@
 # Zoznam zmien verzia 2025
 
-## 2025.0-SNAPSHOT
+## 2025.52
 
-> **WebJET CMS 2025.SNAPSHOT** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
+> **WebJET CMS 2025.52** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
@@ -128,6 +128,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Manažér dokumentov - pridaná možnosť [upraviť metadáta historickej verzie dokumentu](redactor/files/file-archive/README.md#úprava-historickej-verzie-dokumentu-v-manažéri) v manažéri dokumentov (#58241).
 - Hromadný email - upravené auditovanie zmien v kampani. Ak sa pridá skupina neaudituje sa celý zoznam príjemcov (bolo to zbytočne veľa záznamov v audite), zapíše sa len zoznam zmenených skupín. Pri manuálnom pridaní emailov sa naďalej audituje meno aj emailová adresa (#58249).
 - Používatelia - pri importe ak stĺpec v Exceli neobsahuje pole heslo, tak sa pre nových používateľov vygeneruje náhodné heslo. Ak nie je v Exceli zadaný stav Schválený používateľ, tak sa nastaví na hodnotu `true` (#58253).
+- MultiWeb - doplnené zobrazenie domény v bočnej lište (#58317-0).
+- MultiWeb - doplnená možnosť nastaviť doménu presmerovania aby bolo možné zadať `https://` prefix (#58317-0).
+- MultiWeb - doplnená kontrola práv pre skupiny médií a značky (#58317-0).
 - Zoznam formulárov - nastavenie spracovateľa formulárov, pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
 
 ### Oprava chýb
@@ -546,14 +549,18 @@ Iné zmeny:
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
+- Bezpečnosť - zakázané presmerovanie na externé URL adresy po prihlásení cez prihlasovací formulár.
 - Dátové tabuľky - opravená chyba zobrazenia výberových polí pri zapnutí režimu Upraviť v zobrazení mriežky (#57657-16).
 - Dátové tabuľky - opravené uloženie nového záznamu cez klávesovú skratku `CTRL+S` - po uložení sa nastavia vrátené hodnoty nazad do editora aby sa správne nastavilo ID záznamu pre ďalšie úpravy (#57657-16).
 - Formuláre - upravené generovanie názvu poľa tak, aby neobsahovalo bodku (#57657-16).
 - Hromadný email - upravené tlačidlá pre spustenie/zastavenie odosielania hromadného emailu na lepšie zrozumiteľné `play` a `stop` (#54273-81).
 - Hromadný email - opravené ukladanie v Oracle databáze, pole predmet nastavené ako povinné (#54273-81).
 - Hromadný email - Doménové limity - opravené načítanie limitov pre domény z databázy (#54273-81).
+- Hromadný e-mail - opravené nastavenie ID používateľa pri pridaní skupiny, ak existuje viac používateľov s rovnakým emailom (#58217).
 - Spam ochrana - opravená chyba kontroly časového rozmedzia medzi odoslaniami formuláru/vyhľadávania (#57657-16).
 - Webové stránky - opravené usporiadanie stromovej štruktúry pri presune položiek cez `Drag&Drop` v prípade nastavenia zostupného usporiadania (#MF-1199).
+- Webové stránky - opravené vyhľadávanie priečinka v karte Kôš (#58081).
+- Webové stránky - opravené posielanie notifikácie o schválení/neschválení stránky ak neexistuje žiadny schvaľovateľ s notifikáciou, doplnený zoznam zmien v rôznych poliach web stránky (#58007).
 
 ## 2025.0.50
 

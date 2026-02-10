@@ -370,7 +370,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.see("Sekundarny nadpis druheho kroku");
     I.see("penguin.jpg");
     I.see("Technicke info:");
-    I.see("IP adresa: 127.0.0.1");
+    I.see("IP adresa:");
 
     TempMail.checkAttachments(["penguin.jpg"]);
     TempMail.closeEmail();

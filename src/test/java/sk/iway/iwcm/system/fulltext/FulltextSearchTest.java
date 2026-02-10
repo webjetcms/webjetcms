@@ -114,9 +114,9 @@ class FulltextSearchTest extends BaseWebjetTest
 			Logger.setWJLogLevel(Logger.DEBUG);
 			FulltextSearch.index(new Documents("sk"),new PrintWriter(System.out));
 		}
-		catch (Exception e)
+		catch (Exception|AssertionError e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			fail();
 		}
 	}

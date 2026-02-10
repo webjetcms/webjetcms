@@ -2556,6 +2556,7 @@ public class UpdateDatabase
 				}
 
 				String formName = key.substring(0, idx);
+				if (Tools.isEmpty(formName)) return;
 				int domainId = Integer.parseInt( key.substring(idx + 1) );
 
 				//delete old record if exists (so we can run this multiple times)
