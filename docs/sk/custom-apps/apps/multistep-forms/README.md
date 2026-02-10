@@ -1,6 +1,6 @@
-# Spracovateľ formulárov
+# Formuláre
 
-Ide o špeciálnu triedu, ktorá slúži na spracovanie krokov formuláru a umožňuje:
+V niektorých prípadoch je potrebné vykonať zložitejšie operácie, alebo validácie formulárov. Pre tento účel je vo viackrokových formulároch možné nastaviť Java triedu v poli Spracovateľ formulárov. Ide o špeciálnu triedu, ktorá slúži na spracovanie krokov formuláru a umožňuje:
 
 - validáciu kroku
 - spustenie interceptor-a kroku

@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.servlet.http.Cookie;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -158,8 +157,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
             // Get invoice detail for email
             String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
-		    Cookie [] cookies = getRequest().getCookies();
-		    String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(getRequest()) + compUrl + "?invoiceId=" + saved.getId() + "&auth=" + saved.getAuthorizationToken(), cookies);
+		    String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(getRequest()) + compUrl + "?invoiceId=" + saved.getId() + "&auth=" + saved.getAuthorizationToken());
 
             // Replace all {ORDER_DETAILS}
             sb = Tools.replace(sb, ORDER_PLACEHOLDER, data);

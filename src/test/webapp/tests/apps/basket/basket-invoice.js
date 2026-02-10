@@ -8,6 +8,7 @@ let itemsDataTable = "#datatableFieldDTE_Field_editorFields-items_wrapper";
 let editorItems = "datatableFieldDTE_Field_editorFields-items";
 
 let testerName;
+let invoiceNote = "This is nooote";
 
 Before(({ I, DT, login }) => {
     login('admin');
@@ -20,7 +21,7 @@ Before(({ I, DT, login }) => {
     }
 });
 
-const basketUserEmail = "basketNotifyUser";
+const basketUserEmail = "basket.notifyuser";
 
 Scenario('Eshop - Switch domain and empty email inbox', async ({I, Document, TempMail}) => {
     I.say("Change domain");
@@ -52,7 +53,7 @@ Scenario('Eshop - create new invoice', async ({I, TempMail}) => {
     I.fillField("#contactFirstNameId", testerName);
     I.fillField("#contactCityId", "Prešov");
     I.fillField("#contactZipId", "08005");
-    I.fillField("#userNoteId", "This is nooote");
+    I.fillField("#userNoteId", invoiceNote);
 
     I.seeInField("#contactEmailId", "tester@balat.sk");
     I.fillField("#contactEmailId", basketUserEmail + TempMail.getTempMailDomain());
@@ -67,6 +68,12 @@ Scenario('Eshop - check created invoice email notification', async ({I, TempMail
     TempMail.openLatestEmail();
     I.waitForText("Nová objednávka", 10, TempMail.getSubjectSelector());
     I.see("potvrdzujeme prijatie vašej objednávky číslo");
+    //verify invoice_email.jsp fields
+    I.see("Fakturačná adresa");
+    I.see("Smasung Galaxy S9 64GB");
+    I.see("iPhone X 128GB");
+    I.see("Celková suma k úhrade: 3 126,36 €");
+    I.see(invoiceNote);
     TempMail.closeEmail();
     await TempMail.destroyInbox();
 });
@@ -157,7 +164,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document, TempMail}) => {
     DTE.save();
 
     I.say("Status was updated");
-        DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", "", "Čiastočne zaplatená", "Dobierka", "Vyzdvihnutie v predajni", "5", "2 546,70", "3 056,04", "2 856,04"]);
+        DT.checkTableRow("basketInvoiceDataTable", 1, ["", testerName, "Playwright", "", "Čiastočne zaplatená", "Prevodom", "Vyzdvihnutie v predajni", "5", "2 546,70", "3 056,04", "2 856,04"]);
 
     I.say("Add bonus statuses to config");
         Document.setConfigValue("basketInvoiceBonusStatuses", "9|not_here\n10|here_A\n20|here_B");

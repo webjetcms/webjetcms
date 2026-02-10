@@ -55,9 +55,6 @@ public class FormSettingsService {
     public static void prepareSettingsForSave(FormSettingsEntity formSettings, String formType, FormSettingsRepository formSettingsRepository) {
         if(formSettings == null) return;
 
-        // Set form name into form settings
-        formSettings.setFormName(formSettings.getFormName());
-
         // Try get and set id
         Long formSettingsId = formSettingsRepository.findId(formSettings.getFormName(), CloudToolsForCore.getDomainId());
         formSettings.setId(formSettingsId);
@@ -179,7 +176,7 @@ public class FormSettingsService {
 
     private static Long getLongValue(String value) {
         long ret = Tools.getLongValue(value, -1L);
-        return ret == -1 ? null : ret;
+        return ret == -1L ? null : ret;
     }
 
     private static Boolean getBooleanValue(String value) {

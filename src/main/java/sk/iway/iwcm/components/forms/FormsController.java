@@ -111,12 +111,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         entity.setDocId(-1);
         entity.setDomainId(CloudToolsForCore.getDomainId());
         entity.setCreateDate(null);
-        return super.insertItem(entity);
-    }
 
-    @Override
-    public void beforeSave(FormsEntity entity) {
-        entity.setFormName( DocTools.removeChars(entity.getFormName(), false) );
+        //default use lowercase form name, remove special chars
+        entity.setFormName( DocTools.removeChars(entity.getFormName(), true) );
+
+        return super.insertItem(entity);
     }
 
     @Override
@@ -124,9 +123,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         if(entity.getFormSettings() != null && (entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L)) {
             // Its new saved form
 
+            //lowercase form name
+            entity.getFormSettings().setFormName( entity.getFormName() );
+
             // Prepare and save form settings
-            entity.getFormSettings().setFormName( DocTools.removeChars(entity.getFormName(), true) );
-            FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), entity.getFormType(),formSettingsRepository);
+            FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), entity.getFormType(), formSettingsRepository);
             formSettingsRepository.save(entity.getFormSettings());
 
             // All new forms are multistep - add default first step
