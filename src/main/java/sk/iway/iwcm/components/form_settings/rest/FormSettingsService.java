@@ -110,12 +110,12 @@ public class FormSettingsService {
 
     public List<String> getFormProcessorOptions(String term) {
         List<String> ac = new ArrayList<>();
-        if(Tools.isEmpty(term)) return ac;
 
         for(FormProcessorInterface processorInterface : formProcessorInterfaces) {
             String className = processorInterface.getClass().getName();
-            if(className.toLowerCase().contains( term.toLowerCase() ))
+            if (Tools.isEmpty(term) || "%".equals(term) || className.toLowerCase().contains( term.toLowerCase() )) {
                 ac.add(className);
+            }
         }
 
         return ac;
