@@ -63,7 +63,6 @@ private String oldValue;
 })
 private Date updateDate;
 
-
 //GalleryEntity
 @Size(max = 255)
 @Column(name = "image_name")
@@ -104,6 +103,30 @@ private String imagePath;
 private Integer[] passwordProtected;
 ```
 
+Príklad vlastnej [render](https://datatables.net/reference/option/columns.render) funkcie:
+
+```javascript
+//@Column(name = "step_name")
+//@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
+//private String stepName;
+
+window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+                //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+                let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${meta.row + 1}</span>`;
+                let secondRow = "";
+                if(row.stepName && row.stepName.trim() !== "") {
+                        secondRow += `${row.stepName}`;
+                }
+                if (row.stepSubName && row.stepSubName.trim() !== "") {
+                        secondRow += ` (${row.stepSubName})`;
+                }
+                return displayName + (secondRow ? `<br/>${secondRow}` : "");
+        }
+        return data;
+};
+```
+
 ## Vlastnosti @DataTableColumn
 
 Pôvodná dokumentácia na stránke [datatables.net](https://datatables.net/reference/option/columns:)
@@ -133,6 +156,7 @@ Voliteľné polia:
 - ```renderFormat``` - https://datatables.net/reference/option/columns.renderFormat
 - ```renderFormatLinkTemplate``` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - ```renderFormatPrefix``` - https://datatables.net/reference/option/columns.renderFormatPrefix
+- `renderFunction` - meno funkcie v JavaScripte, ktorá sa použije pre vlastné vykreslenie hodnoty stĺpca. Viac na [stránke DataTables](https://datatables.net/reference/option/columns.render).
 - `sortAfter` - meno poľa za ktoré sa pridá toto pole v poradí
 - ```editor``` - objekt ```DataTableColumnEditor```
 - ```hidden``` - pole sa nezobrazí v datatabuľke a používateľ si ho na rozdiel od ```visible``` nemôže zobraziť, pole môže byť použité v editore
@@ -148,6 +172,7 @@ Voliteľné polia:
 - `alwaysCopyProperties` - pri editácii záznamu sa prázdne `null` hodnoty zachovajú a skopírujú z existujúceho objektu v databáze. Pre polia typu dátum/čas to neplatí, tie sa prepíšu automaticky. Ak potrebujete toto použiť aj pre iný typ poľa a preniesť aj `null` hodnotu nastavte atribút na `true`, prípadne na `false` ak nechcete automatický prepis pre dátumové polia.
 - `ai` - nastavením na hodnotu `false` je možné vypnúť zobrazenie AI ikony pre všeobecné možnosti (preložiť, opraviť gramatiku...). AI ikona sa zobrazí len ak je asistent nastavený pre toto konkrétne pole.
 - `disabled` - nastavením na `false` sa vstupnému poľu v editore nastaví atribút `disabled="disabled"`.
+- `export` - nastavením na hodnotu `false` sa pole nebude exportovať.
 
 ## Vlastnosti @DataTableColumnEditor
 
@@ -298,6 +323,12 @@ columns.push({
 });
 ```
 
+Ak potrebujete zmeniť poradie stĺpcov, môžete to spraviť pomocou funkcie ```WJ.DataTable.moveColumn```. V príklade sa stĺpec s názvom ```formSettings.recipients``` presunie za stĺpec s názvom ```formName```:
+
+```javascript
+filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+```
+
 ## Vnorené atribúty
 
 Často je potrebné k entite pridať pre editor doplnkové atribúty (napr. ```checkbox``` pre aplikovanie zmeny aj na podradené entity, doplnkové pole s informáciou atď). Pre tento účel je možné entitu rozšíriť o nový atribút (ktorý sa neukladá do databázy) obsahujúci doplnkové údaje. Typicky ho voláme ```editorFields``` a pre entitu implementujeme potrebnú triedu. Príklady sú v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) alebo [GroupEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). V triedach je následne len editorField atribút, napr. ```private DocEditorFields editorFields = null;```.
@@ -383,6 +414,25 @@ Pre nastavenie údajov medzi entitou a ```editorFields``` v REST controlleri je 
         }
         return entity;
     }
+```
+
+Ak ako vnorený atribút máme inú entitu je vhodné nastaviť aj atribút `sortPrefix` na hodnotu mena atribútu. Automaticky sa na atribútoch vnorenej entity pridá tento prefix do poľa `sortAfter`, inak by sa vám zmiešali názvy polí z rôznych entít.
+
+```java
+public class FormsEntityBasic {
+
+    // Numeric value of the same column (user_id)
+    @Column(name = "user_id")
+    private Long userId;
+
+    // Relation to users table; load lazily, only readable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @DataTableColumnNested(sortPrefix = "userDetails.")
+    private UserDetailsEntity userDetails;
+
+}
 ```
 
 ## Sortovanie poradia polí

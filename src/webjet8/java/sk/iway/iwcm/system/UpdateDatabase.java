@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +16,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -22,10 +24,13 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -33,19 +38,29 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.FormsEntity;
+import sk.iway.iwcm.components.forms.FormsRepository;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -56,10 +71,12 @@ import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.update.DomainIdUpdateService;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
 
 
 /**
@@ -131,6 +148,9 @@ public class UpdateDatabase
 	public static void updateWithSpringInitialized() {
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
+		updateFormAttributesTable();
+
+		parseFormsByType();
 
 		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
 			DomainIdUpdateService.updateExportDatDomainId();
@@ -2500,5 +2520,226 @@ public class UpdateDatabase
 
 		//zapis do DB, ze je to aktualizovane
 		saveSuccessUpdate(note);
+	}
+
+	public static void updateFormAttributesTable()
+	{
+		try {
+			String note = "27.11.2025 [sivan] prekonvertovanie hodnot z tabulky form_attributes do novej tabulky form_settings";
+			if (isAllreadyUpdated(note)) return;
+
+			FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
+			if(formSettingsRepository == null) {
+				Logger.error(UpdateDatabase.class, "FormSettingsRepository bean not found");
+				return;
+			}
+
+			// KEY formName-domainId, VALUE <paramName, value>
+			Map<String, List<Pair<String, String>>> oldAttributes = new HashMap<>();
+			String query = "SELECT value, form_name, param_name, domain_id FROM form_attributes";
+			new ComplexQuery().setSql(query.toString()).list(new Mapper<Object>() {
+				@Override
+				public Object map(ResultSet rs) throws SQLException {
+					String mapKey = rs.getString("form_name") + "-" + rs.getInt("domain_id");
+					if(oldAttributes.containsKey(mapKey) == false) oldAttributes.put(mapKey, new ArrayList<>());
+					oldAttributes.get(mapKey).add( new Pair<>(rs.getString("param_name"), rs.getString("value")) );
+					return null;
+				}
+			});
+
+			final StringBuilder error = new StringBuilder();
+
+			oldAttributes.forEach( (key, attributes) -> {
+				int idx = key.lastIndexOf('-');
+				if (idx == -1) {
+					return; //err
+				}
+
+				String formName = key.substring(0, idx);
+				if (Tools.isEmpty(formName)) return;
+				int domainId = Integer.parseInt( key.substring(idx + 1) );
+
+				//delete old record if exists (so we can run this multiple times)
+				formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
+
+				FormSettingsEntity newSettings = new FormSettingsEntity();
+				newSettings.setId(null);
+				newSettings.setFormName(formName);
+				newSettings.setDomainId(domainId);
+
+				Class<?> type = newSettings.getClass();
+				for(Pair<String, String> attr : attributes) {
+					String paramName = attr.getFirst();
+					paramName = FormSettingsEntity.toPascalCase(paramName);
+					String value = attr.getSecond();
+
+					if ("formmailSenduserinfodocid".equals(paramName)) paramName = "formMailSendUserInfoDocId";
+					else if ("source".equals(paramName)) continue; //skip reserved word
+					else if ("formmailAllowonlyonesubmit".equals(paramName)) paramName = "allowOnlyOneSubmit";
+					else if ("formmailOverwriteoldforms".equals(paramName)) paramName = "overwriteOldForms";
+					else if ("isPdfVersion".equals(paramName)) paramName = "isPdf";
+
+					if ("formMailEncoding".equals(paramName) && "ASCII".equalsIgnoreCase(value)) {
+						value = "true"; //old default was ASCII, new  is boolean
+					}
+
+					try {
+						Field field = type.getDeclaredField(paramName);
+						field.setAccessible(true);
+						if(field.getType() == String.class) {
+							field.set(newSettings, value);
+						} else if(field.getType() == Integer.class) {
+							field.set(newSettings, Integer.valueOf(value));
+						} else if(field.getType() == Boolean.class) {
+							field.set(newSettings, Boolean.valueOf(value));
+						}
+					} catch (Exception e) {
+						Logger.error(UpdateDatabase.class, "Error setting form attribute: " + paramName + " for form: " + formName + ", domainId: " + domainId + " - " + e.getMessage());
+						continue; // err
+					}
+				}
+
+				try {
+					formSettingsRepository.save(newSettings);
+				} catch (Exception e) {
+					Logger.error(UpdateDatabase.class, "Error saving new form attributes for form: " + formName + ", domainId: " + domainId + " - " + e.getMessage());
+					error.append("Error saving new form attributes for form: " + formName + ", domainId: " + domainId + " - " + e.getMessage()).append("\n");
+				}
+			});
+
+			//zapis do DB, ze je to aktualizovane
+			if (error.isEmpty()) saveSuccessUpdate(note);
+			else Adminlog.add(Adminlog.TYPE_UPDATEDB, note + "\n\nerrors:\n" + error.toString(), -1, -1);
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	public static void parseFormsByType() {
+
+		try {
+			String note = "25.01.2026 [sivan] zisti a nastav typ formularov (multistep, simple, basic)";
+			if (isAllreadyUpdated(note)) return;
+
+			FormsRepository formsRepository = Tools.getSpringBean("formsRepository", FormsRepository.class);
+			if(formsRepository == null) return;
+
+			FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
+			if(formSettingsRepository == null) return;
+
+			DocDetailsRepository docDetailsRepository = Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class);
+			if(docDetailsRepository == null) return;
+
+			// All forms (models not filled forms)
+			List<FormsEntity> allFormsList = formsRepository.findAllByCreateDateIsNull();
+
+			// Standard HTML /formmail.do form
+			List<FormsEntity> basicForms = getFormsByType(FormsService.FORM_TYPE.BASIC, allFormsList, docDetailsRepository);
+			basicForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.BASIC.value()); });
+			formsRepository.saveAll(basicForms);
+
+			// Form Simple App
+			List<FormsEntity> simpleForms = getFormsByType(FormsService.FORM_TYPE.SIMPLE, allFormsList, docDetailsRepository);
+			simpleForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.SIMPLE.value()); });
+			formsRepository.saveAll(simpleForms);
+
+			// MultiStep Form
+			List<FormsEntity> multistepForms = getFormsByType(FormsService.FORM_TYPE.MULTISTEP, allFormsList, docDetailsRepository);
+			multistepForms.forEach( form -> { form.setFormType(FormsService.FORM_TYPE.MULTISTEP.value()); });
+			formsRepository.saveAll(multistepForms);
+
+			//
+			formsRepository.setUnknownFormType();
+
+			//zapis do DB, ze je to aktualizovane
+			saveSuccessUpdate(note);
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	/**
+	 * Get forms by type
+	 * @param formType
+	 * @param allFormsList
+	 * @param docDetailsRepository
+	 * @return
+	 */
+	private static List<FormsEntity> getFormsByType(FormsService.FORM_TYPE formType, List<FormsEntity> allFormsList, DocDetailsRepository docDetailsRepository) {
+		List<FormsEntity> formsList = new ArrayList<>();
+
+		if(FormsService.FORM_TYPE.MULTISTEP.equals(formType)) {
+			for(LabelValueInteger mv : getMultistepFormNames()) {
+				for(FormsEntity fe : allFormsList) {
+					if(fe.getFormName().equalsIgnoreCase(mv.getLabel()) && fe.getDomainId() == mv.getValue().intValue()) {
+						formsList.add(fe);
+						break;
+					}
+				}
+			}
+		} else if(FormsService.FORM_TYPE.SIMPLE.equals(formType) || FormsService.FORM_TYPE.BASIC.equals(formType)) {
+			String dataSelector = FormsService.FORM_TYPE.SIMPLE.equals(formType) ? "%!INCLUDE(/components/formsimple/form.jsp,%" : "%/formmail.do?savedb=%";
+			String patternRegex = FormsService.FORM_TYPE.SIMPLE.equals(formType) ? "(!INCLUDE\\(/components/formsimple/form\\.jsp[\\s\\S]*?\\)\\!)" : "action=\"/formmail\\.do\\?[^\\\"]*savedb=([^\\\"&]+)";
+			Pattern formPattern = Pattern.compile(patternRegex);
+
+			DocDB docDB = DocDB.getInstance();
+			Map<String, LabelValueInteger> formsMap = new HashMap<>();
+			for(DocDetails docDetails : docDetailsRepository.findByDataLike(dataSelector)) {
+
+				if(Tools.isNotEmpty(docDetails.getData())) {
+
+					String domain = docDB.getDomain(docDetails.getDocId());
+					Integer domainId = GroupsDB.getDomainId(domain);
+					if(domainId == -1) domainId = 1;
+
+					Matcher formMatcher = formPattern.matcher(docDetails.getData());
+					while (formMatcher.find()) {
+
+						String formName;
+						if(FormsService.FORM_TYPE.SIMPLE.equals(formType)) {
+							// SIMPLE FORM
+							PageParams pageParams = new PageParams( formMatcher.group(1) );
+							formName = pageParams.getValue("formName", "");
+							formName = DocTools.removeChars(formName, true);
+						} else {
+							// BASIC FORM
+							formName = formMatcher.group(1).trim();
+							formName = formName.replaceAll("'", "").replaceAll("\"", "").replaceAll("&quot;", "").replaceAll("&nbsp;", " ");
+							formName = DocTools.removeChars(formName, true);
+						}
+
+						String key = formName + "-" + domainId;
+						formsMap.putIfAbsent(key, new LabelValueInteger(formName, domainId));
+					}
+				}
+			}
+
+			for(LabelValueInteger lv : formsMap.values()) {
+				for(FormsEntity fe : allFormsList) {
+					if(fe.getFormName().equalsIgnoreCase(lv.getLabel()) && fe.getDomainId() == lv.getValue().intValue()) {
+						formsList.add(fe);
+						break;
+					}
+				}
+			}
+		}
+		return formsList;
+	}
+
+	/**
+	 * Get multistep form names from form_steps table
+	 * @return
+	 */
+	private static List<LabelValueInteger> getMultistepFormNames() {
+		String query = "SELECT DISTINCT form_name, domain_id FROM form_steps";
+		List<LabelValueInteger> values = new ArrayList<>();
+        new ComplexQuery().setSql(query).list(new Mapper<LabelValueInteger>() {
+			@Override
+			public LabelValueInteger map(ResultSet rs) throws SQLException {
+				values.add(new LabelValueInteger(rs.getString("form_name"), rs.getInt("domain_id")));
+                return null;
+			}
+		});
+		return values;
 	}
 }

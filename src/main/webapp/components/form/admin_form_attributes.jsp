@@ -10,7 +10,7 @@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <iwcm:checkLogon admin="true" perms="cmp_form"/>
 <%
-java.util.Map<String, String> attributes = new FormAttributeDB().load(Tools.getRequestParameter(request, "formname"));
+java.util.Map<String, String> attributes = new FormSettingsService().load(Tools.getRequestParameter(request, "formname"));
 
 Identity user = UsersDB.getCurrentUser(request);
 
@@ -21,7 +21,7 @@ if (Tools.isEmpty(attributes.get("recipients")) && user != null)
 
 request.setAttribute("formAttributes", attributes);
 %>
-<%@page import="sk.iway.iwcm.form.FormAttributeDB"%>
+<%@page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 
 <style type="text/css">
@@ -68,7 +68,7 @@ function setPage(document)
 	else if (lastPressed == $('#use_form_mail_doc_id_button').get(0))
 		$("input[name='attribute_useFormMailDocId']").val(document[0])
 	else
-		$("input[name='attribute_formmail_sendUserInfoDocId']").val(document[0])
+		$("input[name='attribute_formMailSendUserInfoDocId']").val(document[0])
 }
 
 function saveAttributes(that)
@@ -83,7 +83,7 @@ function saveAttributes(that)
 		postData[$(this).attr('name')] = ""
 	})
 
-	console.log(postData);
+	//console.log(postData);
 
 	$.ajax({
 		url: '/components/form/_save_form_attributes.jsp',
@@ -159,19 +159,19 @@ function saveAttributes(that)
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.form_mail_encoding"/>"><iwcm:text key="editor.form.form_mail_encoding" /></label></td>
-			<td><input type="checkbox" name="attribute_formMailEncoding" value="ASCII" <%="ASCII".equals(attributes.get("formMailEncoding")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.form_mail_encoding"/>" />
+			<td><input type="checkbox" name="attribute_formMailEncoding" value="true" <%="true".equalsIgnoreCase(attributes.get("formMailEncoding")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.form_mail_encoding"/>" />
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.is_pdf"/>"><iwcm:text key="editor.form.is_pdf" /></label></td>
-			<td><input type="checkbox" name="attribute_isPdfVersion" class="inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("isPdfVersion")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.is_pdf"/>"/>
+			<td><input type="checkbox" name="attribute_isPdf" class="inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("isPdf")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.is_pdf"/>"/>
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.allow_only_one_submit"/>"><iwcm:text key="editor.form.allow_only_one_submit" /></label></td>
-			<td><input type="checkbox" name="attribute_formmail_allowOnlyOneSubmit" class="inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("formmail_allowOnlyOneSubmit")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.allow_only_one_submit"/>" />
+			<td><input type="checkbox" name="attribute_allowOnlyOneSubmit" class="inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("allowOnlyOneSubmit")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.allow_only_one_submit"/>" />
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.overwrite_old_forms"/>"><iwcm:text key="editor.form.overwrite_old_forms" /></label></td>
-		<td><input type="checkbox" name="attribute_formmail_overwriteOldForms" class=inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("formmail_overwriteOldForms")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.overwrite_old_forms"/>" />
+		<td><input type="checkbox" name="attribute_overwriteOldForms" class=inputcheckbox" value="true" <%="true".equalsIgnoreCase(attributes.get("overwriteOldForms")) ? " checked " : "" %> title="<iwcm:text key="editor.form.help.overwrite_old_forms"/>" />
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.message_as_attach"/>"><iwcm:text key="editor.form.message_as_attach" /></label></td>
@@ -192,16 +192,12 @@ function saveAttributes(that)
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>"><iwcm:text key="editor.form.send_user_info_doc_id" /></label></td>
-			<td><input type="docid" size="4"  name="attribute_formmail_sendUserInfoDocId" class="inputtext" value="${formAttributes['formmail_sendUserInfoDocId']}" title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>" />
+			<td><input type="docid" size="4"  name="attribute_formMailSendUserInfoDocId" class="inputtext" value="${formAttributes['formMailSendUserInfoDocId']}" title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>" />
 		   <input type="button" class="btn btn-sm btn-outline-secondary button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.fields_emaiL_header"/>"><iwcm:text key="editor.form.fields_email_header" /></label></td>
 			<td><input type="text" name="attribute_fieldsEmailHeader" class="" value="${formAttributes['fieldsEmailHeader']}" title="<iwcm:text key="editor.form.help.fields_email_header"/>" />
-		</td></tr>
-
-		<tr><td><label title="<iwcm:text key="editor.form.help.source"/>"><iwcm:text key="editor.form.source" /></label></td>
-			<td><input type="text" name="attribute_source" class="" value="${formAttributes['source']}" title="<iwcm:text key="editor.form.help.source"/>" />
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.afterSendInterceptor"/>"><iwcm:text key="editor.form.afterSendInterceptor" /></label></td>

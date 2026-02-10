@@ -202,7 +202,8 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
     @Override
     public void afterSave(EmailsEntity entity, EmailsEntity saved) {
-        Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelog(saved.getId(), saved, null), saved.getId(), -1L);
+        //saved can be null if email is unsubscribed
+        if (saved != null) Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelog(saved.getId(), saved, null), saved.getId(), -1L);
     }
 
     @Override

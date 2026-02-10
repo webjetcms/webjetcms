@@ -161,6 +161,10 @@ table.datatableInit {
     tbody > tr.selected,
     tbody > tr > .selected {
         background-color: $primary;
+
+        .text-muted {
+            color: $nice-gray-100 !important;
+        }
     }
 
     // tbody tr {
@@ -1473,7 +1477,7 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     margin-bottom: 5px;
 }
 //variant with textarea-code in textarea element
-.input-group:has(.textarea-code) {
+.DTE_Field_InputControl:has(.textarea-code) {
     width: 892px;
     margin-bottom: 5px;
     .textarea-code {

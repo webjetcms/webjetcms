@@ -145,6 +145,8 @@ Minimálna konfigurácia:
 - ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
 - ```updateEditorAfterSave {boolean}``` - nastavením na ```true``` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
 - `onClose(TABLE, EDITOR, e)` - funkcia, volaná pri kliknutí na tlačidlo Zrušiť alebo zatvorenie editora. Parametre: `TABLE` - inštancia datatabuľky, `EDITOR` - inštancia editora, `e` - event objekt. Ak vráti `false` okno sa nezatvorí. Používa sa napríklad vo `web-pages-datatable.js` pre kontrolu zmien v editore pred zatvorením.
+- `toggleSelector` – CSS selektor určujúci, ktorý element spúšťa výber riadku v tabuľke. Predvolená hodnota je `td.dt-select-td`, čo znamená, že výber riadku sa vykoná iba kliknutím na bunku s touto triedou (typicky stĺpec s ID). Toto nastavenie môžete prepísať (napr. na hodnotu `tr`), aby bolo možné vybrať riadok kliknutím kdekoľvek na riadok.
+- `toggleStyle` – režim výberu riadkov. Predvolená hodnota je `multi` (možno vybrať viacero riadkov naraz). Nastavením na hodnotu `single` obmedzíte výber len na jeden riadok (vhodné, ak má byť naraz editovateľný iba jeden riadok).
 
 ```javascript
 let columns = [
@@ -808,3 +810,19 @@ Logika pre obsluhu koncového bodu `/sumAll` je v triede [DatatableRestControlle
 Nakoľko `footer` využíva dáta tabuľky (až na jeden prípad), výsledná hodnota stĺpca závisí na vy-filtrovaných dátach. Takto viete ľahko zistiť celkovú hodnotu stĺpcov pre špecifické parametre.
 
 !>**Upozornenie:** Ak tabuľka je nastavená ako `serverSide: true` a mód pätičky je `all`, spočítané hodnoty sa **nemenia** v závislosti od filtrovania v tabuľke.
+
+### Poradie usporiadania riadkov
+
+Funkcia poradie usporiadania riadkov umožňuje používateľovi meniť poradie záznamov v tabuľke pomocou drag & drop. Funkčnosť je implementovaná pomocou rozšírenia `RowReorder` z DataTables.
+
+**Použitie:**
+
+Pre aktiváciu je potrebné v `@DataTableColumn` anotácii mať nastavený atribút `inputType` na hodnotu `DataTableColumnType.ROW_REORDER`. Napríklad:
+
+```java
+@Column(name = "sort_priority")
+@DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false)
+private Integer sortPriority;
+```
+
+Pri zmene poradia riadkov sa automaticky vyvolá backend endpoint `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), ktorý aktualizuje hodnoty pre daný stĺpec označený ako `ROW_REORDER` a uloží zmeny do databázy. Ak uloženie bolo úspešné, tabuľka sa obnoví a zobrazí nové poradie riadkov, plus sa zobrazí notifikácia o úspešnom uložení zmien. V prípade chyby sa zobrazí chybová notifikácia.

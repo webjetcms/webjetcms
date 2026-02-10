@@ -285,31 +285,33 @@ export function bindExportButton(TABLE, DATA) {
 
                     let rowData = c;
 
-                    if (DATA.id === 'form-detail') {
+                    if (DATA.id === 'formDetailDataTable') {
                         //console.log("c.columnNamesAndValues=", c.columnNamesAndValues);
                         //pre formulare su data v columnNamesAndValues
-                        Object.keys(c.columnNamesAndValues).forEach(function(key,index) {
-                            //console.log("fixing column names, key=", key, "value=", c.columnNamesAndValues[key]);
-                            var value = c.columnNamesAndValues[key];
-                            try {
-                                //if value contains only numbers, comma, dash convert comma to dot
-                                if (typeof value === "string" && value.match(/^\-?[\d,]+$/) && value.indexOf(",")!=-1) {
-                                    value = value.replace(",", ".");
-                                }
+                        if(c.columnNamesAndValues != undefined && c.columnNamesAndValues != null) {
+                            Object.keys(c.columnNamesAndValues).forEach(function(key,index) {
+                                //console.log("fixing column names, key=", key, "value=", c.columnNamesAndValues[key]);
+                                var value = c.columnNamesAndValues[key];
+                                try {
+                                    //if value contains only numbers, comma, dash convert comma to dot
+                                    if (typeof value === "string" && value.match(/^\-?[\d,]+$/) && value.indexOf(",")!=-1) {
+                                        value = value.replace(",", ".");
+                                    }
 
-                                //if the value is number convert it to number object, skip if it starts with 0 or contains + (probably phone number)
-                                if (typeof value === "string" && value.indexOf("0")!=0 && value.indexOf("+")==-1 && !isNaN(value)) {
-                                    var converted = Number.parseFloat(value);
-                                    //console.log("Converting to number["+index+"]: ", value, "converted=", converted);
-                                    if (!isNaN(converted)) value = converted;
+                                    //if the value is number convert it to number object, skip if it starts with 0 or contains + (probably phone number)
+                                    if (typeof value === "string" && value.indexOf("0")!=0 && value.indexOf("+")==-1 && !isNaN(value)) {
+                                        var converted = Number.parseFloat(value);
+                                        //console.log("Converting to number["+index+"]: ", value, "converted=", converted);
+                                        if (!isNaN(converted)) value = converted;
+                                    }
+                                } catch (e) {
+                                    console.log(e);
                                 }
-                            } catch (e) {
-                                console.log(e);
-                            }
-                            if ("0"===value) value = 0;
+                                if ("0"===value) value = 0;
 
-                            rowData["col_"+key] = value;
-                        });
+                                rowData["col_"+key] = value;
+                            });
+                        }
 
                         //odstran NULL hodnoty, pretoze tie su potom nahradene za vyraz nevyplnene, co vo formoch nechceme
                         Object.keys(rowData).forEach(function(key,index) {

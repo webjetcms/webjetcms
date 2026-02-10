@@ -71,7 +71,7 @@ ls -la ../../../build/test/allure-results/history
 pwd
 printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODECEPT_URL\n" > ../../../build/test/allure-results/environment.properties
 echo -n "java.version=" >> ../../../build/test/allure-results/environment.properties
-java --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
+java -version | head -n 1 >> ../../../build/test/allure-results/environment.properties
 echo -n "node.version=" >> ../../../build/test/allure-results/environment.properties
 node --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
 echo -n "codeceptjs.version=" >> ../../../build/test/allure-results/environment.properties

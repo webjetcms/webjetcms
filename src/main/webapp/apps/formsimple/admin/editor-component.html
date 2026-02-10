@@ -14,8 +14,71 @@
         return "";
     }
 
+    function appAfterXhr(response) {
+        const formSettingsBasicTabCols = ["recipients", "emailTextBefore", "emailTextAfter", "forceTextPlain", "addTechInfo"];
+        const formSettingsAdvancedTabCols = ["ccEmails", "bccEmails", "replyTo", "subject", "forward", "forwardFail", "forwardType", "useFormMailDoc", "useFormDoc", "formmailSendUserInfoDoc", "afterSendInterceptor", "encryptKey", "encrypKeyInfo"];
+
+        let filteredColumns = [];
+        response.columns.forEach(function(column) {
+            if(column.className != null && column.className.includes("not-formsimple")) {
+                //Skip column, do NIOT add to filteredColumns
+                return;
+            }
+            let columNameWithoutPrefix = column.data.replace("formSettings.", "");
+
+            if(formSettingsBasicTabCols.includes(columNameWithoutPrefix)) {
+                column["tab"] = "basic";
+                column.editor["tab"] = "basic";
+                filteredColumns.push(column);
+            } else if(formSettingsAdvancedTabCols.includes(columNameWithoutPrefix)) {
+                column["tab"] = "advanced";
+                column.editor["tab"] = "advanced";
+                filteredColumns.push(column);
+            } else {
+                filteredColumns.push(column);
+            }
+        });
+
+        // Sort filteredColumns by tab, then first put columns not present in the configured lists,
+        // followed by those present ordered by their position in the corresponding list
+        const tabOrder = { basic: 0, advanced: 1 };
+        filteredColumns.sort(function(a, b) {
+            const aTab = a.tab || 'basic';
+            const bTab = b.tab || 'basic';
+
+            // 1) Sort by tab
+            const tabCmp = (tabOrder[aTab] || 99) - (tabOrder[bTab] || 99);
+            if (tabCmp !== 0) return tabCmp;
+
+            // 2) Within same tab: prefer columns not in predefined lists
+            const aName = (a.data || '').replace('formSettings.', '');
+            const bName = (b.data || '').replace('formSettings.', '');
+
+            const isInAList = aTab === 'basic' ? formSettingsBasicTabCols.includes(aName) : formSettingsAdvancedTabCols.includes(aName);
+            const isInBList = bTab === 'basic' ? formSettingsBasicTabCols.includes(bName) : formSettingsAdvancedTabCols.includes(bName);
+
+            if (isInAList !== isInBList) {
+                // false (not in list) should come first
+                return isInAList ? 1 : -1;
+            }
+
+            // 3) Both in list (or both not): if in list, sort by index in the list; otherwise keep stable order
+            if (isInAList && isInBList) {
+                const aIdx = aTab === 'basic' ? formSettingsBasicTabCols.indexOf(aName) : formSettingsAdvancedTabCols.indexOf(aName);
+                const bIdx = bTab === 'basic' ? formSettingsBasicTabCols.indexOf(bName) : formSettingsAdvancedTabCols.indexOf(bName);
+                return aIdx - bIdx;
+            }
+
+            return 0;
+        });
+
+        console.log("Filtered Columns:", filteredColumns);
+        filteredColumns = WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+
+        response.columns = filteredColumns;
+    }
+
     window.datatableLocalJsonUpdate = function(val, conf) {
-        //console.log("updating json data, val=", val);
         //add value to every row if missing
         for (let i=0; i<val.length; i++) {
             if (typeof val[i]['fieldType'] === "undefined") {
@@ -76,7 +139,6 @@
         // Prepare include FIRST !!
         let include = "!INCLUDE(" + componentPath;
         include += ", formName=" + params.formName;
-        include += ", rowView=" + params.rowView;
 
         //calling just to get editor data
         let defaultInclude = convertObjectToInludeParams(params);
@@ -93,24 +155,33 @@
         });
         include += ")!";
 
-        // Now save attributes
-        params.device = "";
-        params.editorData = "";
-        for (const key in params) {
-            if (Array.isArray(params[key])) {
-                if (params[key].length > 0) {
-                    params[key][0] === true ? params[key] = true : params[key] = false;
+
+        let filteredParams = {};
+        for (const [key, value] of Object.entries(params)) {
+            if (key.startsWith("formSettings.")) {
+                let shortKey = key.replace("formSettings.", "");
+
+                if (Array.isArray(value)) {
+                    if (value.length > 0) {
+                        filteredParams[shortKey] = (value[0] === true) ? true : false;
+                        continue;
+                    }
                 }
+
+                filteredParams[shortKey] = value;
             }
         }
 
-        fetch("/admin/rest/apps/simpleform/save_attributes", {
+        // ensure backend receives the form name identifier
+        filteredParams["formName"] = params.formName;
+
+        fetch("/admin/rest/form-settings/save_attributes", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRF-Token": window.csrfToken
             },
-            body: JSON.stringify(params)
+            body: JSON.stringify(filteredParams)
         });
 
         return include;

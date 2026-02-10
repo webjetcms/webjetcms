@@ -19,6 +19,4 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 	$.cleditor.title = []
 	$.cleditor.title['bold'] = '<iwcm:text key="components.cleditor.title.bold" />';
-
-
 </script>

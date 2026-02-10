@@ -71,5 +71,5 @@ Scenario('testovanie app - app-vyhladavanie', async ({ I, DTE, Apps }) => {
     I.switchToNextTab();
 
     I.waitForElement(".gsc-control-cse");
-    I.seeElement('button.gsc-search-button');
+    I.seeElement('input.gsc-input.inputtext');
 });
