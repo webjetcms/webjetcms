@@ -6,7 +6,7 @@ Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
-        newMultistepFormName = "Multistepform_" + randomNumber;
+        newMultistepFormName = "multistepform_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
