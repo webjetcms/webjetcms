@@ -71,9 +71,7 @@
                 paymentsDataTable = event.detail.conf.datatable;
 
                 paymentsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
-                    console.log("postsubmit, paymentsDataTable=", paymentsDataTable);
-
-                    //
+                    // setPayment footer and update invoice status
                     setPaymentsFooter(true);
 
                     //Update ifarme so he show actual values
@@ -81,7 +79,6 @@
                 });
 
                 paymentsDataTable.on("draw", function() {
-                    console.log("paymentFirstDraw=", paymentFirstDraw);
                     if(paymentFirstDraw === true) {
                         //Set footer first time
                         setPaymentsFooter();

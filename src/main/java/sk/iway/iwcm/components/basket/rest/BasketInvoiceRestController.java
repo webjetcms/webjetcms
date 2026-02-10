@@ -159,7 +159,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
             // Get invoice detail for email
             String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
 		    Cookie [] cookies = getRequest().getCookies();
-		    String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(getRequest()) + compUrl + "?invoiceId=" + entity.getId() + "&auth=" + entity.getAuthorizationToken(), cookies);
+		    String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(getRequest()) + compUrl + "?invoiceId=" + saved.getId() + "&auth=" + saved.getAuthorizationToken(), cookies);
 
             // Replace all {ORDER_DETAILS}
             sb = Tools.replace(sb, ORDER_PLACEHOLDER, data);
