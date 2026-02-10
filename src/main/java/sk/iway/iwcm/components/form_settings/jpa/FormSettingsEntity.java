@@ -162,7 +162,7 @@ public class FormSettingsEntity {
     private String afterSendInterceptor;
 
     @Transient
-        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.processor", className = "ai-off",
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.processor", className = "ai-off not-formsimple",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
