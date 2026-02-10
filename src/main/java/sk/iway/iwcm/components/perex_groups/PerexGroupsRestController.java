@@ -41,7 +41,7 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 
     @Override
     public PerexGroupsEntity processToEntity(PerexGroupsEntity entity, ProcessItemAction action) {
-        if(entity != null) entity.getEditorFields().toPerexGroupsEntity(entity);
+        if(entity != null && entity.getEditorFields() != null) entity.getEditorFields().toPerexGroupsEntity(entity);
         return entity;
     }
 

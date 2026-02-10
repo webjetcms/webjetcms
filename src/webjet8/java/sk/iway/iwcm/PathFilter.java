@@ -2421,6 +2421,10 @@ public class PathFilter implements Filter
 
 		//Logger.debug(SetCharacterEncodingFilter.class, "Setting header "+headerName+":"+value);
 
+		//replace cr/lf to allow user split Content-Security-Policy values into multiple lines, as header does not allow cr/lf
+		value = Tools.replace(value, "\r", " ");
+		value = Tools.replace(value, "\n", " ");
+
 		response.setHeader(headerName, value);
 	}
 

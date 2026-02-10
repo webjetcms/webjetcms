@@ -144,6 +144,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      // a) folder-autotest
      I.say('6. Vymazanie vytvorenych priecinkov');
      I.click(locate('.jstree-anchor').withText(root2_name));
+     I.jstreeWaitForLoader();
      // skontrolujem cez upravit ci mam pristupove prava na priecinok
      I.clickCss('.tree-col .dt-buttons .buttons-edit');
      DTE.waitForEditor("groups-datatable");
@@ -166,6 +167,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      DT.waitForLoader();
      I.waitForText(subfolder_name, 10);
      I.click(locate('.jstree-anchor').withText(subfolder_name)); // klikni na podpriecinok
+     I.jstreeWaitForLoader();
      // skontrolujem cez upravit ci mam pristupove prava na priecinok
      I.clickCss('.tree-col .dt-buttons .buttons-edit');
      DTE.waitForEditor("groups-datatable");
@@ -189,6 +191,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
 
      // vymazanie priecinka name-autotest
      I.click(locate('.jstree-anchor').withText(root1_name));
+     I.jstreeWaitForLoader();
      // skontrolujem cez upravit ci mam pristupove prava na priecinok
      I.clickCss('.tree-col .dt-buttons .buttons-edit');
      DTE.waitForEditor("groups-datatable");

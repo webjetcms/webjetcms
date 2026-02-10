@@ -115,12 +115,27 @@ div.mermaid {
     font-size: inherit;
     border: 1px solid transparent;
 }
-
+.gsc-control-cse {
+  padding-bottom: 5px !important;
+}
 div.gsc-results-wrapper-visible {
   background-color: white;
 }
 div.input-wrap {
   background-color: var(--search-input-background-color) !important;
+}
+
+div.deepwiki-badge {
+  margin-left: 13px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+div.deepwiki-badge a {
+  margin-left: 6px;
+  display: inline-block;
+}
+div.deepwiki-badge img {
+  vertical-align: text-bottom;
 }
 
 table.gssb_c {

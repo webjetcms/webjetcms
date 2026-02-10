@@ -97,7 +97,7 @@ public class GdprSearchRestController extends DatatableRestControllerV2<GdprSear
 
                 String url = listEntity.getLink();
                 if (url.startsWith("/admin/formlist.do")) {
-                    url = "/apps/form/admin/?id="+listEntity.getId()+"#/detail/"+listEntity.getName();
+                    url = "/apps/form/admin/detail/?formName="+listEntity.getName()+"&id="+listEntity.getId();
                 } else if (url.startsWith("/components/qa/admin_answer.jsp")) {
                     url = "/apps/qa/admin/?id="+listEntity.getId();
                 } else if (url.startsWith("/admin/webpages")) {

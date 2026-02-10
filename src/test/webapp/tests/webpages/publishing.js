@@ -310,9 +310,8 @@ async function createPublishPage(title, I, DTE, DT) {
 
 Scenario('Webpages - Future publication validation and deletion', async ({ I, DTE, DT }) => {
      await createPublishPage(auto_title, I, DTE, DT);
-     DT.filterContains('title', auto_title);
-     I.clickCss('.buttons-select-all');
-     I.click(DT.btn.edit_button);
+     DT.filterContains('title', "title-autotest");
+     I.click(auto_title, "#datatableInit_wrapper");
      DTE.waitForEditor();
 
      // Overenie notifikácie o budúcej publikácii
@@ -322,7 +321,9 @@ Scenario('Webpages - Future publication validation and deletion', async ({ I, DT
      I.toastrClose();
 
      // Mazanie stránky
-     DT.filterContains('title', "title-autotest");
+     I.wait(1);
+     DT.waitForLoader();
+     I.wait(1);
      I.clickCss("#datatableInit_wrapper .buttons-select-all");
      I.click(DT.btn.delete_button);
      I.click("Zmazať", "div.DTE_Action_Remove");

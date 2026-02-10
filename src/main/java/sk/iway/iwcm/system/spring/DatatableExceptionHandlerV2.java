@@ -96,7 +96,7 @@ public class DatatableExceptionHandlerV2
 			response.setFieldErrors(errorsList);
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
 		}
 
 		if (DatatableRestControllerV2.getLastImportedRow()!=null) {
@@ -155,10 +155,10 @@ public class DatatableExceptionHandlerV2
 				//failsafe
 			}
 			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -179,10 +179,10 @@ public class DatatableExceptionHandlerV2
 		response.setNotify(ex.getNotifyBeans());
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex);
+		Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
 		return new ResponseEntity<>(response, null, HttpStatus.OK);
-	}	
-	
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<DatatableResponse<Object>> handleException(Exception ex) {
 		DatatableResponse<Object> response = new DatatableResponse<>();
@@ -191,11 +191,11 @@ public class DatatableExceptionHandlerV2
 			ResponseStatusException ex2 = (ResponseStatusException)ex;
 			message = ex2.getReason();
 		}
-		
+
 		message = prepareMessage(message, ex);
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex);
+		Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
 		return new ResponseEntity<>(response, null, HttpStatus.OK);
 	}
 

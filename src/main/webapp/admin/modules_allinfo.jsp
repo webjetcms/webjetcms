@@ -156,6 +156,7 @@ keysTable.put("Server monitoring", "Monitoring stavu serveru");
 keysTable.put("tooltip", "Tooltip/nápoveda");
 keysTable.put("structuremirroring", "Zrkadlenie štruktúry");
 keysTable.put("response-header", "HTTP hlavičky");
+keysTable.put("webjet_cmp_ai_tools", "AI nástroje");
 
 //desc
 keysTable.put("components.enumerations.menu.desc", "Aplikácia Číselníky umožňuje vytvárať pomenované typy číselníkov, do ktorých je následne možné ukladať rôzne údaje (napr. zoznam okresov). Typy a dáta číselníkov je tiež možné exportovať a importovať pomocou .xls súboru. Čiselník môžete použíť v aplikácii Formuláre alebo nastaviť výberové možnosti pre volné polia vo web stránke, alebo ich využiť v zákazníckej implementácii.");
@@ -191,7 +192,8 @@ keysTable.put("webjet_cmp_qa", "Frequently Asked Questions - čato kladené otá
 keysTable.put("components.crypto.menu.desc", "Touto aplikáciou pridáte podporu šifrovania dát pre aplikáciu Formuláre. Vygenerujete si šifrovací aj dešifrovací kľúč. Šifrovací kľúč nastavíte vo vlastnostiach konkrétnemu formuláru a týmto kľúčom sa budú šifrovať údaje v databáze. Pre zobrazenie dát zadáte dešifrovací kľúč s ktorým sa vám zobrazia dešifrované údaje. V databáze ale stále zostávajú zabezpečené šifrovaním.");
 keysTable.put("components.adminlog.menu.desc", "Evidencia zmien v systéme WebJET, umožňuje vyhľadávanie v auditných záznamoch podľa dátumu a času, typu udalosti, autora a popisu.");
 keysTable.put("components.response-header.menu.desc", "Aplikácia umožňuje definovať HTTP hlavičky odpovede (HTTP Response Header) na základe URL adries zobrazenej stránky.");
-//keysTable.put("", "");
+keysTable.put("components.ai_tools.menu.desc", "AI nástroje vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky, cez preklady textov, návrhy titulkov, generovanie ilustračných obrázkov až po kompletný návrh stránky z PageBuilder blokov.");
+keysTable.put("components.menu.users.title.desc", "Správuje používateľov administrácie, zákazníkov pristupujúcich do zákazníckej zóny aj emailové skupiny.");
 
 String key = null;
 %>

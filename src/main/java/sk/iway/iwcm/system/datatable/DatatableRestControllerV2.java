@@ -1191,6 +1191,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		this.getOptions(pageImpl);
 
 		pageImpl.setNotify(getThreadData().getNotify());
+		pageImpl.setRedirect(getThreadData().getRedirect());
 
 		return pageImpl;
 	}
@@ -1258,6 +1259,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
 			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
+		boolean isDuplicate = false;
+		setDuplicate(false);
 
 		DatatableResponse<T> response = new DatatableResponse<>();
 
@@ -1316,7 +1319,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			}
 
-			boolean isDuplicate = false;
 			if (datatableRequest.isInsert()) {
 				try {
 					if (id>0) {
@@ -1372,6 +1374,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						}
 
 						isDuplicate = true;
+						setDuplicate(true);
 						beforeDuplicate(entity);
 					}
 
@@ -1505,6 +1508,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
+		response.setRedirect(getThreadData().getRedirect());
 
 		if (datatableRequest.getData().size()>5) {
 			//aby nenastala chyba 429 pri importe musime spomalit download
@@ -1545,6 +1549,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//If thread notify list != null, set list into response
 		if(hasNotify()) response.setNotify(getThreadData().getNotify());
 		response.setForceReload(isForceReload());
+		response.setRedirect(getThreadData().getRedirect());
 
 		return ResponseEntity.ok(response);
 	}
@@ -1639,6 +1644,51 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		} else {
 			return "";
 		}
+	}
+
+
+	/**
+	 * Reorder rows based on RowReorderDto input.
+	 * @param request
+	 * @param rowReorderDto
+	 * @return
+	 */
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@PostMapping(value = "/row-reorder", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+		boolean allGood = true;
+
+		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
+
+		// Loop through entities and set new value to the column specified by dataSrc
+		for (T entity : entities) {
+			try {
+				BeanWrapperImpl beanWrapper = new BeanWrapperImpl(entity);
+				String idColumnName = getIdColumnName(entity);
+
+				// Get entity ID using id column name
+				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+
+				// Get new value for this entity
+				Integer newValue = rowReorderDto.getNewValueById(entityId);
+
+				if(newValue == null) {
+					allGood = false;
+					Logger.error(DatatableRestControllerV2.class, "Error updating row order, entity missing new value for entity ID: " + entityId);
+					break;
+				}
+
+				// Use BeanWrapperImpl to set the property value
+				beanWrapper.setPropertyValue(rowReorderDto.getDataSrc(), newValue);
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, "Error updating row order for entity: " + entity, e);
+				allGood = false;
+			}
+		}
+
+		this.repo.saveAll(entities);
+
+		return ResponseEntity.ok(allGood);
 	}
 
 	public JpaRepository<T, Long> getRepo() {
@@ -1800,6 +1850,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
+	 * Indicate that the operation is duplicate of existing record
+	 * @return
+	 */
+	public boolean isDuplicate() {
+		return getThreadData().isDuplicate();
+	}
+
+	private void setDuplicate(boolean duplicate) {
+		getThreadData().setDuplicate(duplicate);
+	}
+
+	/**
 	 * Indikuje, ze sa ma vykonat reload tabulky
 	 * @return
 	 */
@@ -1833,6 +1895,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				getThreadData().addNotify(notify);
 			}
 		}
+	}
+
+	/**
+	 * Redirect to page after save
+	 * @param redirect
+	 */
+	public static void setRedirect(String redirect) {
+		getThreadData().setRedirect(redirect);
 	}
 
 	/**

@@ -12,59 +12,119 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
-
-import org.eclipse.persistence.annotations.Convert;
-import org.eclipse.persistence.annotations.Converter;
-import org.eclipse.persistence.annotations.Converters;
+import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.users.UserDetails;
-import sk.iway.iwcm.users.UserDetailsConverter;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @MappedSuperclass
-@Converters(value = {
-    @Converter(name = "UserDetailsConverter", converterClass = UserDetailsConverter.class)
-})
 @Setter
 @Getter
 public class FormsEntityBasic {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_forms")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab = "basic")
     private Long id;
 
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "formslist.tools",
+        tab = "basic",
+        renderFormatLinkTemplate = "javascript:openFormHtml('{{id}}');",
+        renderFormatPrefix = "<i class=\"ti ti-eye\"></i>",
+        orderable = false,
+        hiddenEditor = true
+    )
+    private String preview;
+
     @Column(name = "form_name")
+    @NotBlank
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = "formslist.nazov_formularu", tab = "basic",
+        export = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
     private String formName;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title="formslist.pocet_zaznamov", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
+    private transient Integer count;
 
     @Lob
     private String data;
 
-    @Lob
-    private String files;
-
     @Column(name = "create_date")
     @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formslist.createDate", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
     private Date createDate;
+
+    @Column(name = "last_export_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formlist.export.lastExportDate", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
+    private Date lastExportDate;
+
+    @Lob
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title="formslist.note", tab = "basic")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String note;
+
+    @Lob
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA, tab = "basic",
+        title="formslist.attachments", className = "cell-not-editable"
+    )
+    private String files;
 
     @Lob
     private String html;
 
+    // Numeric value of the same column (user_id)
     @Column(name = "user_id")
-    @Convert("UserDetailsConverter")
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
-    private UserDetails userDetails;
+    private Long userId;
 
-    @Lob
-    private String note;
+    // Relation to users table; load lazily, only readable
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @DataTableColumnNested(sortPrefix = "userDetails.")
+    private UserDetailsEntity userDetails;
 
     @Column(name = "doc_id")
     private int docId;
-
-    @Column(name = "last_export_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date lastExportDate;
 
     @Column(name = "domain_id")
     private int domainId;
@@ -79,6 +139,7 @@ public class FormsEntityBasic {
     @Transient
     private Map<String, String> columnNamesAndValues;
 
-    @Transient
-    private int count;
+    public UserDetailsEntity getUserDetails() {
+        return UserDetailsService.getUserDetailsCached(userId);
+    }
 }

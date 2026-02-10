@@ -130,28 +130,28 @@
                         task='sk.iway.iwcm.components.seo.SeoManager';
 
                         UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
-                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
-                        task='sk.iway.iwcm.doc.GroupPublisher;
+                        task='sk.iway.iwcm.doc.GroupPublisher';
 
                         UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
-                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner';
 
                         UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
-                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+                        task='sk.iway.iwcm.stat.StatWriteBuffer';
 
                         UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
-                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer';
 
                         UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
-                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
-                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher';
 
                         UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
-                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater';
                     </string>
                 </void>
                 <void property="oracle">
@@ -163,28 +163,28 @@
                         task='sk.iway.iwcm.components.seo.SeoManager';
 
                         UPDATE crontab SET task_name='Vytvorenie monitoringu systému' WHERE
-                        task='sk.iway.iwcm.system.monitoring.MonitoringManager;
+                        task='sk.iway.iwcm.system.monitoring.MonitoringManager';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v adresároch web stránok' WHERE
-                        task='sk.iway.iwcm.doc.GroupPublisher;
+                        task='sk.iway.iwcm.doc.GroupPublisher';
 
                         UPDATE crontab SET task_name='Zmazanie záznamov heatmapy' WHERE
-                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner;
+                        task='sk.iway.iwcm.stat.heat_map.HeatMapCleaner';
 
                         UPDATE crontab SET task_name='Zápis štatistiky návštevnosti' WHERE
-                        task='sk.iway.iwcm.stat.StatWriteBuffer;
+                        task='sk.iway.iwcm.stat.StatWriteBuffer';
 
                         UPDATE crontab SET task_name='Indexovanie suborov pre vyhladavanie v administracii' WHERE
-                        task='sk.iway.iwcm.components.spotlight.FileIndexer;
+                        task='sk.iway.iwcm.components.spotlight.FileIndexer';
 
                         UPDATE crontab SET task_name='Aktualizácia persistent cache' WHERE
-                        task='sk.iway.iwcm.system.cache.PersistentCacheDB;
+                        task='sk.iway.iwcm.system.cache.PersistentCacheDB';
 
                         UPDATE crontab SET task_name='Publikovanie zmien v konfigurácii' WHERE
-                        task='sk.iway.iwcm.system.ConfPreparedPublisher;
+                        task='sk.iway.iwcm.system.ConfPreparedPublisher';
 
                         UPDATE crontab SET task_name='Publikovanie zmien súborov v Archíve súborov' WHERE
-                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater;
+                        task='sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater';
                     </string>
                 </void>
             </object>
@@ -2745,6 +2745,386 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>13.11.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_steps</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            header TEXT NULL,
+                            next_step_btn_label VARCHAR(255) NULL,
+                            back_step_btn_label VARCHAR(255) NULL,
+                            sort_priority INT NOT NULL,
+                            step_bonus_html TEXT NULL,
+                            current_position INT(11) NOT NULL,
+                            max_position INT(11) NOT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            header NTEXT NULL,
+                            next_step_btn_label NVARCHAR(255) NULL,
+                            back_step_btn_label NVARCHAR(255) NULL,
+                            sort_priority INT NOT NULL,
+                            step_bonus_html NTEXT NULL,
+                            current_position INT NOT NULL,
+                            max_position INT NOT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_steps (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            header CLOB,
+                            next_step_btn_label NVARCHAR2(255),
+                            back_step_btn_label NVARCHAR2(255),
+                            sort_priority INTEGER NOT NULL,
+                            step_bonus_html CLOB,
+                            current_position INTEGER NOT NULL,
+                            max_position INTEGER NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_steps START WITH 1;
+                        CREATE TRIGGER T_form_steps BEFORE INSERT ON form_steps
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_steps.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_steps START WITH 1;
+                        CREATE TABLE form_steps (
+                            id INT DEFAULT NEXTVAL('S_form_steps') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            header TEXT NULL,
+                            next_step_btn_label VARCHAR(255) NULL,
+                            back_step_btn_label VARCHAR(255) NULL,
+                            sort_priority INT NOT NULL,
+                            step_bonus_html TEXT NULL,
+                            current_position INT NOT NULL,
+                            max_position INT NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>12.11.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_items</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            field_type VARCHAR(255) NOT NULL,
+                            required tinyint(1) NULL,
+                            label VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            placeholder VARCHAR(255) NOT NULL,
+                            tooltip VARCHAR(255) NOT NULL,
+                            regex_validation VARCHAR(255) NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name NVARCHAR(255) NOT NULL,
+                            field_type NVARCHAR(255) NOT NULL,
+                            required BIT NULL,
+                            label NVARCHAR(255) NOT NULL,
+                            value NVARCHAR(255) NOT NULL,
+                            placeholder NVARCHAR(255) NOT NULL,
+                            tooltip NVARCHAR(255) NOT NULL,
+                            regex_validation NVARCHAR(255) NULL,
+                            item_form_id NVARCHAR(255) NOT NULL,
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_items (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            field_type NVARCHAR2(255) NOT NULL,
+                            required SMALLINT NULL,
+                            label NVARCHAR2(255),
+                            value NVARCHAR2(255),
+                            placeholder NVARCHAR2(255),
+                            tooltip NVARCHAR2(255),
+                            regex_validation NVARCHAR2(255),
+                            item_form_id NVARCHAR2(255) NOT NULL,
+                            step_id INTEGER NOT NULL,
+                            sort_priority INTEGER NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_items START WITH 1;
+                        CREATE TRIGGER T_form_items BEFORE INSERT ON form_items
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_form_items.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_items START WITH 1;
+                        CREATE TABLE form_items (
+                            id INT DEFAULT NEXTVAL('S_form_items') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            field_type VARCHAR(255) NOT NULL,
+                            required BOOLEAN DEFAULT FALSE,
+                            label VARCHAR(255) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            placeholder VARCHAR(255) NOT NULL,
+                            tooltip VARCHAR(255) NOT NULL,
+                            regex_validation VARCHAR(255) NULL,
+                            item_form_id VARCHAR(255) NOT NULL,
+                            step_id INT NOT NULL,
+                            sort_priority INT NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>26.11.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky form_settings (ako nahrada za form_attributes)</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE form_settings (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            recipients VARCHAR(255) NULL,
+                            row_view tinyint(1) NULL,
+                            cc_emails VARCHAR(255) NULL,
+                            bcc_emails VARCHAR(255) NULL,
+                            reply_to VARCHAR(255) NULL,
+                            subject VARCHAR(255) NULL,
+                            savedb VARCHAR(255) NULL,
+                            forward VARCHAR(255) NULL,
+                            forward_fail VARCHAR(255) NULL,
+                            forward_type VARCHAR(255) NULL,
+                            use_form_doc_id INT NULL,
+                            use_form_mail_doc_id INT NULL,
+                            force_text_plain tinyint(1) NULL,
+                            form_mail_encoding tinyint(1) NULL,
+                            is_pdf tinyint(1) NULL,
+                            allow_only_one_submit tinyint(1) NULL,
+                            overwrite_old_forms tinyint(1) NULL,
+                            message_as_attach tinyint(1) NULL,
+                            double_opt_in tinyint(1) NULL,
+                            add_tech_info tinyint(1) NULL,
+                            message_as_attach_file_name VARCHAR(255) NULL,
+                            formmail_send_user_info_doc_id INT NULL,
+                            fields_email_header VARCHAR(255) NULL,
+                            after_send_interceptor VARCHAR(255) NULL,
+                            encryption_key VARCHAR(1024) NULL,
+                            max_size_in_kilobytes INT NULL,
+                            allowed_extensions VARCHAR(255) NULL,
+                            picture_height INT NULL,
+                            picture_width INT NULL,
+                            email_text_before VARCHAR(1024) NULL,
+                            email_text_after VARCHAR(1024) NULL,
+                            form_add_classes VARCHAR(255) NULL,
+                            form_css VARCHAR(1024) NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE form_settings (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            recipients NVARCHAR(255) NULL,
+                            row_view BIT NULL,
+                            cc_emails NVARCHAR(255) NULL,
+                            bcc_emails NVARCHAR(255) NULL,
+                            reply_to NVARCHAR(255) NULL,
+                            subject NVARCHAR(255) NULL,
+                            savedb NVARCHAR(255) NULL,
+                            forward NVARCHAR(255) NULL,
+                            forward_fail NVARCHAR(255) NULL,
+                            forward_type NVARCHAR(255) NULL,
+                            use_form_doc_id INT NULL,
+                            use_form_mail_doc_id INT NULL,
+                            force_text_plain BIT NULL,
+                            form_mail_encoding BIT NULL,
+                            is_pdf BIT NULL,
+                            allow_only_one_submit BIT NULL,
+                            overwrite_old_forms BIT NULL,
+                            message_as_attach BIT NULL,
+                            double_opt_in BIT NULL,
+                            add_tech_info BIT NULL,
+                            message_as_attach_file_name NVARCHAR(255) NULL,
+                            formmail_send_user_info_doc_id INT NULL,
+                            fields_email_header NVARCHAR(255) NULL,
+                            after_send_interceptor NVARCHAR(255) NULL,
+                            encryption_key NVARCHAR(1024) NULL,
+                            max_size_in_kilobytes INT NULL,
+                            allowed_extensions NVARCHAR(255) NULL,
+                            picture_height INT NULL,
+                            picture_width INT NULL,
+                            email_text_before NVARCHAR(1024) NULL,
+                            email_text_after NVARCHAR(1024) NULL,
+                            form_add_classes NVARCHAR(255) NULL,
+                            form_css NVARCHAR(1024) NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE form_settings (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            form_name NVARCHAR2(255) NOT NULL,
+                            recipients NVARCHAR2(255) NULL,
+                            row_view SMALLINT NULL,
+                            cc_emails NVARCHAR2(255) NULL,
+                            bcc_emails NVARCHAR2(255) NULL,
+                            reply_to NVARCHAR2(255) NULL,
+                            subject NVARCHAR2(255) NULL,
+                            savedb NVARCHAR2(255) NULL,
+                            forward NVARCHAR2(255) NULL,
+                            forward_fail NVARCHAR2(255) NULL,
+                            forward_type NVARCHAR2(255) NULL,
+                            use_form_doc_id INTEGER NULL,
+                            use_form_mail_doc_id INTEGER NULL,
+                            force_text_plain SMALLINT NULL,
+                            form_mail_encoding SMALLINT NULL,
+                            is_pdf SMALLINT NULL,
+                            allow_only_one_submit SMALLINT NULL,
+                            overwrite_old_forms SMALLINT NULL,
+                            message_as_attach SMALLINT NULL,
+                            double_opt_in SMALLINT NULL,
+                            add_tech_info SMALLINT NULL,
+                            message_as_attach_file_name NVARCHAR2(255) NULL,
+                            formmail_send_user_info_doc_id INTEGER NULL,
+                            fields_email_header NVARCHAR2(255) NULL,
+                            after_send_interceptor NVARCHAR2(255) NULL,
+                            encryption_key NVARCHAR2(1024) NULL,
+                            max_size_in_kilobytes INTEGER NULL,
+                            allowed_extensions NVARCHAR2(255) NULL,
+                            picture_height INTEGER NULL,
+                            picture_width INTEGER NULL,
+                            email_text_before NVARCHAR2(1024) NULL,
+                            email_text_after NVARCHAR2(1024) NULL,
+                            form_add_classes NVARCHAR2(255) NULL,
+                            form_css NVARCHAR2(1024) NULL,
+                            domain_id INTEGER DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_form_settings START WITH 1;
+                        CREATE TRIGGER T_form_settings BEFORE INSERT ON form_settings
+                            FOR EACH ROW
+                                BEGIN
+                                    IF :NEW.id IS NULL THEN
+                                        SELECT S_form_settings.NEXTVAL INTO :NEW.id FROM dual|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_form_settings START WITH 1;
+                        CREATE TABLE form_settings (
+                            id INT DEFAULT NEXTVAL('S_form_settings') PRIMARY KEY NOT NULL,
+                            form_name VARCHAR(255) NOT NULL,
+                            recipients VARCHAR(255) NULL,
+                            row_view BOOLEAN DEFAULT FALSE,
+                            cc_emails VARCHAR(255) NULL,
+                            bcc_emails VARCHAR(255) NULL,
+                            reply_to VARCHAR(255) NULL,
+                            subject VARCHAR(255) NULL,
+                            savedb VARCHAR(255) NULL,
+                            forward VARCHAR(255) NULL,
+                            forward_fail VARCHAR(255) NULL,
+                            forward_type VARCHAR(255) NULL,
+                            use_form_doc_id INT NULL,
+                            use_form_mail_doc_id INT NULL,
+                            force_text_plain BOOLEAN DEFAULT FALSE,
+                            form_mail_encoding BOOLEAN DEFAULT FALSE,
+                            is_pdf BOOLEAN DEFAULT FALSE,
+                            allow_only_one_submit BOOLEAN DEFAULT FALSE,
+                            overwrite_old_forms BOOLEAN DEFAULT FALSE,
+                            message_as_attach BOOLEAN DEFAULT FALSE,
+                            double_opt_in BOOLEAN DEFAULT FALSE,
+                            add_tech_info BOOLEAN DEFAULT FALSE,
+                            message_as_attach_file_name VARCHAR(255) NULL,
+                            formmail_send_user_info_doc_id INT NULL,
+                            fields_email_header VARCHAR(255) NULL,
+                            after_send_interceptor VARCHAR(255) NULL,
+                            encryption_key VARCHAR(1024) NULL,
+                            max_size_in_kilobytes INT NULL,
+                            allowed_extensions VARCHAR(255) NULL,
+                            picture_height INT NULL,
+                            picture_width INT NULL,
+                            email_text_before VARCHAR(1024) NULL,
+                            email_text_after VARCHAR(1024) NULL,
+                            form_add_classes VARCHAR(255) NULL,
+                            form_css VARCHAR(1024) NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>25.01.2026</string></void>
+                <void property="desc"><string>Add column form_type in table forms</string></void>
+                <void property="mysql"><string>ALTER TABLE forms ADD COLUMN form_type VARCHAR(255) NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE forms ADD form_type NVARCHAR(255) NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE forms ADD (form_type NVARCHAR2(255) NULL);</string></void>
+                <void property="pgsql"><string>ALTER TABLE forms ADD COLUMN form_type VARCHAR(255) NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>lbalat</string></void>
                 <void property="date"><string>24.01.2026</string></void>
                 <void property="desc"><string>ai - update google/gemini-2.5-flash-image-preview</string></void>
@@ -2752,6 +3132,38 @@
                 <void property="mssql"><string>UPDATE ai_assistants SET model='google/gemini-2.5-flash-image' WHERE model='google/gemini-2.5-flash-image-preview'</string></void>
                 <void property="oracle"><string>UPDATE ai_assistants SET model='google/gemini-2.5-flash-image' WHERE model='google/gemini-2.5-flash-image-preview'</string></void>
                 <void property="pgsql"><string>UPDATE ai_assistants SET model='google/gemini-2.5-flash-image' WHERE model='google/gemini-2.5-flash-image-preview'</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.01.2026</string></void>
+                <void property="desc"><string>Pridanie stlpca context_classes do tabulky news_templates</string></void>
+                <void property="mysql"><string>ALTER TABLE news_templates ADD context_classes VARCHAR(255) NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE news_templates ADD context_classes NVARCHAR(255) NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE news_templates ADD context_classes NVARCHAR2(255);</string></void>
+                <void property="pgsql"><string>ALTER TABLE news_templates ADD COLUMN context_classes VARCHAR(255);</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>01.02.2026</string></void>
+                <void property="desc"><string>cron - disable auditing of running jobs</string></void>
+                <void property="mysql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="mssql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="oracle"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
+                <void property="pgsql"><string>
+                    UPDATE crontab SET audit_task='0' WHERE task IN ('sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater', 'sk.iway.iwcm.calendar.CalendarDB');
+                </string></void>
             </object>
         </void>
 

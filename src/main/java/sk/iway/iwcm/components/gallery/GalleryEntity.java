@@ -127,6 +127,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text cz"
     )
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongCz;
 
     @Size(max = 1000)

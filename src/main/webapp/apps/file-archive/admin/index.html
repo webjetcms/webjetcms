@@ -307,7 +307,12 @@
                     versionsDataTable = event.detail.conf.datatable;
 
                     versionsDataTable.EDITOR.on('open', function (e, type, action) {
-                        $(".DTE_nested_modal").find("button.btn-primary").hide();
+                        // Can edit history version ONLY with required permission
+                        if(WJ.hasPermission("cmp_fileArchiv_history_metadata_edit") === true ) {
+                            $(".DTE_nested_modal").find("button.btn-primary").show();
+                        } else {
+                            $(".DTE_nested_modal").find("button.btn-primary").hide();
+                        }
                     });
                 }
             } else if(event.detail.conf.id == "DTE_Field_editorFields.waitingFiles") {
