@@ -1,9 +1,13 @@
 package sk.iway.iwcm.components.form_settings.rest;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -11,11 +15,23 @@ import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.forms.FormsService;
+import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormFileRestriction;
 
+@Service
 public class FormSettingsService {
+
+    private final FormSettingsRepository formSettingsRepository;
+    private final List<FormProcessorInterface> formProcessorInterfaces;
+
+    @Autowired
+    public FormSettingsService(FormSettingsRepository formSettingsRepository, List<FormProcessorInterface> formProcessorInterfaces) {
+        this.formSettingsRepository = formSettingsRepository;
+        this.formProcessorInterfaces = formProcessorInterfaces;
+    }
 
     // Skip Transient fields or technical fields like ID, domainId, etc.
     private static final List<String> EXCLUDED_FIELDS = List.of(
@@ -30,12 +46,25 @@ public class FormSettingsService {
         "domainId"
     );
 
-    public static void prepareSettingsForSave(FormSettingsEntity formSettings, FormSettingsRepository formSettingsRepository) {
+    /* FUNCTIONS for REST */
+
+    public void prepareSettingsForSave(FormSettingsEntity formSettings, String formType) {
+        prepareSettingsForSave(formSettings, formType, formSettingsRepository);
+    }
+
+    public static void prepareSettingsForSave(FormSettingsEntity formSettings, String formType, FormSettingsRepository formSettingsRepository) {
         if(formSettings == null) return;
 
         // Try get and set id
         Long formSettingsId = formSettingsRepository.findId(formSettings.getFormName(), CloudToolsForCore.getDomainId());
         formSettings.setId(formSettingsId);
+
+        if (FormsService.FORM_TYPE.MULTISTEP.value().equals(formType)) {
+            // Copy value from formProcessr (transient autocomple) into real filed
+            formSettings.setAfterSendInterceptor( formSettings.getFormProcessor() );
+        } else {
+            formSettings.setFormProcessor(null);
+        }
 
         // convert object back to id
         if(formSettings.getUseFormDoc() == null) formSettings.setUseFormDoc(null);
@@ -53,8 +82,15 @@ public class FormSettingsService {
         if(formSettings.getDomainId() == null) formSettings.setDomainId(CloudToolsForCore.getDomainId());
     }
 
-    public static void prepareSettingsForEdit(FormSettingsEntity formSettings) {
+    public static void prepareSettingsForEdit(FormSettingsEntity formSettings, String formType) {
         if(formSettings == null) return;
+
+        if (FormsService.FORM_TYPE.MULTISTEP.value().equals(formType)) {
+            // Copy value from real field into transient autocomplete
+            formSettings.setFormProcessor( formSettings.getAfterSendInterceptor() );
+        } else {
+            formSettings.setFormProcessor(null);
+        }
 
         if(formSettings.getUseFormDocId() != null) {
             DocDetails doc = DocDB.getInstance().getDoc( formSettings.getUseFormDocId() );
@@ -72,7 +108,22 @@ public class FormSettingsService {
         }
     }
 
-    public Map<String, String> load(String formName) {
+    public List<String> getFormProcessorOptions(String term) {
+        List<String> ac = new ArrayList<>();
+
+        for(FormProcessorInterface processorInterface : formProcessorInterfaces) {
+            String className = processorInterface.getClass().getName();
+            if (Tools.isEmpty(term) || "%".equals(term) || className.toLowerCase().contains( term.toLowerCase() )) {
+                ac.add(className);
+            }
+        }
+
+        return ac;
+    }
+
+    /* FUNCTIONS AS replacement for old ATTRIBUTE's logic */
+
+    public static Map<String, String> load(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(formSettingsRepository == null) return new HashMap<>();
 
@@ -82,11 +133,9 @@ public class FormSettingsService {
         return toAttributeMap(formSettings);
     }
 
-    public void save(String formName, Map<String, String> parameters) {
+    public static void save(String formName, Map<String, String> parameters) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
-        if(formSettingsRepository == null) {
-            return;
-        }
+        if(formSettingsRepository == null) return;
 
         FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
         if(formSettings == null) {
@@ -113,82 +162,33 @@ public class FormSettingsService {
                     field.set(formSettings, getBooleanValue(value));
                 }
             } catch (Exception e) {
-                Logger.error(this, "Failed to set field: " + key + " with value: " + value, e);
+                Logger.error(FormSettingsService.class, "Failed to set field: " + key + " with value: " + value, e);
             }
         }
 
         formSettingsRepository.save(formSettings);
     }
 
-    private Integer getIntegerValue(String value)
-	{
-        if (value == null) {
-            return null;
-        }
-		Integer ret = null;
-		try
-		{
-			if (value!=null)
-			{
-				ret = Integer.parseInt(value.trim());
-			}
-		}
-		catch (Exception ex)
-		{
-
-		}
-		return(ret);
+    private static Integer getIntegerValue(String value) {
+        int ret = Tools.getIntValue(value, -1);
+        return ret == -1 ? null : ret;
 	}
 
-    private Long getLongValue(String value)
-    {
-        if (value == null) {
-            return null;
-        }
-        Long ret = null;
-        try
-        {
-            if (value!=null)
-            {
-                ret = Long.parseLong(value.trim());
-            }
-        }
-        catch (Exception ex)
-        {
-
-        }
-        return(ret);
+    private static Long getLongValue(String value) {
+        long ret = Tools.getLongValue(value, -1L);
+        return ret == -1L ? null : ret;
     }
 
-    private Boolean getBooleanValue(String value)
-    {
-        if (value == null) {
-            return null;
-        }
-        Boolean ret = null;
-        try
-        {
-            if (value!=null)
-            {
-                ret = Boolean.parseBoolean(value.trim());
-            }
-        }
-        catch (Exception ex)
-        {
-
-        }
-        return(ret);
+    private static Boolean getBooleanValue(String value) {
+        return Tools.getBooleanValue(value, false);
     }
 
     private static Map<String, String> toAttributeMap(Object entity) {
         Map<String, String> attributes = new HashMap<>();
 
-        if (entity == null) {
-            return attributes;
-        }
+        if (entity == null) return attributes;
 
         Class<?> clazz = entity.getClass();
-
         for (Field field : clazz.getDeclaredFields()) {
             // Skipp fields that should not be included
             if (EXCLUDED_FIELDS.contains(field.getName())) continue;
@@ -198,16 +198,14 @@ public class FormSettingsService {
                 Object value = field.get(entity);
                 attributes.put(field.getName(), value != null ? value.toString() : null);
             } catch (IllegalAccessException e) {
-                throw new RuntimeException(
-                        "Failed to read field: " + field.getName(), e
-                );
+                throw new RuntimeException( "Failed to read field: " + field.getName(), e);
             }
         }
 
         return attributes;
     }
 
-    public Map<String, String> filterAttributes(Map<String, String[]> parameters)
+    public static Map<String, String> filterAttributes(Map<String, String[]> parameters)
 	{
 		Map<String, String> filtered = new HashMap<String, String>();
 		for (Map.Entry<String, String[]> entry : parameters.entrySet())

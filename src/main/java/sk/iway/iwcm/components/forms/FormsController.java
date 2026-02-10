@@ -111,12 +111,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         entity.setDocId(-1);
         entity.setDomainId(CloudToolsForCore.getDomainId());
         entity.setCreateDate(null);
-        return super.insertItem(entity);
-    }
 
-    @Override
-    public void beforeSave(FormsEntity entity) {
-        entity.setFormName( DocTools.removeChars(entity.getFormName(), false) );
+        //default use lowercase form name, remove special chars
+        entity.setFormName( DocTools.removeChars(entity.getFormName(), true) );
+
+        return super.insertItem(entity);
     }
 
     @Override
@@ -124,9 +123,11 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         if(entity.getFormSettings() != null && (entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L)) {
             // Its new saved form
 
-            // save new settings
-            entity.getFormSettings().setFormName(entity.getFormName());
-            entity.getFormSettings().setDomainId(CloudToolsForCore.getDomainId());
+            //lowercase form name
+            entity.getFormSettings().setFormName( entity.getFormName() );
+
+            // Prepare and save form settings
+            FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), entity.getFormType(), formSettingsRepository);
             formSettingsRepository.save(entity.getFormSettings());
 
             // All new forms are multistep - add default first step
@@ -139,7 +140,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
 
-            if ("multistep".equals(entity.getFormType())) {
+            if (FormsService.FORM_TYPE.MULTISTEP.value().equals(entity.getFormType())) {
                 setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));
             }
         }
@@ -164,7 +165,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             if(formsService.getFormName(getRequest()) == null) {
                 // No formName set in request, its from-list -> add info about fomr settings
                 FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(entity.getFormName(), false), domainId);
-                FormSettingsService.prepareSettingsForEdit(formSettings);
+                FormSettingsService.prepareSettingsForEdit(formSettings, entity.getFormType());
                 entity.setFormSettings(formSettings);
             }
 
@@ -192,7 +193,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         } else if(formName == null) {
             // We are editing FORM (main form format) we can change only form_settings not form itself
             entity.getFormSettings().setFormName( DocTools.removeChars(entity.getFormName(), false) );
-            FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), formSettingsRepository);
+            FormSettingsService.prepareSettingsForSave(entity.getFormSettings(), entity.getFormType(), formSettingsRepository);
             formSettingsRepository.save(entity.getFormSettings());
             return formsService.getById(id);
         }
