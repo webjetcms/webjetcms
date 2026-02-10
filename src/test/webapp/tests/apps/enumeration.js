@@ -65,7 +65,8 @@ Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) =
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
         },
-        skipSwitchDomain: true
+        skipSwitchDomain: true,
+        extraWait: 2
     });
 });
 
