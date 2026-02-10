@@ -5,7 +5,26 @@ Before(({ I, login }) => {
 });
 
 Scenario('forms', ({ I , DT, DTE, Document }) => {
-    I.amOnPage("/apps/form/admin/#/detail/Dotaznik-spokojnosti-externy");
+    I.amOnPage("/apps/form/admin/");
+    Document.screenshot("/redactor/apps/form/datatable.png");
+
+    DT.filterEquals("formName", "Brexit");
+    I.clickCss("td.dt-select-td");
+    I.click("button.buttons-edit");
+    DTE.waitForEditor("formsDataTable");
+
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-basic.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-basic.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-email.png");
+
+    I.clickCss("#pills-dt-formsDataTable-settings-advanced-tab");
+    Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/edit-tab-settings-advanced.png");
+
+    I.amOnPage("/apps/form/admin/detail/?formName=Dotaznik-spokojnosti-externy");
     DT.waitForLoader();
 
     Document.screenshot("/redactor/apps/form/detail.png");
@@ -21,7 +40,6 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${I.getConfLng()}`);
     }
-
 
     Document.screenshot("/redactor/apps/form/detail-editnote.png");
 
@@ -45,9 +63,9 @@ Scenario('forms email confirmation', ({ I , DT, DTE, Document }) => {
     Document.screenshotElement('.cke_dialog_body', '/redactor/apps/form/advanced-settings.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(label[for="attribute-doubleOptIn"])', '/redactor/apps/form/checkbox-confirmation.png');
     Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[id="attribute_recipients_id"])', '/redactor/apps/form/input-recipient.png');
-    Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[name="attribute_formmail_sendUserInfoDocId"])', '/redactor/apps/form/input-docid.png');
+    Document.screenshotElement('#attributesContent > table > tbody > tr:has(input[name="attribute_formMailSendUserInfoDocId"])', '/redactor/apps/form/input-docid.png');
 
-    I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
+    I.amOnPage('/apps/form/admin/detail/?formName=Formular-doubleoptin');
     DT.waitForLoader();
     Document.screenshotElement('#forms-list-app .dt-scroll', '/redactor/apps/form/forms-list.png', 1280, 350);
     I.wjSetDefaultWindowSize();

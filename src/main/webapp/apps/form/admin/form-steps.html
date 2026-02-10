@@ -1,0 +1,376 @@
+<link rel="stylesheet" type="text/css" href="/components/_common/cleditor/jquery.cleditor.css" />
+<script type="text/javascript" src="/components/_common/javascript/jquery.browser.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
+
+<script data-th-inline="javascript">
+
+    let itemsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemTabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemUrl = "/admin/rest/form-items";
+
+    let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
+    let stepUrl = "/admin/rest/form-steps";
+    let stepTabs = [
+        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'advanced', title: /*[[\#{datatable.tab.advanced}]]*/ '', selected: false },
+        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
+    ];
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+
+    const isArchived = false;
+
+    WJ.breadcrumb({
+        id: isArchived ? "form-details-archived" : "form-details",
+        tabs: [
+            {
+                url: (isArchived ? "/apps/form/admin/archived/detail/?formName=" : "/apps/form/admin/detail/?formName=") + urlFormName,
+                title: urlFormName,
+                active: true
+            }
+        ],
+        backlink: {
+            url: isArchived ? "/apps/form/admin/archived/" : "/apps/form/admin/",
+            title: WJ.translate("forms.formsList.js"),
+        }
+    });
+</script>
+
+<script type="text/javascript">
+    var formStepsDataTable;
+    var formItemsDataTable;
+    var loadingPreview = false;
+    var loadingStepItems = false;
+    var stepsFirstLoad = true;
+    var itemsFirstLoad = true;
+
+    function getActualPath(stepId) {
+        let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
+        urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
+        return urlWithParams;
+    }
+
+    window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+            //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+            let metaRow = meta.row;
+            if(typeof metaRow === "number") { metaRow = Number(meta.row) + 1; }
+            else if(typeof metaRow === "object") { metaRow = Number(meta.row[0]) + 1; }
+            else { metaRow = "" }
+
+            let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${metaRow}</span>`;
+            let secondRow = "";
+            if(row.stepName && row.stepName.trim() !== "") {
+                secondRow += `${row.stepName}`;
+            }
+            if (row.stepSubName && row.stepSubName.trim() !== "") {
+                secondRow += ` (${row.stepSubName})`;
+            }
+            return displayName + (secondRow ? `<br/>${secondRow}` : "");
+        }
+        return data;
+    }
+
+    window.domReady.add(function () {
+        formStepsDataTable = WJ.DataTable({
+            url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
+            serverSide: true,
+            columns: stepColumns,
+            tabs: stepTabs,
+            id: "formStepsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            idAutoOpener: false,
+            toggleStyle: "single",
+            toggleSelector: "td",
+            paging: false,
+            onXhr: function() {
+                loadingStepItems = false;
+                if (stepsFirstLoad === true) {
+                    stepsFirstLoad = false;
+                    setTimeout(() => {
+                        let steps = $("#formStepsDataTable tbody tr");
+                        if(steps.length > 0) {
+                            let tdS = $(steps[0]).find("td");
+                            if(tdS.length > 0) {
+                                $(tdS[1]).click();
+                            }
+                        }
+                    }, 800);
+                }
+            }
+        });
+        formStepsDataTable.hideButtons(["import", "export", "celledit"]);
+
+        formStepsDataTable.on('select.dt.DT', function () {
+            if(loadingStepItems === true) return;
+            loadingStepItems = true;
+
+            let selectedStep = null;
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max (50 * 100ms)
+
+            const checkInterval = setInterval(() => {
+                selectedStep = $(`#formStepsDataTable tbody tr.selected`);
+                attempts++;
+
+                if(selectedStep.length > 0) {
+                    clearInterval(checkInterval);
+
+                    const stepId = selectedStep[0].getAttribute("id");
+                    // reload form items table for current step
+                    formItemsDataTable.setAjaxUrl(getActualPath(stepId));
+                    formItemsDataTable.ajax.reload();
+
+                    loadStepPreview();
+                } else if(attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.log("Max attempts reached, no selected step found");
+                    loadingStepItems = false;
+                }
+            }, 100);
+        });
+
+        formStepsDataTable.on('deselect.dt.DT', function () {
+            setTimeout(() => {
+                //Clear table only if no row is selected (deselect is called allso when another row is selected)
+                if (formStepsDataTable.rows({ selected: true }).any()) { return; }
+                // I dont want to call DRAW/reload to clear table, call cost performance
+                formItemsDataTable.clear();
+                $("table#formItemsDataTable tbody").html('<tr><td colspan="2" class="dt-empty">' + WJ.translate('datatables.defaults.empty_table.js') + '</td></tr>');
+                $("div.stepPreview").html("");
+            }, 0);
+        });
+
+        formStepsDataTable.on("draw", function() { loadStepPreview(); });
+
+        var order = [];
+        order.push([1, 'desc']);
+
+        formItemsDataTable = WJ.DataTable({
+            url: getActualPath(-1),
+            serverSide: true,
+            columns: itemsColumns,
+            tabs: itemTabs,
+            order: order,
+            id: "formItemsDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            idAutoOpener: false,
+            toggleStyle: "single",
+            toggleSelector: "td",
+            paging: false,
+            onXhr: function() {
+                loadingStepItems = false;
+            }
+        });
+        formItemsDataTable.hideButtons(["import", "export", "celledit"]);
+
+        formItemsDataTable.on("draw", function() { loadStepPreview(); });
+
+        formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            if(itemsFirstLoad === true) {
+                itemsFirstLoad = false;
+
+                $("#DTE_Field_fieldType").on("change", function() {
+                    const selectedFieldType = $(this).val();
+                    const hiddenFieldsByType = formItemsDataTable.DATA.jsonOptions.hiddenFieldsByType;
+
+                    let fieldsToHide = [];
+                    for(let i = 0; i < hiddenFieldsByType.length; i++) {
+                        if(hiddenFieldsByType[i].value == selectedFieldType) {
+                            const hideFieldsStr = hiddenFieldsByType[i].label;
+                            fieldsToHide = hideFieldsStr.split(",").map(field => field.trim());
+                            break;
+                        }
+                    }
+
+                    const allwaysHidden = hiddenFieldsByType
+                        .find(field => field.value === "allwaysHidden")
+                        ?.label
+                        .split(',')
+                        .map(s => s.trim());
+
+                    formItemsDataTable.EDITOR.fields().forEach(function(fieldName) {
+                        if(fieldsToHide.includes(fieldName)) {
+                            formItemsDataTable.EDITOR.field(fieldName).hide();
+                        } else if(allwaysHidden.includes(fieldName) == false) {
+                            formItemsDataTable.EDITOR.field(fieldName).show();
+                        }
+
+                        if(allwaysHidden.includes(fieldName)) {
+                            // like id or formName
+                            formItemsDataTable.EDITOR.field(fieldName).hide();
+                        }
+                    });
+
+                    if(selectedFieldType !== formItemsDataTable.EDITOR.currentJson["fieldType"]) {
+                        // Call only on real change
+                        fetch(`/admin/rest/form-items/default-regex?fieldType=${selectedFieldType}`, {
+                            method: "GET",
+                            headers: { "X-CSRF-Token": window.csrfToken }
+                        })
+                        .then(res => res.json())
+                        .then(regexIds => {
+                            formItemsDataTable.EDITOR.field("regexValidationArr").val([]);
+                            if(regexIds != null && Array.isArray(regexIds) && regexIds.length > 0) {
+                                // regexIds is now an array of Long values
+                                formItemsDataTable.EDITOR.field("regexValidationArr").val(regexIds)
+                            }
+                        })
+                        .catch(err => console.error(err));
+                    }
+                });
+            }
+        });
+    });
+
+    async function loadStepPreview() {
+        if(loadingPreview === false) { loadingPreview = true; }
+        else { return; }
+
+        let selectedStep = $(`#formStepsDataTable tbody tr.selected`);
+        if(selectedStep.length === 0) {
+            $("div.stepPreview").html("");
+            loadingPreview = false;
+            return;
+        }
+
+        const stepId = selectedStep[0].getAttribute("id");
+        const getStepUrl = `/admin/rest/form-steps/get-step?form-name=${encodeURIComponent(urlFormName)}&step-id=${encodeURIComponent(stepId)}`;
+        try {
+            const r = await fetch(getStepUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/json', "X-CSRF-Token": window.csrfToken } });
+            if (!r.ok) {
+                const raw = await r.text();
+                try {
+                    let parsed;
+                    try { parsed = JSON.parse(raw); } catch (_) { parsed = { raw }; }
+                    await this.showGlobalErr(parsed);
+                } catch (e) { /* ignore */ }
+            }
+            const html = await r.text();
+
+            $("div.stepPreview").html(html);
+
+            onResize();
+
+            // init wysiwyg inside preview
+            window.setTimeout(() => {
+                if (window.$ && $.fn && $.fn.cleditor) {
+                    $("div.stepPreview").find("textarea.formsimple-wysiwyg").cleditor({
+                        width: '100%',
+                        controls: 'bold italic underline bullets numbering outdent indent image link icon size color highlight pastetext',
+                        bodyStyle: 'font: 11px  Arial, Helvetica, sans-serif;'
+                    });
+                }
+            }, 100);
+
+            window.setTimeout(() => {
+                loadingPreview = false;
+            }, 100);
+        } catch (error) {
+            console.error("Error fetching step preview:", error);
+            loadingPreview = false;
+        }
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            onResize();
+        }, 500);
+    });
+
+    setInterval(() => {
+        onResize();
+    }, 2000);
+
+    function onResize() {
+        let height = $("#formStepsDataTable_wrapper").innerHeight() - $("#formStepsDataTable_wrapper").find("div.dt-header-row").innerHeight() - 10;
+        $("div.stepPreview").css("height", height + "px");
+    }
+</script>
+
+<style>
+    .datatableInit tr td {
+        cursor: pointer;
+    }
+    .md-breadcrumb {
+        border-bottom-width: 0px;
+    }
+    tr.even-step td { background-color: #F3F3F6 !important; }
+    button.dt-filtrujem-stepId { display: none; }
+    #stepIdSelect > form > div > div > button:hover { background: #999; }
+    #stepIdSelect > form > div > div > button {
+        background: white;
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    button.button_center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    div.dt-filter-stepId button.dropdown-toggle  {
+        border-top-right-radius: 6px !important;
+        border-bottom-right-radius: 6px !important;
+    }
+    td.allow-html { pointer-events: none; }
+    button.buttons-settings { display: none; }
+    div.stepPreviewWrapper { background-color: #F3F3F6; }
+    div.stepPreview {
+        background-color: #F3F3F6;;
+        padding: 15px;
+        margin-left: -15px;
+        margin-right: -15px;
+        overflow: auto;
+    }
+    div.stepPreview form {
+        pointer-events: none;
+    }
+    div.dt-scroll-head { display: none; }
+
+    /* Fix to width iframe */
+    div.cleditorMain iframe { width: 100% !important; }
+
+    /* Fix row margin */
+    div.form-step div.row { margin-right: 0px; }
+
+    /* hide pagination */
+    #formStepsDataTable_wrapper .dt-footer-row .select-info, #formItemsDataTable_wrapper .dt-footer-row .select-info {
+        display: none;
+    }
+
+    #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Name_stepBonusHtml label { display: none; }
+    #panel-body-dt-formStepsDataTable-stepBonusHtml div.DTE_Field_Type_textarea .col-sm-7 { width: 99%; }
+</style>
+
+<div class="row">
+    <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">
+        <table id="formStepsDataTable" class="datatableInit table"></table>
+    </div>
+
+    <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">
+        <table id="formItemsDataTable" class="datatableInit table"></table>
+    </div>
+
+    <div class="col-md-6 stepPreviewWrapper">
+        <div id="" class="dt-header-row clearfix">
+            <div class="row">
+                <div class="col-auto">
+                    <div class="dt-buttons" style="height: 39px; max-height: none;">
+                        <div style="padding-top: 5px;">
+                            <i class="ti ti-eye"></i> [[#{components.multistep_form.form-content.step-preview}]]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stepPreview"></div>
+    </div>
+</div>

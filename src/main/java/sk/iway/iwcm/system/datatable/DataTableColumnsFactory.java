@@ -87,6 +87,8 @@ public class DataTableColumnsFactory {
                     else nestedFieldPrefix = annotation.prefix();
                     if (Tools.isNotEmpty(fieldPrefix)) nestedFieldPrefix = fieldPrefix + nestedFieldPrefix;
 
+                    String sortPrefix = annotation.sortPrefix();
+
                     List<DataTableColumn> columnsNested = dtcf.getColumns(nestedFieldPrefix);
 
                     //If orderable is not set (is null) set to FALSE -> by default nestedColumns do not support ordering
@@ -95,6 +97,14 @@ public class DataTableColumnsFactory {
                             column.setOrderable(false);
                         }
                     });
+
+                    if (Tools.isNotEmpty(sortPrefix)) {
+                        columnsNested.forEach(column -> {
+                            if (Tools.isNotEmpty(column.getSortAfter()) && !column.getSortAfter().startsWith(sortPrefix) && !"FIRST".equals(column.getSortAfter())) {
+                                column.setSortAfter(sortPrefix + column.getSortAfter());
+                            }
+                        });
+                    }
 
                     columns.addAll(columnsNested);
                 }
@@ -164,6 +174,9 @@ public class DataTableColumnsFactory {
         }
 
         if (columnsToSort.size()>0) {
+            //columnsSorted.forEach(column -> {   System.out.println("sorted: data=" + column.getData() + ", sortAfter=" + column.getSortAfter());   });
+            //columnsToSort.forEach(column -> {   System.out.println("tosort: data=" + column.getData() + ", sortAfter=" + column.getSortAfter());   });
+
             //nieco je zle zosortovane, pre istotu pridame na koniec
             columnsSorted.addAll(columnsToSort);
             Logger.error(DataTableColumnsFactory.class, "sortColumns POZOR SKONTROLUJTE sortAfter v COLUMNS definicii, zostali stlpce na sort, pocet="+columnsToSort.size());

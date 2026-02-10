@@ -112,7 +112,7 @@ public class FileArchivatorEditorFields extends BaseEditorFields {
         title="components.file_archiv.rename_file",
         hidden = true,
         className = "hide-on-create",
-        sortAfter = "fileName"
+        sortAfter = "dateInsert"
     )
     private Boolean renameFile;
 

@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
-import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 @Getter
@@ -71,7 +71,7 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
 			)
 		}
     )
-    @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String body;
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")

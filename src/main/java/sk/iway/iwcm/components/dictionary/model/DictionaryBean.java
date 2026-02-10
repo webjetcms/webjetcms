@@ -18,6 +18,7 @@ import sk.iway.iwcm.database.ActiveRecord;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
 @Table(name="dictionary")
@@ -68,6 +69,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
     @Column(name="value")
 	@NotBlank
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="[[#{components.htmlbox.basic}]]")
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String value;
 
 	public int getId() { return getDictionaryId(); }

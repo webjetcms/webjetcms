@@ -31,6 +31,17 @@ export function typeQuill() {
 
     ];
 
+    var toolbarOptionsOneline = [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [
+            'bold', 'italic', 'underline', 'strike',
+            { 'align': [] },
+            { 'script': 'sub'}, { 'script': 'super' }, // superscript/subscript
+            { 'color': [] }, { 'background': [] },          // dropdown with defaults from theme
+            'link'
+        ]
+    ];
+
     /**
      * Update HTML to quill supported HTML tags, e.g.:
      * ol-li.bullet -> ul.li
@@ -138,6 +149,25 @@ export function typeQuill() {
         return htmlCode;
     }
 
+    /**
+     * Test if the editor is one line (without P tags)
+     * @param {*} conf - datatanle column config
+     * @returns
+     */
+    function isOneLine(conf) {
+        //console.log("isOneLine conf=", conf);
+        if (!conf || !conf || typeof conf.className !== "string") {
+            return false;
+        }
+        var classNames = conf.className.split(/\s+/);
+        for (var i = 0; i < classNames.length; i++) {
+            if (classNames[i] === "quill-oneline") {
+                return true;
+            }
+        }
+        return false;
+    }
+
     return {
         create: function (conf) {
             //console.log("Creating quill editor");
@@ -182,7 +212,7 @@ export function typeQuill() {
             conf._quill = new Quill(input.find('.editor')[0], $.extend(true, {
                 theme: 'snow',
                 modules: {
-                    toolbar: toolbarOptions,
+                    toolbar: isOneLine(conf) === true ? toolbarOptionsOneline : toolbarOptions,
                     htmlEditButton: {
                         msg: WJ.translate("datatables.quill.htmlButton.tooltip.js"), //Custom message to display in the editor, default: Edit HTML here, when you click "OK" the quill editor's contents will be replaced
                         okText: '<i class="ti ti-check"></i> '+WJ.translate("button.submit"), // Text to display in the OK button, default: Ok,
@@ -219,10 +249,29 @@ export function typeQuill() {
         get: function (conf) {
             //console.log("QUILL GET=", conf._quill.root.innerHTML);
             var htmlCode = conf._quill.root.innerHTML;
+
             //prazdny text povazuj za prazdny, aby nam fungovalo required field
             if ("<p><br></p>"==htmlCode || ""==conf._quill.getText()) htmlCode = "";
 
-            return window.quillToHtmlFormat(htmlCode);
+            var html = window.quillToHtmlFormat(htmlCode);
+
+            if(isOneLine(conf) === true) {
+                // Remove <p></p> wrapper if present
+                if (typeof html === 'string') {
+                    // Remove single empty <p></p> or <p><br></p>
+                    if (html.trim() === '<p></p>' || html.trim() === '<p><br></p>') {
+                        html = '';
+                    } else {
+                        // Remove wrapping <p>...</p> if the whole content is wrapped
+                        var match = html.match(/^<p>([\s\S]*)<\/p>$/i);
+                        if (match) {
+                            html = match[1];
+                        }
+                    }
+                }
+            }
+
+            return html;
         },
 
         set: function (conf, val) {

@@ -139,4 +139,7 @@ public class BeanDiff
 		return original != null;
 	}
 
+	public String getNewClassName() {
+		return actual.getClass().getName();
+	}
 }

@@ -12,4 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface DataTableColumnNested {
     String prefix() default "auto";
+
+    //if you are nesting entity to another entity you need to set this prefix to correctly sort the nested columns (e.g. "userDetails.")
+    String sortPrefix() default "";
 }

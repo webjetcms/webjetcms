@@ -594,7 +594,7 @@ export function stateSaveCallback(settings,data) {
  * @returns
  */
 export function stateLoadCallback(settings) {
-    if ("form-detail"==settings.sInstance || "component-datatable"==settings.sInstance) return null;
+    if ("formDetailDataTable"==settings.sInstance || "component-datatable"==settings.sInstance) return null;
 
     let key = getStateSaveKey(settings);
     let data = JSON.parse( localStorage.getItem( key ) );

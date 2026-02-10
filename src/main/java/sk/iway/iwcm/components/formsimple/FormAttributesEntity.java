@@ -20,6 +20,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class FormAttributesEntity {
 
+    /*
+     * This entity is retained for backward compatibility. The application now uses
+     * FormSettingsEntity, which operates on the remastered form_attributes table (exposed as form_settings).
+     * Since the form_attributes table still exists, both this entity and its repository are preserved
+     * for potential future use.
+     * #58161 - sivan
+     */
+
     public FormAttributesEntity() {}
 
     public FormAttributesEntity(Long id, String formName, String paramName, Integer domainId) {

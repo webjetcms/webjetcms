@@ -25,6 +25,8 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
     //you can send summary data directly in response
     private Map<String, Long> summary = null;
 
+    private String redirect = null;
+
     public DatatablePageImpl(List<T> content) {
         //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
         super(content, PageRequest.of(0, content.size() < 1 ? 1 : content.size(), Sort.unsorted()), content.size());
@@ -151,5 +153,13 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
             this.summary = new HashMap<>();
         }
         this.summary.put(key, value);
+    }
+
+    public String getRedirect() {
+        return redirect;
+    }
+
+    public void setRedirect(String redirect) {
+        this.redirect = redirect;
     }
 }

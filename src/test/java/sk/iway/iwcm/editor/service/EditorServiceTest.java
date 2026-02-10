@@ -72,11 +72,11 @@ public class EditorServiceTest extends BaseWebjetTest {
             url = Tools.replace(url, ".html", "");
             if (url.endsWith("/")) url = url.substring(0, url.length()-1);
 
-            System.out.println("EditorServiceTest.testUrls("+count+"): url = " + url + " expectedPath = " + doc.getVirtualPath());
+            //System.out.println("EditorServiceTest.testUrls("+count+"): url = " + url + " expectedPath = " + doc.getVirtualPath());
             //doc.getVirtualPath should startsWith url
             assertTrue(doc.getVirtualPath().startsWith(url), "Virtual path for another subpage should startsWith. Expected: " + url + " but was: " + doc.getVirtualPath());
         } else {
-            System.out.println("EditorServiceTest.testUrls("+count+"): url = " + url + " expectedPath = " + doc.getVirtualPath());
+            //System.out.println("EditorServiceTest.testUrls("+count+"): url = " + url + " expectedPath = " + doc.getVirtualPath());
             assertEquals(url, doc.getVirtualPath(), "Virtual path for another subpage should be with page title and number. Expected: " + url + " but was: " + doc.getVirtualPath());
         }
         docDBForTest.addUrlToInternalCache(doc, rootGroup);

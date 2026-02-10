@@ -5,6 +5,8 @@
     var regExpDataTable;
 
     window.domReady.add(function () {
+        // !! hide form steps tab link !! - show only in form detail view
+        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
 
         window.helpLink = "/redactor/apps/form/regexps";
 

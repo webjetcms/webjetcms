@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
@@ -47,38 +46,42 @@ public class DmailService {
         Identity user = UsersDB.getCurrentUser(request);
 
         //Now get all emails under campain actualy in DB - we need it to prevent duplicity
-        Map<String, Integer> emailsTable = new Hashtable<>();
+        Set<String> usedEmails = new HashSet<>();
         for (String email : emailsRepository.getAllCampainEmails( DmailService.getCampaignId(campaing, user), CloudToolsForCore.getDomainId()) ) {
-            emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);
+            usedEmails.add(email.toLowerCase());
         }
+        //add all unsubscribed emails
+        usedEmails.addAll(DmailUtil.getUnsubscribedEmails());
 
         //Get all emails under selected user groups
-        List<String> recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);
+        List<Integer> recpientIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsAdded);
 
-        //Get all unsubscribed emails
-        Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
+        int count = 0;
 
-        for(String recipientEmail : recpientEmails) {
-            //Unsubcribed check
-            if(unsubscribedEmails.contains(recipientEmail.toLowerCase()) == true) continue;
+        for(Integer recipientId : recpientIds) {
+            UserDetails recipient = UsersDB.getUser(recipientId);
+            if(recipient == null) continue;
 
-            //Check duplicity (if this emial alreadry belongs to campain)
-            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;
-            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);
+            // Duplicity check
+            if(usedEmails.contains( recipient.getEmail().toLowerCase() )) continue;
+            usedEmails.add(recipient.getEmail().toLowerCase());
 
             //Check validity then continue
-            if (Tools.isEmail(recipientEmail) == true) {
+            if (Tools.isEmail(recipient.getEmail()) == true) {
                 //Prepare and save email
-                EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
-                boolean prepareSuccess = prepareEmailForInsert(campaing, user == null ? 0 : user.getUserId(), emailToAdd);
+                EmailsEntity emailToAdd = new EmailsEntity( recipient.getEmail() );
+                boolean prepareSuccess = prepareEmailForInsert(campaing, user == null ? 0 : user.getUserId(), emailToAdd, recipient);
                 if(prepareSuccess == false) continue; //Email is not valid
 
                 //Save record in DB
                 emailsRepository.save(emailToAdd);
+                count++;
             } else {
                 return;
             }
         }
+
+        RequestBean.addAuditValue("addedEmailCount", ""+count);
     }
 
     //Add and/or remove emails which belongs to campain by ceratin user group
@@ -129,7 +132,7 @@ public class DmailService {
             mustContainUserId.add(uid);
         }
 
-        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, campaing.getId(), emailsRepository, userDetailsRepository);
+        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, campaing, emailsRepository, userDetailsRepository);
         if(groupsAdded.isEmpty()==false) addEmails(groupsAdded, campaing, emailsRepository, userDetailsRepository, request);
     }
 
@@ -138,9 +141,9 @@ public class DmailService {
      * (user moze byt vo viacerych skupinach, takze moze byt v tej co musi zostat zachovane)
      * @param groupsRemoved
      * @param mustContainUserId
-     * @param campainId
+     * @param campain
      */
-    private static void removeEmails(List<Integer> groupsRemoved, Set<Integer> mustContainUserId, Long campainId, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository) {
+    private static void removeEmails(List<Integer> groupsRemoved, Set<Integer> mustContainUserId, CampaingsEntity campain, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository) {
 
         List<Integer> userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsRemoved);
         List<Integer> filteredUserIds = new ArrayList<>();
@@ -151,7 +154,8 @@ public class DmailService {
         }
 
         //Delete all emails under removed user group
-        emailsRepository.deleteCampainEmail(campainId, filteredUserIds, CloudToolsForCore.getDomainId());
+        int deleted = emailsRepository.deleteCampainEmail(campain.getId(), filteredUserIds, CloudToolsForCore.getDomainId());
+        RequestBean.addAuditValue("removedEmailCount", ""+deleted);
     }
 
     /**
@@ -161,6 +165,20 @@ public class DmailService {
      * @param email
      */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity email) {
+        //Get email recipient(user) using email
+        UserDetails recipient = UsersDB.getUserByEmail(email.getRecipientEmail(), 600);
+        return prepareEmailForInsert(campaign, loggedUserId, email, recipient);
+    }
+
+    /**
+     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
+     * @param campaign
+     * @param loggedUserId
+     * @param email
+     * @param recipient
+     * @return
+     */
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity email, UserDetails recipient) {
 
         //trimni email adresu
         if (email.getRecipientEmail()!=null) email.setRecipientEmail(email.getRecipientEmail().trim());
@@ -168,8 +186,6 @@ public class DmailService {
         //sprav lower case
         if (email.getRecipientEmail()!=null) email.setRecipientEmail(email.getRecipientEmail().toLowerCase());
 
-        //Get email recipient(user) using email
-        UserDetails recipient = UsersDB.getUserByEmail(email.getRecipientEmail(), 600);
         if(recipient == null) {
             email.setRecipientUserId(-1);
             if(Tools.isEmpty(email.getRecipientName())) email.setRecipientName("- -");
@@ -190,16 +206,15 @@ public class DmailService {
             email.setSubject("-");
             email.setSenderName("-");
             email.setSenderEmail("-");
-            email.setCreatedByUserId(loggedUserId);
         } else {
             email.setCampainId(campaign.getId());
             email.setUrl(campaign.getUrl());
             email.setSubject(campaign.getSubject());
             email.setSenderName(campaign.getSenderName());
             email.setSenderEmail(campaign.getSenderEmail());
-            email.setCreatedByUserId(loggedUserId);
         }
 
+        email.setCreatedByUserId(loggedUserId);
         email.setCreateDate(new Date());
         email.setRetry(0);
 

@@ -115,9 +115,9 @@ public class ABTesting
 	public static String generateVariant()
 	{
 		String variantLetter = "a";
+		String ratio = Constants.getString("ABTestingRatio");
 		try
 		{
-			String ratio = Constants.getString("ABTestingRatio");
 			int sum = 0;
 
 			String[] items = (ratio + "").replace(",", ".").split(":");
@@ -143,7 +143,7 @@ public class ABTesting
 		}
 		catch(Exception e)
 		{
-			sk.iway.iwcm.Logger.error(e);
+			sk.iway.iwcm.Logger.error(ABTesting.class, "error parsing ABTestingRatio:" + ratio + " error: " + e.getMessage());
 		}
 		return variantLetter;
 	}

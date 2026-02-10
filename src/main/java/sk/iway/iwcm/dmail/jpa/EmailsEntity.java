@@ -4,7 +4,6 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +24,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
 import sk.iway.iwcm.database.ActiveRecordRepository;
-import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -34,8 +32,9 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 @Table(name = "emails")
 @Getter
 @Setter
-@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
+//not auditing, because for large number of emails it would slow down the process and bloat the adminlog
+//@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+//@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 public class EmailsEntity extends ActiveRecordRepository {
 
     public EmailsEntity() {}

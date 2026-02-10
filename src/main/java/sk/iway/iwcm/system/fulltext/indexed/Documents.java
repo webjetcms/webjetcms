@@ -383,7 +383,7 @@ public class Documents extends Indexed
 			}
 			catch (IOException|InterruptedException e)
 			{
-				sk.iway.iwcm.Logger.error(e);
+				sk.iway.iwcm.Logger.error(Documents.class, "Error indexing document: " + e.getMessage());
 			}
 			finally{
 				indexed.proccessed();

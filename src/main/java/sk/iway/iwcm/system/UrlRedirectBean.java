@@ -97,7 +97,8 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
         title = "groupedit.domain",
         perms = "multiDomain",
 		sortAfter = "redirectCode",
-		defaultValue = "{currentDomain}"
+		defaultValue = "{currentDomain}",
+		className = "multiweb-noteditable"
     )
 	String domainName;
 

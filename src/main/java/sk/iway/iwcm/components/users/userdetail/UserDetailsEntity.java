@@ -285,5 +285,4 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @DataTableColumnNested
     @Valid
 	private UserDetailsEditorFields editorFields = null;
-
 }

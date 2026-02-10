@@ -1,7 +1,9 @@
 package sk.iway.iwcm.common;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,76 @@ public class CloudToolsForCore {
 
     public static final String CLOUD_TEXT_KEY_PREFIX = "cloud.template.";
 	public static final Pattern CLOUD_TEXT_PATTERN = Pattern.compile(CLOUD_TEXT_KEY_PREFIX+"[a-zA-Z0-9\\._-]+");
+
+    //disabled items for "cloud"==Constants.INSTALL_NAME
+    private static final Set<String> DISABLED_ITEMS_CLOUD = new HashSet<>(Arrays.asList(
+        "menuSync",
+
+        "menuConfig",
+        "modUpdate",
+        "cmp_adminlog",
+        "edit_text",
+        "cmp_data_deleting",
+        "cmp_server_monitoring",
+        "cmp_redirects",
+        "modRestart",
+        "cmp_crontab",
+        "make_zip_archive",
+        "cmp_attributes",
+        "export_offline",
+        "cmp_clone_structure",
+
+        "menuGDPRregexp",
+        "menuGDPRDelete",
+
+        "menu.users",
+        "user.admin.userGroups",
+        "users.perm_groups",
+        "menu.fbrowser",
+        "menu.templates",
+
+        "conf.show_all_variables",
+        "prop.show_all_texts",
+        "cmp_mirroring",
+        "menuTemplatesGroup"
+    ));
+
+    //disabled items for multiweb/InitServlet.isTypeCloud()
+    private static final Set<String> DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN = new HashSet<>(Arrays.asList(
+        "menuConfig",
+        "modUpdate",
+        "cmp_adminlog",
+        "edit_text",
+        "cmp_data_deleting",
+        "cmp_server_monitoring",
+        //uz je povolene user.addDisabledItem("cmp_redirects");
+        "modRestart",
+        "cmp_crontab",
+
+        "menuGDPRregexp",
+        "menuGDPRDelete",
+
+        //domain limits allow only for first domain
+        "cmp_dmail_domainlimits",
+        "cmp_response-header",
+        "cmp_adminlog_logging",
+        "cmp_in-memory-logging",
+
+        "user.admin.userGroups",
+        "users.perm_groups",
+
+        "conf.show_all_variables",
+        "prop.show_all_texts",
+        "menuTemplatesGroup"
+    ));
+    private static final Set<String> DISABLED_ITEMS_MULTIWEB_ALL = new HashSet<>(Arrays.asList(
+        "make_zip_archive",
+        "cmp_attributes",
+        "export_offline",
+        "cmp_clone_structure",
+        "cmp_stat_seeallgroups",
+        "cmp_mirroring"
+    ));
 
     protected CloudToolsForCore() {
         //utility class
@@ -320,67 +392,32 @@ public class CloudToolsForCore {
             //nastav disabled items
             Map<String, String> disabledItemsTable = new Hashtable<>();
             user.setDisabledItemsTable(disabledItemsTable);
-            user.addDisabledItem("menuSync");
 
-            user.addDisabledItem("menuConfig");
-            user.addDisabledItem("modUpdate");
-            user.addDisabledItem("cmp_adminlog");
-            user.addDisabledItem("edit_text");
-            user.addDisabledItem("cmp_data_deleting");
-            user.addDisabledItem("cmp_server_monitoring");
-            user.addDisabledItem("cmp_redirects");
-            user.addDisabledItem("modRestart");
-            user.addDisabledItem("cmp_crontab");
-            user.addDisabledItem("make_zip_archive");
-            user.addDisabledItem("cmp_attributes");
-            user.addDisabledItem("export_offline");
-            user.addDisabledItem("cmp_clone_structure");
-
-            user.addDisabledItem("menuGDPRregexp");
-            user.addDisabledItem("menuGDPRDelete");
-
-            user.addDisabledItem("menu.users");
-            user.addDisabledItem("user.admin.userGroups");
-            user.addDisabledItem("users.perm_groups");
-            user.addDisabledItem("menu.fbrowser");
-            user.addDisabledItem("menu.templates");
+            for (String item : DISABLED_ITEMS_CLOUD)
+            {
+                user.addDisabledItem(item);
+            }
         }
         else
         {
+            UsersDB.loadDisabledItemsFromDB(user);
+
             if (isControllerDomain())
             {
                 //prvemu hostu a iway || webactive user povolime niektore systemove moduly
             }
             else
             {
-                user.addDisabledItem("menuConfig");
-                user.addDisabledItem("modUpdate");
-                user.addDisabledItem("cmp_adminlog");
-                user.addDisabledItem("edit_text");
-                user.addDisabledItem("cmp_data_deleting");
-                user.addDisabledItem("cmp_server_monitoring");
-                //uz je povolene user.addDisabledItem("cmp_redirects");
-                user.addDisabledItem("modRestart");
-                user.addDisabledItem("cmp_crontab");
-
-                user.addDisabledItem("menuGDPRregexp");
-                user.addDisabledItem("menuGDPRDelete");
-
-                //domain limits allow only for first domain
-                user.addDisabledItem("cmp_dmail_domainlimits");
-                user.addDisabledItem("cmp_response-header");
-                user.addDisabledItem("cmp_adminlog_logging");
-                user.addDisabledItem("cmp_in-memory-logging");
-
-                user.addDisabledItem("user.admin.userGroups");
-                user.addDisabledItem("users.perm_groups");
+                for (String item : DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN)
+                {
+                    user.addDisabledItem(item);
+                }
             }
 
-            user.addDisabledItem("make_zip_archive");
-            user.addDisabledItem("cmp_attributes");
-            user.addDisabledItem("export_offline");
-            user.addDisabledItem("cmp_clone_structure");
-            user.addDisabledItem("cmp_stat_seeallgroups");
+            for (String item : DISABLED_ITEMS_MULTIWEB_ALL)
+            {
+                user.addDisabledItem(item);
+            }
 
             String specialPerms = Constants.getString("multiwebSpecialPerms-"+user.getUserId());
             if (Tools.isNotEmpty(specialPerms))
@@ -390,8 +427,6 @@ public class CloudToolsForCore {
                     user.removeDisabledItem(special);
                 }
             }
-
-            UsersDB.loadDisabledItemsFromDB(user);
         }
     }
 
@@ -402,6 +437,32 @@ public class CloudToolsForCore {
     public static boolean isControllerDomain() {
         if (InitServlet.isTypeCloud() == false) return false;
         return CloudToolsForCore.getDomainId() == 1;
+    }
+
+    /**
+     * Check if module is enabled in Cloud/MultiWeb installation
+     * @param moduleKey
+     * @return
+     */
+    public static boolean isModuleDisabled(String moduleKey) {
+        if (InitServlet.isTypeCloud() == false) return false;
+        if ("cloud".equals(Constants.getInstallName())) {
+            if (DISABLED_ITEMS_CLOUD.contains(moduleKey)) {
+                return true;
+            }
+        } else {
+            if (isControllerDomain()) {
+                //prvemu hostu a iway || webactive user povolime niektore systemove moduly
+            } else {
+                if (DISABLED_ITEMS_MULTIWEB_NOT_CONTROL_DOMAIN.contains(moduleKey)) {
+                    return true;
+                }
+            }
+            if (DISABLED_ITEMS_MULTIWEB_ALL.contains(moduleKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

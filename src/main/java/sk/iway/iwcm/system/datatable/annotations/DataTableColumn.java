@@ -19,6 +19,8 @@ public @interface DataTableColumn {
     String renderFormat() default "";
     String renderFormatLinkTemplate() default "";
     String renderFormatPrefix() default "";
+    String renderFunction() default "";
+
     //column default visibility in table, if false, user can set column to visible
     boolean[] visible() default {};
     //set to true to hide column in table
@@ -54,4 +56,7 @@ public @interface DataTableColumn {
      * orderProperty = "contactFirstName,deliveryName"
      */
     String orderProperty() default "";
+
+    //set export to false to exclude column from exports
+    boolean[] export() default {};
 }

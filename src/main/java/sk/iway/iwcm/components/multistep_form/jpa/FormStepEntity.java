@@ -1,0 +1,94 @@
+package sk.iway.iwcm.components.multistep_form.jpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+
+@Entity
+@Table(name = "form_steps")
+@Getter
+@Setter
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
+public class FormStepEntity {
+
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_form_steps")
+    @DataTableColumn(inputType = DataTableColumnType.ID, hidden = true)
+    @Accessors(chain = false)
+    private Long id;
+
+    @Column(name = "sort_priority")
+    @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", tab = "main", className = "icon-only", filter = false)
+    private Integer sortPriority;
+
+    @Column(name = "form_name")
+    @NotBlank
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.forms.file_restrictions.form_name", tab = "main", hidden = true)
+    private String formName;
+
+    @Lob
+    @Column(name = "header")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String header;
+
+    @Column(name = "next_step_btn_label")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
+			@DataTableColumnEditor(
+				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.app-cookiebar.buttonText") }
+			)
+	    }
+    )
+    private String nextStepBtnLabel;
+
+    @Column(name = "back_step_btn_label")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    private String backStepBtnLabel;
+
+    @Lob
+    @Column(name="step_bonus_html")
+    @Convert(converter = AllowHtmlAttributeConverter.class)
+    @DataTableColumn(inputType=DataTableColumnType.TEXTAREA, tab="stepBonusHtml", title="components.insert_script.body", className = "textarea-code show-html", hidden = true)
+    private String stepBonusHtml;
+
+    @Column(name = "current_position")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer currentPosition;
+
+    @Column(name = "max_position")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer maxPosition;
+
+    // When duplicationg step, we need it's original ID, so we can duplicate binded items too
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private transient Long idForDuplication;
+
+    @Column(name = "domain_id")
+    private Integer domainId;
+
+    public boolean isLastStep() {
+        return currentPosition == maxPosition;
+    }
+}

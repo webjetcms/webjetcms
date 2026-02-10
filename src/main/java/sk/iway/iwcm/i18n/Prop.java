@@ -363,19 +363,23 @@ public class Prop
 			if (rb != null) urlAddress = rb.getUrl();
 
 			//check if key was allready set as missing, if yes -> just update lastMissing date value
-			boolean present = false;
-			for(MissingKeysDto missingKey : missingTexts.get(language)) {
-				if(missingKey.getKey().equals(key)) {
-					present = true;
-					missingKey.setLastMissing(new Date());
-					if (Tools.isNotEmpty(urlAddress)) missingKey.setUrlAddress(urlAddress);
-					break;
+			try {
+				boolean present = false;
+				for(MissingKeysDto missingKey : missingTexts.get(language)) {
+					if(missingKey.getKey().equals(key)) {
+						present = true;
+						missingKey.setLastMissing(new Date());
+						if (Tools.isNotEmpty(urlAddress)) missingKey.setUrlAddress(urlAddress);
+						break;
+					}
 				}
-			}
 
-			//if key is missing first time, add new MissingKeysDto variable into set of missing keys
-			if(!present) {
-				missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
+				//if key is missing first time, add new MissingKeysDto variable into set of missing keys
+				if(!present) {
+					missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
+				}
+			} catch (Exception ex) {
+				//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
 			}
 
 			//try defaultLanguage property

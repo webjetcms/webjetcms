@@ -154,7 +154,7 @@ public class LogonTools {
                 else
                 {
                     hasEmailParam = true;
-                    sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("login")+"=?"+" OR "+DB.fixAiCiCol("email")+"=?";
+                    sql = "SELECT * FROM users WHERE ("+DB.fixAiCiCol("login")+"=?"+" OR "+DB.fixAiCiCol("email")+"=?)";
                 }
 
                 sql += UsersDB.getDomainIdSqlWhere(true);
