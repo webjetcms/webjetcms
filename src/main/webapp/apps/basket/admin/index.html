@@ -70,6 +70,16 @@
             }
         });
 
+        window.addEventListener("WJ.DT.executeAction", function(e) {
+            if("refundPayment" === e.detail.action) {
+                // setPayment footer and update invoice status
+                setPaymentsFooter(true);
+            } else if("addItem" === e.detail.action) {
+                // setItem footer and update invoice status
+                setItemsFooter(true);
+            }
+        });
+
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.payments") {
                 paymentsDataTable = event.detail.conf.datatable;
@@ -77,16 +87,6 @@
                 paymentsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
                     // setPayment footer and update invoice status
                     setPaymentsFooter(true);
-                });
-
-                window.addEventListener("WJ.DT.executeAction", function(e) {
-                    if("refundPayment" === e.detail.action) {
-                        // setPayment footer and update invoice status
-                        setPaymentsFooter(true);
-                    } else if("addItem" === e.detail.action) {
-                        // setItem footer and update invoice status
-                        setItemsFooter(true);
-                    }
                 });
 
                 let buttonCounter = 4;
@@ -126,7 +126,7 @@
                 itemsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
                     // setPayment footer and update invoice status
                     setItemsFooter(true);
-                })
+                });
 
                 itemsDataTable.button().add(1, {
                     text: '<i class="ti ti-plus"></i>',
@@ -249,10 +249,7 @@
                 url: url + "/getPriceInfo?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
                 method: "GET"
             }).then(
-                function(priceInfo) {
-                    try { return priceInfo; }
-                    catch (e) { return null; }
-                },
+                function(priceInfo) { return priceInfo; },
                 function() { return null; }
             );
         }
@@ -264,7 +261,7 @@
                 let paidSumText = WJ.translate('components.basket.invoice.payments.paid_sum.js');
                 let needToPaySum = WJ.translate('components.basket.invoice.payments.need_to_pay_sum.js');
 
-                if(setInvoiceStatus == true) {
+                if(setInvoiceStatus === true) {
                     //Update ifarme so he show actual values
                     refreshIframeAndSetValues();
                 }
@@ -301,7 +298,7 @@
             if(colSum.length > 0) {
                 let itemsPriceText = WJ.translate('components.basket.invoice.items.items_price.js');
 
-                if(setInvoiceStatus == true) {
+                if(setInvoiceStatus === true) {
                     //Update ifarme so he show actual values
                     refreshIframeAndSetValues();
                 }
