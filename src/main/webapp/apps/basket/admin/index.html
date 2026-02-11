@@ -48,6 +48,11 @@
         basketInvoiceDataTable.hideButton("duplicate");
         basketInvoiceDataTable.hideButton("import");
 
+        basketInvoiceDataTable.EDITOR.on('open', function (e, json, data) {
+            // When open editor, set iframe
+            refreshIframeAndSetValues();
+        });
+
         let resizing = false;
         window.addEventListener('WJ.DTE.resize', function (e) {
             const activeOrderTab = $("#pills-dt-basketInvoiceDataTable-order_status-tab.nav-link.active");
@@ -65,7 +70,6 @@
             }
         });
 
-        let paymentFirstDraw = true;
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.payments") {
                 paymentsDataTable = event.detail.conf.datatable;
@@ -73,18 +77,15 @@
                 paymentsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
                     // setPayment footer and update invoice status
                     setPaymentsFooter(true);
-
-                    //Update ifarme so he show actual values
-                    refreshIframeAndSetValues();
                 });
 
-                paymentsDataTable.on("draw", function() {
-                    if(paymentFirstDraw === true) {
-                        //Set footer first time
-                        setPaymentsFooter();
-
-                        paymentFirstDraw = false;
-                        return;
+                window.addEventListener("WJ.DT.executeAction", function(e) {
+                    if("refundPayment" === e.detail.action) {
+                        // setPayment footer and update invoice status
+                        setPaymentsFooter(true);
+                    } else if("addItem" === e.detail.action) {
+                        // setItem footer and update invoice status
+                        setItemsFooter(true);
                     }
                 });
 
@@ -121,12 +122,11 @@
 
             if(event.detail.conf.id == "DTE_Field_editorFields.items") {
                 itemsDataTable = event.detail.conf.datatable;
-                itemsDataTable.on("draw", function() {
-                    //Re-call iframe and set new values
-                    refreshIframeAndSetValues();
-                    //Refresh footer info
-                    setItemsFooter();
-                });
+
+                itemsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
+                    // setPayment footer and update invoice status
+                    setItemsFooter(true);
+                })
 
                 itemsDataTable.button().add(1, {
                     text: '<i class="ti ti-plus"></i>',
@@ -198,7 +198,8 @@
                         $("#dataDiv")[0].src = "/components/basket/invoice_email.jsp?invoiceId=" + e.detail.dte.currentJson['id'] + "&auth=" + e.detail.dte.currentJson['authorizationToken'];
                     }
 
-                    $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(); });
+                    $("#pills-dt-basketInvoiceDataTable-payments-tab").on("click", function(e) { setPaymentsFooter(false); });
+                    $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(false); });
                 }
             }
         });
@@ -243,57 +244,80 @@
             }
         }
 
+        function getActualPriceInfo() {
+            return $.ajax({
+                url: url + "/getPriceInfo?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
+                method: "GET"
+            }).then(
+                function(priceInfo) {
+                    try { return priceInfo; }
+                    catch (e) { return null; }
+                },
+                function() { return null; }
+            );
+        }
+
         function setPaymentsFooter(setInvoiceStatus = false) {
-            //console.log("setPaymentsFooter");
+            // console.log("setPaymentsFooter");
             let colSum = $("#datatableFieldDTE_Field_editorFields-payments_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
                 let paidSumText = WJ.translate('components.basket.invoice.payments.paid_sum.js');
                 let needToPaySum = WJ.translate('components.basket.invoice.payments.need_to_pay_sum.js');
-                $.ajax({
-                    url: url + "/getPriceInfo?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
-                    method: "GET",
-                    success: function (priceInfo) {
-                        try {
-                            let priceToPayVAT = parseFloat(priceInfo.priceToPay);
-                            let payedPrice = parseFloat(priceInfo.payedPrice);
-                            var paymentFooter = paidSumText + ': ' + WJ.formatPrice(payedPrice) + ' ' + actualCurrent + ' ' + needToPaySum + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
-                            let bonusText = "";
-                            let diff = priceToPayVAT - payedPrice;
-                            if(diff < 0) {
-                                diff = Math.abs(diff);
-                                bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.overpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
-                            } else if(diff > 0) {
-                                bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.underpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
-                            } else {
-                                //nothing - all payed good
-                            }
-                            colSum.html('<p>' + paymentFooter + bonusText + '</p>');
 
-                            if(setInvoiceStatus === true) {
-                                basketInvoiceDataTable.EDITOR.field("statusId").val(priceInfo.status); // set new status to select field in form
-                            }
+                if(setInvoiceStatus == true) {
+                    //Update ifarme so he show actual values
+                    refreshIframeAndSetValues();
+                }
 
-                        } catch (e) {
-                            colSum.html('<p> --- </p>');
+                getActualPriceInfo().then(priceInfo => {
+                    try {
+                        let priceToPayVAT = parseFloat(priceInfo.priceToPay);
+                        let payedPrice = parseFloat(priceInfo.payedPrice);
+                        var paymentFooter = paidSumText + ': ' + WJ.formatPrice(payedPrice) + ' ' + actualCurrent + ' ' + needToPaySum + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
+                        let bonusText = "";
+                        let diff = priceToPayVAT - payedPrice;
+                        if(diff < 0) {
+                            diff = Math.abs(diff);
+                            bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.overpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                        } else if(diff > 0) {
+                            bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.underpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                        } else {
+                            //nothing - all payed good
                         }
-                    }, error: () => { colSum.html('<p> --- </p>'); }
+                        colSum.html('<p>' + paymentFooter + bonusText + '</p>');
+
+                        // set new status to select field in form
+                        if(setInvoiceStatus === true) { basketInvoiceDataTable.EDITOR.field("statusId").val(priceInfo.status); }
+                    } catch (e) {
+                        colSum.html('<p> --- </p>');
+                    }
                 });
             }
         }
 
-        function setItemsFooter() {
-            //console.log("setItemsFooter");
+        function setItemsFooter(setInvoiceStatus = false) {
+            // console.log("setItemsFooter");
             let colSum = $("#datatableFieldDTE_Field_editorFields-items_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
                 let itemsPriceText = WJ.translate('components.basket.invoice.items.items_price.js');
-                $.ajax({
-                    url: url + "/getPriceToPay?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
-                    method: "GET",
-                    success: function (priceToPayVAT) {
+
+                if(setInvoiceStatus == true) {
+                    //Update ifarme so he show actual values
+                    refreshIframeAndSetValues();
+                }
+
+                getActualPriceInfo().then(priceInfo => {
+                    try {
+                        let priceToPayVAT = parseFloat(priceInfo.priceToPay);
                         var itemFooter = itemsPriceText + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
                         //Set footer
                         colSum.html('<p>' + itemFooter + '</p>');
-                    }, error: () => { colSum.html('<p> --- </p>'); }
+
+                        // set new status to select field in form
+                        if(setInvoiceStatus === true) { basketInvoiceDataTable.EDITOR.field("statusId").val(priceInfo.status); }
+                    }  catch (e) {
+                        colSum.html('<p> --- </p>');
+                    }
                 });
             }
         }
