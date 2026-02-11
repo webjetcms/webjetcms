@@ -114,6 +114,8 @@ Následne v druhom kroku pridáte položku typu Overovací kód, ktorá zabezpe�
 
 ![](form-step-email-verification-2.png)
 
+Ak potrebujete implementovať podobnú funkčnosť, ale s inou logikou, tak v časti Programovanie zákazníckych aplikácií je viac technických informácií o možnosti implementácie [vlastného spracovateľa formuláru](../../../custom-apps/apps/multistep-forms/README.md), ktorý zabezpečí požadovanú funkcionalitu.
+
 ## Udalosť pri odoslaní formuláru
 
 Po odoslaní formuláru cez AJAX je publikovaná udalosť `WJ.formSubmit`, na ktorú je možné počúvať, napr. ako:
