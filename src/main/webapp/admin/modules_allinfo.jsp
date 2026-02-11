@@ -154,7 +154,7 @@ keysTable.put("crypto", "Šifrovanie dát");
 keysTable.put("export", "Export noviniek");
 keysTable.put("Server monitoring", "Monitoring stavu serveru");
 keysTable.put("tooltip", "Tooltip/nápoveda");
-keysTable.put("structuremirroring", "Zrkadlenie štruktúry");
+//keysTable.put("mirroring", "Zrkadlenie štruktúry");
 keysTable.put("response-header", "HTTP hlavičky");
 keysTable.put("webjet_cmp_ai_tools", "AI nástroje");
 
@@ -183,7 +183,7 @@ keysTable.put("components.data_deleting.title.desc", "Aplikácia na retenciu sta
 keysTable.put("components.fileIndexer.title.desc", "Táto aplikácia vytvára full text index súborov typu doc(x), xls(x), ppt(x), pdf, xml, txt a umožňuje súbory vyhľadávať vrámci integrovaného vyhľadávania na webstránke.");
 keysTable.put("components.tooltip.menu.desc", "Zobrazí pomocný/vysvetľujúci text pri prechode myšou ponad zadanú skratku/výraz.");
 keysTable.put("components.multiDomain.title.desc", "Umožní v jednej inštalácii WebJET CMS spravovať viaceré nezávislé domény. Na každej doméne môže byť samostatné web sídlo s oddelenými súbormi a obrázkami. Každá doména môže mať vlastný dizajn a vlastné menu.");
-keysTable.put("components.structuremirroring.menu.desc", "Zrkadlenie štruktúry vzájomne preväzuje adresáre a stránky jazykových mutácií. Zmena v jednej jazykovej mutácii sa automaticky prejaví aj v druhej. Zároveň prepája web stránky vo verejnej časti, čiže ak sa nachádzam na stránke SK/O nás a kliknem na EN verziu v hlavičke stránky, dostanem sa na zrkadlenú stránku EN/About Us.");
+keysTable.put("components.mirroring.title.desc", "Zrkadlenie štruktúry vzájomne preväzuje adresáre a stránky jazykových mutácií. Zmena v jednej jazykovej mutácii sa automaticky prejaví aj v druhej. Zároveň prepája web stránky vo verejnej časti, čiže ak sa nachádzam na stránke SK/O nás a kliknem na EN verziu v hlavičke stránky, dostanem sa na zrkadlenú stránku EN/About Us.");
 keysTable.put("components.rss.menu.desc", "Exportuje zoznam stránok/noniviek do RSS formátu. Umožňuje do stránky vložiť odkaz na novinky v inej stránke z rss formátu.");
 keysTable.put("components.messages.menu", "Umožňuje poslať správu inému administrátorovi a integráciu odosielania správ do webstránky (napr. vrámci LMS odosielanie správ medzi tútorom a študentom).");
 keysTable.put("components.map.desc", "Vloží do stránky interaktívnu mapu (Google maps alebo Open Street Map) podľa zadaných GPS súradníc, alebo adresy. Pre použitie Google maps je potrebné mať zakúpený API kľúč od Google.");

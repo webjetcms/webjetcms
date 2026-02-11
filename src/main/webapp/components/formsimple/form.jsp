@@ -305,7 +305,7 @@ String formName = sanitizeFieldId(pageParams.getValue("formName", ""));
 
 if (Tools.isEmpty(formName)) formName = "form-simple";
 
-Map<String, String> attributes = new FormSettingsService().load(DocTools.removeChars(formName, true));
+Map<String, String> attributes = FormSettingsService.load(DocTools.removeChars(formName, true));
 boolean rowView = pageParams.getBooleanValue("rowView", false);
 if (rowView == false && attributes.containsKey("rowView")) {
    rowView = "true".equals(attributes.get("rowView"));

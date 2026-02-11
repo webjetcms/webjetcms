@@ -1821,7 +1821,11 @@ export const dataTableInit = options => {
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
 
-                if (typeof TABLE === "undefined") return true;
+                if (typeof TABLE === "undefined" || typeof TABLE.DATA === "undefined" || typeof TABLE.DATA.id === "undefined") return true;
+
+                // When you have more serverSide:false tables, search will apply search from all tables in page
+                // We must allow only search that belongs to currently filtered table
+                if(TABLE.DATA.id !== settings.sTableId) return true;
 
                 var isOk = true;
 
