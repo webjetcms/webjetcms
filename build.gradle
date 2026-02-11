@@ -297,8 +297,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
-    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-common:3.8.1'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.8.1'
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
