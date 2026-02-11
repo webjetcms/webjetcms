@@ -52,6 +52,8 @@ import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.captcha.Captcha;
+import sk.iway.iwcm.system.datatable.RowReorderDto;
+import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
@@ -836,6 +838,20 @@ public class MultistepFormsService {
 		//return if is correct
 		return CSRF.verifyTokenAjax(request.getSession(), request.getHeader("X-CSRF-Token"));
 	}
+
+    public void updateStepsPositions(RowReorderDto rowReorderDto) {
+        if(rowReorderDto == null) return;
+
+        List<RowReorderValue> values = rowReorderDto.getValues();
+        if(values == null || values.size() == 0) return;
+
+        // Get form name by step id
+        String formName = formStepsRepository.getFormNameByStepId(values.get(0).getId(), CloudToolsForCore.getDomainId()).orElse(null);
+        if(Tools.isEmpty(formName)) return;
+
+        // call update
+        updateStepsPositions(formName);
+    }
 
     public void updateStepsPositions(String formName) {
         if(Tools.isEmpty(formName)) return;
