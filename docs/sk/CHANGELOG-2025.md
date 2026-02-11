@@ -545,7 +545,7 @@ Iné zmeny:
 
 ![meme](_media/meme/2025-18.jpg ":no-zoom")
 
-## 2025.0.x
+## 2025.0.52
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
