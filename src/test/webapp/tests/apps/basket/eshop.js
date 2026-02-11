@@ -267,6 +267,9 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
 
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
+    // uncheck item
+    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
     DT.filterContains("itemTitle", "Ponožky");
     I.clickCss("#datatableFieldDTE_Field_editorFields-items_wrapper button.buttons-select-all");
