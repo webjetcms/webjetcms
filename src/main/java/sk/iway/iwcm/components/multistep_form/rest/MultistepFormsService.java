@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -295,25 +296,22 @@ public class MultistepFormsService {
         String fieldType = entity.getFieldType();
         if("radio".equals(fieldType)) {
             String postfix = "-" + (Tools.isTrue(entity.getRequired()) ? "true" : "false");
-            String baseFormId = Tools.getStringValue(entity.getFieldType(), "");
+            String baseFormId = Tools.getStringValue(fieldType, "");
             baseFormId = StringEscapeUtils.unescapeHtml4(baseFormId);
 
             String itemFormId = "";
             String label = entity.getLabel();
             if (Tools.isNotEmpty(label)) {
                 label = ResponseUtils.filter(label);
-                if(Tools.isEmpty(baseFormId)) itemFormId = label + postfix;
+                baseFormId = DB.prepareString(label, 200);
             }
 
-            if(Tools.isEmpty(baseFormId))
-                baseFormId = ResponseUtils.filter( entity.getFieldType() );
-
-            else itemFormId = baseFormId + postfix;
+            itemFormId = baseFormId + postfix;
 
             return DocTools.removeChars(itemFormId, true);
         }
 
-        String itemFormId = entity.getFieldType();
+        String itemFormId = fieldType;
         itemFormId = DocTools.removeChars(itemFormId, true);
 
         // Generate unique itemFormId with numeric postfix.
