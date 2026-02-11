@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -52,6 +53,8 @@ import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.captcha.Captcha;
+import sk.iway.iwcm.system.datatable.RowReorderDto;
+import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
@@ -293,25 +296,22 @@ public class MultistepFormsService {
         String fieldType = entity.getFieldType();
         if("radio".equals(fieldType)) {
             String postfix = "-" + (Tools.isTrue(entity.getRequired()) ? "true" : "false");
-            String baseFormId = Tools.getStringValue(entity.getLabel(), "");
+            String baseFormId = Tools.getStringValue(fieldType, "");
             baseFormId = StringEscapeUtils.unescapeHtml4(baseFormId);
 
             String itemFormId = "";
             String label = entity.getLabel();
             if (Tools.isNotEmpty(label)) {
                 label = ResponseUtils.filter(label);
-                if(Tools.isEmpty(baseFormId)) itemFormId = label + postfix;
+                baseFormId = DB.prepareString(label, 200);
             }
 
-            if(Tools.isEmpty(baseFormId))
-                baseFormId = ResponseUtils.filter( entity.getFieldType() );
-
-            else itemFormId = baseFormId + postfix;
+            itemFormId = baseFormId + postfix;
 
             return DocTools.removeChars(itemFormId, true);
         }
 
-        String itemFormId = entity.getFieldType();
+        String itemFormId = fieldType;
         itemFormId = DocTools.removeChars(itemFormId, true);
 
         // Generate unique itemFormId with numeric postfix.
@@ -836,6 +836,20 @@ public class MultistepFormsService {
 		//return if is correct
 		return CSRF.verifyTokenAjax(request.getSession(), request.getHeader("X-CSRF-Token"));
 	}
+
+    public void updateStepsPositions(RowReorderDto rowReorderDto) {
+        if(rowReorderDto == null) return;
+
+        List<RowReorderValue> values = rowReorderDto.getValues();
+        if(values == null || values.size() == 0) return;
+
+        // Get form name by step id
+        String formName = formStepsRepository.getFormNameByStepId(values.get(0).getId(), CloudToolsForCore.getDomainId()).orElse(null);
+        if(Tools.isEmpty(formName)) return;
+
+        // call update
+        updateStepsPositions(formName);
+    }
 
     public void updateStepsPositions(String formName) {
         if(Tools.isEmpty(formName)) return;

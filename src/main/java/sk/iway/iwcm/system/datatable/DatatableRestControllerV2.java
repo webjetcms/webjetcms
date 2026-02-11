@@ -1658,7 +1658,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
 		boolean allGood = true;
 
-		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
+		List<T> entities = new ArrayList<>();
+		try {
+			entities = this.repo.findAllById( rowReorderDto.getIds() );
+		} catch (Exception e) {
+			Logger.error(DatatableRestControllerV2.class, "Error fetching entities for row reorder", e);
+			return ResponseEntity.ok(false);
+		}
 
 		// Loop through entities and set new value to the column specified by dataSrc
 		for (T entity : entities) {

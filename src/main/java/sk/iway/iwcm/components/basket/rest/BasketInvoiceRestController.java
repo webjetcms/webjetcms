@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.basket.rest;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -256,11 +255,6 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     @RequestMapping(value="/supported-currencies")
     public List<LabelValue> getListOfSupportedCurrencies() {
         return BasketTools.getSupportedCurrenciesOptions();
-    }
-
-    @GetMapping("/getPriceToPay")
-    public BigDecimal getPriceToPay(@RequestParam("invoiceId") Long invoiceId) {
-        return ProductListService.getPriceToPay(invoiceId, biir);
     }
 
     @GetMapping("/getPriceInfo")
