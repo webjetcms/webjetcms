@@ -4,6 +4,7 @@ const path = require("path");
 const SL = require("./SL");
 
 let randomNumber;
+const firstTdSelector = "td.dt-select-td.sorting_1";
 
 Before(({ I, login, DT }) => {
   login("admin");
@@ -14,7 +15,6 @@ Before(({ I, login, DT }) => {
   DT.addContext("payment", "#paymentMethodsDataTable_wrapper");
   DT.addContext("editorpayment", "#datatableFieldDTE_Field_editorFields-payments_wrapper");
   DT.addContext("editoritems", "#datatableFieldDTE_Field_editorFields-items_wrapper");
-
 });
 
 Scenario('Set config value to default', ({ Document }) => {
@@ -132,7 +132,7 @@ Scenario("GoPay test", async ({ I, DT, DTE, TempMail }) => {
   I.say("Processing partial refund");
   openPayments(I, DT, DTE, testerName);
   I.waitForText("Zaplatená suma: 18,88 eur zo sumy: 18,88 eur", 10, ".dt-footer-row > div > p");
-  I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+  I.click(locate(firstTdSelector).first());
   I.click(DT.btn.editorpayment_refund_button);
   I.waitForText("Vrátenie platby", 10, "div.toast-title");
   I.fillField(".toast input[id^=toastrPromptInput]", "10");
@@ -226,7 +226,7 @@ Scenario('Test of name concatenation', ({ I, DT, DTE }) => {
 Scenario('Verify that cannot change payment method in Payments tab, verify closed date and refundation', async ({ I, DT, DTE }) => {
     const testerName = "autotest-cash-" + randomNumber;
     openPayments(I, DT, DTE, testerName);
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+    I.click(locate(firstTdSelector).first());
     I.click(DT.btn.editorpayment_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
     DTE.selectOption("paymentMethod", SL.PaymentMethods.GoPay);
@@ -236,11 +236,11 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     DTE.selectOption("paymentMethod", SL.PaymentMethods.cashOnDelivery);
     I.uncheckOption("#DTE_Field_confirmed_0");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+    I.click(locate(firstTdSelector).first());
     lineColor = await SL.getFontColor(I, 1,2);
     I.assertEqual(lineColor, SL.red);
 
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+    I.click(locate(firstTdSelector).first());
     I.click(DT.btn.editorpayment_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
     I.checkOption("#DTE_Field_confirmed_0");
@@ -253,7 +253,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     lineColor = await SL.getFontColor(I, 1,2);
     I.assertEqual(lineColor, SL.black);
 
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+    I.click(locate(firstTdSelector).first());
     I.click(DT.btn.editorpayment_edit_button);
 
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
@@ -268,7 +268,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     // uncheck item
-    I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric.sorting_1").first());
+    I.click(locate(firstTdSelector).first());
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
     DT.filterContains("itemTitle", "Ponožky");
