@@ -295,7 +295,7 @@ public class MultistepFormsService {
         String fieldType = entity.getFieldType();
         if("radio".equals(fieldType)) {
             String postfix = "-" + (Tools.isTrue(entity.getRequired()) ? "true" : "false");
-            String baseFormId = Tools.getStringValue(entity.getLabel(), "");
+            String baseFormId = Tools.getStringValue(entity.getFieldType(), "");
             baseFormId = StringEscapeUtils.unescapeHtml4(baseFormId);
 
             String itemFormId = "";
