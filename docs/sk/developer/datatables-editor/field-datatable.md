@@ -15,6 +15,7 @@ Anotácia sa používa ako ```DataTableColumnType.DATATABLE```, pričom je potre
 - `data-dt-field-dt-columns-customize` - meno JavaScript funkcie, ktorá môže byť použitá na úpravu `columns` objektu, napr. `removeEditorFields`. Funkcia musí byť dostupná priamo vo `windows` objekte, ako parameter dostane `columns` objekt a očakáva sa, že ho vráti upravený. Príklad `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - zoznam kariet pre editor v JSON formáte. Všetky názvy aj hodnoty JSON objektu je potrebné obaliť do `'`, preklady sú nahradené automaticky. Príklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. Ak nie je zadané, automaticky sa získa podľa anotácie `@DataTableTabs` zadanej triedy.
 - `data-dt-field-dt-localJson` - aktivuje režim, ktorý pracuje s lokálnym JSON objektom. Používa sa primárne pre aplikácie vo web stránke pre evidenciu položiek aplikácie (napr. položky slide show), ktoré sa naviac automaticky kóduju do reťazca vhodného do `PageParams` objektu a sú kódovanom v `Base64`. Ak existuje funkcia `window.datatableLocalJsonUpdate = function(val, conf)` zavolá sa na voliteľnú úpravu dát.
+- `data-dt-field-dt-autoload` - ak máte tabuľku v prvej karte nastavte na `true` pre jej automatické načítanie pri otvorení okna, inak sa tabuľka inicializuje až pri kliknutí na kartu v ktorej sa nachádza.
 
 Kompletný príklad anotácie:
 
@@ -98,11 +99,10 @@ public class ImpressSlideshowItem {
 
 ## Poznámky k implementácii
 
-Implementácia je v súbore [field-type-datatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastavené ako ```$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();```.
+Implementácia je v súbore [field-type-datatable.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastavené ako ```$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();```.
 
 Funkcia ```resizeDatatable``` sa používa na výpočet veľkosti datatabuľky (aby scrolovali len riadky), prepočet je volaný pri inicializácii poľa, intervalom každých 20 sekúnd (pre istotu), pri zmene veľkosti okna a pri kliknutí na tab v editore. Prepočet sa vykoná len keď je pole viditeľné.
 
 Pri kliknutí na tab v editore sa testuje meno tabu voči tabu kde je vložená datatabuľka a ak sa zhoduje vykoná sa nastavenie šírky stĺpcov volaním ```conf.datatable.columns.adjust();```. Datatabuľka sa môže znova použiť pre rôzne dáta a toto zabezpečí korektné nastavenie šírky stĺpcov v hlavičke podľa obsahu tabuľky.
 
 Funkcia ```getUrlWithParams``` dokáže v URL adrese nahradiť polia z json objektu. Ak URL adresa datatabuľky obsahuje ```?docid={docId}&groupId={groupId}``` tak hodnota ```{docId}``` a ```{groupId}``` je nahradená hodnotami z JSON objektu ```EDITOR.currentJson```.
-
