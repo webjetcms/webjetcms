@@ -147,7 +147,7 @@ V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby 
 
 ### Napojenie na číselník
 
-Pole môžete ľahko napojiť na číselník, napríklad výberové pole, ktoré získava hodnoty z číselníka:
+Výberové pole (`select`) môžete ľahko napojiť na číselník:
 
 ```html
 <div class="govuk-form-group">

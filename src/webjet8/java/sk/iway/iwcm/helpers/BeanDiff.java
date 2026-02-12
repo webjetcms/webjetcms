@@ -75,13 +75,15 @@ public class BeanDiff
 					if (!originalValue.equals(newValue) || original == null)
 					{
 						if (skipEmpty) {
+							String sOriginalValue = originalValue.toString();
+							String sNewValue = newValue.toString();
 							//skip if both values are empty
-							if (originalValue.toString().isEmpty() && newValue.toString().isEmpty()) {
+							if (Tools.isEmpty(sOriginalValue) && Tools.isEmpty(sNewValue)) {
 								continue;
 							}
 							//skip also -1 values for new entity
 							if (original == null) {
-								if (Tools.isEmpty(newValue.toString()) || newValue.toString().equals("-1") || newValue.toString().equals("NULL")) {
+								if (Tools.isEmpty(sNewValue) || sNewValue.equals("-1") || sNewValue.equals("NULL")) {
 									continue;
 								}
 							}
