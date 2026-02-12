@@ -64,7 +64,6 @@ public class BeanDiffPrinter
 					Class<?> entityClass = Class.forName(className);
 					while (entityClass != null) {
 						for (Field field : entityClass.getDeclaredFields()) {
-							field.setAccessible(true);
 							if (field.isAnnotationPresent(DataTableColumn.class)) {
 								DataTableColumn dtcAnn = field.getAnnotation(DataTableColumn.class);
 								if (dtcAnn == null) continue;
@@ -75,30 +74,30 @@ public class BeanDiffPrinter
 						entityClass = entityClass.getSuperclass();
 					}
 				} catch (Exception ex) {
-					// If something went wrong, deleete whole map
+					// If something went wrong, delete whole map
 					translated = null;
 				}
 			}
 
-		StringBuilder output = new StringBuilder();
-		for (Entry<String, PropertyDiff> change : changes.entrySet())
-		{
-			String key = "";
-			if(translated != null && translated.size() > 0) key = translated.get( change.getKey() );
-			if(Tools.isEmpty(key)) key = change.getKey();
+			StringBuilder output = new StringBuilder();
+			for (Entry<String, PropertyDiff> change : changes.entrySet())
+			{
+				String key = "";
+				if(translated != null && translated.size() > 0) key = translated.get( change.getKey() );
+				if(Tools.isEmpty(key)) key = change.getKey();
 
-			output.append('\n').
-				append( key ).
-				append(": ");
+				output.append('\n').
+					append( key ).
+					append(": ");
 
-			if (diff.hasOriginal()) {
-				output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
-				append(" -> ").
-				append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
-			} else {
-				output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+				if (diff.hasOriginal()) {
+					output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
+					append(" -> ").
+					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+				} else {
+					output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+				}
 			}
-		}
 
 			return output.toString();
 		} catch (Exception ex) {

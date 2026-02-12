@@ -88,6 +88,10 @@
                     }
                 });
 
+                setTimeout(function() {
+                    setPaymentsFooter(false);
+                }, 500);
+
                 let buttonCounter = 4;
                 paymentsDataTable.button().add(buttonCounter++, {
                     text: '<i class="ti ti-credit-card-refund"></i>',
@@ -127,6 +131,10 @@
                     //Refresh footer info
                     setItemsFooter();
                 });
+
+                setTimeout(function() {
+                    setItemsFooter(false);
+                }, 500);
 
                 itemsDataTable.button().add(1, {
                     text: '<i class="ti ti-plus"></i>',
