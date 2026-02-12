@@ -144,3 +144,27 @@ V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formul
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - napojenie získania zoznamu ```option``` hodnôt z aplikácie číselník. Zadané je ID číselníka, názov stĺpca pre hodnotu a názov stĺpca pre text.
 
 V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby v emaile nebol zbytočne nefunkčný tooltip).
+
+### Napojenie na číselník
+
+Pole môžete ľahko napojiť na číselník, napríklad výberové pole, ktoré získava hodnoty z číselníka:
+
+```html
+<div class="govuk-form-group">
+  <label for="${id}" class="govuk-label govuk-heading-m">${label}</label>
+  ${tooltip} ${cs-error}
+  <select name="${id}" id="${id}" class="form-control form-select govuk-select">{enumeration-options|${value}|value|label_sk}</select>
+</div>
+```
+
+pomocou výrazu `{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}` sú vytvorené `<option>` elementy, pričom pri vkladaní poľa používateľ do hodnoty v dialógovom okne poľa formuláru zadá ID typu číselníka (napr. 4). To sa vo výraze nahradí za `${value}` a systém načíta z daného číselníka hodnoty pre `<option value="value">label_sk</option>`. Číselník musí mať zadefinované polia `value` s hodnotou a `label_sk` s textom. Ak používate formulár vo viacerých jazykoch môžete mať aj polia `label_en,label_cs` a v prekladovom kľúči v jednotlivých jazykoch použiť správne hodnoty namiesto `label_sk`.
+
+Samozrejme môžete vytvoriť aj priamo polia napojené na konkrétny typ číselník (v príklade 4), vtedy nepoužijete hodnotu `${value}` ale priamo zadané ID v prekladovom kľúči. Používateľ potom nemusí pri pridaní poľa nič zadávať:
+
+```html
+<div class="govuk-form-group">
+  <label for="${id}" class="govuk-label govuk-heading-m">${label}</label>
+  ${tooltip} ${cs-error}
+  <select name="${id}" id="${id}" class="form-control form-select govuk-select">{enumeration-options|4|value|label_sk}</select>
+</div>
+```
