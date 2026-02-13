@@ -1,4 +1,4 @@
-# Udalosti
+# WebJET Udalosti
 
 WebJET používa Spring na publikovanie a počúvanie udalostí. Základný opis nájdete na stránke [baeldung](https://www.baeldung.com/spring-events). Podporované sú synchrónne aj asynchrónne udalosti.
 
