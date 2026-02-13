@@ -9,7 +9,7 @@ import sk.iway.iwcm.system.spring.events.WebjetEventPublisher;
  * https://www.baeldung.com/spring-events
  *
  * Supports listening to specific entity types using:
- * @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'")
+ * @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.components.users.userdetail.UserDetailsEntity'")
  */
 public class DatatableEvent<T> extends ApplicationEvent {
 
