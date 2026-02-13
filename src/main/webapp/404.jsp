@@ -114,6 +114,8 @@ if ("/robots.txt".equals(path))
 %>Disallow: /components
 Disallow: /thumb
 Disallow: /topdf
+Crawl-delay: 1
+
 Sitemap: <%=Tools.getBaseHref(request)%>/sitemap.xml
 <%
 	return;
