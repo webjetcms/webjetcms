@@ -136,7 +136,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - MultiWeb - doplnená možnosť nastaviť doménu presmerovania aby bolo možné zadať `https://` prefix (#58317-0).
 - MultiWeb - doplnená kontrola práv pre skupiny médií a značky (#58317-0).
 - Zoznam formulárov - nastavenie [spracovateľa formulárov](custom-apps/apps/multistep-forms/README.md), pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
-- Číselníky - doplnené odstránenie medzier na začiatku a konci poľa typu reťazec v dátach číselníka (#osk233).
+- Číselníky - doplnené odstránenie medzier na začiatku a konci poľa typu reťazec v dátach číselníka (#OSK233).
 
 ### Oprava chýb
 
