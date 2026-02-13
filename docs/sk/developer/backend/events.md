@@ -136,6 +136,7 @@ import org.springframework.stereotype.Component;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UpdateCodesEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
 @Component
 public class CustomCodesListener {

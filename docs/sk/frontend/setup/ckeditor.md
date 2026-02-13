@@ -106,6 +106,8 @@ SVG súbor musí obsahovať definície ikon s nastaveným ID atribútom, príkla
 
 Ukážkový `sprite.svg` súbor môžete získať v [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) balíku v ceste `build/sprite.svg`.
 
+Kliknutím na existujúcu ikonu v nástrojovej lište sa otvorí dialóg pre jej nastavenie, kde je možné zvoliť veľkosť, farbu a konkrétnu ikonu z dostupných ikon definovaných v SVG súbore. Kliknutím pravým tlačidlom myši sa zobrazí možnosť jej zmazania s potvrdením.
+
 ## Tlačidlo
 
 Tlačidlo sa často používa ako `call to action` prvok na webových stránkach. WebJET podporuje vkladanie elementu `button` alebo `a` s triedou `btn` cez vlastné tlačidlo v CKEditore. Pre `button` je možné nastaviť nasledovné konfiguračné premenné:
