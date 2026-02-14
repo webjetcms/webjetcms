@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Version 2026.0",
+            "perex": "**WebJET CMS 2026.0** brings an improved version of the **Page Builder** tool for creating **complex websites**. Blocks can be **searched and filtered** based on tags, so you can easily find a suitable block to insert into a page. New features have been added such as **column splitting**, **inserting multiple sections at once** and **always-displayed button for adding a new section** for quickly expanding page content.\\n\\nSupport for the **PICTURE element** allows you to display **different images according to the screen resolution** of the visitor, thus improving the visual experience on different devices. In addition, it is possible to insert **custom icons** defined in a common SVG file, which brings greater flexibility in design.\\n\\nThe new **form creation tool** allows you to easily create **multi-step forms** with the option of programmatic validation of individual steps and the option of **confirming the validity of the email address** using the sent code. This will avoid filling out forms with various robots.",
+            "link": "https://docs.webjetcms.sk/latest/en/CHANGELOG-2026?id=_202600"
+        },
+        {
             "title": "Version 2025.40",
             "perex": "**WebJET CMS 2025.40** brings an integrated **AI Assistant**, which greatly simplifies work with content. It allows you to automatically **correct grammar**, **translate** texts, suggest headlines, summarize articles and generate **illustration images** directly in the editor. Thanks to this, content creation is **faster, more accurate and more creative** than ever before.\\n\\nSignificant changes also apply to **tags** and **news templates**, which have been reworked into **separate database tables** with support for separation by domain. This brings greater **transparency, easier management** and the ability to effectively adapt content for multiple websites. The user interface has been **optimized for smaller screens** - the system automatically adjusts the display of windows and maximizes usable space.\\n\\nOn a technical level, the outdated Struts Framework has been removed. Thanks to this, WebJET CMS is more powerful, more stable, **more secure** and ready for the further development of modern web solutions.",
             "link": "https://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202540"
@@ -19,11 +24,6 @@
             "title": "Version 2024.52",
             "perex": "In version 2024.52, Web pages add the ability to set **arrangement method** and **search in tree structure**, ZIP import allows you to set the method of comparing the existing version of the page. **E-commerce** has received a new design for the list of orders and products. **Survey statistics** added, a better image editor in the explorer and improved search in the administration. **Bulk emails** have added the option **set unsubscribe confirmation**. The gallery includes a new field for **Image source URL**, which is filled in automatically when using a photo bank, **Tags** add **language mutations** and optional fields.",
             "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202452"
-        },
-        {
-            "title": "Version 2024.40",
-            "perex": "In version 2024.40 Explorer brings **confirmation when moving files drag&drop**, which reduces the risk of errors. The image editor allows **sizing and cropping according to templates**, making editing easy. The settings of several **applications** have been reworked into a **new design**. The author of the page receives **notifications at the time of publishing and adding a post** to the forum. The new booking application allows **easy booking of objects** and offers statistics for better management. We improved PageBuilder and fixed bugs in File Archive for better stability.",
-            "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202440"
         }
     ]
 }

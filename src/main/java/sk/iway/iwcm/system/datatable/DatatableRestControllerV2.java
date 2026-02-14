@@ -258,7 +258,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	private List<T> editItemByColumn(T entity, String updateByColumn) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
 		beforeSave(entity);
-		new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// ziskame list entit, ktore obsahuju v stlpci updateByColumn rovnaku hodnotu ako entita
 		String idColumnName = getIdColumnName(entity);
@@ -278,7 +278,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 			T processed = insertItem(entity);
 			afterSave(entity, processed);
-			new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();
+			if (processed != null) new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return Arrays.asList(processed);
 		}
 
@@ -312,13 +312,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 
 			beforeSave(entity);
-			new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 			checkItemPermsThrows(entity, id);
 
 			T saved = editItem(entity, id);
 
 			afterSave(entity, saved);
-			new DatatableEvent<>(saved, DatatableEventType.AFTER_SAVE, entity).publishEvent();
+			if (saved != null) new DatatableEvent<>(saved, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 
 			savedList.add(saved);
 		}
@@ -1382,7 +1382,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						isDuplicate = true;
 						setDuplicate(true);
 						beforeDuplicate(entity);
-						new DatatableEvent<>(entity, DatatableEventType.BEFORE_DUPLICATE).publishEvent();
+						if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_DUPLICATE).publishEvent();
 					}
 
 				} catch (Exception ex) {
@@ -1419,7 +1419,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 					if (isDuplicate) {
 						afterDuplicate(entity, id);
-						new DatatableEvent<>(entity, DatatableEventType.AFTER_DUPLICATE, null, id).publishEvent();
+						if (entity != null) new DatatableEvent<>(entity, DatatableEventType.AFTER_DUPLICATE, null, id).publishEvent();
 					}
 				} catch (ConstraintViolationException ex) {
 					//Ignore error if skipWrongData is true
@@ -1578,7 +1578,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
 		beforeSave(entity);
-		new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
@@ -1596,7 +1596,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
 			afterSave(entity, newT);
-			new DatatableEvent<>(newT, DatatableEventType.AFTER_SAVE, entity).publishEvent();
+			if (newT != null) new DatatableEvent<>(newT, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return ResponseEntity.status(HttpStatus.CREATED).body(newT);
 		}
 	}
@@ -1605,7 +1605,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PostMapping("/edit/{id}")
 	public ResponseEntity<T> edit(@PathVariable("id") long id, @Valid @RequestBody T entity) {
 		beforeSave(entity);
-		new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
@@ -1615,7 +1615,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, id);
 			T one = this.editItem(entity, id);
 			afterSave(entity, one);
-			new DatatableEvent<>(one, DatatableEventType.AFTER_SAVE, entity).publishEvent();
+			if (one != null) new DatatableEvent<>(one, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return ResponseEntity.ok(one);
 		}
 	}
@@ -1629,13 +1629,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		boolean deleted = false;
 		if (beforeDelete(entity)) {
-			new DatatableEvent<>(entity, DatatableEventType.BEFORE_DELETE).publishEvent();
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_DELETE).publishEvent();
 			deleted = this.deleteItem(entity, id);
 		}
 		result.put("result", deleted);
 		if (deleted) {
 			afterDelete(entity, id);
-			new DatatableEvent<>(entity, DatatableEventType.AFTER_DELETE, Long.valueOf(id)).publishEvent();
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.AFTER_DELETE, Long.valueOf(id)).publishEvent();
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);

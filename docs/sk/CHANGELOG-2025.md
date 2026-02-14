@@ -1,12 +1,12 @@
 # Zoznam zmien verzia 2025
 
-## 2025.0-SNAPSHOT
+## 2025.52/SNAPSHOT
 
-> **WebJET CMS 2025.0-SNAPSHOT** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
+> **WebJET CMS 2025.52/SNAPSHOT** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
-> Nový nástroj pre tvorbu formulárov umožňuje ľahko vytvárať viac krokové formuláre s možnosťou programovej validácie jednotlivých krokov a možnosťou potvrdenia platnosti emailovej adresy pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
+> Nový nástroj pre **tvorbu formulárov** umožňuje ľahko vytvárať **viackrokové formuláre** s možnosťou programovej validácie jednotlivých krokov a možnosťou **potvrdenia platnosti emailovej adresy** pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
 
 ### Prelomové zmeny
 
@@ -183,6 +183,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Testovanie
 
 - Doplnený skript [rm-same-images.sh](../../src/test/webapp/rm-same-images.sh) pre odstránenie rovnakých obrázkov pri vytvorení nových snímkov obrazovky (#58113).
+
+![meme](_media/meme/2026-0.jpg ":no-zoom")
 
 ## 2025.40
 
