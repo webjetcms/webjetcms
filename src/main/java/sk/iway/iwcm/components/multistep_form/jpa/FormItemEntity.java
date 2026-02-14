@@ -54,7 +54,7 @@ public class FormItemEntity extends BaseEditorFields {
     private String formName;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.label", hiddenEditor = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.label-field", hiddenEditor = true)
     private transient String generatedTitle;
 
     @Transient
@@ -74,7 +74,7 @@ public class FormItemEntity extends BaseEditorFields {
     private transient Integer[] regexValidationArr;
 
     @Column(name = "label")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label", className="quill-oneline", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label-field", className="quill-oneline", hidden = true)
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
 

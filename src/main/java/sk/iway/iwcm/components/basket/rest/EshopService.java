@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -357,8 +356,7 @@ public class EshopService {
 
 		String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", request);
 
-		Cookie [] cookies = request.getCookies();
-		String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(request) + compUrl + "?invoiceId=" + invoiceId + "&auth="+BasketInvoiceEntity.getAuthorizationToken(invoiceId),cookies);
+		String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(request) + compUrl + "?invoiceId=" + invoiceId + "&auth="+BasketInvoiceEntity.getAuthorizationToken(invoiceId));
 
 		String senderName = null;
 

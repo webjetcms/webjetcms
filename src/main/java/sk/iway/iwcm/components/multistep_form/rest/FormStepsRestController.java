@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +32,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.RowReorderDto;
 
 @RestController
 @RequestMapping("/admin/rest/form-steps")
@@ -154,5 +157,19 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
                 .header("Content-Type", contentTypeWithCharset)
                 .body("");
         }
+    }
+
+    @Override
+    @PostMapping(value = "/row-reorder", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+        // call super row reorder to update positions
+        ResponseEntity<Boolean> response = super.rowReorder(request, rowReorderDto);
+
+        if(response.getStatusCode().is2xxSuccessful() && response.getBody() == Boolean.TRUE) {
+            // All good, now update steps positions in form
+            multistepFormsService.updateStepsPositions(rowReorderDto);
+        }
+
+        return response;
     }
 }

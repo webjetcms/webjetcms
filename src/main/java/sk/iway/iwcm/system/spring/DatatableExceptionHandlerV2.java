@@ -96,7 +96,7 @@ public class DatatableExceptionHandlerV2
 			response.setFieldErrors(errorsList);
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
+			Logger.error(DatatableExceptionHandlerV2.class, "ConstraintViolationException: " + ex.getMessage());
 		}
 
 		if (DatatableRestControllerV2.getLastImportedRow()!=null) {
@@ -155,10 +155,10 @@ public class DatatableExceptionHandlerV2
 				//failsafe
 			}
 			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -179,7 +179,7 @@ public class DatatableExceptionHandlerV2
 		response.setNotify(ex.getNotifyBeans());
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
+		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -195,7 +195,8 @@ public class DatatableExceptionHandlerV2
 		message = prepareMessage(message, ex);
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex.getMessage());
+		//log stack trace because this is unexpected exception
+		Logger.error(DatatableExceptionHandlerV2.class, "handleException: " + ex.getMessage(), ex);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

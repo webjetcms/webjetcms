@@ -211,7 +211,7 @@ public class FormMailAction extends HttpServlet
 
 	public static HttpServletRequest fillRequestWithDatabaseOptions(String formName, HttpServletRequest request, List<UploadedFile> excelFile)
 	{
-		Map<String, String> options = new FormSettingsService().load(formName);
+		Map<String, String> options = FormSettingsService.load(formName);
 		IwcmRequest wrapped = new IwcmRequest(request);
 		for(Map.Entry<String, String> entry : options.entrySet())
 		{

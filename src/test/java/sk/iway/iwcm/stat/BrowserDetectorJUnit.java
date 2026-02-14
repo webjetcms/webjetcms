@@ -36,8 +36,15 @@ class BrowserDetectorJUnit
 	private String fbAndroid = 	"Mozilla/5.0 (Linux; Android 10; M2006C3MNG Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.210 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/441.0.0.23.113;]";
 	private String fbAndroid2 = "Mozilla/5.0 (Linux; Android 12; 2203129G Build/SKQ1.211006.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.211 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/441.0.0.23.113;]";
 
-	private String ahrefs = "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)";
-	private String claude = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)";
+	private String ahrefs = 	"Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)";
+	private String claude = 	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)";
+	private String perplexity = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)";
+	private String openAi = 	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPTBot/1.0; +https://openai.com/bot";
+	private String amazon = 	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amzn-SearchBot/0.1) Chrome/119.0.6045.214 Safari/537.36";
+	private String uptime = 	"Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)";
+	private String amazon2 = 	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot) Chrome/119.0.6045.214 Safari/537.36";
+	private String monspark = 	"Mozilla/5.0+(compatible; MonSpark/1.0; http://www.monspark.com/)";
+	private String bing =		"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36";
 
 	private Map<String, String> expectedBrowsers = MapUtils.asMap(
 				safari, "Safari",
@@ -66,7 +73,14 @@ class BrowserDetectorJUnit
 				fbAndroid, "Facebook",
 				fbAndroid2, "Facebook",
 				ahrefs, "AhrefsBot",
-				claude, "ClaudeBot"
+				claude, "ClaudeBot",
+				perplexity, "PerplexityBot",
+				openAi, "ChatGPTBot",
+				amazon, "Amzn-SearchBot",
+				uptime, "UptimeRobot",
+				amazon2, "Amazonbot",
+				monspark, "MonSparkBot",
+				bing, "bingbot"
 	);
 
 	private Map<String, String> expectedVersions = MapUtils.asMap(
@@ -91,7 +105,14 @@ class BrowserDetectorJUnit
 				fbIphone2, "314.0",
 				fbIpad, "446.0",
 				fbAndroid, "441.0",
-				fbAndroid2, "441.0"
+				fbAndroid2, "441.0",
+				perplexity, "1.0",
+				openAi, "1.0",
+				amazon, "0.1",
+				uptime, "2.0",
+				amazon2, "0.1",
+				monspark, "1.0",
+				bing, "2.0"
 	);
 
 	private Map<String, String> expectedOperatingSystems = MapUtils.asMap(
@@ -108,14 +129,28 @@ class BrowserDetectorJUnit
 				fbIphone2, "iOS",
 				fbIpad, "iOS",
 				fbAndroid, "Android",
-				fbAndroid2, "Android"
+				fbAndroid2, "Android",
+				perplexity, "unknown",
+				openAi, "unknown",
+				amazon, "unknown",
+				uptime, "unknown",
+				amazon2, "unknown",
+				monspark, "unknown",
+				bing, "unknown"
 	);
 
 	private Map<String, String> expectedOperatingSystemVersions = MapUtils.asMap(
 				safari, "10",
 				firefox, "11",
 				safariOnMac, "10",
-				crazyBrowser, "XP"
+				crazyBrowser, "XP",
+				perplexity, "unknown",
+				openAi, "unknown",
+				amazon, "unknown",
+				uptime, "unknown",
+				amazon2, "unknown",
+				monspark, "unknown",
+				bing, "unknown"
 	);
 
 	@Test
