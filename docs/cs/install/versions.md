@@ -1,6 +1,6 @@
 # Předpoklady a verze
 
-WebJET 2024 vyžaduje `Java 17` a `Tomcat 9`.
+WebJET vyžaduje `Java 17` a `Tomcat 9`.
 
 Základní projekt ve formátu gradle naleznete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -13,11 +13,13 @@ ext {
 ```
 
 Přičemž aktuálně existují následující verze WebJET:
-- `2025.0-jakarta-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
-- `2025.0-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.0-jakarta-SNAPSHOT` - stabilizovaná verze 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
+- `2025.0-SNAPSHOT` - stabilizovaná verze 2025.52, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.0.52` - stabilizovaná verze 2025.0.52 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.0.50` - stabilizovaná verze 2025.0.50 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
 - `2025.40` - stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
-- `2025.0.40` - stabilizovaná verze 2025.0.49 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.0.40` - stabilizovaná verze 2025.0.40 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
 - `2025.0.23` - stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
@@ -308,7 +310,7 @@ Následně doporučujeme restartovat vaše vývojářské prostředí, v přípa
 
 Pokud na jednom Tomcat serveru provozujete více instalací WebJETu je možné, že starší verze nebudou plně kompatibilní s Java 17. Pro chyby typu:
 
-```
+```txt
 [ERROR] ContextLoader - Context initialization failed <java.lang.IllegalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf>java.lang.Ill
 egalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf
 ...
@@ -317,7 +319,7 @@ Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protect
 
 nastavte pro Tomcat následující `JAVA_OPTS`:
 
-```
+```txt
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
 ```
 
@@ -325,7 +327,7 @@ JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --
 
 Pokud jste provozovali Tomcat ještě s Java verze 8 mohou vzniknout problémy s chybějícími knihovnami (ty jsou potřebné i pro Java 11). Pokud se vám v logu objeví chyba `java.lang.NoClassDefFoundError: javax/activation/DataSource`:
 
-```
+```txt
 java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[...].StandardContext[]]
     ...
     Caused by: java.lang.NoClassDefFoundError: javax/activation/DataSource
@@ -333,14 +335,14 @@ java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException:
 
 je třeba do každé instalace WebJET CMS do složky `WEB-INF/lib` zkopírovat knihovny z [tohoto ZIP archivu](lib-java11.zip) a smazat soubory (pokud existují):
 
-```
+```txt
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
 
 Pokud jste používali WebJET verze `8.0-8.6` - starší než `08/2019`, nebo se vám zobrazí při startu následující chyba:
 
-```
+```txt
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.iwcm.io.FileHistoryBean
 [10.09 13:48:16 {vubintra} {WebJETJavaSECMPInitializer}] initPersistenceUnits[iwcm], beans=82

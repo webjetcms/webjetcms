@@ -63,7 +63,6 @@ private String oldValue;
 })
 private Date updateDate;
 
-
 //GalleryEntity
 @Size(max = 255)
 @Column(name = "image_name")
@@ -104,6 +103,30 @@ private String imagePath;
 private Integer[] passwordProtected;
 ```
 
+Example of own [render](https://datatables.net/reference/option/columns.render) functions:
+
+```javascript
+//@Column(name = "step_name")
+//@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
+//private String stepName;
+
+window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+                //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+                let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${meta.row + 1}</span>`;
+                let secondRow = "";
+                if(row.stepName && row.stepName.trim() !== "") {
+                        secondRow += `${row.stepName}`;
+                }
+                if (row.stepSubName && row.stepSubName.trim() !== "") {
+                        secondRow += ` (${row.stepSubName})`;
+                }
+                return displayName + (secondRow ? `<br>${secondRow}` : "");
+        }
+        return data;
+};
+```
+
 ## Properties @DataTableColumn
 
 Original documentation on the site [datatables.net](https://datatables.net/reference/option/columns:)
@@ -131,6 +154,7 @@ Optional fields:
 - `renderFormat` - https://datatables.net/reference/option/columns.renderFormat
 - `renderFormatLinkTemplate` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - `renderFormatPrefix` - https://datatables.net/reference/option/columns.renderFormatPrefix
+- `renderFunction` - the name of the JavaScript function that will be used for the actual rendering of the column value. More on [DataTables pages](https://datatables.net/reference/option/columns.render).
 - `sortAfter` - the name of the field after which this field is added in the order
 - `editor` - object `DataTableColumnEditor`
 - `hidden` - field does not appear in the datatable and the user does not `visible` cannot display, the field can be used in the editor
@@ -144,6 +168,9 @@ Optional fields:
   - `{currentDateTimeSeconds}` - is replaced by the current date and time including seconds
   - `{currentTime}` - is replaced for the current time
 - `alwaysCopyProperties` - when editing a record, the blank `null` values are preserved and copied from an existing object in the database. This does not apply to date/time fields, they are overwritten automatically. If you need to use this for another type of field and also transfer `null` set the attribute value to `true`, or to `false` if you don't want automatic overwriting for date fields.
+- `ai` - by setting it to `false` it is possible to turn off the AI icon display for general options (translate, correct grammar...). The AI icon will only be displayed if the assistant is set for that specific field.
+- `disabled` - by setting it to `false` attribute is set to the input field in the editor `disabled="disabled"`.
+- `export` - by setting it to `false` the field will not be exported.
 
 ## Properties @DataTableColumnEditor
 
@@ -200,23 +227,36 @@ Field type `DataTableColumnType.SELECT` you can set `option` values over:
 - [REST service](../datatables/restcontroller.md#Dials-for-select-boxes) and setting dials for select boxes. This is the preferred solution for standard datatables.
 - Setting options attributes directly using annotation `@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")`.
 - By calling a static method using annotation `@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")`. V `key` attribute is specified by prefix `method:` class and the method that must return `List` objects. In the attribute `value = "label:value"` annotation is given the attribute name for the description and the attribute name for the value of the selection field (in the example it is called `objekt.getLabel() a objekt.getValue()`).
+- Adding an annotation `@DataTableColumnEditor.optionMethods` with the specified method to execute (this is a nicer entry compared to the previous method). The value of labelProperty and valueProperty is used to get the text and value of the option element, if not specified it is obtained from `label` a `value` Attribute.
 - Connecting to the dials application by entering `@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")`. V `key` prefix is specified in the attribute `enumeration:` name or dial ID. In the attribute `value = "string1:string2"` annotation is given the name of the attribute for the description and the name of the attribute for the value of the selection field - in the example it is called `objekt.getString1() a objekt.getString2()`.
 
 ```java
 @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", editor = {
         @DataTableColumnEditor(
                 options = {
-                //klasicky option tag
-                @DataTableColumnEditorAttr(key = "Slovensky", value = "sk"),
-                @DataTableColumnEditorAttr(key = "Česky", value = "cz"),
+                        //klasicky option tag
+                        @DataTableColumnEditorAttr(key = "Slovensky", value = "sk"),
+                        @DataTableColumnEditorAttr(key = "Česky", value = "cz"),
 
-                //ukazka ziskania zoznamu krajin volanim statickej metody, vo value su mena property pre text a hodnotu option pola
-                @DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value"),
+                        //ukazka ziskania zoznamu krajin volanim statickej metody, vo value su mena property pre text a hodnotu option pola
+                        @DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value"),
 
-                //ukazka napojenia na ciselnik, mozne je zadat meno alebo ID ciselnika, vo value su mena property pre text a hodnotu option pola
-                @DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")
+                        //ukazka napojenia na ciselnik, mozne je zadat meno alebo ID ciselnika, vo value su mena property pre text a hodnotu option pola
+                        @DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")
                 }
         )
+        @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", editor = {
+        @DataTableColumnEditor(
+                optionMethods = {
+                        @DataTableOptionMethod(
+                                className = "sk.iway.iwcm.components.formsimple.FormSimpleApp",
+                                methodName = "getFieldTypes",
+                                labelProperty = "label",
+                                valueProperty = "value"
+                        )
+                })
+        })
+        private String fieldType;
 })
 private String country;
 ```
@@ -274,19 +314,25 @@ columns.push({
 });
 ```
 
+If you need to change the order of the columns, you can do this using the `WJ.DataTable.moveColumn`. In the example, the column called `formSettings.recipients` moves after the column called `formName`:
+
+```javascript
+filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+```
+
 ## Nested attributes
 
-It is often necessary to add additional attributes to the entity for the editor (e.g. `checkbox` for applying the change to child entities, additional information fields, etc.). For this purpose, the entity can be extended with a new attribute (which is not stored in the database) containing additional data. Typically, we call it `editorFields` and implement the necessary class for the entity. Examples are in [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) or [GroupEditorFields](../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). In the classes there is only the editorField attribute, e.g. `private DocEditorFields editorFields = null;`.
+It is often necessary to add additional attributes to the entity for the editor (e.g. `checkbox` for applying the change to child entities, additional information fields, etc.). For this purpose, the entity can be extended with a new attribute (which is not stored in the database) containing additional data. Typically, we call it `editorFields` and implement the necessary class for the entity. Examples are in [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) or [GroupEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). In the classes there is only the editorField attribute, e.g. `private DocEditorFields editorFields = null;`.
 
-Implemented class `EditorFields`, e.g. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typically contains methods `fromDocDetails` for setting attributes in `editorFields` class before editing and `toDocDetails` for setting attributes back in `DocDetails` before saving. These methods need to be called implicitly in your Java code.
+Implemented class `EditorFields`, e.g. [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typically contains methods `fromDocDetails` for setting attributes in `editorFields` class before editing and `toDocDetails` for setting attributes back in `DocDetails` before saving. These methods need to be called implicitly in your Java code.
 
-!>**Warning:** if the entity is cached (as e.g. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) attribute setting `editorFields` will also remain in the cache and may unnecessarily take up memory and create unnecessarily large data during JSON serialization. V `GroupDetails` in editorFields refers to `parentGroupDetails`.
+!>**Warning:** if the entity is cached (as e.g. [GroupDetails](../../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) attribute setting `editorFields` will also remain in the cache and may unnecessarily take up memory and create unnecessarily large data during JSON serialization. V `GroupDetails` in editorFields refers to `parentGroupDetails`.
 
 In the standard procedure, each `GroupDetails` objects set `editorFields` object. When serializing a deeply nested directory, the objects editorFields.parentGroupDetails.editorFields.parentGroupDetails, etc., are then nested. The GroupDetails object just didn't have the necessary first editorFields. The solution is to first object `GroupDetails` clone it and then set into it `editorFields`. An example is in `GroupEditorField.fromGroupDetails` which clones the object and then returns it. The usage in the code is then as `group = gef.fromGroupDetails(group);`.
 
-Common methods for datatable are in the class [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) that your class can extend. Includes methods for adding a CSS class line and adding an icon to a caption. See the documentation for [styling of the datatable](../datatables/README.md#line-styling).
+Common methods for datatable are in the class [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) that your class can extend. Includes methods for adding a CSS class line and adding an icon to a caption. See the documentation for [styling of the datatable](../datatables/README.md#line-styling).
 
-For embedding annotation of nested attributes it is possible to use the annotation `@DatatableColumnNested` such as in [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) on the attribute `editorFields`:
+For embedding annotation of nested attributes it is possible to use the annotation `@DatatableColumnNested` such as in [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) on the attribute `editorFields`:
 
 ```java
 @DataTableColumnNested
@@ -320,7 +366,7 @@ the annotated attribute will be scanned for annotation `@DatatableColumn` recurs
 
 Annotation `@Transient` Tells JPA entities that the attribute is not stored in the database.
 
-To set the data between the entity and `editorFields` it is possible to implement methods in the REST controller `processFromEntity` for setting `editorFields` attributes or `processToEntity` for setting attributes in entity z `editorFields`. An example can be seen in [UserDetailsController](../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Methods are automatically called when reading all records, retrieving a single record, searching, or saving data.
+To set the data between the entity and `editorFields` it is possible to implement methods in the REST controller `processFromEntity` for setting `editorFields` attributes or `processToEntity` for setting attributes in entity z `editorFields`. An example can be seen in [UserDetailsController](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Methods are automatically called when reading all records, retrieving a single record, searching, or saving data.
 
 ```java
     /**
@@ -361,11 +407,30 @@ To set the data between the entity and `editorFields` it is possible to implemen
     }
 ```
 
+If we have another entity as a nested attribute, it is appropriate to set the attribute `sortPrefix` to the value of the attribute name. Automatically, the following prefix is added to the field on the attributes of the nested entity `sortAfter` otherwise you would get mixed field names from different entities.
+
+```java
+public class FormsEntityBasic {
+
+    // Numeric value of the same column (user_id)
+    @Column(name = "user_id")
+    private Long userId;
+
+    // Relation to users table; load lazily, only readable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @DataTableColumnNested(sortPrefix = "userDetails.")
+    private UserDetailsEntity userDetails;
+
+}
+```
+
 ## Sorting the order of fields
 
 By default, the fields are arranged in the order they are written in the source code (although the annotation specification doesn't guarantee this, it does work that way). But if you use nested attributes the order cannot be set by the order in the code.
 
-Therefore, it is possible to use the attribute `sortAfter` into which you enter the data attribute of the previous field. The annotated field is then added to the JSON output after the specified field. The logic is implemented in the method [DataTableColumnsFactory.sortColumns](../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
+Therefore, it is possible to use the attribute `sortAfter` into which you enter the data attribute of the previous field. The annotated field is then added to the JSON output after the specified field. The logic is implemented in the method [DataTableColumnsFactory.sortColumns](../../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
 
 If necessary, a special value can be entered `sortAfter = "FIRST"` to move the field to the top of the list. This should be used in the case of extended entities via `@MappedSuperclass` if even the first `id` attribute is in this entity.
 
@@ -392,7 +457,7 @@ Another option is to display the original page with the URL parameter `?showText
 
 For example:
 
-```
+```txt
 http://iwcm.interway.sk/components/server_monitoring/admin_monitoring_all.jsp?showTextKeys=true
 ```
 
@@ -404,6 +469,6 @@ window.location.href=window.location.href+"&showTextKeys=true";
 
 it will correctly pass through WebJET's protection and the keys will be displayed to you.
 
-**If you have created a new application or have not found a suitable translation key** it needs to be added to the file [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
+**If you have created a new application or have not found a suitable translation key** it needs to be added to the file [text-webjet9.properties](../../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
 
 After adding the translation you need to reload the file `text-webjet9.properties` WebJETom. You do this by calling [home page with parameter ?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true) or by restarting the application server.

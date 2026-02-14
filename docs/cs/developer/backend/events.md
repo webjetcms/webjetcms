@@ -1,4 +1,4 @@
-# Události
+# WebJET Události
 
 WebJET používá Spring k publikování a poslech událostí. Základní popis naleznete na stránce [baeldung](https://www.baeldung.com/spring-events). Podporovány jsou synchronní i asynchronní události.
 
@@ -27,6 +27,7 @@ Aktuálně WebJET publikuje následující události:
 - Web stránky - při časovém publikování stránky - publikován je objekt `DocumentPublishEvent`, který obsahuje `DocDetails` publikované web stránky a atribut `oldVirtualPath` s informací o původní URL adrese stránky (pro detekci, zda se při publikování změnila). Podmínka `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, událost `ON_PUBLISH`.
 - Konfigurace - vytvoření a změna konfigurační proměnné - publikován je objekt `ConfDetails` po uložení hodnoty přes uživatelské rozhraní voláním `ConfDB.setName`, podmínka: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
 - Nahrání souboru - publikován je objekt `File` jak `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, podmínka: `#event.clazz eq 'java.io.File'`.
+- Aktualizace kódů v textu - publikován je objekt `UpdateCodesEvent` po zpracování standardních kódů v metodě `DocTools.updateCodes`, umožňuje přidat vlastní kódy. Podmínka: `#event.clazz eq 'sk.iway.iwcm.system.spring.events.UpdateCodesEvent'`, událost `ON_START` i `ON_END` pro možnost nahrazení kódů před WebJET zpracováním i po zpracování.
 
 ## Poslech události
 
@@ -116,3 +117,47 @@ public boolean setGroup(GroupDetails group)
 ```
 
 Typicky by vyvolání události typu `WebjetEventType.ON_START` mělo být na začátku metody a `WebjetEventType.AFTER_SAVE` na jejím konci (po uložení údajů).
+
+## Aktualizace kódů v textu
+
+Pokud potřebujete přidat vlastní kódy do textu stránky (např. `!CUSTOM_CODE!`), můžete využít událost `ON_START` nebo `ON_END` pro `UpdateCodesEvent`. Tyto události jsou publikovány před a po zpracování standardních kódů v metodě `DocTools.updateCodes`.
+
+Příklad implementace vlastního `listener`:
+
+```java
+package sk.iway.custom;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.UpdateCodesEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+
+@Component
+public class CustomCodesListener {
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.common.UpdateCodesEvent'")
+    public void handleUpdateCodes(final WebjetEvent<UpdateCodesEvent> event) {
+        if (event.getEventType() != WebjetEventType.ON_START) {
+            return; // only process ON_START event, skip ON_END
+        }
+        UpdateCodesEvent updateCodesEvent = event.getSource();
+        StringBuilder text = updateCodesEvent.getText();
+
+        // Add custom code
+        text = Tools.replace(text, "!CUSTOM_CODE!", "My Company VAT ID");
+        text = Tools.replace(text, "!COMPANY_NAME!", "My Company Ltd.");
+
+        // Set the processed text back
+        updateCodesEvent.setText(text);
+    }
+}
+```
+
+V tomto příkladu listener poslouchá na událost `ON_START` a nahrazuje vlastní kódy v textu. Můžete přistupovat ke všem parametrům z `UpdateCodesEvent`:
+- `text` - text stránky (modifikovatelný)
+- `user` - aktuálně přihlášený uživatel
+- `currentDocId` - ID aktuální stránky
+- `request` - HTTP request

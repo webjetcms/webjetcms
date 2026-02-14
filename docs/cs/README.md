@@ -2,191 +2,185 @@
 
 Vítejte v dokumentaci k WebJET CMS verze 2025. Doporučujeme přečíst si [seznam změn](CHANGELOG-2025.md) a [roadmap](ROADMAP.md).
 
-## Seznam změn ve verzi 2025.40
+## Seznam změn ve verzi 2025.52/SNAPSHOT
 
-> **WebJET CMS 2025.40** přináší integrovaného **AI Asistenta**, který zásadně zjednodušuje práci s obsahem. Umožňuje automaticky **opravovat gramatiku**, **překládat** texty, navrhovat titulky, sumarizovat články a generovat **ilustrační obrázky** přímo v editoru. Díky tomu je tvorba obsahu **rychlejší, přesnější a kreativnější** než kdykoli předtím.
+> **WebJET CMS 2025.52/SNAPSHOT** přináší vylepšenou verzi nástroje **Page Builder** pro tvorbu **komplexních web stránek**. V blocích je možné **vyhledávat a filtrovat** na základě značek, snadno tak naleznete vhodný blok pro vložení do stránky. Přidány byly nové funkce jako **rozdělení sloupce**, **vkládání více sekcí najednou** a **stále zobrazené tlačítko pro přidání nové sekce** pro rychlé rozšíření obsahu stránky.
 >
-> Významné změny se týkají také **značek** a **šablon novinek**, které byly přepracovány do **samostatných databázových tabulek** s podporou oddělení podle domén. To přináší vyšší **přehlednost, jednodušší správu** a možnost efektivního přizpůsobení obsahu pro více webů. Uživatelské prostředí bylo **optimalizováno pro menší obrazovky** – systém automaticky přizpůsobí zobrazení oken a maximalizuje využitelný prostor.
+> Podpora **PICTURE elementu** umožňuje zobrazovat **různé obrázky podle rozlišení obrazovky** návštěvníka, čímž se zlepšuje vizuální zážitek na různých zařízeních. Navíc lze vkládat **vlastní ikony** definované ve společném SVG souboru, což přináší větší flexibilitu v designu.
 >
-> Na technické úrovni byl odstraněn zastaralý Struts Framework. Díky tomu je WebJET CMS výkonnější, stabilnější, **bezpečnější** a připraven k dalšímu rozvoji moderních webových řešení.
+> Nový nástroj pro **tvorbu formulářů** umožňuje snadno vytvářet **vícekrokové formuláře** s možností programové validace jednotlivých kroků a možností **potvrzení platnosti emailové adresy** pomocí zaslaného kódu. Vyhnete se tak vyplnění formulářů různými roboty.
 
 ### Průlomové změny
 
-- Odstraněn `Struts Framework`, je třeba provést aktualizaci `JSP` souborů, Java tříd a upravit soubor `web.xml`, více v [sekci pro programátora](#pro-programátora) (#57789).
-- Pokud používáte aplikační server Tomcat ve verzi 9.0.104 a více je třeba [aktualizovat nastavení](install/versions.md#změny-při-přechodu-na-tomcat-90104) parametru `maxPartCount` na `<Connector` elemente (#54273-70).
-- Značky - rozdělené podle domén - při startu se vytvoří kopie značek pro každou doménu (je-li používáno rozdělení údajů podle domén - nastavena konfigurační proměnná `enableStaticFilesExternalDir=true`). Aktualizují se ID značek pro web stránky a galerii. Je třeba manuálně zkontrolovat ID značek pro všechny aplikace novinky a jiné aplikace, které obsahují ID značky – aktualizace se je pokusí opravit, ale doporučujeme ID zkontrolovat. Více informací v sekci pro programátora. (#57837).
-- Novinky - [šablony novinek](frontend/templates/news/README.md) předělané z definice přes překladové klíče na vlastní databázovou tabulku. Při startu WebJETu se zkonvertují záznamy z původního formátu. Jsou odděleny podle domén, pokud obsahují doménový alias vytvoří se pouze v příslušné doméně (#57937).
-- Bezpečnost - přísnější kontrola URL adres administrace - je třeba, aby URL adresa v administraci měla na konci znak `/`, nesprávná adresa je `/admin/v9/webpages/web-pages-list` nebo `/apps/quiz/admin`, správná `/admin/v9/webpages/web-pages-list/` nebo `/apps/quiz/admin/`. Je třeba aby programátor zkontroloval definice URL adres v souborech `modinfo.properties` (#57793).
+- Aktualizované knihovny `commons-lang,displaytag`, více v [sekci pro programátora](#pro-programátora) (#58153).
+- Změněné chování ikony Bloky v režimu Page Builder - [textové bloky integrované](frontend/page-builder/blocks.md) do složky `content` podobně jako jsou bloky pro `section, container, column` (#58165).
+- Upravené zpracování **nahrávání souborů**, více v `multipart/form-data` sekci pro programátora[ (#57793-3).](#pre-programátora) Doporučujeme&#x20;
+- zkontrolovat funkčnost všech formulář&#x16F;**&#x20;z důvodu úprav jejich zpracování, více informací v sekci&#x20;**&#x70;ro programátora[ (#58161).](#pre-programátora) Webové stránky
 
-### AI Asistent
+### Přidána možnost vkládat&#x20;
 
-V dnešním světě je umělá inteligence všude kolem nás a samozřejmě WebJET jako moderní redakční systém nechce zůstat pozadu. Proto s hrdostí představujeme novou verzi WebJET CMS, kde jsme integrovali [pokročilé AI nástroje](redactor/ai/README.md).
+- &#x20;element, který zobrazuje `PICTURE` obrázek podle rozlišení obrazovky[ návštěvníka. Můžete tedy zobrazit rozdílné obrázky na mobilním telefonu, tabletu nebo počítači (#58141).](frontend/setup/ckeditor.md#picture-element) Přidána možnost vkládat&#x20;
 
-![](redactor/ai/datatables/ckeditor-assistants.png)
+![](frontend/setup/picture-element.png)
 
-Tyto funkce vám usnadní tvorbu a úpravu obsahu – od opravy gramatiky, přes překlady textů, návrhy titulků, až po generování ilustračních obrázků.
+- vlastní ikony[ definované ve společném SVG souboru (#58181).](frontend/setup/ckeditor.md#svg-ikony) Přidán přenos aktuálního HTML kódu při přepnutí režimu editoru Standardní/HTML/Page Builder. Můžete tak jednoduše upravit Page Builder stránku v HTML kódu a znovu zobrazit úpravy v režimu Page Builder (#58145).
 
-<div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
+![](frontend/setup/svgicon.png)
 
-### Web stránky
+- Přidáno kontextové menu Smazat element, pomocí kterého můžete snadno smazat tlačítko, odkaz, odstavec, formulář, sekci a podobně. Stačí když na element kliknete pravým tlačítkem pro zobrazení kontextového menu (#osk233).
+- Page Builder - upravené generování stylů při použití nástroje tužka. Do CSS stylu se generují jen změněné hodnoty, ty jsou v dialogovém okně zvýrazněny modrým orámováním vstupního pole (#58145).
+- Page Builder - přidána možnost volání&#x20;
+- vlastního JavaScript souboru[ s podpůrnými funkcemi pro úpravu kódu. Přidána možnost upravit nastavení jako selektory pro elementy, barvy a podobně (#58141).](frontend/page-builder/blocks.md#podporný-javascript-kód) Page Builder - upravené generování kotev u karet tak, aby název kotvy byl generován podle názvu karty - původně byl generován nesémanticky jako&#x20;
+- &#x20;(#112).`autotabs-x-y`Page Builder - doplněna možnost nastavit šířku sloupce na&#x20;
+- &#x20;pro automatické přizpůsobení obsahu (#114).`auto`Page Builder - doplněna možnost připravit&#x20;
+- textové bloky[ přímo do složky ](frontend/page-builder/blocks.md), vkládají se namísto původních bloků čtených z web stránek ze složky Šablony. Web designér je připraví spolu s ostatními typy Page Builder bloků. Umožňuje rychlé vložení často používaných textových částí, tlačítek a podobně (#58165 `content`Page Builder - při vkládání nového bloku je výchozí karta Knihovna namísto Základní, aby se zjednodušil výběr bloku z připraveného seznamu (#58165).
+- Page Builder - doplněna možnost rozdělit sloupec na dvě části pomocí nové funkce Rozdělit sloupec. Vyvoláte ji pomocí kliknutí na + ve žluté liště, zvolením možnosti Blok a následně v kartě Základní zvolíte možnost Rozdělit sloupec. Funkce umožňuje rychlé rozdělení sloupce bez nutnosti vkládat nový sloupec a přesouvat obsah (#58165).
+- Page Builder - doplněna možnost vložit blok, který obsahuje více sekcí nebo jiných elementů - označí se po vložení všechny sekce (#58173).
+- Page Builder - doplněno&#x20;
+- ID bloku[ do atributu ](frontend/page-builder/blocks.md#id-bloku) pro možnost vyhledání použití bloku ve web stránkách přes vyhledávání v administraci (#58193 `data-pb-id`Page Builder - seznam oblíbených bloků je ukládán pro každého uživatele zvlášť, aby si každý mohl spravovat vlastní seznam oblíbených bloků (#58193).
+- Page Builder - přidána stále zobrazená ikona pro přidání nové sekce na konci stránky, což zjednodušuje přidávání nových sekcí do stránky (#58173).
+- Page Builder - upravený design nástrojové lišty pro lepší viditelnost na různých pozadích (#58165).
 
-- AB Testování - přidána možnost [zobrazovat AB verzi](redactor/apps/abtesting/README.md) podle stavu přihlášeného uživatele - nepřihlášenému uživateli se zobrazí A verze a přihlášenému B verze. Režim aktivujete nastavením konfigurační proměnné `ABTestingForLoggedUser` na hodnotu `true` (#57893).
-- [Page Builder](redactor/webpages/pagebuilder.md) - upravený vizuál, aby lépe zapadal do aktuálního designu WebJET CMS (#57893).
+![](redactor/webpages/pagebuilder-plusbutton.png)
 
-![](redactor/webpages/pagebuilder-style.png)
-
-- Povoleno zobrazení stránek obsahujících `404.html` v URL adrese ze systémových složek, aby vám taková technická stránka nepřekážela mezi standardními web stránkami (#57657-8).
-- Značky - rozdělené zobrazení značek podle aktuálně zvolené domény, abyste mohli mít značky zvlášť pro každou doménu ve WebJETu (#57837).
-- Klonování struktury - přidána informace o nakonfigurovaném překladači a kolik volných znaků k překladu zbývá (#57881).
-- Zrcadlení struktury - přidána možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat zrcadlení stránek (#57881).
-
-![](redactor/apps/clone-structure/clone_structure_set_translator.png)
-
-- Zrcadlení - přidání nové sekce [zrcadlení](redactor/webpages/mirroring/README.md) pro sledování a správu provázaných složek a stránek po akci zrcadlení (#57941).
-
-![](redactor/webpages/mirroring/groups_datatable.png)
-
-- Při výběru obrázku nebo video souboru, v editoru stránek jsou v průzkumníku zobrazeny jen vhodné typy souborů, ostatní jsou filtrovány (#57921).
-
-### Šablony
-
-- Přidána nová sekce [Šablony novinek](frontend/templates/news/README.md) pro správu a správu šablon novinek (#57937).
-
-![](frontend/templates/news/news-temps-datatable.png)
-
-### Uživatelské rozhraní
-
-- Při použití malého monitoru (výška okna méně než 760 bodů) se zobrazí okno automaticky na celou plochu a zmenší se hlavička a patička (titulek okna je menším písmem). Zvýší se tak zobrazené množství informací, což je zapotřebí hlavně v sekci web stránky. Používá se u oken používajících CSS třídu `modal-xl`, což jsou aktuální web stránky, foto galerie, editor obrázků a uživatelé (#57893).
+- Page Builder - doplněna možnost&#x20;
 
 ![](redactor/webpages/pagebuilder.png)
 
-- V editoru přidána možnost kliknout na ikonu obrázku na začátku pole, pro jeho zobrazení v nové kartě.
+- filtrovat bloky[ podle názvu a štítků (#58173).](frontend/page-builder/blocks.md#názov-a-značky-bloku) Doplněna&#x20;
 
-![](developer/datatables-editor/field-type-elfinder.png)
+![](redactor/webpages/pagebuilder-library.png)
 
-### Aplikace
+- detekce změny obsahu[ a upozornění na neuložené změny při zavírání okna prohlížeče. Změny se začnou detekovat 5 vteřin po otevření web stránky. (#112).](redactor/webpages/working-in-editor/README.md#detekcia-zmeny-obsahu-stránky) Doplněna možnost nastavit výchozí hodnoty pro tabulky v CKEditoru přes konfigurační proměnné, více v&#x20;
+- sekci nastavení CKEditoru[ (#58189).](frontend/setup/ckeditor.md#konfiguračné-premenné) Doplněna možnost vkládat&#x20;
+- tlačítko[ - element ](frontend/setup/ckeditor.md#tlačítko). Umíte tak snadno vkládat různé akční `button` tlačítka (#58201).`call to action`Styl -&#x20;
+- výběr stylu[ definovaného pro element Např. ](frontend/examples/template-bare/README.md#seznam-stylů-pro-editor) nebo `p.paragraph-green,p.paragraph-red-border,p.paragraph-yellow-background` umožňuje nastavit více stylů současně. Opakovaným zvolením již nastaveného stylu se tento styl odstraní (#OSK140).`section.test-section,section.test-section-green`Upravený text pro publikování stránky do budoucnosti na&#x20;
+- Naplánovat změnu stránky po tomto dat&#x75;**, při zvolení této možnosti se také změní tlačítko pro uložení na text&#x20;**&#x4E;aplánova&#x74;**&#x20;pro jasnější informaci pro uživatele (#58253).**&#x44;o žádosti o schválení web stránky doplněn seznam změněných polí (#58077).
+- Aplikace
 
-- Přidána možnost zobrazit aplikaci pouze přihlášenému/nepřihlášenému uživateli. Režim se nastavuje v kartě [Zobrazení nastavení aplikace](redactor/webpages/working-in-editor/README.md#karta-zobrazení) v editoru stránek (#57893).
+![](redactor/webpages/approve/approve-form.png)
 
-![](custom-apps/appstore/common-settings-tab.png)
+### Předěláno nastavení vlastností aplikací v editoru ze starého kódu v&#x20;
 
-Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP` na `Spring` aplikace. Aplikace automaticky získávají i možnost nastavit [zobrazení na zařízeních](custom-apps/appstore/README.md#podmíněné-zobrazení-aplikace). Design je ve shodě se zbytkem WebJET CMS a datových tabulek (#57409).
-- [Carousel Slider](redactor/apps/carousel_slider/README.md)
-- [Emotikony](redactor/apps/emoticon/README.md)
-- [Fórum/Diskuse](redactor/apps/forum/README.md)
-- [Otázky a odpovědi](redactor/apps/qa/README.md)
-- [Uživatelé](redactor/apps/user/README.md)
-- [Působivá prezentace](redactor/apps/app-impress_slideshow/README.md)
-- [Restaurační menu](redactor/apps/restaurant-menu/README.md)
-- [Slider](redactor/apps/slider/README.md)
-- [Slit slider](redactor/apps/app-slit_slider/README.md)
-- [Sociální ikony](redactor/apps/app-social_icon/README.md)
-- [Video](redactor/apps/video/README.md)
+&#x20;na `JSP` aplikace. Aplikace automaticky získávají i možnost nastavit `Spring` zobrazení na zařízeních[. Design je ve shodě se zbytkem WebJET CMS a datových tabulek (#58073).](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) Novinky
+- [Formulář snadno](redactor/apps/news/README.md)
 
-![](redactor/apps/app-slit_slider/editor-items.png)
+![](redactor/apps/news/editor-dialog.png)
 
-### Menu
+- [Formuláře](redactor/apps/formsimple/README.md)
 
-- Pokud [menu web stránky](redactor/apps/menu/README.md) nemá zadanou kořenovou složku (hodnota je nastavena na 0), automaticky se použije kořenová složka pro aktuálně zobrazenou web stránku. Je to výhodné pokud se zobrazuje menu ve více jazykových mutacích kde každá je kořenová složka - nemusíte mít menu/hlavičky pro každý jazyk samostatně, stačí jedna společná (#57893).
+![](redactor/apps/formsimple/editor-dialog-items.png)
 
-### Statistika
+### Nový způsob vytváření formulářů, které mohou obsahovat&#x20;
 
-- V sekcí [návštěvnost](redactor/apps/stat/README.md#návštěvnost) přidán sumární počet Vidění, Návštěv a Počet různých uživatelů pro snadný přehled celkové návštěvnosti za zvolené období (#57929).
+- více kroků[ s pokročilými funkcemi. V seznamu formulářů umíte vytvořit nový formulář, kterému následně přidáte jednotlivé položky a případně několik kroků. Karta položky formuláře je viditelná v detailu formuláře typu Vícekrokový formulář (#58161).](redactor/apps/multistep-form/README.md) Seznam formulářů - celá sekce byla předělána z technologie&#x20;
 
-![](redactor/apps/stat/stats-page.png)
+![](redactor/apps/multistep-form/real-form.png)
 
-- V sekcí [vadné stránky](redactor/apps/stat/README.md#vadné-stránky) přidáno filtrování podle botů (aplikuje se pouze na nově zaznamenané údaje) a sumární počet v patičce. Je třeba upravit stránku `404.jsp` ve vašem projektu přidáním objektu `request` do volání `StatDB.addError(statPath, referer, request);` (#58053).
+- &#x20;na standardní `Vue.js` pro lepší integraci do WebJET CMS a zjednodušení úprav (#58161).`Html + JavaScript`Seznam formulářů - umožněno vytváření formuláře, který je automaticky typu&#x20;
+- vícekrokový formulář[ (#58161).](redactor/apps/multistep-form/README.md) Seznam formulářů - umožněno nastavování parametrů/atributů všech typů formulářů přímo v editoru formuláře (#58161).
+- Seznam formulářů - pole poznámka umožňuje vkládat formátovaný text, umíte tak lépe evidovat doplňkové informace k formuláři (#58161).
+- Detail formuláře - přidána možnost zobrazení všech údajů přihlášeného uživatele, data se také exportují do Excelu (#58161).
+- Ověřovací kód - přidána možnost odeslat formulář až po zadání&#x20;
+- ověřovacího kódu[ zaslaného na email adresu. Umíte tak lépe chránit formuláře před SPAM-em (#58161).](redactor/apps/form/README.md#nastavenie-potvrdenia-zaslaným-kódom) Přesměrování
 
-![](redactor/apps/stat/error-page.png)
+![](redactor/apps/form/form-step-email-verification-2.png)
 
-### Volitelná pole
+### Přidáno možnost ukončit platnost přesměrování ve stanoveném čase a možnost zadat poznámku s informací k čemu přesměrování slouží. Přesměrování, která již nejsou časově platná, se zobrazí červeně (#58105).
 
-- Přidána podpora pro nové typy [volitelných polí](frontend/webpages/customfields/README.md):
-  - [Výběr složky webových stránek](frontend/webpages/customfields/README.md#výběr-složky-webových-stránek) (#57941).
-  - [Výběr webové stránky](frontend/webpages/customfields/README.md#výběr-webové-stránky) (#57941).
+- Elektronický obchod
 
-![](frontend/webpages/customfields/webpages-doc-null.png)
+![](redactor/webpages/redirects/path-editor.png)
 
-Bezpečnost![](frontend/webpages/customfields/webpages-group-null.png)
+### Nová sekce&#x20;
 
-### Opravena možná zranitelnost v Safari při speciální URL adrese směřující na archiv souborů v kombinaci s pěknou 404 stránkou (#57657-8).
-- Jiné menší změny
+- Způsoby doručení[, jako samostatná tabulka nahrazuje původní konfiguraci dostupných způsob doručení, která se nacházela přímo v nastaveních aplikace ](redactor/apps/eshop/delivery-methods/README.md) elektronického obchod&#x75;**. Pro každý způsob doručení lze nastavit také cenu, která při zvolení možnosti bude automaticky přičtena k objednávce. Nastavené způsoby doručení se také automaticky promítnou do možností při vytváření objednávky zákazníkem. Připraveno je doručení poštou a osobní vyzvednutí, do budoucna plánujeme doplnit integraci na doručovací společnosti (#58061).**&#x42;ezpečnost
 
-### Audit změn - vyhledávání - pole Typ je uspořádáno podle abecedy (#58093).
-- Elektronický obchod - přidána možnost nastavit&#x20;
-- kořenová složka[ se seznamem produktů pomocí konfigurační proměnné ](redactor/apps/eshop/product-list/README.md), pokud nevyhovuje automatické hledání podle vložené aplikace seznam produktů (#58057).`basketAdminGroupIds`Elektronický obchod - aplikace pro nastavení platebních metod přesunuta ze složky&#x20;
-- &#x20;do standardního `/apps/eshop/admin/payment-methods/` (#58057 `/apps/basket/admin/payment-methods/`Elektronický obchod - po smazání objednávky jsou smazány z databáze i její položky a platby (#58070).
-- Monitorování serveru - aktuální hodnoty - přidaný typ databázového serveru (MariaDB, Microsoft SQL, Oracle, PostgreSQL) (#58101).
-- Překladač - u překladače&#x20;
-- &#x20;se zlepšilo zpracování vrácených chybových hlášek, pro přesnější identifikování problému (#57881 `DeepL`Překladač - přidána podpora pro implementaci více překladačů a jejich automatické zpracování/využití (#57881).
-- Překladač - přidáno automatické&#x20;
-- auditování počtu spotřebovaných znaků[ při každém překladu. Do audit záznamu typu ](admin/setup/translation.md) se do sloupce `TRANSLATION` zapíše spotřebované množství kreditů při překladu. Audituje se i počet dostupných znaků, výsledek je uložen do cache a aktualizuje se znovu nejdříve o 5 minut (#57965).`EntityID`Průzkumník - optimalizované načítání, opraveno duplicitní čtení knihovny&#x20;
-- &#x20;(#57997).`jQuery UI`Oprava chyb
+![](redactor/apps/eshop/delivery-methods/datatable.png)
 
-### Datové tabulky - opraveno nastavení možností do výběrového menu externího filtru (#57657-8).
-- Klonování struktury - opravena validace zadaných id složek a přidán výpis chybové zprávy (#57941).
-- Galerie - přidána podpora pro výběr složky galerie, v aplikaci Galerie ve web stránce, při použití doménových aliasů a editace záznamu v galerii s doménovým aliasem (#57657-11).
-- Webové stránky - opraveno zobrazení seznamu stránek při zobrazení složek jako tabulky (#57657-12).
-- Grafy - opraveno zobrazení velkého množství legend v grafech, automaticky se využije posouvání v legendách (#58093).
+### Přidána podpora pro povolení pouze&#x20;
+
+- jednoho aktivního přihlášen&#xED;**&#x20;na jednoho uživatele. Režim zapnete nastavením konfigurační proměnné&#x20;**&#x20;na hodnotu `sessionSingleLogon`. Při novém přihlášení se zruší předchozí aktivní `true` (#58121).`session`Odstraněna nepodporovaná knihovna&#x20;
+- commons-lang[, nahrazena novou knihovnou ](https://mvnrepository.com/artifact/commons-lang/commons-lang) commons-lang3[, v ](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3) je aktualizační skript pro úpravu zdrojových kódů (#58153).`update-2023-18.jsp`Přidán seznam&#x20;
+- Moje aktivní přihlášení[ na úvodní obrazovce administrace, která zobrazuje všechna aktivní přihlášení do administrace pod vaším uživatelským účtem a možnost jejich ukončení. Přidána i možnost odeslat email přihlášenému administrátorovi (#58125).](redactor/admin/welcome.md#moje-aktívne-prihlásenia) Captcha - nastavením konfigurační proměnné&#x20;
+
+![](redactor/admin/sessions.png)
+
+- &#x20;na hodnotu `captchaType` lze Captcha zcela vypnout. Nezobrazí se iv případě, pokud má šablona zobrazené web stránky vypnutou SPAM ochranu. V takovém případě je ale třeba korektně kontrolovat vypnutí SPAM ochrany šablony iv případném kódu zpracování/verifikace Captcha odpovědi, pro formuláře je tato kontrola zabezpečena. Můžete použít volání `none` pro ověření režimu a vypnutí spam ochrany (#54273-78).`Captcha.isRequired(component, request)`Aktualizovaná knihovna pro&#x20;
+- odesílání emailů[ z ](install/config/README.md#odesílání-emailů) na `com.sun.mail:javax.mail:1.6.2` z důvodu podpory nových autentifikačních mechanismů SMTP serverů jako například `com.sun.mail:jakarta.mail:1.6.8` a přidaná konfigurační proměnná `NTLMv2` pro vynucení použití autorizačního mechanismu - nastavte např. na hodnotu `smtpAuthMechanism` pro vynucení `NTLM` autorizace namísto použití `NTLM` autorizace (#58153 `BASIC`Upraveno logování výjimek při přerušení HTTP spojení (např. při zavření prohlížeče, odchodu na jinou web stránku a podobně). Takové výjimky se nezapíší do logu, aby nenastala chyba obsazení místa. Týká se výjimek typu&#x20;
+- &#x20;a názvů výjimek definovaných přes konfigurační proměnnou `IOExceptio`, výchozí `clientAbortMessages` (#58153).`response already,connection reset by peer,broken pipe,socket write error`Jiné menší změny
+
+### Vyhledávání – upravené načtení seznamu šablon při hledání web stránek. Načtou se všechny šablony bez ohledu na jejich dostupnost ve složkách, aby se nestalo, že při editaci web stránky šablona není dostupná (#58073).
+
+- HTTP hlavičky - přidána možnost nastavit hlavičku delší než 255 znaků, například pro nastavení&#x20;
+- &#x20;(`Content-Security-Policy`#82[)](https://github.com/webjetcms/webjetcms/issues/82) Konfigurace - upravený způsob smazání konfigurační proměnné. Po vymazání se automaticky nastaví původní hodnota z&#x20;
+
+![](admin/settings/response-header/editor.png)
+
+- , aby byla stejná jako bude po restartu serveru. V původním řešení se proměnná jen smazala, ale její hodnota zůstala interně nastavena do restartu serveru (#57849).`Constants`Konfigurace - přidána možnost nastavit&#x20;
+- jméno HTTP hlavičky[ pro získání IP adresy návštěvníka přes konfigurační proměnnou ](sysadmin/pentests/README.md#konfigurace) (#58237).`xForwardedForHeader`Bezpečnost - přidána možnost konfigurace blokovaných cest souborů/adresářů přes proměnnou&#x20;
+- . Standardně jsou blokovány URL adresy, které v názvu obsahují výraz `pathFilterBlockedPaths`. Lze přidat další podle potřeby (#PR103).`.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn`Značky - upravené zobrazené značek, v případě duplicity hodnot. Porovnání je bez vlivu diakritiky a velkých/malých písmen&#x20;
+- #115[.](https://github.com/webjetcms/webjetcms/issues/115) Zrcadlení - přidána možnost zobrazit obrázek vlajky namísto textu v&#x20;
+
+![](redactor/webpages/perex-duplicity-values.png)
+
+- přepínači jazyka stránky[ (#54273-79).](redactor/apps/docmirroring/README.md#vytvorenie-odkazu-na-jazykové-mutácie-v-hlavičke-stránky) Změna hesla - přidána možnost nastavit jméno a email adresu ze které je odeslán email s odkazem na změnu hesla přes konfigurační proměnné&#x20;
+- &#x20;a `passwordResetDefaultSenderEmail` (#58125 `passwordResetDefaultSenderName`Statistika - doplněné sumární počty vidění a návštěv v TOP stránkách (#PR136).
+- Novinky - přejmenovaná hodnota uspořádat podle priority na uspořádat podle Pořadí uspořádání (priority) pro sladění s hodnotou v editoru (#57667-16).
+- Formulář snadno - přidána možnost nastavit hodnotu&#x20;
+- &#x20;pro vložení formuláře např. do patičky stránky (#57667-16).`useFormDocId`Novinky / Šablony novinek - přesunuté pole&#x20;
+- &#x20;z aplikace Novinky do Šablony novinek, aby se vlastnost nastavovala přímo v šabloně novinek. Původní hodnota `contextClasses` z Novinek bude nadále fungovat, ale nelze jej již nastavovat v uživatelském rozhraní (#58245).`contextClasses`Manažer dokumentů - přidána možnost&#x20;
+- upravit metadata historické verze dokumentu[ v manažeru dokumentů (#58241).](redactor/files/file-archive/README.md#úprava-historickej-verzie-dokumentu-v-manažéri) Hromadný email - upravené auditování změn v kampani. Pokud se přidá skupina neaudituje se celý seznam příjemců (bylo to zbytečně mnoho záznamů v auditu), zapíše se pouze seznam změněných skupin. Při manuálním přidání emailů se nadále audituje jméno i emailová adresa (#58249).
+- Uživatelé - při importu pokud sloupec v Excelu neobsahuje pole heslo, tak se pro nové uživatele vygeneruje náhodné heslo. Pokud není v Excelu zadán stav Schválený uživatel, tak se nastaví na hodnotu&#x20;
+- &#x20;(#58253 `true`MultiWeb - doplněno zobrazení domény v boční liště (#58317-0).
+- MultiWeb - doplněna možnost nastavit doménu přesměrování aby bylo možné zadat&#x20;
+- &#x20;prefix (#58317-0 `https://`MultiWeb - doplněna kontrola práv pro skupiny médií a značky (#58317-0).
+- Seznam formulářů - nastavení&#x20;
+- zpracovatele formulářů[, pomocí autocomplete pole, který nabízí třídy implementující ](custom-apps/apps/multistep-forms/README.md) (#58313 `FormProcessorInterface`Číselníky - doplněno odstranění mezer na začátku a konci pole typu řetězec v datech číselníku (#OSK233).
+- Oprava chyb
+
+### Značky - opraveno duplikování složky v Zobrazit pro při uložení značky, odstraněn výběr složky z ostatních domén, protože značky jsou již odděleny podle domén (#58121).
+- Web stránky - opraveno vkládání tvrdé mezery za spojky tak, aby se aplikovalo pouze na text stránky a nikoli na atributy nebo HTML značky (#OSK235).
+- Datatables - opravené zpracování události&#x20;
+- &#x20;u vybraných vstupních polí filtrů tabulky (#58313).`Enter`Datatables - opravené filtrování kdy se více&#x20;
+- &#x20;tabulek na stránce navzájem ovlivňovalo při filtrování (#58313 `serverSide:false`Elektronický obchod - opraveno odesílání email notifikace, při změně stavu objednávky (#58313).
+- Elektronický obchod - opraveno automatické nastavení stavu objednávky po změně plateb (#58313).
 - Dokumentace
 
-### Doplněna dokumentace pro nastavení a používání&#x20;
+### Aktualizovány všechny fotky obrazovky v české verzi dokumentace (#58113).
 
-- dvoustupňového ověřování/autorizace[ (#57889).](redactor/admin/logon.md#dvojstupňové-overovanie) Pro programátora
+- Pro programátora
 
-### Zrušená třída&#x20;
+### Volná pole - přidána možnost specifikovat vlastní sloupce pro label a hodnotu při&#x20;
+- propojení na číselník[. Umožňuje flexibilnější nastavení, která vlastnost z číselníku se použije jako zobrazený text a která jako uložená hodnota (#PR108).](frontend/webpages/customfields/README.md#číselník) Smazané nepoužívané soubory&#x20;
+- , pokud je ve vašem projektu používáte vezměte je ze `/admin/spec/gallery_editor_perex_group.jsp,/admin/spec/perex_group.jsp` starší verze[ WebJET CMS (#58073).](https://github.com/webjetcms/webjetcms/tree/release/2025.40/src/main/webapp/admin/spec) Mírně upravené API v&#x20;
+- NewsActionBean[, hlavně nastavení ](../../src/webjet8/java/sk/iway/iwcm/components/news/NewsActionBean.java) které jsou nyní typu `groupIds`. Můžete použít `List<GroupDetails>` pro nastavení s polem ID hodnot (#58073 `setGroupIds(int[] groupIds)`Opravena možnost vkládání uvozovek do parametrů aplikací (#58117).
+- Připraveny kontejnery pro všechny podporované databázové servery ve WebJET CMS pro snadné spuštění ve VS Code. Nacházejí se ve složce&#x20;
+- &#x20;(#58137).`.devcontainer/db`Elektronický obchod - kvůli změnám při procesu implementace&#x20;
+- způsobů doručen&#xED;**&#x20;je třeba provést úpravu souboru pomocí aktualizačního skriptu&#x20;**&#x20;a to nad sekcí `update-2023-18.jsp` (#58061).`basket`Elektronický obchod - přejmenovaná anotace&#x20;
+- &#x20;na `@PaymentMethod` a `@FieldsConfig` na `@PaymentFieldMapAttr` pro sjednocení anotací mezi platbami a způsoby doručení (#58061).`@FieldMapAttr`Elektronický obchod - při procesu implementace&#x20;
+- způsobů doručen&#xED;**&#x20;do souboru&#x20;**&#x20;přibylo několik změn, které si musíte implementovat manuálně. Tyto změny jsou příliš komplexní, aby se daly doplnit pomocí aktualizačního skriptu `order_form.jsp` (#58061).`update-2023-18.jsp`Navigační lišta - přidána možnost použít vlastní implementaci generátoru&#x20;
+- navigační lišty[. Přes konfigurační proměnnou ](redactor/apps/navbar/README.md) je možné nastavit jméno třídy implementující `navbarDefaultType` (#PR101).`NavbarInterface`Odstraněna nepodporovaná knihovna&#x20;
+- commons-lang[, nahrazena novou knihovnou ](https://mvnrepository.com/artifact/commons-lang/commons-lang) commons-lang3[, v ](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3) je aktualizační skript pro úpravu zdrojových kódů (#58153).`update-2023-18.jsp`Aktualizovaná knihovna&#x20;
+- displaytag[ na verzi ](https://mvnrepository.com/artifact/com.github.hazendaz/displaytag) (#58153).`2.9.0`Upraveno zpracování nahrávání souborů&#x20;
+- . Ve Spring aplikacích pro souborové pole použijte místo `multipart/form-data` přímo `org.apache.commons.fileupload.FileItem`, které bude automaticky nastaveno. Není již třeba používat volání typu `org.springframework.web.multipart.MultipartFile` pro získání souboru. `entity.setDocument(MultipartWrapper.getFileStoredInRequest("document", request))` Upozornění:**&#x20;je třeba nahradit všechny výskyty&#x20;**&#x20;za `CommonsMultipartFile` ve vašem kódu, také zrušit URL parametry ve Spring aplikaci pro vynucené zpracování. Výraz `MultipartFile` nahraďte za `data-th-action="@{${request.getAttribute('ninja').page.urlPath}(\_\_forceParse=1,\_\_setf=1)}"`. Můžete použít `data-th-action="${request.getAttribute('ninja').page.urlPath}"` k aktualizaci souborů (#57793-3).`/admin/update/update-2023-18.jsp`Doplněna možnost vytvoření&#x20;
+- projektových kopií souborů[ Spring aplikaci. Stačí vytvořit vlastní verzi souboru ve složce ](frontend/customize-apps/README.md) podobně jako se používá pro JSP soubory. WebJET CMS nejprve hledá soubor v projektové složce a není-li nalezen použije standardní soubor z `/apps/INSTALL_NAME/` složky (#58073).`/apps/`Doplněna možnost nastavit&#x20;
+- jméno pro CSS styl[ v CSS souboru přes komentář ](frontend/examples/template-bare/README.md). Jméno se zobrazí v seznamu stylů v editoru (#58209).`/* editor title: Style Name */`Editor - upravený dialog pro nastavení&#x20;
+- &#x20;\- zrušeno nastavení barev a velikostí, `a.btn` používají se už jen CSS třídy[ stejně jako pr ](frontend/setup/ckeditor.md#tlačítko) (#57657-16).`button`Datové tabulky - možnost zobrazení pouze ikony bez pořadí pro&#x20;
+- &#x20;pokud danému sloupci přidáme třídu `rowReorder` (#58161).`icon-only`Datové tabulky - nové možnosti pro výběr řádků v tabulce&#x20;
+- &#x20;a `toggleSelector`, více v `toggleStyle` sekci datových tabulek[ (#58161).](developer/datatables/README.md#možnosti-konfigurácie) Datové tabulky - nová možnost vlastní&#x20;
+- render[ funkce pomocí anotace ](developer/datatables-editor/datatable-columns.md). Umožní vám zobrazit ve sloupci složené hodnoty z více polí a podobně (#58161).`@DataTableColumn(...renderFunction = "renderStepName")`Datové tabulky - přidána možnost&#x20;
+- přesměrovat uživatele[ na jinou stránku po uložení záznamu voláním metody ](developer/datatables/restcontroller.md#přesměrování-po-uložení) (#58161).`setRedirect(String redirect)`Formuláře - Upraveno zobrazení seznamu formulářů, zrušena třída&#x20;
+- , nahrazena třídou `FormAttributesDB`. Nastavení formulářů změněno z tabulky `FormService` na tabulku `form_attributes`. Doporučujeme po aktualizaci ověřit funkčnost všech formulářů na web stránce (#58161).`form_settings`Formuláře - vytvoření nové tabulky&#x20;
+- &#x20;jako náhradu za tabulku `form_settings`, kde se ukládají vlastnosti formulářů. Jednotlivé atributy (nastavení) jsou nyní uloženy v samostatných sloupcích jako jeden záznam na řádek. Data byla do nové tabulky konvertována pomocí `form_attributes` (#58161).`UpdateDatabase.java`Přechod na novou tabulku&#x20;
+- &#x20;pro vlastnosti formulářů v `form_settings` souborech. Je třeba si spustit aktualizační skript `.jsp`, který upraví potřebné `update-2025-0.jsp` (#58161).`.jsp`Seznam formulářů - nastavování parametrů/atributů všech typů formulářů přesměrováno z tabulky&#x20;
+- &#x20;do nové tabulky `form_attributes` (#58161).`form_settings`Datové tabulky - přidána BE podpora pro&#x20;
+- , kdy lze měnit pořadí záznamů přímo v datové tabulce pomocí drag\&drop (#58161).`row-reorder`Události - přidaná událost&#x20;
+- Aktualizace kódů v textu[ pro možnost úprav kódů v textu stránky typu ](developer/backend/events.md#aktualizace-kódů-v-textu) a podobně (#54273-63).`!CUSTOM_CODE!`Datové tabulky - přidáno&#x20;
+- Spring události[ pro možnost úprav dat v zákaznických instalacích (#54273-63).](developer/backend/events-datatable.md) Testování
 
-- , která se používala v importech z `ImportXLSForm` formátu v `XLS` spec/import\_xls.jsp[. Technicky třída není nutná, stačí smazat referenci v JSP a upravit formulář na standardní HTML formulář (#57789).](../../src/main/webapp/admin/spec/import_xls.jsp) Zlepšený aktualizační skript&#x20;
-- &#x20;pro Archiv souborů - umí aktualizovat standardní změny a doplnit potřebné změny do vaší verze `/admin/update/update-2023-18.jsp` a pomocných tříd (#57789).`FileArchivatorBean`Třída&#x20;
-- &#x20;nahrazena objektem `org.apache.struts.action.ActionMessage`, třída `String` nahrazena `ActionMessages` (#57789).`List<String>`Zrušený framework&#x20;
-- , tagy `Struts` nahrazeno za odpovídající `<logic:present/iterate/...`, pozor `<iwcm:present/iterate/...` za `<bean:write`.`<iwcm:beanWrite`V Java kódu jsou z důvodu odstranění&#x20;
-- &#x20;následující změny:`Struts` nahrazen za&#x20;
-  - `ActionMessage` nahrazen za `String`
-  - `ActionMessages` vrátí `List<String>`
-  - `BasicLdapLogon.logon` místo `List<String>` nahrazen `ActionMessages`
-  - `org.apache.struts.util.ResponseUtils.filter` Amcharts - přidána podpora pro zadání funkce pro transformaci textu ve štítcích kategorií u grafu typu `sk.iway.iwcm.tags.support.ResponseUtils.filter`
-- &#x20;(#58093).`PIE`Amcharts - přidána podpora pro zadání funkce pro transformaci textu v legendě grafu typu&#x20;
-- &#x20;(#58093).`LINE`Amcharts - přidána možnost skrýt tooltip když hodnota je&#x20;
-- &#x20;nebo `null` v grafu typu `0` (#58093).`LINE`Pro konverzi JSP i Java souborů můžete použít skript&#x20;
+### Doplněný skript&#x20;
 
-. Zadáte-li jako cestu hodnotu `/admin/update/update-2023-18.jsp` provede se nahrazení iv `java` souborech. Problémem je spuštění projektu, pokud obsahuje chyby. Můžete ale složku `../java/*.java` přejmenovat na `src/main/java` aby šel spustit čistý WebJET. Následně můžete použít aktualizační skript. Ten prohledává a aktualizuje složku `src/main/java-update` i `../java/*.java`.`../java-update/*.java`V souboru&#x20;
+- rm-same-images.sh[ pro odstranění stejných obrázků při pořízení nových snímků obrazovky (#58113).](../../src/test/webapp/rm-same-images.sh)
 
-&#x20;již není nutná inicializace `WEB-INF/web.xml`, smažte celou `Apache Struts` sekci obsahující `<servlet>` a `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` obsahující `<servlet-mapping>`.`<servlet-name>action</servlet-name>`Rozdělené značky podle domén (je-li nastavena konfigurační proměnná&#x20;
-- ), aby bylo možné jednoduše mít samostatné značky pro každou doménu. Při spuštění WebJET nakopíruje stávající značky pro všechny definované domény. Přeskočí značky, které mají nastavené zobrazení pouze ve specifické složce, kde podle první složky nastaví doménu pro značku. Aktualizuje značky pro Novinky, tedy pro aplikaci `enableStaticFilesExternalDir=true` kde vyhledá výraz `/components/news/news-velocity.jsp` a `perexGroup` u kterých se pokusí ID značek aktualizovat podle domény dané web stránky. Informace se zapíše do historie a v Auditu vznikne záznam s podrobností jak se `perexGroupNot` nahradil, příklad:`INCLUDE`Pro první&#x20;
-
-```txt
-UPDATE:
-id: 76897
-
-news-velocity.jsp - update perexGroups+perexGroupsNot for domainId, old code::
-INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="625", perexGroupNot="626")
-new code:
-INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="", perexGroupNot="")
-
-INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="3+645", perexGroupNot="794")
-new code:
-INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="1438+1439", perexGroupNot="1440")
-```
-
-&#x20;byly odstraněny značky s ID 625 a 626, protože ty se nezobrazují v dané složce/doméně - měly nastavené zobrazení pouze pro určitou složku. Ve druhém `INCLUDE` byly změněny značky `INCLUDE` na nově vzniklé `3+645` a `1438+1439` za `794`.`1440`| perex\_group\_id | perex\_group\_name | domain\_id | available\_groups |
-| -------------- | -------------------- | --------- | ---------------- |
-| 3 | další perex skupina | 1 | NULL |
-| 645 | deletedPerexGroup | 1 | NULL |
-| 794 | kalendář-událostí | 1 | NULL |
-| 1438 | další perex skupina | 83 | NULL |
-| 1439 | deletedPerexGroup | 83 | NULL |
-| 1440 | kalendář-událostí | 83 | NULL |
-
-Před spuštěním aktualizace existovaly v databázi pouze záznamy&#x20;
-
-, kterým se nastavilo `3, 645 a 794`. Záznamy `domain_id=1` vznikly při aktualizaci pro `1438, 1439 a 1440`.`domain_id=83`Datové tabulky - přidána podpora pro úpravu&#x20;
-- lokálních JSON dat[ (#57409).](developer/datatables-editor/field-datatable.md#lokálne-json-dáta) Datové tabulky - přidané rozšíření&#x20;
-- Row Reorder[ pro možnost uspořádání seznamu pomocí funkce ](https://datatables.net/extensions/rowreorder/) (#57409).`Drag&Drop`Datatabulky - Přidána možnost nastavení&#x20;
-- Patičky pro součet hodnot[ (#57929).](developer/datatables/README.md#pätička-pre-súčet-hodnôt) Aplikace - doplněna možnost použít lokální JSON data pro nastavení položek aplikace, například položek pro&#x20;
-- působivou prezentaci[ (#57409).](redactor/apps/app-impress_slideshow/README.md)
-
-![](redactor/apps/app-impress_slideshow/editor-items.png)
-
-![meme](_media/meme/2025-40.jpg ":no-zoom")
+![meme](_media/meme/2026-0.jpg ":no-zoom")

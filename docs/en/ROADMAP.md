@@ -11,11 +11,22 @@ Explanation of the pictograms used:
 - [ ] +if it starts on a character `+` the task was added to the list after the initial creation of the schedule, such tasks are typically requested by customers and will affect the schedule if implemented. This means that some other tasks may not be implemented in a given version due to lack of time.
 - [ ] ~~crossed out~~ task moved to another version, or solved in a different way, or cancelled. The description always includes the version number where it was moved or the reason for cancellation.
 
+## 2026
+
+- Semantic search - leverage AI to improve search with `RAG`.
+- Headless CMS - prepare REST interfaces for using WebJET CMS in headless mode.
+- Migration to Spring Boot project.
+- Testing - add accessibility testing using the extension [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- Permissions - add option to set read-only permissions and possibly set only allowed IDs for editing.
+- Forms - add the ability to set the total attachment size for the form, now it can only be set per file.
+- Statistics - edit entry to `seo_bots` via `StatWriteBuffer` for fewer conflicts under high load and clustered database.
+- Scripts - add the option to set whether the script should be inserted in the page editor or not.
+
 ## 2025
 
-- [ ] Switch to `Jakarta EE` - change Java packages from `javax.servlet` at `jakarta.servlet`, prepare migration script (#57793).
-- [ ] Switching to Tomcat 11+ application server (#57793).
-- [ ] Switch to `Spring` Version 7 (#57793).
+- [x] Switch to `Jakarta EE` - change Java packages from `javax.servlet` at `jakarta.servlet`, prepare migration script (#57793).
+- [x] Switching to Tomcat 11+ application server (#57793).
+- [x] Switch to `Spring` Version 7 (#57793).
 - [ ] Introduce into the project the obligation to use `SonarLint` and formatting code via `.editorconfig` or `Spotless` - Example https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Primary use of the GitHub repository for development.
 - [x] Cancel artifact generation on old `iwmsp.sk` repository, artifacts will only be available through [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
@@ -30,21 +41,21 @@ Explanation of the pictograms used:
 - [ ] Applications - option to purchase the application for the OpenSource version (#55825).
 - [ ] Option to execute Thymeleaf code in the header/footer and maybe in the body of the web page.
 - [ ] Security - add generation support `nonce` For `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
-- [ ] Forms - add the ability to call a Java class for form validation.
+- [x] Forms - add option to call Java class for form validation (#58161).
 - [x] Tags - filter by current domain to be the same as in other sections (#57837).
-- [ ] Import users - if no password is entered, generate one (for new users), if no status is sent `available` set to `true`.
+- [x] Import users - if no password is entered, generate one (for new users), if no status is sent `authorized` set to `true` (#58253).
 - [ ] In tests, somehow automated to check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` which are incorrect waits without a defined time, will cause automated tests to get stuck.
 - [ ] Add an app to redirect the main page to `/sk/` or `/en/` by browser language.
-- [ ] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants` (#57849).
+- [x] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants` (#57849).
 - [x] Gallery - when duplicating an image, enable the "Folder" change to allow us to duplicate images to a folder other than the current folder (#57885).
-- [ ] Bulk email - audit changes in user groups.
+- [x] Bulk email - audit changes in user groups (#58249).
 - [x] Archive files - rebuild into data tables (#57317).
 - [ ] Optional fields - add the option to select multiple items to link to the dial.
 - [x] E-commerce - integration to the payment gateway `GoPay` (#56609).
 - [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
 - [x] Reservations - new app for all-day reservations (#57389).
-- [ ] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
+- [x] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
 - [x] Bulk email - optimizing recipient list creation (#57537).
 - [ ] +Background Tasks - option to manually run the task on `node` that has the task set, now it will run on `node` where the user is logged in.
 - [ ] +Forms - disable `GET` call to `FormMail/FormMailAjax`.
@@ -59,7 +70,7 @@ Explanation of the pictograms used:
 - [ ] +Search Engine - set folder properties (indexing, rights) according to the parent (recursively) on first opening, if the folder has no settings in the database.
 - [ ] +For a field of type `DataTableColumnType.JSON` specifically `className = "dt-tree-page-null"` add the option to define a root folder.
 - [ ] +Move all `Converter` classes such as. `DocDetailsNotNullConverter` into a separate `package` where there will be no other entities to make this `Converter` can also be used in projects where a separate `JPA`.
-- [ ] +Add the option to set the HTTP header name for `x-forwarded-for` and determine which of the IP addresses to use (first VS last).
+- [x] +Add option to set HTTP header name for `x-forwarded-for` and determine which of the IP addresses to use (first VS last) (#58237).
 - [ ] +Tables - add the option to arrange by multiple columns by clicking with the key `SHIFT`.
 - [ ] +Tables - add option `hideOnDuplicate` for cards in the editor, not forgetting also the class `DataTableTab` so that it can also be set in the annotation.
 - [ ] +Add the option to move to the parent folder in the Media of this page.
@@ -71,12 +82,14 @@ Explanation of the pictograms used:
 - [ ] Gallery - allow to change the path of the gallery (folder) and set everything related to it.
 - [ ] +Configuration - add column group with value `modules` configuration variable (selection field, can have multiple values). Add the option to display also unconfigured variables (i.e. complete list). Create a tool to generate all variables by groups/modules into `md` file in the documentation for an overview of all variables.
 - [ ] +If I have an unsaved page with the title Cleaning and there is already another page with the title Cleaning, the newly uploaded images will be uploaded to the Cleaning folder before saving it `upratovanie`. But when the page is saved, it gets the URL cleaning-2.html and the other images are already uploaded to the folder `upratovanie-2`. It is necessary to edit the code in `getPageUploadSubDir` so that instead of using the page title directly, it tries to get the URL for the new page and then uses that.
-- [ ] +HTTP headers - extend the maximum HTTP header value size to more than 255 characters, for `Content-Security-Policy` it's undersized (#PR83).
+- [x] +HTTP headers - extend the maximum size of the HTTP header value to more than 255 characters, for `Content-Security-Policy` it's undersized (#PR83, #58129).
 - [x] +Integration of AI tools, helpers, assistants (#57997).
 - [ ] +In profile editing, the API key is not displayed after it is generated, notifications are not transferred to the parent window.
 - [ ] +Forms - modify form protection so that it is not used `document.write`.
 - [ ] +Add the option to set the type `textarea` as in AI assistants and with line numbers, e.g. in scripts or elsewhere where code writing is expected.
-- [ ] +News - move field `contextClasses` from the news app to the news template. Field set as `hidden` to remain functional (can be set somewhere), if empty use the value from the template. So both options must work, maybe combine both values into one list.
+- [x] +News - move field `contextClasses` from the news app to the news template. Field set as `hidden` to remain functional (can be set somewhere), if empty use the value from the template. So both options must work, maybe combine both values into one list (#58245).
+- [ ] +Nested datatables - set the number of records in the mode `auto` according to the size of the nested datatable area.
+- [ ] +Send email later function used `sendMailSaveEmailPath` that can't save the file according to the current domain, think about a solution. Maybe this is because emails are sent in the background where the domain may not be known.
 
 ## 2024
 

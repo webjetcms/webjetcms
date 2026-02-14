@@ -132,7 +132,7 @@ npm run build
 npm run start
 ```
 
-individual `npm` scripts are defined in [package.json](package.json) in the elements `scripts` and made of `node_scripts/*.js` Directory:
+individual `npm` scripts are defined in [package.json](https://github.com/webjetcms/templates-bare/blob/master/package.json) in the elements `scripts` and made of `node_scripts/*.js` Directory:
 - `npm run build` - generates a complete `dist` Directory.
 - `npm run build:assets` - re-generates files from the directory `assets` (images, font icons).
 - `npm run build:pug` - re-generates HTML files from the source pug files.
@@ -142,11 +142,11 @@ individual `npm` scripts are defined in [package.json](package.json) in the elem
 - `npm run start` - starts prototyping mode - generates `dist` directory, tracks changes to the files and opens the browser with the prototype version.
 - `npm run start:debug` - starts the prototyping mode with `debug` Browser mode.
 
-Configuration for prototyping mode `browser-sync` is located in the file [node-scripts/bs-config.js](node_scripts/bs-config.js). There is possibly a need to modify the path for replacing the addresses of fonts/images that are linked with the full URL in the CSS files (since during prototyping the URL of the pages differs from the address in the final version via WebJET CMS).
+Configuration for prototyping mode `browser-sync` is located in the file [node-scripts/bs-config.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/bs-config.js). There is possibly a need to modify the path for replacing the addresses of fonts/images that are linked with the full URL in the CSS files (since during prototyping the URL of the pages differs from the address in the final version via WebJET CMS).
 
 ### JavaScript file processing
 
-To be able to use npm modules directly in the file [ninja.js](src/js/ninja.js) is used [browserify](https://www.npmjs.com/package/browserify) with extension [esmify](https://www.npmjs.com/package/esmify). The processing is in the file [render-scripts.js](node_scripts/render-scripts.js).
+To be able to use npm modules directly in the file [ninja.js](https://github.com/webjetcms/templates-bare/blob/master/src/js/ninja.js) is used [browserify](https://www.npmjs.com/package/browserify) with extension [esmify](https://www.npmjs.com/package/esmify). The processing is in the file [render-scripts.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/render-scripts.js).
 
 The reason is that all JavaScript libraries used in a web page can be managed via npm (i.e. easily updated).
 
@@ -230,6 +230,56 @@ span.more-info {
 
 You can then select the text and apply this style only to the selected text. If it did not have an HTML tag `span` would be applied to the parent element, i.e. typically to the whole paragraph - `p`.
 
+If you don't like the default style name in the selection box, you can change it by adding a comment:
+
+```css
+span.more-info {
+    /* editor title: Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+possibly in abbreviated form directly with a comment at the end of the style definition line:
+
+```css
+span.more-info { /* Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+Applying multiple styles at once is also supported. It is used if an element is also defined in CSS:
+
+```css
+p.paragraph-green {
+    color: green;
+}
+p.paragraph-red-border {
+    border: 1px solid red;
+}
+p.paragraph-yellow-background {
+    background-color: yellow;
+}
+```
+
+the user can choose any combination of these styles per element `p`. If the style is already applied to the element, selecting it again will remove the style. This makes it easy to apply multiple styles at once.
+
+If you want the selection menu to display titles in your style, you can add a CSS stylesheet definition for the editor to the page header in Page Builder mode:
+
+```html
+<script>
+    webjetContentsCss = [
+       '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+       '/templates/jet/assets/css/editor.css'
+    ];
+</script>
+```
+
+we recommend adding only the minimal styling necessary for styling names.
+
 ## Creating PageBuilder blocks
 
 If you need to create a new block for PageBuilder follow this guide.
@@ -253,7 +303,7 @@ For example, the file `src/pagebuilder/column/card/card.pug`:
 
 File `src/pug/pagebuilder/container/cards/cards.pug`
 
-```
+```pugjs
 .container
     .row
         include ../../column/card/card
@@ -263,7 +313,7 @@ File `src/pug/pagebuilder/container/cards/cards.pug`
 
 File `src/pug/pagebuilder/section/cards/cards.pug`
 
-```
+```pugjs
 section
     include ../../container/cards/cards
 ```

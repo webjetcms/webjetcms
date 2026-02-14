@@ -7,6 +7,7 @@
   - [General settings](/frontend/setup/config.md)
   - [Optional fields](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
+  - [CKEditor](/frontend/setup/ckeditor.md)
 - Templates
   - [The way the page is displayed](/frontend/templates/README.md)
   - [Templates](/frontend/templates/templates.md)

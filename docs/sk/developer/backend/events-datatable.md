@@ -2,7 +2,7 @@
 
 WebJET publikuje udalosti pri operáciách s datatabuľkami (vykonávaných cez `DatatableRestControllerV2`). Tieto udalosti využívajú Spring mechanizmus publikovania udalostí, viac informácií nájdete v dokumentácii k [základným udalostiam](events.md).
 
-Udalosti datatabuliek sú implementované v triede [DatatableEvent<T>](../../../../src/main/java/sk/iway/iwcm/system/datatable/events/DatatableEvent.java), ktorá je generická s typom entity. Obsahuje nasledovné atribúty:
+Udalosti datatabuliek sú implementované v triede [DatatableEvent](../../../../src/main/java/sk/iway/iwcm/system/datatable/events/DatatableEvent.java), ktorá je generická s typom entity. Obsahuje nasledovné atribúty:
 
 - `source` - zdrojový objekt entity (napr. `UserDetailsEntity`, `WebpagesEntity`)
 - `eventType` - [typ udalosti](#typy-udalostí)
