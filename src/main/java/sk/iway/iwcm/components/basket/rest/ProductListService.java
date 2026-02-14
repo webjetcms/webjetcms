@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -394,6 +395,17 @@ public class ProductListService {
                               .reduce(BigDecimal.ZERO, BigDecimal::add)
                               .setScale(2, RoundingMode.HALF_UP);
     }
+
+    public static Map<String, String> getPriceInfo(Long invoiceId, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
+        BigDecimal priceToPay = getPriceToPay(invoiceId, biir);
+        BigDecimal payedPrice = getPayedPrice(invoiceId, bipr);
+        int status = getInvoiceStatusByValues(priceToPay, payedPrice);
+        return Map.of(
+            "priceToPay", priceToPay.toString(),
+            "payedPrice", payedPrice.toString(),
+            "status", String.valueOf(status)
+        );
+        }
 
     public static final Integer getInvoiceStatusByValues(BigDecimal priceToPayVat, BigDecimal totalPayedPrice) {
         if(CurrencyTag.formatNumber(priceToPayVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))

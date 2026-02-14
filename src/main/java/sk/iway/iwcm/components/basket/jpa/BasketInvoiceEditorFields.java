@@ -74,12 +74,6 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String body;
 
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
-    private String orderRecapHead;
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
-    private String orderRecapBody;
-
     //AUTH TOKEN  - for getting iframe of invoice_email.jsp
     @DataTableColumn(visible = false, hidden = true, hiddenEditor = true)
     private String authToken;

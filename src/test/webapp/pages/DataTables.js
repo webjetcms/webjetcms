@@ -478,6 +478,11 @@ module.exports = {
                 I.refreshPage();
                 DT.waitForLoader();
             }
+            if (typeof options.extraWait == "number") {
+                I.say("Waiting extra time: "+options.extraWait+" seconds");
+                I.wait(options.extraWait);
+                DT.waitForLoader();
+            }
             DT.filterContains(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
             I.see(`${testingData[0]}${DUPLICATE_TEXT}`, "div.dt-scroll-body");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");

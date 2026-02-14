@@ -18,7 +18,7 @@ if (Tools.getRequestParameter(request, "form_name") != null)
        formName = DocTools.removeChars(formName, true);
    }
 
-	Map<String, String> parameters = new FormSettingsService().filterAttributes(request.getParameterMap());
-	new FormSettingsService().save(formName, parameters);
+	Map<String, String> parameters = FormSettingsService.filterAttributes(request.getParameterMap());
+	FormSettingsService.save(formName, parameters);
 }
 %>

@@ -17,7 +17,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <iwcm:menu name="menuWebpages">
 <html>
 <head>
-<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>">
+	<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>">
+	<title>WebJET CMS</title>
 </head>
 
 <script type="text/javascript" >
@@ -65,6 +66,7 @@ function setupScroll()
 <%
 int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docid"), -1);
 int historyId = Tools.getIntValue(Tools.getRequestParameter(request, "historyid"),-1);
+boolean isNewDoc = false;
 String onlyBody = Tools.getRequestParameter(request, "onlyBody") != null ? "&forwarddoccompare=true" : "";
 String domain = DocDB.getInstance().getDomain(docId);
 if (Tools.isNotEmpty(domain))
@@ -76,7 +78,7 @@ String rightFrameKey = "editor.compafe.history_version";
 if (request.getAttribute("isApprove")!=null) rightFrameKey = "editor.compare.to_approve_version";
 
 
-String framesetSize = "*,*";
+String framesetSize = "*,*,300";
 
 //overenie, ci sa nejedna o novu stranku
     {
@@ -91,7 +93,8 @@ String framesetSize = "*,*";
 				if (abs < (1000))
 				{
 					request.setAttribute("historyEqualsDoc", "1");
-					framesetSize = "*";
+					isNewDoc = true;
+					framesetSize = "*,300";
 				}
 			}
         }
@@ -102,17 +105,18 @@ String framesetSize = "*,*";
 	<frameset rows="*,100" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
 </iwcm:present>
 
-	<frameset cols="<%=framesetSize%>" onload="setupScroll()">
+	<frameset cols="<%=framesetSize%>" onload="setupScroll()" border="3" BORDERCOLOR="#edeff1">
         <iwcm:empty name="historyEqualsDoc">
-		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
-		    <frame name="leftTop" src="/admin/doc_compare_top.jsp?textKey=editor.compare.actual_version&docid=<%=docId %>&historyid=<%=historyId %>&actual=true<%=onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
-			 <frame name="left" id="left"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&NO_WJTOOLBAR=true<%=onlyBody%>">
-		</frameset>
+			<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
+				<frame name="leftTop" src="/admin/doc_compare_top.jsp?textKey=editor.compare.actual_version&docid=<%=docId %>&historyid=<%=historyId %>&actual=true<%=onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
+				<frame name="left" id="left"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&NO_WJTOOLBAR=true<%=onlyBody%>">
+			</frameset>
         </iwcm:empty>
-		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1"  border="1" frameborder="1" framespacing="0">
+		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
 			<frame name="rightTop" src="/admin/doc_compare_top.jsp?textKey=<%=rightFrameKey %>&docid=<%=docId %>&historyid=<%=historyId+onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
 			<frame name="right"  id="right"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&historyid=<%=historyId%>&NO_WJTOOLBAR=true<%=onlyBody%>">
 		</frameset>
+		<frame name="diff" id="diff" border="5" src="/admin/doc_attr_diff.jsp?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&historyid=<%=historyId%>&new=<%=isNewDoc%>" scrolling="auto" BORDERCOLOR="#edeff1">
 	</frameset>
 
 <iwcm:present name="isApprove">

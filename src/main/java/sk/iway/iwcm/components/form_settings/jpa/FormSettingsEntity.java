@@ -157,9 +157,23 @@ public class FormSettingsEntity {
 
     /* We are re-using this in multistep forms (just using old value, but functionality is different) */
     @Column(name = "after_send_interceptor")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "ai-off")
     @Size(max = 255)
     private String afterSendInterceptor;
+
+    @Transient
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.processor", className = "ai-off not-formsimple",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/form-settings/autocomplete-formProcessor"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+				}
+			)
+		}
+    )
+    private String formProcessor;
 
     @Column(name = "encryption_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.form.encryptionKey")

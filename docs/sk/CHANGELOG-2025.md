@@ -22,13 +22,13 @@ Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/
 
 Pre vyhľadanie v kóde môžete použiť hľadanie v súboroch `*Repository.java` a hľadať regulárny výraz `\(.*List[^)]*\)`, `\(.*Long\[\][^)]*\)`, `\(.*Integer\[\][^)]*\)`. Odporúčame vykonať kód, v logu sa zobrazí chyba a použiť vygenerované SQL do `Query` hodnoty. Problémom je len kontrola typu, kde `EclipseLink` nevie identifikovať, že má kontrolovať pole/zoznam a nie priamo dátový typ.
 
-## 2025.52
+## 2025.52/SNAPSHOT
 
-> **WebJET CMS 2025.52** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
+> **WebJET CMS 2025.52/SNAPSHOT** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
-> Nový nástroj pre tvorbu formulárov umožňuje ľahko vytvárať viac krokové formuláre s možnosťou programovej validácie jednotlivých krokov a možnosťou potvrdenia platnosti emailovej adresy pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
+> Nový nástroj pre **tvorbu formulárov** umožňuje ľahko vytvárať **viackrokové formuláre** s možnosťou programovej validácie jednotlivých krokov a možnosťou **potvrdenia platnosti emailovej adresy** pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.
 
 ### Prelomové zmeny
 
@@ -48,6 +48,7 @@ Pre vyhľadanie v kóde môžete použiť hľadanie v súboroch `*Repository.jav
 ![](frontend/setup/svgicon.png)
 
 - Pridaný prenos aktuálneho HTML kódu pri prepnutí režimu editora Štandardný/HTML/Page Builder. Môžete tak jednoducho upraviť Page Builder stránku v HTML kóde a znova zobraziť úpravy v režime Page Builder (#58145).
+- Pridané kontextové menu Zmazať element, pomocou ktorého môžete ľahko zmazať tlačidlo, odkaz, odstavec, formulár, sekciu a podobne. Stačí keď na element kliknete pravým tlačidlom pre zobrazenie kontextového menu (#osk233).
 - Page Builder - upravené generovanie štýlov pri použití nástroja ceruzka. Do CSS štýlu sa generujú len zmenené hodnoty, tie sú v dialógovom okne zvýraznené modrým orámovaním vstupného poľa (#58145).
 - Page Builder - pridaná možnosť volania [vlastného JavaScript súboru](frontend/page-builder/blocks.md#podporný-javascript-kód) s podpornými funkciami pre úpravu kódu. Pridaná možnosť upraviť nastavenia ako selektory pre elementy, farby a podobne (#58141).
 - Page Builder - upravené generovanie kotiev pri kartách tak, aby názov kotvy bol generovaný podľa názvu karty - pôvodne bol generovaný nesémanticky ako `autotabs-x-y` (#112).
@@ -75,6 +76,9 @@ Pre vyhľadanie v kóde môžete použiť hľadanie v súboroch `*Repository.jav
 - Doplnená možnosť vkladať [tlačidlo](frontend/setup/ckeditor.md#tlačidlo) - element `button`. Viete tak ľahko vkladať rôzne akčné `call to action` tlačidlá (#58201).
 - Štýl - [výber štýlu](frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor) definovaného pre element napr. `p.paragraph-green,p.paragraph-red-border,p.paragraph-yellow-background` alebo `section.test-section,section.test-section-green` umožňuje nastaviť viaceré štýly súčasne. Opakovaným zvolením už nastaveného štýlu sa tento štýl odstráni (#OSK140).
 - Upravený text pre publikovanie stránky do budúcnosti na **Naplánovať zmenu stránky po tomto dátume**, pri zvolení tejto možnosti sa aj zmení tlačidlo na uloženie na text **Naplánovať** pre jasnejšiu informáciu pre používateľa (#58253).
+- Do žiadosti o schválenie web stránky doplnený zoznam zmenených polí (#58077).
+
+![](redactor/webpages/approve/approve-form.png)
 
 ### Aplikácie
 
@@ -153,11 +157,17 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - MultiWeb - doplnené zobrazenie domény v bočnej lište (#58317-0).
 - MultiWeb - doplnená možnosť nastaviť doménu presmerovania aby bolo možné zadať `https://` prefix (#58317-0).
 - MultiWeb - doplnená kontrola práv pre skupiny médií a značky (#58317-0).
+- Zoznam formulárov - nastavenie [spracovateľa formulárov](custom-apps/apps/multistep-forms/README.md), pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
+- Číselníky - doplnené odstránenie medzier na začiatku a konci poľa typu reťazec v dátach číselníka (#OSK233).
 
 ### Oprava chýb
 
 - Značky - opravené duplikovanie priečinka v Zobraziť pre pri uložení značky, odstránený výber priečinka z ostatných domén, keďže značky sú už oddelené podľa domén (#58121).
 - Web stránky - opravené vkladanie tvrdej medzery za spojky tak, aby sa aplikovalo iba na text stránky a nie na atribúty alebo HTML značky (#OSK235).
+- Datatables - opravené spracovanie udalosti `Enter` pri vybraných vstupných poliach filtrov tabuľky (#58313).
+- Datatables - opravené filtrovanie kedy sa viacero `serverSide:false` tabuliek na stránke navzájom ovplyvňovalo pri filtrovaní (#58313).
+- Elektronický obchod - opravené odosielanie email notifikácie, pri zmene stavu objednávky (#58313).
+- Elektronický obchod - opravené automatické nastavenie stavu objednávky po zmene platieb (#58313).
 
 ### Dokumentácia
 
@@ -189,10 +199,14 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Prechod na novú tabuľku `form_settings` pre vlastnosti formulárov v `.jsp` súboroch. Je potrebné si spustiť aktualizačný skript `update-2025-0.jsp`, ktorý upraví potrebné `.jsp` (#58161).
 - Zoznam formulárov - nastavovanie parametrov/atribútov všetkých typov formulárov presmerované z tabuľky `form_attributes` do novej tabuľky `form_settings` (#58161).
 - Dátové tabuľky - pridaná BE podpora pre `row-reorder`, kedy je možné meniť poradie záznamov priamo v dátovej tabuľke pomocou drag&drop (#58161).
+- Udalosti - pridaná udalosť [Aktualizácia kódov v texte](developer/backend/events.md#aktualizácia-kódov-v-texte) pre možnosť úprav kódov v texte stránky typu `!CUSTOM_CODE!` a podobne (#54273-63).
+- Dátové tabuľky - pridané [Spring udalosti](developer/backend/events-datatable.md) pre možnosť úprav dát v zákazníckych inštaláciách (#54273-63).
 
 ### Testovanie
 
 - Doplnený skript [rm-same-images.sh](../../src/test/webapp/rm-same-images.sh) pre odstránenie rovnakých obrázkov pri vytvorení nových snímkov obrazovky (#58113).
+
+![meme](_media/meme/2026-0.jpg ":no-zoom")
 
 ## 2025.40
 
@@ -562,7 +576,7 @@ Iné zmeny:
 
 ![meme](_media/meme/2025-18.jpg ":no-zoom")
 
-## 2025.0.x
+## 2025.0.52
 
 > Opravná verzia pôvodnej verzie 2025.0.
 

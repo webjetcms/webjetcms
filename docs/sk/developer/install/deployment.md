@@ -7,7 +7,7 @@ Deployment jar archívov pre použitie v klientských projektoch je založené n
 Pred vytvorením buildu je potrebné manuálne vykonať/skontrolovať nasledovné kroky:
 
 - pripraviť popis zmien v súbore ```docs/CHANGELOG.md```
-- upraviť súbor ```docs/README.md``` - pridať na vrch najnovšiu verziu z changelogu a dole zmazať poslednú (v README.md sa zobrazuje 5 posledných verzií)
+- upraviť súbor ```docs/README.md``` - pridať na vrch najnovšiu verziu z changelogu
 - upraviť prekladový kľúč ```admin.overview.changelog``` so sumárom zmien aktuálnej verzie zobrazený pod uvítacím textom na úvodnej obrazovke
 - upraviť ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - doplniť sumár a odkaz na changelog najnovšej verzie
 

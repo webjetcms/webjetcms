@@ -23,6 +23,7 @@ import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
@@ -145,7 +146,7 @@ public class FormSimpleApp extends WebjetComponentAbstract {
         }
 
         //
-        FormSettingsService.prepareSettingsForEdit(formSettings);
+        FormSettingsService.prepareSettingsForEdit(formSettings, FormsService.FORM_TYPE.SIMPLE.value());
 
         super.initAppEditor(componentRequest, request);
     }

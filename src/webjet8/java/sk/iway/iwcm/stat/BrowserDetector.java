@@ -230,6 +230,15 @@ public class BrowserDetector implements Serializable {
 			if (userAgentString == null)
 				return;
 
+			//fix ChatGPT-User -> ChatGPTBot
+			if (userAgentString.contains("ChatGPT-User")) {
+				userAgentString = userAgentString.replace("ChatGPT-User", "ChatGPTBot");
+			}
+			//monspark to bot
+			if (userAgentString.contains("MonSpark")) {
+				userAgentString = userAgentString.replace("MonSpark", "MonSparkBot");
+			}
+
 			Client uaClient = uaParser.parse(userAgentString);
 
 			browserName = uaClient.userAgent.family;
@@ -427,6 +436,7 @@ public class BrowserDetector implements Serializable {
 	}
 
 	public String getBrowserSubplatform() {
+		if (browserSubplatform == null) return "unknown";
 		return ResponseUtils.filter(browserSubplatform);
 	}
 
