@@ -8,6 +8,8 @@
 >
 > A new tool for **creation of forms** makes it easy to create **multi-step forms** with the possibility of programmatic validation of individual steps and the possibility of **confirmation of the validity of the email address** using the code sent. This avoids the forms being filled in by various robots.
 
+!> Warning: version `2025.52` is technically identical to the version `2026.0` and can be fully interchanged.
+
 ### Groundbreaking changes
 
 - Updated libraries `commons-lang,displaytag`, more in [section for the programmer](#for-the-programmer) (#58153).

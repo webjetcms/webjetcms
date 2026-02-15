@@ -8,6 +8,8 @@
 >
 > Nový nástroj pro **tvorbu formulářů** umožňuje snadno vytvářet **vícekrokové formuláře** s možností programové validace jednotlivých kroků a možností **potvrzení platnosti emailové adresy** pomocí zaslaného kódu. Vyhnete se tak vyplnění formulářů různými roboty.
 
+!> Upozornění: verze `2025.52` je technicky shodná s verzí `2026.0` a může být plnohodnotně zaměněna.
+
 ### Průlomové změny
 
 - Aktualizované knihovny `commons-lang,displaytag`, více v [sekci pro programátora](#pro-programátora) (#58153).

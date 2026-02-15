@@ -18,6 +18,10 @@ V editaci formuláře můžete měnit pole poznámka (ve kterém si můžete evi
 
 Formulář nejjednodušeji vytvoříte kliknutím na ikonu Přidat a nastavením jeho základních parametrů v kartě Základní. Vytvoříte tak nový formulář typu [Vícekrokový formulář](../multistep-form/README.md). Následně můžete k formuláři přidat jednotlivé položky formuláře (textová pole, zaškrtávací pole, výběrová pole a podobně) kliknutím na název vytvořeného formuláře v tabulce a přechodem do karty [Položky formuláře](../multistep-form/README.md).
 
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Karta Základní
 
 ![](edit-tab-basic.png)

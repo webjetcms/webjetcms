@@ -1,10 +1,10 @@
-# WebJET CMS 2025
+# WebJET CMS 2026
 
-Vitajte v dokumentácii k WebJET CMS verzie 2025. Odporúčame prečítať si [zoznam zmien](CHANGELOG-2025.md) a [roadmap](ROADMAP.md).
+Vitajte v dokumentácii k WebJET CMS verzie 2026. Odporúčame prečítať si [zoznam zmien](CHANGELOG-2026.md) a [roadmap](ROADMAP.md).
 
-## Zoznam zmien vo verzii 2025.52/SNAPSHOT
+## Zoznam zmien vo verzii 2026.0
 
-> **WebJET CMS 2025.52/SNAPSHOT** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
+> **WebJET CMS 2026.0** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.
 >
 > Podpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.
 >
@@ -76,7 +76,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Nový spôsob vytvárania formulárov, ktoré môžu obsahovať [viac krokov](redactor/apps/multistep-form/README.md) s pokročilými funkciami. V zozname formulárov viete vytvoriť nový formulár, ktorému následne pridáte jednotlivé položky a prípadne viaceré kroky. Karta položky formuláru je viditeľná v detaile formuláru typu Viackrokový formulár (#58161).
 
-![](redactor/apps/multistep-form/real-form.png)
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 - Zoznam formulárov - celá sekcia bola prerobená z technológie `Vue.js` na štandardné `Html + JavaScript` pre lepšiu integráciu do WebJET CMS a zjednodušenie úprav (#58161).
 - Zoznam formulárov - umožnené vytváranie formuláru, ktorý je automaticky typu [viackrokový formulár](redactor/apps/multistep-form/README.md) (#58161).

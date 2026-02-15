@@ -18,6 +18,10 @@ In form editing, you can change the note field (where you can record the process
 
 The easiest way to create a form is to click the Add icon and set its basic parameters in the Basic tab. This will create a new form of type [Multi-step form](../multistep-form/README.md). You can then add individual form items (text fields, checkboxes, selection fields, etc.) to the form by clicking on the name of the created form in the table and navigating to the [Items on the form](../multistep-form/README.md).
 
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Basic tab
 
 ![](edit-tab-basic.png)

@@ -6,6 +6,7 @@
 - [Manuál pre správcu](/admin/README.md)
 - [Manuál pre prevádzku](/sysadmin/README.md)
 - [Zoznam zmien](/CHANGELOG.md)
+    - [Verzia 2026](/CHANGELOG-2026.md)
     - [Verzia 2025](/CHANGELOG-2025.md)
     - [Verzia 2024](/CHANGELOG-2024.md)
     - [Verzia 2023](/CHANGELOG-2023.md)

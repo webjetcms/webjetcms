@@ -8,12 +8,14 @@ V gradle projektoch stačí zadať verziu v build.gradle:
 
 ```gradle
 ext {
-    webjetVersion = "2024.18";
+    webjetVersion = "2026.0";
 }
 ```
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
+- `2026.0-jakarta` - stabilizovaná verzia 2026.0 pre aplikačný server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
+- `2026.0` - stabilizovaná verzia 2026.0, nepribúdajú do nej denné zmeny.
 - `2025.0-jakarta-SNAPSHOT` - stabilizovaná verzia 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - stabilizovaná verzia 2025.52, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - `2025.0.52` - stabilizovaná verzia 2025.0.52 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).

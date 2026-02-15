@@ -1,10 +1,10 @@
-# WebJET CMS 2025
+# WebJET CMS 2026
 
-Welcome to the documentation for WebJET CMS version 2025. We recommend to read [list of changes](CHANGELOG-2025.md) a [roadmap](ROADMAP.md).
+Welcome to the documentation for WebJET CMS version 2026. We recommend to read [list of changes](CHANGELOG-2026.md) a [roadmap](ROADMAP.md).
 
-## List of changes in version 2025.52/SNAPSHOT
+## List of changes in version 2026.0
 
-> **WebJET CMS 2025.52/SNAPSHOT** brings an improved version of the tool **Page Builder** for the creation of **complex web pages**. In blocks it is possible **search and filter** based on tags, so you can easily find the appropriate block to insert into the page. New features have been added such as **column division**, **inserting multiple sections at once** a **button to add a new section still displayed** to quickly expand the page content.
+> **WebJET CMS 2026.0** brings an improved version of the tool **Page Builder** for the creation of **complex web pages**. In blocks it is possible **search and filter** based on tags, so you can easily find the appropriate block to insert into the page. New features have been added such as **column division**, **inserting multiple sections at once** a **button to add a new section still displayed** to quickly expand the page content.
 >
 > Support **PICTURE element** allows you to display **different images according to screen resolution** visitor, thus improving the visual experience on different devices. In addition, it is possible to embed **custom icons** defined in a common SVG file, which brings more flexibility in design.
 >
@@ -75,7 +75,9 @@ Welcome to the documentation for WebJET CMS version 2025. We recommend to read [
 
 - more steps[ with advanced features. In the list of forms you can create a new form, to which you can then add individual items and possibly multiple steps. The form item tab is visible in the form detail of the Multistep form type (#58161).](redactor/apps/multistep-form/README.md) List of forms - the whole section has been redesigned from technology&#x20;
 
-![](redactor/apps/multistep-form/real-form.png)
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 - &#x20;to standard `Vue.js` for better integration into WebJET CMS and simplified editing (#58161).`Html + JavaScript`List of forms - enables the creation of a form that is automatically of type&#x20;
 - multi-step form[ (#58161).](redactor/apps/multistep-form/README.md) List of forms - allows setting parameters/attributes of all form types directly in the form editor (#58161).

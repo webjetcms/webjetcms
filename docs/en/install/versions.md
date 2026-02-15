@@ -8,11 +8,13 @@ In gradle projects, just specify the version in build.gradle:
 
 ```gradle
 ext {
-    webjetVersion = "2024.18";
+    webjetVersion = "2026.0";
 }
 ```
 
 Currently there are the following versions of WebJET:
+- `2026.0-jakarta` - Stabilized version 2026.0 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
+- `2026.0` - Stabilized version 2026.0, no daily changes are added.
 - `2025.0-jakarta-SNAPSHOT` - stabilized version 2025.52 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - stabilized version 2025.52, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - `2025.0.52` - Stabilized version 2025.0.52 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
