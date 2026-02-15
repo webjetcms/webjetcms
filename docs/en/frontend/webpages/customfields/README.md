@@ -169,8 +169,23 @@ To select an existing page (its `docId`) it is possible to use the type `docsIn_
 
 ![](webpages-enumeration.png)
 
-The connection to the dialer is via type `enumeration_X` where X is the ID of the dial type. The value is set to the ID of the record from the dial:
-- `editor.field_x.type=enumeration_2` - displays options from dial type 2 as a selection field
+The connection to the dialer is via type `enumeration_X` where X is the ID of the dial type. The value and label are set by default `string1` value from the dial:
+- `editor.field_x.type=enumeration_2` - displays as a selection field the options from the dial type 2, both the value and the label will be from `string1`
+- `editor.field_x.type=enumeration_2_null` - by adding `_null` it is also possible to select a blank option at the end of the type
+
+#### Custom columns for label and value
+
+It is possible to specify which properties from the codebook are used for the label and the value of the selection field:
+- `editor.field_x.type=enumeration_2_string1_id` - the label will be from `string1`, the value of z `id`
+- `editor.field_x.type=enumeration_2_string2_string3` - the label will be from `string2`, the value of z `string3`
+- `editor.field_x.type=enumeration_2_string1_id_null` - the label will be from `string1`, the value of z `id`, with blank value option
+
+You can use any property from the dial:
+- `string1` to `string12` - text fields
+- `decimal1` to `decimal4` - numeric fields
+- `boolean1` to `boolean4` - Boolean fields
+- `date1` to `date4` - date fields
+- `id` - identifier of the record in the codebook
 
 ### Unique identifier
 

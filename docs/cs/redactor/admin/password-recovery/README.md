@@ -36,6 +36,8 @@ Zaslaný email obsahuje 2 odkazy:
 
 ![](email.png)
 
+Jméno a email adresu ze které je odeslán email s odkazem na změnu hesla lze nastavit přes konfigurační proměnné `passwordResetDefaultSenderEmail` a `passwordResetDefaultSenderName`.
+
 ### Akce změny hesla
 
 Klepnutím na první odkaz, **Chcete-li změnit heslo, klikněte sem do 30 minut.**, se dostanete na stránku ke změně hesla.

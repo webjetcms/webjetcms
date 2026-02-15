@@ -16,6 +16,7 @@ Dostupná jsou následující pole:
 - **Název šablony** - povinné pole s **jedinečným** název šablony novinek
 - **Obrázek šablony** - pole pro výběr ilustračního obrázku zobrazených novinek (pro lepší orientaci při výběru šablony v aplikaci novinky)
 - **Šablonovací nástroj** - výběr šablonovacího nástroje (dosud podporován pouze `Velocity`)
+- **Vložit třídy do Velocity šablony** - pole pro vložení názvu třídy, která bude dostupná v šabloně. pro zobrazení diskuse je třeba přidat třídu `sk.iway.iwcm.forum.ForumDB`. Třídy můžete oddělit čárkou nebo novým řádkem. V kódu pak můžete použít např. `$ForumDB.isActive($doc.getDocId())` pro přístup k metodám třídy.
 - **HTML kód** - kód šablony
 - **Umístění stránkování** - místo kam se vloží stránkování
 - **HTML kód stránkování** - kód stránkování
@@ -95,6 +96,19 @@ $pagesAll
 //celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
 $totalPages
 
+//custom paging
+<ul class="pagination justify-content-center">
+     #foreach($page in $pages)
+     <li class="pagination__item">
+         <a href="$page.url"
+            class="pagination__link btn btn--square#if($page.actual) pagination__link--active#end"
+            aria-label="Strana $page.label">
+            $page.label
+         </a>
+     </li>
+     #end
+</ul>
+
 //podmienene zobrazenie ak je zadany perex obrazok
 #if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
 ```
@@ -108,3 +122,22 @@ $doc.lastUpdateDate $doc.lastUpdateTime
 //datum a cas vytvorenia
 $doc.publishStartString
 ```
+
+Dostupné jsou standardně následující objekty:
+
+```java
+vc.put("docDetails", doc);
+vc.put("currentUser", user);
+vc.put("news", newsList);
+vc.put("actionBean", this);
+vc.put("context", this);
+vc.put("prop", prop);
+vc.put("Tools", Tools.class);
+vc.put("DocDB", sk.iway.iwcm.doc.DocDB.class);
+vc.put("GroupsDB", sk.iway.iwcm.doc.GroupsDB.class);
+vc.put("MediaDB", sk.iway.spirit.MediaDB.class);
+vc.put("pageParams", new PageParams(getRequest()));
+vc.put("dateTool", new DateTool());
+```
+
+Pokud potřebujete, můžete do šablony přidat další třídy pomocí pole **Vložit třídy do Velocity šablony** v editoru šablony novinek.

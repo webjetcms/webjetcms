@@ -1,10 +1,10 @@
 # Thymeleaf
 
-[Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#messages) je šablonovací framework. Ve WebJETu je spojen se Spring MVC.
+[Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#standard-expression-syntax) je šablonovací framework. Ve WebJETu je spojen se Spring MVC.
 
 ## Mapování URL
 
-Mapování URL adres admin části se provádí v [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) jako:
+Mapování URL adres admin části se provádí v [ThymeleafAdminController.java](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) jako:
 
 ```java
 @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage}" })
@@ -23,15 +23,15 @@ Mapování URL adres admin části se provádí v [ThymeleafAdminController.java
 
 přičemž pokud `subpage` není zadané hledá se soubor `index.pug`. Při volání /admin/v9/ se provede stránka `dashboard/overview.pug`.
 
-Všechny výchozí objekty se vkládají do modelu přes [LayoutBean.java](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutBean.java).
+Všechny výchozí objekty se vkládají do modelu přes [LayoutBean.java](../../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutBean.java).
 
 ## Vložení vlastních objektů do modelu
 
-Pokud potřebujete pro určité stránky administrace vložit vlastní objekt do modelu, lze využít události. [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publikuje událost [ThymeleafEvent](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java), na kterou lze poslouchat. V události je publikován `ModelMap` objekt i `HttpServletRequest`.
+Pokud potřebujete pro určité stránky administrace vložit vlastní objekt do modelu, lze využít události. [ThymeleafAdminController.java](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publikuje událost [ThymeleafEvent](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java), na kterou lze poslouchat. V události je publikován `ModelMap` objekt i `HttpServletRequest`.
 
-Příkladem použití je [WebPagesListener](../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
+Příkladem použití je [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
 
-Důležité je použít anotaci `@Component` (což vyžaduje i přidání package ve třídě [SpringConfig](../../../src/main/java/sk/iway/webjet/v9/SpringConfig.java) v anotaci `@ComponentScan`) a samozřejmě `@EventListener`. V podmínkách je třeba nastavit hodnotu parametru `page` a `subpage`, aby poslech události byl proveden pouze pro zadanou stránku administrace.
+Důležité je použít anotaci `@Component` (což vyžaduje i přidání package ve třídě [SpringConfig](../../../../src/main/java/sk/iway/webjet/v9/V9SpringConfig.java) v anotaci `@ComponentScan`) a samozřejmě `@EventListener`. V podmínkách je třeba nastavit hodnotu parametru `page` a `subpage`, aby poslech události byl proveden pouze pro zadanou stránku administrace.
 
 ```java
 @Component
@@ -73,7 +73,7 @@ webpagesDatatable = WJ.DataTable({
 
 ## LayoutService
 
-Třída [LayoutService](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) zajišťuje naplnění základních objektů pro zobrazení admin části. Důležité Java metody:
+Třída [LayoutService](../../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) zajišťuje naplnění základních objektů pro zobrazení admin části. Důležité Java metody:
 
 ```java
 //Pridanie zoznamu jazykov do datatabuľky
@@ -144,7 +144,7 @@ let tabs = [
     { id: 'basic', title: '[[#{menu.top.help}]]', selected: true },
 ```
 
-pokud potřebujete přidat nový překladový klíč přidejte jej do souboru [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties). Klíče jsou organizovány podle pug souborů. Po přidání překladového klíče obnovte překlady zavoláním URL adresy [/admin/?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true). WebJET si obnoví obsah souboru `text-webjet9.properties` a načte nové klíče.
+pokud potřebujete přidat nový překladový klíč přidejte jej do souboru [text-webjet9.properties](../../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties). Klíče jsou organizovány podle pug souborů. Po přidání překladového klíče obnovte překlady zavoláním URL adresy [/admin/?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true). WebJET si obnoví obsah souboru `text-webjet9.properties` a načte nové klíče.
 
 V Java kódu lze získat objekt `Prop.java` jako:
 
@@ -213,6 +213,29 @@ podporovány jsou následující funkce:
 - `int getConstantInt(String name, int defaultValue)` - vrátí celo číselnou hodnotu konstanty podle zadaného `name`, pokud neexistuje vrátí hodnotu zadanou v `defaultValue`.
 - `boolean getConstantBoolean(String name)` - vrátí binární hodnotu konstanty podle zadaného `name`, pokud neexistuje vrátí `false`.
 - `boolean isPerexGroupsRenderAsSelect()` - vrátí binární hodnotu pro zobrazení značek (perex skupin) jako multi výběrové pole namísto seznamu zaškrtávacích polí (pokud existuje více než 30 značek).
+
+## Volání statické metody
+
+Pokud potřebujete volat komplexnější kód můžete jej vložit do statické metody a tu následně zavolat v PUG souboru:
+
+```java
+public class MyUtils {
+    public static String getMyValue(String param) {
+        //complex code
+        return value;
+    }
+}
+```
+
+a v PUG souboru ji zavoláte následovně:
+
+```javascript
+span(data-th-text="${T(sk.iway.iwcm.utils.MyUtils).getMyValue('parameter')}")
+
+<p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
+
+<p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+```
 
 ## Kontrola práv
 

@@ -1,10 +1,10 @@
 # Thymeleaf
 
-[Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#messages) is a templating framework. In WebJET it is connected with Spring MVC.
+[Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#standard-expression-syntax) is a templating framework. In WebJET it is connected with Spring MVC.
 
 ## URL mapping
 
-The mapping of the URLs of the admin part is done in [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) Like:
+The mapping of the URLs of the admin part is done in [ThymeleafAdminController.java](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) Like:
 
 ```java
 @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage}" })
@@ -23,15 +23,15 @@ The mapping of the URLs of the admin part is done in [ThymeleafAdminController.j
 
 whereby if `subpage` not specified a file is being searched for `index.pug`. When /admin/v9/ is called, the page `dashboard/overview.pug`.
 
-All default objects are inserted into the model via [LayoutBean.java](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutBean.java).
+All default objects are inserted into the model via [LayoutBean.java](../../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutBean.java).
 
 ## Inserting custom objects into the model
 
-If you need to insert a custom object into the model for certain administration pages, you can use events. [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publishes the event [ThymeleafEvent](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java) to which it is possible to listen. In the event is published `ModelMap` object and `HttpServletRequest`.
+If you need to insert a custom object into the model for certain administration pages, you can use events. [ThymeleafAdminController.java](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publishes the event [ThymeleafEvent](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java) to which it is possible to listen. In the event is published `ModelMap` object and `HttpServletRequest`.
 
-An example of use is [WebPagesListener](../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
+An example of use is [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
 
-It is important to use annotation `@Component` (which also requires adding a package in the class [SpringConfig](../../../src/main/java/sk/iway/webjet/v9/SpringConfig.java) in the annotation `@ComponentScan`) and of course `@EventListener`. In the conditions it is necessary to set the value of the parameter `page` a `subpage` so that event listening is done only for the specified administration page.
+It is important to use annotation `@Component` (which also requires adding a package in the class [SpringConfig](../../../../src/main/java/sk/iway/webjet/v9/V9SpringConfig.java) in the annotation `@ComponentScan`) and of course `@EventListener`. In the conditions it is necessary to set the value of the parameter `page` a `subpage` so that event listening is done only for the specified administration page.
 
 ```java
 @Component
@@ -73,7 +73,7 @@ webpagesDatatable = WJ.DataTable({
 
 ## LayoutService
 
-Class [LayoutService](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) ensures that basic objects are populated to display the admin part. Important Java methods:
+Class [LayoutService](../../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) ensures that basic objects are populated to display the admin part. Important Java methods:
 
 ```java
 //Pridanie zoznamu jazykov do datatabuľky
@@ -144,7 +144,7 @@ let tabs = [
     { id: 'basic', title: '[[#{menu.top.help}]]', selected: true },
 ```
 
-if you need to add a new translation key, add it to the file [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties). Keys are organized by pug files. After adding a translation key, refresh the translations by calling the URL [/admin/?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true). WebJET restores the contents of the file `text-webjet9.properties` and loads the new keys.
+if you need to add a new translation key, add it to the file [text-webjet9.properties](../../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties). Keys are organized by pug files. After adding a translation key, refresh the translations by calling the URL [/admin/?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true). WebJET restores the contents of the file `text-webjet9.properties` and loads the new keys.
 
 In Java code it is possible to get an object `Prop.java` Like:
 
@@ -213,6 +213,29 @@ the following functions are supported:
 - `int getConstantInt(String name, int defaultValue)` - returns the integer value of the constant according to the specified `name`, if none returns the value specified in `defaultValue`.
 - `boolean getConstantBoolean(String name)` - returns the binary value of the constant according to the specified `name` if there is no return `false`.
 - `boolean isPerexGroupsRenderAsSelect()` - returns a binary value for displaying tags (perex groups) as a multi-select field instead of a list of checkboxes (if there are more than 30 tags).
+
+## Calling a static method
+
+If you need to call more complex code you can put it in a static method and then call it in a PUG file:
+
+```java
+public class MyUtils {
+    public static String getMyValue(String param) {
+        //complex code
+        return value;
+    }
+}
+```
+
+and call it in the PUG file as follows:
+
+```javascript
+span(data-th-text="${T(sk.iway.iwcm.utils.MyUtils).getMyValue('parameter')}")
+
+<p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
+
+<p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+```
 
 ## Control of rights
 

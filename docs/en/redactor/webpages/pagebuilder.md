@@ -42,6 +42,12 @@ Clicking on the gear will also display the + icons for inserting a new block. Cl
 
 ![](pagebuilder-library.png)
 
+In the Library tab, you can search for blocks by name, or filter blocks by label. You can define these in the file `pagebuilder.properties` At [creating blocks](../../frontend/page-builder/blocks.md#name-and-block-marks) for your website.
+
+An icon appears at the bottom of the page `+` for easier addition of a new section.
+
+![](pagebuilder-plusbutton.png)
+
 ## Setting the width of the columns
 
 The editor allows you to adjust the column widths according to the selected device. In the toolbar, next to the editor type toggle, there is an option to set the size (width) of the device.
@@ -55,3 +61,7 @@ The editor allows you to adjust the column widths according to the selected devi
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+## Column splitting
+
+To invoke the Split Column function, click on the `+` in the yellow bar and select Block. Then, in the Basic tab, select the Split Column option. This function allows you to quickly split a column without having to insert a new column and move the contents. It will allow you to insert new complex blocks into a long text column, for example.

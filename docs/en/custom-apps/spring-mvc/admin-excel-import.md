@@ -103,7 +103,7 @@ It is possible to override some of the methods if necessary, example in the meth
 ```java
 package sk.iway.basecms.contact.excelimport;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.slf4j.Logger;

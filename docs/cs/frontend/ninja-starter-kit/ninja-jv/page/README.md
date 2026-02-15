@@ -32,6 +32,8 @@ Použité v :ghost:<code>head.jsp</code>
 <meta property="og:title" content="${ninja.page.seoTitle}" />
 ```
 
+Při volání `seoTitle` je odstraněn případný HTML kód z titulku stránky, pokud potřebujete titulek včetně HTML kódu můžete použít `${ninja.page.seoTitleHtml}`.
+
 ## Popis *String*
 
 Hledá popis ve volitelném poli S :carousel\_horse: `getFieldS()` (SEO popis), pokud je pole prázdné, tak použije standardní perex popis :carousel\_horse: `getPerexPre()`.

@@ -5,7 +5,7 @@
 Banner system application, allows you to insert a banner into the page. The system supports the following types of banners:
 - Image - displays a static image or an animated one `gif`. It records clicks on the banner.
 - Html code - inserts the specified HTML code of the dynamic banner into the page. It does not register clicks on the banner.
-- Content banner - inserts an image in the background above which text and buttons for performing an action (click to action buttons) are placed.
+- Content banner - inserts an image in the background of the page above which there is text and buttons to perform an action (called. `call to action` buttons).
 - Video - embeds a local video file or a YouTube video into the page.
 
 ![](datatable.png)

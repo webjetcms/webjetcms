@@ -134,7 +134,7 @@ V kartě Perex můžete nastavit platnost zobrazení stránky, nebo nastavit jej
 
 ![](editor/tab-perex.png)
 
-Pole **Datum začátku**, **Datum konce** a **Datum konání** se obvykle používají pouze u novinek, tiskových zpráv, událostí a konferencí. Pole **Datum začátku** a **Datum konce** mají však i speciální funkci v případě, že chcete načasovat publikování nebo zrušení stránky od jistého časového okamžiku v budoucnosti. Tato funkce je aktivována po zaškrtnutí políčka **Zveřejnit stránku po tomto datu**, resp. **Odveřejnit stránku po tomto datu**. Hodnotu polí **Datum začátku** a **Datum konce** je nutné vyplnit pro všechny události a konference v kalendáři událostí. Pro novinky stačí zadat datum začátku.
+Pole **Datum začátku**, **Datum konce** a **Datum konání** se obvykle používají pouze u novinek, tiskových zpráv, událostí a konferencí. Pole **Datum začátku** a **Datum konce** mají však i speciální funkci v případě, že chcete načasovat publikování nebo zrušení stránky od jistého časového okamžiku v budoucnosti. Tato funkce je aktivována po zaškrtnutí políčka **Naplánovat změnu stránky po tomto datu**, resp. **Odveřejnit stránku po tomto datu**. Hodnotu polí **Datum začátku** a **Datum konce** je nutné vyplnit pro všechny události a konference v kalendáři událostí. Pro novinky stačí zadat datum začátku.
 
 Perex (Anotace) obsahuje stručný popis, čeho se stránka týká. Neměl by být delší než cca 160 znaků. Perex se používá hlavně při psaní novinek, tiskových zpráv, událostí a konferencí, kde představuje krátký popis k článku, který je zobrazen v seznamu zpráv.
 

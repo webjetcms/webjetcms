@@ -11,11 +11,22 @@ Vysvětlení použitých piktogramů:
 - [ ] +pokud začíná na znak `+` byla úloha přidána do seznamu až po prvotním vytvoření plánu, takové úkoly jsou typicky požadovány zákazníky a pokud budou realizovány ovlivní časový plán. To znamená, že některé jiné úkoly nemusí být v dané verzi realizovány z nedostatku času.
 - [ ] ~~přeškrtnuto~~ úloha přesunuta do jiné verze, nebo řešena jiným způsobem, nebo zrušena. V popisu je vždy číslo verze kam se přesunula nebo důvod zrušení.
 
+## 2026
+
+- Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG`.
+- Headless CMS - připravit REST rozhraní pro použití WebJET CMS v headless módu.
+- Migrace na Spring Boot projekt.
+- Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- Práva - přidat možnost nastavit práva jen na čtení a případně nastavit jen povolené ID pro editaci.
+- Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor.
+- Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi.
+- Skripty - přidat možnost nastavit, zda se má skript vkládat také v editoru stránek, nebo ne.
+
 ## 2025
 
-- [ ] Přechod na `Jakarta EE` - změna Java packages z `javax.servlet` na `jakarta.servlet`, připravit migrační skript (#57793).
-- [ ] Přechod na aplikační server Tomcat 11+ (#57793).
-- [ ] Přechod na `Spring` verze 7 (#57793).
+- [x] Přechod na `Jakarta EE` - změna Java packages z `javax.servlet` na `jakarta.servlet`, připravit migrační skript (#57793).
+- [x] Přechod na aplikační server Tomcat 11+ (#57793).
+- [x] Přechod na `Spring` verze 7 (#57793).
 - [ ] Zavést do projektu povinnost použití `SonarLint` a formátování kódu přes `.editorconfig` nebo `Spotless` - příklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Primární používání GitHub repozitáře pro vývoj.
 - [x] Zrušení generování artifaktů na starý `iwmsp.sk` repozitář, artefakty budou dostupné už jen přes [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
@@ -30,21 +41,21 @@ Vysvětlení použitých piktogramů:
 - [ ] Aplikace - možnost nákupu aplikace pro OpenSource verzi (#55825).
 - [ ] Možnost provést Thymeleaf kód v hlavičce/patičce a možná i v těle web stránky.
 - [ ] Bezpečnost - přidat podporu generování `nonce` pro `Content-Security-Policy` hlavičku, viz. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
-- [ ] Formuláře - přidat možnost volat Java třídu pro validaci formuláře.
+- [x] Formuláře - přidat možnost volat Java třídu pro validaci formuláře (#58161).
 - [x] Značky - filtrovat podle aktuální domény aby to bylo stejné jako v jiných částech (#57837).
-- [ ] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), není-li posílán stav `available` nastavit na `true`.
+- [x] Import uživatelů - pokud není zadané heslo, tak vygenerovat (pro nové uživatele), pokud není posílán stav `authorized` nastavit na `true` (#58253).
 - [ ] V testech nějak automatizovaně kontrolovat výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí zaseknutí automatizovaných testů.
 - [ ] Doplnit aplikaci pro přesměrování hlavní stránky na `/sk/` nebo `/en/` podle jazyka prohlížeče.
-- [ ] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants` (#57849).
+- [x] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants` (#57849).
 - [x] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky (#57885).
-- [ ] Hromadný email - auditovat změny ve skupinách uživatelů.
+- [x] Hromadný email - auditovat změny ve skupinách uživatelů (#58249).
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
 - [ ] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči `ADFS/SAML` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
-- [ ] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
+- [x] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
 - [x] Hromadný email - optimalizace tvorby seznamu příjemců (#57537).
 - [ ] +Úkoly na pozadí - možnost ručně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
 - [ ] +Formuláře - zakázat `GET` volání na `FormMail/FormMailAjax`.
@@ -59,7 +70,7 @@ Vysvětlení použitých piktogramů:
 - [ ] +Průzkumník - nastavit vlastnosti složky (indexování, práva) podle rodičovské (rekurzivní) při prvním otevření, pokud složka nemá nastavení v databázi.
 - [ ] +Pro pole typu `DataTableColumnType.JSON`, konkrétně `className = "dt-tree-page-null"` přidat možnost definovat kořenovou složku.
 - [ ] +Přesunout všechny `Converter` třídy jako `DocDetailsNotNullConverter` do samostatného `package` kde nebudou jiné entity aby bylo možné tento `Converter` použít iv projektech kde je použit samostatný `JPA`.
-- [ ] +Přidat možnost nastavit jméno HTTP hlavičky pro `x-forwarded-for` a určit, která z IP adres se použije (první VS poslední).
+- [x] +Přidat možnost nastavit jméno HTTP hlavičky pro `x-forwarded-for` a určit, která z IP adres se použije (první VS poslední) (#58237).
 - [ ] +Datatabulky - přidat možnost uspořádání podle více sloupců kliknutím s klávesou `SHIFT`.
 - [ ] +Datatabulky - přidat možnost `hideOnDuplicate` pro karty v editoru, nezapomenout i na třídu`DataTableTab` aby to šlo nastavit iv anotaci.
 - [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
@@ -71,12 +82,14 @@ Vysvětlení použitých piktogramů:
 - [ ] Galerie - umožnit změnu cesty galerie (složky) a nastavit vše s tím spojené.
 - [ ] +Konfigurace - doplnit sloupec skupina s hodnotou `modules` konfigurační proměnné (výběrové pole, může mít více hodnot). Doplnit možnost zobrazit i nenastavené proměnné (neboli kompletní seznam). Vytvořit nástroj pro vygenerování všech proměnných podle skupin/modulů do `md` souboru v dokumentaci pro přehled všech proměnných.
 - [ ] +Pokud mám neuloženou stránku s titulkem Úklid a už existuje jiná stránka s názvem Úklid, tak nově nahrané obrázky se před jejím uložením nahrají do složky `upratovanie`. Ale když se stránka uloží, získá URL adresu úklid-2.html a další obrázky se již nahrají do složky `upratovanie-2`. Je třeba upravit kód v `getPageUploadSubDir` tak, aby místo přímého použití titulku stránky zkusil získat URL adresu pro novou stránku a to pak použil.
-- [ ] +HTTP hlavičky - rozšířit maximální velikost hodnoty HTTP hlavičky na více než 255 znaků, pro `Content-Security-Policy` je to nedostatečná velikost (#PR83).
+- [x] +HTTP hlavičky - rozšířit maximální velikost hodnoty HTTP hlavičky na více než 255 znaků, pro `Content-Security-Policy` je to nedostatečná velikost (#PR83, #58129).
 - [x] +Integrace AI nástrojů, pomocníků, asistentů (#57997).
 - [ ] +V editaci profilu se nezobrazí API klíč po jeho vygenerování, notifikace se nepřenesou do rodičovského okna.
 - [ ] +Formuláře - upravit ochranu formulářů tak, aby se nepoužíval `document.write`.
 - [ ] +Přidat možnost nastavit typ `textarea` jako je v AI asistentech is čísly řádků, například. do skriptů nebo jinde, kde se předpokládá psaní kódu.
-- [ ] +Novinky - přesunout pole `contextClasses` z aplikace novinky do šablony novinek. Pole nastavit jako `hidden` aby zůstalo funkční (někde může být nastaveno), pokud je prázdné použít hodnotu ze šablony. Musí tedy fungovat obě možnosti, lze spojit obě hodnoty do jednoho seznamu.
+- [x] +Novinky - přesunout pole `contextClasses` z aplikace novinky do šablony novinek. Pole nastavit jako `hidden` aby zůstalo funkční (někde může být nastaveno), pokud je prázdné použít hodnotu ze šablony. Musí tedy fungovat obě možnosti, lze spojit obě hodnoty do jednoho seznamu (#58245).
+- [ ] +Vnořené datatabulky - nastavit počet záznamů v režimu `auto` podle velikosti oblasti vnořené datatabulky.
+- [ ] +Funkce odeslat email později používá `sendMailSaveEmailPath`, které neumí uložit soubor podle aktuální domény, zamyslet se nad řešením. Možná je tomu tak kvůli tomu, že se emaily posílají na pozadí kde doména nemusí být známa.
 
 ## 2024
 

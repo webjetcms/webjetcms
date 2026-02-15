@@ -36,6 +36,8 @@ The sent email contains 2 links:
 
 ![](email.png)
 
+The name and email address from which the email with the link to change the password is sent can be set via configuration variables `passwordResetDefaultSenderEmail` a `passwordResetDefaultSenderName`.
+
 ### Password change action
 
 Click on the first link, **To change your password, click here within 30 minutes.**, you will be taken to a page to change your password.

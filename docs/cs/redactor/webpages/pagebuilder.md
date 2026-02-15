@@ -42,6 +42,12 @@ Po kliknutí na ozubené kolo se také zobrazí ikony + pro vložení nového bl
 
 ![](pagebuilder-library.png)
 
+V kartě knihovna můžete vyhledávat bloky podle názvu nebo filtrovat bloky podle štítků. Ty můžete definovat v souboru `pagebuilder.properties` při [vytváření bloků](../../frontend/page-builder/blocks.md#název-a-značky-bloku) pro vaši web stránku.
+
+Na konci stránky se zobrazuje ikona `+` pro jednodušší přidání nové sekce.
+
+![](pagebuilder-plusbutton.png)
+
 ## Nastavení šířky sloupců
 
 Editor umožňuje nastavit šířky sloupce podle zvoleného zařízení. V nástrojové liště u přepínače typu editoru je možnost nastavit velikost (šířku) zařízení.
@@ -55,3 +61,7 @@ Editor umožňuje nastavit šířky sloupce podle zvoleného zařízení. V nás
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+## Rozdělení sloupce
+
+Funkci Rozdělit sloupec vyvoláte pomocí kliknutí na `+` ve žluté liště a zvolením možnosti Blok. Následně v kartě Základní zvolíte možnost Rozdělit sloupec. Funkce umožňuje rychlé rozdělení sloupce bez nutnosti vkládat nový sloupec a přesouvat obsah. Umožní vám vkládat nové komplexní bloky. do dlouhého textového sloupce.
