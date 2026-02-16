@@ -6,7 +6,7 @@
 
     <property name="root" location=".."/>
     <!-- make tmp folder outside of vscode, because Code Helper (Renderer) will be eating CPU crazy -->
-    <property name="tempDir" location="../../tmp-jakarta-migration"/>
+    <property name="tempDir" location="../build/tmp-jakarta-migration"/>
 
     <!-- update current project sources -->
     <property name="jakartaDir" location=".."/>
@@ -63,6 +63,7 @@
                 <exclude name="WEB-INF/sql/**"/>
                 <exclude name="WEB-INF/tmp/**"/>
                 <exclude name="WEB-INF/update/**"/>
+                <exclude name="**/node_modules/**"/>
             </fileset>
         </copy>
     </target>
