@@ -46,27 +46,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 public class HtmlBoxApp extends WebjetComponentAbstract {
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
-    private String insertCodeType;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.RADIO,
-        title = "components.htmlbox.insertType",
-        tab = "basic",
-        editor = {
-            @DataTableColumnEditor(
-                options = {
-                    @DataTableColumnEditorAttr(
-                        key = "components.htmlbox.staticBlock",
-                        value = "static"),
-                    @DataTableColumnEditorAttr(
-                        key = "components.htmlbox.dynamicBlock",
-                        value = "dynamic")
-                }
-            )
-        }
-    )
-    private String insertBlockStyle = "static";
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.htmlbox.code_type", tab = "basic")
+    private String codeType;
 
     @DataTableColumn(
         inputType = DataTableColumnType.RADIO,
@@ -85,9 +66,9 @@ public class HtmlBoxApp extends WebjetComponentAbstract {
             )
         }
     )
-    private String insertDocStyle = "static";
+    private String docStyle = "static";
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.htmlbox.block_type", tab = "basic")
     private String blockType;
 
     private HashMap<String, String> customPageLinks = new HashMap<>();
@@ -97,36 +78,34 @@ public class HtmlBoxApp extends WebjetComponentAbstract {
 
     private List<OptionDto> getBlocksOptions(HttpServletRequest request) {
         List<OptionDto> blocks = new ArrayList<>();
-		//prescanuj adresar a vylistuj vsetky priecinky do selectboxu
-		IwcmFile dir = new IwcmFile(Tools.getRealPath("/components/"+Constants.getInstallName()+"/htmlbox/objects"));
-		if (dir.exists()==false) dir = new IwcmFile(Tools.getRealPath("/components/htmlbox/objects"));
-		 String dirName;
-		if (dir.exists() && dir.canRead())
-		{
-		   IwcmFile files[] = FileTools.sortFilesByName(dir.listFiles());
+        // Scan directory and list all folders to selectbox
+        IwcmFile dir = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/htmlbox/objects"));
+        if (dir.exists() == false) {
+            dir = new IwcmFile(Tools.getRealPath("/components/htmlbox/objects"));
+        }
 
-		  if(files != null) {
-			int size = files.length;
-			IwcmFile f;
-			for (int i = 0; i < size; i++) {
-				f = files[i];
-				if (f.isDirectory()) {
-					dirName = f.getName();
+        if (dir.exists() && dir.canRead()) {
+            IwcmFile[] files = FileTools.sortFilesByName(dir.listFiles());
 
-					String dirNameDecoded = "";
-					if (FileBrowserTools.hasForbiddenSymbol(dirName))
-						continue;
+            if (files != null) {
+                for (IwcmFile f : files) {
+                    if (f.isDirectory()) {
+                        String dirName = f.getName();
 
-						try {
-							dirNameDecoded = dirName.replace('_', ' ');
-						} catch (Exception ex){}
-						blocks.add(new OptionDto(Tools.escapeHtml(dirNameDecoded), Tools.escapeHtml(dirName), null));
-				}
-			}
-		  }
-		}
+                        if (FileBrowserTools.hasForbiddenSymbol(dirName)) {
+                            continue;
+                        }
 
-        for(OptionDto option : blocks) customPageLinks.put(option.getValue(), WriteTagToolsForCore.getCustomPage("/components/htmlbox/html_temp-ajax.jsp", request) + "?dirName=" + option.getValue());
+                        String dirNameDecoded = dirName.replace('_', ' ');
+                        blocks.add(new OptionDto(Tools.escapeHtml(dirNameDecoded), Tools.escapeHtml(dirName), null));
+                    }
+                }
+            }
+        }
+
+        for (OptionDto option : blocks) {
+            customPageLinks.put(option.getValue(), WriteTagToolsForCore.getCustomPage("/components/htmlbox/html_temp-ajax.jsp", request) + "?dirName=" + option.getValue());
+        }
 
         return blocks;
     }
@@ -161,7 +140,7 @@ public class HtmlBoxApp extends WebjetComponentAbstract {
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
         options.put("blockType", getBlocksOptions(request));
-        options.put("insertCodeType", getInsertCodeTypeOptions(request));
+        options.put("codeType", getInsertCodeTypeOptions(request));
         return options;
     }
 

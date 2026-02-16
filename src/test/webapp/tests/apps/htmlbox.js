@@ -4,6 +4,8 @@ Before(({ login }) => {
     login('admin');
 });
 
+/* REMATERED old tests */
+
 Scenario("Bloky - test zobrazovania", ({ I }) => {
     I.amOnPage("/apps/bloky/");
     I.waitForElement(locate("h1").withText(("Bloky")));
@@ -14,7 +16,7 @@ Scenario('Blocks - Content should include gallery component not snippet', ({ I, 
     navigateToWebPagesList(I);
     createNewPage(I, DT, DTE);
     openContentEditor(I);
-    selectContent(I, "Text s aplikáciou");
+    selectContent(I, "Text s aplikáciou", "Hlavná šablona: Šablóny");
 
     I.switchTo("#cke_1_contents > iframe");
     I.dontSee("!INCLUDE(/components/gallery/gallery.jsp");
@@ -30,7 +32,7 @@ Scenario('Blocks - Editing remote image should show a warning', ({ I, DT, DTE })
     navigateToWebPagesList(I);
     createNewPage(I, DT, DTE);
     openContentEditor(I);
-    selectContent(I, "content15.html ", "Content");
+    selectContent(I, "content15.html ", "Predpripravený blok", "Content");
 
     I.say('Clicking on the inserted image');
     I.switchTo("#cke_1_contents > iframe");
@@ -68,24 +70,115 @@ function openContentEditor(I) {
     I.clickCss('.cke_button.cke_button__htmlbox.cke_button_off');
 }
 
-function selectContent(I, contentName, folder) {
+function selectContent(I, contentName, blockType, blockName) {
     I.say(`Selecting content: ${contentName}`);
     I.switchTo('.cke_dialog_ui_iframe');
     I.waitForElement('#editorComponent', 10);
     I.switchTo('#editorComponent');
 
-    if (folder) {
-        I.say(`Navigating to folder: ${folder}`);
-        I.clickCss("#tabLink2");
-        I.selectOption("#DirNameSelect", folder);
-        I.switchTo("#dirPreview");
-    } else {
-        I.switchTo('#previewWindow');
-    }
+    I.dtEditorSelectOption("codeType", blockType);
+
+    if (blockName) { I.dtEditorSelectOption("blockType", blockName); }
+
+    I.switchTo('#previewIframe');
 
     I.clickCss(`.thumbImage[data-name="${contentName}"]`);
 
     I.say('Confirming content selection');
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_ok");
+}
+
+/* NEW tests */
+
+Scenario('Test app visual and logic', ({ I, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=64361");
+
+    Apps.insertApp("Predpripravené bloky", '#components-htmlbox-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    var codeTypeOptions = ["Predpripravený blok", "Web stránka", "Hlavná šablona: Šablóny"];
+    I.say("Check code type options");
+    checkAndSelect(I, "codeType", codeTypeOptions, "Predpripravený blok");
+
+    var blockTypeOptions = ["Columns", "Contact", "Content", "Download", "Header"];
+    I.say("Check block type options");
+    checkAndSelect(I, "blockType", blockTypeOptions, "Content");
+
+    I.say("Check and select generated blockType");
+    I.switchTo('#previewIframe');
+    I.forceClick(`.thumbImage[data-name="content01.html "]`);
+
+    I.say("Save app and check inserted value");
+    I.switchTo();
+    I.clickCss(".cke_dialog_ui_button_ok");
+
+    Apps.switchEditor('html');
+    I.see('<section class="content1"');
+    I.see('<h2 class="text-uppercase editContent"');
+    I.see('url(/images/template/common/ublocks/content1.jpg);');
+});
+
+Scenario('Test app visual and logic 2', ({ I, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=64361");
+
+    Apps.insertApp("Predpripravené bloky", '#components-htmlbox-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
+
+    I.say("Chekc templates and choose one - as STATIC");
+    I.switchTo('#previewIframe');
+    I.forceClick(`.thumbImage[data-name="Normálna stránka"]`);
+
+    I.say("Save app and check inserted value");
+    I.switchTo();
+    I.clickCss(".cke_dialog_ui_button_ok");
+
+    Apps.switchEditor('html');
+    I.see("<h1>Toto je nadpis stránky</h1>");
+    I.see("<p>Lorem ipsum dolor sit amet, consectetuer");
+});
+
+Scenario('Test app visual and logic 3', ({ I, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=64361");
+
+    Apps.insertApp("Predpripravené bloky", '#components-htmlbox-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
+
+    I.say("Chekc templates and choose one - as DYNAMIC link");
+    I.clickCss("#DTE_Field_docStyle_1");
+    I.switchTo('#previewIframe');
+    I.forceClick(`.thumbImage[data-name="Normálna stránka"]`);
+
+    I.say("Save app and check inserted value");
+    I.switchTo();
+    I.clickCss(".cke_dialog_ui_button_ok");
+
+    Apps.switchEditor('html');
+    I.see("!INCLUDE(/components/htmlbox/showdoc.jsp, docid=317)!");
+    Apps.switchEditor('standard');
+
+    I.say("Reopen app and test that DOC type of block is set, and page is pre-set too");
+    Apps.openAppEditor();
+
+    I.seeElement( locate("#editorAppDTE_Field_docDetails input.form-control[value='/System/Šablóny/Normálna stránka']") );
+    I.switchTo("#previewIframe");
+    I.seeElement("#WebJETEditor3Body");
+    I.see("Toto je nadpis stránky");
+});
+
+function checkAndSelect(I, selector, seeOptions, selectOption) {
+    I.click(".DTE_Field_Name_" + selector + " button.dropdown-toggle");
+    I.waitForVisible("div.dropdown-menu.show");
+    seeOptions.forEach(option => {
+        I.seeElement( locate("div.dropdown-menu.show").find( locate("a.dropdown-item > span").withText(option) ) );
+    });
+    if (selectOption) { I.click( locate("div.dropdown-menu.show").find( locate("a.dropdown-item > span").withText(selectOption) ) ); }
+    I.waitForInvisible("div.dropdown-menu.show");
 }
