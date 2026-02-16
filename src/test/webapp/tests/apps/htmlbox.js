@@ -171,6 +171,14 @@ Scenario('Test app visual and logic 3', ({ I, Apps }) => {
     I.switchTo("#previewIframe");
     I.seeElement("#WebJETEditor3Body");
     I.see("Toto je nadpis stránky");
+
+    I.switchTo();
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+    I.clickCss("button.btn-vue-jstree-item-remove");
+    I.switchTo("#previewIframe");
+    I.dontSeeElement("#WebJETEditor3Body");
+    I.dontSee("Toto je nadpis stránky");
 });
 
 function checkAndSelect(I, selector, seeOptions, selectOption) {

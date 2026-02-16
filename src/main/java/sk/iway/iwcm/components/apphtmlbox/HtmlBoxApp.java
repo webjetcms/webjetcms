@@ -38,9 +38,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     itemKey = "app-htmlbox",
     imagePath = "/components/htmlbox/editoricon.png",
     componentPath = "/components/htmlbox/showdoc.jsp,/components/htmlbox/editor_component.jsp",
-    customHtml = "/apps/app-htmlbox/admin/editor-component.html"
-    // galleryImages = "/components/app-htmlbox/",
-    //
+    customHtml = "/apps/app-htmlbox/admin/editor-component.html",
+    galleryImages = "/components/htmlbox/"
 )
 @Getter
 @Setter
