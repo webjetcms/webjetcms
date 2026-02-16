@@ -456,8 +456,8 @@
     </target>
 
     <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">
-        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
-        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
+        <replace file="${root}/../../src/main/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
+        <replace file="${root}/../../src/main/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
     </target>
 
     <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Prepare all JAR files for deployment">
