@@ -9,7 +9,7 @@
     <property name="tempDir" location="../../tmp-jakarta-migration"/>
 
     <!-- update current project sources -->
-    <property name="jakartaDir" location="../"/>
+    <property name="jakartaDir" location=".."/>
 
     <!-- Migrate javax.* to jakarta.*
     https://github.com/apache/tomcat-jakartaee-migration/blob/main/README.md
