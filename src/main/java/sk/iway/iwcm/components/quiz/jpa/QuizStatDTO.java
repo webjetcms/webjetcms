@@ -2,8 +2,8 @@ package sk.iway.iwcm.components.quiz.jpa;
 
 import java.util.Date;
 
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +23,7 @@ public class QuizStatDTO {
 		className = "image",
 		renderFormat = "dt-format-image"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String imageUrl;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.quiz.statistics.table.right_answers")

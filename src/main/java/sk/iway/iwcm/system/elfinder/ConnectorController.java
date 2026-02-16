@@ -2,10 +2,10 @@ package sk.iway.iwcm.system.elfinder;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import cn.bluejoe.elfinder.controller.FsException;
 import cn.bluejoe.elfinder.controller.executor.CommandExecutionContext;

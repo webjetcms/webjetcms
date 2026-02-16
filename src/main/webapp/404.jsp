@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page import="sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails,sk.iway.iwcm.i18n.Prop" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@page import="sk.iway.iwcm.system.UrlRedirectBean"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@page import="sk.iway.iwcm.io.IwcmFile"%><%!
-public void safeForward(javax.servlet.jsp.PageContext pageContext, String forward) throws java.io.IOException, javax.servlet.ServletException {
+public void safeForward(jakarta.servlet.jsp.PageContext pageContext, String forward) throws java.io.IOException, jakarta.servlet.ServletException {
 	try {
 		pageContext.forward(forward);
 	} catch (IllegalStateException ex) {

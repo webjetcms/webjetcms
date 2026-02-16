@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.helpers.Util;
 
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Enumeration;

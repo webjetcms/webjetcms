@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.basket.support;
 
 import java.math.BigDecimal;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Data;
 import sk.iway.iwcm.common.BasketTools;

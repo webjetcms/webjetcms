@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +55,7 @@ public class MonitoringRestController extends DatatableRestControllerV2<Monitori
         if(pageable.getPageSize() >= this.maxDataCount) {
             Page<MonitoringEntity> pageableData = monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);
             MonitoringManager monitoringManger = new MonitoringManager(pageableData, dateFrom, dateTo);
-            return new PageImpl<>(monitoringManger.returnAggregatedData());
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(monitoringManger.returnAggregatedData());
         } else {
             Page<MonitoringEntity> pageableData = monitoringRepository.findAll(pageable);
             return pageableData;
@@ -85,7 +85,7 @@ public class MonitoringRestController extends DatatableRestControllerV2<Monitori
         if( (paggination != null && paggination.equals("true")) || pageable.getPageSize() >= this.maxDataCount) {
             Page<MonitoringEntity> pageableData = monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);
             MonitoringManager monitoringManger = new MonitoringManager(pageableData, dateFrom, dateTo);
-            return new PageImpl<>(monitoringManger.returnAggregatedData());
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(monitoringManger.returnAggregatedData());
         } else {
             return monitoringRepository.findAllByDayDateGreaterThanEqualAndDayDateLessThanEqual(pageable, dateFrom, dateTo);
         }

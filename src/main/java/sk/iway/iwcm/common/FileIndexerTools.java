@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -449,7 +449,7 @@ public class FileIndexerTools {
                                     String clazzName = saveMethod.substring( 0, saveMethod.lastIndexOf('.'));
                                     String methodName = saveMethod.substring( clazzName.length() +1 );
                                     Class<?> clazz = Class.forName(clazzName);
-                                    Method method = clazz.getMethod(methodName, Class.forName("sk.iway.iwcm.editor.EditorForm"),Class.forName("javax.servlet.http.HttpServletRequest"));
+                                    Method method = clazz.getMethod(methodName, Class.forName("sk.iway.iwcm.editor.EditorForm"),Class.forName("jakarta.servlet.http.HttpServletRequest"));
                                     method.invoke(null, doc, request);
                                 }
                                 catch(Exception e){

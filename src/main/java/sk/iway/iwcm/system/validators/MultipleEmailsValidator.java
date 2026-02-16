@@ -3,8 +3,8 @@ package sk.iway.iwcm.system.validators;
 import java.util.Set;
 import java.util.HashSet;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.dmail.DmailUtil;

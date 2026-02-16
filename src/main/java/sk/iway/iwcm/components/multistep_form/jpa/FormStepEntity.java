@@ -1,16 +1,16 @@
 package sk.iway.iwcm.components.multistep_form.jpa;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -50,7 +50,7 @@ public class FormStepEntity {
     @Lob
     @Column(name = "header")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String header;
 
     @Column(name = "next_step_btn_label")

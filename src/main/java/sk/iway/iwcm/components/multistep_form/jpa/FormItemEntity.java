@@ -1,14 +1,14 @@
 package sk.iway.iwcm.components.multistep_form.jpa;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -75,7 +75,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "label")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.label-field", className="quill-oneline", hidden = true)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
 
     @Column(name = "value")
@@ -88,7 +88,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "tooltip")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
 
     @Column(name = "regex_validation")

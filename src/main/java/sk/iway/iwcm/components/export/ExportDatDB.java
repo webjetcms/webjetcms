@@ -2,8 +2,8 @@ package sk.iway.iwcm.components.export;
 
 import java.util.List;
 
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;

@@ -18,9 +18,9 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.servlet.http.HttpSession;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpSession;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

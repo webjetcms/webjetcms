@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 

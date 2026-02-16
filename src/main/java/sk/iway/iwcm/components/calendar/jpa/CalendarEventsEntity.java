@@ -1,11 +1,11 @@
 package sk.iway.iwcm.components.calendar.jpa;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -137,7 +137,7 @@ public class CalendarEventsEntity extends CalendarEventsBasic {
         tab = "description",
         hidden = true
     )
-    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String description;
 
     @Column(name = "notify_hours_before")

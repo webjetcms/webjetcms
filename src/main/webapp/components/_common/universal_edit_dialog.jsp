@@ -3,7 +3,7 @@
 <%@page import="sk.iway.iwcm.system.stripes.WebJETActionBean"%>
 <%@page import="sk.iway.iwcm.components.crud.UniversalCrudAction"%>
 <%@page import="sk.iway.iwcm.database.ActiveRecord"%>
-<%@page import="javax.persistence.Id"%>
+<%@page import="jakarta.persistence.Id"%>
 <%@page import="net.sourceforge.stripes.action.ActionBean"%>
 <%@page import="java.lang.reflect.Field"%>
 <%

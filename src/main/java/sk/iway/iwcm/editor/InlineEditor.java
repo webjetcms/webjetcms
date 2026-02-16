@@ -1,6 +1,6 @@
 package sk.iway.iwcm.editor;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONArray;

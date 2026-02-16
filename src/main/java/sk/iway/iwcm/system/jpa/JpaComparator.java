@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -49,7 +49,7 @@ public class JpaComparator<T> implements Serializable, Comparator<T>
 	{
 		if(clazz.getAnnotation(Entity.class)==null)
 		{
-			throw new IllegalArgumentException("Class '"+clazz.getName()+"' doesn't have @javax.persistence.Entity annotation!");
+			throw new IllegalArgumentException("Class '"+clazz.getName()+"' doesn't have @jakarta.persistence.Entity annotation!");
 		}
 		ascending = isAscending;
 		caseSensitive = isCaseSensitive;

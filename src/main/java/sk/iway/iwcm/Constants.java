@@ -2471,13 +2471,13 @@ public class Constants {
 		setBoolean(constName, val);
 	}
 
-	private static javax.servlet.ServletContext servletContext = null;
+	private static jakarta.servlet.ServletContext servletContext = null;
 
-	public static void setServletContext(javax.servlet.ServletContext newServletContext) {
+	public static void setServletContext(jakarta.servlet.ServletContext newServletContext) {
 		servletContext = newServletContext;
 	}
 
-	public static javax.servlet.ServletContext getServletContext() {
+	public static jakarta.servlet.ServletContext getServletContext() {
 		return servletContext;
 	}
 

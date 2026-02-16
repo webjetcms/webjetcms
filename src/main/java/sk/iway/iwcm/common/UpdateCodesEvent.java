@@ -1,6 +1,6 @@
 package sk.iway.iwcm.common;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
 

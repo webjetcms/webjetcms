@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +40,7 @@ public class DatatableExceptionHandler
 				response.setError(ex.getMessage());
 		  }
 
-		  return new ResponseEntity<>(response, null, HttpStatus.OK);
+		  return new ResponseEntity<>(response, HttpStatus.OK);
 	 }
 
 	 @ExceptionHandler(TransactionSystemException.class)
@@ -64,13 +64,13 @@ public class DatatableExceptionHandler
 				response.setError(ex.getMessage());
 		  }
 
-		  return new ResponseEntity<>(response, null, HttpStatus.OK);
+		  return new ResponseEntity<>(response, HttpStatus.OK);
 	 }
 
 	 @ExceptionHandler(Exception.class)
 	 public ResponseEntity<DatatableResponse<Object>> handleException(Exception ex) {
 		  DatatableResponse<Object> response = new DatatableResponse<>();
 		  response.setError("exception: " + ex.getMessage());
-		  return new ResponseEntity<>(response, null, HttpStatus.OK);
+		  return new ResponseEntity<>(response, HttpStatus.OK);
 	 }
 }

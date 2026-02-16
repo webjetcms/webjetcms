@@ -16,8 +16,8 @@ import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.system.Modules;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;

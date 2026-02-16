@@ -2,15 +2,15 @@ package sk.iway.iwcm.components.dictionary.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -69,7 +69,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
     @Column(name="value")
 	@NotBlank
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="[[#{components.htmlbox.basic}]]")
-	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String value;
 
 	public int getId() { return getDictionaryId(); }

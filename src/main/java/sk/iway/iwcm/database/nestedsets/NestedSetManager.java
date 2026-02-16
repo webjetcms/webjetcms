@@ -3,7 +3,7 @@ package sk.iway.iwcm.database.nestedsets;
 import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.eclipse.persistence.expressions.Expression;
 

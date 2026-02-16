@@ -3,8 +3,8 @@ package sk.iway.iwcm.components;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.datatable.OptionDto;

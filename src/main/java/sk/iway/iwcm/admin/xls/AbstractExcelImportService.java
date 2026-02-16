@@ -12,8 +12,8 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.xls.exception.ExcelImportServiceException;
 import sk.iway.iwcm.i18n.Prop;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

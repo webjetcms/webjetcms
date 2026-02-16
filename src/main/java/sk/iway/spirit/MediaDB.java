@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.Query;
-import javax.servlet.http.HttpSession;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpSession;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;

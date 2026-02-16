@@ -12,8 +12,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 {

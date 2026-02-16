@@ -4,7 +4,7 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.crypto.CryptoRsa2048;
 import sk.iway.iwcm.components.crypto.CryptoTink;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 

@@ -16,7 +16,7 @@ import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.utils.Pair;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * TemplatesGroupDB.java

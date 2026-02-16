@@ -2,7 +2,7 @@ package sk.iway.iwcm.form;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.AdminlogBean;

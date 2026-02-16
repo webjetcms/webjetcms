@@ -1,8 +1,8 @@
 package cn.bluejoe.elfinder.controller.executor;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import cn.bluejoe.elfinder.service.FsServiceFactory;
 

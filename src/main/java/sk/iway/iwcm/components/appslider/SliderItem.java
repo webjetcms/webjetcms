@@ -25,6 +25,6 @@ public class SliderItem {
     private String description;
 
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.news.redirectAfterClick")
-    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String redirectUrl;
 }

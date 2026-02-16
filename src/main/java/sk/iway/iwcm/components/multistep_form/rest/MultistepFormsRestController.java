@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
 import org.json.JSONObject;

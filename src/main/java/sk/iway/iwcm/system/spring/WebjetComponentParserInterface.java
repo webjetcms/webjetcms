@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.spring;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface WebjetComponentParserInterface {
     void run(HttpServletRequest request, HttpServletResponse response);

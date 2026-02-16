@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -65,9 +65,9 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
     @Override
     public Page<BasketInvoicePaymentEntity> getAllItems(Pageable pageable) {
         long invoiceId = getInvoiceId();
-        if(invoiceId < 1)  return new PageImpl<>(new ArrayList<>());
+        if(invoiceId < 1)  return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(new ArrayList<>());
         BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId()).orElse(null);
-        if(invoice == null) return new PageImpl<>(new ArrayList<>());
+        if(invoice == null) return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(new ArrayList<>());
 
         DatatablePageImpl<BasketInvoicePaymentEntity> page = new DatatablePageImpl<>( bipr.findAllByInvoiceId(invoiceId, pageable) );
         processFromEntity(page, ProcessItemAction.GETALL);

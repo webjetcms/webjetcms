@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;

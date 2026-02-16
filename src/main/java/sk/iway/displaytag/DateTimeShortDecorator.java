@@ -3,7 +3,7 @@ package sk.iway.displaytag;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.PageContext;
 
 import org.displaytag.decorator.DisplaytagColumnDecorator;
 import org.displaytag.properties.MediaTypeEnum;

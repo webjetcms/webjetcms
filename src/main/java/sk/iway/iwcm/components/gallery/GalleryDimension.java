@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;

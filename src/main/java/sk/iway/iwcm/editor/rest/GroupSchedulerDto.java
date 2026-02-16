@@ -2,7 +2,7 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;

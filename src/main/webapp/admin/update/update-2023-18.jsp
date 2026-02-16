@@ -528,8 +528,8 @@ static {
 	replaces.add(new OptionDto("RandomStringUtils.random(", "RandomStringUtils.secure().next(", ".jsp,.java"));
 
 	//multipart update
-	replaces.add(new OptionDto("org.springframework.web.multipart.commons.CommonsMultipartFile", "org.springframework.web.multipart.MultipartFile", ".jsp,.java"));
-	replaces.add(new OptionDto("CommonsMultipartFile", "MultipartFile", ".jsp,.java"));
+	replaces.add(new OptionDto("org.springframework.web.multipart.MultipartFile", "org.springframework.web.multipart.MultipartFile", ".jsp,.java"));
+	replaces.add(new OptionDto("MultipartFile", "MultipartFile", ".jsp,.java"));
 	replaces.add(new OptionDto(".getFileItem().getSize()", ".getSize()", ".jsp,.java"));
 	replaces.add(new OptionDto(".getFileItem().getName()", ".getOriginalFilename()", ".jsp,.java"));
 	replaces.add(new OptionDto("@{"+"$"+"{request.getAttribute('ninja').page.urlPath}(\\_\\_forceParse=1,\\_\\_setf=1)}", "$"+"{"+"request.getAttribute('ninja').page.urlPath}", ".html"));

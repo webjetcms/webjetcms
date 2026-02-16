@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.gdpr;
 
-import javax.persistence.EntityListeners;
+import jakarta.persistence.EntityListeners;
 
 import lombok.Getter;
 import lombok.Setter;

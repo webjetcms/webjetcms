@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.elfinder;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 import cn.bluejoe.elfinder.service.FsServiceFactory;
 import sk.iway.iwcm.Logger;

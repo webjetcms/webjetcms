@@ -2,9 +2,9 @@ package sk.iway.iwcm.tags;
 
 import java.io.IOException;
 
-import javax.servlet.jsp.JspTagException;
-import javax.servlet.jsp.tagext.BodyContent;
-import javax.servlet.jsp.tagext.BodyTagSupport;
+import jakarta.servlet.jsp.JspTagException;
+import jakarta.servlet.jsp.tagext.BodyContent;
+import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
 import sk.iway.iwcm.Tools;
 

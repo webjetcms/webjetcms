@@ -3,13 +3,13 @@ package sk.iway.iwcm.components.gdpr.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.components.gdpr.GdprModule;
 import sk.iway.iwcm.database.ActiveRecord;
@@ -26,7 +26,7 @@ public class DocumentsBean extends ActiveRecord implements GdprModel {
     private String title;
     private String data;
     @Column(name = "data_asc")
-    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String dataAsc;
     @Column(name = "group_id")
     private int groupId;

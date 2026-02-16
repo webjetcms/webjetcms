@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
