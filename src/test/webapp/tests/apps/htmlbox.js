@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-/* REMATERED old tests */
+/* REMASTERED old tests */
 
 Scenario("Bloky - test zobrazovania", ({ I }) => {
     I.amOnPage("/apps/bloky/");
@@ -129,7 +129,7 @@ Scenario('Test app visual and logic 2', ({ I, Apps }) => {
 
     I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
 
-    I.say("Chekc templates and choose one - as STATIC");
+    I.say("Check templates and choose one - as STATIC");
     I.switchTo('#previewIframe');
     I.forceClick(`.thumbImage[data-name="Normálna stránka"]`);
 
