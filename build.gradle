@@ -102,7 +102,6 @@ sourceSets {
     main {
         java {
             srcDirs 'src/main/java'
-            //srcDirs 'src/webjet8/java'
         }
     }
  }
