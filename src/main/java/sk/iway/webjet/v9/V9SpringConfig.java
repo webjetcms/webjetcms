@@ -150,7 +150,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.upload",
     "sk.iway.iwcm.components.basket.delivery_methods.rest",
     "sk.iway.iwcm.components.multistep_form",
-    "sk.iway.iwcm.components.form_settings.rest"
+    "sk.iway.iwcm.components.form_settings.rest",
+    "sk.iway.iwcm.components.apphtmlbox"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

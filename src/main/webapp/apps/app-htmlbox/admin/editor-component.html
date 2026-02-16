@@ -1,0 +1,167 @@
+<script>
+
+    let currentDocId = null;
+    const templetGroupPrefix = "templateGroupId_";
+
+    function insertIframe() {
+        const basicTab = document.getElementById("panel-body-dt-component-datatable-basic");
+        if(basicTab) {
+            // create iframe element
+            const iframe = document.createElement("iframe");
+
+            // set attributes
+            iframe.id = "previewIframe";
+            iframe.name = "previewIframe";
+            iframe.dataset.marginTop = "85";
+            iframe.src = "";
+
+            // set styles
+            iframe.style.width = "100%";
+            iframe.style.height = "860px";
+            iframe.style.background = "white";
+            iframe.style.border = "0px";
+            iframe.style.maxHeight = "860px";
+
+            // append to body (or another container)
+            basicTab.appendChild(iframe);
+        }
+    }
+
+    function setIframeSrc(src) {
+        const iframe = document.getElementById("previewIframe");
+        if(iframe) { iframe.src = src; }
+        else { console.error("Iframe not found!"); }
+    }
+
+    function setIframeSrcForDoc() {
+        if(currentDocId == undefined || currentDocId == null) {
+            setIframeSrc("");
+            return;
+        }
+
+        setIframeSrc("/components/htmlbox/iframe.jsp?docid=" + currentDocId);
+    }
+
+    function appAfterInit(response, datatable, path, isInsert) {
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const codeTypeSelect = document.getElementById("DTE_Field_insertCodeType");
+            const insertBlockStyle = document.querySelector(".DTE_Field_Name_insertBlockStyle");
+            const blockType = document.querySelector(".DTE_Field_Name_blockType");
+            const insertDocStyle = document.querySelector(".DTE_Field_Name_insertDocStyle");
+            const docDetails = document.querySelector(".DTE_Field_Name_docDetails");
+
+            // Ste iframe insertIframe
+            insertIframe();
+
+            //
+            blockType.querySelector("#DTE_Field_blockType").addEventListener("change", function() {
+                const selectedBlockType = this.value;
+                let src = response.data.customPageLinks[selectedBlockType];
+                setIframeSrc(src);
+            });
+
+            window.addEventListener("WJ.jstree.change", function(e) {
+                if("#component-datatable_modal #DTE_Field_docDetails" === e.detail.textInputId) {
+                    currentDocId = e.detail.item.docId;
+                    setIframeSrcForDoc();
+                }
+            });
+
+            window.addEventListener("WJ.jstree.item.remove", function(e) {
+                let locationSearch = e.srcElement.location.search;
+                if(locationSearch != null && locationSearch.includes("name=sk.iway.iwcm.components.apphtmlbox.HtmlBoxApp")) {
+                    currentDocId = null;
+                    setIframeSrcForDoc("");
+                }
+            });
+
+            codeTypeSelect.addEventListener("change", function() {
+                const selectedValue = this.value;
+
+                if("block" === selectedValue) {
+                    insertBlockStyle.style.display = "none";
+                    blockType.style.display = "none";
+                    insertDocStyle.style.display = "none";
+                    docDetails.style.display = "none";
+
+                    blockType.querySelector("#DTE_Field_blockType").dispatchEvent(new Event("change"));
+                } else if("doc" === selectedValue) {
+                    insertBlockStyle.style.display = "none";
+                    blockType.style.display = "none";
+                    insertDocStyle.style.display = "flex";
+                    docDetails.style.display = "flex";
+
+                    if(response.data.docDetails != null) {
+                        currentDocId = response.data.docDetails.docId;
+                        setIframeSrcForDoc();
+                    } else { setIframeSrc(""); }
+
+                } else {
+                    insertBlockStyle.style.display = "flex";
+                    blockType.style.display = "none";
+                    insertDocStyle.style.display = "none";
+                    docDetails.style.display = "none";
+
+                    if(selectedValue.startsWith(templetGroupPrefix)) {
+                        const templateGroupId = selectedValue.substring(templetGroupPrefix.length);
+                        setIframeSrc("/components/htmlbox/iframe2.jsp?dirDocId=" + templateGroupId);
+                    } else {
+                        console.error("Unknown code type selected:", selectedValue);
+                        setIframeSrc("");
+                    }
+                }
+            });
+            // If doc is set, select doc code type and style
+            if(response.data.docDetails != null) {
+                codeTypeSelect.value = "doc";
+                insertDocStyle.querySelector("input[type='radio'][value='dynamic']").checked = true;
+            }
+            // Trigger change to set initial visibility and iframe src
+            codeTypeSelect.dispatchEvent(new Event("change"));
+        });
+    }
+
+    function sanitazeHtml(html) {
+        if(html == undefined || html == null) { return ""; }
+        else return html.replace(/&quot;/gi, "\"");
+    }
+
+    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+        const codeTypeSelectValue = document.getElementById("DTE_Field_insertCodeType").value;
+
+        if("block" === codeTypeSelectValue) {
+            const bodyHtml = document.querySelector('#previewIframe')?.contentDocument?.querySelector('#previewWindow')?.contentDocument?.body?.innerHTML;
+            return sanitazeHtml(bodyHtml);
+        } else if("doc" === codeTypeSelectValue) {
+            if(currentDocId == undefined || currentDocId == null) { return ""; }
+            const insertDocStyleValue = document.querySelector(".DTE_Field_Name_insertDocStyle input[type='radio']:checked")?.value;
+            if("static" === insertDocStyleValue) {
+                const bodyHtml = document.querySelector('#previewIframe')?.contentDocument?.getElementById("_iframeHtmlData")?.value;
+                return sanitazeHtml(bodyHtml);
+            } else if("dynamic" === insertDocStyleValue) {
+                return "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=" + currentDocId + ")!"
+            } else {
+                console.error("Unknown insertDocStyleValue:", insertDocStyleValue);
+                return "";
+            }
+        } else if(codeTypeSelectValue.startsWith(templetGroupPrefix)) {
+            const codeTypeSelectValue = document.getElementById("DTE_Field_insertCodeType")?.value;
+            const templateGroupId = codeTypeSelectValue.substring(templetGroupPrefix.length);
+            const insertBlockStyleValue = document.querySelector(".DTE_Field_Name_insertBlockStyle input[type='radio']:checked")?.value;
+            if("static" === insertBlockStyleValue) {
+                const bodyHtml = document.querySelector('#previewIframe')?.contentDocument.getElementById("WJTempPreview")?.contentDocument?.getElementById("_iframeHtmlData")?.value;
+                return sanitazeHtml(bodyHtml);
+            } else if("dynamic" === insertBlockStyleValue) {
+                var selectedObjectDocId = document.querySelector('#previewIframe')?.contentDocument?.querySelector(".selected")?.getAttribute("data-docid");
+                return "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=" + selectedObjectDocId + ")!";
+            } else {
+                console.error("Unknown insertBlockStyleValue:", insertBlockStyleValue);
+                return "";
+            }
+        } else {
+            console.error("Unknown code type selected:", codeTypeSelectValue);
+            return "";
+        }
+    }
+
+</script>
