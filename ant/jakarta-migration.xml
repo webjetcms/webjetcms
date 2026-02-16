@@ -29,9 +29,6 @@
 
         <!-- copy java src -->
         <copy todir="${tempDir}/src-utf8/main/java" overwrite="true">
-            <fileset dir="${root}/src/webjet8/java">
-                <include name="**/*"/>
-            </fileset>
             <fileset dir="${root}/src/main/java">
                 <include name="**/*"/>
             </fileset>
