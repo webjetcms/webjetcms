@@ -214,8 +214,10 @@ Scenario('apps screenshot for editor-components.jsp 4', ({ I, DT, DTE, Document 
     I.switchTo("#editorComponent");
     I.wait(4);
     Document.screenshot(basePath+"/components/htmlbox/screenshot-1"+lngSuffix+".jpg");
-    I.click("#tabLink2");
+    I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
     Document.screenshot(basePath+"/components/htmlbox/screenshot-2"+lngSuffix+".jpg");
+    I.dtEditorSelectOption("codeType", "Web stránka");
+    Document.screenshot(basePath+"/components/htmlbox/screenshot-3"+lngSuffix+".jpg");
 
     screenshotWebAndApp(I, Document, 77776, "/components/related-pages", ".ly-content .container", tabLinkNone, null, 800, 600);
     screenshotWebAndApp(I, Document, 70839, "/components/rating", ".ly-content .container", tabLinkNone, null, 800, 600);
