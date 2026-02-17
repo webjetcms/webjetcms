@@ -222,11 +222,8 @@ dependencies {
     implementation("org.springframework:spring-test:${springVersion}")
     //implementation("org.springframework:spring-messaging:${springVersion}")
 
-    //implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-common
-    //implementation("org.springdoc:springdoc-openapi-starter-common:2.8.8")
-    // https://mvnrepository.com/artifact/org.webjars/swagger-ui
-    implementation("org.webjars:swagger-ui:5.22.0")
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2-jakarta for OpenAPI generation with integration API
+    implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.30")
     // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations-jakarta
     implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.30")
     // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-models-jakarta

@@ -7,11 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Predicate;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-//import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -25,17 +23,14 @@ import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import freemarker.core.Configurable;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FreemarkerHelpers;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -66,39 +61,25 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/**").permitAll()
                 .requestMatchers("/private/rest/**", "/webjars/**").authenticated()
-                .requestMatchers("/swagger-ui**", "/admin/rest/**").hasRole("Group_admin")
+                .requestMatchers("/swagger-ui**", "/swagger-ui/**", "/v3/api-docs/**", "/admin/rest/**").hasRole("Group_admin")
             );
 
         SpringAppInitializer.dtDiff("Configure security DONE");
     }
 
-    /*@Bean
-    public GroupedOpenApi api() {
-
-        Predicate<String> paths;
-        //TODO: JAKARTA if (Constants.getBoolean("swaggerEnabled")) paths = PathSelectors.any();
-        //else paths = PathSelectors.none();
-
-        Logger.println(BaseSpringConfig.class, "-------> Docket api()");
-        SpringAppInitializer.dtDiff("Docket api() START");
-
-        GroupedOpenApi docket = GroupedOpenApi.builder()
-                .group("webjet-api")
-                .addOpenApiMethodFilter(method -> method.isAnnotationPresent(RestController.class))
-                .build();
-
-        SpringAppInitializer.dtDiff("Docket api() END");
-        return docket;
-    }
-
+    /**
+     * OpenAPI info configuration - used by OpenApiRestController
+     * @return OpenAPI with WebJET API info
+     */
     @Bean
     public OpenAPI apiInfo() {
+        Logger.println(BaseSpringConfig.class, "-------> OpenAPI apiInfo()");
         OpenAPI apiInfo = new OpenAPI()
-                .info(new Info().title("WebJET API")
-                .description("For more info visit https://docs.webjetcms.sk or http://github.com/webjetcms/webjetcms/")
+                .info(new Info().title("WebJET CMS API")
+                .description("For more info visit <a href='https://docs.webjetcms.sk'>WebJET CMS Documentation</a> or <a href='http://github.com/webjetcms/webjetcms/'>GitHub Repository</a>")
                 .version(InitServlet.getActualVersion()));
         return apiInfo;
-    }*/
+    }
 
     /**
      * Nastavenie MAX velkosti stranky pre Spring data (bola to dost fuska...)
