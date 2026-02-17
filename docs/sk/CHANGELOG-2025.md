@@ -66,6 +66,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/formsimple/editor-dialog-items.png)
 
+- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
+
+![](redactor/apps/htmlbox/editor-block.png)
+
 ### Formuláre
 
 - Nový spôsob vytvárania formulárov, ktoré môžu obsahovať [viac krokov](redactor/apps/multistep-form/README.md) s pokročilými funkciami. V zozname formulárov viete vytvoriť nový formulár, ktorému následne pridáte jednotlivé položky a prípadne viaceré kroky. Karta položky formuláru je viditeľná v detaile formuláru typu Viackrokový formulár (#58161).
