@@ -1,0 +1,37 @@
+<script type="text/javascript" src="/components/quiz/js/jquery.sha1.js"></script>
+<script>
+
+function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+    //console.log('appGetComponentCode', componentPath, params, componentDatatable, isInsert);
+
+    if(params.name == undefined || params.name == null || params.name == '') { return ""; }
+
+    let url = "!INCLUDE(/components/inquirysimple/inquiry.jsp";
+    url += ", formId=" + params.formId;
+    url += ", name=" + params.name;
+    url += ", active=" + (params.active?.[0] === true);
+    url += ", multiAnswer=" + (params.multiAnswer?.[0] === true);
+
+    // Copy value from id questionId to Id if exist, otherwise generate questionId
+    let editorData = [];
+    params.editorData?.forEach((item) => {
+        // If empty generate questionId
+        if(item.questionId == null || item.questionId == "") {
+            //console.log("questionId do not  exist for ", params.name);
+            item.questionId = $.sha1(params.name + new Date() + item.rowOrder);
+        }
+
+        editorData.push({
+            id: item.questionId,
+            question: item.question
+        });
+    });
+
+    // Set editorData
+    if(editorData.length > 0) { url += ", editorData=" + WJ.base64encode(JSON.stringify(editorData)); }
+    else { url += ", editorData=JTVCJTVE"; }
+
+    return url += ")!";
+}
+
+</script>
