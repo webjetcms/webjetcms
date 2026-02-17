@@ -58,7 +58,7 @@ public class UserGroupsDB extends DB
 	 *@param  serverName      Description of the Parameter
 	 *@return                 The instance value
 	 */
-	public static UserGroupsDB getInstance(javax.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
+	public static UserGroupsDB getInstance(jakarta.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
 		//try to get it from server space
 		if (force_refresh == false)
@@ -78,7 +78,7 @@ public class UserGroupsDB extends DB
 	 *@param  servletContext  Description of the Parameter
 	 *@param  serverName      Description of the Parameter
 	 */
-	private UserGroupsDB(javax.servlet.ServletContext servletContext, String serverName)
+	private UserGroupsDB(jakarta.servlet.ServletContext servletContext, String serverName)
 	{
 		this.serverName = serverName;
 

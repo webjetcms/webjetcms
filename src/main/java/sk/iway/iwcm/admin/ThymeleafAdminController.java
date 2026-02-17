@@ -30,7 +30,7 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.spring.services.WebjetSecurityService;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -17,7 +17,7 @@ import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

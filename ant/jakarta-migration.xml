@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+
+<project name="migrate from javax.servlet to jakarta.servlet and copy output to jakarta-test-src project" default="migrate" >
+
+    <property environment="env"/>
+
+    <property name="root" location=".."/>
+    <!-- make tmp folder outside of vscode, because Code Helper (Renderer) will be eating CPU crazy -->
+    <property name="tempDir" location="../build/tmp-jakarta-migration"/>
+
+    <!-- update current project sources -->
+    <property name="jakartaDir" location=".."/>
+
+    <!-- Migrate javax.* to jakarta.*
+    https://github.com/apache/tomcat-jakartaee-migration/blob/main/README.md
+    -->
+    <taskdef name="javax2jakarta" classname="org.apache.tomcat.jakartaee.MigrationTask" classpath="./jakartaee-migration/jakartaee-migration-1.0.9-shaded.jar"/>
+
+    <target name="prepare-src">
+        <!-- temporary directories to store original sources -->
+        <delete dir="${tempDir}" />
+        <mkdir dir="${tempDir}" />
+        <mkdir dir="${tempDir}/src-utf8" />
+        <mkdir dir="${tempDir}/src-utf8/main" />
+        <mkdir dir="${tempDir}/src-utf8/main/java" />
+        <mkdir dir="${tempDir}/src-utf8/main/webapp" />
+        <mkdir dir="${tempDir}/src-utf8/test" />
+        <mkdir dir="${tempDir}/src-utf8/test/java" />
+
+        <!-- copy java src -->
+        <copy todir="${tempDir}/src-utf8/main/java" overwrite="true">
+            <fileset dir="${root}/src/main/java">
+                <include name="**/*"/>
+            </fileset>
+            <fileset dir="${root}/src/main/aspectj">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <copy todir="${tempDir}/src-utf8/test/java/" overwrite="true">
+            <fileset dir="${root}/src/test/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <!-- copy webapps -->
+        <copy todir="${tempDir}/src-utf8/main/webapp" overwrite="true">
+            <fileset dir="${root}/src/main/webapp">
+                <include name="**/*"/>
+                <exclude name="admin/v9/node_modules/**"/>
+                <exclude name="admin/v9/dist/**"/>
+                <exclude name="files/**"/>
+                <exclude name="images/**"/>
+                <exclude name="static-files/**"/>
+                <exclude name="WEB-INF/ai_files/**"/>
+                <exclude name="WEB-INF/fonts/**"/>
+                <exclude name="WEB-INF/formfiles/**"/>
+                <exclude name="WEB-INF/imgcache/**"/>
+                <exclude name="WEB-INF/libfilehistory/**"/>
+                <exclude name="WEB-INF/sql/**"/>
+                <exclude name="WEB-INF/tmp/**"/>
+                <exclude name="WEB-INF/update/**"/>
+                <exclude name="**/node_modules/**"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="transform" depends="prepare-src">
+
+        <javax2jakarta
+            src="${tempDir}/src-utf8/"
+            dest="${tempDir}/src-utf8-jakarta/"
+            profile="tomcat"
+        />
+
+        <echo message="-----> replacing javax.* with jakarta.* in files"/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.persistence." value="jakarta.persistence."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.activation." value="jakarta.activation."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.xml.bind." value="jakarta.xml.bind."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.validation." value="jakarta.validation."/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="freemarker.ext.servlet." value="freemarker.ext.jakarta.servlet."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.springframework.web.multipart.commons.CommonsMultipartFile" value="org.springframework.web.multipart.MultipartFile"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="CommonsMultipartFile" value="MultipartFile"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.springframework.web.multipart.commons.CommonsMultipartResolver" value="org.springframework.web.multipart.support.StandardServletMultipartResolver"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="CommonsMultipartResolver" value="StandardServletMultipartResolver"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.eclipse.persistence.sessions.Record" value="org.eclipse.persistence.sessions.DataRecord"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="public Object profileExecutionOfQuery(DatabaseQuery query, Record row, AbstractSession session)" value="public Object profileExecutionOfQuery(DatabaseQuery query, DataRecord row, AbstractSession session)"/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="import org.springframework.web.util.NestedServletException;" value=""/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="catch (NestedServletException|org.springframework.security.access.AccessDeniedException e)" value="catch (org.springframework.security.access.AccessDeniedException e)"/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.eclipse.persistence.config.SessionCustomizer" value="org.eclipse.persistence.sessions.SessionCustomizer"/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.apache.commons.fileupload.FileItem" value="org.apache.commons.fileupload2.core.FileItem"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.apache.commons.fileupload.disk.DiskFileItem" value="org.apache.commons.fileupload2.core.DiskFileItem"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="import org.apache.commons.fileupload.FileUploadBase;" value=""/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.apache.commons.fileupload.servlet.ServletFileUpload" value="org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="ServletFileUpload upload = new ServletFileUpload(" value="JakartaServletFileUpload upload = new JakartaServletFileUpload("/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="FileUploadBase.SizeLimitExceededException" value="javax.naming.SizeLimitExceededException"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token=".getStoreLocation().getAbsolutePath()" value=".getPath().toAbsolutePath().toString()"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getSize()" value="uploadedFile.getSize()"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getName()" value="uploadedFile.getOriginalFilename()"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getInputStream()" value="uploadedFile.getInputStream()"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/">
+            <replacetoken><![CDATA[ResponseEntity<>(response, null, HttpStatus.OK)]]></replacetoken>
+            <replacevalue><![CDATA[ResponseEntity<>(response, HttpStatus.OK)]]></replacevalue>
+        </replace>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.apache.commons.fileupload." value="org.apache.commons.fileupload2.core."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.hibernate.validator.internal.util.privilegedactions." value="org.hibernate.validator.internal.util.actions."/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.thymeleaf.spring5." value="org.thymeleaf.spring6."/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="io.swagger.annotations.ApiOperation" value="io.swagger.v3.oas.annotations.Operation"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="io.swagger.annotations.ApiParam" value="io.swagger.v3.oas.annotations.Parameter"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="springfox.documentation.annotations.ApiIgnore" value="io.swagger.v3.oas.annotations.Hidden"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="io.swagger.annotations.ApiModelProperty" value="io.swagger.v3.oas.annotations.media.Schema"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="io.swagger.annotations.ApiModel" value="io.swagger.v3.oas.annotations.media.Schema"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="io.swagger.annotations.Api" value="io.swagger.v3.oas.annotations.tags.Tag"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@Api(description" value="@Tag(name=&quot;&quot;, description" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiOperation(value" value="@Operation(summary" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiParam(value" value="@Parameter(description" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiIgnore(" value="@Hidden(" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiModelProperty(dataType" value="@Schema(type" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiModelProperty(" value="@Schema(" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="@ApiModel(" value="@Schema(" />
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="new PageImpl&lt;&gt;(" value="new sk.iway.iwcm.system.datatable.DatatablePageImpl&lt;&gt;(" />
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="import org.springframework.data.domain.PageImpl;" value=""/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="public class DatatablePageImpl&lt;T&gt; extends PageImpl&lt;T&gt; {" value="public class DatatablePageImpl&lt;T&gt; extends org.springframework.data.domain.PageImpl&lt;T&gt; {"/>
+
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="DefaultMultipartHttpServletRequest" value="StandardMultipartHttpServletRequest"/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="multipartResolver.setMaxUploadSize(-1);" value=""/>
+
+    </target>
+
+    <target name="migrate" depends="transform">
+
+        <echo message="-----> syncing files to ${jakartaDir}"/>
+
+        <!-- skopiruj SRC do JAKARTA verzie -->
+        <sync todir="${jakartaDir}/src/main/java/" overwrite="true">
+            <fileset dir="${tempDir}/src-utf8-jakarta/main/java/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/" overwrite="true">
+            <fileset dir="${tempDir}/src-utf8-jakarta/main/webapp/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <!-- sync test sources -->
+        <sync todir="${jakartaDir}/src/test/java/" overwrite="true">
+            <fileset dir="${tempDir}/src-utf8-jakarta/test/java/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <!-- text*.properties - replace validation keys -->
+        <replace dir="${jakartaDir}/src/main/webapp/WEB-INF/classes/" token="javax.validation.constraints." value="jakarta.validation.constraints." />
+
+        <!-- copy other resources -->
+        <copy todir="${jakartaDir}/" overwrite="true">
+            <fileset dir="${root}">
+                <include name="build.gradle"/>
+            </fileset>
+        </copy>
+        <copy todir="${jakartaDir}/ant" overwrite="true">
+            <fileset dir="${root}/ant/">
+                <include name="*.xml"/>
+                <include name="*.sh"/>
+                <include name="*.config"/>
+            </fileset>
+        </copy>
+        <sync todir="${jakartaDir}/libs" overwrite="true">
+            <fileset dir="${root}/libs/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <sync todir="${jakartaDir}/src/main/aspectj/" overwrite="true">
+            <fileset dir="${root}/src/main/aspectj/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/resources/" overwrite="true">
+            <fileset dir="${root}/src/main/resources/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/sql/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/WEB-INF/sql/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/files/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/files/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/images/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/images/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/static-files/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/static-files/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/fonts/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/WEB-INF/fonts/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/main/webapp/WEB-INF/formfiles/" overwrite="true">
+            <fileset dir="${root}/src/main/webapp/WEB-INF/formfiles/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+
+        <sync todir="${jakartaDir}/src/test/resources/" overwrite="true">
+            <fileset dir="${root}/src/test/resources/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+        <sync todir="${jakartaDir}/src/test/webapp/" overwrite="true">
+            <fileset dir="${root}/src/test/webapp/">
+                <include name="**/*"/>
+                <exclude name="node_modules/**"/>
+            </fileset>
+        </sync>
+
+
+        <copy todir="${jakartaDir}/.vscode" overwrite="true">
+            <fileset dir="${root}/.vscode/">
+                <include name="**/*"/>
+                <exclude name="settings.json"/>
+            </fileset>
+        </copy>
+        <sync todir="${jakartaDir}/.devcontainer" overwrite="true">
+            <fileset dir="${root}/.devcontainer/">
+                <include name="**/*"/>
+            </fileset>
+        </sync>
+    </target>
+
+</project>

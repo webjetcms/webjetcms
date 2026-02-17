@@ -3,11 +3,11 @@ package sk.iway.iwcm;
 import java.io.IOException;
 import java.util.Locale;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import freemarker.ext.servlet.FreemarkerServlet;
+import freemarker.ext.jakarta.servlet.FreemarkerServlet;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
 import sk.iway.iwcm.users.UsersDB;

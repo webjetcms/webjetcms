@@ -1,6 +1,6 @@
 package sk.iway.iwcm.tags;
 
-import javax.servlet.jsp.tagext.BodyContent;
+import jakarta.servlet.jsp.tagext.BodyContent;
 
 import sk.iway.iwcm.Tools;
 

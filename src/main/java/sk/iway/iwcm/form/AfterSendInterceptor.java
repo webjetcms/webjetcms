@@ -1,8 +1,8 @@
 package sk.iway.iwcm.form;
 
-import javax.mail.Multipart;
-import javax.mail.internet.MimeMessage;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface AfterSendInterceptor
 {

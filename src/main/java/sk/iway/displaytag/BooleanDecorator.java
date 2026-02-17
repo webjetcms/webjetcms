@@ -1,6 +1,6 @@
 package sk.iway.displaytag;
 
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.PageContext;
 
 import org.displaytag.decorator.DisplaytagColumnDecorator;
 import org.displaytag.properties.MediaTypeEnum;

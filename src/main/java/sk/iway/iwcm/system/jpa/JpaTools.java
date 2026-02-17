@@ -6,9 +6,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.Predicate;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
@@ -129,8 +129,8 @@ public class JpaTools
 		Logger.debug(JpaTools.class, "getJpaClassNames.basePackage="+basePackage);
 
 		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
-		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Converter.class));
+		scanner.addIncludeFilter(new AnnotationTypeFilter(jakarta.persistence.Entity.class));
+		scanner.addIncludeFilter(new AnnotationTypeFilter(jakarta.persistence.Converter.class));
 		for (BeanDefinition bd : scanner.findCandidateComponents(basePackage))
 		{
 			Logger.debug(JpaTools.class, "JPA: found class "+bd.getBeanClassName());
@@ -221,7 +221,7 @@ public class JpaTools
             dbQuery.setSelectionCriteria(expr);
 
             Query query = em.createQuery(dbQuery);
-            query.setHint("javax.persistence.cache.storeMode", "REFRESH");
+            query.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
             List<T> records = JpaDB.getResultList(query);
             return records;
         }catch (Exception e) {
@@ -245,7 +245,7 @@ public class JpaTools
 			dbQuery.setSelectionCriteria(expr);
 
 			Query query = em.createQuery(dbQuery);
-			query.setHint("javax.persistence.cache.storeMode", "REFRESH");
+			query.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
 			@SuppressWarnings("unchecked")
 			List<T> records = query.setMaxResults(1).getResultList();
 			if (records == null || records.size() == 0)
@@ -489,7 +489,7 @@ public class JpaTools
         Expression expr = applyDomainId(null, object, clazz);
         dbQuery.setSelectionCriteria(expr);
 		Query query = em.createQuery(dbQuery);
-		query.setHint("javax.persistence.cache.storeMode", "REFRESH");
+		query.setHint("jakarta.persistence.cache.storeMode", "REFRESH");
 		List<T> records = JpaDB.getResultList(query);
 
 		return records;

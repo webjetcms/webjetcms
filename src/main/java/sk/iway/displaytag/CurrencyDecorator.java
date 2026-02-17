@@ -2,7 +2,7 @@ package sk.iway.displaytag;
 
 import java.text.DecimalFormat;
 
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.PageContext;
 
 import org.displaytag.decorator.DisplaytagColumnDecorator;
 import org.displaytag.exception.DecoratorException;

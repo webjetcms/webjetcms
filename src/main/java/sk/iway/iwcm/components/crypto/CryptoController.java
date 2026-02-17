@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Zakladny controller pre spravu sifrovacich klucov

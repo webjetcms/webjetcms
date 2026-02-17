@@ -21,18 +21,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validator;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
@@ -2087,7 +2087,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		String errCause = firstViolation.getMessageTemplate();
 		if(Tools.isNotEmpty(errCause) && errCause.startsWith("{") && errCause.endsWith("}")) {
-			//For example {javax.validation.constraints.NotBlank.message}
+			//For example {jakarta.validation.constraints.NotBlank.message}
 			errCause = errCause.substring(1, errCause.length() - 1);
 			errCause = Prop.getInstance().getText( errCause );
 		} else {

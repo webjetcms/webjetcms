@@ -12,9 +12,9 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
 /**
  *  InitServlet.java - inicializacia Update Managera

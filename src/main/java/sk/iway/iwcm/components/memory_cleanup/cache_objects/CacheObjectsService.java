@@ -5,7 +5,7 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.*;
@@ -18,7 +18,7 @@ import sk.iway.iwcm.tags.CombineTag;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.utils.Pair;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -52,7 +52,7 @@ public class CacheObjectsService {
         holder.setPage(pageable.getPageNumber());
         holder.setPageSize(pageable.getPageSize());
 
-        return new PageImpl<>(holder.getPageList(), pageable, cacheDtoList.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, cacheDtoList.size());
     }
 
     boolean deleteCacheBean(CacheDto cacheBean) {
@@ -166,7 +166,7 @@ public class CacheObjectsService {
         holder.setPage(pageable.getPageNumber());
         holder.setPageSize(pageable.getPageSize());
 
-        return new PageImpl<>(holder.getPageList(), pageable, filteredCacheDtos.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, filteredCacheDtos.size());
     }
 
     private Pair<Timestamp, Timestamp> getCleanExpirationDateValue(String updateDate) {

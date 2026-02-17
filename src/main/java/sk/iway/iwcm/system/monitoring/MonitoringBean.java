@@ -2,7 +2,7 @@ package sk.iway.iwcm.system.monitoring;
 
 import java.util.Date;
 
-import springfox.documentation.annotations.ApiIgnore;
+import io.swagger.v3.oas.annotations.Hidden;
 
 /**
  * MonitoringBean.java - zaznam z tabulky monitoring pre uchovanie udajov z monitorovania
@@ -15,7 +15,7 @@ import springfox.documentation.annotations.ApiIgnore;
  *	@modified     $Date: 2009/08/05 13:39:54 $
  */
 //pada to na .nodeName v JS kode swaggeru, preto musime ignorovat
-@ApiIgnore()
+@Hidden()
 public class MonitoringBean
 {
 	private int 	monitoringId;		// identifikator

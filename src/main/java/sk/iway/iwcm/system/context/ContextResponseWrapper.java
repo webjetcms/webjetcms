@@ -8,11 +8,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -213,14 +213,6 @@ public class ContextResponseWrapper extends HttpServletResponseWrapper
 	//setStatus implementation
 	protected int statusCode = 0;
 	protected String statusMessage = null;
-	@Override
-	@SuppressWarnings("deprecation")
-	public void setStatus(int sc, String sm)
-	{
-		super.setStatus(sc, sm);
-		statusCode = sc;
-		statusMessage = sm;
-	}
 	@Override
 	public void setStatus(int sc)
 	{

@@ -11,11 +11,11 @@ import org.springframework.web.servlet.DispatcherServlet;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DebugTimer;
 
-import javax.servlet.FilterRegistration;
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration.Dynamic;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration.Dynamic;
 import java.util.ArrayList;
 import java.util.List;
 

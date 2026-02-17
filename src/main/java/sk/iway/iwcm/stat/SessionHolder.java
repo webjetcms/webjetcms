@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -70,7 +70,7 @@ public class SessionHolder
     *@param  servletContext  Description of the Parameter
     *@return                 The instance value
     */
-   public static SessionHolder getInstance(javax.servlet.ServletContext servletContext)
+   public static SessionHolder getInstance(jakarta.servlet.ServletContext servletContext)
    {
       if (servletContext!=null && servletContext.getAttribute(SESSION_HOLDER) != null)
       {
@@ -84,7 +84,7 @@ public class SessionHolder
     *
     *@param  servletContext  Description of the Parameter
     */
-   private SessionHolder(javax.servlet.ServletContext servletContext)
+   private SessionHolder(jakarta.servlet.ServletContext servletContext)
    {
       //Logger.println(this,"SessionHolder: constructor");
 		data = Collections.synchronizedMap(new Hashtable<String, SessionDetails>());

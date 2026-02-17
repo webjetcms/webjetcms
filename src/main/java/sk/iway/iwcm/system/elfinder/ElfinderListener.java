@@ -2,7 +2,7 @@ package sk.iway.iwcm.system.elfinder;
 
 import java.util.Date;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

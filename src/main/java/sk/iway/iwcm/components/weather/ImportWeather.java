@@ -8,9 +8,9 @@ import sk.iway.iwcm.components.weather.met.no.generated.Temperature;
 import sk.iway.iwcm.components.weather.met.no.generated.TimeType;
 import sk.iway.iwcm.components.weather.met.no.generated.Weatherdata;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;

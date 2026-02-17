@@ -2,6 +2,7 @@ package sk.iway.upload;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -9,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
 
 import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
@@ -21,9 +22,9 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
-import javax.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+import jakarta.servlet.ServletException;
 
 
 /**
@@ -62,9 +63,9 @@ public class DiskMultiPartRequestHandler
     */
    public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
    {
-		DiskFileItemFactory factory = new DiskFileItemFactory();
+		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
 
-		ServletFileUpload upload = new ServletFileUpload(factory);
+		JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
@@ -79,7 +80,7 @@ public class DiskMultiPartRequestHandler
 
 				if (diskFile.isFormField())
 				{
-					Logger.debug(DiskMultiPartRequestHandler.class, "name="+diskFile.getFieldName()+" value="+diskFile.getString(SetCharacterEncodingFilter.getEncoding())+" isFormField="+diskFile.isFormField()+" inMemory="+diskFile.isInMemory());
+					Logger.debug(DiskMultiPartRequestHandler.class, "name="+diskFile.getFieldName()+" value="+diskFile.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()))+" isFormField="+diskFile.isFormField()+" inMemory="+diskFile.isInMemory());
 				}
 				else
 				{
@@ -91,7 +92,7 @@ public class DiskMultiPartRequestHandler
 				Logger.debug(DiskMultiPartRequestHandler.class, "setting");
 
 				String name = diskFile.getFieldName();
-				String value = diskFile.getString(SetCharacterEncodingFilter.getEncoding());
+				String value = diskFile.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()));
 
 				//aby nam fungovalo aj request.getParameterValues()
 				List<String> valuesList = paramsTable.get(name);

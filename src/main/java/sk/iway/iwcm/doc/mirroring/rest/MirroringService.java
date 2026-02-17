@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.beans.support.SortDefinition;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -90,10 +90,10 @@ public class MirroringService {
             data = getDocsData();
         } else {
             addParamWarning("getPage()", PARAMETER_TYPE_ERR, type);
-            return new PageImpl<>( new ArrayList<>() );
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
         }
 
-        return new PageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
     }
 
     /**
@@ -126,7 +126,7 @@ public class MirroringService {
             data = getDocsData();
         } else {
             addParamWarning("getFilteredPage()", PARAMETER_TYPE_ERR, type);
-            return new PageImpl<>( new ArrayList<>() );
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
         }
 
         //Filter by syncId
@@ -134,7 +134,7 @@ public class MirroringService {
             int filterSyncId = Tools.getIntValue(request.getParameter("searchId"), -1);
             if(filterSyncId < 1) {
                //bad format or invalid value
-               return new PageImpl<>( new ArrayList<>() );
+               return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
             } else {
                 List<MirroringDTO> tmpFiltered = data.stream()
                     .filter(item -> item.getId().intValue() == filterSyncId)
@@ -159,7 +159,7 @@ public class MirroringService {
                     .toList();
             } else {
                 Logger.warn(MirroringService.class, "Request parametert searchEditorFields.statusIcons have unknown value: " + statucIconFilter);
-                return new PageImpl<>( new ArrayList<>() );
+                return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
             }
             data = new ArrayList<>(tmpFiltered);
         }
@@ -200,7 +200,7 @@ public class MirroringService {
             }
         }
 
-        return new PageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
     }
 
     /**

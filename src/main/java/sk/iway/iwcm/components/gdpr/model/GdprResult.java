@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.gdpr.model;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class GdprResult {
     private int id;

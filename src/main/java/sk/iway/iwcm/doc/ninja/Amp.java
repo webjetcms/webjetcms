@@ -15,7 +15,7 @@ import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.helpers.RequestHelper;
 
 import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;

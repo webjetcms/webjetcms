@@ -2,7 +2,7 @@ package sk.iway.iwcm.system.stripes;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import net.sourceforge.stripes.controller.FileUploadLimitExceededException;
 import net.sourceforge.stripes.controller.multipart.DefaultMultipartWrapperFactory;
 import net.sourceforge.stripes.controller.multipart.MultipartWrapper;

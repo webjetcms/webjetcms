@@ -3,7 +3,7 @@ package sk.iway.iwcm.database;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 import org.apache.commons.beanutils.PropertyUtils;
 

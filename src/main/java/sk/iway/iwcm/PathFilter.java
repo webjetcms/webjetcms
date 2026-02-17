@@ -1,7 +1,7 @@
 package sk.iway.iwcm;
 
 import org.apache.commons.codec.binary.Base64;
-import org.springframework.web.util.NestedServletException;
+
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
 import sk.iway.iwcm.components.abtesting.ABTesting;
@@ -27,12 +27,12 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.*;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.*;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.PageContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -1306,7 +1306,7 @@ public class PathFilter implements Filter
 			// Pass control on to the next filter
 			chain.doFilter(servletRequest, servletResponse);
 		}
-		catch (NestedServletException|org.springframework.security.access.AccessDeniedException e)
+		catch (org.springframework.security.access.AccessDeniedException e)
 		{
 			//nastane napr. pri volani /admin/adminlog/logging ak user nema pravo na cmp_adminlog
 			//rest sluzby si to handluju same, toto sa tyka webview

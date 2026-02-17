@@ -8,7 +8,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.*;
 
 /**

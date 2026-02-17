@@ -13,12 +13,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
@@ -996,8 +999,7 @@ public class LogonTools {
      * @param session
      * @param user
      */
-    public static Authentication setUserToSession(HttpSession session, Identity user)
-    {
+    public static Authentication setUserToSession(HttpSession session, Identity user) {
         if (session != null) session.setAttribute(Constants.USER_KEY, user);
 
         try
@@ -1006,10 +1008,22 @@ public class LogonTools {
             //RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
             if (Constants.getServletContext().getAttribute("springContext")!=null)
             {
-                //ApplicationContext context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-                //AuthenticationManager authenticationManager = context.getBean("authenticationManagerBean", AuthenticationManager.class);
                 final Authentication authentication = WebjetAuthentificationProvider.authenticate(user);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+
+                // Ulož context do session cez SecurityContextRepository
+                SecurityContextRepository securityContextRepository = Tools.getSpringBean("securityContextRepository", SecurityContextRepository.class);
+                if (securityContextRepository == null) {
+                    securityContextRepository = new HttpSessionSecurityContextRepository();
+                }
+
+                //HttpSessionSecurityContextRepository repo = new HttpSessionSecurityContextRepository();
+                //securityContextRepository.saveContext(context, request, response);
+                //we don't have request/response here, securityContextRepository.saveContextInHttpSession is private, so we use session directly - hack, but it works
+                if (session != null) session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
                 return authentication;
             }
         }

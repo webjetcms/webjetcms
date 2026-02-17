@@ -19,7 +19,7 @@ import java.lang.reflect.Proxy;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.IntStream;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class DemoRestController

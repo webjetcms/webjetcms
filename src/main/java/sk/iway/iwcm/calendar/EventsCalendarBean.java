@@ -2,22 +2,22 @@ package sk.iway.iwcm.calendar;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import sk.iway.iwcm.database.ActiveRecord;
 
 @Entity
@@ -40,13 +40,13 @@ public class EventsCalendarBean extends ActiveRecord implements Serializable {
     private String description;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long")
+    @Schema(type = "long")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_from")
     private Date from;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long")
+    @Schema(type = "long")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_to")
     private Date to;

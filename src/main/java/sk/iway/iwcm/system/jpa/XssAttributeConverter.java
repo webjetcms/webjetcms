@@ -1,14 +1,14 @@
 package sk.iway.iwcm.system.jpa;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import sk.iway.iwcm.DB;
 
 /**
  * Konverter ktory automaticky escapne HTML kod ak sa v hodnote nachadzaju znaky &lt; alebo &gt;
  * Pre povolenie HTML znakov je potrebne pouzit anotaciu:
- * @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+ * @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
  * V pripade potreby vypnutia je mozne do konf. premennej xssHtmlAllowedFields pridat hodnotu jpaentity
  *
  * POZOR: ak vam to tu pada na tom, ze nevie skonvertovat BigDecimal na String a podobne

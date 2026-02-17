@@ -1,6 +1,6 @@
 package sk.iway.iwcm.system.jpaconverters;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Converts NULL database value to empty string. Used mainly because Oracle can't store enpty strings.

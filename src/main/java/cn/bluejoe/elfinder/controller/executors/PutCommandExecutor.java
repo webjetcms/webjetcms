@@ -2,8 +2,8 @@ package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.OutputStream;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;

@@ -16,8 +16,8 @@ import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.utils.Pair;
 
-import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Query;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**

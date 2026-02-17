@@ -5,8 +5,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Query;
-import javax.persistence.Table;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 

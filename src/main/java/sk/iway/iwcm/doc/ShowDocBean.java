@@ -1,7 +1,7 @@
 package sk.iway.iwcm.doc;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Bean, ktory umoznuje doplnit data pri zobrazeni stranky, publikuje sa ako event

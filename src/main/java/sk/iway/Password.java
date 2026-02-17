@@ -6,7 +6,7 @@ import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.PasswordsHistoryDB;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Calendar;

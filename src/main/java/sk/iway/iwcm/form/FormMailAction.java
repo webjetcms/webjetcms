@@ -33,15 +33,15 @@ import sk.iway.iwcm.utils.Pair;
 import sk.iway.upload.DiskMultiPartRequestHandler;
 import sk.iway.upload.UploadedFile;
 
-import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
-import javax.activation.MimetypesFileTypeMap;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.activation.DataHandler;
+import jakarta.activation.FileDataSource;
+import jakarta.activation.MimetypesFileTypeMap;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.*;
 import java.lang.reflect.Method;

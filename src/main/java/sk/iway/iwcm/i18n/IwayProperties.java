@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import javax.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.JspWriter;
 
 import net.sourceforge.stripes.action.FileBean;
 import sk.iway.iwcm.Logger;

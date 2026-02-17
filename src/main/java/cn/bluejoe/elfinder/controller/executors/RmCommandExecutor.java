@@ -3,8 +3,8 @@ package cn.bluejoe.elfinder.controller.executors;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 

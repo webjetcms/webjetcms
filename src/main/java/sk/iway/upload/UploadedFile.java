@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.io.IwcmFile;
@@ -40,7 +40,7 @@ public class UploadedFile
 		if (localFile!=null)
 			return localFile.getAbsolutePath();
 		if (diskFileItem != null)
-			return diskFileItem.getStoreLocation().getAbsolutePath();
+			return diskFileItem.getPath().toAbsolutePath().toString();
 		else
 			return "";
 	}

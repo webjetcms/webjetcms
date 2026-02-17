@@ -180,7 +180,7 @@ public class CalendarDetails
 		return bgColorIndex;
 	}
 
-	public String getCircleImgString(javax.servlet.http.HttpServletRequest request)
+	public String getCircleImgString(jakarta.servlet.http.HttpServletRequest request)
 	{
 	  if (typeId <= 5)
 		 return "<img src='/images/kruh_" + typeId + ".gif'>";

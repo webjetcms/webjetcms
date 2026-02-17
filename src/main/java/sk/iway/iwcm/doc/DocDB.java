@@ -29,7 +29,7 @@ import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -191,9 +191,9 @@ public class DocDB extends DB
 	 *@deprecated
 	 */
 	@Deprecated
-	public static DocDB getInstance(javax.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
+	public static DocDB getInstance(jakarta.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
 	{
-		javax.servlet.ServletContext servletContext = Constants.getServletContext();
+		jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 		if (!force_refresh)
 		{
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
@@ -241,7 +241,7 @@ public class DocDB extends DB
 	 * @param serverName
 	 *           Description of the Parameter
 	 */
-	private DocDB(javax.servlet.ServletContext servletContext, String serverName)
+	private DocDB(jakarta.servlet.ServletContext servletContext, String serverName)
 	{
 		Logger.println(this,"DocDB: constructor ["+Constants.getInstallName()+"]");
 		Logger.debugMemInfo();

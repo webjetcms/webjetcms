@@ -16,7 +16,7 @@ import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

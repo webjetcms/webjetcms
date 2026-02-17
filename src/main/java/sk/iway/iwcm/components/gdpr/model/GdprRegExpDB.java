@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.gdpr.model;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 

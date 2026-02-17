@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.criteria.Predicate;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -280,7 +280,7 @@ public class AiStatService {
 
             //Apply sorting from pageable
             if (pageable != null && pageable.getSort() != null && pageable.getSort().isSorted()) {
-                List<javax.persistence.criteria.Order> orders = new java.util.ArrayList<>();
+                List<jakarta.persistence.criteria.Order> orders = new java.util.ArrayList<>();
                 pageable.getSort().forEach(o -> {
                     try {
                         if (o.isAscending()) {
