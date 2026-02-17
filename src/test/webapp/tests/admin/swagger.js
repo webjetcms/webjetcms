@@ -80,7 +80,7 @@ Scenario("no permissions", async ({I, Document}) => {
 
     I.amOnPage(swaggerUrl);
     I.see("Chyba 404");
-    response = await I.sendGetRequest(restUrl, {
+    await I.sendGetRequest(restUrl, {
         'Referer': referer,
         'x-auth-token': '',
         'Cookie': "JSESSIONID="+sessionId,

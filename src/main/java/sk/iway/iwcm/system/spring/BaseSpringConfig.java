@@ -61,7 +61,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/**").permitAll()
                 .requestMatchers("/private/rest/**", "/webjars/**").authenticated()
-                .requestMatchers("/swagger-ui**", "/swagger-ui/**", "/v3/api-docs/**", "/admin/rest/**").hasRole("Group_admin")
+                .requestMatchers("/swagger-ui**", "/swagger-ui/**", "/admin/rest/**").hasRole("Group_admin")
             );
 
         SpringAppInitializer.dtDiff("Configure security DONE");

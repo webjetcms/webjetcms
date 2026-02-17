@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,7 +52,7 @@ import sk.iway.iwcm.Tools;
  * Scans all @RestController beans with Spring MVC annotations and generates OpenAPI spec.
  *
  * Access URLs:
- * - JSON: /v3/api-docs
+ * - JSON: /admin/rest/openapi/api-docs
  * - Swagger UI: /admin/swagger-ui/index.html
  */
 @RestController
@@ -82,7 +83,7 @@ public class OpenApiRestController {
         if (Constants.getBoolean("swaggerEnabled") == false) {
             //redirect to /404.jsp if swagger is not enabled
             Logger.debug(OpenApiRestController.class, "Swagger API docs requested but swaggerEnabled=false, returning 404");
-            return "redirect:/404.jsp";
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
         }
 
         try {

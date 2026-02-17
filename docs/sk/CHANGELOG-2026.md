@@ -9,7 +9,10 @@
 ### Bezpečnosť
 
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
-- Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/) pomocou knižnice `springdoc-openapi`. Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorý majú právo na editáciu administrátorov (#57793).
+
+### Pre programátora
+
+- Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
 
 ## 2026.0
 

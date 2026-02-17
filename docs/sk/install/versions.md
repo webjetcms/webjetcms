@@ -1,6 +1,6 @@
 # Predpoklady a verzie
 
-WebJET vyžaduje `Java 17` a `Tomcat 9`.
+Aktuálna verzia WebJET CMS vyžaduje `Java 17` a `Tomcat 11`.
 
 Základný projekt vo formáte gradle nájdete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -109,23 +109,19 @@ V `build.gradle` je potrebné aktualizovať `gretty` konfiguráciu a pridať nas
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring
