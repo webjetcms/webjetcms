@@ -85,7 +85,7 @@ V [Tomcat od verzie 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/htt
 
 ## Zmeny pri prechode na Jakarta verziu
 
-Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7. Prelomové zmeny:
+Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 11, používa Spring verzie 7. Prelomové zmeny:
 
 - URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
 - V Spring DATA repozitároch pre `IN/NOTIN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:

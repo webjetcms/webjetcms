@@ -13,7 +13,7 @@ plugins {
     id 'java'
     id 'war'
     https://github.com/gretty-gradle-plugin/gretty
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
@@ -47,6 +47,7 @@ ext {
     springSecurityVersion = "6.4.+";
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.19';
+    eclipselinkVersion = '5.0.0-B13';
 }
 
 lombok {
@@ -123,6 +124,10 @@ configurations {
         exclude group: 'commons-io', module: 'commons-io'
     }
 
+    grettyRunnerTomcat11 {
+
+    }
+
     agent {
         canBeResolved = true
         canBeConsumed = true
@@ -166,7 +171,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
     implementation("com.github.hazendaz:displaytag:3.2.0")
 
-    implementation("org.eclipse.persistence:eclipselink:5.0.0-B08")
+    implementation("org.eclipse.persistence:eclipselink:${eclipselinkVersion}")
 
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
@@ -312,13 +317,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
-    // used in gopay-api
-    // Source: https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
-    implementation("org.apache.logging.log4j:log4j-api:2.25.3")
-    implementation("org.apache.logging.log4j:log4j-core:2.25.3")
-
-    implementation 'cz.gopay:gp-java-api-v3-common:3.8.1'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.8.1'
+    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
@@ -433,7 +433,7 @@ jacoco {
 gretty {
     // supported values:
     // 'jetty7', 'jetty8', 'jetty9', 'jetty9.3', 'jetty9.4', 'tomcat7', 'tomcat8'
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
     contextPath = ''
     httpPort = 80
     httpsEnabled = true
