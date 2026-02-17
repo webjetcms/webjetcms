@@ -23,7 +23,7 @@
   <taskdef
       resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
     <classpath>
-      <pathelement location="./aspectj/aspectjtools-1.9.19.jar"/>
+      <pathelement location="./aspectj/aspectjtools-1.9.25.1.jar"/>
     </classpath>
   </taskdef>
 

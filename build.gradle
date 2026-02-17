@@ -46,7 +46,9 @@ ext {
     springDataVersion = "4.0.+";
     springSecurityVersion = "6.4.+";
     allureVersion = "2.32.0";
-    aspectJVersion = '1.9.19';
+    //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
+    //jar to ant/aspectj and update version in ant/compile.xml file
+    aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
 }
 
@@ -219,8 +221,6 @@ dependencies {
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
     //implementation("org.springframework:spring-messaging:${springVersion}")
-    implementation("org.springframework.plugin:spring-plugin-core:2.0.0.RELEASE")
-    implementation("org.springframework.plugin:spring-plugin-metadata:2.0.0.RELEASE")
 
     //implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-common
@@ -245,12 +245,12 @@ dependencies {
 
     implementation("com.google.crypto.tink:tink:1.19.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.29") //1.3 is latest branch with support for Java EE java.* namespace
+    implementation("ch.qos.logback:logback-core:1.5.29")
     implementation("ch.qos.logback:logback-classic:1.5.29")
-    implementation("org.slf4j:slf4j-api:1.7.36")
-    implementation("org.slf4j:jcl-over-slf4j:1.7.36")
-    implementation("org.slf4j:log4j-over-slf4j:1.7.36")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.17.1")
+    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:jcl-over-slf4j:2.0.16")
+    implementation("org.slf4j:log4j-over-slf4j:2.0.16")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.24.3")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
@@ -271,7 +271,7 @@ dependencies {
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
-    //  https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring5
+    // https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring6
     implementation group: 'org.thymeleaf', name: 'thymeleaf-spring6', version: '3.1.3.RELEASE'
 
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
@@ -304,21 +304,15 @@ dependencies {
     //testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
     //testImplementation "io.qameta.allure:allure-junit5"
 
-    //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
-    // used in io.springfox:springfox-swagger2
-    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
-    implementation 'io.github.classgraph:classgraph:4.8.177'
+    //gopay https://mvnrepository.com/artifact/cz.gopay/gp-java-api-v3-common
+    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
 
-    // used in com.google.crypto.tink:tink
-    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-    implementation 'com.google.protobuf:protobuf-java:3.25.5'
+    //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
 
     // used in velocity-tools-generic
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
-
-    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
