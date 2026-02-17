@@ -580,6 +580,9 @@ public class OpenApiRestController {
         // Complex type - create reference and generate schema if not already done
         String schemaName = type.getSimpleName();
         if (!schemasToGenerate.containsKey(schemaName) && !processedClasses.contains(type)) {
+            // Add to processedClasses BEFORE calling generateSchemaForClass to prevent
+            // infinite recursion with circular references (e.g., A references B, B references A)
+            processedClasses.add(type);
             generateSchemaForClass(type);
         }
 
