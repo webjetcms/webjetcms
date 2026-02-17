@@ -330,26 +330,22 @@ public class PathFilter implements Filter
 				return;
 			}
 
-			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws)
-			if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.equals("/ws") || path.equals("/ws/"))
+			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws) / springdoc-openapi
+			if (path.contains("/swagger") || path.contains("/v2/api-docs") || path.contains("/admin/rest/openapi/api-docs") || path.equals("/ws") || path.equals("/ws/"))
 			{
 				boolean swaggerEnabled = Constants.getBoolean("swaggerEnabled");
 				if (swaggerEnabled)
 				{
-				//testni, ci je povoleny aj pre neadmina
-				if (Constants.getBoolean("swaggerRequireAdmin"))
-				{
 					Identity user = UsersDB.getCurrentUser(req);
-					if (user==null || user.isAdmin()==false) swaggerEnabled = false;
-				}
+					if (user==null || user.isAdmin()==false || user.isEnabledItem("users.edit_admins")==false) swaggerEnabled = false;
 				}
 
 				if (swaggerEnabled==false)
 				{
-				Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
-				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				forwardSafely("/404.jsp", req, res);
-						return;
+					Adminlog.add(Adminlog.TYPE_XSS, "Swagger path is not enabled (conf. swaggerEnabled=false), path="+path, -1, -1);
+					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					forwardSafely("/404.jsp", req, res);
+					return;
 				}
 			}
 

@@ -38,7 +38,6 @@
     "gitPrefix.pattern": ".*/(\\d+)-.*",
     "coverage-gutters.coverageBaseDir": "docs/codecoverage-report/",
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
-    "terminal.integrated.shellIntegration.enabled": false,
 
     "spellright.language": [
         "cs_CZ",

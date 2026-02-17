@@ -1,6 +1,6 @@
 # Predpoklady a verzie
 
-WebJET vyžaduje `Java 17` a `Tomcat 9`.
+Aktuálna verzia WebJET CMS vyžaduje `Java 17` a `Tomcat 11`.
 
 Základný projekt vo formáte gradle nájdete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -14,13 +14,13 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
-- `2026.0-jakarta` - stabilizovaná verzia 2026.0 pre aplikačný server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
+- `2026.0-jakarta` - stabilizovaná verzia 2026.0 pre aplikačný server Tomcat 11 s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
 - `2026.0` - stabilizovaná verzia 2026.0, nepribúdajú do nej denné zmeny.
 - `2025.0-jakarta-SNAPSHOT` - stabilizovaná verzia 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - stabilizovaná verzia 2025.52, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - `2025.0.52` - stabilizovaná verzia 2025.0.52 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2025.0.50` - stabilizovaná verzia 2025.0.50 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
-- `2025.40-jakarta` - stabilizovaná verzia 2025.40 pre aplikačný server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
+- `2025.40-jakarta` - stabilizovaná verzia 2025.40 pre aplikačný server Tomcat 10/11 s využitím `Jakarta namespace`, nepribúdajú do nej denné zmeny.
 - `2025.40` - stabilizovaná verzia 2025.40, nepribúdajú do nej denné zmeny.
 - `2025.0.40` - stabilizovaná verzia 2025.0.40 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2025.18` - stabilizovaná verzia 2025.18, nepribúdajú do nej denné zmeny.
@@ -85,7 +85,7 @@ V [Tomcat od verzie 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/htt
 
 ## Zmeny pri prechode na Jakarta verziu
 
-Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7. Prelomové zmeny:
+Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 11, používa Spring verzie 7. Prelomové zmeny:
 
 - URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
 - V Spring DATA repozitároch pre `IN/NOTIN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:
@@ -109,23 +109,19 @@ V `build.gradle` je potrebné aktualizovať `gretty` konfiguráciu a pridať nas
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring

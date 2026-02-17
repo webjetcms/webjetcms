@@ -1961,8 +1961,6 @@ public class Constants {
 				MOD_CONFIG, "Povolene triedy pre XMLDecoder");
 
 		setBoolean("swaggerEnabled", false, MOD_SECURITY, "Povolenie zobrazovania swagger API dokumentacie na URL adrese /admin/swagger-ui/index.html");
-		setBoolean("swaggerRequireAdmin", true, MOD_SECURITY,
-				"Ak je nastavene na true je vyzadovane admin konto pre zobrazenie swagger dokumentacie");
 
 		setInt("bootstrapColumns", 12, MOD_EDITOR, "Pocet stlpcov bootstrap gridu (pre PageBuilder).");
 		setString("pageBuilderPrefix", "pb", MOD_EDITOR,
