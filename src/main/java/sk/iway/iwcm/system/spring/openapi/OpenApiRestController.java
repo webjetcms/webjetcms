@@ -1,7 +1,15 @@
 package sk.iway.iwcm.system.spring.openapi;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,12 +31,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.core.util.Json;
-import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -43,7 +52,6 @@ import sk.iway.iwcm.Tools;
  *
  * Access URLs:
  * - JSON: /v3/api-docs
- * - YAML: /v3/api-docs.yaml
  * - Swagger UI: /admin/swagger-ui/index.html
  */
 @RestController
@@ -59,6 +67,11 @@ public class OpenApiRestController {
     private OpenAPI cachedOpenApi;
     private long lastCacheTime = 0;
     private static final long CACHE_DURATION_MS = 60000; // 1 minute cache
+
+    // Track schemas to be generated
+    @SuppressWarnings("rawtypes")
+    private Map<String, Schema> schemasToGenerate;
+    private Set<Class<?>> processedClasses;
 
     /**
      * Returns OpenAPI specification in JSON format
@@ -93,10 +106,15 @@ public class OpenApiRestController {
 
         Logger.println(OpenApiRestController.class, "Generating OpenAPI specification...");
 
+        // Initialize schema tracking
+        schemasToGenerate = new HashMap<>();
+        processedClasses = new HashSet<>();
+
         // Clone the base OpenAPI info
         OpenAPI openApi = new OpenAPI()
                 .info(openApiInfo.getInfo())
-                .paths(new Paths());
+                .paths(new Paths())
+                .components(new Components());
 
         // Get all REST controller classes
         Set<Class<?>> resourceClasses = new HashSet<>();
@@ -118,11 +136,17 @@ public class OpenApiRestController {
             scanController(openApi, controllerClass);
         }
 
+        // Add all collected schemas to components
+        if (!schemasToGenerate.isEmpty()) {
+            openApi.getComponents().setSchemas(schemasToGenerate);
+        }
+
         cachedOpenApi = openApi;
         lastCacheTime = now;
 
         Logger.println(OpenApiRestController.class, "OpenAPI specification generated with " +
-                (openApi.getPaths() != null ? openApi.getPaths().size() : 0) + " paths");
+                (openApi.getPaths() != null ? openApi.getPaths().size() : 0) + " paths and " +
+                schemasToGenerate.size() + " schemas");
 
         return cachedOpenApi;
     }
@@ -132,6 +156,9 @@ public class OpenApiRestController {
      */
     private void scanController(OpenAPI openApi, Class<?> controllerClass) {
         String basePath = "";
+
+        // Build type variable mappings from the entire class hierarchy
+        Map<TypeVariable<?>, Type> typeVarMappings = resolveTypeVariables(controllerClass);
 
         // Get base path from @RequestMapping on class (check hierarchy)
         Class<?> currentClass = controllerClass;
@@ -165,11 +192,46 @@ public class OpenApiRestController {
                 String methodSignature = getMethodSignature(method);
                 if (!scannedMethods.contains(methodSignature)) {
                     scannedMethods.add(methodSignature);
-                    scanMethod(openApi, method, basePath, tagName);
+                    scanMethod(openApi, method, basePath, tagName, typeVarMappings);
                 }
             }
             currentClass = currentClass.getSuperclass();
         }
+    }
+
+    /**
+     * Resolves type variable mappings from the class hierarchy.
+     * For example, if A extends B&lt;String&gt; and B&lt;T&gt; extends C&lt;T, Integer&gt;,
+     * this will map T -> String for B's type parameters.
+     */
+    private Map<TypeVariable<?>, Type> resolveTypeVariables(Class<?> leafClass) {
+        Map<TypeVariable<?>, Type> mappings = new HashMap<>();
+
+        Class<?> currentClass = leafClass;
+        while (currentClass != null && currentClass != Object.class) {
+            Type genericSuperclass = currentClass.getGenericSuperclass();
+            if (genericSuperclass instanceof ParameterizedType) {
+                ParameterizedType paramType = (ParameterizedType) genericSuperclass;
+                Class<?> rawType = (Class<?>) paramType.getRawType();
+                TypeVariable<?>[] typeParams = rawType.getTypeParameters();
+                Type[] actualArgs = paramType.getActualTypeArguments();
+
+                for (int i = 0; i < typeParams.length && i < actualArgs.length; i++) {
+                    Type resolvedType = actualArgs[i];
+                    // If the actual arg is itself a type variable, try to resolve it
+                    if (resolvedType instanceof TypeVariable) {
+                        Type mapped = mappings.get(resolvedType);
+                        if (mapped != null) {
+                            resolvedType = mapped;
+                        }
+                    }
+                    mappings.put(typeParams[i], resolvedType);
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+
+        return mappings;
     }
 
     /**
@@ -188,7 +250,7 @@ public class OpenApiRestController {
     /**
      * Scans a method and adds operation to OpenAPI spec
      */
-    private void scanMethod(OpenAPI openApi, Method method, String basePath, String tagName) {
+    private void scanMethod(OpenAPI openApi, Method method, String basePath, String tagName, Map<TypeVariable<?>, Type> typeVarMappings) {
         String path = basePath;
         RequestMethod[] httpMethods = null;
 
@@ -253,18 +315,48 @@ public class OpenApiRestController {
                 operation.addParametersItem(oasParam);
             }
 
-            // Check for request body
+            // Resolve the parameter type considering generic type mappings
+            Type resolvedGenericType = resolveType(param.getParameterizedType(), typeVarMappings);
+            Class<?> resolvedType = getClassFromType(resolvedGenericType);
+
+            // Check for request body (explicit @RequestBody annotation)
             if (param.isAnnotationPresent(RequestBody.class)) {
                 io.swagger.v3.oas.models.parameters.RequestBody oasRequestBody = new io.swagger.v3.oas.models.parameters.RequestBody();
+                Schema<?> bodySchema = getOrCreateSchema(resolvedType, resolvedGenericType, typeVarMappings);
                 oasRequestBody.setContent(new Content().addMediaType("application/json",
-                        new io.swagger.v3.oas.models.media.MediaType().schema(new Schema<>().type("object"))));
+                        new io.swagger.v3.oas.models.media.MediaType().schema(bodySchema)));
+                operation.setRequestBody(oasRequestBody);
+            }
+            // Check for implicit request body - complex types without @PathVariable, @RequestParam, @RequestBody
+            // These are typically form parameters that Spring binds automatically
+            else if (oasParam == null && !param.isAnnotationPresent(RequestBody.class) && isComplexType(resolvedType)) {
+                io.swagger.v3.oas.models.parameters.RequestBody oasRequestBody = new io.swagger.v3.oas.models.parameters.RequestBody();
+                Schema<?> bodySchema = getOrCreateSchema(resolvedType, resolvedGenericType, typeVarMappings);
+                // For form data binding, use form-urlencoded and multipart
+                Content content = new Content();
+                content.addMediaType("application/x-www-form-urlencoded",
+                        new io.swagger.v3.oas.models.media.MediaType().schema(bodySchema));
+                content.addMediaType("multipart/form-data",
+                        new io.swagger.v3.oas.models.media.MediaType().schema(bodySchema));
+                oasRequestBody.setContent(content);
                 operation.setRequestBody(oasRequestBody);
             }
         }
 
-        // Add default response
+        // Add response with proper schema based on return type
         ApiResponses responses = new ApiResponses();
-        responses.addApiResponse("200", new ApiResponse().description("Successful operation"));
+        ApiResponse successResponse = new ApiResponse().description("Successful operation");
+
+        Type resolvedReturnType = resolveType(method.getGenericReturnType(), typeVarMappings);
+        // Unwrap wrapper types like ResponseEntity, Optional, etc.
+        resolvedReturnType = unwrapResponseType(resolvedReturnType, typeVarMappings);
+        Class<?> returnType = getClassFromType(resolvedReturnType);
+        if (returnType != void.class && returnType != Void.class) {
+            Schema<?> responseSchema = getOrCreateSchema(returnType, resolvedReturnType, typeVarMappings);
+            successResponse.setContent(new Content().addMediaType("application/json",
+                    new io.swagger.v3.oas.models.media.MediaType().schema(responseSchema)));
+        }
+        responses.addApiResponse("200", successResponse);
         operation.setResponses(responses);
 
         // Get or create path item
@@ -337,12 +429,324 @@ public class OpenApiRestController {
     }
 
     /**
-     * Gets OpenAPI schema for a Java type
+     * Resolves a Type by replacing TypeVariables with their actual types from the mappings
+     */
+    private Type resolveType(Type type, Map<TypeVariable<?>, Type> typeVarMappings) {
+        if (type instanceof TypeVariable) {
+            Type resolved = typeVarMappings.get(type);
+            return resolved != null ? resolved : type;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            Type[] actualArgs = pType.getActualTypeArguments();
+            Type[] resolvedArgs = new Type[actualArgs.length];
+            boolean changed = false;
+            for (int i = 0; i < actualArgs.length; i++) {
+                resolvedArgs[i] = resolveType(actualArgs[i], typeVarMappings);
+                if (resolvedArgs[i] != actualArgs[i]) {
+                    changed = true;
+                }
+            }
+            if (changed) {
+                return new ResolvedParameterizedType(pType.getRawType(), resolvedArgs, pType.getOwnerType());
+            }
+        }
+        return type;
+    }
+
+    /**
+     * Extracts the raw Class from a Type
+     */
+    private Class<?> getClassFromType(Type type) {
+        if (type instanceof Class) {
+            return (Class<?>) type;
+        }
+        if (type instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) type).getRawType();
+        }
+        if (type instanceof TypeVariable) {
+            // Unresolved type variable, default to Object
+            return Object.class;
+        }
+        return Object.class;
+    }
+
+    /**
+     * Unwraps wrapper response types like ResponseEntity, Optional, HttpEntity
+     * to get the actual payload type.
+     * For example: ResponseEntity&lt;CategoryDto&gt; -&gt; CategoryDto
+     */
+    private Type unwrapResponseType(Type type, Map<TypeVariable<?>, Type> typeVarMappings) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) type;
+            Class<?> rawClass = (Class<?>) pType.getRawType();
+
+            // Check if it's a wrapper type that should be unwrapped
+            String className = rawClass.getName();
+            if (className.equals("org.springframework.http.ResponseEntity") ||
+                className.equals("org.springframework.http.HttpEntity") ||
+                className.equals("java.util.Optional") ||
+                className.equals("java.util.concurrent.CompletableFuture") ||
+                className.equals("reactor.core.publisher.Mono")) {
+
+                Type[] typeArgs = pType.getActualTypeArguments();
+                if (typeArgs.length > 0) {
+                    Type innerType = typeArgs[0];
+                    // Resolve type variable if needed
+                    innerType = resolveType(innerType, typeVarMappings);
+                    // Recursively unwrap in case of nested wrappers
+                    return unwrapResponseType(innerType, typeVarMappings);
+                }
+            }
+        }
+        return type;
+    }
+
+    /**
+     * Simple implementation of ParameterizedType for resolved types
+     */
+    private static class ResolvedParameterizedType implements ParameterizedType {
+        private final Type rawType;
+        private final Type[] actualTypeArguments;
+        private final Type ownerType;
+
+        ResolvedParameterizedType(Type rawType, Type[] actualTypeArguments, Type ownerType) {
+            this.rawType = rawType;
+            this.actualTypeArguments = actualTypeArguments;
+            this.ownerType = ownerType;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return actualTypeArguments;
+        }
+
+        @Override
+        public Type getRawType() {
+            return rawType;
+        }
+
+        @Override
+        public Type getOwnerType() {
+            return ownerType;
+        }
+    }
+
+    /**
+     * Gets or creates an OpenAPI schema for a type, registering complex types for later generation
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Schema<?> getOrCreateSchema(Class<?> type, Type genericType, Map<TypeVariable<?>, Type> typeVarMappings) {
+        // Handle primitive and simple types
+        Schema simpleSchema = getSimpleSchemaForType(type);
+        if (simpleSchema != null) {
+            return simpleSchema;
+        }
+
+        // Handle arrays
+        if (type.isArray()) {
+            ArraySchema arraySchema = new ArraySchema();
+            arraySchema.setItems(getOrCreateSchema(type.getComponentType(), type.getComponentType(), typeVarMappings));
+            return arraySchema;
+        }
+
+        // Handle collections (List, Set, etc.)
+        if (Collection.class.isAssignableFrom(type)) {
+            ArraySchema arraySchema = new ArraySchema();
+            if (genericType instanceof ParameterizedType) {
+                Type[] typeArgs = ((ParameterizedType) genericType).getActualTypeArguments();
+                if (typeArgs.length > 0) {
+                    Type resolvedItemType = resolveType(typeArgs[0], typeVarMappings);
+                    Class<?> itemClass = getClassFromType(resolvedItemType);
+                    arraySchema.setItems(getOrCreateSchema(itemClass, resolvedItemType, typeVarMappings));
+                } else {
+                    arraySchema.setItems(new Schema<>().type("object"));
+                }
+            } else {
+                arraySchema.setItems(new Schema<>().type("object"));
+            }
+            return arraySchema;
+        }
+
+        // Handle Map
+        if (Map.class.isAssignableFrom(type)) {
+            Schema mapSchema = new Schema<>();
+            mapSchema.setType("object");
+            mapSchema.setAdditionalProperties(new Schema<>().type("object"));
+            return mapSchema;
+        }
+
+        // Complex type - create reference and generate schema if not already done
+        String schemaName = type.getSimpleName();
+        if (!schemasToGenerate.containsKey(schemaName) && !processedClasses.contains(type)) {
+            generateSchemaForClass(type);
+        }
+
+        // Return a reference to the schema
+        Schema refSchema = new Schema<>();
+        refSchema.set$ref("#/components/schemas/" + schemaName);
+        return refSchema;
+    }
+
+    /**
+     * Generates a schema for a complex class type
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void generateSchemaForClass(Class<?> clazz) {
+        if (processedClasses.contains(clazz)) {
+            return;
+        }
+        processedClasses.add(clazz);
+
+        String schemaName = clazz.getSimpleName();
+        Schema schema = new Schema<>();
+        schema.setType("object");
+        schema.setDescription(clazz.getName());
+
+        // Check for @Schema annotation on class
+        io.swagger.v3.oas.annotations.media.Schema classSchemaAnn = clazz.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
+        if (classSchemaAnn != null && Tools.isNotEmpty(classSchemaAnn.description())) {
+            schema.setDescription(classSchemaAnn.description());
+        }
+
+        Map<String, Schema> properties = new HashMap<>();
+
+        // Get all fields from class hierarchy
+        Class<?> currentClass = clazz;
+        while (currentClass != null && currentClass != Object.class) {
+            for (Field field : currentClass.getDeclaredFields()) {
+                // Skip static, transient and synthetic fields
+                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) ||
+                    java.lang.reflect.Modifier.isTransient(field.getModifiers()) ||
+                    field.isSynthetic()) {
+                    continue;
+                }
+
+                String fieldName = field.getName();
+                Schema fieldSchema = createFieldSchema(field);
+                if (fieldSchema != null) {
+                    properties.put(fieldName, fieldSchema);
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+
+        if (!properties.isEmpty()) {
+            schema.setProperties(properties);
+        }
+
+        schemasToGenerate.put(schemaName, schema);
+    }
+
+    /**
+     * Creates a schema for a field
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Schema createFieldSchema(Field field) {
+        Class<?> fieldType = field.getType();
+        Type genericType = field.getGenericType();
+
+        // Check for @Schema annotation
+        io.swagger.v3.oas.annotations.media.Schema schemaAnnotation = field.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
+
+        Schema schema;
+
+        // Handle simple types
+        Schema simpleSchema = getSimpleSchemaForType(fieldType);
+        if (simpleSchema != null) {
+            schema = simpleSchema;
+        }
+        // Handle arrays
+        else if (fieldType.isArray()) {
+            ArraySchema arraySchema = new ArraySchema();
+            Schema itemSchema = getSimpleSchemaForType(fieldType.getComponentType());
+            if (itemSchema != null) {
+                arraySchema.setItems(itemSchema);
+            } else {
+                // Complex array item type - use reference
+                String itemSchemaName = fieldType.getComponentType().getSimpleName();
+                if (!processedClasses.contains(fieldType.getComponentType())) {
+                    generateSchemaForClass(fieldType.getComponentType());
+                }
+                Schema refSchema = new Schema<>();
+                refSchema.set$ref("#/components/schemas/" + itemSchemaName);
+                arraySchema.setItems(refSchema);
+            }
+            schema = arraySchema;
+        }
+        // Handle collections
+        else if (Collection.class.isAssignableFrom(fieldType)) {
+            ArraySchema arraySchema = new ArraySchema();
+            if (genericType instanceof ParameterizedType) {
+                Type[] typeArgs = ((ParameterizedType) genericType).getActualTypeArguments();
+                if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
+                    Class<?> itemClass = (Class<?>) typeArgs[0];
+                    Schema itemSchema = getSimpleSchemaForType(itemClass);
+                    if (itemSchema != null) {
+                        arraySchema.setItems(itemSchema);
+                    } else {
+                        String itemSchemaName = itemClass.getSimpleName();
+                        if (!processedClasses.contains(itemClass)) {
+                            generateSchemaForClass(itemClass);
+                        }
+                        Schema refSchema = new Schema<>();
+                        refSchema.set$ref("#/components/schemas/" + itemSchemaName);
+                        arraySchema.setItems(refSchema);
+                    }
+                } else {
+                    arraySchema.setItems(new Schema<>().type("object"));
+                }
+            } else {
+                arraySchema.setItems(new Schema<>().type("object"));
+            }
+            schema = arraySchema;
+        }
+        // Handle Map
+        else if (Map.class.isAssignableFrom(fieldType)) {
+            schema = new Schema<>();
+            schema.setType("object");
+            schema.setAdditionalProperties(new Schema<>().type("object"));
+        }
+        // Handle enums
+        else if (fieldType.isEnum()) {
+            schema = new Schema<>();
+            schema.setType("string");
+            Object[] enumConstants = fieldType.getEnumConstants();
+            for (Object enumConstant : enumConstants) {
+                schema.addEnumItemObject(enumConstant.toString());
+            }
+        }
+        // Complex type - use reference
+        else {
+            String refSchemaName = fieldType.getSimpleName();
+            if (!processedClasses.contains(fieldType)) {
+                generateSchemaForClass(fieldType);
+            }
+            schema = new Schema<>();
+            schema.set$ref("#/components/schemas/" + refSchemaName);
+        }
+
+        // Apply @Schema annotation properties
+        if (schemaAnnotation != null) {
+            if (Tools.isNotEmpty(schemaAnnotation.description())) {
+                schema.setDescription(schemaAnnotation.description());
+            }
+            if (Tools.isNotEmpty(schemaAnnotation.example())) {
+                schema.setExample(schemaAnnotation.example());
+            }
+        }
+
+        return schema;
+    }
+
+    /**
+     * Gets OpenAPI schema for simple/primitive types, returns null for complex types
      */
     @SuppressWarnings("rawtypes")
-    private Schema getSchemaForType(Class<?> type) {
+    private Schema getSimpleSchemaForType(Class<?> type) {
         Schema schema = new Schema<>();
-        if (type == String.class) {
+
+        if (type == String.class || type == CharSequence.class) {
             schema.setType("string");
         } else if (type == Integer.class || type == int.class) {
             schema.setType("integer");
@@ -350,14 +754,72 @@ public class OpenApiRestController {
         } else if (type == Long.class || type == long.class) {
             schema.setType("integer");
             schema.setFormat("int64");
+        } else if (type == Short.class || type == short.class) {
+            schema.setType("integer");
+            schema.setFormat("int32");
+        } else if (type == Byte.class || type == byte.class) {
+            schema.setType("integer");
+            schema.setFormat("int32");
         } else if (type == Boolean.class || type == boolean.class) {
             schema.setType("boolean");
-        } else if (type == Double.class || type == double.class || type == Float.class || type == float.class) {
+        } else if (type == Double.class || type == double.class) {
             schema.setType("number");
+            schema.setFormat("double");
+        } else if (type == Float.class || type == float.class) {
+            schema.setType("number");
+            schema.setFormat("float");
+        } else if (type == BigDecimal.class) {
+            schema.setType("number");
+        } else if (type == Date.class || type.getName().startsWith("java.time.")) {
+            schema.setType("string");
+            schema.setFormat("date-time");
+        } else if (type == Character.class || type == char.class) {
+            schema.setType("string");
         } else {
-            schema.setType("object");
+            // Not a simple type
+            return null;
         }
+
         return schema;
+    }
+
+    /**
+     * Gets OpenAPI schema for a Java type (for parameters - simple types only)
+     */
+    @SuppressWarnings("rawtypes")
+    private Schema getSchemaForType(Class<?> type) {
+        Schema simpleSchema = getSimpleSchemaForType(type);
+        if (simpleSchema != null) {
+            return simpleSchema;
+        }
+        // For parameters, just return object type for complex types
+        Schema schema = new Schema<>();
+        schema.setType("object");
+        return schema;
+    }
+
+    /**
+     * Determines if a type is a complex type that should be treated as a request body.
+     * Complex types are not primitives, not wrappers, not String, not common JDK types.
+     */
+    private boolean isComplexType(Class<?> type) {
+        if (type.isPrimitive()) return false;
+        if (type.isArray()) return false;
+        if (type.isEnum()) return false;
+        if (type == String.class) return false;
+        if (Number.class.isAssignableFrom(type)) return false;
+        if (type == Boolean.class) return false;
+        if (type == Character.class) return false;
+        if (type == Date.class) return false;
+        if (type.getName().startsWith("java.time.")) return false;
+        if (Collection.class.isAssignableFrom(type)) return false;
+        if (Map.class.isAssignableFrom(type)) return false;
+        if (type == Object.class) return false;
+        // Spring framework classes
+        if (type.getName().startsWith("org.springframework.")) return false;
+        if (type.getName().startsWith("jakarta.servlet.")) return false;
+        // It's a complex domain type
+        return true;
     }
 
     /**
