@@ -67,7 +67,7 @@ public class OpenApiRestController {
 
     private OpenAPI cachedOpenApi;
     private long lastCacheTime = 0;
-    private static final long CACHE_DURATION_MS = 60000; // 1 minute cache
+    private static final long CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour cache
 
     // Track schemas to be generated
     @SuppressWarnings("rawtypes")
