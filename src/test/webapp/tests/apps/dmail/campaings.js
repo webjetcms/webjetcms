@@ -1026,7 +1026,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
     I.dontSee("testdefault@balat.sk");
 });
 
-Scenario('BUG multiple users same email', ({I, DT, DTE}) => {
+Scenario('BUG multiple users same emai.', ({I, DT, DTE}) => {
     I.amOnPage("/apps/dmail/admin/?id=-1");
 
     const usersEmail = "test_campaign@balat.sk";

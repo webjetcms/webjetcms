@@ -398,7 +398,11 @@ public class UsersDB
 	 * @param email
 	 * @return
 	 */
-	public static UserDetails getUserByEmail(String email, int cacheInSeconds)
+	public static UserDetails getUserByEmail(String email, int cacheInSeconds) {
+		return getUserByEmail(email, false, cacheInSeconds);
+	}
+
+	public static UserDetails getUserByEmail(String email, boolean newest, int cacheInSeconds)
 	{
 		Cache cache = Cache.getInstance();
 		if (cacheInSeconds > 0) {
@@ -417,7 +421,11 @@ public class UsersDB
 		{
 
 			db_conn = DBPool.getConnectionReadUncommited();
-			ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true));
+
+			// Maybe we want newest user with specific email (specialy for campaing where one email can be shared with more users - tehn we want the newest one)
+			if(newest == false) ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true));
+			else ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true) + " ORDER BY reg_date DESC");
+
 			ps.setString(1, DB.fixAiCiValue(email));
 			rs = ps.executeQuery();
 
