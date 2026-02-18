@@ -134,7 +134,12 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         entity = processToEntity(entity, ProcessItemAction.CREATE);
 
-        if(entity.getId() != null && entity.getId().longValue() > 0 && Arrays.equals(selectedGroups, originalGroups) == false) {
+        if(entity.getId() == null || entity.getId().longValue() < 1) {
+            // New campaign, set date and creator
+            entity.setCreateDate(new Date());
+            entity.setCreatedByUserId(getUser().getUserId());
+        } else if(Arrays.equals(selectedGroups, originalGroups) == false) {
+            // Existing campaing (edit), handle emails if selected groups changed
             DmailService.handleEmails(selectedGroups, originalGroups, entity, emailsRepository, userDetailsRepository, getRequest());
         }
 	}

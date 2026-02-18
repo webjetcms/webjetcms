@@ -422,7 +422,7 @@ public class UsersDB
 
 			db_conn = DBPool.getConnectionReadUncommited();
 
-			// Maybe we want newest user with specific email (specialy for campaing where one email can be shared with more users - tehn we want the newest one)
+			// Maybe we want newest user with specific email (especially for campaign where one email can be shared with more users - then we want the newest one)
 			if(newest == false) ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true));
 			else ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true) + " ORDER BY reg_date DESC");
 
