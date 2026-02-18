@@ -8,6 +8,7 @@ public enum WebjetEventType {
    AFTER_DELETE,
    ON_XHR_FILE_UPLOAD,
    ON_END,
-   ON_PUBLISH
-
+   ON_PUBLISH,
+   ON_RECOVER,
+   AFTER_RECOVER
 }

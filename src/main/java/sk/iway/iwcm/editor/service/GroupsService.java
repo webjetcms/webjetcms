@@ -27,6 +27,8 @@ import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
 /**
  * service class for groups operations
@@ -55,6 +57,8 @@ public class GroupsService extends NotifyService {
     public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
 
 		if (isInTrash(group) == false) return false; //Group is not in trash
+
+		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
 
 		//Get group by id + chec perms
 		GroupsDB groupsDB = GroupsDB.getInstance();
@@ -141,6 +145,10 @@ public class GroupsService extends NotifyService {
 		//Refresh
 		DocDB.getInstance(true);
 		GroupsDB.getInstance(true);
+
+		// Get newly recovered group
+		group = GroupsDB.getInstance().getGroup(group.getGroupId());
+		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER)).publishEvent();
 
         return true;
 	}

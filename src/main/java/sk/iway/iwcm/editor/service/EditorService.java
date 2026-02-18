@@ -1659,6 +1659,8 @@ public class EditorService {
 		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
 		DocDetails docDetailsToRecover = docDetailsOpt.get();
 
+		(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+
 		//To check perms and approve for this action
 		checkPermissions(currentUser, docDetailsToRecover, true);
 
@@ -1695,6 +1697,8 @@ public class EditorService {
 				docDetailsToRecover.setGroupId(destGroup.getGroupId());
 				docDetailsToRecover.setAvailable(true);
 				docRepo.save(docDetailsToRecover);
+
+				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
 			} else {
 				//No right
 				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);

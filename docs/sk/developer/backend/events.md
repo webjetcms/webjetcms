@@ -18,6 +18,8 @@ Pre štandardné operácie sú typy udalostí implementované v `enum` triede `W
 - `AFTER_DELETE` - vyvolaná po zmazaní objektu
 - `ON_XHR_FILE_UPLOAD` - vyvolaná po nahratí súboru cez URL adresu `/XhrFileUpload`
 - `ON_END` - vyvolané na konci metódy, používa sa v prípade keď sa nevykonáva uloženie (čiže nevyvolá sa `AFTER_SAVE`), ale len nejaká akcia
+- `ON_RECOVER` - vyvolané na začiatku metódy, v procese obnovy stránky alebo adresára, máte prístup k obnovovanému objektu
+- `AFTER_RECOVER` - vyvolané po obnovení stránky alebo adresára, máte prístup k už obnovenému objektu stránky alebo adresára
 
 ## Aktuálne publikované udalosti
 

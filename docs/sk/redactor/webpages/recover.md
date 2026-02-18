@@ -47,5 +47,13 @@ Pri obnovení, sa hodnota možnosti **Zobrazovať** nastaví podľa nasledujúci
 - ak stránka nemá žiaden záznam v histórii, jej hodnota **Zobrazovať** sa automaticky zapne
 
 **Dajte si pozor na tento rozdiel:**
+
 - pri Obnovení web stránky, sa stránka **NEDÁ obnoviť** bez záznamu v histórii, nakoľko nevieme, kde sa táto stránka nachádzala.
 - pri Obnovení priečinka, sa web stránka **DÁ obnoviť** aj bez záznamu v histórii, nakoľko vieme kde sa nachádza (jej poloha v obnovovanom priečinku je jasná) a záznam z histórie používame výhradne na nastavenie hodnoty možnosti **Zobrazovať**.
+
+## Publikované udalosti
+
+Na začiatku procesu obnovy stránky alebo adresára je publikovaná udalosť `ON_RECOVER`, ktorá obsahuje obnovovaný objekt z koša.
+Po dokončení obnovy stránky alebo adresára je publikovaná udalosť `AFTER_RECOVER`, ktorá obsahuje obnovený objekt stránky alebo adresára.
+
+!> **Upozornenie:** pri obnovení adresára sa publikuje udalosť iba pre daný adresár, ale nepublikujú sa žiadne udalosti pre pod-adresáre a stránky nachádzajúce sa v tomto adresári (alebo v jeho pod-adresároch).
