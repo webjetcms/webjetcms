@@ -8,8 +8,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -83,7 +81,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     private Boolean authorized;
 
     @Column(name = "allow_login_start")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title = "[[#{user.admin.allowLoginStart}]]",
@@ -94,7 +92,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     private Date allowLoginStart;
 
     @Column(name = "allow_login_end")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title = "[[#{user.admin.allowLoginEnd}]]",
@@ -198,7 +196,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     private String writableFolders;
 
     @Column(name = "reg_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         title = "components.forum.regdate",
         inputType = DataTableColumnType.DATETIME,
@@ -221,7 +219,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     private String lastLogon;
 
     @Column(name = "last_logon")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         title = "admin.users.lastlogon",
         inputType = DataTableColumnType.DATETIME,

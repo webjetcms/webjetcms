@@ -100,14 +100,11 @@ public class SimpleQuery
 		}
 		catch (Exception ex)
 		{
-			//prevents HikariDataSource HikariDataSource (HikariPool-1) has been closed on server shutdown
-			if (sql.contains("UPDATE cluster_monitoring")==false) {
-				exceptionMessage = ex.getMessage();
-				IllegalStateException exception = new IllegalStateException(exceptionMessage);
-				exception.initCause(ex);
-				Logger.error(SimpleQuery.class, "ERROR SQL: "+ sql + params);
-				throw exception;
-			}
+			exceptionMessage = ex.getMessage();
+			IllegalStateException exception = new IllegalStateException(exceptionMessage);
+			exception.initCause(ex);
+			Logger.error(SimpleQuery.class, "ERROR SQL: "+ sql + params);
+			throw exception;
 		}
 		finally
 		{
@@ -124,7 +121,6 @@ public class SimpleQuery
 			{
 			}
 		}
-		return 0;
 	}
 
 	@SuppressWarnings("unchecked")

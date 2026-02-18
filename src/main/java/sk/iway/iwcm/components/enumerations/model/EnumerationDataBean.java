@@ -17,8 +17,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 import lombok.Getter;
@@ -143,22 +141,22 @@ public class EnumerationDataBean extends ActiveRecordRepository implements Seria
     @Column(name = "enumeration_type_id", insertable=false, updatable=false)
     private Integer typeId;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column (name= "date1")
     @DataTableColumn(inputType = DataTableColumnType.DATE)
     private Date date1;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column (name = "date2")
     @DataTableColumn(inputType = DataTableColumnType.DATE)
     private Date date2;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column (name = "date3")
     @DataTableColumn(inputType = DataTableColumnType.DATE)
     private Date date3;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column (name = "date4")
     @DataTableColumn(inputType = DataTableColumnType.DATE)
     private Date date4;

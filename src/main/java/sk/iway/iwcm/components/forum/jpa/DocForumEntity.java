@@ -11,8 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 
@@ -107,7 +105,7 @@ public class DocForumEntity implements Serializable {
     private String question;
 
     @Column(name = "question_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.forum.admin.datum",

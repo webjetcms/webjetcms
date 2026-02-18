@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecord;
@@ -42,10 +40,10 @@ public class ToDoBean extends ActiveRecord implements Serializable
 	@Column(name = "user_id")
 	private int userId;
 	@Column(name = "create_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date createDate;
 	@Column(name = "modif_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date modifDate;
 	@Column(name = "text")
 	private String text;
@@ -56,7 +54,7 @@ public class ToDoBean extends ActiveRecord implements Serializable
 	@Column(name = "sort_priority")
 	private int priority;
 	@Column(name = "dead_line")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date deadLine;
 	@Column(name = "note")
 	private String note;

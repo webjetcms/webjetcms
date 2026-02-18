@@ -87,7 +87,7 @@ public class PersistentCacheBean extends ActiveRecordRepository implements Seria
     int refreshMinutes;
 
     @Column(name = "next_refresh")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             renderFormat = "dt-format-date-time",
             title = "[[#{components.memory_cleanup.persistent_cache_objects.next_update}]]",

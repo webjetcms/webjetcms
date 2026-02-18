@@ -52,7 +52,7 @@ public class ConfPreparedEntity {
 
     @NotNull
     @Column(name = "date_changed")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         renderFormat = "dt-format-date-time",
@@ -62,7 +62,7 @@ public class ConfPreparedEntity {
 
     @NotNull
     @Column(name = "date_prepared")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         renderFormat = "dt-format-date-time",

@@ -8,8 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.database.ActiveRecord;
@@ -32,7 +30,7 @@ public class DocNoteBean extends ActiveRecord
 {
 	@Id
 	@GeneratedValue(generator="WJGen_document_notes")
-	@TableGenerator(name="WJGen_document_notes",pkColumnValue="document_notes")	
+	@TableGenerator(name="WJGen_document_notes",pkColumnValue="document_notes")
 	@Column(name="id")
 	int id;
 	@Column(name="doc_id")
@@ -43,10 +41,10 @@ public class DocNoteBean extends ActiveRecord
 	String note;
 	@Column(name="user_id")
 	int userId;
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name="created")
 	Date created;
-	
+
 	public int getId()
 	{
 		return id;

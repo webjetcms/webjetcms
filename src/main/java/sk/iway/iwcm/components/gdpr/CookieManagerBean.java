@@ -10,8 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 
 import sk.iway.iwcm.database.ActiveRecord;
@@ -131,7 +129,7 @@ public class CookieManagerBean extends ActiveRecord implements Serializable
 	private boolean party3rd;
 
     @Column(name="save_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.date.last_update",

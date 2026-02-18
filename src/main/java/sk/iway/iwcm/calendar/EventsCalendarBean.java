@@ -10,8 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -41,13 +39,13 @@ public class EventsCalendarBean extends ActiveRecord implements Serializable {
 
     @NotNull(message = "validation.not_null.error")
     @Schema(type = "long")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_from")
     private Date from;
 
     @NotNull(message = "validation.not_null.error")
     @Schema(type = "long")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_to")
     private Date to;
 

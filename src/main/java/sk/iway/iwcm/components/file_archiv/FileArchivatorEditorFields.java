@@ -3,9 +3,6 @@ package sk.iway.iwcm.components.file_archiv;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -70,7 +67,7 @@ public class FileArchivatorEditorFields extends BaseEditorFields {
     )
     private Boolean saveLater;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         tab = "basic",

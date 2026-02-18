@@ -10,8 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -63,7 +61,7 @@ public class DocHistory extends DocBasic {
     @Column(name = "disapproved_by")
 	private Integer disapprovedBy;
 
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "approve_date")
 	private Date approveDate;
 
@@ -73,7 +71,7 @@ public class DocHistory extends DocBasic {
 	@Transient
 	private String historyDisapprovedByName;
 
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "save_date")
 	private Date saveDate;
 

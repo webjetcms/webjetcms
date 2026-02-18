@@ -77,12 +77,12 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     String cookieClass;
 
     @Column(name="valid_from")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType=DataTableColumnType.DATETIME, tab="scriptPerms", title="user.admin.allowLoginStart")
     Date validFrom;
 
     @Column(name="valid_to")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType=DataTableColumnType.DATETIME, tab="scriptPerms", title="user.admin.allowLoginEnd")
     Date validTo;
 
@@ -111,7 +111,7 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     String scriptBody;
 
     @Column(name="save_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     Date saveDate;
 
     @Column(name="user_id")

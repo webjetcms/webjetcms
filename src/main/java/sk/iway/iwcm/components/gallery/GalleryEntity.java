@@ -11,8 +11,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -317,7 +315,7 @@ public class GalleryEntity {
     private String author;
 
     @Column(name = "upload_datetime")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             tab = "metadata",
             title = "components.gallery.metadata.uploadDateTime",

@@ -9,8 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -40,7 +38,7 @@ public class CalendarEventsBasic implements Serializable {
     private String title;
 
     @Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -50,7 +48,7 @@ public class CalendarEventsBasic implements Serializable {
 	private Date dateFrom;
 
     @Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.end",

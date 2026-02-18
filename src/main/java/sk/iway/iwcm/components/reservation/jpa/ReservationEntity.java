@@ -14,8 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -88,7 +86,7 @@ public class ReservationEntity implements Serializable {
     private Long reservationObjectId;
 
     @Column(name = "date_from")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
@@ -98,7 +96,7 @@ public class ReservationEntity implements Serializable {
 	private Date dateFrom;
 
     @Column(name = "date_to")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,

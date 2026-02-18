@@ -9,8 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 
@@ -77,7 +75,7 @@ public class FormsEntityBasic {
     private String data;
 
     @Column(name = "create_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formslist.createDate", tab = "basic",
         editor = {
             @DataTableColumnEditor(
@@ -88,7 +86,7 @@ public class FormsEntityBasic {
     private Date createDate;
 
     @Column(name = "last_export_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formlist.export.lastExportDate", tab = "basic",
         editor = {
             @DataTableColumnEditor(
@@ -130,7 +128,7 @@ public class FormsEntityBasic {
     private int domainId;
 
     @Column(name = "double_optin_confirmation_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     private Date doubleOptinConfirmationDate;
 
     @Column(name = "double_optin_hash")

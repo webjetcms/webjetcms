@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 import sk.iway.iwcm.database.ActiveRecord;
 
@@ -34,7 +32,7 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
 
 	@Id
 	@GeneratedValue(generator="WJGen_passwords_history")
-	@TableGenerator(name="WJGen_passwords_history",pkColumnValue="passwords_history")	
+	@TableGenerator(name="WJGen_passwords_history",pkColumnValue="passwords_history")
 	@Column(name="passwords_history_id")
 	private int passwordsHistoryId;
 	@Column(name="user_id")
@@ -44,7 +42,7 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
 	@Column(name="salt")
 	String salt;
 	@Column(name="save_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     Date saveDate;
 
     public PasswordsHistoryBean(){
@@ -58,7 +56,7 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
     }
 
     /**Ak taky zaznam neexistuje, tak ho ulozi
-     * 
+     *
      */
     public static PasswordsHistoryBean insertAndSaveNew(int userId, String hash, String salt)
     {
@@ -74,24 +72,24 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
 	{
 		return passwordsHistoryId;
 	}
-	
+
 	public void setPasswordsHistoryId(int passwordsHistoryId)
 	{
 		this.passwordsHistoryId = passwordsHistoryId;
 	}
-	
+
 	@Override
 	public void setId(int id)
 	{
 		setPasswordsHistoryId(id);
 	}
-	
+
 	@Override
 	public int getId()
 	{
 		return getPasswordsHistoryId();
 	}
-	
+
 	public int getUserId()
 	{
 		return userId;
@@ -133,7 +131,7 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
 	}
 
 	/** Ulozi a nastavi datum ulozenia (ak nebol nastaveny)
-	 * 
+	 *
 	 */
     public boolean save()
     {
@@ -141,25 +139,25 @@ public class PasswordsHistoryBean extends ActiveRecord implements Serializable
             setSaveDate(new Date());
         return super.save();
     }
-    
+
     /** Ulozi ho iba ak uz neexistuje taky password v historii
-     * 
+     *
      * @return
      */
     public boolean saveIfNotExists()
-    {    	
+    {
     	if(PasswordsHistoryDB.existsPassword(getUserId(), getPassword()))
     		return false;
         return save();
     }
 
     /** Ak neexistuje taky zaznam, tak ho ulozi a zmaze najstarsi
-     * 
+     *
      * @return
      */
     public boolean saveIfNotExistsAndDeleteOld()
     {
-    	boolean isSaved = saveIfNotExists(); 
+    	boolean isSaved = saveIfNotExists();
         if(isSaved)
         	PasswordsHistoryDB.getInstance().deleteOld(getUserId());
         return isSaved;

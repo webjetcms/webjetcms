@@ -8,8 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 
 /**
@@ -38,7 +36,7 @@ public class FileArchivCategoryNodeBean extends sk.iway.iwcm.database.nestedsets
 	@Column(name="category_name")
 	String categoryName;
 	@Column(name="date_insert")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     Date dateInsert;
 	@Column(name="string1Name")
 	String string1Name;
