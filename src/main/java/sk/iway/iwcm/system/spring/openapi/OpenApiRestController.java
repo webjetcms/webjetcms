@@ -536,7 +536,7 @@ public class OpenApiRestController {
     /**
      * Gets or creates an OpenAPI schema for a type, registering complex types for later generation
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     private Schema<?> getOrCreateSchema(Class<?> type, Type genericType, Map<TypeVariable<?>, Type> typeVarMappings) {
         // Handle primitive and simple types
         Schema simpleSchema = getSimpleSchemaForType(type);

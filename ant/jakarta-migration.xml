@@ -80,6 +80,7 @@
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.xml.bind." value="jakarta.xml.bind."/>
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.validation." value="jakarta.validation."/>
         <replace dir="${tempDir}/src-utf8-jakarta/" token="javax.ws." value="jakarta.ws."/>
+        <replace dir="${tempDir}/src-utf8-jakarta/" token="org.springframework.lang.NonNull" value="org.jspecify.annotations.NonNull"/>
 
         <replace dir="${tempDir}/src-utf8-jakarta/" token="freemarker.ext.servlet." value="freemarker.ext.jakarta.servlet."/>
         <replace dir="${tempDir}/src-utf8-jakarta/" token="org.springframework.web.multipart.commons.CommonsMultipartFile" value="org.springframework.web.multipart.MultipartFile"/>

@@ -82,7 +82,7 @@ public interface DataTablesInterface {
      * @param item
      * @return
      */
-    default boolean canUpload(FileItem item) { return true; }
+    default boolean canUpload(FileItem<?> item) { return true; }
 
     /**
      * Default implementacia uploadu
@@ -91,11 +91,11 @@ public interface DataTablesInterface {
     default boolean upload(HttpServletRequest request)
     {
         @SuppressWarnings("unchecked")
-        Map<String, FileItem> files = (Map<String,FileItem>)request.getAttribute("MultipartWrapper.files");
-        for (Map.Entry<String, FileItem> entry : files.entrySet())
+        Map<String, FileItem<?>> files = (Map<String,FileItem<?>>)request.getAttribute("MultipartWrapper.files");
+        for (Map.Entry<String, FileItem<?>> entry : files.entrySet())
         {
             //String name = entry.getKey();
-            FileItem item = entry.getValue();
+            FileItem<?> item = entry.getValue();
 
             String randomName = RandomStringUtils.secure().next(10, true, true);
             if (canUpload(item))

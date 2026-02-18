@@ -31,9 +31,9 @@ public class IwayFileBean extends FileBean implements Serializable
 	 */
 	private static final long serialVersionUID = 8501190073097050241L;
 
-	FileItem item;
+	FileItem<?> item;
 
-	public IwayFileBean(File file, FileItem item)
+	public IwayFileBean(File file, FileItem<?> item)
 	{
 		super(file, item.getContentType(), item.getName());
 		this.item = item;

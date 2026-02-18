@@ -41,7 +41,6 @@ import sk.iway.iwcm.Tools;
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
 //inherited from HttpServletRequest
-@SuppressWarnings("deprecation")
 public class ContextRequest implements HttpServletRequest
 {
 	private final HttpServletRequest original;
