@@ -93,20 +93,4 @@ public class SortDefinition {
         this.ascending = ascending;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof SortDefinition other)) return false;
-        return this.property.equals(other.property) &&
-               this.ignoreCase == other.ignoreCase &&
-               this.ascending == other.ascending;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = this.property.hashCode();
-        hashCode = 29 * hashCode + (this.ignoreCase ? 1 : 0);
-        hashCode = 29 * hashCode + (this.ascending ? 1 : 0);
-        return hashCode;
-    }
 }
