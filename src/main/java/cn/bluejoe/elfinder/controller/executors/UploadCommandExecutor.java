@@ -101,9 +101,9 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 	{
 		long _start;
 		long _size;
-		FileItem _content;
+		FileItem<?> _content;
 
-		public Part(long start, long size, FileItem fileItem)
+		public Part(long start, long size, FileItem<?> fileItem)
 		{
 			super();
 			this._start = start;
@@ -266,7 +266,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 			throws Exception
 	{
 		@SuppressWarnings("unchecked")
-		Map<String,FileItem> filesMap = (Map<String,FileItem>) request.getAttribute("MultipartWrapper.files");
+		Map<String,FileItem<?>> filesMap = (Map<String,FileItem<?>>) request.getAttribute("MultipartWrapper.files");
 		//List<FileItem> files = new ArrayList<FileItem>(filesMap.values());
 		final List<FsItemEx> added = new ArrayList<>();
 
@@ -307,10 +307,10 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				}
 			}
 
-			for (Entry<String, FileItem> entry : filesMap.entrySet())
+			for (Entry<String, FileItem<?>> entry : filesMap.entrySet())
 			{
 				String filepath = entry.getKey();
-				FileItem fi = entry.getValue();
+				FileItem<?> fi = entry.getValue();
 				String directory = getDirectory(filepath);
 				String fileName = getFilename(filepath);
 				fileName = fixFileNameDirPath(fileName);
@@ -534,7 +534,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		}
 	}
 
-	private String processChunkUpload(HttpServletRequest request, Map<String,FileItem> filesMap, FileWriter fw)
+	private String processChunkUpload(HttpServletRequest request, Map<String,FileItem<?>> filesMap, FileWriter fw)
 				throws NumberFormatException, IOException
 		{
 			// cid : unique id of chunked uploading file

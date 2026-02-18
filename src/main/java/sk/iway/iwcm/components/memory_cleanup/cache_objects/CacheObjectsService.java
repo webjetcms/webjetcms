@@ -3,8 +3,9 @@ package sk.iway.iwcm.components.memory_cleanup.cache_objects;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
+
+import sk.iway.iwcm.system.datatable.PagedListHolder;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -40,17 +41,7 @@ public class CacheObjectsService {
         List<CacheBean> listOfCacheBeans = Collections.list(cacheBeans);
         List<CacheDto> cacheDtoList = memoryCleanupMapper.beanListToDtoList(listOfCacheBeans);
 
-        String sort = request.getParameter("sort");
-        if (sort != null) {
-            String[] sortArray = sort.split(",");
-            Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
-
-            sortCacheDtos(sortPair, cacheDtoList);
-        }
-
-        PagedListHolder<CacheDto> holder = new PagedListHolder<>(cacheDtoList);
-        holder.setPage(pageable.getPageNumber());
-        holder.setPageSize(pageable.getPageSize());
+        PagedListHolder<CacheDto> holder = new PagedListHolder<>(cacheDtoList, pageable);
 
         return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, cacheDtoList.size());
     }
@@ -162,9 +153,7 @@ public class CacheObjectsService {
 
         sortCacheDtos(sortPair, filteredCacheDtos);
 
-        PagedListHolder<CacheDto> holder = new PagedListHolder<>(filteredCacheDtos);
-        holder.setPage(pageable.getPageNumber());
-        holder.setPageSize(pageable.getPageSize());
+        PagedListHolder<CacheDto> holder = new PagedListHolder<>(filteredCacheDtos, pageable);
 
         return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, filteredCacheDtos.size());
     }
@@ -212,9 +201,9 @@ public class CacheObjectsService {
     }
 
     private void sortCacheDtos(Pair<String, String> sortPair, List<CacheDto> cacheDtoList) {
-        if (sortPair.second.equals("asc")) {
+        if (sortPair.second != null && sortPair.second.equals("asc")) {
             cacheDtoList.sort(cacheDtoComparator.getSortingComparator(sortPair.first));
-        } else if (sortPair.second.equals("desc")) {
+        } else if (sortPair.second != null && sortPair.second.equals("desc")) {
             cacheDtoList.sort(cacheDtoComparator.getSortingComparator(sortPair.first).reversed());
         }
     }
