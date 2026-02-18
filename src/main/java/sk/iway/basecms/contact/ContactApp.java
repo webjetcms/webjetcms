@@ -111,7 +111,7 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String edit(@RequestParam("id") long id, Model model, HttpServletRequest request) {
-        ContactEntity contact = contactRepository.getById(id);
+        ContactEntity contact = contactRepository.getReferenceById(id);
         model.addAttribute("entity", contact);
 
         //pridaj do modelu moznosti pre select country

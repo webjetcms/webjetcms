@@ -104,7 +104,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             //Delete previous temporaly saved emails
             emailsRepository.deleteByCampainIdAndDomainId((long)-user.getUserId(), CloudToolsForCore.getDomainId());
         } else {
-            entity = campaingsRepository.getById(id);
+            entity = campaingsRepository.getReferenceById(id);
         }
 
         processFromEntity(entity, ProcessItemAction.GETALL);

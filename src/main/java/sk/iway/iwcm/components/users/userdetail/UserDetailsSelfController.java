@@ -45,7 +45,7 @@ public class UserDetailsSelfController extends DatatableRestControllerV2<UserDet
     public Page<UserDetailsSelfEntity> getAllItems(Pageable pageable) {
 
         List<UserDetailsSelfEntity> all = new ArrayList<>();
-        UserDetailsSelfEntity self = userDetailsSelfRepository.getById(Long.valueOf(getUser().getUserId()));
+        UserDetailsSelfEntity self = userDetailsSelfRepository.getReferenceById(Long.valueOf(getUser().getUserId()));
         all.add(self);
 
         DatatablePageImpl<UserDetailsSelfEntity> page = new DatatablePageImpl<>(all);

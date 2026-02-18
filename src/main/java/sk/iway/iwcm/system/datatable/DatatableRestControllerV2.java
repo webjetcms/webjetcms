@@ -333,7 +333,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @return
 	 */
 	public boolean deleteItem(T entity, long id) {
-		if (beforeDelete(repo.getById(id))) {
+		if (beforeDelete(repo.getReferenceById(id))) {
 			try {
 				if (checkDomainId) {
 					//zmazanie pri pouziti domain_id riesime ziskanim zaznamu cez getOneItem ktore overi aj domain_id stlpec a naslednym zmazanim entity

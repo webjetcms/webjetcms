@@ -69,7 +69,7 @@ public class MediaEditorFields extends BaseEditorFields {
 
             if(tmp[0] != -1) {
                 for(int i = 0; i < tmp.length; i++) {
-                    newGroups.add(repo.getById(Long.valueOf(tmp[i])));
+                    newGroups.add(repo.getReferenceById(Long.valueOf(tmp[i])));
                 }
             }
         }

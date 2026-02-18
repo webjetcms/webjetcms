@@ -85,7 +85,7 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
             entity = new BasketInvoicePaymentEntity();
             entity.setCreateDate(new Date());
         } else {
-            entity = bipr.getById(id);
+            entity = bipr.getReferenceById(id);
         }
 
         processFromEntity(entity, ProcessItemAction.GETONE);

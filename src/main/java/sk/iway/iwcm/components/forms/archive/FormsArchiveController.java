@@ -98,7 +98,7 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
     public boolean checkItemPerms(FormsArchiveEntity entity, Long id) {
         if (InitServlet.isTypeCloud()) {
             if (entity.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
-            FormsArchiveEntity old = getRepo().getById(entity.getId());
+            FormsArchiveEntity old = getRepo().getReferenceById(entity.getId());
             if (old != null && old.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
         }
         return true;
