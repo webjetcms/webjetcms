@@ -159,6 +159,10 @@ public class LogLevelsService {
         }
     }
 
+    /**
+     * Get log directory based on catalina.base or catalina.home or user.dir system properties.
+     * @return
+     */
     public static File getLogDir() {
         String catalinaBase = System.getProperty("catalina.base");
         if (catalinaBase == null) catalinaBase = System.getProperty("catalina.home");

@@ -403,21 +403,18 @@ public class ContextRequest implements HttpServletRequest
 	@Override
 	public long getContentLengthLong()
 	{
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public String changeSessionId()
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
