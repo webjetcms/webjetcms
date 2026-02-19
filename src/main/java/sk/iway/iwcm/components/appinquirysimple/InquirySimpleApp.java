@@ -1,5 +1,8 @@
 package sk.iway.iwcm.components.appinquirysimple;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +34,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
         descKey = "components.inquirysimple.desc",
         itemKey = "menuInquiry",
         imagePath = "/components/inquirysimple/editoricon.png",
-        //galleryImages = "/components/slider/",
+        galleryImages = "/components/inquirysimple",
         componentPath = "/components/inquirysimple/inquiry.jsp",
         customHtml = "/apps/inquiry-simple/admin/editor-component.html"
 )
@@ -79,7 +82,8 @@ public class InquirySimpleApp extends WebjetComponentAbstract {
         String editorData = pageParams.getValue("editorData", "");
         if(Tools.isNotEmpty(editorData )) {
             // 1) Base64 decode
-            String decodedOld = Tools.base64Decode(editorData);
+            String decodedOld = new String(Base64.getDecoder().decode(editorData), StandardCharsets.UTF_8);
+            decodedOld = URLDecoder.decode(decodedOld, StandardCharsets.UTF_8);
 
             // 2) JSON
             try {
@@ -98,7 +102,7 @@ public class InquirySimpleApp extends WebjetComponentAbstract {
                 String modifiedJson = mapper.writeValueAsString(array);
 
                 // encode again if needed
-                String encoded = Tools.base64Encode(modifiedJson);
+                String encoded = Base64.getEncoder().encodeToString(modifiedJson.getBytes(StandardCharsets.UTF_8));
 
                 // replace old editorData with new editorData
                 componentRequest.setParameters( Tools.replace(componentRequest.getParameters(), "editorData=" + editorData, "editorData=" + encoded) );

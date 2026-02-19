@@ -15,6 +15,6 @@ public class AnswerItem {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.inquirysimple.question")
     private String question;
 
-    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.inquiry_simple.question_id", className = "hide-on-create")
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.inquiry_simple.question_id", className = "hide-on-create", visible = false)
     String questionId;
 }

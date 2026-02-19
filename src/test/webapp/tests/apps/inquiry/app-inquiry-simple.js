@@ -11,7 +11,8 @@ Before(({ I, login }) => {
     }
 
 });
-Scenario('Test new inquiry simple', async ({I, DT, DTE, Apps, Document}) => {
+
+Scenario('Test new inquiry simple @screenshot', async ({I, DT, DTE, Apps, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=40744");
     DT.waitForLoader();
 
@@ -22,11 +23,15 @@ Scenario('Test new inquiry simple', async ({I, DT, DTE, Apps, Document}) => {
 
     I.fillField("#DTE_Field_name", inquiryName);
 
+    Document.screenshot("/redactor/apps/inquiry/inquiry-simple-tab-basic.png");
+
     I.say("Add answers");
     I.clickCss("#pills-dt-component-datatable-answers-tab");
     addQuestion(I, DTE, "ANSWER_A-" + randomNumber);
     addQuestion(I, DTE, "ANSWER_B-" + randomNumber);
     addQuestion(I, DTE, "ANSWER_C-" + randomNumber);
+
+    Document.screenshot("/redactor/apps/inquiry/inquiry-simple-tab-answers.png");
 
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_ok");
@@ -45,6 +50,8 @@ Scenario('Test new inquiry simple', async ({I, DT, DTE, Apps, Document}) => {
     I.clickCss("input.inputradio");
     I.clickCss("button.btn.btn-primary");
     I.waitForText("ANSWER_A-" + randomNumber + " 1 hlasov / 100 %", 5);
+
+    Document.screenshot("/redactor/apps/inquiry/inquiry-simple-vote.png");
 
     I.say("Try vote again");
     I.clickCss("button.btn.btn-primary");
