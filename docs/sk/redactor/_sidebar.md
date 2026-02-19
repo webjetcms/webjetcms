@@ -44,7 +44,7 @@
 - Aplikácie
   - AB testovanie
     - [Úvod](/redactor/apps/abtesting/README.md)
-    - [AB Testovanie](/redactor/apps/abtesting/abtesting.md)
+    - [Správa AB testov](/redactor/apps/abtesting/abtesting.md)
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
