@@ -124,8 +124,6 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
     @Override
     public void beforeSave(CampaingsEntity entity) {
-        Identity user = UsersDB.getCurrentUser(getRequest());
-
         if(entity.getId() != null && entity.getId().longValue() > 0) {
             //Safety action - remove all unsubscribed emails from campaign (can happen)
             EmailDB.deleteUnsubscribedEmailsFromCampaign(entity.getId().intValue());
@@ -136,16 +134,13 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         entity = processToEntity(entity, ProcessItemAction.CREATE);
 
-        //String errorTitle = getProp().getText("datatables.error.title.js");
-        if(entity.getId()==null || entity.getId().longValue() <1) {
+        if(entity.getId() == null || entity.getId().longValue() < 1) {
+            // New campaign, set date and creator
             entity.setCreateDate(new Date());
-            entity.setCreatedByUserId(user.getUserId());
-
-            DmailService.addEmails(Arrays.stream(selectedGroups).boxed().toList(), entity, emailsRepository, userDetailsRepository, getRequest());
-        } else {
-            if(!Arrays.equals(selectedGroups, originalGroups)) {
-                DmailService.handleEmails(selectedGroups, originalGroups, entity, emailsRepository, userDetailsRepository, getRequest());
-            }
+            entity.setCreatedByUserId(getUser().getUserId());
+        } else if(Arrays.equals(selectedGroups, originalGroups) == false) {
+            // Existing campaing (edit), handle emails if selected groups changed
+            DmailService.handleEmails(selectedGroups, originalGroups, entity, emailsRepository, userDetailsRepository, getRequest());
         }
 	}
 
@@ -247,7 +242,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         //Create recipients for new campaign
         List<EmailsEntity> emails = emailsRepository.findAllByCampainIdAndDomainIdOrderByIdDesc(originalId, CloudToolsForCore.getDomainId());
         for (EmailsEntity email : emails) {
-            email.setId(-1L);
+            email.setId(null);
             email.setCampainId(entity.getId());
             email.setCreateDate(new Date());
             email.setCreatedByUserId(getUser().getUserId());
