@@ -113,18 +113,8 @@ public class BannerRestController extends DatatableRestControllerV2<BannerBean, 
      */
     @GetMapping("/autocomplete")
     public List<String> getAutocomplete(@RequestParam String term) {
-
-        List<String> ac = new ArrayList<>();
-
-        //Get all where group name is like %term%, and distict because its autocomplete list and we dont want duplicity
-        List<BannerBean> groupNamesPage =  bannerRepository.findDistinctAllByBannerGroupLikeAndDomainId("%" + term + "%", CloudToolsForCore.getDomainId());
-
-        //Loop gained entities and add group name to autcomplete list "ac"
-        for(BannerBean entity : groupNamesPage) {
-            if (ac.contains(entity.getBannerGroup())==false) ac.add(entity.getBannerGroup());
-        }
-
-        return ac;
+        //Get distinct bannerGroup values matching the search term for the current domain
+        return bannerRepository.findDistinctBannerGroupsByGroupLikeAndDomainId("%" + term + "%", CloudToolsForCore.getDomainId());
     }
 
     @Override
