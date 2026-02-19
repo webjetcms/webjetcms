@@ -1,6 +1,18 @@
 <script type="text/javascript" src="/components/quiz/js/jquery.sha1.js"></script>
 <script>
 
+    function prepareJsonEditorDataCustom(decoded) {
+        if(decoded == undefined || decoded == null || decoded == "" || Array.isArray(decoded) == false) return [];
+
+        decoded.forEach((item, index) => {
+            item.questionId = item.id;
+            item.id = index + 1; // Add 1-based ID
+            item.rowOrder = (index + 1)*10; // Add rowOrder for row reordering
+        });
+
+        return decoded;
+    }
+
 function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
     //console.log('appGetComponentCode', componentPath, params, componentDatatable, isInsert);
 

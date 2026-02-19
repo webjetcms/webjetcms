@@ -1,17 +1,9 @@
 package sk.iway.iwcm.components.appinquirysimple;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -78,38 +70,6 @@ public class InquirySimpleApp extends WebjetComponentAbstract {
         String formId = pageParams.getValue("formId", "");
         if(Tools.isEmpty(formId)) this.formId = UUID.randomUUID().toString();
         else this.formId = formId;
-
-        String editorData = pageParams.getValue("editorData", "");
-        if(Tools.isNotEmpty(editorData )) {
-            // 1) Base64 decode
-            String decodedOld = new String(Base64.getDecoder().decode(editorData), StandardCharsets.UTF_8);
-            decodedOld = URLDecoder.decode(decodedOld, StandardCharsets.UTF_8);
-
-            // 2) JSON
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                ArrayNode array = (ArrayNode) mapper.readTree(decodedOld);
-
-                // loop & modify
-                for (JsonNode node : array) {
-                    ObjectNode obj = (ObjectNode) node;
-                    String id = obj.get("id").asText();
-                    obj.remove("id");
-                    obj.put("questionId", id);
-                }
-
-                // back to JSON
-                String modifiedJson = mapper.writeValueAsString(array);
-
-                // encode again if needed
-                String encoded = Base64.getEncoder().encodeToString(modifiedJson.getBytes(StandardCharsets.UTF_8));
-
-                // replace old editorData with new editorData
-                componentRequest.setParameters( Tools.replace(componentRequest.getParameters(), "editorData=" + editorData, "editorData=" + encoded) );
-            } catch(Exception e) {
-
-            }
-        }
 
         super.initAppEditor(componentRequest, request);
     }
