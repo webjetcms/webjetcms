@@ -159,8 +159,15 @@ public class LogLevelsService {
         }
     }
 
+    public static File getLogDir() {
+        String catalinaBase = System.getProperty("catalina.base");
+        if (catalinaBase == null) catalinaBase = System.getProperty("catalina.home");
+        if (catalinaBase == null) catalinaBase = System.getProperty("user.dir");
+        return new File(catalinaBase, "logs");
+    }
+
     public static final List<LogFileBean> getLogFiles() {
-        File logDir = new File(System.getProperty("catalina.base"),"logs");
+        File logDir = getLogDir();
         File[] files = logDir.listFiles();
         List<LogFileBean> result = new ArrayList<>();
         if (files != null) {

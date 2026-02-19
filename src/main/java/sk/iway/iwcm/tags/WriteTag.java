@@ -700,12 +700,12 @@ public class WriteTag extends BodyTagSupport
 									if (htmlCode == null) {
 										WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);
 										request.getRequestDispatcher(includeFileName).include(request, respWrapper);
-										if (respWrapper.redirectURL != null) {
-											response.sendRedirect(respWrapper.redirectURL);
+										if (respWrapper.getRedirectURL() != null) {
+											response.sendRedirect(respWrapper.getRedirectURL());
 											return;
 										}
 
-										htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
+										htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
 									}
 
 									htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);

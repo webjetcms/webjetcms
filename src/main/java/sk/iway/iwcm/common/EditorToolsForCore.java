@@ -331,9 +331,9 @@ public class EditorToolsForCore {
                 request.setAttribute("fulltext_preview", data);
 
                 request.getRequestDispatcher(includeFileName).include(request, respWrapper);
-                if (Tools.isEmpty(respWrapper.redirectURL))
+                if (Tools.isEmpty(respWrapper.getRedirectURL()))
                 {
-                    htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
+                    htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
                 }
             }
             else

@@ -467,7 +467,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	         chain.doFilter(request, wrapper);
 
 	         //ExportDelegate.writeExport((HttpServletResponse) servletResponse, servletRequest, wrapper);
-	         String content = wrapper.strWriter.getBuffer().toString();
+	         String content = wrapper.getStrWriterAsString();
 	         Logger.debug( SetCharacterEncodingFilter.class, content);
 
 	         Logger.debug(SetCharacterEncodingFilter.class, "response is commited: "+response.isCommitted());
