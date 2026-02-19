@@ -796,6 +796,7 @@ public class Sender extends TimerTask
 					{
 						//ten &amp; vraj robil v niektorych mail klientoch chyby, tiket 9576
 						newLink = Tools.addParameterToUrlNoAmp(baseHref, param, value);
+						oldLink = Tools.unescapeHtmlEntities(oldLink); // kvoli tomu, ze v stranke sa nam nahradia & za &amp; - nahrada html entities a nasledne nam to moze spravit v cielovej oldUrl 404, kedze parametre budu neplatne.
 
 						Base64 b64 = new Base64();
 						String base64encoded = new String(b64.encode(oldLink.getBytes()));
