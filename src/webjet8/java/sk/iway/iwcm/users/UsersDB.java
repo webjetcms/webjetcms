@@ -402,6 +402,13 @@ public class UsersDB
 		return getUserByEmail(email, false, cacheInSeconds);
 	}
 
+	/**
+	 * Vrati pouzivatela so zadanym emailom (prveho co najde), ak je parameter newest true, tak vrati najnovsieho usera s danym emailom
+	 * @param email
+	 * @param newest
+	 * @param cacheInSeconds
+	 * @return
+	 */
 	public static UserDetails getUserByEmail(String email, boolean newest, int cacheInSeconds)
 	{
 		Cache cache = Cache.getInstance();
@@ -422,9 +429,12 @@ public class UsersDB
 
 			db_conn = DBPool.getConnectionReadUncommited();
 
-			// Maybe we want newest user with specific email (especially for campaign where one email can be shared with more users - then we want the newest one)
-			if(newest == false) ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true));
-			else ps = db_conn.prepareStatement("SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true) + " ORDER BY reg_date DESC");
+			String sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true);
+			if (newest) {
+				// Maybe we want newest user with specific email (especially for campaign where one email can be shared with more users - then we want the newest one)
+				sql += " ORDER BY reg_date DESC";
+			}
+			ps = db_conn.prepareStatement(sql);
 
 			ps.setString(1, DB.fixAiCiValue(email));
 			rs = ps.executeQuery();
