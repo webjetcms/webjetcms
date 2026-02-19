@@ -674,6 +674,7 @@ Zadaný HTML kód je vložený do stránky s editorom aplikácie. Je možné vyu
 - `appGetComponentPath(componentPath, componentDatatable)` - volané pri vložení aplikácie do stránky, môžete zmeniť cestu pre vložený `INCLUDE` napr. na základe vybraných možností.
 - `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
 - `async appCodeExecute(params)` - volanie po kliknutí na tlačidlo OK, môže volať serverovú REST službu.
+- `prepareJsonEditorDataCustom` - volané pri konvertovaní JSON dát lokálne tabuľky (po dekódovaní), môže upraviť data pre zobrazenie v editore.
 
 Ukážkový kód rôznych možností:
 

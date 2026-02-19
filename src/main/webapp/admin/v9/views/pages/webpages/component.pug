@@ -80,7 +80,7 @@ block content
         });
 
         function createDatatable(response) {
-            //console.log("success, response=", response);
+            //console.log("createDatatable, response=", response);
             if (typeof response.error !== 'undefined') {
                 WJ.notifyError(response.error);
                 return;
@@ -261,8 +261,14 @@ block content
                     //It's json, decode it
                     //console.log("Decoding JSON data for column:", column.data, "value:", fieldValue);
                     let decoded = decodeJSONData(fieldValue);
-                    //add ID and rowOrder to each item in the JSON array
-                    decoded = prepareJsonEditorData(decoded);
+
+                    if (typeof window.prepareJsonEditorDataCustom === "function") {
+                        // CUSTOM
+                        window.prepareJsonEditorDataCustom(decoded);
+                    } else {
+                    // DEFAULT - add ID and rowOrder to each item in the JSON array
+                        decoded = prepareJsonEditorData(decoded);
+                    }
 
                     //console.log("decoded=", decoded);
                     if (decoded != null) {
