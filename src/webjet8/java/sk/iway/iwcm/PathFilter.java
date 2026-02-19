@@ -1,6 +1,5 @@
 package sk.iway.iwcm;
 
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.web.util.NestedServletException;
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
@@ -538,8 +537,7 @@ public class PathFilter implements Filter
 							try
 							{
 								String extURL2 = Tools.replace(extURL, "|", "=");
-								Base64 b64 = new Base64();
-								extURL = new String(b64.decode(extURL2.getBytes()));
+								extURL = Tools.base64Decode(extURL2);
 							}
 							catch (Exception e)
 							{
@@ -671,8 +669,7 @@ public class PathFilter implements Filter
 						{
 							//toto je len finta, token zacina na NAHODNY ZNAK aby to nebolo na prvy pohlad base64 automaticky dekodovatelne
 							token = Tools.replace(token, "|", "=").substring(1);
-							Base64 b64 = new Base64();
-							token = new String(b64.decode(token.getBytes()));
+							token = Tools.base64Decode(token);
 							int i = token.indexOf(":");
 							if (i>0)
 							{

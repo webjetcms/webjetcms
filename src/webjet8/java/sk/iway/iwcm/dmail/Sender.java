@@ -13,7 +13,6 @@ import java.util.*;
 
 import net.sourceforge.stripes.mock.MockHttpServletRequest;
 import net.sourceforge.stripes.mock.MockHttpSession;
-import org.apache.commons.codec.binary.Base64;
 
 import sk.iway.Password;
 import sk.iway.iwcm.*;
@@ -795,10 +794,10 @@ public class Sender extends TimerTask
 					{
 						//ten &amp; vraj robil v niektorych mail klientoch chyby, tiket 9576
 						newLink = Tools.addParameterToUrlNoAmp(baseHref, param, value);
-						String oldLinkUnescaped = Tools.unescapeHtmlEntities(oldLink); // kvoli tomu, ze v stranke sa nam nahradia & za &amp; - nahrada html entities a nasledne nam to moze spravit v cielovej oldUrl 404, kedze parametre budu neplatne.
+						// unescape - because in the page we replace & with &amp; - replacement of html entities and then it can cause 404 in the target oldUrl, since the parameters will be invalid
+						String oldLinkUnescaped = Tools.unescapeHtmlEntities(oldLink);
 
-						Base64 b64 = new Base64();
-						String base64encoded = new String(b64.encode(oldLinkUnescaped.getBytes()));
+						String base64encoded = Tools.base64Encode(oldLinkUnescaped);
 						base64encoded = Tools.replace(base64encoded, "=", "|");
 
 						newLink = Tools.addParameterToUrlNoAmp(newLink, "extURL", base64encoded);
