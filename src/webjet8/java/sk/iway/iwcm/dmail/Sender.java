@@ -791,15 +791,14 @@ public class Sender extends TimerTask
 				oldLink = body.substring(start+6, end);
 				if ( ( oldLink.trim().startsWith("http")==false || Constants.getBoolean("replaceExternalLinks"))  && oldLink.trim().startsWith("javascript")==false && oldLink.trim().startsWith("mailto")==false  && !oldLink.contains(baseHref) && !oldLink.contains("/combine.jsp"))
 				{
-					newLink = baseHref;
 					if (oldLink.trim().startsWith("http"))
 					{
 						//ten &amp; vraj robil v niektorych mail klientoch chyby, tiket 9576
 						newLink = Tools.addParameterToUrlNoAmp(baseHref, param, value);
-						oldLink = Tools.unescapeHtmlEntities(oldLink); // kvoli tomu, ze v stranke sa nam nahradia & za &amp; - nahrada html entities a nasledne nam to moze spravit v cielovej oldUrl 404, kedze parametre budu neplatne.
+						String oldLinkUnescaped = Tools.unescapeHtmlEntities(oldLink); // kvoli tomu, ze v stranke sa nam nahradia & za &amp; - nahrada html entities a nasledne nam to moze spravit v cielovej oldUrl 404, kedze parametre budu neplatne.
 
 						Base64 b64 = new Base64();
-						String base64encoded = new String(b64.encode(oldLink.getBytes()));
+						String base64encoded = new String(b64.encode(oldLinkUnescaped.getBytes()));
 						base64encoded = Tools.replace(base64encoded, "=", "|");
 
 						newLink = Tools.addParameterToUrlNoAmp(newLink, "extURL", base64encoded);
