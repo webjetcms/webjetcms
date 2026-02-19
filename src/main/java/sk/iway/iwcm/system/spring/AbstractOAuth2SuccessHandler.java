@@ -34,8 +34,19 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     protected static final String EMAIL_ATTRIBUTE = "email";
     protected static final String GIVEN_NAME_ATTRIBUTE = "given_name";
     protected static final String FAMILY_NAME_ATTRIBUTE = "family_name";
-    protected static final String USERNAME_ATTRIBUTE = "preferred_username";
+    protected static final String USERNAME_ATTRIBUTE_DEFAULT = "preferred_username";
     protected static final String ROLE_PREFIX = "ROLE_";
+
+    /**
+     * Vráti názov atribútu pre username z konfigurácie, alebo default "preferred_username"
+     */
+    protected String getUsernameAttribute() {
+        String configured = Constants.getString("oauth2_usernameAttribute");
+        if (Tools.isNotEmpty(configured)) {
+            return configured;
+        }
+        return USERNAME_ATTRIBUTE_DEFAULT;
+    }
 
     @Override
     public abstract void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException;
@@ -54,14 +65,15 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
         if (familyName != null) userDetails.setLastName(familyName);
 
         // Nastav login - prednostne z username atribútu, inak použij email pred zavináčom
-        String username = oauth2User.getAttribute(USERNAME_ATTRIBUTE);
+        String usernameAttr = getUsernameAttribute();
+        String username = oauth2User.getAttribute(usernameAttr);
         String login;
         if (username != null && !username.trim().isEmpty()) {
             login = username;
-            Logger.debug(this.getClass(), "Using username from OAuth2 provider: " + login);
+            Logger.debug(this.getClass(), "Using username from OAuth2 provider (attribute '" + usernameAttr + "'): " + login);
         } else {
             login = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
-            Logger.debug(this.getClass(), "Username not provided by OAuth2 provider, using email prefix: " + login);
+            Logger.debug(this.getClass(), "Username not provided by OAuth2 provider (attribute '" + usernameAttr + "'), using email prefix: " + login);
         }
         userDetails.setLogin(login);
         userDetails.setAuthorized(true);
@@ -80,7 +92,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     protected void updateExistingUserFromOAuth2(OAuth2User oauth2User, UserDetails userDetails) {
         String givenName = oauth2User.getAttribute(GIVEN_NAME_ATTRIBUTE);
         String familyName = oauth2User.getAttribute(FAMILY_NAME_ATTRIBUTE);
-        String username = oauth2User.getAttribute(USERNAME_ATTRIBUTE);
+        String username = oauth2User.getAttribute(getUsernameAttribute());
 
         boolean needsUpdate = false;
         if (givenName != null && !givenName.equals(userDetails.getFirstName())) {
