@@ -51,7 +51,7 @@ import jakarta.servlet.ServletException;
 public class DiskMultiPartRequestHandler
 {
 
-   private List<FileItem> files;
+   private List<DiskFileItem> files;
 
 	/**
     *  kopia triedy z originalneho balika, pouziva vsak nas MultipartIterator
@@ -65,7 +65,7 @@ public class DiskMultiPartRequestHandler
    {
 		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
 
-		JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
+		JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> upload = new JakartaServletFileUpload<>(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
@@ -74,10 +74,8 @@ public class DiskMultiPartRequestHandler
 		if (files != null)
 		{
 			Map<String, List<String>> paramsTable = new Hashtable<>();
-			for (FileItem item : files)
+			for (DiskFileItem diskFile : files)
 			{
-				DiskFileItem diskFile = ((DiskFileItem)item);
-
 				if (diskFile.isFormField())
 				{
 					Logger.debug(DiskMultiPartRequestHandler.class, "name="+diskFile.getFieldName()+" value="+diskFile.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()))+" isFormField="+diskFile.isFormField()+" inMemory="+diskFile.isInMemory());
@@ -115,7 +113,7 @@ public class DiskMultiPartRequestHandler
 			}
 
 			// Add parts to the wrapped request
-			for (FileItem item : files)
+			for (FileItem<?> item : files)
 			{
 				Part part = new FileItemPart(item);
                 wrapped.addPart(part);
@@ -134,7 +132,7 @@ public class DiskMultiPartRequestHandler
 	public Map<String, UploadedFile> getFileElements()
 	{
 		Map<String, UploadedFile> items = new HashMap<>();
-		for (FileItem item : files)
+		for (FileItem<?> item : files)
 		{
 			DiskFileItem diskFile = ((DiskFileItem)item);
 			if (diskFile.isFormField()) continue;
@@ -146,7 +144,7 @@ public class DiskMultiPartRequestHandler
 	public Map<String, List<UploadedFile>> getFileElementsMultiple()
 	{
 		Map<String, List<UploadedFile>> items = new HashMap<>();
-		for (FileItem item : files)
+		for (FileItem<?> item : files)
 		{
 			DiskFileItem diskFile = ((DiskFileItem)item);
 			if (diskFile.isFormField()) continue;
@@ -166,7 +164,7 @@ public class DiskMultiPartRequestHandler
 
 	public void rollback()
 	{
-		for (FileItem item : files)
+		for (FileItem<?> item : files)
 		{
 			try {
 				item.delete();

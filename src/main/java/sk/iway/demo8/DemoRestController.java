@@ -1,24 +1,34 @@
 package sk.iway.demo8;
 
+import org.eclipse.persistence.expressions.Expression;
+import org.eclipse.persistence.expressions.ExpressionBuilder;
+import org.eclipse.persistence.jpa.JpaEntityManager;
+import org.eclipse.persistence.queries.ReadAllQuery;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.banner.model.BannerBean;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.SpringSecurityConf;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.IntStream;
 
+import jakarta.persistence.Query;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -67,6 +77,25 @@ public class DemoRestController
 
 		String name = Tools.getParameter(request, "name");
 		result.append("\n<p class='name-request'>").append(name).append("</p>");
+
+		//get banners using JPA with date fields - verify JPA Date handling with date/time
+		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
+		ReadAllQuery dbQuery = new ReadAllQuery(BannerBean.class);
+
+		ExpressionBuilder builder = new ExpressionBuilder();
+		Expression expr = builder.get("domainId").equal(CloudToolsForCore.getDomainId());
+		expr = expr.and(builder.get("dateFrom").greaterThan(new java.util.Date(Tools.getNow())));
+		expr = expr.and(builder.get("dateTo").greaterThan(new java.util.Date(Tools.getNow())));
+		dbQuery.setSelectionCriteria(expr);
+
+		Query query = em.createQuery(dbQuery);
+		@SuppressWarnings("unchecked")
+		List<BannerBean> banners = query.getResultList();
+
+		result.append("Banners count: ").append(banners.size()).append("\n<br>");
+		for (BannerBean banner : banners) {
+			result.append("Banner id: ").append(banner.getId()).append(", dateFrom: ").append(Tools.formatDateTimeSeconds(banner.getDateFrom())).append(", dateTo: ").append(Tools.formatDateTimeSeconds(banner.getDateTo())).append(", statDate=").append(Tools.formatDateTimeSeconds(banner.getStatDate())).append("\n<br>");
+		}
 
 		return result.toString();
 	}

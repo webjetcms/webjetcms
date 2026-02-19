@@ -41,7 +41,6 @@ import sk.iway.iwcm.Tools;
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
 //inherited from HttpServletRequest
-@SuppressWarnings("deprecation")
 public class ContextRequest implements HttpServletRequest
 {
 	private final HttpServletRequest original;
@@ -404,21 +403,18 @@ public class ContextRequest implements HttpServletRequest
 	@Override
 	public long getContentLengthLong()
 	{
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public String changeSessionId()
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

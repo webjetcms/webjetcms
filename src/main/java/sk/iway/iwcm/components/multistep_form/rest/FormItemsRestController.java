@@ -142,7 +142,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
             if(stepId != -1) entity.setStepId(stepId);
         } else {
-            entity = formItemsRepository.getById(id);
+            entity = formItemsRepository.getReferenceById(id);
         }
 
         return processFromEntity(entity, ProcessItemAction.GETONE);

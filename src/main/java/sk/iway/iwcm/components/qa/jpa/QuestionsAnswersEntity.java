@@ -165,7 +165,7 @@ public class QuestionsAnswersEntity implements Serializable{
     private String answer;
 
 	@Column(name = "question_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{qa.date}]]",
@@ -195,7 +195,7 @@ public class QuestionsAnswersEntity implements Serializable{
 	/*Hidden unused fields*/
 
 	@Column(name = "answer_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
 		hidden = true,

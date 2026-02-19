@@ -365,7 +365,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             return;
         }
 
-        UserDetailsEntity userToApprove = userDetailsRepository.getById(userId);
+        UserDetailsEntity userToApprove = userDetailsRepository.getReferenceById(userId);
         boolean authorization = AuthorizeUserService.authUser(userToApprove, getUser(), generatePass, getRequest());
 
         //Show notification about auth status

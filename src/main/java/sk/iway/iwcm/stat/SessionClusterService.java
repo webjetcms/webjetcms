@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -146,18 +147,20 @@ public class SessionClusterService {
 
             Timestamp lastUpdated = new Timestamp(Tools.getNow());
 
-            // Try to update existing record first
-            int updatedRows = new SimpleQuery().executeWithUpdateCount(UPDATE, sessionAsString, lastUpdated, myNodeName, TYPE);
+            if (InitServlet.isWebjetInitialized()) {
+                // Try to update existing record first
+                int updatedRows = new SimpleQuery().executeWithUpdateCount(UPDATE, sessionAsString, lastUpdated, myNodeName, TYPE);
 
-            if (updatedRows == 0) {
-                // No existing record found, insert new one
-                new SimpleQuery().execute(INSERT, myNodeName, TYPE, sessionAsString, lastUpdated);
-                Logger.debug(SessionClusterService.class, String.format("Inserted new session data for node %s", myNodeName));
-            } else {
-                Logger.debug(SessionClusterService.class, String.format("Updated existing session data for node %s", myNodeName));
+                if (updatedRows == 0) {
+                    // No existing record found, insert new one
+                    new SimpleQuery().execute(INSERT, myNodeName, TYPE, sessionAsString, lastUpdated);
+                    Logger.debug(SessionClusterService.class, String.format("Inserted new session data for node %s", myNodeName));
+                } else {
+                    Logger.debug(SessionClusterService.class, String.format("Updated existing session data for node %s", myNodeName));
+                }
+
+                deleteOldData(false);
             }
-
-            deleteOldData(false);
         } catch (Exception e) {
             Logger.error(SessionClusterService.class, "Error updating session data in cluster monitoring: " + e.getLocalizedMessage());
         }

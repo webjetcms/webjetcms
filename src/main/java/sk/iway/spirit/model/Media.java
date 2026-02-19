@@ -18,8 +18,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 
@@ -131,7 +129,7 @@ public class Media extends ActiveRecordRepository implements Serializable
 	String mediaTitleEn;
 
 	@Column(name="last_update")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	Date lastUpdate;
 
 	@Column(name = "field_a")

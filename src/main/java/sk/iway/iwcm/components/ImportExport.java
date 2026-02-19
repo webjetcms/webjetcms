@@ -271,7 +271,7 @@ public class ImportExport
 		return result;
 	}
 
-	public static List<IwcmFile> importFromZip(FileItem archive, String tmpDir, JspWriter printWriter)
+	public static List<IwcmFile> importFromZip(FileItem<?> archive, String tmpDir, JspWriter printWriter)
 	{
 		List<IwcmFile> importedFiles = new ArrayList<>();
 		ZipArchiveInputStream zipIn = null;
@@ -337,7 +337,7 @@ public class ImportExport
 		return importedFiles;
 	}
 
-	public static List<IwcmFile> importFromTgz(FileItem archive, String tmpDir, JspWriter printWriter)
+	public static List<IwcmFile> importFromTgz(FileItem<?> archive, String tmpDir, JspWriter printWriter)
 	{
 		List<IwcmFile> importedFiles = new ArrayList<>();
 		TarArchiveInputStream tarIn = null;

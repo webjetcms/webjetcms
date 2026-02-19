@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecord;
@@ -43,7 +41,7 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	@Column(name="file_url")
 	String fileUrl;
 	@Column(name="change_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	Date changeDate;
 	@Column(name="user_id")
 	int userId;

@@ -10,8 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 
 import sk.iway.iwcm.database.ActiveRecordRepository;
@@ -65,7 +63,7 @@ public class GdprRegExpBean extends ActiveRecordRepository implements Serializab
 	Integer userId;
 
 	@Column(name="date_insert")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     Date dateInsert;
 
     @Column(name="domain_id")

@@ -266,9 +266,9 @@ public class Ninja {
             Logger.error(Ninja.class, e);
         }
 
-        if (Tools.isEmpty(respWrapper.redirectURL))
+        if (Tools.isEmpty(respWrapper.getRedirectURL()))
         {
-            return respWrapper.strWriter.getBuffer().toString();
+            return respWrapper.getStrWriter().getBuffer().toString();
         }
 
         return "";

@@ -67,7 +67,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
     @Override
     public FormStepEntity getOneItem(long id) {
-        FormStepEntity entity = (id == -1) ? new FormStepEntity() : formStepsRepository.getById(id);
+        FormStepEntity entity = (id == -1) ? new FormStepEntity() : formStepsRepository.getReferenceById(id);
         if(id < 1) entity.setFormName(MultistepFormsService.getFormName(getRequest()));
         // Copy value so it can be used during duplicate action
         entity.setIdForDuplication(entity.getId());

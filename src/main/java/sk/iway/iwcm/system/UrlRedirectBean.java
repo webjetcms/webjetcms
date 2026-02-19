@@ -11,8 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -62,7 +60,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	private Long urlRedirectId;
 
 	@Column(name="insert_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title ="components.redirect.admin_list.datum_vlozenia",
@@ -113,7 +111,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	String newUrl;
 
 	@Column(name="publish_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "components.banner.dateFrom",
@@ -127,7 +125,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	Date publishDate;
 
 	@Column(name="valid_to")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "components.banner.dateTo",

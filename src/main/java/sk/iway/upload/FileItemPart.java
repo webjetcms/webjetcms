@@ -10,9 +10,9 @@ import java.util.Collections;
 
 public class FileItemPart implements Part {
 
-    private final FileItem fileItem;
+    private final FileItem<?> fileItem;
 
-    public FileItemPart(FileItem fileItem) {
+    public FileItemPart(FileItem<?> fileItem) {
         this.fileItem = fileItem;
     }
 

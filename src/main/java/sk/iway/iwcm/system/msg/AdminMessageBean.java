@@ -10,40 +10,38 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 
 @Entity
 @Table(name="admin_message")
-public class AdminMessageBean implements Serializable 
+public class AdminMessageBean implements Serializable
 {
 
 	private static final long serialVersionUID = -3300244402731194831L;
 
 	@Id
 	@GeneratedValue(generator="WJGen_admin_message")
-	@TableGenerator(name="WJGen_admin_message",pkColumnValue="admin_message")	
+	@TableGenerator(name="WJGen_admin_message",pkColumnValue="admin_message")
    	@Column(name="admin_message_id")
 	private int adminMessageId;
-	
+
    	@Column(name="create_by_user_id")
 	private Integer createByUserId;
-	
+
    	@Column(name="create_date")
-   	@Temporal(TemporalType.TIMESTAMP)
+   	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date createDate;
-	
+
    	@Column(name="is_readed")
 	private Boolean isReaded;
-	
+
 	@Lob
    	@Column(name="message_text")
 	private String messageText;
-	
+
    	@Column(name="only_for_logged")
 	private Boolean onlyForLogged;
-	
+
    	@Column(name="recipient_user_id")
 	private Integer recipientUserId;
 

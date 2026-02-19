@@ -226,7 +226,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     public boolean checkItemPerms(FormsEntity entity, Long id) {
         if (InitServlet.isTypeCloud()) {
             if (entity.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
-            FormsEntity old = getRepo().getById(entity.getId());
+            FormsEntity old = getRepo().getReferenceById(entity.getId());
             if (old != null && old.getDomainId()!=CloudToolsForCore.getDomainId()) return false;
         }
         return true;

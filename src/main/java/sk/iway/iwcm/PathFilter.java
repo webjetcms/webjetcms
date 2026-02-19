@@ -1041,7 +1041,7 @@ public class PathFilter implements Filter
 
 						WJResponseWrapper respWrapper = new WJResponseWrapper(res, req);
 						req.getRequestDispatcher("/showdoc.do?docid=" + accessDocId).forward(req, respWrapper);
-						StringBuilder htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
+						StringBuilder htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
 
 						String fixedHtml = htmlCode.toString();
 

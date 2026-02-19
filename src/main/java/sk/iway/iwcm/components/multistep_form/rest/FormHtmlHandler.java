@@ -149,7 +149,7 @@ public class FormHtmlHandler {
         this.isEmailRender = false;
 
         StringBuilder stepHtml = new StringBuilder();
-        FormStepEntity formStep = formStepsRepository.getById(stepId);
+        FormStepEntity formStep = formStepsRepository.getReferenceById(stepId);
 
         // Form start
         stepHtml.append( getFormStart(stepId, request) );

@@ -57,7 +57,7 @@ public class GalleryDimension {
     private String author = "";
 
     @Column(name = "create_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "components.gallery.createDate",

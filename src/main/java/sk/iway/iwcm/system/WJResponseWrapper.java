@@ -13,7 +13,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
-
+import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
@@ -35,8 +35,8 @@ import sk.iway.iwcm.system.context.ContextFilter;
 public class WJResponseWrapper extends HttpServletResponseWrapper
 {
 	PrintWriter writer;
-	public StringWriter strWriter;
-	public String redirectURL = null;
+	private StringWriter strWriter;
+	private String redirectURL = null;
 	HttpServletResponse origResponse;
 	HttpServletRequest origRequest;
 	private ByteArrayOutputStream baos = null;
@@ -60,14 +60,14 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
 			String ae = req.getHeader("accept-encoding");
 	      if (ae != null && ae.indexOf("gzip") != -1)
 	      {
-	      	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	      	GZIPOutputStream gzipstream = new GZIPOutputStream(baos);
+	      	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	      	GZIPOutputStream gzipstream = new GZIPOutputStream(out);
 
 	      	byte[] originalBytes = htmlCode.getBytes(SetCharacterEncodingFilter.getEncoding());
 	      	gzipstream.write(originalBytes);
 	      	gzipstream.finish();
 
-	      	byte[] bytes = baos.toByteArray();
+	      	byte[] bytes = out.toByteArray();
 
 	      	origResponse.addHeader("Content-Length", Integer.toString(bytes.length));
 	      	origResponse.addHeader("Content-Encoding", "gzip");
@@ -77,7 +77,7 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
 
 	      	Logger.debug(WJResponseWrapper.class, "Gzipping output, path="+PathFilter.getOrigPath(req)+"?"+(String)req.getAttribute("path_filter_query_string")+" original="+originalBytes.length+" compressed="+bytes.length+" ratio="+((double)originalBytes.length / (double)bytes.length));
 
-	         return;
+	        return;
 	      }
 		}
 
@@ -109,32 +109,22 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
     */
    public WJResponseWrapper(HttpServletResponse response, HttpServletRequest req)
    {
-       super(response);
-       origResponse = response;
-       //baos = new ByteArrayOutputStream();
-       strWriter = new StringWriter();
-       writer = new PrintWriter(strWriter);
-       origRequest = req;
+		//user mock response to avoid problems with tomcat 11 buffer
+		super(new MockHttpServletResponse());
+		origResponse = response;
+		//baos = new ByteArrayOutputStream();
+		strWriter = new StringWriter();
+		writer = new PrintWriter(strWriter);
+		origRequest = req;
    }
-
-
-   // ----------------------------------------------------- Instance Variables
-
-
-
-
-   // --------------------------------------------------------- Public Methods
-
 
    /**
     * Swallow any attempt to flush the response buffer.
     */
    @Override
    public void flushBuffer() throws IOException {
-
-   	Logger.println(this,"--> FLUSH BUFFER");
-       ; // No action is required
-
+   		Logger.debug(this,"--> FLUSH BUFFER");
+    	// No action is required
    }
 
 
@@ -147,20 +137,13 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
    @Override
    public PrintWriter getWriter() throws IOException {
 
-       return (writer); // FIXME - getWriter()
+       return (writer);
 
    }
    @Override
 	public void setBufferSize(int bufferSize)
 	{
-		try
-		{
-			super.setBufferSize(bufferSize);
-		}
-		catch (Exception e)
-		{
-
-		}
+		// Do not propagate to origResponse - would cause Tomcat 11 to mark it as committed
 	}
 	public String getRedirectURL()
 	{
@@ -197,14 +180,13 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
 			@Override
 			public boolean isReady()
 			{
-				// TODO Auto-generated method stub
 				return false;
 			}
 
 			@Override
 			public void setWriteListener(WriteListener arg0)
 			{
-				// TODO Auto-generated method stub
+				//Auto-generated method stub
 
 			}
 
@@ -225,7 +207,32 @@ public class WJResponseWrapper extends HttpServletResponseWrapper
 				sk.iway.iwcm.Logger.error(e);
 			}
 		}
-		else if (strWriter!=null&&strWriter.getBuffer().length()>0) return strWriter.getBuffer().toString();
+		else if (strWriter!=null && strWriter.getBuffer().isEmpty()==false) return strWriter.getBuffer().toString();
 		return null;
+	}
+
+	@Override
+	public boolean isCommitted() {
+		return false;
+	}
+
+	@Override
+	public void reset() {
+		strWriter.getBuffer().setLength(0);
+	}
+
+	@Override
+	public void resetBuffer() {
+		//do nothing
+	}
+
+	public StringWriter getStrWriter()
+	{
+		return strWriter;
+	}
+
+	public String getStrWriterAsString()
+	{
+		return strWriter.getBuffer().toString();
 	}
 }

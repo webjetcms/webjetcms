@@ -14,8 +14,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -83,7 +81,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	private String contactLastName;
 
     @Column(name="create_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.basket.invoice.date_created",

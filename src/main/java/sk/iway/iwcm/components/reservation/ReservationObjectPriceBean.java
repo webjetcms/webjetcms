@@ -10,8 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 import sk.iway.iwcm.database.ActiveRecord;
 
@@ -32,25 +30,25 @@ import sk.iway.iwcm.database.ActiveRecord;
 public class ReservationObjectPriceBean extends ActiveRecord implements Serializable
 {
 	private static final long serialVersionUID = -1L;
-	
+
 	@Id
 	@GeneratedValue(generator="WJGen_reservation_object_price")
-	@TableGenerator(name="WJGen_reservation_object_price",pkColumnValue="reservation_object_price")	
+	@TableGenerator(name="WJGen_reservation_object_price",pkColumnValue="reservation_object_price")
 	@Column(name="object_price_id")
 	private int objectPriceId;
 	@Column(name="object_id")
 	private int objectId;
 	@Column(name="datum_od")
-	@Temporal(TemporalType.DATE)
+	//deprecated, not need anymore @Temporal(TemporalType.DATE)
 	private Date datumOd;
 	@Column(name="datum_do")
-	@Temporal(TemporalType.DATE)
+	//deprecated, not need anymore @Temporal(TemporalType.DATE)
 	private Date datumDo;
 	@Column(name="cena")
 	private BigDecimal cena;
 	@Column(name="domain_id")
 	private int domainId;
-	
+
 	@Override
 	public int getId()
 	{
@@ -109,5 +107,5 @@ public class ReservationObjectPriceBean extends ActiveRecord implements Serializ
 	{
 		this.domainId = domainId;
 	}
-	
+
 }

@@ -14,8 +14,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
@@ -320,7 +318,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	private Integer[] perexGroups;
 
 	@Column(name = "date_created")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title="webstranky.nadpis.posledna_zmena",
 		visible = true, hiddenEditor = true, sortAfter = "authorName"
 	)
@@ -639,21 +637,21 @@ public class DocBasic implements DocGroupInterface, Serializable
 	private String htmlHead = "";
 
 	@Column(name = "publish_start")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.dateStart",
 		tab = "perex", visible = false, sortAfter = "editorFields.emails", className = "DTE_Field_Has_Checkbox"
 	)
 	private Date publishStartDate;
 
 	@Column(name = "publish_end")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.dateEnd",
 		tab = "perex", visible = false, sortAfter = "editorFields.publishAfterStart", className = "DTE_Field_Has_Checkbox"
 	)
 	private Date publishEndDate;
 
 	@Column(name = "event_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.eventDate",
 		tab = "perex", visible = false, sortAfter = "editorFields.disableAfterEnd",
 		editor = {

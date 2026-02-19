@@ -17,8 +17,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -391,7 +389,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 
 	/*TAB restrictions*/
 	@Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{components.banner.dateFrom}]]",
@@ -401,7 +399,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 	private Date dateFrom;
 
 	@Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{components.banner.dateTo}]]",
@@ -522,7 +520,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 	private Integer height;
 
 	@Column(name = "stat_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date statDate;
 
 	@Column(name = "width")

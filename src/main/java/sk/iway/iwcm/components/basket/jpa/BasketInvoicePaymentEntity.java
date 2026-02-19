@@ -12,8 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -82,7 +80,7 @@ public class BasketInvoicePaymentEntity implements Serializable {
     private Integer paymentStatus;
 
     @Column(name="create_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.basket.invoice.date_created"
@@ -99,7 +97,7 @@ public class BasketInvoicePaymentEntity implements Serializable {
     private String paymentDescription;
 
     @Column(name="closed_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.basket.close_date",
