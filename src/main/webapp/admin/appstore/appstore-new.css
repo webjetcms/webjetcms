@@ -283,3 +283,8 @@ div.appStore div.cycle-promo-pager a {display: inline-block; background: url(/ad
 div.appStore div.cycle-pager a.activeSlide,
 div.appStore div.cycle-promo-pager a.activeSlide {background-position: left top;}
 
+/* Maximized CKEditor dialog - full width layout (class added via JS to iframe body) */
+body.cke-maximized .container,
+body.cke-maximized .menuBox {
+    max-width: 100% !important;
+}

@@ -424,7 +424,7 @@ function componentClick(componentName, width, height)
 
 					//System.out.println(app.getNameKey());
 					%>
-					<div class="menu-app col-sm-3" data-app-action="<%=app.getComponentClickAction() %>" data-app="app<%=appCounter%>" id="<%=DocTools.removeChars(app.getNameKey(), true).replace('.', '-')%>">
+					<div class="menu-app col-sm-3 col-lg-2" data-app-action="<%=app.getComponentClickAction() %>" data-app="app<%=appCounter%>" id="<%=DocTools.removeChars(app.getNameKey(), true).replace('.', '-')%>">
 						<div class="row">
 							<div class="col-sm-4">
 								<div class="img">

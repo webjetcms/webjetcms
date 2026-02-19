@@ -95,6 +95,68 @@ table.cke_dialog {
                 }
             }
         }
+
+        /**
+         * Maximized state - disables drag/drop on title bar and hides resize handle
+         * Applied via JavaScript when maximize button is clicked
+         */
+        &.cke_dialog_maximized {
+            .cke_dialog_title {
+                cursor: default !important;
+                pointer-events: none;
+            }
+
+            .cke_resizer {
+                display: none !important;
+            }
+        }
+
+        /**
+         * Maximize/Minimize buttons - positioned before close button
+         * Uses tabler icons font for icons, shares common styling
+         */
+        .cke_dialog_maximize_button,
+        .cke_dialog_minimize_button {
+            background: none !important;
+            border: 1px solid #868EA5;
+            border-radius: 6px;
+            padding: 5px 5px 3px 5px;
+            position: absolute;
+            right: 52px;
+            top: 8px;
+            z-index: 5;
+            cursor: pointer;
+
+            .cke_label {
+                display: contents;
+                font-size: 0px; //hide text, icon shown via ::before
+
+                &::before {
+                    font-family: 'tabler-icons-filled';
+                    color: #13151B;
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+            }
+
+            &:hover {
+                border-color: #0063FB;
+
+                .cke_label::before {
+                    color: #0063FB;
+                }
+            }
+        }
+
+        //icon for maximize button (arrows pointing outward)
+        .cke_dialog_maximize_button .cke_label::before {
+            content: $ti-icon-arrows-maximize;
+        }
+
+        //icon for minimize button (arrows pointing inward)
+        .cke_dialog_minimize_button .cke_label::before {
+            content: $ti-icon-arrows-minimize;
+        }
     }
     div.cke_dialog_tabs {
         background-color: #F3F3F6;
