@@ -86,7 +86,6 @@ public class DemoRestController
 		Expression expr = builder.get("domainId").equal(CloudToolsForCore.getDomainId());
 		expr = expr.and(builder.get("dateFrom").greaterThan(new java.util.Date(Tools.getNow())));
 		expr = expr.and(builder.get("dateTo").greaterThan(new java.util.Date(Tools.getNow())));
-		expr = expr.and(builder.get("statDate").greaterThan(new java.util.Date(Tools.getNow())));
 		dbQuery.setSelectionCriteria(expr);
 
 		Query query = em.createQuery(dbQuery);

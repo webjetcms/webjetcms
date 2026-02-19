@@ -158,9 +158,9 @@ public class SessionClusterService {
                 } else {
                     Logger.debug(SessionClusterService.class, String.format("Updated existing session data for node %s", myNodeName));
                 }
-            }
 
-            deleteOldData(false);
+                deleteOldData(false);
+            }
         } catch (Exception e) {
             Logger.error(SessionClusterService.class, "Error updating session data in cluster monitoring: " + e.getLocalizedMessage());
         }
