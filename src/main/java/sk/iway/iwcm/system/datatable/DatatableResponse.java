@@ -28,6 +28,7 @@ public class DatatableResponse<T> {
 	private List<DatatableFieldError> fieldErrors;
 	private Boolean forceReload;
     private List<NotifyBean> notify;
+	private String redirect;
 
 	public List<T> getData() {
 		return data;

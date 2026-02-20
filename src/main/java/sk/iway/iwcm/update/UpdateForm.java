@@ -1,6 +1,6 @@
 package sk.iway.iwcm.update;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;

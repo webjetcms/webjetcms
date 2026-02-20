@@ -1141,6 +1141,10 @@ html.in-iframe-show-table {
     opacity: 1;
 }
 
+.DTE_Field.disabled .form-control.form-select {
+    pointer-events: none;
+}
+
 .DTE_Field.multiweb-noteditable .form-control {
     cursor: not-allowed;
     pointer-events: none;
@@ -1206,4 +1210,9 @@ div.tooltip.show {
             background-color: #4d4d4d;
         }
     }
+}
+
+//last DTE_Field_Type_quill in tab needs space below for link dialog
+.panel-body .DTE_Field.DTE_Field_Type_quill:last-child {
+  margin-bottom: 20px;
 }

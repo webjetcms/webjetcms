@@ -1,4 +1,4 @@
-# Events
+# WebJET Events
 
 WebJET uses Spring to publish and listen to events. A basic description can be found at [baeldung](https://www.baeldung.com/spring-events). Both synchronous and asynchronous events are supported.
 
@@ -27,6 +27,7 @@ Currently WebJET publishes the following events:
 - Web page - when the page is published in time - the object is published `DocumentPublishEvent` which contains `DocDetails` published web page and attribute `oldVirtualPath` with information about the original URL of the page (to detect if it has changed during publishing). Prerequisite `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, event `ON_PUBLISH`.
 - Configuration - create and change a configuration variable - an object is published `ConfDetails` after saving the value via the user interface by calling `ConfDB.setName`, condition: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
 - Uploading a file - an object is published `File` Like `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, condition: `#event.clazz eq 'java.io.File'`.
+- Updating codes in text - an object is published `UpdateCodesEvent` after processing the standard codes in the method `DocTools.updateCodes`, allows you to add custom codes. Prerequisite: `#event.clazz eq 'sk.iway.iwcm.system.spring.events.UpdateCodesEvent'`, event `ON_START` Also `ON_END` for the possibility of replacing codes before and after WebJET processing.
 
 ## Listening event
 
@@ -116,3 +117,47 @@ public boolean setGroup(GroupDetails group)
 ```
 
 Typically, raising an event of type `WebjetEventType.ON_START` should be at the beginning of the method and `WebjetEventType.AFTER_SAVE` at the end (after saving the data).
+
+## Updating codes in text
+
+If you need to add custom codes to the page text (e.g. `!CUSTOM_CODE!`), you can use the event `ON_START` or `ON_END` For `UpdateCodesEvent`. These events are published before and after the processing of standard codes in the method `DocTools.updateCodes`.
+
+Example of custom implementation `listener`:
+
+```java
+package sk.iway.custom;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.UpdateCodesEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
+
+@Component
+public class CustomCodesListener {
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.common.UpdateCodesEvent'")
+    public void handleUpdateCodes(final WebjetEvent<UpdateCodesEvent> event) {
+        if (event.getEventType() != WebjetEventType.ON_START) {
+            return; // only process ON_START event, skip ON_END
+        }
+        UpdateCodesEvent updateCodesEvent = event.getSource();
+        StringBuilder text = updateCodesEvent.getText();
+
+        // Add custom code
+        text = Tools.replace(text, "!CUSTOM_CODE!", "My Company VAT ID");
+        text = Tools.replace(text, "!COMPANY_NAME!", "My Company Ltd.");
+
+        // Set the processed text back
+        updateCodesEvent.setText(text);
+    }
+}
+```
+
+In this example the listener listens to the event `ON_START` and replaces custom codes in the text. You can access all parameters from `UpdateCodesEvent`:
+- `text` - page text (modifiable)
+- `user` - currently logged in user
+- `currentDocId` - ID of the current page
+- `request` - HTTP request

@@ -106,6 +106,7 @@ Volitelné možnosti:
 - `editSearchSteps` - funkce přidávající kroky testování při vyhledání záznamu.
 - `beforeDeleteSteps` - funkce přidávající kroky testování před smazáním záznamu.
 - `perms` - jméno práva (např. `editor_edit_media_all`) pro automatické ověření zabezpečení REST služby.
+- `extraWait` - pokud je nastaveno v některých případech se počká nastavený čas v sekundách, potřebné pokud stránka načítá nějaké extra údaje.
 
 Interně se po inicializaci ještě nastaví následující atributy:
 - `id` - ID objektu datatabulky v DOM stromu.

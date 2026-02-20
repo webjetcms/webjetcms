@@ -5,11 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -164,6 +164,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             notify.addButton(new NotifyButton(getProp().getText("menu.logout"), "btn btn-primary", "ti ti-logout", "window.location.href=$('.js-logout-toggler').attr('href')"));
             addNotify(notify);
         }
+
+        // Remove user from cache
+        UsersDB.removeUserFromCache(entity.getId().intValue());
     }
 
     @Override
@@ -215,17 +218,23 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if ("remove".equals(target.getAction())) return;
 
-		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword()))
-		{
-			//vygeneruj heslo
-			entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));
-		}
+		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword())) {
+			// generate password
+			entity.setPassword(generateUserPassword());
+        }
 
         Prop prop = Prop.getInstance(request);
 
         //Import setting
         if(isImporting()) {
-            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+            if(Tools.isEmpty(entity.getPassword())) {
+                if(entity.getId() == null || entity.getId() < 1L) {
+                    // generate password for new users
+			        entity.setPassword(generateUserPassword());
+                } else {
+                    entity.setPassword(UserTools.PASS_UNCHANGED);
+                }
+            }
 
             if (entity.getEditorFields()==null) {
                 UserDetailsEditorFields udef = new UserDetailsEditorFields();
@@ -242,6 +251,8 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
             //By default not admin
             if(entity.getAdmin() == null) entity.setAdmin(false);
+            //authorize user if not set from import
+            if (entity.getAuthorized() == null) entity.setAuthorized(true);
         }
 
         boolean allowWeakPassword = false;
@@ -251,12 +262,12 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
         if (Tools.isNotEmpty(entity.getEmail()) && Tools.isEmail(entity.getEmail())==false) {
-            errors.rejectValue("errorField.email", null, prop.getText("javax.validation.constraints.Email.message"));
+            errors.rejectValue("errorField.email", null, prop.getText("jakarta.validation.constraints.Email.message"));
         }
 
         //validate login
         if (entity.getEditorFields()==null || Tools.isEmpty(entity.getEditorFields().getLogin())) {
-            errors.rejectValue("errorField.editorFields.login", null, prop.getText("javax.validation.constraints.NotBlank.message"));
+            errors.rejectValue("errorField.editorFields.login", null, prop.getText("jakarta.validation.constraints.NotBlank.message"));
         }
     }
 
@@ -354,7 +365,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             return;
         }
 
-        UserDetailsEntity userToApprove = userDetailsRepository.getById(userId);
+        UserDetailsEntity userToApprove = userDetailsRepository.getReferenceById(userId);
         boolean authorization = AuthorizeUserService.authUser(userToApprove, getUser(), generatePass, getRequest());
 
         //Show notification about auth status
@@ -385,5 +396,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         entity.setRegDate(new Date(Tools.getNow()));
         entity.setLastLogonAsDate(null);
         super.beforeDuplicate(entity);
+    }
+
+    private final String generateUserPassword() {
+        return Password.generateStringHash(5) + Password.generatePassword(5);
     }
 }

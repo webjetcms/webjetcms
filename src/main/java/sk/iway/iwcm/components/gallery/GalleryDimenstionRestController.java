@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,7 +73,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             }
         }
 
-        return new PageImpl<>(list);
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(list);
     }
 
     @Override

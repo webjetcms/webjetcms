@@ -1,15 +1,18 @@
 package sk.iway.iwcm.components.enumerations.rest;
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
@@ -106,8 +110,36 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         super.addSpecSearch(params, predicates, root, builder);
     }
 
+    /**
+     * Trims all string fields (string1 through string12) in the entity.
+     * This prevents issues with trailing spaces from copy-pasted text.
+     */
+    private void trimStringFields(EnumerationDataBean entity) {
+        if (entity == null) return;
+
+        try {
+            BeanWrapper wrapper = new BeanWrapperImpl(entity);
+            PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
+
+            for (PropertyDescriptor descriptor : descriptors) {
+                if (descriptor.getPropertyType() == String.class && descriptor.getName().matches("string\\d+")) {
+                    String value = (String) wrapper.getPropertyValue(descriptor.getName());
+                    if (value != null) {
+                        wrapper.setPropertyValue(descriptor.getName(), value.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Log the exception if needed, but do not interrupt the save process
+            Logger.error(EnumerationDataRestController.class, "Error trimming string fields: " + e.getMessage());
+        }
+    }
+
     @Override
     public void beforeSave(EnumerationDataBean entity) {
+        // trim all string fields before save, so last space in string using copy&paste from some text will not cause problems
+        trimStringFields(entity);
+
         processToEntity(entity, ProcessItemAction.EDIT);
     }
 

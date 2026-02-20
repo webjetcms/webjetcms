@@ -12,12 +12,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ModuleInfo;
@@ -654,6 +656,11 @@ public class MenuService {
         for (ModuleInfo m : allModules) {
             if ((m.isUserItem()==false && (m.getSubmenus()==null || m.getSubmenus().isEmpty())) || m.getItemKey().length()<3) continue;
 
+            if (InitServlet.isTypeCloud()) {
+                //disable items which are not in cloud
+                if (CloudToolsForCore.isModuleDisabled(m.getItemKey())) continue;
+            }
+
             if (rootItem.getId().equals(getPermsIdWithPrefix(getGroup9(m))+"-leaf") == false) continue;
 
             JsTreeItem child = new JsTreeItem();
@@ -670,6 +677,11 @@ public class MenuService {
                 boolean hasItem = false;
                 for (ModuleInfo sub : m.getSubmenus()) {
                     if (sub.isAvailable()==false || sub.isUserItem()==false || sub.getItemKey()==null || sub.getItemKey().length()<3) continue;
+
+                    if (InitServlet.isTypeCloud()) {
+                        //disable items which are not in cloud
+                        if (CloudToolsForCore.isModuleDisabled(sub.getItemKey())) continue;
+                    }
 
                     //v Zoznam web stranok preskakujeme Editacia media skupin, lebo to mame separatne ako polozku
                     if ("editor_edit_media_group".equals(sub.getItemKey()) && "menuWebpages".equals(m.getItemKey())) continue;

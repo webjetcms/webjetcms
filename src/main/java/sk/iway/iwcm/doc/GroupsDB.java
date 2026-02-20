@@ -20,8 +20,8 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -104,7 +104,7 @@ public class GroupsDB extends DB
 	 *@deprecated - pouzite verziu getInstance(boolean forceRefresh)
 	 */
 	@Deprecated
-	public static GroupsDB getInstance(javax.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
+	public static GroupsDB getInstance(jakarta.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
 		//try to get it from server space
 		if (force_refresh == false)
@@ -151,7 +151,7 @@ public class GroupsDB extends DB
 	 *@param  servletContext  Description of the Parameter
 	 *@param  serverName      Description of the Parameter
 	 */
-	private GroupsDB(javax.servlet.ServletContext servletContext, String serverName)
+	private GroupsDB(jakarta.servlet.ServletContext servletContext, String serverName)
 	{
 		Logger.println(this,"GroupsDB: constructor [" + Constants.getInstallName()+"]");
 		this.serverName = serverName;

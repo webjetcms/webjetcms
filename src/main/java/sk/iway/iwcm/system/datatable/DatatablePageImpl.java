@@ -7,14 +7,14 @@ import java.util.Map;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import sk.iway.iwcm.Tools;
 
-public class DatatablePageImpl<T> extends PageImpl<T> {
+public class DatatablePageImpl<T> extends org.springframework.data.domain.PageImpl<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -24,6 +24,8 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     //you can send summary data directly in response
     private Map<String, Long> summary = null;
+
+    private String redirect = null;
 
     public DatatablePageImpl(List<T> content) {
         //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
@@ -151,5 +153,13 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             this.summary = new HashMap<>();
         }
         this.summary.put(key, value);
+    }
+
+    public String getRedirect() {
+        return redirect;
+    }
+
+    public void setRedirect(String redirect) {
+        this.redirect = redirect;
     }
 }

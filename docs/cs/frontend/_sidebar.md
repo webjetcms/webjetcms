@@ -7,6 +7,7 @@
   - [Všeobecná nastavení](/frontend/setup/config.md)
   - [Volitelná pole](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
+  - [CKEditor](/frontend/setup/ckeditor.md)
 - Šablony
   - [Způsob zobrazení stránky](/frontend/templates/README.md)
   - [Šablony](/frontend/templates/templates.md)

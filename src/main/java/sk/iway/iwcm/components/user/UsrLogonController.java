@@ -4,9 +4,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -101,7 +101,9 @@ public class UsrLogonController extends WebjetComponentAbstract {
                     if (request.getAttribute("successUrl")!=null){
                         succesUrl = request.getAttribute("successUrl").toString();
                     }
-                    if (Tools.isNotEmpty(succesUrl))
+
+                    //security: allow only forwards to local addresses, if requested to external address use redirect set in webpage
+                    if (Tools.isNotEmpty(succesUrl) && succesUrl.startsWith("/") && succesUrl.contains("//")==false)
                     {
                         url = new StringBuilder(succesUrl);
                         //we must redirect, because we are allready in Struts action and the mapping to docid will not work

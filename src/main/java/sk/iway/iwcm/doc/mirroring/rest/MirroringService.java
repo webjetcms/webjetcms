@@ -13,15 +13,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.support.MutableSortDefinition;
-import org.springframework.beans.support.PagedListHolder;
-import org.springframework.beans.support.SortDefinition;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
+import sk.iway.iwcm.system.datatable.PagedListHolder;
+import sk.iway.iwcm.system.datatable.SortDefinition;
+
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 
@@ -90,10 +89,10 @@ public class MirroringService {
             data = getDocsData();
         } else {
             addParamWarning("getPage()", PARAMETER_TYPE_ERR, type);
-            return new PageImpl<>( new ArrayList<>() );
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
         }
 
-        return new PageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
     }
 
     /**
@@ -126,7 +125,7 @@ public class MirroringService {
             data = getDocsData();
         } else {
             addParamWarning("getFilteredPage()", PARAMETER_TYPE_ERR, type);
-            return new PageImpl<>( new ArrayList<>() );
+            return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
         }
 
         //Filter by syncId
@@ -134,7 +133,7 @@ public class MirroringService {
             int filterSyncId = Tools.getIntValue(request.getParameter("searchId"), -1);
             if(filterSyncId < 1) {
                //bad format or invalid value
-               return new PageImpl<>( new ArrayList<>() );
+               return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
             } else {
                 List<MirroringDTO> tmpFiltered = data.stream()
                     .filter(item -> item.getId().intValue() == filterSyncId)
@@ -159,7 +158,7 @@ public class MirroringService {
                     .toList();
             } else {
                 Logger.warn(MirroringService.class, "Request parametert searchEditorFields.statusIcons have unknown value: " + statucIconFilter);
-                return new PageImpl<>( new ArrayList<>() );
+                return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>( new ArrayList<>() );
             }
             data = new ArrayList<>(tmpFiltered);
         }
@@ -200,7 +199,7 @@ public class MirroringService {
             }
         }
 
-        return new PageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listToHolter(data, pageable).getPageList(), pageable, data.size());
     }
 
     /**
@@ -878,32 +877,15 @@ public class MirroringService {
     /*********** PRIVATE SUPPRORT methods **************/
 
     /**
-     * return PagedListHolder that is used for pagination and sorting of MirroringDTO items.
+     * Return PagedListHolder that is used for pagination and sorting of MirroringDTO items.
      * @param data
      * @param pageable
      * @return
      */
     private PagedListHolder<MirroringDTO> listToHolter(List<MirroringDTO> data ,Pageable pageable) {
-        PagedListHolder<MirroringDTO> listHolder = new PagedListHolder<>(data);
-
-        SortDefinition sortDefinition;
-        Sort sort = pageable.getSort();
-        if(sort.isEmpty() == false) {
-            Sort.Order order = sort.iterator().next();
-            sortDefinition = new MutableSortDefinition(order.getProperty(), true, order.isAscending());
-        } else {
-            //Default value
-            sortDefinition = new MutableSortDefinition("id", true, true);
-        }
-
-        listHolder.setSort(sortDefinition);
-        listHolder.resort();
-
-        //
-        listHolder.setPage(pageable.getPageNumber());
-        listHolder.setPageSize(pageable.getPageSize());
-
-        return listHolder;
+        //Default sort by id ascending
+        SortDefinition defaultSort = new SortDefinition("id", true, true);
+        return new PagedListHolder<>(data, pageable, defaultSort);
     }
 
     /**

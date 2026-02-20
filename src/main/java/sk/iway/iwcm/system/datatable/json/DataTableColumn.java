@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Transient;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -55,6 +55,7 @@ public class DataTableColumn {
     private String renderFormat;
     private String renderFormatLinkTemplate;
     private String renderFormatPrefix;
+    private String renderFunction;
 
     private DataTableColumnEditor editor;
     private Boolean visible;
@@ -222,6 +223,10 @@ public class DataTableColumn {
             renderFormatPrefix = annotation.renderFormatPrefix();
         }
 
+        if (Tools.isNotEmpty(annotation.renderFunction())) {
+            renderFunction = annotation.renderFunction();
+        }
+
         boolean[] _visible = annotation.visible();
         if (_visible.length > 0) {
             this.visible = _visible[0];
@@ -303,6 +308,13 @@ public class DataTableColumn {
         if (ai.length > 0) {
             if (ai[0]==false) {
                 addClassName("ai-off");
+            }
+        }
+
+        boolean[] exportable = annotation.export();
+        if (exportable.length > 0) {
+            if (exportable[0]==false) {
+                addClassName("not-export");
             }
         }
 

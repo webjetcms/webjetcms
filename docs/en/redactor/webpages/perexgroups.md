@@ -40,6 +40,14 @@ Tags are displayed as checkboxes by default, but if more than 30 tags are define
 
 !> **Warning:** the name of the tag (group perex) varies depending on the language selected. If such a language mutation exists, it will be displayed. If not, the value from the field **Group name**.
 
+### Duplication of brand names
+
+If you create multiple tags with the same language version of the name, the web page editor will display them when you select the tag. **ID** a **Group name** for resolution. If the mark has only **Group name** or language mutation is the same as **Group name**, in addition, only the **ID**.
+
+![](perex-duplicity-values.png)
+
+!> **Warning:** values are compared without the influence of diacritics and upper/lower case letters
+
 ### Use
 
 You can use the tags, for example, in the news list. Example of a newsletter template that displays the name of the newsgroup and sets the CSS style according to the group ID. `color-ID` to set the color of the perex group. Automatically uses the language variant of the tag (if defined) according to the page language:

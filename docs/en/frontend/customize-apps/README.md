@@ -9,3 +9,5 @@ Value `INSTALL_NAME` is the name of the installation, in the configuration in th
 - `/components/search/search.jsp`
 
 The search for the correct file will be done automatically. The first one found according to the order given will be used.
+
+Similarly for Spring applications in the folder `/apps/INSTALL_NAME/`, e.g. `/apps/file-archive/mvc/file-archive.html` copy to `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` and adjust to your needs.

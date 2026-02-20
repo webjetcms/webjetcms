@@ -147,13 +147,21 @@ Scenario('apps screenshot for editor-components.jsp 2', ({ I, DT, DTE, Document 
     Document.screenshot(basePath+"/components/emoticon/screenshot-1"+lngSuffix+".jpg");
 });
 
-Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document }) => {
+Scenario('apps screenshot for editor-components.jsp 3', ({ I, DT, DTE, Document, Apps }) => {
 
     screenshotWebAndApp(I, Document, 26180, "/components/formsimple", "#formMailForm-formular-lahko", tabLink1Spring, function(Document, I, DT, DTE) {
         I.clickCss("#pills-dt-editor-component-datatable li:nth-child(3) a");
         Document.screenshot(basePath+"/components/formsimple/screenshot-4.jpg");
         tabLink2Spring(Document, I, DT, DTE);
     }, 800, 600);
+
+    // MULTISTEP FORM
+    Apps.insertApp('Formulár', '#multistep_form-title', 156274 , false);
+    Document.screenshotElement(".cke_dialog_ui_iframe", basePath+"/components/multistep-form/screenshot-1"+lngSuffix+".jpg");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Registracia-na-online-kurz");
+    Document.screenshotElement(".ly-content .container", basePath+"/components/multistep-form/screenshot-2"+lngSuffix+".jpg");
+    I.amOnPageLng("/apps/formular/registracia-online-kurz.html");
+    Document.screenshotElement(".ly-content .container", basePath+"/components/multistep-form/screenshot-3"+lngSuffix+".jpg");
 
     screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 120026, "/components/news-calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);

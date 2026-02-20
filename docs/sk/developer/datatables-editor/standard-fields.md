@@ -110,11 +110,8 @@ Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý
 
 Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
-Všimnite si nastavenie ```@Temporal(TemporalType.TIMESTAMP)``` pre korektnú konverziu poľa do databázového stĺpca (vyžaduje to JPA).
-
 ```java
     @Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -129,7 +126,6 @@ Podobné pole ako ```DATE``` ale naviac umožňuje aj výber času.
 
 ```java
     @Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -164,7 +160,6 @@ Treba si uvedomiť že trieda ```DefaultTimeValueConverter``` implementuje ```At
 Výberové pole, nastavuje sa typom ```DataTableColumnType.SELECT```.
 
 ![](../../frontend/webpages/customfields/webpages-select.png)
-
 
 Dôležité je definovať možnosti výberového poľa:
 
@@ -288,7 +283,6 @@ Jednotlivé možnosti môžete priamo vymenovať pomocou zoznamu ```@DataTableCo
 ```
 
 Všimnite si, že aj keď hodnoty do value zadávate ako reťazec korektne sa pretypujú na číslo (technicky v HTML kóde je všetko reťazec, ale pri odoslaní aj zobrazení to Spring korektne konvertuje).
-
 
 ## MULTISELECT
 
@@ -485,6 +479,15 @@ Všimnite si použitie konvertora ```@javax.persistence.Convert(converter = Allo
 ```
 
 ![](../../redactor/apps/tooltip/tooltip-editor.png)
+
+Ak nastavíte CSS triedu ```quill-oneline``` zobrazí sa zjednodušený editor bez možnosti vytvárania odsekov:
+
+```java
+    @Column(name = "tooltip")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String tooltip;
+```
 
 ## WYSIWYG
 

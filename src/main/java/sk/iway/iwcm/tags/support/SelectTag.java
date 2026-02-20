@@ -20,7 +20,7 @@
  */
 package sk.iway.iwcm.tags.support;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 import lombok.Getter;
 import lombok.Setter;

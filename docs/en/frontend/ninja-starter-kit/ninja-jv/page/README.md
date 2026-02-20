@@ -32,6 +32,8 @@ Used in :ghost:<code>head.jsp</code>
 <meta property="og:title" content="${ninja.page.seoTitle}" />
 ```
 
+When calling `seoTitle` any HTML code is removed from the page header, if you need a header including HTML code you can use `${ninja.page.seoTitleHtml}`.
+
 ## Description *String*
 
 Looks for a description in the optional field S :carousel\_horse: `getFieldS()` (SEO description), if the field is empty, it will use the standard perex description :carousel\_horse: `getPerexPre()`.

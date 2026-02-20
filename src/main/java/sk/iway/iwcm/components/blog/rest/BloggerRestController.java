@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.blog.rest;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -95,7 +95,7 @@ public class BloggerRestController extends DatatableRestControllerV2<BloggerBean
 
         //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
         if (Tools.isEmpty(entity.getEmail()) || !Tools.isEmail(entity.getEmail()))
-            errors.rejectValue("errorField.email", null, prop.getText("javax.validation.constraints.Email.message"));
+            errors.rejectValue("errorField.email", null, prop.getText("jakarta.validation.constraints.Email.message"));
 
         //validate selected blogger group
         if(entity.getEditableGroup() == null)

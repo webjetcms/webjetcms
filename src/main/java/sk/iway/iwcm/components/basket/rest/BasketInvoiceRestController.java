@@ -1,12 +1,11 @@
 package sk.iway.iwcm.components.basket.rest;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEditorFields;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
@@ -53,6 +53,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
     private static final String ORDER_PLACEHOLDER = "{ORDER_DETAILS}";
     private static final String STATUS_PLACEHOLDER = "{STATUS}";
+    private static final String STATUS_KEY_PREFIX = "components.basket.invoice.status.";
 
     @Autowired
     public BasketInvoiceRestController(BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr, PaymentMethodsService pms, DeliveryMethodsService dms) {
@@ -145,13 +146,20 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         BasketInvoiceEditorFields bied = entity.getEditorFields();
         if(bied != null && Boolean.TRUE.equals(bied.getSendNotification())) {
             StringBuilder sb = new StringBuilder();
-            //Styles
-            sb.append(bied.getOrderRecapHead());
-            //Email body AND replace "{ORDER_DETAILS}" with actual order details
-            sb.append( bied.getBody().replace(ORDER_PLACEHOLDER, bied.getOrderRecapBody()) );
-            //
+
+            // Add email body
+            sb.append( bied.getBody() );
+
+            // Replace al {STATUS}
             Integer actualStatus = bir.getStatusId(saved.getId(), CloudToolsForCore.getDomainId());
-            sb.replace(sb.indexOf(STATUS_PLACEHOLDER), sb.indexOf(STATUS_PLACEHOLDER) + STATUS_PLACEHOLDER.length(), actualStatus.toString());
+            sb = Tools.replace(sb, STATUS_PLACEHOLDER, getProp().getText(STATUS_KEY_PREFIX + actualStatus));
+
+            // Get invoice detail for email
+            String compUrl = WriteTagToolsForCore.getCustomPage("/components/basket/invoice_email.jsp", getRequest());
+		    String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(getRequest()) + compUrl + "?invoiceId=" + saved.getId() + "&auth=" + saved.getAuthorizationToken());
+
+            // Replace all {ORDER_DETAILS}
+            sb = Tools.replace(sb, ORDER_PLACEHOLDER, data);
 
             boolean emailSendOK = SendMail.send(getUser().getFullName(), getUser().getEmail(), entity.getContactEmail(), bied.getSubject(), sb.toString(), getRequest());
             if(!emailSendOK) throwError("components.basket.errorSendingEmail");
@@ -249,14 +257,9 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         return BasketTools.getSupportedCurrenciesOptions();
     }
 
-    @GetMapping("/getPriceToPay")
-    public BigDecimal getPriceToPay(@RequestParam("invoiceId") Long invoiceId) {
-        return ProductListService.getPriceToPay(invoiceId, biir);
-    }
-
-    @GetMapping("/getPayedPrice")
-    public BigDecimal getPayedPrice(@RequestParam("invoiceId") Long invoiceId) {
-        return ProductListService.getPayedPrice(invoiceId, bipr);
+    @GetMapping("/getPriceInfo")
+    public Map<String, String> getPriceInfo(@RequestParam("invoiceId") Long invoiceId) {
+        return ProductListService.getPriceInfo(invoiceId, biir, bipr);
     }
 
     private String normalizeValueForSearch(String value) {

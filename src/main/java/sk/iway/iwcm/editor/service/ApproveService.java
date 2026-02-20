@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,7 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.groups_approve.GroupsApproveEntity;
 import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -26,7 +27,10 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -61,6 +65,59 @@ public class ApproveService {
 	public boolean isSelfApproved() {
 		return this.selfApproved;
 	}
+
+	private static final String[] diffBlacklistedProperties = {
+		"data",
+		"dataAsc",
+		"fileName",
+		"lastUpdateDate",
+		"dateCreatedString",
+		"perex",
+		"authorId",
+		"rootGroupL1",
+		"rootGroupL2",
+		"rootGroupL3",
+		"perexPre",
+		"timeCreatedString",
+		"syncStatus",
+		"lastUpdateTime",
+		"historyApprovedBy",
+		"groupId",
+		"perexImageOriginal",
+		"historyApprovedByName",
+		"historySaveDate",
+		"publishStartString",
+		"syncId",
+		"historyDisapprovedByName",
+		"perexImageNormal",
+		"historyId",
+		"perexGroupIdsString",
+		"lazyLoaded",
+		"syncDefaultForGroupId",
+		"docLink",
+		"viewsTotal",
+		"syncRemotePath",
+		"historyActual",
+		"forumCount",
+		"authorEmail",
+		"historyApproveDate",
+		"docId",
+		"publicable",
+		"publishStartStringExtra",
+		"authorPhoto",
+		"tempName",
+		"perexImageSmall",
+		"currency",
+		"eventDateString",
+		"quantity",
+		"publishEndTimeString",
+		"pageNewChangedStatus",
+		"publishEndString",
+		"historyDisapprovedBy",
+		"publishStartTimeString",
+		"logonPageDocId",
+		"eventTimeString"
+	};
 
     @Autowired
     public ApproveService(GroupsApproveRepository approveRepo, DocHistoryRepository docHistoryRepo, HttpServletRequest request) {
@@ -220,7 +277,7 @@ public class ApproveService {
 	 * @param editorService
 	 * @return return true if approve was success
 	 */
-	public boolean approveAction(DocHistoryRepository docHistoryRepo, EditorService editorService) {
+	public boolean approveAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepository, EditorService editorService) {
 
 		//Get and check historyId
 		int historyId = Tools.getIntValue(request.getParameter("historyid"), -1);
@@ -281,7 +338,7 @@ public class ApproveService {
 
 			String approverNames = getApproveUserNames();
 
-			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes);
+			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes, docDetailsRepository);
 			request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
 
 			//posli info email autorovi
@@ -518,11 +575,11 @@ public class ApproveService {
 	 * @param editedDoc
 	 * @param historyId
 	 */
-    public void sendEmails(DocDetails editedDoc, int historyId) {
+    public void sendEmails(DocDetails editedDoc, int historyId, DocDetailsRepository docDetailsRepository) {
         //Posielanie ziadosti o schvaleni web stranky
 		if (approveByTable != null && approveByTable.size() > 0) {
 			//Posielanie ziadosti o schvaleni web stranky
-			sendWebpageApproveRequestEmail(editedDoc, historyId, currentUser.getUserId(), null);
+			sendWebpageApproveRequestEmail(editedDoc, historyId, currentUser.getUserId(), null, docDetailsRepository);
 		} else if (notifyTable != null && notifyTable.size() > 0) {
 			//Posielanie notifikacii o zmene vo web stranke, neposiela sa, ak sa stranka musi schvalit, preto v else podmienke
 			sendWebpageChangeNotification(editedDoc);
@@ -538,7 +595,7 @@ public class ApproveService {
 	 * @param senderUserId
 	 * @param comment
 	 */
-    public void sendWebpageApproveRequestEmail(DocBasic editedDoc, int historyId, int senderUserId, String comment) {
+    public void sendWebpageApproveRequestEmail(DocBasic editedDoc, int historyId, int senderUserId, String comment, DocDetailsRepository docDetailsRepository) {
 
         if (approveByTable == null || approveByTable.isEmpty()) return;
 
@@ -570,10 +627,50 @@ public class ApproveService {
 
 		message.append(senderUser.getFullName()).append(" &lt;").append(senderUser.getEmail()).append("&gt;");
 
+		if (editedDoc != null) {
+			//test if this is a new document - for new one there will be only one record
+			DocBasic historyDoc = null;
+			int historyCount = (new SimpleQuery()).forInt("SELECT COUNT(*) FROM documents_history WHERE doc_id = ?", editedDoc.getDocId());
+			if (historyCount > 1) {
+				historyDoc = docDetailsRepository.findById( editedDoc.getDocId() );
+			}
+			message.append(getDiff(editedDoc, historyDoc, prop));
+		}
+
 		String subject = prop.getText("approve.subject") + ": " + title;
 		SendMail.send(senderUser.getFullName(), senderUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
 
 		auditApproveRequestEmail(editedDoc, historyId);
+	}
+
+	/**
+	 * Vytvori diff medzi originalom a editovanym dokumentom, tento diff sa pouzije v emaily schvalovatelom, aby videli co sa zmenilo
+	 * @param editedDoc
+	 * @param docDetailsRepository
+	 * @return
+	 */
+	public static StringBuilder getDiff(DocBasic editedDoc, DocBasic historyDoc, Prop prop) {
+		StringBuilder message = new StringBuilder();
+		if(editedDoc != null) {
+			BeanDiff diff = new BeanDiff().skipEmpty().setNew(editedDoc).setOriginal(historyDoc);
+			diff.blacklist(diffBlacklistedProperties);
+
+			if(diff.diff().size() > 0) {
+				// Add to message compare with changed values
+				message.append("<br>\n<br>\n");
+
+				if (historyDoc == null) message.append(prop.getText("doc.approve.new_params"));
+				else message.append(prop.getText("doc.approve.changed_params"));
+
+				message.append(": ");
+
+				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
+				adminlogChanges = ResponseUtils.filter(adminlogChanges);
+				adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+				message.append( adminlogChanges );
+			}
+		}
+		return message;
 	}
 
 	/**
@@ -651,9 +748,6 @@ public class ApproveService {
 	 * @param docHistory - change represented by docHistory entity that was approved/rejected
 	 */
 	private void sendWebpageApproveNotification(boolean isApproved, DocHistory docHistory) {
-		//If there is no one to notify, return
-		if(!needNotification()) return;
-
 		if(isApproved) {
 			//DocHistory Create/Edit action - APPROVED
 
@@ -690,9 +784,6 @@ public class ApproveService {
 	 * @param docHistory
 	 */
 	private void sendWebpageApproveDelNotification(boolean isApproved, DocHistory docHistory) {
-		//If there is no one to notify, return
-		if(!needNotification()) return;
-
 		StringBuilder message;
 		String subject;
 		String url = Tools.getBaseHref(request) + "/showdoc.do?docid=" + docHistory.getDocId();

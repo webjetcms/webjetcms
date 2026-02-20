@@ -1,13 +1,13 @@
 package sk.iway.iwcm.components.formsimple;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +19,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 public class FormAttributesEntity {
+
+    /*
+     * This entity is retained for backward compatibility. The application now uses
+     * FormSettingsEntity, which operates on the remastered form_attributes table (exposed as form_settings).
+     * Since the form_attributes table still exists, both this entity and its repository are preserved
+     * for potential future use.
+     * #58161 - sivan
+     */
 
     public FormAttributesEntity() {}
 

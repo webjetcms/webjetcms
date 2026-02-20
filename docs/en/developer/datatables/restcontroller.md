@@ -956,6 +956,21 @@ For the data export test, the method can be called `isExporting()` which returns
 
 For importing it is possible to modify/validate the data by implementing the method `preImportDataEdit`. This method is called before the import and it is possible to modify the data. An example is in the class [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
 
+## Redirection after saving
+
+If you need to redirect the user to another page after the record has been successfully saved, it is possible to set the URL by calling `setRedirect(String redirect)`:
+
+```java
+    @Override
+    public void afterSave(FormsEntity entity, FormsEntity saved) {
+        if(entity.getFormSettings().getId() == null || entity.getFormSettings().getId() == -1L) {
+            if ("multistep".equals(entity.getFormType())) {
+                setRedirect("/apps/form/admin/form-content/?formName=" + Tools.URLEncode(saved.getFormName()));
+            }
+        }
+    }
+```
+
 ## Extension versions
 
 There are extension classes for special cases.

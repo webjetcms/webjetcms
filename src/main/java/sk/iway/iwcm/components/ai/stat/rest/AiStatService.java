@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.criteria.Predicate;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -75,7 +75,7 @@ public class AiStatService {
             .forEach(assistantId -> mappedValues.put(assistantId, mappedValues.getOrDefault(assistantId, 0) + 1));
 
 
-        return doShit(mappedValues, assistantsRepo, prop);
+        return processMapToList(mappedValues, assistantsRepo, prop);
     }
 
     public static final List<LabelValueInteger> getPieChartDataMostTokens(String created, String provider, String action, String groupName, AiStatRepository statRepo, AssistantDefinitionRepository assistantsRepo, Prop prop) {
@@ -90,7 +90,7 @@ public class AiStatService {
                 (oldValue, newValue) -> (oldValue == null ? 0 : oldValue) + (newValue == null ? 0 : newValue) //Integer::sum gives VSCode java warning even when merge has Null checks
             ));
 
-        return doShit(mappedValues, assistantsRepo, prop);
+        return processMapToList(mappedValues, assistantsRepo, prop);
     }
 
     public static final Map<String, List<DaysUsageDTO>> getLineChartData(String created, String provider, String action, String groupName, AiStatRepository statRepo, AssistantDefinitionRepository assistantsRepo) {
@@ -186,7 +186,7 @@ public class AiStatService {
         return values;
     }
 
-    private static final List<LabelValueInteger> doShit(Map<Long, Integer> mappedValues, AssistantDefinitionRepository assistantsRepo, Prop prop) {
+    private static final List<LabelValueInteger> processMapToList(Map<Long, Integer> mappedValues, AssistantDefinitionRepository assistantsRepo, Prop prop) {
         // Sort entries by value descending
         List<Map.Entry<Long, Integer>> sortedEntries = new ArrayList<>(mappedValues.entrySet());
         sortedEntries.sort((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()));
@@ -280,7 +280,7 @@ public class AiStatService {
 
             //Apply sorting from pageable
             if (pageable != null && pageable.getSort() != null && pageable.getSort().isSorted()) {
-                List<javax.persistence.criteria.Order> orders = new java.util.ArrayList<>();
+                List<jakarta.persistence.criteria.Order> orders = new java.util.ArrayList<>();
                 pageable.getSort().forEach(o -> {
                     try {
                         if (o.isAscending()) {

@@ -115,7 +115,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
 
         Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter("campainId"), -1));
-        CampaingsEntity campaign = (campainId > 0L) ? campaingsRepository.getById(campainId) : null;
+        CampaingsEntity campaign = (campainId > 0L) ? campaingsRepository.getReferenceById(campainId) : null;
 
         //Load allready pushed emails in DB
         for (String email : emailsRepository.getAllCampainEmails( DmailService.getCampaignId(campaign, getUser()), CloudToolsForCore.getDomainId()) ) {
@@ -202,7 +202,8 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
     @Override
     public void afterSave(EmailsEntity entity, EmailsEntity saved) {
-        Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelog(saved.getId(), saved, null), saved.getId(), -1L);
+        //saved can be null if email is unsubscribed
+        if (saved != null) Adminlog.add(Adminlog.TYPE_DMAIL, Adminlog.getChangelog(saved.getId(), saved, null), saved.getId(), -1L);
     }
 
     @Override
@@ -246,7 +247,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
 
                 CampaingsEntity campain;
                 if(campaingId > 0) {
-                    campain = campaingsRepository.getById(campaingId);
+                    campain = campaingsRepository.getReferenceById(campaingId);
                 } else {
                     //Problem we dont have campain yet (create fake)
                     campain = new CampaingsEntity();

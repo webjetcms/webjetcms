@@ -8,11 +8,11 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyTagSupport;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
@@ -700,12 +700,12 @@ public class WriteTag extends BodyTagSupport
 									if (htmlCode == null) {
 										WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);
 										request.getRequestDispatcher(includeFileName).include(request, respWrapper);
-										if (respWrapper.redirectURL != null) {
-											response.sendRedirect(respWrapper.redirectURL);
+										if (respWrapper.getRedirectURL() != null) {
+											response.sendRedirect(respWrapper.getRedirectURL());
 											return;
 										}
 
-										htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
+										htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
 									}
 
 									htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);

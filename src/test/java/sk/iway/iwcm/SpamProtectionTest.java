@@ -8,7 +8,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -68,7 +68,7 @@ public class SpamProtectionTest extends BaseWebjetTest {
         HttpServletRequest request = mockRequest();
         for (int i = 0; i < 3; i++) {
             boolean allowed = SpamProtection.canPost(MODULE, "post" + i, request);
-            System.out.println("Post " + i + " allowed: " + allowed);
+            //System.out.println("Post " + i + " allowed: " + allowed);
             waitTimeout();
             assertThat("Post " + i + " should be allowed", allowed, is(true));
         }

@@ -20,9 +20,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Trieda pre generovanie JSONu pre DataTableEditor {@see https://datatables.net/} z anotacie {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor} nad poliami objektu.

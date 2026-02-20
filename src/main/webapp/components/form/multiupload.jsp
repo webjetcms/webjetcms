@@ -3,7 +3,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="java.util.Map" %>
-<%@ page import="sk.iway.iwcm.form.FormAttributeDB" %>
+<%@ page import="sk.iway.iwcm.components.form_settings.rest.FormSettingsService" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
@@ -20,7 +20,7 @@ String allowedExtensions = pp.getValue("allowedExtensions", null);
 //ak mame savedb mozeme skusit nacitat allowedExtensions
 if (Tools.isNotEmpty(formSaveDb))
 {
-    Map<String, String> formAttrs = new FormAttributeDB().load(formSaveDb);
+    Map<String, String> formAttrs = FormSettingsService.load(formSaveDb);
     if (formAttrs != null)
     {
        if (Tools.isNotEmpty(formAttrs.get("allowedExtensions"))) allowedExtensions = formAttrs.get("allowedExtensions");

@@ -22,8 +22,8 @@ import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.EditorException;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +96,7 @@ public class DatatableExceptionHandlerV2
 			response.setFieldErrors(errorsList);
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, "ConstraintViolationException: " + ex.getMessage());
 		}
 
 		if (DatatableRestControllerV2.getLastImportedRow()!=null) {
@@ -119,7 +119,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@ExceptionHandler(TransactionSystemException.class)
@@ -155,10 +155,10 @@ public class DatatableExceptionHandlerV2
 				//failsafe
 			}
 			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
 			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, ex);
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -166,7 +166,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@ExceptionHandler(EditorException.class)
@@ -179,10 +179,10 @@ public class DatatableExceptionHandlerV2
 		response.setNotify(ex.getNotifyBeans());
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex);
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
-	}	
-	
+		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<DatatableResponse<Object>> handleException(Exception ex) {
 		DatatableResponse<Object> response = new DatatableResponse<>();
@@ -191,12 +191,13 @@ public class DatatableExceptionHandlerV2
 			ResponseStatusException ex2 = (ResponseStatusException)ex;
 			message = ex2.getReason();
 		}
-		
+
 		message = prepareMessage(message, ex);
 
 		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex);
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		//log stack trace because this is unexpected exception
+		Logger.error(DatatableExceptionHandlerV2.class, "handleException: " + ex.getMessage(), ex);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	private String prepareMessage(String message, Exception ex) {
@@ -228,7 +229,7 @@ public class DatatableExceptionHandlerV2
 	 */
 	private String getErrorMessage(ConstraintViolation<?> violation) {
 
-		//{javax.validation.constraints.NotBlank.message}
+		//{jakarta.validation.constraints.NotBlank.message}
 		String key = violation.getMessageTemplate();
 		if (key != null && key.length()>3) {
 			if (key.startsWith("{") && key.endsWith("}") && key.length()>3) key = key.substring(1, key.length()-1);

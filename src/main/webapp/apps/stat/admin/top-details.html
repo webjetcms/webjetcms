@@ -55,7 +55,7 @@
         parseUrlParams();
 
         $.get({
-            url: docNewUrl+"doc-title/?docId="+docId,
+            url: docNewUrl+"doc-title?docId="+docId,
             success: function(response) {
                 //console.log("response=", response);
                 $("span.statPageTitle").text(response);
@@ -265,7 +265,7 @@
                 tmpDefURL += "&docId=" + docId;
                 tmpDefURL += "&chartType=" + ChartTools.ChartType.Line;
             } else {
-                tmpDefURL += "/b-variant/";
+                tmpDefURL += "/b-variant";
                 tmpDefURL += "?docId=" + docId;
                 tmpDefURL += "&dayDate=" + searchDateValue;
                 tmpDefURL += "&percentual=" + percentual;

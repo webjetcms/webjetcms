@@ -102,6 +102,8 @@ Všimněte si, že v těle `combine` jsou vloženy standardní `link` a `script`
 
 Kombinace nejprve vloží skripty a CSS z těla a následně doplní ty definované v `data-iwcm-combine` atribute. Tam vkládejte jen specifické skripty a CSS, které se používají pouze při zpracování přes WebJET CMS.
 
+Atributem `basePath` nastavíte kořenovou složku pro jednotlivé soubory, abyste nemuseli psát celou cestu. Pro adresy začínající na `/templates/` nebo `/components/` se hodnota v `basePath` nepřidá.
+
 ## Vkládání skriptů
 
 Pro vkládání skriptů z aplikace skripty existuje speciální značka `data-iwcm-script`. Jako jméno dostává pozici skriptu (např. `header`) podle definice v aplikaci. Značka používá tag `div`, ten se ale při zobrazení odstraní.

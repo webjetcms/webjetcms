@@ -13,7 +13,7 @@ plugins {
     id 'java'
     id 'war'
     https://github.com/gretty-gradle-plugin/gretty
-    id 'org.gretty' version "3.1.1"
+    id 'org.gretty' version "5.0.1"
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
@@ -42,11 +42,14 @@ ext {
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
-    springVersion = "5.3.+";
-    springDataVersion = "2.6.1";
-    springSecurityVersion = "5.8.+";
-    allureVersion = "2.24.0";
-    aspectJVersion = '1.9.19';
+    springVersion = "7.0.+";
+    springDataVersion = "4.0.+";
+    springSecurityVersion = "6.4.+";
+    allureVersion = "2.32.0";
+    //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
+    //jar to ant/aspectj and update version in ant/compile.xml file
+    aspectJVersion = '1.9.25.1';
+    eclipselinkVersion = '5.0.0-B13';
 }
 
 lombok {
@@ -102,7 +105,6 @@ sourceSets {
     main {
         java {
             srcDirs 'src/main/java'
-            srcDirs 'src/webjet8/java'
         }
     }
  }
@@ -118,13 +120,14 @@ configurations {
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
     //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
 
-    grettyRunnerTomcat85 {
-
-    }
-    grettyRunnerTomcat9 {
+    grettyRunnerTomcat10 {
         // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
         // https://mvnrepository.com/artifact/commons-io/commons-io
         exclude group: 'commons-io', module: 'commons-io'
+    }
+
+    grettyRunnerTomcat11 {
+
     }
 
     agent {
@@ -152,9 +155,12 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.26.1")
 
     // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'com.zaxxer:HikariCP:6.3.0'
 
-    implementation("commons-fileupload:commons-fileupload:1.+")
+    //implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-fileupload2-jakarta-servlet6
+    implementation("org.apache.commons:commons-fileupload2-jakarta-servlet6:2.0.0-M4")
+
     implementation("commons-io:commons-io:2.18.0")
     implementation("org.apache.commons:commons-lang3:3.19.0")
     // https://mvnrepository.com/artifact/org.apache.commons/commons-text
@@ -165,14 +171,15 @@ dependencies {
     //implementation("taglibs:datetime:1.0.1") //taglib datetime:
 
     // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
-    implementation("com.github.hazendaz:displaytag:2.9.0")
+    implementation("com.github.hazendaz:displaytag:3.2.0")
 
-    implementation("org.eclipse.persistence:eclipselink:2.7.+")
+    implementation("org.eclipse.persistence:eclipselink:${eclipselinkVersion}")
 
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
-    implementation("org.hibernate.validator:hibernate-validator:6.2.5.Final")
+    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.13")
@@ -208,18 +215,21 @@ dependencies {
     implementation("org.springframework.data:spring-data-jpa:${springDataVersion}")
     implementation("org.springframework:spring-orm:${springVersion}")
     implementation("org.springframework:spring-tx:${springVersion}")
-    implementation("org.springframework.security:spring-security-core:${springSecurityVersion}")
-    implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
+    implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
     //implementation("org.springframework:spring-messaging:${springVersion}")
-    implementation("org.springframework.plugin:spring-plugin-core:2.0.0.RELEASE")
-    implementation("org.springframework.plugin:spring-plugin-metadata:2.0.0.RELEASE")
-    implementation("io.springfox:springfox-swagger2:3.0.0")
-        implementation("io.swagger.core.v3:swagger-annotations:2.1.12") //update to 2.1.12
-    implementation("sk.iway:wjstripes:1.6.0-SNAPSHOT")
+
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-jaxrs2-jakarta for OpenAPI generation with integration API
+    implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:2.2.30")
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations-jakarta
+    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.30")
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-models-jakarta
+    implementation("io.swagger.core.v3:swagger-models-jakarta:2.2.30")
+
+    implementation("net.sourceforge.stripes:stripes:1.6.0-JakartaEE10")
     implementation("net.sf.trove4j:trove4j:2.1.0")  //TODO: test DocDB hashing with Integer maps
     //implementation("net.sf.uadetector:uadetector-core:0.9.22")
     //implementation("net.sf.uadetector:uadetector-resources:2014.10")
@@ -227,44 +237,46 @@ dependencies {
     implementation("org.json:json:20231013")
     //implementation("cryptix:cryptix:3.2.0") //HERE
 
-    implementation("com.sun.mail:jakarta.mail:1.6.8")
+    // https://mvnrepository.com/artifact/org.eclipse.angus/angus-mail = jakarta.mail/javax.mail api and implementation
+    implementation("org.eclipse.angus:angus-mail:2.0.5")
 
     implementation("com.google.crypto.tink:tink:1.19.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.19") //1.3 is latest branch with support for Java EE java.* namespace
-    implementation("ch.qos.logback:logback-classic:1.5.19")
-    implementation("org.slf4j:slf4j-api:1.7.36")
-    implementation("org.slf4j:jcl-over-slf4j:1.7.36")
-    implementation("org.slf4j:log4j-over-slf4j:1.7.36")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.17.1")
+    implementation("ch.qos.logback:logback-core:1.5.29")
+    implementation("ch.qos.logback:logback-classic:1.5.29")
+    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:jcl-over-slf4j:2.0.16")
+    implementation("org.slf4j:log4j-over-slf4j:2.0.16")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.24.3")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
-    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-spec
-    implementation 'org.apache.taglibs:taglibs-standard-spec:1.2.5'
-    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-impl
-    runtimeOnly 'org.apache.taglibs:taglibs-standard-impl:1.2.5'
+    // https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.2'
+    // https://mvnrepository.com/artifact/org.glassfish.web/jakarta.servlet.jsp.jstl
+    runtimeOnly 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
 
     implementation("sk.iway:wjdaisydiff:1.1-SNAPSHOT-shaded")
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
-    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-    providedCompile "javax.servlet:servlet-api:2.5"
-    providedCompile "javax.servlet.jsp:javax.servlet.jsp-api:2.3.3"
-    providedCompile 'javax.el:javax.el-api:3.0.0'
-    providedCompile 'javax.annotation:jsr250-api:1.0'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1'
+    providedCompile 'jakarta.el:jakarta.el-api:5.0.1'
 
-    //  https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring5
-    implementation group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '3.1.2.RELEASE'
+    // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+
+    // https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring6
+    implementation group: 'org.thymeleaf', name: 'thymeleaf-spring6', version: '3.1.3.RELEASE'
 
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
-    implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20240325.1'
+    implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20260102.1'
 
     //Java 11/17 - JAXB-API - do not update to v3, packages changed from javax.xml.bind to jakarta.xml.bind
     // https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl
-    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
+    implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
 
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
@@ -273,33 +285,31 @@ dependencies {
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
-    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.6'
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
-    testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
+    // Spring Framework 7.0 requires JUnit 6 baseline
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation 'org.mockito:mockito-core:5.18.0'
-    testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
-    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
-    testImplementation "io.qameta.allure:allure-junit5"
+    testRuntimeOnly 'org.glassfish:jakarta.el:5.0.0-M1'
+    // Allure - temporarily disabled until allure-junit6 is available
+    //testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    //testImplementation "io.qameta.allure:allure-junit5"
+
+    //gopay https://mvnrepository.com/artifact/cz.gopay/gp-java-api-v3-common
+    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
-    // used in io.springfox:springfox-swagger2
-    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
-    implementation 'io.github.classgraph:classgraph:4.8.177'
-
-    // used in com.google.crypto.tink:tink
-    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-    implementation 'com.google.protobuf:protobuf-java:3.25.5'
 
     // used in velocity-tools-generic
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
-
-    implementation 'cz.gopay:gp-java-api-v3-common:3.8.1'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.8.1'
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
@@ -414,7 +424,7 @@ jacoco {
 gretty {
     // supported values:
     // 'jetty7', 'jetty8', 'jetty9', 'jetty9.3', 'jetty9.4', 'tomcat7', 'tomcat8'
-    servletContainer = 'tomcat9'
+    servletContainer = 'tomcat11'
     contextPath = ''
     httpPort = 80
     httpsEnabled = true
@@ -431,7 +441,7 @@ gretty {
     reloadOnClassChange = false
     debugSuspend = false
 
-    extraResourceBase 'src/webjet8/webapp'
+    //extraResourceBase 'src/webjet8/webapp'
 
     //JVM parametre
     jvmArgs = [
@@ -574,9 +584,9 @@ task writePom() {
                 if (verA[i].equals("+")) verA[i] = "0"
                 if (verB[i].equals("+")) verB[i] = "0"
                 def numA = 0;
-                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC1", "").replace("-RC2", "").replace("-RC3", "").toInteger(); } catch (Exception ex) {}
+                try { numA = verA[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
                 def numB = 0;
-                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC1", "").replace("-RC2", "").replace("-RC3", "").toInteger(); } catch (Exception ex) {}
+                try { numB = verB[i].replace("-SNAPSHOT", "").replace("-RC", "").toInteger(); } catch (Exception ex) {}
 
                 if (numA != numB) {
                     return numA <=> numB
@@ -664,6 +674,12 @@ task writePom() {
                 println "----> removing: "+artifactName
                 i.remove();
             }
+
+            //remove stripes, it is integrated with our changes in libs jar
+            if ("stripes".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
         }
 
         // zapis pom subor
@@ -678,4 +694,11 @@ task writePom() {
 
         delete files("build/pom.xml")
     }
+}
+
+tasks.withType(JavaCompile) {
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
+    //needed for Spring
+    options.compilerArgs += ['-parameters']
 }

@@ -22,18 +22,18 @@ Before(({ I, login }) => {
 });
 
 function verifyForm(formName, text, I, DT, DTE) {
-    I.amOnPage("/apps/form/admin/#/detail/"+formName);
+    I.amOnPage("/apps/form/admin/detail/?formName="+formName);
     DT.waitForLoader();
     DT.filterContains("col_meno-a-priezvisko", text);
     I.see("Záznamy 1 až 1", ".dt-info");
-    I.see(fileNameSanitized, "#form-detail td.cell-not-editable a");
+    I.see(fileNameSanitized, "#formDetailDataTable td.cell-not-editable a");
 
-    DT.addContext("form", "#form-detail_wrapper");
+    DT.addContext("form", "#formDetailDataTable_wrapper");
     I.click(DT.btn.form_select_all_button);
     I.click(DT.btn.form_delete_button);
-    DTE.waitForEditor("form-detail");
-    DTE.save("form-detail");
-    DTE.waitForModalClose("form-detail_modal");
+    DTE.waitForEditor("formDetailDataTable");
+    DTE.save("formDetailDataTable");
+    DTE.waitForModalClose("formDetailDataTable_modal");
 }
 
 function submitForm(I, DT, DTE) {

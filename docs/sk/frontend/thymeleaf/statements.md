@@ -50,6 +50,7 @@ alebo priamo ako text:
     data-th-title="\#{admin.top.webjet_version} + ${' '+layout.version}"
 >
 ```
+
 okrem toho je možné použiť aj [Literal substitutions](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#literal-substitutions):
 
 ```html
@@ -57,7 +58,7 @@ okrem toho je možné použiť aj [Literal substitutions](https://www.thymeleaf.
 ```
 
 !>**Upozornenie:** ak vám vyhodí chybu typu: ```Could not parse as expression: "aitem--open md-large-menu"```, je to kvôli ```__```. To je špeciálna značka pre [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing)
-a je potrebne to escapovať ako \\\\_, príklad:
+a je potrebne to escapovať ako `\\\\_`, príklad:
 
 ```html
 <div data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'">

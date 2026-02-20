@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping(value = "/admin/rest/groups/tree")
@@ -73,6 +73,10 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
 
         String click = getRequest().getParameter("click");
         if (click!=null && click.contains("dt-tree-group")) showPages = false;
+
+        //do not show pages for tree search because they dont have proper parent set
+        String treeSearchValue = getRequest().getParameter("treeSearchValue");
+        if (Tools.isNotEmpty(treeSearchValue)) showPages = false;
 
         List<JsTreeItem> items = new ArrayList<>();
 

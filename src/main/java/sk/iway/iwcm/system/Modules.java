@@ -23,6 +23,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.blog.rest.BloggerService;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -109,7 +110,7 @@ public class Modules
 		modVersions.put("cmp_adresar", "I;ec1"); //WebJET adresar - 1990
 		modVersions.put("cmp_attributes", "E;1c9"); //WebJET Attributes - 9990
 		modVersions.put("cmp_auction", "EI;1b2"); //WebJET Aukcie - 1990
-		modVersions.put("cmp_banner", "EC;26d"); //WebJET Banner Manager - 5900
+		modVersions.put("cmp_banner", "ECM;26d"); //WebJET Banner Manager - 5900
 		modVersions.put("cmp_basket", "ECMI;943"); //WebJET Shopping Basket - 3900
 		modVersions.put("cmp_bazar", "PEI;bf5"); //WebJET Bazzar - 3900
 		modVersions.put("cmp_blog", "EIM;3cd"); //WebJET Blog - 4900
@@ -167,7 +168,7 @@ public class Modules
 		modVersions.put("cmp_organization", "I;ae3");
 		modVersions.put("cmp_page_reactions", "EI;af2");
         modVersions.put("cmp_page_update_info", "EI;c52"); //-------WebJET Page Update Info - 1990
-		modVersions.put("cmp_pocasie", "PECI;7c8"); //WebJET pocasie - 1990
+		modVersions.put("cmp_pocasie", "PECIM;7c8"); //WebJET pocasie - 1990
 		modVersions.put("cmp_popup", "BPECI;111"); //WebJET Popup - v cene
 		modVersions.put("cmp_profesia", "PEI;d4d"); //WebJET Profesia - 1990
 		modVersions.put("cmp_proxy", "ECI;52c"); //WebJET Proxy - 2990
@@ -192,7 +193,7 @@ public class Modules
 		modVersions.put("cmp_slider", "PEIM;8a6");
 		modVersions.put("cmp_sms", "EI;8cf"); //WebJET SMS Sender - 2900
 		modVersions.put("cmp_stat", "PECIM;f49"); //WebJET Statistics - 9990 Sk
-		modVersions.put("cmp_structuremirroring", "E;a42"); //WebJET structuremirroring
+		modVersions.put("cmp_mirroring", "E;a42"); //WebJET structuremirroring
 		modVersions.put("cmp_sync", "PEI;ce2"); //WebJET SyncDir - 2990
 		modVersions.put("cmp_tips", "PECI;9d5"); //WebJET Tips - 900
 		modVersions.put("cmp_tooltip", "E;371"); //WebJET Tooltip - 900
@@ -202,7 +203,7 @@ public class Modules
 		modVersions.put("cmp_wiki", "EI;1c4"); //Wiki
 		modVersions.put("cmp_xml", "PEI;bf0");
 		modVersions.put("cmp_captcha", "PECI;a3c"); //zoznam slov pre captchu
-		modVersions.put("cmp_ai_tools", "PEI;109"); //zoznam slov pre AI tools
+		modVersions.put("cmp_ai_tools", "PEIM;109"); //zoznam slov pre AI tools
 
 		//modVersions.put("menuUsers", "PECDIO;f20"); //WebJET Multi-User Access - 2990 Sk, WebJET Protected Section-4990
 		modVersions.put("menuSync", "PEI;f36"); //WebJET Synchronization - 12900
@@ -1247,6 +1248,13 @@ public class Modules
 				if (user.isDisabledItem(mi.getItemKey()) && (mi.getSubmenus(user)==null || mi.getSubmenus(user).size()<1))
 				{
 					continue;
+				}
+
+				//blog has special checks
+				if ("cmp_blog".equals(mi.getItemKey()))
+				{
+					//check also defined blog groups, if there is any
+					if (BloggerService.isUserBloggerOrBloggerAdmin(user)==false) continue;
 				}
 
 				//Logger.debug(this,"Pridavam: " + mi.getItemKey());

@@ -27,9 +27,13 @@ async function initializeSwaggerUI() {
   //console.debug('CSRF token:', window.csrfToken);
   // the following lines will be replaced by docker/configurator, when it runs in a docker-container
   window.ui = SwaggerUIBundle({
-    url: "/v2/api-docs",
+    url: "/admin/rest/openapi/api-docs",
     dom_id: '#swagger-ui',
     deepLinking: true,
+    // Show the OpenAPI operationId (typically the method name) in the UI for easier reference.
+    displayOperationId: true,
+    // Enable the search/filter box in Swagger UI to quickly find specific operations.
+    filter: true,
     presets: [
       SwaggerUIBundle.presets.apis,
       SwaggerUIStandalonePreset

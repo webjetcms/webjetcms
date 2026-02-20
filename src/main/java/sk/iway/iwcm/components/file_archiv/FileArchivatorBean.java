@@ -4,16 +4,14 @@ import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.json.JSONObject;
@@ -82,7 +80,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	private String fileName;
 
 	@Column(name="date_insert")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.file_archiv.date_insert",
@@ -97,7 +95,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	private Date dateInsert;
 
 	@Column(name="valid_from")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="inquiry.valid_since",
@@ -106,7 +104,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	private Date validFrom;
 
 	@Column(name="valid_to")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="inquiry.valid_till",
@@ -234,7 +232,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	private String note;
 
 	@Column(name="date_upload_later")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         tab = "basic",

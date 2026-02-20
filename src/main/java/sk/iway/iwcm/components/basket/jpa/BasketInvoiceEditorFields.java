@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.basket.jpa;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
-import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 @Getter
@@ -71,14 +71,8 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
 			)
 		}
     )
-    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String body;
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
-    private String orderRecapHead;
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
-    private String orderRecapBody;
 
     //AUTH TOKEN  - for getting iframe of invoice_email.jsp
     @DataTableColumn(visible = false, hidden = true, hiddenEditor = true)

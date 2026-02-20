@@ -544,9 +544,12 @@ export class WebPagesDatatable {
                 });
                 $("#DTE_Field_urlInheritGroup_0").on("change", function() { self.#showHideUrlAddress("urlInheritGroup"); });
                 $("#DTE_Field_generateUrlFromTitle_0").on("change", function() { self.#showHideUrlAddress("generateUrlFromTitle"); });
+
+                $("#DTE_Field_editorFields-publishAfterStart_0").on("change", function() { self.#publishAfterStartChanged(); });
             }
 
             self.#showHideUrlAddress();
+            self.#publishAfterStartChanged();
         });
         this.webpagesDatatable.EDITOR.on('open', function (e, mode, action) {
             //console.log("Open, e=", e, "mode=", mode, "action=", action);
@@ -663,6 +666,21 @@ export class WebPagesDatatable {
             this.webpagesDatatable.EDITOR.field("virtualPath").show();
             this.webpagesDatatable.EDITOR.field("editorVirtualPath").hide();
             $("#DTE_Field_virtualPath").attr("disabled", "disabled");
+        }
+    }
+
+    #publishAfterStartChanged() {
+        var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
+        var primaryButton= $("#" + this.webpagesDatatable.DATA.id + "_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary");
+        //set editor submit button to save or plan according to checkbox state
+        var currentHtml = primaryButton.html();
+        //only change when is is save or schedule, it also can be delete or duplicate
+        if (currentHtml.indexOf(WJ.translate("button.schedule"))>=0 || currentHtml.indexOf(WJ.translate('button.save'))>=0) {
+            if (publishAfterStart === true) {
+                primaryButton.html('<i class="ti ti-calendar-check"></i> ' + WJ.translate("button.schedule"));
+            } else {
+                primaryButton.html('<i class="ti ti-check"></i> ' + WJ.translate('button.save'));
+            }
         }
     }
 

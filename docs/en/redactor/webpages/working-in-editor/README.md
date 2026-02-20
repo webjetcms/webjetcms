@@ -44,7 +44,7 @@ The predefined headings are always applied to the entire paragraph. To create a 
 
 There should always be only one main Heading 1 on each web page, which should start the text. Since this heading is automatically generated from the page title by default on the page (if the template defines it that way), there is no need to insert it into the body of the page. Sections within the page are separated by Heading 2, their sub-sections by Heading 3, etc.
 
-There are other predefined styles in this menu, but their use is based on their name, for example styles containing the text "table" are used only for tables and so on. Clicking into any page text in the editor will automatically set the style used at that cursor position in the Style field. The currently applied style is indicated by an arrow in the left-hand drop-down menu.
+There are other predefined styles in this menu, but their use is based on their name, for example styles containing the text "table" are used only for tables and so on. Clicking into any page text in the editor will automatically set the style used at that cursor position in the Style field. The currently applied style is highlighted by underlining its name. Re-selecting an already set style will remove that style. For more information, see [manuals for Web Designer](../../../frontend/examples/template-bare/README.md#list-of-styles-for-editor).
 
 If you want to change the style of such text within a paragraph, you must not tag the text. Just click into the text on the page, the color style will be automatically pre-set in the drop-down menu **Style** and then you can change it to another style.
 
@@ -280,3 +280,9 @@ There may be times when you need to type characters that the Slovak keyboard doe
 When you click on the desired character, the character will be typed at the cursor position. Special characters are inserted as text, so they have no additional settings.
 
 !> Note: the icon for inserting special characters may be changed to an icon in some cases ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") for insertion [FontAwesome](../../../frontend/webpages/fontawesome/README.md) Images.
+
+## Page content change detection
+
+The page editor contains a mechanism that detects changes to the content of the page. When you click the Cancel button to close the window while changes have been made to the page content, you will see a dialog box warning you that no changes have been saved. Click OK to close the window without saving the changes; click Cancel to return to the page editor.
+
+When the page is opened in the editor, the current page content is retrieved after 5 seconds (so that all scripts and application previews can be loaded) and this is then compared with the current content when the Cancel button is clicked. That is, the correct detection works after 5 seconds of opening the page in the editor.

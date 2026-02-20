@@ -12,8 +12,9 @@ Anotace se používá jako `DataTableColumnType.DATATABLE`, přičemž je třeba
 - `data-dt-field-dt-url` - URL adresa REST služby, může obsahovat makra pro vložení hodnoty z rodičovského editoru, např.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
 - `data-dt-field-dt-columns` - jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md) Např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
 - `data-dt-field-dt-columns-customize` - jméno JavaScript funkce, která může být použita k úpravě`columns` objektu, například `removeEditorFields`. Funkce musí být dostupná přímo ve `windows` objektu, jak parametr dostane`columns` objekt a očekává se, že jej vrátí upravený. Příklad `function removeEditorFields(columns) { return columsn; }`.
-- `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
-- `data-dt-field-dt-localJson` - aktivuje režim, který pracuje s lokálním JSON objektem. Používá se primárně pro aplikace ve web stránce pro evidenci položek aplikace (např. položky slide show), které se navíc automaticky kódují do řetězce vhodného do `PageParams` objektu a jsou kódovaném v `Base64`.
+- `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. Pokud není zadáno, automaticky se získá podle anotace `@DataTableTabs` zadané třídy.
+- `data-dt-field-dt-localJson` - aktivuje režim, který pracuje s lokálním JSON objektem. Používá se primárně pro aplikace ve web stránce pro evidenci položek aplikace (např. položky slide show), které se navíc automaticky kódují do řetězce vhodného do `PageParams` objektu a jsou kódovaném v `Base64`. Pokud existuje funkce `window.datatableLocalJsonUpdate = function(val, conf)` zavolá se na volitelnou úpravu dat.
+- `data-dt-field-dt-autoload` - pokud máte tabulku v první kartě nastavte na `true` pro její automatické načtení při otevření okna, jinak se tabulka inicializuje až při kliknutí na kartu ve které se nachází.
 
 Kompletní příklad anotace:
 
@@ -96,7 +97,7 @@ public class ImpressSlideshowItem {
 
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-datatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastaveno jako `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
+Implementace je v souboru [field-type-datatable.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastaveno jako `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
 
 Funkce `resizeDatatable` se používá pro výpočet velikosti datatabulky (aby scrolovaly jen řádky), přepočet je volán při inicializaci pole, intervalem každých 20 sekund (pro jistotu), při změně velikosti okna a při kliknutí na tab v editoru. Přepočet se provede jen když je pole viditelné.
 

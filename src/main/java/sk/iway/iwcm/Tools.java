@@ -38,11 +38,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -449,7 +449,7 @@ public class Tools
 	 * @param url
 	 * @return
 	 */
-	public static String downloadUrl(String url, javax.servlet.http.Cookie [] cookies)
+	public static String downloadUrl(String url, jakarta.servlet.http.Cookie [] cookies)
 	{
 		return(downloadUrl(url, SetCharacterEncodingFilter.getEncoding(), cookies));
 	}
@@ -461,7 +461,7 @@ public class Tools
 	 * @param cookies cookies ktore sa maju pouzit pri requeste
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies)
 	{
 		return downloadUrl( url,  defaultEncoding,  cookies,0);
 	}
@@ -474,7 +474,7 @@ public class Tools
 	 * @param timeOutSeconds cas v sekundach po uplynuti ktorych sa spojenie prerusi.
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies,int timeOutSeconds)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies,int timeOutSeconds)
 	{
 		return downloadUrl( url,  defaultEncoding,  cookies, timeOutSeconds, null);
 	}
@@ -488,7 +488,7 @@ public class Tools
 	 * @param headers dodatocne hlavicky ktore chceme requestu pridat
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies,int timeOutSeconds, Map<String, String> headers)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies,int timeOutSeconds, Map<String, String> headers)
 	{
 		String body = null;
 		if (url.startsWith("http://") || url.startsWith("https://"))
@@ -523,7 +523,7 @@ public class Tools
 				}*/
 				if(cookies != null)
 				{
-					for (javax.servlet.http.Cookie cookie : cookies) {
+					for (jakarta.servlet.http.Cookie cookie : cookies) {
 					    conn.addRequestProperty("Cookie", cookie.getName() + "=" + cookie.getValue());
 					}
 				}
@@ -1368,7 +1368,7 @@ public class Tools
 	 * @param defaultValue
 	 * @return
 	 */
-	public static String getCookieValue(javax.servlet.http.Cookie[] cookies, String name, String defaultValue)
+	public static String getCookieValue(jakarta.servlet.http.Cookie[] cookies, String name, String defaultValue)
 	{
 		if (cookies == null) return defaultValue;
 
@@ -2589,7 +2589,7 @@ public class Tools
 	}
 
 
-	public static boolean addCookie(javax.servlet.http.Cookie cookie, HttpServletResponse response, HttpServletRequest request)
+	public static boolean addCookie(jakarta.servlet.http.Cookie cookie, HttpServletResponse response, HttpServletRequest request)
 	{
 
 		if (response == null || cookie == null || request == null)
@@ -2625,7 +2625,7 @@ public class Tools
 		}
 	}
 
-	public static boolean canSetCookie(String classification, javax.servlet.http.Cookie[] cookies)
+	public static boolean canSetCookie(String classification, jakarta.servlet.http.Cookie[] cookies)
 	{
 		if (Constants.getBoolean("gdprAllowAllCookies")) return true;
 
@@ -2657,7 +2657,7 @@ public class Tools
 	 * @param actualCookies
 	 * @return
 	 */
-	private static boolean canSetAnyCookie(javax.servlet.http.Cookie[] actualCookies)
+	private static boolean canSetAnyCookie(jakarta.servlet.http.Cookie[] actualCookies)
 	{
 		if(actualCookies == null || Tools.isEmpty(Constants.getString("disableCookiesCookieName")) || Tools.isEmpty(Constants.getString("disableCookiesCookieValue")) )
 			return true;
@@ -3319,6 +3319,21 @@ public class Tools
 
 		Matcher m = pattern.matcher(source);
 		return m.replaceAll(newStr);
+	}
+
+	/**
+	 * Replace all occurrences of regex pattern in source StringBuilder with newStr, eg:
+	 * content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+	 * @param source
+	 * @param regexPattern
+	 * @param newStr
+	 * @param isCaseInsensitive
+	 * @return
+	 */
+	public static StringBuilder replaceRegex(StringBuilder source, String regexPattern, String newStr, boolean isCaseInsensitive) {
+		if(source == null) return null;
+
+		return new StringBuilder( replaceRegex(source.toString(), regexPattern, newStr, isCaseInsensitive) );
 	}
 
 	/*
