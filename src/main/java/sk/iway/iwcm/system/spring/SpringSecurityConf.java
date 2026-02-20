@@ -5,13 +5,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicSuccessHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +38,24 @@ public class SpringSecurityConf {
 		Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
 		http.authenticationProvider(new WebjetAuthentificationProvider());
 
+		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
+		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
+		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
+			basicAuthEnabled = true;
+			http.httpBasic(customizer -> {});
+		}
+
+		// OAuth2 login podpora
+		if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
+			http.oauth2Login(oauth2 -> {
+				oauth2.clientRegistrationRepository(clientRegistrationRepository());
+				oauth2.authorizedClientService(authorizedClientService());
+				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
+			});
+		}
+
 		// Disable headers and CSRF as per original config
 		http.headers(headers -> {
 			headers.xssProtection(xss -> xss.disable());
@@ -39,15 +67,6 @@ public class SpringSecurityConf {
 
 		// configure security from BaseSpringConfig
 		configureSecurity(http, "sk.iway.iwcm.system.spring.BaseSpringConfig");
-
-		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
-		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
-		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
-			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
-			basicAuthEnabled = true;
-			http.httpBasic(customizer -> {});
-		}
-
 
 		if (Tools.isNotEmpty(Constants.getInstallName()))
 		{
@@ -107,5 +126,85 @@ public class SpringSecurityConf {
 	public static boolean isBasicAuthEnabled()
 	{
 		return basicAuthEnabled;
+	}
+
+	@Bean
+	public ClientRegistrationRepository clientRegistrationRepository() {
+		List<String> clients = List.of(Tools.getTokens(Constants.getString("oauth2_clients"), ","));
+		List<ClientRegistration> registrations = clients.stream()
+				.map(this::buildClientRegistration)
+				.filter(registration -> registration != null)
+				.collect(Collectors.toList());
+		// Ak je zoznam prázdny, vráť anonymnú implementáciu ClientRegistrationRepository namiesto InMemoryClientRegistrationRepository
+		if (registrations.isEmpty()) {
+			return new ClientRegistrationRepository() {
+				@Override
+				public ClientRegistration findByRegistrationId(String registrationId) {
+					return null;
+				}
+			};
+		}
+		return new InMemoryClientRegistrationRepository(registrations);
+	}
+
+	private ClientRegistration buildClientRegistration(String providerId) {
+		String clientId = Constants.getString("oauth2_" + providerId + "ClientId");
+		String clientSecret = Constants.getString("oauth2_" + providerId + "ClientSecret");
+		if (Tools.isAnyEmpty(clientId, clientSecret)) return null;
+		// Preddefinovaní poskytovatelia
+		if ("google".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GOOGLE.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("facebook".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.FACEBOOK.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("github".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GITHUB.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("okta".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.OKTA.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		// Ostatní poskytovatelia - načítaj všetky potrebné parametre
+		String authorizationUri = Constants.getString("oauth2_" + providerId + "AuthorizationUri");
+		String tokenUri = Constants.getString("oauth2_" + providerId + "TokenUri");
+		String userInfoUri = Constants.getString("oauth2_" + providerId + "UserInfoUri");
+		String jwkSetUri = Constants.getString("oauth2_" + providerId + "JwkSetUri");
+		String issuerUri = Constants.getString("oauth2_" + providerId + "IssuerUri");
+		String userNameAttributeName = Constants.getString("oauth2_" + providerId + "UserNameAttributeName", "email");
+		String scopesStr = Constants.getString("oauth2_" + providerId + "Scopes", "openid,profile,email");
+		String clientName = Constants.getString("oauth2_" + providerId + "ClientName", providerId);
+		if (Tools.isAnyEmpty(authorizationUri, tokenUri, userInfoUri, jwkSetUri, issuerUri)) return null;
+		return ClientRegistration.withRegistrationId(providerId)
+				.clientId(clientId)
+				.clientSecret(clientSecret)
+				.scope(scopesStr.split(","))
+				.authorizationUri(authorizationUri)
+				.tokenUri(tokenUri)
+				.userInfoUri(userInfoUri)
+				.userNameAttributeName(userNameAttributeName)
+				.jwkSetUri(jwkSetUri)
+				.issuerUri(issuerUri)
+				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+				.clientName(clientName)
+				.authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+				.build();
+	}
+
+	@Bean
+	public OAuth2AuthorizedClientService authorizedClientService() {
+		return new InMemoryOAuth2AuthorizedClientService(
+				clientRegistrationRepository());
 	}
 }

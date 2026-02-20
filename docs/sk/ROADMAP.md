@@ -22,6 +22,7 @@ Vysvetlenie použitých piktogramov:
 - Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
 - Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 - Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie.
+- Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pro `select` pole.
 
 ## 2025
 
