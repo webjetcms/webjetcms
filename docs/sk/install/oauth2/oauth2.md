@@ -1,6 +1,6 @@
 # OAuth2 Autentifikácia v WebJET CMS
 
-WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov prostredníctvom externých poskytovateľov ako sú Google, Facebook, GitHub, Keycloak a ďalších.
+WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov prostredníctvom externých poskytovateľov ako sú Google, Facebook, GitHub, Keycloak a ďalších. Konfigurácia sa číta pri inicializácii WebJET CMS, po zmene hodnôt alebo prvotnom nastavení je potrebné reštartovať aplikačný server.
 
 ## Konfigurácia
 

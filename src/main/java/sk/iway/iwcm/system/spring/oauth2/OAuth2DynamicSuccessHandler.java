@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.spring.oauth2;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -23,16 +22,8 @@ public class OAuth2DynamicSuccessHandler implements AuthenticationSuccessHandler
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
-        HttpSession session = request.getSession(false);
-        boolean isAdminLogin = false;
-
-        // Kontrola explicitného OAuth2 atribútu nastaveného v admin/user logon stránke
-        if (session != null) {
-            Boolean isAdminSection = (Boolean) session.getAttribute("oauth2_is_admin_section");
-            isAdminLogin = (isAdminSection != null && isAdminSection);
-            // Po použití odstráň atribút
-            session.removeAttribute("oauth2_is_admin_section");
-        }
+        // Použije helper na zistenie typu prihlásenia a vyčistí session atribút
+        boolean isAdminLogin = OAuth2LoginHelper.isAdminLoginAndClear(request);
 
         Logger.info(OAuth2DynamicSuccessHandler.class, "OAuth2 login detected - isAdminLogin: " + isAdminLogin);
 

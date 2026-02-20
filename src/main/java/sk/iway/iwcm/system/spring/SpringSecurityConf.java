@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicErrorHandler;
 import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicSuccessHandler;
 
 import java.util.List;
@@ -53,6 +54,7 @@ public class SpringSecurityConf {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
 				oauth2.authorizedClientService(authorizedClientService());
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
+				oauth2.failureHandler(new OAuth2DynamicErrorHandler());
 			});
 		}
 
