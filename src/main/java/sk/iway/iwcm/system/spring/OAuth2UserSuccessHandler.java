@@ -37,6 +37,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             if (principal instanceof OAuth2User) {
                 oauth2User = (OAuth2User) principal;
+                logOAuth2Attributes(oauth2User);
                 email = oauth2User.getAttribute(EMAIL_ATTRIBUTE);
             }
 

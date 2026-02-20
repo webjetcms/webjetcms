@@ -297,6 +297,32 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
+     * Zaloguje všetky atribúty z OAuth2 tokenu ako JSON pre diagnostiku
+     */
+    protected void logOAuth2Attributes(OAuth2User oauth2User) {
+        if (oauth2User == null) return;
+        try {
+            Map<String, Object> attributes = oauth2User.getAttributes();
+            StringBuilder sb = new StringBuilder();
+            sb.append("OAuth2 token attributes: {\n");
+            for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+                sb.append("  \"").append(entry.getKey()).append("\": ");
+                Object value = entry.getValue();
+                if (value instanceof String) {
+                    sb.append("\"").append(value).append("\"");
+                } else {
+                    sb.append(value);
+                }
+                sb.append(",\n");
+            }
+            sb.append("}");
+            Logger.debug(this.getClass(), sb.toString());
+        } catch (Exception ex) {
+            Logger.error(this.getClass(), "Error logging OAuth2 attributes", ex);
+        }
+    }
+
+    /**
      * Pomocná metóda na spracovanie chyby - nastaví chybu do session a vykoná redirect
      */
     protected void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, String redirectUrl) throws IOException {
