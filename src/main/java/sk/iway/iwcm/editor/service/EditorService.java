@@ -1662,14 +1662,10 @@ public class EditorService {
 		//To check permissions and approve for this action before publishing recover event
 		checkPermissions(currentUser, docDetailsToRecover, true);
 
-		//Publish recover event after successful permission check
-		(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
-
 		//Find last actual (if posible) history id (so we know wehre to recover page)
 		Integer historyId = null;
 		Optional<Integer> historyIdOpt = historyRepo.findMaxHistoryId(recoverDocId, true); //(actual history id)
-		if(historyIdOpt.isPresent())
-			historyId = historyIdOpt.get();
+		if(historyIdOpt.isPresent()) historyId = historyIdOpt.get();
 		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
 
 		if(historyId == null) {
@@ -1695,6 +1691,10 @@ public class EditorService {
 			approveService.loadApproveTables(destGroup.getGroupId());
 			if(approveService.needApprove() == false || approveService.isSelfApproved()) {
 				//Have right
+
+				//Publish recover event after successful permission check
+				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+
 				docDetailsToRecover.setGroupId(destGroup.getGroupId());
 				docDetailsToRecover.setAvailable(true);
 				docRepo.save(docDetailsToRecover);

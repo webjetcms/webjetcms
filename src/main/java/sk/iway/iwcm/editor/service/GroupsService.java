@@ -68,8 +68,8 @@ public class GroupsService extends NotifyService {
 			return false;
 		}
 
+		//publish before recover event
 		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
-
 
 		int parentGroupId = 0;
 		String parentGroupPath = prop.getText("stat_settings.group_id");
@@ -149,6 +149,8 @@ public class GroupsService extends NotifyService {
 
 		// Get newly recovered group
 		group = GroupsDB.getInstance().getGroup(group.getGroupId());
+
+		//publish recover event
 		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER)).publishEvent();
 
         return true;
