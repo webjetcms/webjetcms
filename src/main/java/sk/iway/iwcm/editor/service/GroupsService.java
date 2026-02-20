@@ -58,8 +58,6 @@ public class GroupsService extends NotifyService {
 
 		if (isInTrash(group) == false) return false; //Group is not in trash
 
-		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
-
 		//Get group by id + chec perms
 		GroupsDB groupsDB = GroupsDB.getInstance();
 
@@ -69,6 +67,9 @@ public class GroupsService extends NotifyService {
 			addNotify(info);
 			return false;
 		}
+
+		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
+
 
 		int parentGroupId = 0;
 		String parentGroupPath = prop.getText("stat_settings.group_id");

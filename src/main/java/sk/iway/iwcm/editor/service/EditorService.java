@@ -1659,10 +1659,11 @@ public class EditorService {
 		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
 		DocDetails docDetailsToRecover = docDetailsOpt.get();
 
-		(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
-
-		//To check perms and approve for this action
+		//To check permissions and approve for this action before publishing recover event
 		checkPermissions(currentUser, docDetailsToRecover, true);
+
+		//Publish recover event after successful permission check
+		(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
 
 		//Find last actual (if posible) history id (so we know wehre to recover page)
 		Integer historyId = null;

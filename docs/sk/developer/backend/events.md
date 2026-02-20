@@ -18,8 +18,8 @@ Pre štandardné operácie sú typy udalostí implementované v `enum` triede `W
 - `AFTER_DELETE` - vyvolaná po zmazaní objektu
 - `ON_XHR_FILE_UPLOAD` - vyvolaná po nahratí súboru cez URL adresu `/XhrFileUpload`
 - `ON_END` - vyvolané na konci metódy, používa sa v prípade keď sa nevykonáva uloženie (čiže nevyvolá sa `AFTER_SAVE`), ale len nejaká akcia
-- `ON_RECOVER` - vyvolané na začiatku metódy, v procese obnovy stránky alebo adresára, máte prístup k obnovovanému objektu
-- `AFTER_RECOVER` - vyvolané po obnovení stránky alebo adresára, máte prístup k už obnovenému objektu stránky alebo adresára
+- `ON_RECOVER` - vyvolané na začiatku metódy v procese obnovy webovej stránky alebo priečinka z koša. Máte prístup k obnovovanému objektu.
+- `AFTER_RECOVER` - vyvolané po obnovení webovej stránky alebo priečinka z koša. Máte prístup k už obnovenému objektu.
 
 ## Aktuálne publikované udalosti
 
@@ -30,6 +30,7 @@ Aktuálne WebJET publikuje nasledovné udalosti:
 - Web stránky - uloženie a zmazanie adresára - publikovaný je objekt `GroupDetails` pred aj po uložení pri volaní `GroupsDB.setGroup` a `GroupsDB.deleteGroup`, ktoré by sa malo používať na štandardné operácie s adresárom web stránky. Podmienka: `#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'`.
 - Web stránky - zobrazenie web stránky na frontende - publikovaný je objekt `ShowDocBean` po získaní `DocDetails` objektu (udalosť `ON_START`) a pred smerovaním na JSP šablónu je publikovaná udalosť `ON_END`. Pri `ON_START` je možné nastaviť atribút `forceShowDoc` na `DocDetails` objekt, ktorý sa použije pre zobrazenie stránky, atribút `doc` je zatiaľ prázdny. Nastavený je len `docId`. Pri udalosti `ON_END` je v atribúte `doc` zobrazený `DocDetails` objekt. Podmienka: `#event.clazz eq 'sk.iway.iwcm.doc.ShowDocBean'`.
 - Web stránky - pri časovom publikovaní stránky - publikovaný je objekt `DocumentPublishEvent`, ktorý obsahuje `DocDetails` publikovanej web stránky a atribút `oldVirtualPath` s informáciou o pôvodnej URL adrese stránky (pre detekciu, či sa pri publikovaní zmenila). Podmienka `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, udalosť `ON_PUBLISH`.
+- Web stránky - na začiatku procesu obnovy webovej stránky alebo priečinka z koša je publikovaná udalosť `ON_RECOVER`, ktorá obsahuje obnovovaný objekt. Po dokončení obnovy je publikovaná udalosť `AFTER_RECOVER`, ktorá obsahuje obnovený objekt stránky alebo priečinka. Pri obnovení priečinka sa publikuje udalosť iba pre daný priečinok, nepublikujú sa jednotlivé udalosti pre pod-priečinky a webové stránky nachádzajúce sa v tomto priečinku.
 - Konfigurácia - vytvorenie a zmena konfiguračnej premennej - publikovaný je objekt `ConfDetails` po uložení hodnoty cez používateľské rozhranie volaním `ConfDB.setName`, podmienka: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
 - Nahratie súboru - publikovaný je objekt `File` ako `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, podmienka: `#event.clazz eq 'java.io.File'`.
 - Aktualizácia kódov v texte - publikovaný je objekt `UpdateCodesEvent` po spracovaní štandardných kódov v metóde `DocTools.updateCodes`, umožňuje pridať vlastné kódy. Podmienka: `#event.clazz eq 'sk.iway.iwcm.system.spring.events.UpdateCodesEvent'`, udalosť `ON_START` aj `ON_END` pre možnosť nahradenia kódov pred WebJET spracovaním aj po spracovaní.
