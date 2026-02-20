@@ -164,6 +164,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             notify.addButton(new NotifyButton(getProp().getText("menu.logout"), "btn btn-primary", "ti ti-logout", "window.location.href=$('.js-logout-toggler').attr('href')"));
             addNotify(notify);
         }
+
+        // Remove user from cache
+        UsersDB.removeUserFromCache(entity.getId().intValue());
     }
 
     @Override
@@ -215,17 +218,23 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         if ("remove".equals(target.getAction())) return;
 
-		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword()))
-		{
-			//vygeneruj heslo
-			entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));
-		}
+		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword())) {
+			// generate password
+			entity.setPassword(generateUserPassword());
+        }
 
         Prop prop = Prop.getInstance(request);
 
         //Import setting
         if(isImporting()) {
-            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);
+            if(Tools.isEmpty(entity.getPassword())) {
+                if(entity.getId() == null || entity.getId() < 1L) {
+                    // generate password for new users
+			        entity.setPassword(generateUserPassword());
+                } else {
+                    entity.setPassword(UserTools.PASS_UNCHANGED);
+                }
+            }
 
             if (entity.getEditorFields()==null) {
                 UserDetailsEditorFields udef = new UserDetailsEditorFields();
@@ -242,6 +251,8 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
             //By default not admin
             if(entity.getAdmin() == null) entity.setAdmin(false);
+            //authorize user if not set from import
+            if (entity.getAuthorized() == null) entity.setAuthorized(true);
         }
 
         boolean allowWeakPassword = false;
@@ -385,5 +396,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         entity.setRegDate(new Date(Tools.getNow()));
         entity.setLastLogonAsDate(null);
         super.beforeDuplicate(entity);
+    }
+
+    private final String generateUserPassword() {
+        return Password.generateStringHash(5) + Password.generatePassword(5);
     }
 }

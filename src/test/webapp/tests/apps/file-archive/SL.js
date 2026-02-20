@@ -241,7 +241,7 @@ module.exports = {
     checkOrderIds(values) {
         I.say("checkOrderIds, values=" + values);
         values.forEach((value, index) => {
-            DT.checkTableCell("fileArchiveDataTable", index + 1, 12, value);
+            DT.checkTableCell("fileArchiveDataTable", index + 1, 13, value);
         });
     },
 

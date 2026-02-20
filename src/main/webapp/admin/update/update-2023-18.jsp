@@ -533,6 +533,11 @@ static {
 	replaces.add(new OptionDto(".getFileItem().getSize()", ".getSize()", ".jsp,.java"));
 	replaces.add(new OptionDto(".getFileItem().getName()", ".getOriginalFilename()", ".jsp,.java"));
 	replaces.add(new OptionDto("@{"+"$"+"{request.getAttribute('ninja').page.urlPath}(\\_\\_forceParse=1,\\_\\_setf=1)}", "$"+"{"+"request.getAttribute('ninja').page.urlPath}", ".html"));
+
+	// form_attributes to form_settings logic
+	replaces.add(new OptionDto("import=\"sk.iway.iwcm.form.FormAttributeDB\"", "import=\"sk.iway.iwcm.components.form_settings.rest.FormSettingsService\"", null));
+	replaces.add(new OptionDto("FormAttributeDB", "FormSettingsService", null));
+	replaces.add(new OptionDto("new FormSettingsService().", "FormSettingsService.", null));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

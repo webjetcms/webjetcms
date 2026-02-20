@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.upload;
 
-import sk.iway.iwcm.system.spring.components.SpringContext;
-
+import sk.iway.iwcm.Tools;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -94,6 +93,6 @@ public class XhrFileUploadServlet extends HttpServlet
 	 * @return - XhrFileUploadService
 	 */
 	public static XhrFileUploadService getService() {
-		return SpringContext.getApplicationContext().getBean("xhrFileUploadService", XhrFileUploadService.class);
+		return Tools.getSpringBean("xhrFileUploadService", XhrFileUploadService.class);
 	}
 }

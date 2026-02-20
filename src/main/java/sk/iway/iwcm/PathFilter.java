@@ -23,6 +23,7 @@ import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -82,7 +83,7 @@ public class PathFilter implements Filter
 	public void init(FilterConfig filterConfig) throws ServletException
 	{
 		//tu nemozeme pouzivat logger pretoze toto sa vola skor ako zbehne InitServlet
-		Logger.info(PathFilter.class, "PathFilter init");
+		SpringAppInitializer.dtDiff("PathFilter init");
 		try
 		{
 			//inicializuj password protected
@@ -98,6 +99,7 @@ public class PathFilter implements Filter
 		{
 			sk.iway.iwcm.Logger.error(e);
 		}
+		SpringAppInitializer.dtDiff("PathFilter init done");
 	}
 
 	public static void registerDynamicForward(String name, DynamicForward dynamicForward)
@@ -2420,6 +2422,10 @@ public class PathFilter implements Filter
 		if ("&nbsp;".equals(value)) value = " ";
 
 		//Logger.debug(SetCharacterEncodingFilter.class, "Setting header "+headerName+":"+value);
+
+		//replace cr/lf to allow user split Content-Security-Policy values into multiple lines, as header does not allow cr/lf
+		value = Tools.replace(value, "\r", " ");
+		value = Tools.replace(value, "\n", " ");
 
 		response.setHeader(headerName, value);
 	}

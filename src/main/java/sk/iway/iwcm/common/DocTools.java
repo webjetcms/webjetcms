@@ -20,6 +20,8 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -123,6 +125,7 @@ public class DocTools {
      */
     public static String removeChars(String ret, boolean lowerCase)
     {
+        if (ret == null) return null;
         //odstran HTML kod
         if (ret.indexOf("<")!=-1 && ret.indexOf(">")!=-1 && (ret.indexOf("/")!=-1 || ret.indexOf("-")!=-1))
         {
@@ -467,6 +470,11 @@ public class DocTools {
     {
         try
         {
+            //Allow custom code processing via event
+            UpdateCodesEvent event = new UpdateCodesEvent(text, user, currentDocId, request);
+            (new WebjetEvent<UpdateCodesEvent>(event, WebjetEventType.ON_START)).publishEvent();
+            text = event.getText();
+
             String docTitle = (String) request.getAttribute("doc_title");
             if (docTitle == null)
             {
@@ -698,6 +706,11 @@ public class DocTools {
             }
 
             text = updateUserCodes(user, text);
+
+            //Allow custom code processing via event
+            event = new UpdateCodesEvent(text, user, currentDocId, request);
+            (new WebjetEvent<UpdateCodesEvent>(event, WebjetEventType.ON_END)).publishEvent();
+            text = event.getText();
         }
         catch (Exception ex)
         {

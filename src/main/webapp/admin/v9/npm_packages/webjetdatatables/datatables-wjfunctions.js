@@ -594,7 +594,7 @@ export function stateSaveCallback(settings,data) {
  * @returns
  */
 export function stateLoadCallback(settings) {
-    if ("form-detail"==settings.sInstance || "component-datatable"==settings.sInstance) return null;
+    if ("formDetailDataTable"==settings.sInstance || "component-datatable"==settings.sInstance) return null;
 
     let key = getStateSaveKey(settings);
     let data = JSON.parse( localStorage.getItem( key ) );
@@ -1151,15 +1151,15 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         if ($(this).hasClass("dt-format-number") || $(this).hasClass("dt-format-percentage")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="number">';
             html = `
-            <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="min filter-input form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max filter-input form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-number--decimal") || $(this).hasClass("dt-format-percentage--decimal") || $(this).hasClass("dt-format-number--text")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="number-decimal">';
             html = `
-            <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-date") || $(this).hasClass("dt-format-date-time") || $(this).hasClass("dt-format-date--text")
@@ -1184,8 +1184,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
 
 
             html = `
-            <input class="${dateFormat} min form-control form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="${dateFormat} max form-control form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="${dateFormat} min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="${dateFormat} max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-none")) {

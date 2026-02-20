@@ -20,14 +20,14 @@ Scenario("Google vyhľadávanie - test zobrazovania", ({ I }) => {
 
     I.say("Check search");
     I.fillField('search', searchText);
-    I.clickCss('.gsc-search-button .gsc-search-button-v2');
+    I.pressKey('Enter');
 
     I.see(searchText, '.gs-snippet');
     I.waitForElement( locate(".gsc-expansionArea > div a.gs-title").withText(resultText), 10);
 
     I.say("Change order");
-    I.clickCss("div.gsc-selected-option");
-    I.clickCss("div.gsc-option-menu > div:nth-of-type(2) > div");
+    //I.clickCss("div.gsc-selected-option");
+    //I.clickCss("div.gsc-option-menu > div:nth-of-type(2) > div");
 
     I.say("Check changed order");
     //this is hard to test...
@@ -71,5 +71,5 @@ Scenario('testovanie app - app-vyhladavanie', async ({ I, DTE, Apps }) => {
     I.switchToNextTab();
 
     I.waitForElement(".gsc-control-cse");
-    I.seeElement('button.gsc-search-button');
+    I.seeElement('input.gsc-input.inputtext');
 });

@@ -728,6 +728,11 @@ function initClosure() {
     // =======================
     window.addEventListener('beforeunload', (event) => {
         try {
+            // Nezobraziť varovanie pre image-editor iFrame
+            if (window.location.pathname.indexOf('/apps/image-editor') >= 0) {
+                return;
+            }
+
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
             if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");
@@ -802,6 +807,37 @@ window.WJ.DataTable.mergeColumns = function (columns, obj) {
         console.error("Objekt s name: " + obj.name + ", nenajdeny");
     }
 };
+
+/**
+ * Move column name after column sortAfter
+ * @param {*} columns - list of columns
+ * @param {*} name - column name to sort
+ * @param {*} sortAfter - column name after which insert the column
+ */
+window.WJ.DataTable.moveColumn = function (columns, name, sortAfter) {
+
+    var col = null;
+    var newColumns = [];
+    //find column to insert
+    $.each(columns, function (i, v) {
+        if (v.name === name) {
+            col = v;
+            return true;
+        }
+    });
+    //create new columns array with column inserted after sortAfter
+    $.each(columns, function (i, v) {
+        if (v.name === name) {
+            return true;
+        }
+        newColumns.push(v);
+        if (v.name === sortAfter && col !== null) {
+            newColumns.push(col);
+            col = null;
+        }
+    });
+    return newColumns;
+}
 
 function fire(el, type, props = {}) {
   let ev;

@@ -13,6 +13,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Tools;
 
 
 /**
@@ -39,6 +40,7 @@ public class BeanDiff
 	private List<String> blacklist;
 	private boolean whitelistOn = false;
 	private boolean blacklistOn = false;
+	private boolean skipEmpty = false;
 
 	public Map<String, PropertyDiff> diff()
 	{
@@ -72,6 +74,21 @@ public class BeanDiff
 
 					if (!originalValue.equals(newValue) || original == null)
 					{
+						if (skipEmpty) {
+							String sOriginalValue = originalValue.toString();
+							String sNewValue = newValue.toString();
+							//skip if both values are empty
+							if (Tools.isEmpty(sOriginalValue) && Tools.isEmpty(sNewValue)) {
+								continue;
+							}
+							//skip also -1 values for new entity
+							if (original == null) {
+								if (Tools.isEmpty(sNewValue) || sNewValue.equals("-1") || sNewValue.equals("NULL")) {
+									continue;
+								}
+							}
+						}
+
 						PropertyDiff diff = new PropertyDiff();
 						diff.valueBefore = originalValue;
 						diff.valueAfter = newValue;
@@ -95,6 +112,19 @@ public class BeanDiff
 	public BeanDiff setNew(Object newBean)
 	{
 		this.actual = newBean;
+		return this;
+	}
+
+	public Object getOriginal() {
+		return original;
+	}
+
+	public Object getActual() {
+		return actual;
+	}
+
+	public BeanDiff skipEmpty() {
+		this.skipEmpty = true;
 		return this;
 	}
 
@@ -139,4 +169,7 @@ public class BeanDiff
 		return original != null;
 	}
 
+	public String getNewClassName() {
+		return actual.getClass().getName();
+	}
 }

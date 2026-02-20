@@ -7,6 +7,7 @@
 set -e
 
 echo "WARNING: CHECK VERSION IN build.xml"
+echo "RUN AS ./deploy.sh 2>&1 | tee deploy.log to save log"
 date
 ant waitForConfirm
 

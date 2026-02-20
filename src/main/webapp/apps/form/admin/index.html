@@ -1,94 +1,191 @@
 <script data-th-inline="javascript">
-    window.formRestUrl = "/admin/rest/forms-list";
-</script>
+    let url = "/admin/rest/forms-list";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
+    const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];
+    const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
+    const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
+    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 
-<div id="forms-list-app">
-    <router-view></router-view>
-</div>
+    var tabs = [
+        { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
+        { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
+        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false }
+    ];
+</script>
 
 <script type="text/javascript">
+    var formsDataTable;
 
-    function openFormHtml(id) {
-        //add print button
-        if ($("#modalPrintButton").length == 0) {
-            const printButton = document.createElement('button');
-            printButton.id = 'modalPrintButton';
-            printButton.className = 'btn btn-outline-secondary';
-            printButton.innerHTML = WJ.translate("button.print");
-            printButton.onclick = function() {
-                $("#modalIframeIframeElement")[0].contentWindow.print();
-            };
-            $('#modalIframe .modal-footer').prepend(printButton);
-        }
-        WJ.openIframeModal({
-            url: window.formRestUrl+"/html/?id="+id,
-            width: 800,
-            height: 600,
-            closeButtonPosition: 'close-button-over empty-header',
-            buttonTitleKey: 'button.confirm',
-            okclick: function() {
-                WJ.closeIframeModal();
+    WJ.breadcrumb({
+        id: "forms",
+        tabs: [
+            {
+                url: "/apps/form/admin/",
+                title: WJ.translate("forms.formsList.js"),
+                active: true
             }
-        });
-    }
-
-    window.domReady.add(function () {
-        //const name = window.location.hash.split('/').pop() || null;
-        //if (name) document.getElementById('pills-form-detail-tab').innerHTML = name;
-
-        let vueFormsApp = window.VueTools.createApp({
-            components: {
-
-            }
-        });
-
-        /* preklady pre vue */
-        vueFormsApp.config.globalProperties.$id = '[[#{datatables.id.js}]]';
-        vueFormsApp.config.globalProperties.$formName = '[[#{formslist.nazov_formularu}]]';
-        vueFormsApp.config.globalProperties.$count = '[[#{formslist.pocet_zaznamov}]]';
-        vueFormsApp.config.globalProperties.$lastSendDate = '[[#{formslist.datum_posledneho}]]';
-        vueFormsApp.config.globalProperties.$lastExportDate = '[[#{formlist.export.lastExportDate}]]';
-        vueFormsApp.config.globalProperties.$doubleOptinConfirmationDate = '[[#{formslist.doubleOptInDate}]]';
-        vueFormsApp.config.globalProperties.$btnListOfForms = '[[#{components.forms.label.list_of_forms}]]';
-        vueFormsApp.config.globalProperties.$createDate = '[[#{formslist.createDate}]]';
-        vueFormsApp.config.globalProperties.$note  = '[[#{formslist.note}]]';
-        vueFormsApp.config.globalProperties.$files = '[[#{formslist.attachments}]]';
-        vueFormsApp.config.globalProperties.$tools = '[[#{formslist.tools}]]';
-        vueFormsApp.config.globalProperties.$preview = '[[#{editor.preview}]]';
-
-        //taby
-        vueFormsApp.config.globalProperties.$tabMetadata = '[[#{components.forms.detail.tab.metadata}]]';
-        vueFormsApp.config.globalProperties.$tabFields = '[[#{components.forms.detail.tab.fields}]]';
-        vueFormsApp.config.globalProperties.$tabUser = '[[#{components.forms.detail.tab.user}]]';
-
-        //user
-        vueFormsApp.config.globalProperties.$userId = '[[#{components.users.groups_approve.user_id}]]';
-        vueFormsApp.config.globalProperties.$userFirstName = '[[#{user.firstName}]]';
-        vueFormsApp.config.globalProperties.$userLastName = '[[#{user.lastName}]]';
-        vueFormsApp.config.globalProperties.$userLogin = '[[#{user.login}]]';
-        vueFormsApp.config.globalProperties.$userCompany = '[[#{user.company}]]';
-        vueFormsApp.config.globalProperties.$userAdress = '[[#{user.address}]]';
-        vueFormsApp.config.globalProperties.$userCity = '[[#{user.city}]]';
-        vueFormsApp.config.globalProperties.$userZip = '[[#{user.ZIP}]]';
-        vueFormsApp.config.globalProperties.$userCountry = '[[#{user.country}]]';
-        vueFormsApp.config.globalProperties.$userEmail = '[[#{user.email}]]';
-        vueFormsApp.config.globalProperties.$userAddress = '[[#{user.phone}]]';
-        vueFormsApp.config.globalProperties.$userFieldA = '[[#{user.fieldA}]]';
-        vueFormsApp.config.globalProperties.$userFieldB = '[[#{user.fieldB}]]';
-        vueFormsApp.config.globalProperties.$userFieldC = '[[#{user.fieldC}]]';
-        vueFormsApp.config.globalProperties.$userFieldD = '[[#{user.fieldD}]]';
-        vueFormsApp.config.globalProperties.$userFieldE = '[[#{user.fieldE}]]';
-
-        //prava
-        vueFormsApp.config.globalProperties.$permsDeniedTitle = '[[#{admin.operationPermissionDenied}]]';
-        vueFormsApp.config.globalProperties.$permsDeniedText = '[[#{components.forms.permsDeniedNote}]]';
-
-        //archivuj
-        vueFormsApp.config.globalProperties.$archiveForm = '[[#{components.form.admin_forms.archivuj_formular}]]';
-
-        vueFormsApp.use(window.VueTools.getRouter());
-        vueFormsApp.mount("#forms-list-app");
-
+        ]
     });
 
+    window.openFormHtml = function (formName) {
+        if(formName == undefined || formName == null) return;
+        window.location.href="/apps/form/admin/detail/?formName="+ formName;
+    };
+
+    let filteredColumns = [];
+    columns.forEach(function(column) {
+        if(formColumnsToKeep.includes(column.data)) filteredColumns.push(column);
+        else if(column.data.startsWith("formSettings.")) {
+
+            column.hidden = true;
+            if(basicSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-basic"; }
+            else if(emailSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-email"; }
+            else if(advancedSettingColumns.includes(column.data.substring("formSettings.".length)) === true) { column.editor.tab = "settings-advanced"; }
+            else { column.editor.tab = "basic"; } // Just in case, put it into basic tab
+
+            filteredColumns.push(column);
+        }
+    });
+
+    window.WJ.DataTable.mergeColumns(filteredColumns, { name: "createDate", title: '[[#{formslist.datum_posledneho}]]' });
+    window.WJ.DataTable.mergeColumns(filteredColumns, {
+        name: "formName",
+        className: "required cell-not-editable",
+        renderFormatLinkTemplate: "javascript:openFormHtml('{{formName}}');",
+        renderFormatPrefix: '<i class="ti ti-eye"></i> '
+    });
+
+    filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+    let columnsFetchPromise = Promise.resolve();
+
+    var editorWasInitialized = false;
+    window.domReady.add(function () {
+        // !! hide form steps tab link !! - show only in form detail view
+        $("a.nav-link[href='/apps/form/admin/form-steps/']").hide();
+
+        var order = [];
+        order.push([4, 'desc']);
+
+        function initformsDataTable() {
+            formsDataTable = WJ.DataTable({
+                url:  url,
+                columns: filteredColumns,
+                id: 'formsDataTable',
+                serverSide: false,
+                tabs: tabs,
+                order: order,
+                idAutoOpener: true,
+                lastExportColumnName: 'lastExportDate',
+                byIdExportColumnName: 'id',
+                fetchOnEdit: true,
+                fetchOnCreate: true
+            });
+            formsDataTable.hideButtons(['celledit', 'duplicate', 'import']);
+
+            formsDataTable.button().add(4, {
+                extends: 'remove',
+                text: '<i class="ti ti-archive"></i>',
+                action: function (e, dt, node) {
+                    //console.log("Rotate, e=",e," dt=",dt," node=",node);
+                    formsDataTable.executeAction("archiveForm");
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    'title': '[[#{components.form.admin_forms.archivuj_formular}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            formsDataTable.EDITOR.on('open', function (e, type, action) {
+                initEditor();
+
+                let formType = formsDataTable.EDITOR.field('formType').get();
+
+                if("simple" === formType) {
+                    let headlines = $("#panel-body-dt-formsDataTable-settings-advanced .row-headline");
+                    if(headlines && headlines.length > 0) { $(headlines[headlines.length - 1]).hide(); }
+                } else {
+                    let headlines = $("#panel-body-dt-formsDataTable-settings-advanced .row-headline");
+                    if(headlines && headlines.length > 0) { $(headlines[headlines.length - 1]).show(); }
+                }
+
+                filteredColumns.forEach(function(column) {
+                    if("formSettings.id" === column.data || "formSettings.savedb" === column.data) { return; }
+                    if("formSettings.formName" === column.data) {
+                        //This column is used to join to forms, we do not fill it manually
+                        formsDataTable.EDITOR.field(column.data).hide();
+                        return;
+                    }
+
+                    if(column.data.startsWith("formSettings.")) {
+                        let className = column.className;
+                        if(className) {
+                            let classNames = className.split(" ");
+
+                            if(formType === "multistep" && classNames.includes("not-multistep")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else if(formType === "simple" && classNames.includes("not-formsimple")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else if(formType === "basic" && classNames.includes("not-form")) {
+                                formsDataTable.EDITOR.field(column.data).hide();
+                            } else {
+                                formsDataTable.EDITOR.field(column.data).show();
+                            }
+                        }
+                    }
+                });
+
+                if("multistep" === formType) {
+                    formsDataTable.EDITOR.field('formSettings.formProcessor').show();
+                    formsDataTable.EDITOR.field('formSettings.afterSendInterceptor').hide();
+                } else {
+                    formsDataTable.EDITOR.field('formSettings.formProcessor').hide();
+                    formsDataTable.EDITOR.field('formSettings.afterSendInterceptor').show();
+                }
+
+                if("create" === action) {
+                    formsDataTable.EDITOR.field("formName").enable();
+                    formsDataTable.EDITOR.field("formType").disable();
+                    formsDataTable.EDITOR.field("count").hide();
+                    formsDataTable.EDITOR.field("createDate").hide();
+                    $(".DTE_Action_Create").find(".modal-title").text("[[#{editor.form_setting.add_multistep_form}]]");
+                } else {
+                    formsDataTable.EDITOR.field("formName").disable();
+                    formsDataTable.EDITOR.field("formType").enable();
+                    formsDataTable.EDITOR.field("count").show();
+                    formsDataTable.EDITOR.field("createDate").show();
+                }
+            });
+
+            function initEditor() {
+                if(editorWasInitialized === false) {
+                    editorWasInitialized = true;
+                    //Show hide file name field based on checkbox
+                    $("#DTE_Field_formSettings-messageAsAttach_0").on("change", function() {
+                        if($(this).is(":checked")) {
+                            $("div.DTE_Field_Name_formSettings\\.messageAsAttachFileName").show();
+                        } else {
+                            $("div.DTE_Field_Name_formSettings\\.messageAsAttachFileName").hide();
+                        }
+                    });
+                }
+            }
+        }
+
+        //Initialize after potential dynamic column fetch
+        columnsFetchPromise.finally(() => initformsDataTable());
+
+    });
 </script>
+
+<style type="text/css">
+    #pills-dt-formsDataTable-basic {
+        min-height: 400px;
+    }
+</style>
+
+<table id="formsDataTable" class="datatableInit table"></table>

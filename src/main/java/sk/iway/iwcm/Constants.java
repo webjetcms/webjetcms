@@ -1285,7 +1285,7 @@ public class Constants {
 		setString("metadataRemoverCommand", "", "editor;files;gallery",
 				"Ak je nastavene aktivuje sa odstranovanie metadat z uploadovanych suborov, alebo sa pouzije imageMagick na zmensenie velkosti - nastavte na /usr/bin/convert");
 		setString("metadataRemoverParams", "{filePath}", "editor;files;gallery",
-				"Parametre metadata removera, pre zmensenie obrazka cez imageMagick nastavte na {filePath} -resize 1920x1080 {filePath}");
+				"Parametre metadata removera, pre zmensenie obrazka cez imageMagick nastavte na {filePath} -resize 1920x1080 {filePath}, alebo {filePath} -strip -quality 92 -interlace Plane -sampling-factor 4:2:0 {filePath} pre odstranenie metadat a znizenie velkosti suboru");
 		setString("metadataRemoverExtensions", "jpg,jpeg,png,gif", "editor;files;gallery",
 				"Povolene pripony, z ktorych sa budu odstranovat metadata.");
 

@@ -231,7 +231,7 @@ if (query!=null && query.trim().length()>0)
 
 	for(String colName : columnNames){
 	%>
-	<display:column title="<%=colName%>" escapeXml="true" sortable="true"><%=trow.get(colName)%></display:column>
+	<display:column title="<%=colName%>" escapeXml="false" sortable="true"><%=trow.get(colName)%></display:column>
 	<%} %>
  		<display:setProperty name="export.excel.filename" value="results.xls" />
 		<display:setProperty name="export.csv.filename" value="results.csv" />

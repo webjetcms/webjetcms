@@ -365,7 +365,7 @@ public class EditorService {
 		}
 
 		/*Odoslanie schvalovani a notifikacii*/
-		approveService.sendEmails(editedDoc, historyId);
+		approveService.sendEmails(editedDoc, historyId, docRepo);
 		dt.diff("after sendApproveNotifyEmail");
 
 		if(isNewPage || wasApproved || disableHistory) {
@@ -1417,7 +1417,7 @@ public class EditorService {
 	 * @return
 	 */
 	public boolean approveAction() {
-		return approveService.approveAction(historyRepo, this);
+		return approveService.approveAction(historyRepo, docRepo, this);
 	}
 
 	/**
@@ -1587,7 +1587,7 @@ public class EditorService {
 
 			//!! BUG FIX - If page is stil waiting to be approven (as inserted)
 			//If approver try delete this page it's gonna be ok, BUT in this (non approver) case actualPublishedHistoryId is empty
-			if(!actualPublishedHistoryIdOpt.isPresent()) return "Something went wrong. Page probably isn't exist.";
+			if(!actualPublishedHistoryIdOpt.isPresent()) return prop.getText("doc.approve.can_delete_non_approved_doc");
 			int actualPublishedHistoryId  = actualPublishedHistoryIdOpt.get();
 
 			//vypne zapisovanie zaznamov do documents_history tabulky. true - nezapise zaznam do documents_history

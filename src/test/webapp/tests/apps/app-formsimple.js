@@ -19,7 +19,7 @@ Before(({ I, DT, login }) => {
     DT.addContext("simpleformItems", "#datatableFieldDTE_Field_editorData_wrapper");
 });
 
-Scenario("Form simple - check defautl values on empty page", async ({ I, DT, DTE, Apps }) => {
+Scenario("Form simple - check default values on empty page", async ({ I, DT, DTE, Apps }) => {
     I.amOnPage(`/admin/v9/webpages/web-pages-list/?groupid=${formSimpleFolder}`);
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
@@ -31,11 +31,11 @@ Scenario("Form simple - check defautl values on empty page", async ({ I, DT, DTE
     I.say("Check default values");
         // We set page name BUT because page is new, BE set default formName and subject
         I.assertContain(await I.grabValueFrom("#DTE_Field_formName"), applicationName);
-        I.assertContain(await I.grabValueFrom("#DTE_Field_attribute_recipients"), "tester@balat.sk");
-        I.dontSeeCheckboxIsChecked("#DTE_Field_attribute_forceTextPlain_0");
-        I.seeCheckboxIsChecked("#DTE_Field_attribute_addTechInfo_0");
+        I.assertContain(await I.grabValueFrom("#DTE_Field_formSettings-recipients"), "tester@balat.sk");
+        I.dontSeeCheckboxIsChecked("#DTE_Field_formSettings-forceTextPlain_0");
+        I.seeCheckboxIsChecked("#DTE_Field_formSettings-addTechInfo_0");
         I.clickCss("#pills-dt-component-datatable-advanced-tab");
-        I.assertEqual(await I.grabValueFrom("#DTE_Field_attribute_forwardType"), "");
+        I.assertEqual(await I.grabValueFrom("#DTE_Field_formSettings-forwardType"), "");
 });
 
 Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
@@ -49,16 +49,16 @@ Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
 
     I.say("Prepare app for insert - tab basic");
         I.fillField("#DTE_Field_formName", newPageName);
-        I.fillField("#DTE_Field_attribute_emailTextBefore", "email text before");
-        I.uncheckOption("#DTE_Field_attribute_forceTextPlain_0");
+        I.fillField("#DTE_Field_formSettings-emailTextBefore", "email text before");
+        I.uncheckOption("#DTE_Field_formSettings-forceTextPlain_0");
 
     I.say("Prepare app for insert - tab advanced");
         I.clickCss("#pills-dt-component-datatable-advanced-tab");
-        I.fillField("#DTE_Field_attribute_subject", newPageName);
-        I.fillField("#DTE_Field_attribute_ccEmails", "tester@balat.sk");
-        I.fillField(locate(".DTE_Field_Name_attribute_forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
+        I.fillField("#DTE_Field_formSettings-subject", newPageName);
+        I.fillField("#DTE_Field_formSettings-ccEmails", "tester@balat.sk");
+        I.fillField(locate(".DTE_Field_Name_formSettings\\.forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
 
-        I.click( locate("#editorAppDTE_Field_attribute_useFormMailDocId").find("button.btn-vue-jstree-item-edit") );
+        I.click( locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-vue-jstree-item-edit") );
         I.waitForVisible("#jsTree");
         I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
         I.click( locate(".jstree-anchor").withText('Jet portal 4 - testovacia stranka') );
@@ -70,7 +70,7 @@ Scenario("Form simple - test insert process", async ({ I, DT, DTE, Apps }) => {
 
     savingApp(I);
 
-    await checkPageParams(Apps, newPageName, "false", "JTVCJTVE");
+    await checkPageParams(Apps, newPageName, "JTVCJTVE");
 
     I.say("Check, other params aer not there");
         Apps.switchEditor('html');
@@ -88,23 +88,23 @@ Scenario("Form simple - test update process", async ({ I, DT, DTE, Apps }) => {
 
     I.say("Check and edit values - basic tab");
         I.seeInField("#DTE_Field_formName", newPageName);
-        I.seeInField("#DTE_Field_attribute_recipients", "tester@balat.sk");
-        I.seeInField("#DTE_Field_attribute_emailTextBefore", "email text before");
-        I.dontSeeCheckboxIsChecked("#DTE_Field_attribute_forceTextPlain_0");
-        I.seeCheckboxIsChecked("#DTE_Field_attribute_addTechInfo_0");
+        I.seeInField("#DTE_Field_formSettings-recipients", "tester@balat.sk");
+        I.seeInField("#DTE_Field_formSettings-emailTextBefore", "email text before");
+        I.dontSeeCheckboxIsChecked("#DTE_Field_formSettings-forceTextPlain_0");
+        I.seeCheckboxIsChecked("#DTE_Field_formSettings-addTechInfo_0");
 
         I.fillField("#DTE_Field_formName", newPageName + "_changed");
-        I.fillField("#DTE_Field_attribute_emailTextBefore", "email text before - changed");
-        I.fillField("#DTE_Field_attribute_emailTextAfter", "email text agter");
-        I.uncheckOption("#DTE_Field_attribute_addTechInfo_0");
+        I.fillField("#DTE_Field_formSettings-emailTextBefore", "email text before - changed");
+        I.fillField("#DTE_Field_formSettings-emailTextAfter", "email text agter");
+        I.uncheckOption("#DTE_Field_formSettings-addTechInfo_0");
 
     I.say("Check and edit values - advanced tab");
         I.clickCss("#pills-dt-component-datatable-advanced-tab");
-        I.seeInField("#DTE_Field_attribute_ccEmails", "tester@balat.sk");
-        I.seeInField("#DTE_Field_attribute_subject", newPageName);
-        I.seeInField(locate(".DTE_Field_Name_attribute_forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
-        I.seeInField(locate("#editorAppDTE_Field_attribute_useFormMailDocId").find("input.form-control"), "/Jet portal 4/Jet portal 4 - testovacia stranka");
-        I.click(locate("#editorAppDTE_Field_attribute_useFormMailDocId").find("button.btn-vue-jstree-item-remove"));
+        I.seeInField("#DTE_Field_formSettings-ccEmails", "tester@balat.sk");
+        I.seeInField("#DTE_Field_formSettings-subject", newPageName);
+        I.seeInField(locate(".DTE_Field_Name_formSettings\\.forward").find("input.form-control"), "/images/gallery/chrysanthemum.jpg");
+        I.seeInField(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("input.form-control"), "/Jet portal 4/Jet portal 4 - testovacia stranka");
+        I.click(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("button.btn-vue-jstree-item-remove"));
 
     I.say("Check and edit values - items tab");
     I.say("Check its empty - leave it empty");
@@ -113,15 +113,15 @@ Scenario("Form simple - test update process", async ({ I, DT, DTE, Apps }) => {
 
     savingApp(I);
 
-    await checkPageParams(Apps, newPageName + "_changed", "false", "JTVCJTVE");
+    await checkPageParams(Apps, newPageName + "_changed", "JTVCJTVE");
 
     I.say('Check, that changed values are saved');
         Apps.openCurrentAppEditor("component-datatable_modal", false);
         I.seeInField("#DTE_Field_formName", newPageName + "_changed");
-        I.seeInField("#DTE_Field_attribute_emailTextBefore", "email text before - changed");
-        I.dontSeeCheckboxIsChecked("#DTE_Field_attribute_addTechInfo_0");
+        I.seeInField("#DTE_Field_formSettings-emailTextBefore", "email text before - changed");
+        I.dontSeeCheckboxIsChecked("#DTE_Field_formSettings-addTechInfo_0");
         I.clickCss("#pills-dt-component-datatable-advanced-tab");
-        I.dontSeeInField(locate("#editorAppDTE_Field_attribute_useFormMailDocId").find("input.form-control"), "/Jet portal 4/Jet portal 4 - testovacia stranka");
+        I.dontSeeInField(locate("#editorAppDTE_Field_formSettings-useFormMailDoc").find("input.form-control"), "/Jet portal 4/Jet portal 4 - testovacia stranka");
         I.switchTo();
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_cancel');
@@ -185,7 +185,7 @@ Scenario("Form simple - test items inner table", async ({ I, DT, DTE, Apps }) =>
 
     savingApp(I);
 
-    await checkPageParams(Apps, newPageName + "_changed", "false", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMmFkcmVzYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJ0cnVlJTVELCUyMmxhYmVsJTIyOiUyMiUzQ3AlM0VMYWJlbCUyMGZpZWxkJTNDL3AlM0UlMjIsJTIydmFsdWUlMjI6JTIyVmFsdWUlMjBmaWVsZCUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjJQbGFjZWhvbGRlciUyMGZpZWxkJTIyLCUyMnRvb2x0aXAlMjI6JTIyJTNDcCUzRVRoaXMlMjBpcyUyMHRvb2x0aXAlM0MvcCUzRSUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIybWVkemVyYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIyY2FwdGNoYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCU1RA==");
+    await checkPageParams(Apps, newPageName + "_changed", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMmFkcmVzYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJ0cnVlJTVELCUyMmxhYmVsJTIyOiUyMiUzQ3AlM0VMYWJlbCUyMGZpZWxkJTNDL3AlM0UlMjIsJTIydmFsdWUlMjI6JTIyVmFsdWUlMjBmaWVsZCUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjJQbGFjZWhvbGRlciUyMGZpZWxkJTIyLCUyMnRvb2x0aXAlMjI6JTIyJTNDcCUzRVRoaXMlMjBpcyUyMHRvb2x0aXAlM0MvcCUzRSUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIybWVkemVyYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIyY2FwdGNoYSUyMiwlMjJyZXF1aXJlZCUyMjolNUJmYWxzZSU1RCwlMjJsYWJlbCUyMjolMjIlMjIsJTIydmFsdWUlMjI6JTIyJTIyLCUyMnBsYWNlaG9sZGVyJTIyOiUyMiUyMiwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCU1RA==");
 
     I.say('Save page');
         DTE.save();
@@ -208,7 +208,7 @@ Scenario("Form simple - test items inner table 2", async ({ I, DT, DTE, Apps }) 
 
     savingApp(I);
 
-    await checkPageParams(Apps, newPageName + "_changed", "false", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMm1lZHplcmElMjIsJTIycmVxdWlyZWQlMjI6JTVCZmFsc2UlNUQsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnZhbHVlJTIyOiUyMiUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjIlMjIsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QsJTdCJTIyZmllbGRUeXBlJTIyOiUyMmNhcHRjaGElMjIsJTIycmVxdWlyZWQlMjI6JTVCZmFsc2UlNUQsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnZhbHVlJTIyOiUyMiUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjIlMjIsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QlNUQ=");
+    await checkPageParams(Apps, newPageName + "_changed", "JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMm1lZHplcmElMjIsJTIycmVxdWlyZWQlMjI6JTVCZmFsc2UlNUQsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnZhbHVlJTIyOiUyMiUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjIlMjIsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QsJTdCJTIyZmllbGRUeXBlJTIyOiUyMmNhcHRjaGElMjIsJTIycmVxdWlyZWQlMjI6JTVCZmFsc2UlNUQsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnZhbHVlJTIyOiUyMiUyMiwlMjJwbGFjZWhvbGRlciUyMjolMjIlMjIsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QlNUQ=");
 
     DTE.cancel();
 });
@@ -222,10 +222,9 @@ Scenario("Remove page", ({ I, DT, DTE }) => {
     DTE.waitForLoader();
 });
 
-async function checkPageParams(Apps, formName, rowView, editorData) {
+async function checkPageParams(Apps, formName, editorData) {
     const params = {
         formName: formName,
-        rowView: rowView,
         editorData: editorData
     };
 

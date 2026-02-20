@@ -1,0 +1,37 @@
+<link rel="stylesheet" type="text/css" href="/components/_common/cleditor/jquery.cleditor.css" />
+<script type="text/javascript" src="/components/_common/javascript/jquery.browser.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.js"></script>
+<script type="text/javascript" src="/components/_common/cleditor/jquery.cleditor.icon.js"></script>
+
+<!-- Wrapper will be appended inside div.container by the JS module -->
+
+<div data-th-id="${'multistep-form-wrapper-'+csrf}"></div>
+
+<script th:inline="javascript">
+    //CLEDITOR init
+    $.cleditor.messages = []
+    $.cleditor.messages['selection_required'] = /*[[#{components.cleditor.messages.selection_required}]]*/ "";
+    $.cleditor.messages['cutcopypaste'] = /*[[#{components.cleditor.messages.cutcopypaste_disabled_by_browser}]]*/ "";
+    $.cleditor.messages['urlenter'] = /*[[#{components.cleditor.messages.urlenter}]]*/ "";
+    $.cleditor.messages['submit'] = /*[[#{components.cleditor.messages.submit}]]*/ "";
+    $.cleditor.messages['pastetext'] = /*[[#{components.cleditor.messages.pastetext}]]*/ "";
+
+    $.cleditor.title = []
+    $.cleditor.title['bold'] = /*[[#{components.cleditor.title.bold}]]*/ "";
+</script>
+
+<script type="module" th:inline="javascript">
+    import { MultistepForm } from '/apps/form/mvc/multistep-form.js';
+
+    new MultistepForm(
+        {
+            container: 'body > article > div.container',
+            formName: /*[[${formName}]]*/ "",
+            stepId: /*[[${stepId}]]*/ "",
+            csrf: /*[[${csrf}]]*/ "",
+            // Localized messages passed from server
+            successMessage: /*[[#{multistep_form.form_save_succ}]]*/ "",
+            errorMessage: /*[[#{multistep_form.step_saving_err}]]*/ ""
+        }
+    ).start();
+</script>

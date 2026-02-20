@@ -32,7 +32,13 @@ PageParams pp = new PageParams(request);
             $(".wjdropzone").each(function() {
 
                 var element = $(this);
-                //console.log(element);
+
+                var initialized = element.attr("data-dropzone-initialized");;
+                if (initialized == "true") {
+                    //console.log("Dropzone already initialized for this element, skipping.");
+                    return;
+                }
+                element.attr("data-dropzone-initialized", "true");
 
                 var dzmaxfiles = element.data("dzmaxfiles") || 25;
                 //console.log("dzmaxfiles="+dzmaxfiles);

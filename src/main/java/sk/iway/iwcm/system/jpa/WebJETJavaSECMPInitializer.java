@@ -253,6 +253,7 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
                 "sk.iway.iwcm.system.cache",
                 "sk.iway.iwcm.system.captcha",
                 "sk.iway.iwcm.system.jpa",
+                "sk.iway.iwcm.system.jpaconverters",
                 "sk.iway.iwcm.system.msg",
                 "sk.iway.iwcm.users",
                 "sk.iway.spirit.model"

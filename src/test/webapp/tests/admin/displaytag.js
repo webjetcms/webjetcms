@@ -13,7 +13,7 @@ Scenario('DisplayTag sorting', ({ I, DT }) => {
     I.see("A/B testovanie", "table.sort_table");
     DT.checkTableRow("m", 1, ["A/B testovanie", "webjet_cmp_abtesting"]);
     I.click("Modul", "#m thead th a");
-    DT.checkTableRow("m", 1, ["Zrkadlenie štruktúry", "webjet_cmp_structuremirroring"]);
+    DT.checkTableRow("m", 1, ["Zrkadlenie", "webjet_cmp_mirroring"]);
 });
 
 function exportFile(name, type, I) {

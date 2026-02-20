@@ -110,6 +110,9 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, BasketInvoicePaymentEntity> target, Identity currentUser, Errors errors, Long id, BasketInvoicePaymentEntity entity) {
+        if(Tools.isEmpty( entity.getPaymentMethod()) )
+                errors.rejectValue("errorField.paymentMethod", "", getProp().getText("components.payment_methods.must_be_selected_err"));
+
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             boolean saveAsRefund = false;
             if(entity.getEditorFields() != null)
