@@ -43,19 +43,19 @@ int historyId = Tools.getIntValue(Tools.getRequestParameter(request, "historyid"
 WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);
 request.setAttribute(BuffTag.IS_BUFF_TAG, "true");
 request.getRequestDispatcher("/showdoc.do?docid="+docId+"&historyid=-1&NO_WJTOOLBAR=true"+("true".equals(Tools.getRequestParameter(request, "onlyBody")) ? "&forwarddoccompare=true" : "")).include(request, respWrapper);
-String htmlCodeNew = respWrapper.strWriter.getBuffer().toString();
-if (respWrapper.redirectURL!=null)
+String htmlCodeNew = respWrapper.getStrWriterAsString();
+if (respWrapper.getRedirectURL()!=null)
 {
-	htmlCodeNew = "Redirected to: "+respWrapper.redirectURL;
+	htmlCodeNew = "Redirected to: "+respWrapper.getRedirectURL();
 }
 htmlCodeNew = Tools.replace(htmlCodeNew, "&nbsp;", " "); //jeeff: pridane, lebo do WJ sme pridali editorSingleCharNbsp a potom to hlasilo nezmyselne rozdiely (tvrdu medzeru nevidno)
 
 respWrapper = new WJResponseWrapper(response,request);
 request.getRequestDispatcher("/showdoc.do?docid="+docId+"&historyid="+historyId+"&NO_WJTOOLBAR=true"+("true".equals(Tools.getRequestParameter(request, "onlyBody")) ? "&forwarddoccompare=true" : "")).include(request, respWrapper);
-String htmlCodeOld = respWrapper.strWriter.getBuffer().toString();
-if (respWrapper.redirectURL!=null)
+String htmlCodeOld = respWrapper.getStrWriterAsString();
+if (respWrapper.getRedirectURL()!=null)
 {
-	htmlCodeOld = "Redirected to: "+respWrapper.redirectURL;
+	htmlCodeOld = "Redirected to: "+respWrapper.getRedirectURL();
 }
 htmlCodeOld = Tools.replace(htmlCodeOld, "&nbsp;", " ");
 

@@ -39,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2026.0" />
+        <property name="artifact.version" value="2026.0-jakarta-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -266,7 +266,7 @@
         <copy todir="${root}/libs" overwrite="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
                 <include name="net/**"/>
-                <include name="org/displaytag/**"/>
+                <include name="org/**"/>
             </fileset>
         </copy>
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
@@ -289,6 +289,7 @@
             <fileset dir="${finalwar}/WEB-INF/lib">
                 <include name="webjetcms-*.jar"/>
                 <include name="wj*.jar"/>
+                <include name="displaytag-*.jar"/>
                 <include name="*.zip"/>
             </fileset>
             <fileset dir="${finalwar}">
@@ -456,8 +457,8 @@
     </target>
 
     <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">
-        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
-        <replace file="${root}/../../src/webjet8/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
+        <replace file="${root}/../../src/main/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="@JsonSerialize //(using = WrappedNodeSerializer" value="@JsonSerialize(using = WrappedNodeSerializer"/>
+        <replace file="${root}/../../src/main/java/sk/iway/iwcm/database/nestedsets/JpaNode.java" token="//import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;" value="import sk.iway.iwcm.database.nestedsets.JpaNode.WrappedNodeSerializer;"/>
     </target>
 
     <target name="prepareAllJars" depends="define-artifact-properties,makejars,makepom" description="Prepare all JAR files for deployment">

@@ -106,7 +106,7 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
     @Override
     public boolean deleteItem(DocHistoryDto entity, long id) {
         //zmazat je mozne len zaznamy v buducnosti
-        DocHistory history = docHistoryRepository.getById(entity.getId());
+        DocHistory history = docHistoryRepository.getReferenceById(entity.getId());
         if (history!=null && Boolean.TRUE.equals(history.getPublicable()) && history.getPublishStartDate().getTime()>Tools.getNow()) {
             if (EditorDB.isPageEditable(getUser(), history.getDocId())) {
                 docHistoryRepository.deleteByIdPublicable(history.getId(), true);

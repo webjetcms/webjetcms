@@ -25,7 +25,7 @@ public class ImpressSlideshowItem {
     private String subtitle;
 
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.news.redirectAfterClick")
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String redirectUrl;
 
     @DataTableColumn(inputType = DataTableColumnType.COLOR, title = "components.app-slit_slider.admin_news_list.headingColor")

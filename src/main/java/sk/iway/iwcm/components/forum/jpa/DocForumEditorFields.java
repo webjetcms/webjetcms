@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.forum.jpa;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;

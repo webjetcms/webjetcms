@@ -5,11 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -262,12 +262,12 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
         if (Tools.isNotEmpty(entity.getEmail()) && Tools.isEmail(entity.getEmail())==false) {
-            errors.rejectValue("errorField.email", null, prop.getText("javax.validation.constraints.Email.message"));
+            errors.rejectValue("errorField.email", null, prop.getText("jakarta.validation.constraints.Email.message"));
         }
 
         //validate login
         if (entity.getEditorFields()==null || Tools.isEmpty(entity.getEditorFields().getLogin())) {
-            errors.rejectValue("errorField.editorFields.login", null, prop.getText("javax.validation.constraints.NotBlank.message"));
+            errors.rejectValue("errorField.editorFields.login", null, prop.getText("jakarta.validation.constraints.NotBlank.message"));
         }
     }
 
@@ -365,7 +365,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             return;
         }
 
-        UserDetailsEntity userToApprove = userDetailsRepository.getById(userId);
+        UserDetailsEntity userToApprove = userDetailsRepository.getReferenceById(userId);
         boolean authorization = AuthorizeUserService.authUser(userToApprove, getUser(), generatePass, getRequest());
 
         //Show notification about auth status

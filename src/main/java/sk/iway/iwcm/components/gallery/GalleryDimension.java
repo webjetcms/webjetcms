@@ -2,12 +2,13 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -20,6 +21,15 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GALLERY)
 @Table(name = "gallery_dimension")
 public class GalleryDimension {
+
+    @PreUpdate
+    @PrePersist
+    public void prePersist() {
+        if (domainId==null) domainId = CloudToolsForCore.getDomainId();
+        if (id != null && (id.intValue()==0 || id.intValue()==-1)) {
+                id = null;
+        }
+    }
 
     @Id
     @Column(name = "dimension_id")
@@ -57,7 +67,7 @@ public class GalleryDimension {
     private String author = "";
 
     @Column(name = "create_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "components.gallery.createDate",

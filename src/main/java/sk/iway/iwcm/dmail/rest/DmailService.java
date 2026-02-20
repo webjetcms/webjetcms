@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
@@ -166,7 +166,7 @@ public class DmailService {
      */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity email) {
         //Get email recipient(user) using email
-        UserDetails recipient = UsersDB.getUserByEmail(email.getRecipientEmail(), 600);
+        UserDetails recipient = UsersDB.getUserByEmail(email.getRecipientEmail(), true, 600);
         return prepareEmailForInsert(campaign, loggedUserId, email, recipient);
     }
 

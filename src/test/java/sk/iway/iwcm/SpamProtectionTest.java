@@ -8,7 +8,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 

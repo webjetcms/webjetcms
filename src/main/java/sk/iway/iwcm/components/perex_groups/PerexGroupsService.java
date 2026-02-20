@@ -13,7 +13,7 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 
 import java.util.List;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 public class PerexGroupsService {
 

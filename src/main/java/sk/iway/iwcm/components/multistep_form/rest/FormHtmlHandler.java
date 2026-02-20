@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
@@ -149,7 +149,7 @@ public class FormHtmlHandler {
         this.isEmailRender = false;
 
         StringBuilder stepHtml = new StringBuilder();
-        FormStepEntity formStep = formStepsRepository.getById(stepId);
+        FormStepEntity formStep = formStepsRepository.getReferenceById(stepId);
 
         // Form start
         stepHtml.append( getFormStart(stepId, request) );

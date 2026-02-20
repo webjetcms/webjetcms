@@ -2,17 +2,15 @@ package sk.iway.iwcm.doc;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,7 +61,7 @@ public class DocHistory extends DocBasic {
     @Column(name = "disapproved_by")
 	private Integer disapprovedBy;
 
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "approve_date")
 	private Date approveDate;
 
@@ -73,7 +71,7 @@ public class DocHistory extends DocBasic {
 	@Transient
 	private String historyDisapprovedByName;
 
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "save_date")
 	private Date saveDate;
 
