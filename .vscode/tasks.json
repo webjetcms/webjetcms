@@ -556,6 +556,32 @@
                 "clear": true,
                 "showReuseMessage": false
             }
+        },
+        {
+            "label": "Docker Keycloak Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/keycloak/"
+            },
+            "command": "if ! docker ps | grep -q webjetcms-keycloak; then docker compose -f docker-compose-keycloak.yml up -d && echo 'Waiting for initialization' && sleep 30 && echo 'Started Keycloak container'; else echo 'Keycloak container already running'; fi",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker Keycloak Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/keycloak/"
+            },
+            "command": "docker compose -f docker-compose-keycloak.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
         }
     ]
 }

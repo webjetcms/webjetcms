@@ -2,57 +2,6 @@
 
 WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov prostredníctvom externých poskytovateľov ako sú Google, Facebook, GitHub, Keycloak a ďalších.
 
-## Prehľad implementácie
-
-OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a obsahuje:
-
-- **Spring Security konfiguráciu** - Konfigurácia OAuth2 klientov a endpoints
-- **OAuth2DynamicSuccessHandler** - Dynamické rozhodovanie medzi admin a user handlerom
-- **Dva typy Success Handlers**:
-  - **OAuth2AdminSuccessHandler** - Pre admin zónu (synchronizuje user groups + permission groups + admin flag)
-  - **OAuth2UserSuccessHandler** - Pre user zónu (synchronizuje iba user groups)
-- **AbstractOAuth2SuccessHandler** - Spoločná base trieda s funkcionalitou pre oba handlery
-- **Automatická synchronizácia skupín** - Mapovanie skupín z OAuth2 providera na WebJET skupiny (iba pre nakonfigurovaných providerov)
-- **Admin práva z OAuth2** - Automatické nastavenie admin práv na základe skupín (iba admin zóna)
-
-## Architektúra
-
-### Hlavné komponenty
-
-1. **SpringSecurityConf** (`src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java`)
-   - Konfigurácia OAuth2 klientov
-   - Registrácia OAuth2DynamicSuccessHandler
-   - Konfigurácia authorized client service
-
-2. **OAuth2DynamicSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2DynamicSuccessHandler.java`)
-   - Dynamické rozhodovanie medzi admin a user handlerom
-   - Používa session atribút `oauth2_is_admin_section` pre rozlíšenie
-
-3. **AbstractOAuth2SuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/AbstractOAuth2SuccessHandler.java`)
-   - Abstraktná base trieda pre OAuth2 Success Handlers
-   - Spoločná funkcionalita pre extrakciu skupín a atribútov z OAuth2
-   - Spracovanie chýb cez session
-
-4. **OAuth2AdminSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2AdminSuccessHandler.java`)
-   - Spracovanie úspešnej OAuth2 autentifikácie pre **admin zónu**
-   - Vytvorenie alebo aktualizácia používateľa
-   - Synchronizácia skupín a práv (user groups + permission groups)
-   - Nastavenie admin práv
-
-5. **OAuth2UserSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2UserSuccessHandler.java`)
-   - Spracovanie úspešnej OAuth2 autentifikácie pre **zákaznícku zónu**
-   - Synchronizácia iba user groups (nie permission groups)
-   - Nenastavuje admin práva
-
-6. **AdminLogonController** (`src/main/java/sk/iway/iwcm/logon/AdminLogonController.java`)
-   - Zobrazenie OAuth2 prihlasovacích odkazov na logon stránke
-   - Generovanie URL pre OAuth2 poskytovateľov
-   - Spracovanie OAuth2 chýb zo session
-   - Nastavenie `oauth2_is_admin_section` atribútu
-
-7. **Logon Template** (`src/main/webapp/admin/skins/webjet8/logon-spring.jsp`)
-   - Zobrazenie OAuth2 prihlasovacích tlačidiel
-
 ## Konfigurácia
 
 ### Základná konfigurácia
@@ -95,18 +44,18 @@ oauth2_oktaClientId=your-okta-client-id
 oauth2_oktaClientSecret=your-okta-client-secret
 ```
 
-### Vlastní poskytovatelia (napr. Keycloak)
+### Keycloak
 
-Pre vlastných poskytovateľov je potrebné nastaviť všetky OAuth2 parametre:
+Pre vlastných poskytovateľov (napríklad Keycloak) je potrebné nastaviť všetky `OAuth2` parametre:
 
 ```properties
-oauth2_keycloakClientId=webjet-client
+oauth2_keycloakClientId=webjetcms-client
 oauth2_keycloakClientSecret=your-client-secret
-oauth2_keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/auth
-oauth2_keycloakTokenUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/token
-oauth2_keycloakUserInfoUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/userinfo
-oauth2_keycloakJwkSetUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/certs
-oauth2_keycloakIssuerUri=https://keycloak.example.com/auth/realms/your-realm
+oauth2_keycloakAuthorizationUri=https://keycloak.local/realms/your-realm/protocol/openid-connect/auth
+oauth2_keycloakTokenUri=https://keycloak.local/realms/your-realm/protocol/openid-connect/token
+oauth2_keycloakUserInfoUri=https://keycloak.local/realms/your-realm/protocol/openid-connect/userinfo
+oauth2_keycloakJwkSetUri=https://keycloak.local/realms/your-realm/protocol/openid-connect/certs
+oauth2_keycloakIssuerUri=https://keycloak.local/realms/your-realm
 oauth2_keycloakUserNameAttributeName=email
 oauth2_keycloakScopes=openid,profile,email
 oauth2_keycloakClientName=Keycloak
@@ -199,6 +148,7 @@ boolean isUserSaved = UsersDB.saveUser(userDetails);
 ```
 
 **Podporované atribúty pre login:**
+
 - Konfigurovateľné cez `oauth2_usernameAttribute` (predvolene `preferred_username` - štandardný OIDC atribút)
 - Fallback: časť emailu pred zavináčom
 
@@ -286,7 +236,7 @@ Extrakcia skupín prebieha v `AbstractOAuth2SuccessHandler.extractGroupsFromOAut
     "roles": ["admin", "user"]
   },
   "resource_access": {
-    "webjet-client": {
+    "webjetcms-client": {
       "roles": ["webjet-admin", "content-editor"]
     }
   }
@@ -599,7 +549,7 @@ Logger.info(class, "Synchronized user " + email + " to " + newUserGroups.size() 
 
 **Vytvorenie klienta v Keycloak:**
 
-- Client ID: `webjet-client`
+- Client ID: `webjetcms-client`
 - Client Protocol: `openid-connect`
 - Access Type: `confidential`
 - Valid Redirect URIs: `https://your-domain.com/login/oauth2/code/keycloak`
@@ -611,13 +561,13 @@ Logger.info(class, "Synchronized user " + email + " to " + newUserGroups.size() 
 ```properties
 oauth2_clients=keycloak
 oauth2_clientsWithPermissions=keycloak
-oauth2_keycloakClientId=webjet-client
+oauth2_keycloakClientId=webjetcms-client
 oauth2_keycloakClientSecret=generated-secret-from-keycloak
-oauth2_keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/auth
-oauth2_keycloakTokenUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/token
-oauth2_keycloakUserInfoUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/userinfo
-oauth2_keycloakJwkSetUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/certs
-oauth2_keycloakIssuerUri=https://keycloak.example.com/auth/realms/webjet
+oauth2_keycloakAuthorizationUri=https://keycloak.local/auth/realms/webjet/protocol/openid-connect/auth
+oauth2_keycloakTokenUri=https://keycloak.local/auth/realms/webjet/protocol/openid-connect/token
+oauth2_keycloakUserInfoUri=https://keycloak.local/auth/realms/webjet/protocol/openid-connect/userinfo
+oauth2_keycloakJwkSetUri=https://keycloak.local/auth/realms/webjet/protocol/openid-connect/certs
+oauth2_keycloakIssuerUri=https://keycloak.local/auth/realms/webjet
 oauth2_keycloakUserNameAttributeName=email
 oauth2_keycloakScopes=openid,profile,email
 oauth2_keycloakClientName=Keycloak Login
@@ -684,6 +634,57 @@ public String showLogonForm(ModelMap model, HttpServletRequest request, HttpSess
   - Nenastavuje admin flag
   - Nevyžaduje admin práva
 
+## Prehľad implementácie
+
+OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a obsahuje:
+
+- **Spring Security konfiguráciu** - Konfigurácia OAuth2 klientov a endpoints
+- **OAuth2DynamicSuccessHandler** - Dynamické rozhodovanie medzi admin a user handlerom
+- **Dva typy Success Handlers**:
+  - **OAuth2AdminSuccessHandler** - Pre admin zónu (synchronizuje user groups + permission groups + admin flag)
+  - **OAuth2UserSuccessHandler** - Pre user zónu (synchronizuje iba user groups)
+- **AbstractOAuth2SuccessHandler** - Spoločná base trieda s funkcionalitou pre oba handlery
+- **Automatická synchronizácia skupín** - Mapovanie skupín z OAuth2 providera na WebJET skupiny (iba pre nakonfigurovaných providerov)
+- **Admin práva z OAuth2** - Automatické nastavenie admin práv na základe skupín (iba admin zóna)
+
+## Architektúra
+
+### Hlavné komponenty
+
+1. **SpringSecurityConf** (`src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java`)
+   - Konfigurácia OAuth2 klientov
+   - Registrácia OAuth2DynamicSuccessHandler
+   - Konfigurácia authorized client service
+
+2. **OAuth2DynamicSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2DynamicSuccessHandler.java`)
+   - Dynamické rozhodovanie medzi admin a user handlerom
+   - Používa session atribút `oauth2_is_admin_section` pre rozlíšenie
+
+3. **AbstractOAuth2SuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/AbstractOAuth2SuccessHandler.java`)
+   - Abstraktná base trieda pre OAuth2 Success Handlers
+   - Spoločná funkcionalita pre extrakciu skupín a atribútov z OAuth2
+   - Spracovanie chýb cez session
+
+4. **OAuth2AdminSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2AdminSuccessHandler.java`)
+   - Spracovanie úspešnej OAuth2 autentifikácie pre **admin zónu**
+   - Vytvorenie alebo aktualizácia používateľa
+   - Synchronizácia skupín a práv (user groups + permission groups)
+   - Nastavenie admin práv
+
+5. **OAuth2UserSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2UserSuccessHandler.java`)
+   - Spracovanie úspešnej OAuth2 autentifikácie pre **zákaznícku zónu**
+   - Synchronizácia iba user groups (nie permission groups)
+   - Nenastavuje admin práva
+
+6. **AdminLogonController** (`src/main/java/sk/iway/iwcm/logon/AdminLogonController.java`)
+   - Zobrazenie OAuth2 prihlasovacích odkazov na logon stránke
+   - Generovanie URL pre OAuth2 poskytovateľov
+   - Spracovanie OAuth2 chýb zo session
+   - Nastavenie `oauth2_is_admin_section` atribútu
+
+7. **Logon Template** (`src/main/webapp/admin/skins/webjet8/logon-spring.jsp`)
+   - Zobrazenie OAuth2 prihlasovacích tlačidiel
+
 ## API referencia
 
 ### OAuth2DynamicSuccessHandler
@@ -743,3 +744,4 @@ Metódy pre OAuth2 admin prihlásenie:
 
 - `showLogonForm()` - Nastavuje session atribút `oauth2_is_admin_section` a generuje OAuth2 URL
 - Spracováva OAuth2 chyby zo session a zobrazuje príslušné chybové hlášky
+

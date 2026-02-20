@@ -709,7 +709,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
         Map<String, Object> resourceAccess = new HashMap<>();
         Map<String, Object> clientAccess = new HashMap<>();
         clientAccess.put("roles", List.of("webjet-user"));
-        resourceAccess.put("webjet-client", clientAccess);
+        resourceAccess.put("webjetcms-client", clientAccess);
         attributes.put("resource_access", resourceAccess);
 
         return attributes;

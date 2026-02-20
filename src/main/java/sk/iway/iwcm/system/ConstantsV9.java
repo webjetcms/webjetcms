@@ -149,11 +149,11 @@ public class ConstantsV9 {
 		// Keycloak OAuth2 (custom provider)
 		Constants.setString("oauth2_keycloakClientId", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client ID");
 		Constants.setString("oauth2_keycloakClientSecret", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client Secret");
-		Constants.setString("oauth2_keycloakAuthorizationUri", "", Constants.MOD_SECURITY, "Keycloak Authorization URI");
-		Constants.setString("oauth2_keycloakTokenUri", "", Constants.MOD_SECURITY, "Keycloak Token URI");
-		Constants.setString("oauth2_keycloakUserInfoUri", "", Constants.MOD_SECURITY, "Keycloak User Info URI");
-		Constants.setString("oauth2_keycloakJwkSetUri", "", Constants.MOD_SECURITY, "Keycloak JWK Set URI");
-		Constants.setString("oauth2_keycloakIssuerUri", "", Constants.MOD_SECURITY, "Keycloak Issuer URI");
+		Constants.setString("oauth2_keycloakAuthorizationUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/auth", Constants.MOD_SECURITY, "Keycloak Authorization URI");
+		Constants.setString("oauth2_keycloakTokenUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/token", Constants.MOD_SECURITY, "Keycloak Token URI");
+		Constants.setString("oauth2_keycloakUserInfoUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/userinfo", Constants.MOD_SECURITY, "Keycloak User Info URI");
+		Constants.setString("oauth2_keycloakJwkSetUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/certs", Constants.MOD_SECURITY, "Keycloak JWK Set URI");
+		Constants.setString("oauth2_keycloakIssuerUri", "http://keycloak.local:18080/realms/webjetcms", Constants.MOD_SECURITY, "Keycloak Issuer URI");
 		Constants.setString("oauth2_keycloakUserNameAttributeName", "email", Constants.MOD_SECURITY, "Keycloak User Name Attribute Name");
 		Constants.setString("oauth2_keycloakScopes", "openid,profile,email", Constants.MOD_SECURITY, "Keycloak OAuth2 Scopes");
 		Constants.setString("oauth2_keycloakClientName", "Keycloak", Constants.MOD_SECURITY, "Keycloak Client Display Name");

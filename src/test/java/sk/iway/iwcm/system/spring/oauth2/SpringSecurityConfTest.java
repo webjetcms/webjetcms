@@ -154,11 +154,11 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         Constants.setString("oauth2_clients", "keycloak");
         Constants.setString("oauth2_keycloakClientId", "keycloak-client-id");
         Constants.setString("oauth2_keycloakClientSecret", "keycloak-client-secret");
-        Constants.setString("oauth2_keycloakAuthorizationUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth");
-        Constants.setString("oauth2_keycloakTokenUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token");
-        Constants.setString("oauth2_keycloakUserInfoUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/userinfo");
-        Constants.setString("oauth2_keycloakJwkSetUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/certs");
-        Constants.setString("oauth2_keycloakIssuerUri", "https://keycloak.example.com/auth/realms/test");
+        Constants.setString("oauth2_keycloakAuthorizationUri", "https://keycloak.local/auth/realms/test/protocol/openid-connect/auth");
+        Constants.setString("oauth2_keycloakTokenUri", "https://keycloak.local/auth/realms/test/protocol/openid-connect/token");
+        Constants.setString("oauth2_keycloakUserInfoUri", "https://keycloak.local/auth/realms/test/protocol/openid-connect/userinfo");
+        Constants.setString("oauth2_keycloakJwkSetUri", "https://keycloak.local/auth/realms/test/protocol/openid-connect/certs");
+        Constants.setString("oauth2_keycloakIssuerUri", "https://keycloak.local/auth/realms/test");
         Constants.setString("oauth2_keycloakUserNameAttributeName", "preferred_username");
         Constants.setString("oauth2_keycloakScopes", "openid,profile,email");
         Constants.setString("oauth2_keycloakClientName", "Keycloak");
@@ -173,9 +173,9 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         assertNotNull(keycloakReg);
         assertEquals("keycloak-client-id", keycloakReg.getClientId());
         assertEquals("keycloak-client-secret", keycloakReg.getClientSecret());
-        assertEquals("https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth",
+        assertEquals("https://keycloak.local/auth/realms/test/protocol/openid-connect/auth",
                     keycloakReg.getProviderDetails().getAuthorizationUri());
-        assertEquals("https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token",
+        assertEquals("https://keycloak.local/auth/realms/test/protocol/openid-connect/token",
                     keycloakReg.getProviderDetails().getTokenUri());
         assertEquals("preferred_username",
                     keycloakReg.getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName());

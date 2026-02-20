@@ -2,25 +2,6 @@
 
 Tento návod popisuje kompletný postup inštalácie lokálneho Keycloak servera cez Docker a jeho konfiguráciu pre prihlasovanie do WebJET CMS vrátane synchronizácie skupín a práv.
 
-<!-- TOC -->
-- [1. Inštalácia Keycloak](#1-inštalácia-keycloak)
-- [2. Konfigurácia Keycloak](#2-konfigurácia-keycloak)
-  - [2.1 Vytvorenie Realmu](#21-vytvorenie-realmu)
-  - [2.2 Vytvorenie klienta (Client)](#22-vytvorenie-klienta-client)
-  - [2.3 Vytvorenie skupín (Groups)](#23-vytvorenie-skupín-groups)
-  - [2.4 Vytvorenie rolí klienta (Client Roles)](#24-vytvorenie-rolí-klienta-client-roles)
-  - [2.5 Mapovanie skupín a vlastných atribútov do tokenu](#25-mapovanie-skupín-a-vlastných-atribútov-do-tokenu)
-  - [2.6 Vytvorenie testovacieho používateľa](#26-vytvorenie-testovacieho-používateľa)
-- [3. Konfigurácia WebJET CMS](#3-konfigurácia-webjet-cms)
-  - [3.1 Konfiguračné premenné pre admin zónu](#31-konfiguračné-premenné-pre-admin-zónu)
-  - [3.2 Konfigurácia pre zákaznícku/user zónu](#32-konfigurácia-pre-zákaznícku-user-zónu)
-  - [3.3 Konfigurácia vlastného username atribútu](#33-konfigurácia-vlastného-username-atribútu)
-  - [3.4 Vytvorenie skupín vo WebJET CMS](#34-vytvorenie-skupín-vo-webjet-cms)
-- [4. Príklad reálneho tokenu (Orange SK)](#4-príklad-reálneho-tokenu-orange-sk)
-- [5. Testovanie](#5-testovanie)
-- [6. Časté problémy](#6-časté-problémy)
-<!-- /TOC -->
-
 ## 1. Inštalácia Keycloak
 
 ### Spustenie cez Docker Compose
@@ -54,7 +35,7 @@ docker compose -f docker-compose-keycloak.yml down
 1. Prihláste sa do Keycloak admin konzoly (http://localhost:18080)
 2. V ľavom hornom rohu kliknite na dropdown "master" → **Create realm**
 3. Vyplňte:
-   - **Realm name**: `webjet` (alebo ľubovoľný názov, napr. `orange`)
+   - **Realm name**: `webjetcms` (alebo ľubovoľný názov)
    - **Enabled**: ON
 4. Kliknite **Create**
 
@@ -63,7 +44,7 @@ docker compose -f docker-compose-keycloak.yml down
 1. V ľavom menu kliknite **Clients** → **Create client**
 2. **General Settings**:
    - **Client type**: `OpenID Connect`
-   - **Client ID**: `webjet-client` (tento ID budete používať v konfigurácii WebJET)
+   - **Client ID**: `webjetcms-client` (tento ID budete používať v konfigurácii WebJET)
    - Kliknite **Next**
 3. **Capability config**:
    - **Client authentication**: `ON` (zmení sa na "confidential" typ)
@@ -97,14 +78,14 @@ Skupiny v Keycloak sa mapujú na skupiny používateľov (user groups) a skupiny
 
 Keycloak pozná dva typy rolí:
 
-- **Client roles** — role viazané na konkrétneho klienta (napr. `webjet-client`). Objavujú sa v tokene v sekcii `resource_access.<clientId>.roles`. Vhodné ak máte viacero klientov a potrebujete odlíšiť práva pre každý z nich.
+- **Client roles** — role viazané na konkrétneho klienta (napr. `webjetcms-client`). Objavujú sa v tokene v sekcii `resource_access.<clientId>.roles`. Vhodné ak máte viacero klientov a potrebujete odlíšiť práva pre každý z nich.
 - **Realm roles** — globálne role pre celý realm, zdieľané naprieč všetkými klientmi. Objavujú sa v tokene v sekcii `realm_access.roles`. Vhodné pre univerzálne role platné naprieč aplikáciami.
 
 WebJET CMS automaticky extrahuje a mapuje **oba typy rolí** na skupiny používateľov a skupiny práv.
 
 #### Vytvorenie Client roles
 
-1. Prejdite na **Clients** → vyberte váš klient (`webjet-client`)
+1. Prejdite na **Clients** → vyberte váš klient (`webjetcms-client`)
 2. Záložka **Roles** → **Create role**
 3. Vytvorte role podľa potreby, napríklad:
    - **Role name**: `customerAdmin`
@@ -136,7 +117,7 @@ Keycloak štandardne neposiela skupiny, klientské role a vlastné atribúty v I
 #### Mapovanie skupín (groups)
 
 1. Prejdite na **Clients** → vyberte váš klient → záložka **Client scopes**
-2. Kliknite na `webjet-client-dedicated` scope (dedicated scope pre vášho klienta)
+2. Kliknite na `webjetcms-client-dedicated` scope (dedicated scope pre vášho klienta)
 3. Kliknite **Configure a new mapper** (alebo **Add mapper** → **By configuration**)
 4. Vyberte **Group Membership**
 5. Vyplňte:
@@ -156,9 +137,9 @@ Pre prenos klientských rolí (vytvorených v sekcii 2.4) do tokenu:
 2. Vyberte **User Client Role**
 3. Vyplňte:
    - **Name**: `client roles`
-   - **Client ID**: vyberte vášho klienta (napr. `webjet-client`)
+   - **Client ID**: vyberte vášho klienta (napr. `webjetcms-client`)
    - **Multivalued**: `ON`
-   - **Token Claim Name**: `resource_access.webjet-client.roles` (nahraďte `webjet-client` názvom vášho klienta)
+   - **Token Claim Name**: `resource_access.webjetcms-client.roles` (nahraďte `webjetcms-client` názvom vášho klienta)
    - **Claim JSON Type**: `String`
    - **Add to ID token**: `ON`
    - **Add to access token**: `ON`
@@ -250,7 +231,7 @@ Nastavte nasledovné konfiguračné premenné v WebJET CMS (Nastavenia → Konfi
 oauth2_clients=keycloak
 
 # Client ID a Secret z Keycloak (záložka Credentials)
-oauth2_keycloakClientId=webjet-client
+oauth2_keycloakClientId=webjetcms-client
 oauth2_keycloakClientSecret=VLOŽTE-CLIENT-SECRET-Z-KEYCLOAK
 
 # Keycloak endpointy (nahraďte realm názvom vášho realmu)
@@ -418,7 +399,7 @@ Pre overenie štruktúry tokenu môžete použiť direct access grant (ak je pov
 ```bash
 curl -X POST http://localhost:18080/realms/webjet/protocol/openid-connect/token \
   -d "grant_type=password" \
-  -d "client_id=webjet-client" \
+  -d "client_id=webjetcms-client" \
   -d "client_secret=YOUR-CLIENT-SECRET" \
   -d "username=testuser" \
   -d "password=test" \
