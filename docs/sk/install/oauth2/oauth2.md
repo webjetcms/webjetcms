@@ -2,6 +2,8 @@
 
 WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov prostredníctvom externých poskytovateľov ako sú Google, Facebook, GitHub, Keycloak a ďalších. Konfigurácia sa číta pri inicializácii WebJET CMS, po zmene hodnôt alebo prvotnom nastavení je potrebné reštartovať aplikačný server.
 
+Párovanie používateľov sa vykonáva na základe emailu, ktorý musí byť jedinečný. Pri prvom prihlásení cez OAuth2 sa vytvorí nový používateľ v databáze WebJET s nastaveným prihlasovacím meno, menom, priezviskom a autorizáciou.
+
 ## Konfigurácia
 
 ### Základná konfigurácia
@@ -83,15 +85,15 @@ Pre synchronizáciu skupín (iba pre nakonfigurovaných providerov v `oauth2_cli
 - `realm_access.roles` - Keycloak realm roles
 - Spring Security authorities - Automaticky extrahované z autentifikácie
 
-**Pravidlá pre extrakciu loginu:**
+**Pravidlá pre extrakciu prihlasovacieho mena:**
 
-1. **Prednostný atribút**: Hodnota konfiguračnej premennej `oauth2_usernameAttribute` (predvolene `preferred_username`) - ak je poskytnutý OAuth2 providerom, použije sa pre login
+1. **Prednostný atribút**: Hodnota konfiguračnej premennej `oauth2_usernameAttribute` (predvolene `preferred_username`) - ak je poskytnutý OAuth2 serverom, použije sa pre login
 2. **Fallback**: Časť emailu pred zavináčom - ak atribút nie je dostupný
 
 **Príklady:**
 
-- Keycloak poskytuje `preferred_username: "john.doe"` → login bude `john.doe`
-- Google neposkytuje `preferred_username` → login bude časť pred @ z emailu (napr. `john.doe` z `john.doe@gmail.com`)
+- Keycloak poskytuje `preferred_username: "john.doe"` - login bude `john.doe`
+- Google neposkytuje `preferred_username` - login bude časť pred @ z emailu (napr. `john.doe` z `john.doe@gmail.com`)
 - Ak je nastavené `oauth2_usernameAttribute=sub`, použije sa atribút `sub` namiesto `preferred_username`
 
 ### Konfigurácia atribútu pre login (username)
@@ -120,9 +122,9 @@ Príklad: `https://your-webjet-domain.com/login/oauth2/code/google`
 
 Keď sa používateľ prihlási prvýkrát cez OAuth2:
 
-1. **Extrakcia údajov** - Z OAuth2 atribútov sa extrahuje email, meno, priezvisko a login (username)
+1. **Extrakcia údajov** - Z OAuth2 atribútov sa extrahuje email, meno, priezvisko a prihlasovacie meno (username)
 2. **Vytvorenie používateľa** - Vytvorí sa nový používateľ v WebJET databáze
-3. **Nastavenie loginu** - Login sa nastaví prednostne z atribútu určeného konfiguračnou premennou `oauth2_usernameAttribute` (predvolene `preferred_username`), ak nie je dostupný použije sa časť emailu pred zavináčom
+3. **Nastavenie prihlasovacieho mena** - Prihlasovacie meno sa nastaví prednostne z atribútu určeného konfiguračnou premennou `oauth2_usernameAttribute` (predvolene `preferred_username`), ak nie je dostupný použije sa časť emailu pred zavináčom
 4. **Autorizácia** - Používateľ sa označí ako autorizovaný
 
 Vytvorenie používateľa prebieha v `AbstractOAuth2SuccessHandler.createNewUserFromOAuth2()`:
@@ -133,7 +135,7 @@ userDetails.setEmail(email);
 userDetails.setFirstName(givenName);
 userDetails.setLastName(familyName);
 
-// Nastav login - prednostne z username atribútu, inak použij email pred zavináčom
+// Nastav prihlasovacie meno - prednostne z username atribútu, inak použij email pred zavináčom
 String usernameAttr = getUsernameAttribute(); // oauth2_usernameAttribute alebo default "preferred_username"
 String username = oauth2User.getAttribute(usernameAttr);
 String login;
@@ -164,7 +166,7 @@ Aktualizácia prebieha v `AbstractOAuth2SuccessHandler.updateExistingUserFromOAu
 
 ## Synchronizácia skupín
 
-OAuth2 Success Handlers obsahujú špecializovanú logiku pre synchronizáciu skupín z nakonfigurovaných OAuth2 providerov.
+OAuth2 Success Handlers obsahujú špecializovanú logiku pre synchronizáciu skupín z nakonfigurovaných OAuth2 poskytovateľov.
 
 ### Rozdiely medzi Admin a User zónou
 
@@ -190,11 +192,11 @@ Aby sa synchronizovali skupiny a práva z OAuth2 providera, je potrebné nastavi
 oauth2_clientsWithPermissions=keycloak,okta
 ```
 
-Táto premenná definuje zoznam providerov (oddelený čiarkami), pre ktorých sa má vykonávať synchronizácia skupín a práv. Pre ostatných providerov (napr. Google, Facebook) sa synchronizácia nevykonáva.
+Táto premenná definuje zoznam poskytovateľov (oddelený čiarkami), pre ktorých sa má vykonávať synchronizácia skupín a práv. Pre ostatných poskytovateľov (napr. Google, Facebook) sa synchronizácia nevykonáva.
 
 Kontrola prebieha v `AbstractOAuth2SuccessHandler.shouldSyncPermissions()`.
 
-### Detekcia providera
+### Detekcia poskytovateľa
 
 Provider ID sa získava v `AbstractOAuth2SuccessHandler.getProviderId()`:
 
@@ -295,7 +297,7 @@ UsersDB.saveUser(userDetails);
 
 ### Automatické nastavenie admin práv (iba admin zóna)
 
-Pre nakonfigurovaných OAuth2 providerov (definovaných v `oauth2_clientsWithPermissions`) sa admin práva nastavujú automaticky v **admin zóne** na základe konfiguračnej premennej:
+Pre nakonfigurovaných OAuth2 poskytovateľov (definovaných v `oauth2_clientsWithPermissions`) sa admin práva nastavujú automaticky v **admin zóne** na základe konfiguračnej premennej:
 
 ```properties
 NTLMAdminGroupName=admin
@@ -325,8 +327,8 @@ if (userDetails.isAdmin() != isAdmin) {
 
 ### Obmedzenia OAuth2 procesov
 
-1. **Konfigurovateľná synchronizácia** - Synchronizácia skupín a admin práv funguje iba pre OAuth2 providerov nakonfigurovaných v `oauth2_clientsWithPermissions`
-2. **Email validácia** - Každý používateľ musí mať validný email atribút
+1. **Konfigurovateľná synchronizácia** - Synchronizácia skupín a admin práv funguje iba pre OAuth2 poskytovateľov nakonfigurovaných v `oauth2_clientsWithPermissions`
+2. **Email validácia** - Každý používateľ musí mať platný email atribút
 3. **Jedinečnosť emailu** - Email musí byť jedinečný v systéme
 
 ### Error handling
@@ -523,11 +525,11 @@ Logger.info(class, "Synchronized user " + email + " to " + newUserGroups.size() 
 
 2. **Neplatná konfigurácia** - Chybné OAuth2 endpoint URL
    - Skontrolujte všetky URI v konfigurácii
-   - Pre custom providerov musia byť nastavené všetky parametre
+   - Pre vlastných  poskytovateľov musia byť nastavené všetky parametre
 
 3. **Skupiny sa nesynchronizujú** - Provider nie je nakonfigurovaný v `oauth2_clientsWithPermissions` alebo chybné názvy skupín
    - Skontrolujte `oauth2_clientsWithPermissions` konfiguráciu
-   - Overťe názvy skupín v WebJET vs OAuth2 provider
+   - Overte názvy skupín v WebJET vs OAuth2 provider
    - Pozrite logy na úrovni DEBUG pre detaily extrakcie skupín
 
 4. **Redirect URI** - Nesprávne nastavený redirect URI u poskytovateľa
@@ -540,7 +542,7 @@ Logger.info(class, "Synchronized user " + email + " to " + newUserGroups.size() 
 
 6. **Chýbajúce admin práva** - Používateľ nemôže pristúpiť do admin zóny
    - Skontrolujte `NTLMAdminGroupName` konfiguráciu
-   - Overťe prítomnosť admin skupiny v OAuth2 groups
+   - Overte prítomnosť admin skupiny v OAuth2 groups
    - Chyba: `accessDenied`
 
 ## Príklady konfigurácie
@@ -595,7 +597,7 @@ oauth2_googleClientId=your-google-client-id.apps.googleusercontent.com
 oauth2_googleClientSecret=your-google-client-secret
 ```
 
-**Poznámka**: Pre Google OAuth2 sa defaultne **nesynchronizujú** skupiny, pretože Google nie je v `oauth2_clientsWithPermissions`. Pre synchronizáciu skupín je potrebné použiť provider ako Keycloak alebo Okta.
+**Poznámka**: Pre Google OAuth2 sa **nesynchronizujú** skupiny, pretože Google nie je v `oauth2_clientsWithPermissions`. Pre synchronizáciu skupín je potrebné použiť poskytovateľa ako Keycloak alebo Okta.
 
 ### OAuth2 pre zákaznícku zónu (User logon)
 
@@ -639,11 +641,11 @@ public String showLogonForm(ModelMap model, HttpServletRequest request, HttpSess
 OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a obsahuje:
 
 - **Spring Security konfiguráciu** - Konfigurácia OAuth2 klientov a endpoints
-- **OAuth2DynamicSuccessHandler** - Dynamické rozhodovanie medzi admin a user handlerom
+- **OAuth2DynamicSuccessHandler** - Dynamické rozhodovanie medzi admin a user spracovateľom po úspešnej autentifikácii
 - **Dva typy Success Handlers**:
   - **OAuth2AdminSuccessHandler** - Pre admin zónu (synchronizuje user groups + permission groups + admin flag)
   - **OAuth2UserSuccessHandler** - Pre user zónu (synchronizuje iba user groups)
-- **AbstractOAuth2SuccessHandler** - Spoločná base trieda s funkcionalitou pre oba handlery
+- **AbstractOAuth2SuccessHandler** - Spoločná base trieda s funkcionalitou pre oboch spracovateľov
 - **Automatická synchronizácia skupín** - Mapovanie skupín z OAuth2 providera na WebJET skupiny (iba pre nakonfigurovaných providerov)
 - **Admin práva z OAuth2** - Automatické nastavenie admin práv na základe skupín (iba admin zóna)
 
@@ -657,7 +659,7 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
    - Konfigurácia authorized client service
 
 2. **OAuth2DynamicSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2DynamicSuccessHandler.java`)
-   - Dynamické rozhodovanie medzi admin a user handlerom
+   - Dynamické rozhodovanie medzi admin a user spracovateľom
    - Používa session atribút `oauth2_is_admin_section` pre rozlíšenie
 
 3. **AbstractOAuth2SuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/AbstractOAuth2SuccessHandler.java`)
@@ -691,7 +693,7 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
 
 Dynamický router pre OAuth2 autentifikáciu:
 
-- `onAuthenticationSuccess()` - Rozhoduje medzi admin a user handlerom na základe session atribútu `oauth2_is_admin_section`
+- `onAuthenticationSuccess()` - Rozhoduje medzi admin a user spracovateľom na základe session atribútu `oauth2_is_admin_section`
 
 ### AbstractOAuth2SuccessHandler
 
@@ -744,4 +746,3 @@ Metódy pre OAuth2 admin prihlásenie:
 
 - `showLogonForm()` - Nastavuje session atribút `oauth2_is_admin_section` a generuje OAuth2 URL
 - Spracováva OAuth2 chyby zo session a zobrazuje príslušné chybové hlášky
-
