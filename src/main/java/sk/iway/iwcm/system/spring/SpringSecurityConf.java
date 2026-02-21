@@ -52,12 +52,16 @@ public class SpringSecurityConf {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
-				oauth2.authorizedClientService(authorizedClientService());
+				oauth2.authorizedClientService(authorizedClientService(clientRegistrationRepository()));
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
 				oauth2.failureHandler(new OAuth2DynamicErrorHandler());
 			});
 		}
 
+		// Enable session fixation protection by migrating the session on authentication
+		http.sessionManagement(session ->
+			session.sessionFixation(sessionFixation -> sessionFixation.migrateSession())
+		);
 		// Disable headers and CSRF as per original config
 		http.headers(headers -> {
 			headers.xssProtection(xss -> xss.disable());
@@ -205,8 +209,7 @@ public class SpringSecurityConf {
 	}
 
 	@Bean
-	public OAuth2AuthorizedClientService authorizedClientService() {
-		return new InMemoryOAuth2AuthorizedClientService(
-				clientRegistrationRepository());
+	public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository clientRegistrationRepository) {
+        return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
 	}
 }

@@ -67,13 +67,28 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
         // Set login - preferably from username attribute, otherwise use email before @ sign
         String usernameAttr = getUsernameAttribute();
         String username = oauth2User.getAttribute(usernameAttr);
-        String login;
+        String login = null;
         if (username != null && !username.trim().isEmpty()) {
-            login = username;
+            login = username.trim();
             Logger.debug(this.getClass(), "Using username from OAuth2 provider (attribute '" + usernameAttr + "'): " + login);
-        } else {
-            login = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
-            Logger.debug(this.getClass(), "Username not provided by OAuth2 provider (attribute '" + usernameAttr + "'), using email prefix: " + login);
+        } else if (Tools.isNotEmpty(email)) {
+            if (email.contains("@")) {
+                String emailLocalPart = email.substring(0, email.indexOf("@"));
+                if (Tools.isNotEmpty(emailLocalPart.trim())) {
+                    login = emailLocalPart.trim();
+                    Logger.debug(this.getClass(), "Username not provided by OAuth2 provider (attribute '" + usernameAttr + "'), using email prefix: " + login);
+                }
+            } else {
+                // Email does not contain '@', use whole email as fallback if not empty
+                login = email.trim();
+                Logger.debug(this.getClass(), "Username not provided by OAuth2 provider (attribute '" + usernameAttr + "'), using full email as username: " + login);
+            }
+        }
+
+        // Validate that login is not empty before setting it
+        if (Tools.isEmpty(login)) {
+            Logger.error(this.getClass(), "Cannot create user from OAuth2 data because login could not be determined from username attribute or email.");
+            return null;
         }
         userDetails.setLogin(login);
         userDetails.setAuthorized(true);

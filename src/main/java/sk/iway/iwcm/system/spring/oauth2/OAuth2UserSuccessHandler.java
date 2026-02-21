@@ -72,16 +72,18 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 Logger.info(OAuth2UserSuccessHandler.class, "Skipping group synchronization for provider '" + providerId + "' (not configured in oauth2_clientsWithPermissions)");
             }
 
+            HttpSession session = request.getSession();
+            String afterLogonRedirect = (String)session.getAttribute("afterLogonRedirect");
+
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
-            HttpSession session = request.getSession();
+
             LogonTools.setUserToSession(session, identity);
 
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
 
             // Redirect after login
-            String afterLogonRedirect = (String)session.getAttribute("afterLogonRedirect");
             if (afterLogonRedirect != null) {
                 response.sendRedirect(afterLogonRedirect);
             } else {
