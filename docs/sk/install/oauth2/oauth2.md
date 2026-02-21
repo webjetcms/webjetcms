@@ -333,9 +333,43 @@ if (userDetails.isAdmin() != isAdmin) {
 
 ### Error handling
 
-OAuth2 Success Handlers obsahujú rozsiahle error handling s ukladaním chýb do session a presmerovaním na logon stránku.
+OAuth2 integrácia obsahuje dva typy spracovania chýb:
 
-Spoločná metóda v `AbstractOAuth2SuccessHandler`:
+**1. Chyby pri autentifikácii** (`OAuth2DynamicErrorHandler`):
+
+Spracováva chyby, ktoré nastanú počas OAuth2 autentifikácie (napr. neplatný token, server error):
+
+```java
+public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                    AuthenticationException exception) throws IOException {
+    // Určí či ide o admin alebo user prihlásenie
+    boolean isAdminLogin = OAuth2LoginHelper.isAdminLogin(request);
+
+    // Získa kód chyby z výnimky
+    String errorCode = getErrorCodeFromException(exception);
+
+    Logger.error(OAuth2DynamicErrorHandler.class, "OAuth2 authentication failed - isAdminLogin: " + isAdminLogin + ", error: " + errorCode);
+
+    // Nastaví chybu a presmeruje
+    OAuth2LoginHelper.handleError(request, response, errorCode, isAdminLogin);
+}
+```
+
+**Mapovanie chýb na kódy:**
+
+| Výnimka | Kód chyby |
+| --------- | ---------- |
+| `OAuth2AuthorizationCodeRequestTypeNotSupported` | `oauth2_provider_not_configured` |
+| `OAuth2AuthenticationException` s `invalid_token`/`invalid_grant` | `oauth2_invalid_token` |
+| `OAuth2AuthenticationException` s `access_denied` | `oauth2_access_denied` |
+| `OAuth2AuthenticationException` s `server_error` | `oauth2_server_error` |
+| `AuthorizationRequestNotFoundException` | `oauth2_authorization_request_not_found` |
+| `ClientAuthorizationException` | `oauth2_client_authorization_failed` |
+| Ostatné | `oauth2_authentication_failed` |
+
+**2. Chyby v Success Handlers** (`handleError`):
+
+Spoločná metóda v `AbstractOAuth2SuccessHandler` využívajúca `OAuth2LoginHelper`:
 
 ```java
 // Pomocná metóda pre spracovanie OAuth2 chýb
@@ -411,27 +445,57 @@ logon.err.oauth2_exception=OAuth2 prihlásenie zlyhalo: vyskytla sa neočakávan
 logon.err.oauth2_unknown=OAuth2 prihlásenie zlyhalo: neznáma chyba
 ```
 
+## OAuth2 Login Helper
+
+`OAuth2LoginHelper` je pomocná trieda so zdieľanou funkcionalitou pre OAuth2 spracovanie. Poskytuje:
+
+### Detekcia typu prihlásenia
+
+```java
+// Zistí, či ide o admin prihlásenie (na základe session atribútu)
+boolean isAdminLogin = OAuth2LoginHelper.isAdminLogin(request);
+
+// Zistí typ prihlásenia a odstráni session atribút (jednorazové použitie)
+boolean isAdminLogin = OAuth2LoginHelper.isAdminLoginAndClear(request);
+```
+
+### Spracovanie chýb
+
+```java
+// Nastaví chybu do session a presmeruje podľa typu prihlásenia
+OAuth2LoginHelper.handleError(request, response, "oauth2_error_code", isAdminLogin);
+
+// Alebo s explicitnou redirect URL
+OAuth2LoginHelper.handleError(request, response, "oauth2_error_code", "/custom/redirect/");
+```
+
+### Redirect URL konštanty
+
+```java
+OAuth2LoginHelper.getAdminRedirectUrl();  // "/admin/logon/"
+OAuth2LoginHelper.getUserRedirectUrl();   // "/"
+OAuth2LoginHelper.getErrorRedirectUrl(isAdminLogin);  // Podľa typu
+```
+
 ## OAuth2 Dynamic Success Handler
 
 ### Princíp fungovania
 
-`OAuth2DynamicSuccessHandler` rozhoduje, ktorý handler použiť na základe session atribútu `oauth2_is_admin_section`:
+`OAuth2DynamicSuccessHandler` rozhoduje, ktorý handler použiť na základe session atribútu `oauth2_is_admin_section` pomocou `OAuth2LoginHelper`:
 
 ```java
-HttpSession session = request.getSession(false);
-boolean isAdminLogin = false;
+public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                    Authentication authentication) throws IOException {
+    // Použije helper na zistenie typu prihlásenia a vyčistí session atribút
+    boolean isAdminLogin = OAuth2LoginHelper.isAdminLoginAndClear(request);
 
-if (session != null) {
-    Boolean isAdminSection = (Boolean) session.getAttribute("oauth2_is_admin_section");
-    isAdminLogin = (isAdminSection != null && isAdminSection);
-    // Po použití odstráň atribút
-    session.removeAttribute("oauth2_is_admin_section");
-}
+    Logger.info(OAuth2DynamicSuccessHandler.class, "OAuth2 login detected - isAdminLogin: " + isAdminLogin);
 
-if (isAdminLogin) {
-    adminHandler.onAuthenticationSuccess(request, response, authentication);
-} else {
-    userHandler.onAuthenticationSuccess(request, response, authentication);
+    if (isAdminLogin) {
+        adminHandler.onAuthenticationSuccess(request, response, authentication);
+    } else {
+        userHandler.onAuthenticationSuccess(request, response, authentication);
+    }
 }
 ```
 
@@ -642,6 +706,8 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
 
 - **Spring Security konfiguráciu** - Konfigurácia OAuth2 klientov a endpoints
 - **OAuth2DynamicSuccessHandler** - Dynamické rozhodovanie medzi admin a user spracovateľom po úspešnej autentifikácii
+- **OAuth2DynamicErrorHandler** - Spracovanie chýb pri OAuth2 autentifikácii s presmerovaním na správnu logon stránku
+- **OAuth2LoginHelper** - Pomocná trieda so zdieľanou funkcionalitou pre OAuth2 spracovanie (detekcia typu prihlásenia, spracovanie chýb)
 - **Dva typy Success Handlers**:
   - **OAuth2AdminSuccessHandler** - Pre admin zónu (synchronizuje user groups + permission groups + admin flag)
   - **OAuth2UserSuccessHandler** - Pre user zónu (synchronizuje iba user groups)
@@ -653,47 +719,76 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
 
 ### Hlavné komponenty
 
-1. **SpringSecurityConf** (`src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java`)
+1. [SpringSecurityConf](../../../../src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java)
    - Konfigurácia OAuth2 klientov
-   - Registrácia OAuth2DynamicSuccessHandler
+   - Registrácia OAuth2DynamicSuccessHandler a OAuth2DynamicErrorHandler
    - Konfigurácia authorized client service
 
-2. **OAuth2DynamicSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2DynamicSuccessHandler.java`)
-   - Dynamické rozhodovanie medzi admin a user spracovateľom
-   - Používa session atribút `oauth2_is_admin_section` pre rozlíšenie
+2. [OAuth2LoginHelper](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2LoginHelper.java)
+   - Pomocná trieda so zdieľanou funkcionalitou pre OAuth2 spracovanie
+   - Detekcia typu prihlásenia (admin/user)
+   - Spracovanie chýb a presmerovanie
 
-3. **AbstractOAuth2SuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/AbstractOAuth2SuccessHandler.java`)
+3. [OAuth2DynamicSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicSuccessHandler.java)
+   - Dynamické rozhodovanie medzi admin a user spracovateľom
+   - Používa OAuth2LoginHelper pre rozlíšenie typu prihlásenia
+
+4. [OAuth2DynamicErrorHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicErrorHandler.java)
+   - Spracovanie chýb pri OAuth2 autentifikácii
+   - Mapovanie výnimiek na chybové kódy
+   - Presmerovanie na správnu logon stránku (admin/user)
+
+5. [AbstractOAuth2SuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/AbstractOAuth2SuccessHandler.java)
    - Abstraktná base trieda pre OAuth2 Success Handlers
    - Spoločná funkcionalita pre extrakciu skupín a atribútov z OAuth2
    - Spracovanie chýb cez session
 
-4. **OAuth2AdminSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2AdminSuccessHandler.java`)
+6. [OAuth2AdminSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2AdminSuccessHandler.java)
    - Spracovanie úspešnej OAuth2 autentifikácie pre **admin zónu**
    - Vytvorenie alebo aktualizácia používateľa
    - Synchronizácia skupín a práv (user groups + permission groups)
    - Nastavenie admin práv
 
-5. **OAuth2UserSuccessHandler** (`src/main/java/sk/iway/iwcm/system/spring/OAuth2UserSuccessHandler.java`)
+7. [OAuth2UserSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2UserSuccessHandler.java)
    - Spracovanie úspešnej OAuth2 autentifikácie pre **zákaznícku zónu**
    - Synchronizácia iba user groups (nie permission groups)
    - Nenastavuje admin práva
 
-6. **AdminLogonController** (`src/main/java/sk/iway/iwcm/logon/AdminLogonController.java`)
+8. [AdminLogonController](../../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java)
    - Zobrazenie OAuth2 prihlasovacích odkazov na logon stránke
    - Generovanie URL pre OAuth2 poskytovateľov
    - Spracovanie OAuth2 chýb zo session
    - Nastavenie `oauth2_is_admin_section` atribútu
 
-7. **Logon Template** (`src/main/webapp/admin/skins/webjet8/logon-spring.jsp`)
+9. [Logon Template](../../../../src/main/webapp/admin/skins/webjet8/logon-spring.jsp)
    - Zobrazenie OAuth2 prihlasovacích tlačidiel
 
 ## API referencia
+
+### OAuth2LoginHelper
+
+Pomocná trieda so zdieľanou funkcionalitou:
+
+- `isAdminLogin(request)` - Zistí, či ide o admin prihlásenie na základe session atribútu
+- `isAdminLoginAndClear(request)` - Zistí typ prihlásenia a odstráni session atribút
+- `getErrorRedirectUrl(isAdminLogin)` - Vráti redirect URL pre chybu podľa typu prihlásenia
+- `getAdminRedirectUrl()` - Vráti redirect URL pre admin zónu (`/admin/logon/`)
+- `getUserRedirectUrl()` - Vráti redirect URL pre user zónu (`/`)
+- `handleError(request, response, errorCode, redirectUrl)` - Nastaví chybu do session a presmeruje
+- `handleError(request, response, errorCode, isAdminLogin)` - Nastaví chybu a presmeruje podľa typu
+
+### OAuth2DynamicErrorHandler
+
+Handler pre chyby pri OAuth2 autentifikácii:
+
+- `onAuthenticationFailure()` - Spracuje chybu, zistí typ prihlásenia a presmeruje na správnu logon stránku
+- `getErrorCodeFromException()` - Mapuje výnimky na chybové kódy pre prekladovú tabuľku
 
 ### OAuth2DynamicSuccessHandler
 
 Dynamický router pre OAuth2 autentifikáciu:
 
-- `onAuthenticationSuccess()` - Rozhoduje medzi admin a user spracovateľom na základe session atribútu `oauth2_is_admin_section`
+- `onAuthenticationSuccess()` - Rozhoduje medzi admin a user spracovateľom pomocou `OAuth2LoginHelper.isAdminLoginAndClear()`
 
 ### AbstractOAuth2SuccessHandler
 
