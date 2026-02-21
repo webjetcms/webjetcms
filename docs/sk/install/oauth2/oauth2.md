@@ -76,7 +76,7 @@ WebJET CMS pri OAuth2 autentifikácii extrahuje nasledujúce atribúty z OAuth2/
 
 #### Atribúty pre skupiny a práva
 
-Pre synchronizáciu skupín (iba pre nakonfigurovaných providerov v `oauth2_clientsWithPermissions`):
+Pre synchronizáciu skupín (iba pre nakonfigurovaných poskytovateľov v `oauth2_clientsWithPermissions`):
 
 - `groups` - Jednoduchý zoznam skupín
 - `roles` - Jednoduchý zoznam rolí
@@ -160,7 +160,7 @@ Pre existujúcich používateľov sa aktualizujú:
 
 - Meno a priezvisko (ak sa zmenili v OAuth2 provideri)
 - Login (ak OAuth2 provider poskytuje atribút definovaný v `oauth2_usernameAttribute` / predvolene `preferred_username` a ten sa zmenil)
-- Skupinové priradenia (iba pre nakonfigurovaných providerov v `oauth2_clientsWithPermissions`)
+- Skupinové priradenia (iba pre nakonfigurovaných poskytovateľov v `oauth2_clientsWithPermissions`)
 
 Aktualizácia prebieha v `AbstractOAuth2SuccessHandler.updateExistingUserFromOAuth2()`.
 
@@ -647,7 +647,7 @@ NTLMAdminGroupName=webjet-admin
 - Vytvorte skupiny s názvami zhodnými s WebJET skupinami
 - Priraďte používateľov do príslušných skupín
 - Admin skupina: `webjet-admin` (podľa NTLMAdminGroupName)
-- Mapujte skupiny na token (Client Scopes → dedicated scope → Add mapper → Group Membership)
+- Mapujte skupiny na token (Client Scopes - dedicated scope - Add mapper - Group Membership)
 
 **Testovanie:**
 
@@ -714,7 +714,7 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
   - **OAuth2AdminSuccessHandler** - Pre admin zónu (synchronizuje user groups + permission groups + admin flag)
   - **OAuth2UserSuccessHandler** - Pre user zónu (synchronizuje iba user groups)
 - **AbstractOAuth2SuccessHandler** - Spoločná base trieda s funkcionalitou pre oboch spracovateľov
-- **Automatická synchronizácia skupín** - Mapovanie skupín z OAuth2 providera na WebJET skupiny (iba pre nakonfigurovaných providerov)
+- **Automatická synchronizácia skupín** - Mapovanie skupín z OAuth2 providera na WebJET skupiny (iba pre nakonfigurovaných poskytovateľov)
 - **Admin práva z OAuth2** - Automatické nastavenie admin práv na základe skupín (iba admin zóna)
 
 ## Architektúra

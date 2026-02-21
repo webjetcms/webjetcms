@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -98,6 +99,11 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
             return null;
         }
 
+        //disable all admin permissions for new user
+        LogonTools.disableAllAdminItems(userDetails.getUserId());
+
+        LogonTools.updateLastLogin(userDetails.getUserId());
+
         return userDetails;
     }
 
@@ -134,6 +140,8 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
                 Logger.error(this.getClass(), "Failed to update user for email: " + userDetails.getEmail());
             }
         }
+
+        LogonTools.updateLastLogin(userDetails.getUserId());
     }
 
     /**

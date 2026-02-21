@@ -8,6 +8,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 import java.io.IOException;
 
@@ -19,6 +20,8 @@ public class OAuth2DynamicErrorHandler implements AuthenticationFailureHandler {
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
+
+        SetCharacterEncodingFilter.registerDataContext(request);
 
         // Determine if this is admin or user login
         boolean isAdminLogin = OAuth2LoginHelper.isAdminLogin(request);

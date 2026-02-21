@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 
 import java.io.IOException;
 
@@ -21,6 +22,8 @@ public class OAuth2DynamicSuccessHandler implements AuthenticationSuccessHandler
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+
+        SetCharacterEncodingFilter.registerDataContext(request);
 
         // Use helper to determine login type and clear session attribute
         boolean isAdminLogin = OAuth2LoginHelper.isAdminLoginAndClear(request);

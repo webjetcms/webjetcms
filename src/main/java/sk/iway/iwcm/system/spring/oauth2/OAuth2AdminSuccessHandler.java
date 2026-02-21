@@ -7,9 +7,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
@@ -85,7 +87,11 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
             response.sendRedirect("/admin/");
-            } catch (Exception ex) {
+
+            //update request bean to current user for correct logging
+            SetCharacterEncodingFilter.registerDataContext(request);
+            Adminlog.add(Adminlog.TYPE_USER_LOGON, "OAuth2 - user (ADMIN) successfully loged: name=" + userDetails.getLogin(), -1, -1);
+        } catch (Exception ex) {
             Logger.error(OAuth2AdminSuccessHandler.class, ex);
             handleError(request, response, "oauth2_exception", "/admin/logon/");
         }

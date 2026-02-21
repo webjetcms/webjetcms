@@ -27,6 +27,15 @@ public class OAuth2LoginHelper {
     private static final String USER_REDIRECT_URL = "/";
 
     /**
+     * Set info that login will be for admin section
+     * @param request
+     */
+    public static void setAdminLogin(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        session.setAttribute(SESSION_ATTR_ADMIN_SECTION, true);
+    }
+
+    /**
      * Determines if this is an administration login
      * Based on session attribute set in admin/user logon page
      *

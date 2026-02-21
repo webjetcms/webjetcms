@@ -275,7 +275,7 @@ public class AdminLogonController {
         if (logonUrls.size() > 0) {
             HttpSession session = request.getSession();
             // Nastav explicitný atribút pre OAuth2 admin login
-            session.setAttribute("oauth2_is_admin_section", true);
+            OAuth2LoginHelper.setAdminLogin(request);
 
             // Ak adminAfterLogonRedirect neexistuje, nastav defaultnú hodnotu
             if (session.getAttribute("adminAfterLogonRedirect") == null) {
@@ -356,6 +356,17 @@ public class AdminLogonController {
     }
 
 
+    /**
+     * Set admin session for oauth2 return after successful authentication
+     * @param request
+     * @return
+     */
+    @GetMapping("logon/setadmin/")
+    @ResponseBody
+    public String setAdmin(HttpServletRequest request) {
+        OAuth2LoginHelper.setAdminLogin(request);
+        return "OK";
+    }
 
     private void determineLanguage(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
         String lng = ResponseUtils.filter(request.getParameter("language"));

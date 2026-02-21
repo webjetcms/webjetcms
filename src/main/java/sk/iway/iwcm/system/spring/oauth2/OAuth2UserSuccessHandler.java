@@ -7,8 +7,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
 import sk.iway.iwcm.users.UserDetails;
@@ -89,6 +91,10 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
             } else {
                 response.sendRedirect("/");
             }
+
+            //update request bean to current user for correct logging
+            SetCharacterEncodingFilter.registerDataContext(request);
+            Adminlog.add(Adminlog.TYPE_USER_LOGON, "OAuth2 - user successfully loged: name=" + userDetails.getLogin(), -1, -1);
         } catch (Exception ex) {
             Logger.error(OAuth2UserSuccessHandler.class, ex);
             handleError(request, response, "oauth2_exception", "/");

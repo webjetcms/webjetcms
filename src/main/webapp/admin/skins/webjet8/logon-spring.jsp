@@ -73,6 +73,13 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             }
         }
 
+        function doOauthLogon(url) {
+            // Set admin login flag in session before redirecting to OAuth2 provider
+            $.get("/admin/logon/setadmin/").always(function() {
+                window.location.href = url;
+            });
+        }
+
         //-->
     </script>
 </head>
@@ -176,7 +183,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <c:if test="${isOAuth2Enabled}">
                         <c:forEach var="url" items="${logonUrls}">
                             <div class="form-group">
-                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="window.location.href='${url.value}'"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
+                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
                             </div>
                         </c:forEach>
                     </c:if>

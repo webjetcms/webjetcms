@@ -1364,7 +1364,7 @@ public class UsersDB
 
 	static void logChanges(UserDetails oldUser, UserDetails user)
 	{
-		BeanDiff diff = new BeanDiff().setNew(user).setOriginal(oldUser).blacklist("password", "salt", "settingsDontSave");
+		BeanDiff diff = new BeanDiff().setNew(user).setOriginal(oldUser).blacklist("password", "salt", "settingsDontSave", "lastLogon");
 		if (diff.diff().size() == 0)
 			return;
 		StringBuilder message = new StringBuilder().append(user.getLogin()).append('\n').append(new BeanDiffPrinter(diff));
