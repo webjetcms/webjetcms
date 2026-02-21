@@ -2,7 +2,7 @@
 
 WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov prostredníctvom externých poskytovateľov ako sú Google, Facebook, GitHub, Keycloak a ďalších. Konfigurácia sa číta pri inicializácii WebJET CMS, po zmene hodnôt alebo prvotnom nastavení je potrebné reštartovať aplikačný server.
 
-Párovanie používateľov sa vykonáva na základe emailu, ktorý musí byť jedinečný. Pri prvom prihlásení cez OAuth2 sa vytvorí nový používateľ v databáze WebJET s nastaveným prihlasovacím meno, menom, priezviskom a autorizáciou.
+Párovanie používateľov sa vykonáva na základe emailu, ktorý musí byť jedinečný. Pri prvom prihlásení cez OAuth2 sa vytvorí nový používateľ v databáze WebJET s nastaveným prihlasovacím meno, menom, priezviskom a autorizáciou. Skupiny používateľov a skupiny práv sa synchronizujú na základe zhody mena. Administrátori sa nastavujú automaticky na základe členstva v skupine definovanej v konfiguračnej premennej `NTLMAdminGroupName`.
 
 ## Konfigurácia
 
@@ -331,7 +331,7 @@ if (userDetails.isAdmin() != isAdmin) {
 2. **Email validácia** - Každý používateľ musí mať platný email atribút
 3. **Jedinečnosť emailu** - Email musí byť jedinečný v systéme
 
-### Error handling
+### Spracovanie chýb
 
 OAuth2 integrácia obsahuje dva typy spracovania chýb:
 
@@ -509,7 +509,7 @@ session.setAttribute("oauth2_is_admin_section", true);
 
 **User zóna**: Logon controller pre zákaznícku zónu nastavuje `false` alebo nenastavuje nič (default je user handler).
 
-## Logon stránka
+## Prihlasovacia stránka
 
 ### Zobrazenie OAuth2 tlačidiel
 
@@ -529,6 +529,8 @@ OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná prem
     </c:forEach>
 </c:if>
 ```
+
+Ak je nastavená konfiguračná premenná `oauth2_adminLogonAutoRedirect` na `true`, prihlasovacia stránka do administrácie automaticky presmeruje na prvého dostupného OAuth2 poskytovateľa. Nezobrazí sa teda ani štandardný prihlasovací formulár WebJET CMS.
 
 ### Generovanie OAuth2 URL
 

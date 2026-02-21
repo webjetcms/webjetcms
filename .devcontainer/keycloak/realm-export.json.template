@@ -136,8 +136,8 @@
       "username": "testuser",
       "enabled": true,
       "emailVerified": true,
-      "firstName": "Test",
-      "lastName": "User",
+      "firstName": "Testuser",
+      "lastName": "Keycloak",
       "email": "testuser@webjetcms.sk",
       "credentials": [
         {
@@ -147,15 +147,16 @@
         }
       ],
       "groups": [
-        "/Newsletter"
+        "/Newsletter",
+        "/Bankári"
       ]
     },
     {
       "username": "banker",
       "enabled": true,
       "emailVerified": true,
-      "firstName": "Bank",
-      "lastName": "User",
+      "firstName": "Banker",
+      "lastName": "Keycloak",
       "email": "banker@webjetcms.sk",
       "credentials": [
         {
@@ -172,8 +173,8 @@
       "username": "adminuser",
       "enabled": true,
       "emailVerified": true,
-      "firstName": "Admin",
-      "lastName": "User",
+      "firstName": "Adminuser",
+      "lastName": "Keycloak",
       "email": "adminuser@webjetcms.sk",
       "credentials": [
         {
@@ -183,7 +184,8 @@
         }
       ],
       "groups": [
-        "/Admini"
+        "/Admini",
+        "/Bankári"
       ]
     }
   ]

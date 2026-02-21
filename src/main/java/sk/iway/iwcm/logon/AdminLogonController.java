@@ -211,7 +211,7 @@ public class AdminLogonController {
         }
 
         String adminHost = Constants.getString("multiDomainAdminHost");
-//out.println("adminHost="+adminHost+" domain="+DocDB.getDomain(request));
+        //out.println("adminHost="+adminHost+" domain="+DocDB.getDomain(request));
 
         String serverName = Tools.getServerName(request);
         if (("iwcm.interway.sk".equals(request.getServerName())==false && "localhost".equals(request.getServerName())==false) && Tools.isNotEmpty(adminHost) && (","+adminHost+",").indexOf(","+serverName+",")==-1)
@@ -259,12 +259,22 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
-        addOAuth2UrlsToModel(session, model);
+        String autoRedirect = addOAuth2UrlsToModel(session, model);
+        if (Tools.isNotEmpty(autoRedirect)) {
+            model.addAttribute("autoRedirect", autoRedirect);
+            if (Tools.isEmpty(oauth2LogonError)) {
+                if (request.getParameter("logoff") == null) {
+                    // Automatic redirect to first OAuth2 provider instead of showing logon form
+                    return "redirect:" + autoRedirect;
+                }
+            }
+        }
 
         return LOGON_FORM;
     }
 
-    private void addOAuth2UrlsToModel(HttpSession session, ModelMap model) {
+    private String addOAuth2UrlsToModel(HttpSession session, ModelMap model) {
+        String autoRedirect = null;
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
             // Nastav explicitný atribút pre OAuth2 admin login
             session.setAttribute("oauth2_is_admin_section", true);
@@ -277,15 +287,22 @@ public class AdminLogonController {
             Iterable<ClientRegistration> clientRegistrations = null;
             ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
             if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
-                clientRegistrations = (Iterable<ClientRegistration>) clientRegistrationRepository;
+                @SuppressWarnings("unchecked")
+                Iterable<ClientRegistration> clientRegistration = (Iterable<ClientRegistration>) clientRegistrationRepository;
+                clientRegistrations = clientRegistration;
             }
             if (clientRegistrations != null) {
-                clientRegistrations.forEach(registration ->
-                        oauth2AuthenticationUrls.put(registration.getClientName(),
-                                authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
+                for (ClientRegistration registration : clientRegistrations) {
+                    String uri = authorizationRequestBaseUri + "/" + registration.getRegistrationId();
+                    oauth2AuthenticationUrls.put(registration.getClientName(), uri);
+                    if (Constants.getBoolean("oauth2_adminLogonAutoRedirect") && autoRedirect == null) {
+                        autoRedirect = uri;
+                    }
+                }
                 model.addAttribute("urls", oauth2AuthenticationUrls);
             }
         }
+        return autoRedirect;
     }
 
     @PostMapping("logon/")

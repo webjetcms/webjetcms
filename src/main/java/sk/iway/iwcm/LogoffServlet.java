@@ -108,6 +108,8 @@ public class LogoffServlet extends HttpServlet {
             }
         }
 
+        String logoffRedirect = Constants.getString("logoffRedirectUrl");
+
         // Forward control to the specified success URI
         if (request.getParameter("forwardDocId")!=null)
         {
@@ -119,13 +121,13 @@ public class LogoffServlet extends HttpServlet {
             String forward = Tools.replace(Tools.sanitizeHttpHeaderParam(request.getParameter("forward")), "//", "/");
             //security: allow only forwards to local addresses, if requested to external address use forwardDocId with redirect set in webpage
             if (forward.startsWith("/") && forward.contains("//")==false) {
-                response.sendRedirect(forward);
-                return;
+                logoffRedirect = forward;
             }
         }
         //request.getRequestDispatcher("success").forward(request,response);
         //response.sendRedirect("/");
-        String logoffRedirect = Constants.getString("logoffRedirectUrl");
+
+        if (Constants.getBoolean("oauth2_adminLogonAutoRedirect")) logoffRedirect = Tools.addParameterToUrl(logoffRedirect, "logoff", "true");
         response.sendRedirect(logoffRedirect);
     }
 

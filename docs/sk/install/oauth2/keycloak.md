@@ -1,4 +1,5 @@
 # Keycloak - Inštalácia a konfigurácia pre WebJET CMS
+<!-- spellcheck-off -->
 
 Tento návod popisuje kompletný postup inštalácie lokálneho Keycloak servera cez Docker a jeho konfiguráciu pre prihlasovanie do WebJET CMS vrátane synchronizácie skupín a práv.
 
@@ -26,14 +27,38 @@ cd .devcontainer/db/
 docker compose -f docker-compose-keycloak.yml down
 ```
 
-> **Poznámka**: Dáta Keycloak sú uložené v Docker volume `webjetcms-keycloakdata` a prežijú reštart kontajnera.
+!>**Poznámka**: Dáta Keycloak sú uložené v Docker volume `webjetcms-keycloakdata` a prežijú reštart kontajnera.
+
+### Pripravená verzia
+
+Pre jednoduché použitie je pripravená verzia konfigurovaná cez súbor [realm-export.json.template](../../../../.devcontainer/keycloak/realm-export.json.template), ktorý obsahuje pripravenú konfiguráciu pre priame použitie. Je potrebné do `hosts` súboru pridať záznam:
+
+```txt
+127.0.0.1   keycloak.local
+```
+
+a do premenných prostredia nastaviť `CODECEPT_DEFAULT_PASSWORD` na heslo, ktoré sa použije pre vytvorenie `admin` používateľa ale aj používateľov pre WebJET CMS `adminuser,testuser,banker`. Sú priradený do skupín `Admini,Bankári,Newsletter`.
+
+```txt
+CODECEPT_DEFAULT_PASSWORD=your_password_here
+```
+
+Následne stačí spustiť kontajner, ktorý použije JSON šablónu. Vo WebJET CMS stačí nastaviť konfiguračné premenné:
+
+```txt
+oauth2_clients=keycloak
+oauth2_keycloakClientId=webjetcms-client
+oauth2_keycloakClientSecret=your_password_here set in CODECEPT_DEFAULT_PASSWORD ENV variable
+```
+
+zvyšné premenné sú nastavené na hodnoty, ktoré zodpovedajú konfigurácii v realm-export.json.template. Po reštarte WebJET CMS budete môcť testovať prihlásenie pomocou Keycloak. Jeho administrácia je dostupná na adrese http://keycloak.local:18080 (nezabudnite pridať záznam do hosts súboru). Po prihlásení sa do admin konzoly Keycloak nezabudnite prepnúť vpravo hore realm na `webjetcms`.
 
 ## 2. Konfigurácia Keycloak
 
 ### 2.1 Vytvorenie Realmu
 
 1. Prihláste sa do Keycloak admin konzoly (http://localhost:18080)
-2. V ľavom hornom rohu kliknite na dropdown "master" → **Create realm**
+2. V ľavom hornom rohu kliknite na dropdown "master" - **Create realm**
 3. Vyplňte:
    - **Realm name**: `webjetcms` (alebo ľubovoľný názov)
    - **Enabled**: ON
@@ -41,7 +66,7 @@ docker compose -f docker-compose-keycloak.yml down
 
 ### 2.2 Vytvorenie klienta (Client)
 
-1. V ľavom menu kliknite **Clients** → **Create client**
+1. V ľavom menu kliknite **Clients** - **Create client**
 2. **General Settings**:
    - **Client type**: `OpenID Connect`
    - **Client ID**: `webjetcms-client` (tento ID budete používať v konfigurácii WebJET)
@@ -62,49 +87,49 @@ docker compose -f docker-compose-keycloak.yml down
 #### Získanie Client Secret
 
 1. Prejdite na záložku **Credentials** v práve vytvorenom klientovi
-2. Skopírujte hodnotu **Client secret** — budete ju potrebovať pri konfigurácii WebJET
+2. Skopírujte hodnotu **Client secret** - budete ju potrebovať pri konfigurácii WebJET
 
 ### 2.3 Vytvorenie skupín (Groups)
 
 Skupiny v Keycloak sa mapujú na skupiny používateľov (user groups) a skupiny práv (permission groups) vo WebJET CMS. Názvy skupín **musia byť zhodné** s názvami skupín vo WebJET.
 
-1. V ľavom menu kliknite **Groups** → **Create group**
+1. V ľavom menu kliknite **Groups** - **Create group**
 2. Vytvorte skupiny podľa potreby, napríklad:
-   - `webjet-admin` — admin skupina (bude použitá pre nastavenie admin práv)
-   - `editors` — skupina pre editorov obsahu
-   - `customerAdmin` — skupina pre zákazníckych administrátorov
+   - `webjet-admin` - admin skupina (bude použitá pre nastavenie admin práv)
+   - `editors` - skupina pre editorov obsahu
+   - `customerAdmin` - skupina pre zákazníckych administrátorov
 
 ### 2.4 Vytvorenie rolí (Roles)
 
 Keycloak pozná dva typy rolí:
 
-- **Client roles** — role viazané na konkrétneho klienta (napr. `webjetcms-client`). Objavujú sa v tokene v sekcii `resource_access.<clientId>.roles`. Vhodné ak máte viacero klientov a potrebujete odlíšiť práva pre každý z nich.
-- **Realm roles** — globálne role pre celý realm, zdieľané naprieč všetkými klientmi. Objavujú sa v tokene v sekcii `realm_access.roles`. Vhodné pre univerzálne role platné naprieč aplikáciami.
+- **Client roles** - role viazané na konkrétneho klienta (napr. `webjetcms-client`). Objavujú sa v tokene v sekcii `resource_access.<clientId>.roles`. Vhodné ak máte viacero klientov a potrebujete odlíšiť práva pre každý z nich.
+- **Realm roles** - globálne role pre celý realm, zdieľané naprieč všetkými klientmi. Objavujú sa v tokene v sekcii `realm_access.roles`. Vhodné pre univerzálne role platné naprieč aplikáciami.
 
 WebJET CMS automaticky extrahuje a mapuje **oba typy rolí** na skupiny používateľov a skupiny práv.
 
 #### Vytvorenie Client roles
 
-1. Prejdite na **Clients** → vyberte váš klient (`webjetcms-client`)
-2. Záložka **Roles** → **Create role**
+1. Prejdite na **Clients** - vyberte váš klient (`webjetcms-client`)
+2. Záložka **Roles** - **Create role**
 3. Vytvorte role podľa potreby, napríklad:
    - **Role name**: `customerAdmin`
    - **Role name**: `editors`
 4. Priraďte role používateľom:
-   - Prejdite na **Users** → vyberte používateľa
-   - Záložka **Role mapping** → **Assign role**
-   - Filter: **Filter by clients** → vyberte role z vášho klienta
+   - Prejdite na **Users** - vyberte používateľa
+   - Záložka **Role mapping** - **Assign role**
+   - Filter: **Filter by clients** - vyberte role z vášho klienta
 
 #### Vytvorenie Realm roles
 
-1. V ľavom menu kliknite **Realm roles** → **Create role**
+1. V ľavom menu kliknite **Realm roles** - **Create role**
 2. Vytvorte role podľa potreby, napríklad:
    - **Role name**: `spravca-obsahu`
    - **Role name**: `schvalovatel`
 3. Priraďte role používateľom:
-   - Prejdite na **Users** → vyberte používateľa
-   - Záložka **Role mapping** → **Assign role**
-   - Filter: **Filter by realm roles** → vyberte požadované role
+   - Prejdite na **Users** - vyberte používateľa
+   - Záložka **Role mapping** - **Assign role**
+   - Filter: **Filter by realm roles** - vyberte požadované role
 
 > **Dôležité**: Oba typy rolí vyžadujú vytvorenie príslušného mappera v client scope (sekcia 2.5), aby sa objavili v ID tokene a UserInfo odpovedi. Bez mappera role síce existujú v Keycloak, ale WebJET CMS ich neuvidí.
 
@@ -116,9 +141,9 @@ Keycloak štandardne neposiela skupiny, klientské role a vlastné atribúty v I
 
 #### Mapovanie skupín (groups)
 
-1. Prejdite na **Clients** → vyberte váš klient → záložka **Client scopes**
+1. Prejdite na **Clients** - vyberte váš klient - záložka **Client scopes**
 2. Kliknite na `webjetcms-client-dedicated` scope (dedicated scope pre vášho klienta)
-3. Kliknite **Configure a new mapper** (alebo **Add mapper** → **By configuration**)
+3. Kliknite **Configure a new mapper** (alebo **Add mapper** - **By configuration**)
 4. Vyberte **Group Membership**
 5. Vyplňte:
    - **Name**: `groups`
@@ -133,7 +158,7 @@ Keycloak štandardne neposiela skupiny, klientské role a vlastné atribúty v I
 
 Pre prenos klientských rolí (vytvorených v sekcii 2.4) do tokenu:
 
-1. V rovnakom dedicated scope kliknite **Add mapper** → **By configuration**
+1. V rovnakom dedicated scope kliknite **Add mapper** - **By configuration**
 2. Vyberte **User Client Role**
 3. Vyplňte:
    - **Name**: `client roles`
@@ -152,7 +177,7 @@ WebJET CMS automaticky extrahuje role z formátu `resource_access.{client}.roles
 
 Ak používate realm role (vytvorené v sekcii 2.4), musíte vytvoriť mapper aby sa objavili v tokene:
 
-1. V rovnakom dedicated scope kliknite **Add mapper** → **By configuration**
+1. V rovnakom dedicated scope kliknite **Add mapper** - **By configuration**
 2. Vyberte **User Realm Role**
 3. Vyplňte:
    - **Name**: `realm roles`
@@ -170,7 +195,7 @@ Ak používate realm role (vytvorené v sekcii 2.4), musíte vytvoriť mapper ab
 
 Pre mapovanie vlastných používateľských atribútov (ako `customerNumber`, `custId`, atď.):
 
-1. V rovnakom dedicated scope kliknite **Add mapper** → **By configuration**
+1. V rovnakom dedicated scope kliknite **Add mapper** - **By configuration**
 2. Vyberte **User Attribute**
 3. Vyplňte:
    - **Name**: `customerNumber`
@@ -188,7 +213,7 @@ Opakujte pre každý vlastný atribút, ktorý chcete mať v tokene.
 
 Aby sa vlastné atribúty (napr. `customerNumber`) zobrazovali pri používateľoch a boli dostupné v tokenoch, musíte ich najprv definovať v User Profile:
 
-1. V ľavom menu kliknite **Realm settings** → záložka **User profile**
+1. V ľavom menu kliknite **Realm settings** - záložka **User profile**
 2. Kliknite **Create attribute**
 3. Vyplňte:
    - **Attribute name**: `customerNumber`
@@ -205,7 +230,7 @@ Opakujte pre každý vlastný atribút. Po vytvorení sa atribút objaví v deta
 
 ### 2.7 Vytvorenie testovacieho používateľa
 
-1. V ľavom menu kliknite **Users** → **Add user**
+1. V ľavom menu kliknite **Users** - **Add user**
 2. Vyplňte:
    - **Username**: `testuser`
    - **Email**: `testuser@example.com`
@@ -213,18 +238,18 @@ Opakujte pre každý vlastný atribút. Po vytvorení sa atribút objaví v deta
    - **First name**: `Test`
    - **Last name**: `User`
 3. Kliknite **Create**
-4. Záložka **Credentials** → **Set password**:
+4. Záložka **Credentials** - **Set password**:
    - **Password**: `test`
    - **Temporary**: `OFF`
-5. Záložka **Groups** → **Join group** → pridajte používateľa do vytvorených skupín (napr. `webjet-admin`)
-6. Záložka **Role mapping** → **Assign role** → Filter by clients → priraďte client role (napr. `customerAdmin`)
-7. Pre vlastné atribúty: záložka **Details** → zrolujte nadol, vyplňte hodnotu atribútu (napr. **Customer Number**: `0134416700`) → kliknite **Save**
+5. Záložka **Groups** - **Join group** - pridajte používateľa do vytvorených skupín (napr. `webjet-admin`)
+6. Záložka **Role mapping** - **Assign role** - Filter by clients - priraďte client role (napr. `customerAdmin`)
+7. Pre vlastné atribúty: záložka **Details** - zrolujte nadol, vyplňte hodnotu atribútu (napr. **Customer Number**: `0134416700`) - kliknite **Save**
 
 ## 3. Konfigurácia WebJET CMS
 
 ### 3.1 Konfiguračné premenné pre admin zónu
 
-Nastavte nasledovné konfiguračné premenné v WebJET CMS (Nastavenia → Konfigurácia):
+Nastavte nasledovné konfiguračné premenné v WebJET CMS (Nastavenia - Konfigurácia):
 
 ```properties
 # Zoznam OAuth2 providerov (oddelený čiarkami)
@@ -284,14 +309,15 @@ Ak konfiguračná premenná nie je nastavená, použije sa predvolená hodnota `
 
 Aby synchronizácia skupín fungovala, musia skupiny vo WebJET existovať a ich názvy musia zodpovedať názvom skupín/rolí v Keycloak tokene.
 
-1. Prejdite do **Admin** → **Používatelia** → **Skupiny používateľov**
+1. Prejdite do **Admin** - **Používatelia** - **Skupiny používateľov**
 2. Vytvorte skupiny s **rovnakými názvami** ako v Keycloak:
    - `webjet-admin`
    - `editors`
    - `customerAdmin`
-3. Pre admin práva: Vytvorte aj **skupiny práv** (Admin → Používatelia → Skupiny práv) s rovnakými názvami
+3. Pre admin práva: Vytvorte aj **skupiny práv** (Admin - Používatelia - Skupiny práv) s rovnakými názvami
 
 WebJET CMS automaticky:
+
 - Načíta skupiny z tokenu (z `groups`, `roles`, `resource_access.*.roles`, `realm_access.roles`)
 - Porovná ich s existujúcimi skupinami vo WebJET podľa názvu
 - Odstráni staré priradenia a nastaví nové (úplná synchronizácia)
@@ -339,11 +365,11 @@ Nasledujúci príklad ukazuje reálnu štruktúru OAuth2 tokenu z produkčného 
 ### Ako WebJET CMS spracuje tento token
 
 | Atribút v tokene | Použitie vo WebJET | Poznámka |
-|---|---|---|
+| --- | --- | --- |
 | `email` | Email používateľa, identifikácia | Povinný, musí byť jedinečný |
-| `preferred_username` | Login (predvolene) | V tomto prípade UUID — nevhodné ako login |
+| `preferred_username` | Login (predvolene) | V tomto prípade UUID - nevhodné ako login |
 | `customerNumber` | Login (ak nastavené `oauth2_usernameAttribute=customerNumber`) | Odporúčané pre tento typ tokenu |
-| `resource_access.CMS_Orange_OSK.roles` | Skupiny — extrahuje sa `customerAdmin` | Automaticky |
+| `resource_access.CMS_Orange_OSK.roles` | Skupiny - extrahuje sa `customerAdmin` | Automaticky |
 | `given_name` / `family_name` | Meno a priezvisko | Ak sú prítomné v tokene |
 
 ### Konfigurácia WebJET pre tento token
@@ -374,6 +400,7 @@ NTLMAdminGroupName=customerAdmin
 ```
 
 V tomto prípade:
+
 - Login používateľa bude `0134416700` (z `customerNumber`)
 - Používateľ bude priradený do skupiny `customerAdmin` (z `resource_access.CMS_Orange_OSK.roles`)
 - Ak je prihlásenie cez admin zónu a `NTLMAdminGroupName=customerAdmin`, používateľ dostane admin práva
@@ -446,7 +473,7 @@ Výsledný access token dekódujte na [jwt.io](https://jwt.io) a overte prítomn
 ### Redirect URI mismatch
 
 - Keycloak hlási chybu s redirect URI
-- **Riešenie**: V konfigurácii klienta v Keycloak (Settings → Valid redirect URIs) pridajte:
+- **Riešenie**: V konfigurácii klienta v Keycloak (Settings - Valid redirect URIs) pridajte:
   - `http://localhost/login/oauth2/code/keycloak` (pre lokálny vývoj)
   - `https://your-domain.com/login/oauth2/code/keycloak` (pre produkciu)
 
