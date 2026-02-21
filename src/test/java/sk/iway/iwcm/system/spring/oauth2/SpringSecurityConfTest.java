@@ -17,6 +17,7 @@ import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -240,7 +241,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         Constants.setString("oauth2_googleClientSecret", "google-client-secret");
 
         // Spustenie testu
-        OAuth2AuthorizedClientService service = springSecurityConf.authorizedClientService();
+        OAuth2AuthorizedClientService service = springSecurityConf.authorizedClientService(springSecurityConf.clientRegistrationRepository());
 
         // Overenie
         assertNotNull(service);

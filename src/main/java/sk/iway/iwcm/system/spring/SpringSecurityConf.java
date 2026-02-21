@@ -157,7 +157,7 @@ public class SpringSecurityConf {
 		String clientId = Constants.getString("oauth2_" + providerId + "ClientId");
 		String clientSecret = Constants.getString("oauth2_" + providerId + "ClientSecret");
 		if (Tools.isAnyEmpty(clientId, clientSecret)) return null;
-		// Preddefinovaní poskytovatelia
+		// known providers
 		if ("google".equalsIgnoreCase(providerId)) {
 			return CommonOAuth2Provider.GOOGLE.getBuilder(providerId)
 					.clientId(clientId)
@@ -182,7 +182,7 @@ public class SpringSecurityConf {
 					.clientSecret(clientSecret)
 					.build();
 		}
-		// Ostatní poskytovatelia - načítaj všetky potrebné parametre
+		// other providers - load all necessary parameters
 		String authorizationUri = Constants.getString("oauth2_" + providerId + "AuthorizationUri");
 		String tokenUri = Constants.getString("oauth2_" + providerId + "TokenUri");
 		String userInfoUri = Constants.getString("oauth2_" + providerId + "UserInfoUri");

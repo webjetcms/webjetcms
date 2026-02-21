@@ -54,7 +54,7 @@ Vysvetlenie použitých piktogramov:
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
-- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [x] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).

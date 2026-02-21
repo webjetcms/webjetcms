@@ -517,7 +517,7 @@ OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná prem
 
 ```jsp
 <c:if test="${isOAuth2Enabled}">
-    <c:forEach var="url" items="${urls}">
+    <c:forEach var="url" items="${logonUrls}">
         <div class="form-group">
             <button type="button" name="oauth2-login-submit"
                     class="btn btn-primary"
@@ -550,7 +550,7 @@ if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistratio
     clientRegistrations.forEach(registration ->
         oauth2AuthenticationUrls.put(registration.getClientName(),
             authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
-    model.addAttribute("urls", oauth2AuthenticationUrls);
+    model.addAttribute("logonUrls", oauth2AuthenticationUrls);
 }
 ```
 
@@ -686,7 +686,7 @@ public String showLogonForm(ModelMap model, HttpServletRequest request, HttpSess
         clientRegistrations.forEach(registration ->
             oauth2AuthenticationUrls.put(registration.getClientName(),
                 authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
-        model.addAttribute("urls", oauth2AuthenticationUrls);
+        model.addAttribute("logonUrls", oauth2AuthenticationUrls);
     }
     return USER_LOGON_FORM;
 }

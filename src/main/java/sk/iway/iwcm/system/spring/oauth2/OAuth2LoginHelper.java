@@ -3,10 +3,18 @@ package sk.iway.iwcm.system.spring.oauth2;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.core.ResolvableType;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 /**
  * Helper class with shared functionality for OAuth2 handlers
@@ -108,5 +116,51 @@ public class OAuth2LoginHelper {
     public static void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, boolean isAdminLogin) throws IOException {
         String redirectUrl = getErrorRedirectUrl(isAdminLogin);
         handleError(request, response, errorCode, redirectUrl);
+    }
+
+    /**
+     * Gets logon URLs for configured OAuth2 clients to display on login page
+     * @param request HTTP request
+     * @return map of client names to authorization URLs
+     */
+    public static Map<String, String> getLogonUrls(boolean isAdmin, HttpServletRequest request) {
+        if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
+            // Označ že ide o user sekciu (nie admin)
+            HttpSession session = request.getSession();
+            if (isAdmin) {
+                session.setAttribute("oauth2_is_admin_section", true);
+            } else {
+                //save session redirect
+                session.setAttribute("afterLogonRedirect", PathFilter.getOrigPath(request));
+                session.removeAttribute("oauth2_is_admin_section");
+            }
+
+            Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
+            String authorizationRequestBaseUri = "/oauth2/authorization";
+
+            try {
+                ClientRegistrationRepository clientRegistrationRepository = Tools.getSpringBean("clientRegistrationRepository", ClientRegistrationRepository.class);
+                if (clientRegistrationRepository != null) {
+                    Iterable<ClientRegistration> clientRegistrations = null;
+                    ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
+                    if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
+                        @SuppressWarnings("unchecked")
+                        Iterable<ClientRegistration> clientRegistration = (Iterable<ClientRegistration>) clientRegistrationRepository;
+                        clientRegistrations = clientRegistration;
+                    }
+                    if (clientRegistrations != null) {
+                        for (ClientRegistration registration : clientRegistrations) {
+                            oauth2AuthenticationUrls.put(registration.getClientName(),
+                                authorizationRequestBaseUri + "/" + registration.getRegistrationId());
+                        }
+                        Logger.debug(OAuth2LoginHelper.class, "OAuth2 URLs set for user logon: " + oauth2AuthenticationUrls);
+                        return oauth2AuthenticationUrls;
+                    }
+                }
+            } catch (Exception e) {
+                Logger.error(OAuth2LoginHelper.class, "Error getting OAuth2 client registrations", e);
+            }
+        }
+        return null;
     }
 }

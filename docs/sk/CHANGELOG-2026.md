@@ -9,6 +9,7 @@
 ### Bezpečnosť
 
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
+- Pridaná možnosť autorizácie cez [OAuth2/Keycloak](install/oauth2/oauth2.md) (#56665).
 
 ### Pre programátora
 

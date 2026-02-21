@@ -8,9 +8,6 @@ import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.core.ResolvableType;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -44,6 +41,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.system.spring.oauth2.OAuth2LoginHelper;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
@@ -73,16 +71,13 @@ public class AdminLogonController {
     private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
-    private static final String authorizationRequestBaseUri = "/oauth2/authorization";
     Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
 
-    private final ClientRegistrationRepository clientRegistrationRepository;
     private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-    public AdminLogonController(UserDetailsRepository userDetailsRepository, ClientRegistrationRepository clientRegistrationRepository) {
+    public AdminLogonController(UserDetailsRepository userDetailsRepository) {
         this.userDetailsRepository = userDetailsRepository;
-        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     /**
@@ -259,7 +254,7 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
-        String autoRedirect = addOAuth2UrlsToModel(session, model);
+        String autoRedirect = addOAuth2UrlsToModel(request, model);
         if (Tools.isNotEmpty(autoRedirect)) {
             model.addAttribute("autoRedirect", autoRedirect);
             if (Tools.isEmpty(oauth2LogonError)) {
@@ -273,9 +268,12 @@ public class AdminLogonController {
         return LOGON_FORM;
     }
 
-    private String addOAuth2UrlsToModel(HttpSession session, ModelMap model) {
+    private String addOAuth2UrlsToModel(HttpServletRequest request, ModelMap model) {
         String autoRedirect = null;
-        if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
+
+        Map<String, String> logonUrls = OAuth2LoginHelper.getLogonUrls(true, request);
+        if (logonUrls.size() > 0) {
+            HttpSession session = request.getSession();
             // Nastav explicitný atribút pre OAuth2 admin login
             session.setAttribute("oauth2_is_admin_section", true);
 
@@ -284,22 +282,9 @@ public class AdminLogonController {
                 session.setAttribute("adminAfterLogonRedirect", "/admin/");
             }
 
-            Iterable<ClientRegistration> clientRegistrations = null;
-            ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
-            if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
-                @SuppressWarnings("unchecked")
-                Iterable<ClientRegistration> clientRegistration = (Iterable<ClientRegistration>) clientRegistrationRepository;
-                clientRegistrations = clientRegistration;
-            }
-            if (clientRegistrations != null) {
-                for (ClientRegistration registration : clientRegistrations) {
-                    String uri = authorizationRequestBaseUri + "/" + registration.getRegistrationId();
-                    oauth2AuthenticationUrls.put(registration.getClientName(), uri);
-                    if (Constants.getBoolean("oauth2_adminLogonAutoRedirect") && autoRedirect == null) {
-                        autoRedirect = uri;
-                    }
-                }
-                model.addAttribute("urls", oauth2AuthenticationUrls);
+            model.addAttribute("logonUrls", logonUrls);
+            if (Constants.getBoolean("oauth2_adminLogonAutoRedirect")) {
+                autoRedirect = logonUrls.values().iterator().next(); // redirect to first provider if auto redirect is enabled
             }
         }
         return autoRedirect;
@@ -329,7 +314,7 @@ public class AdminLogonController {
         if (errors.get("ERROR_KEY")!=null) {
             Logger.error(this,"su nejake chyby v logovacom formulari");
             model.addAttribute("errors", errors.get("ERROR_KEY"));
-            addOAuth2UrlsToModel(session, model);
+            addOAuth2UrlsToModel(request, model);
             return LOGON_FORM;
         }
 

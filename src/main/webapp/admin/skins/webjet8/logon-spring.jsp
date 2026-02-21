@@ -174,7 +174,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                     </c:if>
                     <c:if test="${isOAuth2Enabled}">
-                        <c:forEach var="url" items="${urls}">
+                        <c:forEach var="url" items="${logonUrls}">
                             <div class="form-group">
                                 <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="window.location.href='${url.value}'"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
                             </div>
