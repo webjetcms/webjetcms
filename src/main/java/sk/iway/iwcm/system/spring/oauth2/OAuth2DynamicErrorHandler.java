@@ -12,32 +12,32 @@ import sk.iway.iwcm.Logger;
 import java.io.IOException;
 
 /**
- * Dynamický OAuth2 Error Handler, ktorý spracováva chyby pri OAuth2 autentifikácii.
- * Na základe session atribútu rozhodne, či presmeruje na admin alebo user login stránku.
+ * Dynamic OAuth2 Error Handler that processes errors during OAuth2 authentication.
+ * Based on session attribute decides whether to redirect to admin or user login page.
  */
 public class OAuth2DynamicErrorHandler implements AuthenticationFailureHandler {
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
 
-        // Zisti, či ide o admin alebo user prihlásenie
+        // Determine if this is admin or user login
         boolean isAdminLogin = OAuth2LoginHelper.isAdminLogin(request);
 
-        // Získaj kód chyby z výnimky
+        // Get error code from exception
         String errorCode = getErrorCodeFromException(exception);
 
         Logger.error(OAuth2DynamicErrorHandler.class, "OAuth2 authentication failed - isAdminLogin: " + isAdminLogin + ", error: " + errorCode + ", exception: " + exception.getMessage());
         Adminlog.add(Adminlog.TYPE_USER_LOGON, "OAuth2 authentication failed - isAdminLogin: " + isAdminLogin + ", error: " + errorCode + ", exception: " + exception.getMessage(), -1, -1);
 
-        // Nastav chybu a presmeruj
+        // Set error and redirect
         OAuth2LoginHelper.handleError(request, response, errorCode, isAdminLogin);
     }
 
     /**
-     * Získa kód chyby z výnimky pre zobrazenie používateľovi
+     * Gets error code from exception for displaying to user
      *
-     * @param exception výnimka pri autentifikácii
-     * @return kód chyby pre prekladovú tabuľku
+     * @param exception authentication exception
+     * @return error code for translation table
      */
     private String getErrorCodeFromException(AuthenticationException exception) {
         if (exception == null) {
@@ -49,7 +49,7 @@ public class OAuth2DynamicErrorHandler implements AuthenticationFailureHandler {
 
         Logger.debug(OAuth2DynamicErrorHandler.class, "Processing exception: " + exceptionClass + " - " + message);
 
-        // Mapovanie konkrétnych chýb na kódy
+        // Mapping specific errors to codes
         if (exceptionClass.contains("OAuth2AuthorizationCodeRequestTypeNotSupported")) {
             return "oauth2_provider_not_configured";
         }
@@ -71,7 +71,7 @@ public class OAuth2DynamicErrorHandler implements AuthenticationFailureHandler {
             return "oauth2_client_authorization_failed";
         }
 
-        // Všeobecná chyba
+        // General error
         return "oauth2_authentication_failed";
     }
 }

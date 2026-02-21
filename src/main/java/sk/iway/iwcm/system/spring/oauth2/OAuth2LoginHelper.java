@@ -9,7 +9,7 @@ import sk.iway.iwcm.Logger;
 import java.io.IOException;
 
 /**
- * Pomocná trieda so zdieľanou funkcionalitou pre OAuth2 handlery
+ * Helper class with shared functionality for OAuth2 handlers
  */
 public class OAuth2LoginHelper {
 
@@ -19,11 +19,11 @@ public class OAuth2LoginHelper {
     private static final String USER_REDIRECT_URL = "/";
 
     /**
-     * Zistí, či sa jedná o prihlásenie do administrácie
-     * Na základe session atribútu nastaveného v admin/user logon stránke
+     * Determines if this is an administration login
+     * Based on session attribute set in admin/user logon page
      *
      * @param request HTTP request
-     * @return true ak ide o admin prihlásenie
+     * @return true if this is admin login
      */
     public static boolean isAdminLogin(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -35,10 +35,10 @@ public class OAuth2LoginHelper {
     }
 
     /**
-     * Zistí, či sa jedná o prihlásenie do administrácie a odstráni session atribút
+     * Determines if this is an administration login and removes session attribute
      *
      * @param request HTTP request
-     * @return true ak ide o admin prihlásenie
+     * @return true if this is admin login
      */
     public static boolean isAdminLoginAndClear(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -47,47 +47,47 @@ public class OAuth2LoginHelper {
         }
         Boolean isAdminSection = (Boolean) session.getAttribute(SESSION_ATTR_ADMIN_SECTION);
         boolean result = isAdminSection != null && isAdminSection;
-        // Po použití odstráň atribút
+        // Remove attribute after use
         session.removeAttribute(SESSION_ATTR_ADMIN_SECTION);
         return result;
     }
 
     /**
-     * Vráti URL pre presmerovanie pri chybe podľa typu prihlásenia
+     * Returns redirect URL for error based on login type
      *
-     * @param isAdminLogin true ak ide o admin prihlásenie
-     * @return URL pre presmerovanie
+     * @param isAdminLogin true if this is admin login
+     * @return redirect URL
      */
     public static String getErrorRedirectUrl(boolean isAdminLogin) {
         return isAdminLogin ? ADMIN_REDIRECT_URL : USER_REDIRECT_URL;
     }
 
     /**
-     * Vráti URL pre presmerovanie do admin zóny
+     * Returns redirect URL for admin zone
      *
-     * @return URL pre presmerovanie do admin zóny
+     * @return redirect URL for admin zone
      */
     public static String getAdminRedirectUrl() {
         return ADMIN_REDIRECT_URL;
     }
 
     /**
-     * Vráti URL pre presmerovanie do user zóny
+     * Returns redirect URL for user zone
      *
-     * @return URL pre presmerovanie do user zóny
+     * @return redirect URL for user zone
      */
     public static String getUserRedirectUrl() {
         return USER_REDIRECT_URL;
     }
 
     /**
-     * Nastaví chybový kód do session a vykoná redirect
+     * Sets error code to session and performs redirect
      *
      * @param request HTTP request
      * @param response HTTP response
-     * @param errorCode kód chyby
-     * @param redirectUrl URL pre presmerovanie
-     * @throws IOException ak zlyhá redirect
+     * @param errorCode error code
+     * @param redirectUrl redirect URL
+     * @throws IOException if redirect fails
      */
     public static void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, String redirectUrl) throws IOException {
         HttpSession session = request.getSession();
@@ -97,13 +97,13 @@ public class OAuth2LoginHelper {
     }
 
     /**
-     * Nastaví chybový kód do session a vykoná redirect podľa typu prihlásenia
+     * Sets error code to session and performs redirect based on login type
      *
      * @param request HTTP request
      * @param response HTTP response
-     * @param errorCode kód chyby
-     * @param isAdminLogin true ak ide o admin prihlásenie
-     * @throws IOException ak zlyhá redirect
+     * @param errorCode error code
+     * @param isAdminLogin true if this is admin login
+     * @throws IOException if redirect fails
      */
     public static void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, boolean isAdminLogin) throws IOException {
         String redirectUrl = getErrorRedirectUrl(isAdminLogin);

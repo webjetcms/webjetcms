@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Abstraktná base trieda pre OAuth2 Success Handlers
- * Obsahuje spoločnú funkcionalitu pre admin aj user login
+ * Abstract base class for OAuth2 Success Handlers
+ * Contains shared functionality for admin and user login
  */
 public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
@@ -38,7 +38,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     protected static final String ROLE_PREFIX = "ROLE_";
 
     /**
-     * Vráti názov atribútu pre username z konfigurácie, alebo default "preferred_username"
+     * Returns the username attribute name from configuration, or default "preferred_username"
      */
     protected String getUsernameAttribute() {
         String configured = Constants.getString("oauth2_usernameAttribute");
@@ -52,7 +52,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     public abstract void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException;
 
     /**
-     * Vytvorí nového používateľa z OAuth2 údajov
+     * Creates a new user from OAuth2 data
      */
     protected UserDetails createNewUserFromOAuth2(OAuth2User oauth2User, String email) {
         UserDetails userDetails = new UserDetails();
@@ -64,7 +64,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
         if (givenName != null) userDetails.setFirstName(givenName);
         if (familyName != null) userDetails.setLastName(familyName);
 
-        // Nastav login - prednostne z username atribútu, inak použij email pred zavináčom
+        // Set login - preferably from username attribute, otherwise use email before @ sign
         String usernameAttr = getUsernameAttribute();
         String username = oauth2User.getAttribute(usernameAttr);
         String login;
@@ -87,7 +87,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Aktualizuje existujúceho používateľa s novými údajmi z OAuth2
+     * Updates existing user with new data from OAuth2
      */
     protected void updateExistingUserFromOAuth2(OAuth2User oauth2User, UserDetails userDetails) {
         String givenName = oauth2User.getAttribute(GIVEN_NAME_ATTRIBUTE);
@@ -104,7 +104,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
             needsUpdate = true;
         }
 
-        // Aktualizuj login ak sa zmenil v OAuth2 provideri
+        // Update login if changed in OAuth2 provider
         if (username != null && !username.trim().isEmpty() && !username.equals(userDetails.getLogin())) {
             Logger.info(this.getClass(), "Updating login from '" + userDetails.getLogin() + "' to '" + username + "' for user: " + userDetails.getEmail());
             userDetails.setLogin(username);
@@ -122,7 +122,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Získa ID OAuth2 providera z autentifikácie
+     * Gets OAuth2 provider ID from authentication
      */
     protected String getProviderId(Authentication authentication) {
         if (authentication instanceof OAuth2AuthenticationToken) {
@@ -136,7 +136,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Zisťuje či má daný provider nakonfigurované synchronizovať práva
+     * Determines if the given provider is configured to synchronize permissions
      */
     protected boolean shouldSyncPermissions(String providerId) {
         if (providerId == null) {
@@ -157,29 +157,29 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Extrahuje zoznam skupín z OAuth2 atribútov
-     * Podporuje rôzne formáty: groups, roles, resource_access.client.roles, atď.
+     * Extracts list of groups from OAuth2 attributes
+     * Supports various formats: groups, roles, resource_access.client.roles, etc.
      */
     protected List<String> extractGroupsFromOAuth2(OAuth2User oauth2User) {
         List<String> groups = new ArrayList<>();
 
-        // Skús získať zo všetkých možných atribútov
+        // Try to get from all possible attributes
         groups.addAll(extractFromAttribute(oauth2User, GROUPS_ATTRIBUTE));
         groups.addAll(extractFromAttribute(oauth2User, ROLES_ATTRIBUTE));
         groups.addAll(extractFromAttribute(oauth2User, GROUP_MEMBERSHIP_ATTRIBUTE));
 
-        // Skús získať z Keycloak formátu (resource_access)
+        // Try to get from Keycloak format (resource_access)
         groups.addAll(extractFromResourceAccess(oauth2User));
 
-        // Skús získať z realm_access (Keycloak realm roles)
+        // Try to get from realm_access (Keycloak realm roles)
         groups.addAll(extractFromRealmAccess(oauth2User));
 
-        // Skús získať z authorities (Spring Security)
+        // Try to get from authorities (Spring Security)
         if (oauth2User.getAuthorities() != null) {
             for (var authority : oauth2User.getAuthorities()) {
                 String authName = authority.getAuthority();
                 if (authName.startsWith(ROLE_PREFIX)) {
-                    authName = authName.substring(ROLE_PREFIX.length()); // Odstráň prefix ROLE_
+                    authName = authName.substring(ROLE_PREFIX.length()); // Remove ROLE_ prefix
                 }
                 if (!groups.contains(authName)) {
                     groups.add(authName);
@@ -193,7 +193,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Extrahuje zoznam z jednoduchého atribútu
+     * Extracts list from simple attribute
      */
     protected List<String> extractFromAttribute(OAuth2User oauth2User, String attributeName) {
         List<String> result = new ArrayList<>();
@@ -208,7 +208,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
                 }
             }
         } else if (attr instanceof String) {
-            // Ak je to string, skús ho rozdeliť podľa čiarok alebo medzier
+            // If it's a string, try to split by commas or spaces
             String[] parts = ((String) attr).split("[,\\s]+");
             for (String part : parts) {
                 if (!part.trim().isEmpty()) {
@@ -222,7 +222,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Extrahuje role z resource_access
+     * Extracts roles from resource_access
      */
     @SuppressWarnings("unchecked")
     protected List<String> extractFromResourceAccess(OAuth2User oauth2User) {
@@ -241,7 +241,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Extrahuje role z jedného klientského resource
+     * Extracts roles from one client resource
      */
     @SuppressWarnings("unchecked")
     protected List<String> extractRolesFromClientResource(Map.Entry<String, Object> clientEntry) {
@@ -261,7 +261,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Extrahuje role z realm_access
+     * Extracts roles from realm_access
      */
     @SuppressWarnings("unchecked")
     protected List<String> extractFromRealmAccess(OAuth2User oauth2User) {
@@ -278,7 +278,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Pomocná metóda na extrahovanie rolí z roles objektu
+     * Helper method for extracting roles from roles object
      */
     protected List<String> extractRolesFromRolesObject(Object rolesObject, String source) {
         List<String> result = new ArrayList<>();
@@ -297,7 +297,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Zaloguje všetky atribúty z OAuth2 tokenu ako JSON pre diagnostiku
+     * Logs all attributes from OAuth2 token as JSON for diagnostics
      */
     protected void logOAuth2Attributes(OAuth2User oauth2User) {
         if (oauth2User == null) return;
@@ -323,7 +323,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     }
 
     /**
-     * Pomocná metóda na spracovanie chyby - nastaví chybu do session a vykoná redirect
+     * Helper method for error handling - sets error to session and performs redirect
      */
     protected void handleError(HttpServletRequest request, HttpServletResponse response, String errorCode, String redirectUrl) throws IOException {
         HttpSession session = request.getSession();

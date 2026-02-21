@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * OAuth2 Success Handler pre zákaznícku zónu (user logon)
- * Na rozdiel od OAuth2AdminSuccessHandler pre admin zónu:
- * - Nenastavuje isAdmin flag
- * - Nenastavuje permission groups (skupiny práv)
- * - Mapuje iba user groups (skupiny používateľov)
+ * OAuth2 Success Handler for customer zone (user logon)
+ * Unlike OAuth2AdminSuccessHandler for admin zone:
+ * - Does not set isAdmin flag
+ * - Does not set permission groups
+ * - Maps only user groups
  */
 public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
 
@@ -50,7 +50,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             UserDetails userDetails = UsersDB.getUserByEmail(email, 1);
             if (userDetails == null) {
-                // Vytvor nového používateľa
+                // Create new user
                 userDetails = createNewUserFromOAuth2(oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2UserSuccessHandler.class, "Failed to create user for email: " + email);
@@ -59,11 +59,11 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 }
                 Logger.info(OAuth2UserSuccessHandler.class, "Created new user for email: " + email);
             } else {
-                // Aktualizuj existujúceho používateľa s novými údajmi z OAuth2
+                // Update existing user with new data from OAuth2
                 updateExistingUserFromOAuth2(oauth2User, userDetails);
             }
 
-            // Aplikuj user groups z OAuth2 iba pre nakonfigurovaných providerov
+            // Apply user groups from OAuth2 only for configured providers
             String providerId = getProviderId(authentication);
             if (shouldSyncPermissions(providerId)) {
                 Logger.info(OAuth2UserSuccessHandler.class, "Applying OAuth2 user groups for provider: " + providerId);
@@ -80,7 +80,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
 
-            // Redirect po prihlásení
+            // Redirect after login
             String afterLogonRedirect = (String)session.getAttribute("afterLogonRedirect");
             if (afterLogonRedirect != null) {
                 response.sendRedirect(afterLogonRedirect);
@@ -94,8 +94,8 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Aplikuje user groups z OAuth2 atribútov na používateľa (iba pre nakonfigurovaných providerov)
-     * NEAPLIKUJE permission groups ani admin práva - toto je user zóna!
+     * Applies user groups from OAuth2 attributes to user (only for configured providers)
+     * DOES NOT apply permission groups or admin rights - this is user zone!
      */
     private void applyOAuth2UserGroups(OAuth2User oauth2User, UserDetails userDetails) {
         try {
@@ -107,11 +107,11 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Nájdi existujúce skupiny používateľov v WebJET
+            // Find existing user groups in WebJET
             List<UserGroupDetails> matchingUserGroups = new ArrayList<>();
 
             try {
-                // Načítaj všetky user groups a filtruj podľa názvu
+                // Load all user groups and filter by name
                 List<UserGroupDetails> allUserGroups = UserGroupsDB.getInstance().getUserGroups();
                 for (UserGroupDetails userGroup : allUserGroups) {
                     if (oauth2Groups.contains(userGroup.getUserGroupName())) {
@@ -125,7 +125,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Synchronizuj skupiny - odstráň staré a pridaj nové
+            // Synchronize groups - remove old and add new
             synchronizeUserGroups(userDetails, matchingUserGroups);
 
             if (matchingUserGroups.isEmpty()) {
@@ -138,11 +138,11 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Odstráni všetky skupinové priradenia používateľa
+     * Removes all group assignments from user
      */
     private void removeAllGroupAssignments(UserDetails userDetails) {
         try {
-            // Odstráň zo všetkých skupín používateľov
+            // Remove from all user groups
             userDetails.setUserGroupsIds(null);
             Logger.info(OAuth2UserSuccessHandler.class, "Removed user from all user groups: " + userDetails.getEmail());
         } catch (Exception ex) {
@@ -151,7 +151,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Synchronizuje skupiny používateľa - odstráni staré a pridá nové
+     * Synchronizes user groups - removes old and adds new
      */
     private void synchronizeUserGroups(UserDetails userDetails, List<UserGroupDetails> newUserGroups) {
         String userEmail = userDetails != null ? userDetails.getEmail() : "unknown";
@@ -161,10 +161,10 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Najprv odstráň zo všetkých existujúcich skupín
+            // First remove from all existing groups
             removeAllGroupAssignments(userDetails);
 
-            // Pridaj nové user groups
+            // Add new user groups
             if (!newUserGroups.isEmpty()) {
                 for (UserGroupDetails group : newUserGroups) {
                     userDetails.addToGroup(group.getUserGroupId());
@@ -172,7 +172,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
                 }
             }
 
-            // Ulož všetky zmeny
+            // Save all changes
             boolean saved = UsersDB.saveUser(userDetails);
             if (saved) {
                 Logger.info(OAuth2UserSuccessHandler.class, "Successfully synchronized user groups: " + userDetails.getUserGroupsIds());

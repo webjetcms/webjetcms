@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
 import sk.iway.iwcm.users.UserDetails;
@@ -46,7 +47,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             UserDetails userDetails = UsersDB.getUserByEmail(email, 1);
             if (userDetails == null) {
-                // Vytvor nového používateľa
+                // Create new user
                 userDetails = createNewUserFromOAuth2(oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2AdminSuccessHandler.class, "Failed to create user for email: " + email);
@@ -55,11 +56,11 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 }
                 Logger.info(OAuth2AdminSuccessHandler.class, "Created new user for email: " + email);
             } else {
-                // Aktualizuj existujúceho používateľa s novými údajmi z OAuth2
+                // Update existing user with new data from OAuth2
                 updateExistingUserFromOAuth2(oauth2User, userDetails);
             }
 
-            // Aplikuj práva z OAuth2 iba pre nakonfigurovaných providerov
+            // Apply permissions from OAuth2 only for configured providers
             String providerId = getProviderId(authentication);
             if (shouldSyncPermissions(providerId)) {
                 Logger.info(OAuth2AdminSuccessHandler.class, "Applying OAuth2 permissions for provider: " + providerId);
@@ -68,7 +69,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 Logger.info(OAuth2AdminSuccessHandler.class, "Skipping group synchronization for provider '" + providerId + "' (not configured in oauth2_clientsWithPermissions)");
             }
 
-            // Skontroluj či má používateľ admin práva
+            // Check if user has admin rights
             if (!userDetails.isAdmin()) {
                 Logger.warn(OAuth2AdminSuccessHandler.class, "User " + userDetails.getEmail() + " does not have admin rights after OAuth2 synchronization");
                 HttpSession session = request.getSession();
@@ -91,7 +92,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Aplikuje práva z OAuth2 atribútov na používateľa
+     * Applies permissions from OAuth2 attributes to user
      */
     private void applyOAuth2Permissions(OAuth2User oauth2User, UserDetails userDetails) {
         try {
@@ -103,12 +104,12 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Nájdi existujúce skupiny používateľov v WebJET
+            // Find existing user groups in WebJET
             List<UserGroupDetails> matchingUserGroups = new ArrayList<>();
             List<PermissionGroupBean> matchingPermissionGroups = new ArrayList<>();
 
             try {
-                // Načítaj všetky user groups a filtruj podľa názvu
+                // Load all user groups and filter by name
                 List<UserGroupDetails> allUserGroups = UserGroupsDB.getInstance().getUserGroups();
                 for (UserGroupDetails userGroup : allUserGroups) {
                     if (oauth2Groups.contains(userGroup.getUserGroupName())) {
@@ -117,7 +118,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                     }
                 }
 
-                // Načítaj všetky permission groups a filtruj podľa názvu
+                // Load all permission groups and filter by name
                 List<PermissionGroupBean> allPermissionGroups = PermissionGroupDB.getPermissionGroups(null);
                 for (PermissionGroupBean permissionGroup : allPermissionGroups) {
                     if (oauth2Groups.contains(permissionGroup.getTitle())) {
@@ -131,24 +132,26 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Synchronizuj skupiny - odstráň staré a pridaj nové
+            // Synchronize groups - remove old and add new
             synchronizeUserGroups(userDetails, matchingUserGroups, matchingPermissionGroups);
 
             if (matchingUserGroups.isEmpty() && matchingPermissionGroups.isEmpty()) {
                 Logger.info(OAuth2AdminSuccessHandler.class, "No matching user groups or permission groups found for user " + userDetails.getEmail());
             }
 
-            // Nastav admin práva na základe skupín z Keycloak
+            // Set admin rights based on groups from Keycloak
             try {
                 String adminGroupName = Constants.getString("NTLMAdminGroupName");
-                boolean isAdmin = false;
-                if (adminGroupName != null && !adminGroupName.isEmpty() && oauth2Groups.contains(adminGroupName)) {
-                    isAdmin = true;
-                }
-                if (userDetails.isAdmin() != isAdmin) {
-                    userDetails.setAdmin(isAdmin);
-                    UsersDB.saveUser(userDetails);
-                    Logger.info(OAuth2AdminSuccessHandler.class, "Set admin=" + isAdmin + " for user: " + userDetails.getEmail() + " based on Keycloak groups");
+                if (Tools.isNotEmpty(adminGroupName)) {
+                    boolean isAdmin = false;
+                    if (oauth2Groups.contains(adminGroupName)) {
+                        isAdmin = true;
+                    }
+                    if (userDetails.isAdmin() != isAdmin) {
+                        userDetails.setAdmin(isAdmin);
+                        UsersDB.saveUser(userDetails);
+                        Logger.info(OAuth2AdminSuccessHandler.class, "Set admin=" + isAdmin + " for user: " + userDetails.getEmail() + " based on Keycloak groups");
+                    }
                 }
             } catch (Exception e) {
                 Logger.error(OAuth2AdminSuccessHandler.class, "Error setting admin flag for user: " + userDetails.getEmail(), e);
@@ -159,14 +162,14 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Odstráni všetky skupinové priradenia používateľa
+     * Removes all group assignments from user
      */
     private void removeAllGroupAssignments(UserDetails userDetails) {
         try {
-            // Odstráň zo všetkých skupín používateľov
+            // Remove from all user groups
             userDetails.setUserGroupsIds(null);
 
-            // Odstráň zo všetkých skupín práv
+            // Remove from all permission groups
             List<PermissionGroupBean> userPermGroups = UserGroupsDB.getPermissionGroupsFor(userDetails.getUserId());
             for (PermissionGroupBean permGroup : userPermGroups) {
                 UsersDB.deleteUserFromPermissionGroup(userDetails.getUserId(), permGroup.getUserPermGroupId());
@@ -178,7 +181,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
     }
 
     /**
-     * Synchronizuje skupiny používateľa - odstráni staré a pridá nové
+     * Synchronizes user groups - removes old and adds new
      */
     private void synchronizeUserGroups(UserDetails userDetails, List<UserGroupDetails> newUserGroups, List<PermissionGroupBean> newPermissionGroups) {
         String userEmail = userDetails != null ? userDetails.getEmail() : "unknown";
@@ -188,10 +191,10 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 return;
             }
 
-            // Najprv odstráň zo všetkých existujúcich skupín
+            // First remove from all existing groups
             removeAllGroupAssignments(userDetails);
 
-            // Pridaj nové user groups
+            // Add new user groups
             if (!newUserGroups.isEmpty()) {
                 for (UserGroupDetails group : newUserGroups) {
                     userDetails.addToGroup(group.getUserGroupId());
@@ -199,7 +202,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 }
             }
 
-            // Ulož všetky zmeny
+            // Save all changes
             boolean saved = UsersDB.saveUser(userDetails);
             if (saved) {
                 Logger.info(OAuth2AdminSuccessHandler.class, "Successfully synchronized user groups: " + userDetails.getUserGroupsIds());
@@ -210,7 +213,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
                 Logger.error(OAuth2AdminSuccessHandler.class, "Failed to save user groups synchronization for user: " + userDetails.getEmail());
             }
 
-            // Pridaj permission groups
+            // Add permission groups
             if (!newPermissionGroups.isEmpty()) {
                 for (PermissionGroupBean group : newPermissionGroups) {
                     UsersDB.addUserToPermissionGroup(userDetails.getUserId(), group.getUserPermGroupId());
