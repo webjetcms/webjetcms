@@ -1,5 +1,6 @@
 {
   "realm": "webjetcms",
+  "displayName": "WebJET CMS",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
