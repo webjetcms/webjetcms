@@ -50,7 +50,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
             UserDetails userDetails = UsersDB.getUserByEmail(email, 1);
             if (userDetails == null) {
                 // Create new user
-                userDetails = createNewUserFromOAuth2(oauth2User, email);
+                userDetails = createNewUserFromOAuth2(authentication, oauth2User, email);
                 if (userDetails == null) {
                     Logger.error(OAuth2AdminSuccessHandler.class, "Failed to create user for email: " + email);
                     handleError(request, response, "oauth2_user_create_failed", "/admin/logon/");

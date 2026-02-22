@@ -269,7 +269,7 @@ public class AdminLogonController {
     }
 
     private String addOAuth2UrlsToModel(HttpServletRequest request, ModelMap model) {
-        String autoRedirect = null;
+        String autoRedirectUrl = null;
 
         Map<String, String> logonUrls = OAuth2LoginHelper.getLogonUrls(true, request);
         if (logonUrls.size() > 0) {
@@ -283,11 +283,12 @@ public class AdminLogonController {
             }
 
             model.addAttribute("logonUrls", logonUrls);
-            if (Constants.getBoolean("oauth2_adminLogonAutoRedirect")) {
-                autoRedirect = logonUrls.values().iterator().next(); // redirect to first provider if auto redirect is enabled
+            String oauth2AdminLogonAutoRedirect = Constants.getString("oauth2_adminLogonAutoRedirect");
+            if (Tools.isNotEmpty(oauth2AdminLogonAutoRedirect)) {
+                autoRedirectUrl = logonUrls.get(oauth2AdminLogonAutoRedirect); // redirect to specified provider if auto redirect is enabled
             }
         }
-        return autoRedirect;
+        return autoRedirectUrl;
     }
 
     @PostMapping("logon/")

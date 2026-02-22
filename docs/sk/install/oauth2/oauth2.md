@@ -14,29 +14,45 @@ Pre aktiváciu OAuth2 je potrebné nastaviť konfiguračnú premennú:
 oauth2_clients=google,keycloak
 ```
 
+Ak potrebujete zobraziť rôznych poskytovateľov v administrácii alebo v zákazníckej zóne môžete nastaviť `oauth2_clientsIncludeAdmin` a `oauth2_clientsIncludeUser`:
+
+```properties
+oauth2_clientsIncludeAdmin=keycloak
+oauth2_clientsIncludeUser=google,facebook
+```
+
+v takomto prípade sa pre administráciu zobrazí iba `keycloak` a pre zákaznícku zónu `google` a `facebook`. Zadaný poskytovatelia musia byť nakonfigurovaní v `oauth2_clients` aby sa zobrazili v prihlasovacej stránke. Predvolene je nastavená hodnota `*`, čo znamená že sa zobrazí každý nakonfigurovaný poskytovateľ.
+
 ### Preddefinovaní poskytovatelia
 
-Pre populárnych poskytovateľov stačí nastaviť `clientId` a `clientSecret`:
+Pre populárnych poskytovateľov stačí nastaviť `clientId` a `clientSecret`. Pomocou hodnoty `oauth2_{provider}DefaultGroups` môžete definovat skupiny používateľov, ktoré sa pridelia novovytvorenému používateľovi pri prvom prihlásení cez daného poskytovateľa. Hodnota je zoznam ID skupín oddelený čiarkou (napr. `1,3`). Tieto skupiny sa neaplikujú pre už existujúcich používateľov, čiže po prvom prihlásení môžete používateľom nastaviť práva ako potrebujete priamo v administrácii WebJET CMS a tieto práva zostanú zachované pre ďalšie prihlásenia. Ak používate viacerých poskytovateľov, môžete definovat rôzne skupiny pre každého poskytovateľa aby ste vedeli rozlíšiť používateľov pre poskytovateľov.
 
 #### Google
 
 ```properties
 oauth2_googleClientId=your-google-client-id
 oauth2_googleClientSecret=your-google-client-secret
+oauth2_googleDefaultGroups=1,2
 ```
+
+Požadované hodnoty získate cez [Google API Console](https://console.developers.google.com/) v sekcii Credentials. Pri registrácii OAuth2 klienta u Google je nutné nastaviť redirect URI vo formáte `https://your-domain.com/login/oauth2/code/google`.
 
 #### Facebook
 
 ```properties
 oauth2_facebookClientId=your-facebook-client-id
 oauth2_facebookClientSecret=your-facebook-client-secret
+oauth2_facebookDefaultGroups=1,3
 ```
+
+Požadované hodnoty získate cez [Facebook for Developers](https://developers.facebook.com/docs/facebook-login) v sekcii My Apps. Vytvorte aplikáciu, nastavte akcie na prihlásenie. Pri registrácii OAuth2 klienta u Facebooku je nutné nastavit redirect URI vo formáte `https://your-domain.com/login/oauth2/code/facebook`. V sekcii `App settings` nájdete `App ID` a `App Secret`, které použijete pro konfiguraci WebJET CMS.
 
 #### GitHub
 
 ```properties
 oauth2_githubClientId=your-github-client-id
 oauth2_githubClientSecret=your-github-client-secret
+oauth2_githubDefaultGroups=1,4
 ```
 
 #### Okta
@@ -44,11 +60,12 @@ oauth2_githubClientSecret=your-github-client-secret
 ```properties
 oauth2_oktaClientId=your-okta-client-id
 oauth2_oktaClientSecret=your-okta-client-secret
+oauth2_oktaDefaultGroups=1,5
 ```
 
-### Keycloak
+### Iný OAuth2 poskytovateľ
 
-Pre vlastných poskytovateľov (napríklad Keycloak) je potrebné nastaviť všetky `OAuth2` parametre:
+Pre vlastných poskytovateľov (napríklad `Keycloak`) je potrebné nastaviť všetky `OAuth2` parametre. Meno konfiguračnej premennej sa tvorí dynamicky z názvu poskytovateľa (napríklad `keycloak`):
 
 ```properties
 oauth2_keycloakClientId=webjetcms-client
@@ -63,6 +80,8 @@ oauth2_keycloakScopes=openid,profile,email
 oauth2_keycloakClientName=Keycloak
 ```
 
+Ak by ste použili poskytovateľa s názvom `myprovider`, museli by ste nastaviť premenné s prefixom `oauth2_myprovider...`. Viete mať takto v systéme nastavených aj viacerých OAuth2 poskytovateľov súčasne (napríklad `keycloak-admins`, `keycloak-users`), každý s vlastnou konfiguráciou.
+
 ### Podporované OAuth2 atribúty
 
 WebJET CMS pri OAuth2 autentifikácii extrahuje nasledujúce atribúty z OAuth2/OIDC providera:
@@ -73,6 +92,7 @@ WebJET CMS pri OAuth2 autentifikácii extrahuje nasledujúce atribúty z OAuth2/
 - `given_name` - Krstné meno používateľa
 - `family_name` - Priezvisko používateľa
 - `preferred_username` - **Predvolený** atribút pre login (štandardný OIDC atribút, konfigurovateľný cez `oauth2_usernameAttribute`)
+- `picture` - URL adresa profilového obrázku (ak je poskytovaný)
 
 #### Atribúty pre skupiny a práva
 
@@ -114,7 +134,7 @@ Pre všetkých poskytovateľov sa automaticky nastavuje redirect URI:
 {baseUrl}/login/oauth2/code/{registrationId}
 ```
 
-Príklad: `https://your-webjet-domain.com/login/oauth2/code/google`
+Príklad: `https://your-domain.com/login/oauth2/code/google`
 
 ## Synchronizácia používateľov
 
@@ -530,7 +550,7 @@ OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná prem
 </c:if>
 ```
 
-Ak je nastavená konfiguračná premenná `oauth2_adminLogonAutoRedirect` na `true`, prihlasovacia stránka do administrácie automaticky presmeruje na prvého dostupného OAuth2 poskytovateľa. Nezobrazí sa teda ani štandardný prihlasovací formulár WebJET CMS.
+Ak je nastavená konfiguračná premenná `oauth2_adminLogonAutoRedirect` na názov poskytovateľa (napr. `keycloak`), prihlasovacia stránka do administrácie automaticky presmeruje na daného OAuth2 poskytovateľa. Nezobrazí sa teda ani štandardný prihlasovací formulár WebJET CMS.
 
 ### Generovanie OAuth2 URL
 

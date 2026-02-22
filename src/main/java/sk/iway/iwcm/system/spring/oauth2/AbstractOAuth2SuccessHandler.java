@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -37,6 +38,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     protected static final String FAMILY_NAME_ATTRIBUTE = "family_name";
     protected static final String USERNAME_ATTRIBUTE_DEFAULT = "preferred_username";
     protected static final String ROLE_PREFIX = "ROLE_";
+    protected static final String PICTURE_ATTRIBUTE = "picture";
 
     /**
      * Returns the username attribute name from configuration, or default "preferred_username"
@@ -55,7 +57,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
     /**
      * Creates a new user from OAuth2 data
      */
-    protected UserDetails createNewUserFromOAuth2(OAuth2User oauth2User, String email) {
+    protected UserDetails createNewUserFromOAuth2(Authentication authentication, OAuth2User oauth2User, String email) {
         UserDetails userDetails = new UserDetails();
         userDetails.setEmail(email);
 
@@ -93,6 +95,23 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
         }
         userDetails.setLogin(login);
         userDetails.setAuthorized(true);
+
+        //extract photo link if available
+        String picture = oauth2User.getAttribute(PICTURE_ATTRIBUTE);
+        if (Tools.isNotEmpty(picture)) {
+            userDetails.setPhoto(picture);
+        }
+
+        //set random password as it's required for user creation, but it won't be used for login
+        userDetails.setPassword(Password.generateStringHash(32));
+
+        //extract provider ID and try to find default groups
+        String providerId = getProviderId(authentication);
+        String userGroupIds = Constants.getString("oauth2_" + providerId+"DefaultGroups");
+        if (Tools.isNotEmpty(userGroupIds)) {
+            userDetails.setUserGroupsIds(userGroupIds);
+            Logger.debug(this.getClass(), "Assigned default groups to new user from provider config (oauth2_" + providerId + "DefaultGroups): " + userGroupIds);
+        }
 
         boolean isUserSaved = UsersDB.saveUser(userDetails);
         if (!isUserSaved) {

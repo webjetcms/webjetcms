@@ -136,12 +136,19 @@ public class OAuth2LoginHelper {
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
             // Označ že ide o user sekciu (nie admin)
             HttpSession session = request.getSession();
+            String[] includeClients;
             if (isAdmin) {
                 session.setAttribute("oauth2_is_admin_section", true);
+                includeClients = Constants.getArray("oauth2_clientsIncludeAdmin");
             } else {
                 //save session redirect
                 session.setAttribute("afterLogonRedirect", PathFilter.getOrigPath(request));
                 session.removeAttribute("oauth2_is_admin_section");
+                includeClients = Constants.getArray("oauth2_clientsIncludeUser");
+            }
+
+            if (includeClients.length == 0 || (includeClients.length == 1 && "*".equals(includeClients[0]))) {
+                includeClients = null; // include all clients
             }
 
             Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
@@ -159,6 +166,12 @@ public class OAuth2LoginHelper {
                     }
                     if (clientRegistrations != null) {
                         for (ClientRegistration registration : clientRegistrations) {
+                            // Filter clients based on configuration
+                            if (includeClients != null && !Tools.containsOneItem(includeClients, registration.getRegistrationId())) {
+                                Logger.debug(OAuth2LoginHelper.class, "Skipping OAuth2 client '" + registration.getRegistrationId() + "' as it's not included in configuration");
+                                continue;
+                            }
+
                             oauth2AuthenticationUrls.put(registration.getClientName(),
                                 authorizationRequestBaseUri + "/" + registration.getRegistrationId());
                         }

@@ -129,23 +129,29 @@ public class ConstantsV9 {
 		// OAuth2 konfiguračné premenné
 		Constants.setString("oauth2_clients", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
 		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
-		Constants.setBoolean("oauth2_adminLogonAutoRedirect", false, Constants.MOD_SECURITY, "Ak je nastavené na true, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
+		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_SECURITY, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
+		Constants.setString("oauth2_clientsIncludeAdmin", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky administrácie (napr. keycloak,okta). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
+		Constants.setString("oauth2_clientsIncludeUser", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky pre používateľov (napr. google,facebook). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
 
 		// Google OAuth2
 		Constants.setString("oauth2_googleClientId", "", Constants.MOD_SECURITY, "Google OAuth2 Client ID");
 		Constants.setString("oauth2_googleClientSecret", "", Constants.MOD_SECURITY, "Google OAuth2 Client Secret");
+		Constants.setString("oauth2_googleDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Facebook OAuth2
 		Constants.setString("oauth2_facebookClientId", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client ID");
 		Constants.setString("oauth2_facebookClientSecret", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client Secret");
+		Constants.setString("oauth2_facebookDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// GitHub OAuth2
 		Constants.setString("oauth2_githubClientId", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client ID");
 		Constants.setString("oauth2_githubClientSecret", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client Secret");
+		Constants.setString("oauth2_githubDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Okta OAuth2
 		Constants.setString("oauth2_oktaClientId", "", Constants.MOD_SECURITY, "Okta OAuth2 Client ID");
 		Constants.setString("oauth2_oktaClientSecret", "", Constants.MOD_SECURITY, "Okta OAuth2 Client Secret");
+		Constants.setString("oauth2_oktaDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
 
 		// Keycloak OAuth2 (custom provider)
 		Constants.setString("oauth2_keycloakClientId", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client ID");
