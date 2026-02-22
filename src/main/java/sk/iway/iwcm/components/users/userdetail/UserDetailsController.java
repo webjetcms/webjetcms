@@ -393,6 +393,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {
             entity.setPassword("random");
         }
+        if (entity.getApiKey() != null && entity.getApiKey().equals(UserTools.PASS_UNCHANGED)) {
+            entity.setApiKey("");
+        }
         entity.setRegDate(new Date(Tools.getNow()));
         entity.setLastLogonAsDate(null);
         super.beforeDuplicate(entity);

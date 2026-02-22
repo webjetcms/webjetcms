@@ -1297,6 +1297,7 @@ public class Tools
 		if (host == null)
 		{
 			host = ip;
+			if (host == null) return null; //probably junit test
 
 			//ip z privatnych rozsahov nepouzijem
 			if (ip.startsWith("192.168.") || ip.startsWith("10.")) return host;
@@ -2263,6 +2264,8 @@ public class Tools
 				}
 			}
         }
+
+		if (serverName == null) return null; //probably junit test
 
 		//sometimes serverName is send with :port at the end by some k8s proxy, remove it
 		int index = serverName.indexOf(':');

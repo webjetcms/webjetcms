@@ -34,6 +34,9 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.admin.layout.MenuService;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
@@ -1152,5 +1155,28 @@ public class LogonTools {
             sk.iway.iwcm.Logger.error(ex);
         }
         return false;
+    }
+
+    /**
+     * For admin created for example by oauth2 you need to disable all admin items
+     * because perms will be mapped by perm groups
+     * @param userId
+     */
+    public static void disableAllAdminItems(int userId) {
+        List<JsTreeItem> allPermissions = MenuService.getAllPermissions();
+        for (JsTreeItem permission : allPermissions) {
+            if (permission.getId().endsWith("-leaf")) continue;
+
+            UsersDB.disableItem(userId, MenuService.removePermsIdPrefix(permission.getId()));
+        }
+    }
+
+    /**
+     * Update last_logon field in database to current date time
+     * @param userId
+     */
+    public static void updateLastLogin(int userId) {
+        //update last_logon
+        new SimpleQuery().execute("UPDATE users SET last_logon=? WHERE user_id=?", new java.util.Date(Tools.getNow()), userId);
     }
 }

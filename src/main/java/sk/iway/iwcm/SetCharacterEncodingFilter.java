@@ -188,7 +188,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			String path = request.getRequestURI();
 			if (ContextFilter.isRunning(request)) path = ContextFilter.removeContextPath(request.getContextPath(), path);
 
-			if (path.startsWith("/admin/elfinder-connector/") || path.equals("/admin/elFinder/gethash.jsp"))
+			if (path != null && (path.startsWith("/admin/elfinder-connector/") || path.equals("/admin/elFinder/gethash.jsp")))
 			{
 				requestBean.setRequest(request);
 			}

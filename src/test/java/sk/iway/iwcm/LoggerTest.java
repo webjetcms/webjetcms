@@ -1,8 +1,10 @@
 package sk.iway.iwcm;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -10,6 +12,7 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class LoggerTest extends BaseWebjetTest {
 
     @BeforeEach

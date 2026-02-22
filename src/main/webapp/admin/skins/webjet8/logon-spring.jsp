@@ -33,6 +33,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     pageContext.setAttribute("subtitle", subtitle);
 
     pageContext.setAttribute("lng", lng);
+
+    request.setAttribute("isOAuth2Enabled", Tools.isNotEmpty(Constants.getString("oauth2_clients")));
 %><!DOCTYPE html>
 <html>
 <head>
@@ -69,6 +71,13 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     document.f_passwd.loginName.value = document.logonForm.username.value;
                 }
             }
+        }
+
+        function doOauthLogon(url) {
+            // Set admin login flag in session before redirecting to OAuth2 provider
+            $.get("/admin/logon/setadmin/").always(function() {
+                window.location.href = url;
+            });
         }
 
         //-->
@@ -150,25 +159,34 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                     </iwcm:present>
 
-                    <div class="form-group">
-                        <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
-                        <div class="input-icon">
-                            <i class="ti ti-user"></i>
-                            <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                    <c:if test="${autoRedirect == null}">
+                        <div class="form-group">
+                            <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
+                            <div class="input-icon">
+                                <i class="ti ti-user"></i>
+                                <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label"><iwcm:text key="user.password"/></label>
-                        <div class="input-icon">
-                            <i class="ti ti-lock"></i>
-                            <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                        <div class="form-group">
+                            <label class="control-label"><iwcm:text key="user.password"/></label>
+                            <div class="input-icon">
+                                <i class="ti ti-lock"></i>
+                                <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                            </div>
+                            <div class="password-strength-info"></div>
                         </div>
-                        <div class="password-strength-info"></div>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
-                        <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
-                    </div>
+                        <div class="form-group">
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
+                            <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
+                        </div>
+                    </c:if>
+                    <c:if test="${isOAuth2Enabled}">
+                        <c:forEach var="url" items="${logonUrls}">
+                            <div class="form-group">
+                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
+                            </div>
+                        </c:forEach>
+                    </c:if>
                 </div>
             </form:form>
 
