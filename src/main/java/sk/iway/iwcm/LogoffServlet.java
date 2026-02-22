@@ -127,7 +127,7 @@ public class LogoffServlet extends HttpServlet {
         //request.getRequestDispatcher("success").forward(request,response);
         //response.sendRedirect("/");
 
-        if (Constants.getBoolean("oauth2_adminLogonAutoRedirect")) logoffRedirect = Tools.addParameterToUrl(logoffRedirect, "logoff", "true");
+        if (Tools.isNotEmpty(Constants.getString("oauth2_adminLogonAutoRedirect"))) logoffRedirect = Tools.addParameterToUrl(logoffRedirect, "logoff", "true");
         response.sendRedirect(logoffRedirect);
     }
 

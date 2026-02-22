@@ -552,7 +552,7 @@ OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná prem
 </c:if>
 ```
 
-Ak je nastavená konfiguračná premenná `oauth2_adminLogonAutoRedirect` na názov poskytovateľa (napr. `keycloak`), prihlasovacia stránka do administrácie automaticky presmeruje na daného OAuth2 poskytovateľa. Nezobrazí sa teda ani štandardný prihlasovací formulár WebJET CMS.
+Ak je nastavená konfiguračná premenná `oauth2_adminLogonAutoRedirect` na názov poskytovateľa (napr. `Keycloak` alebo `Google`), prihlasovacia stránka do administrácie automaticky presmeruje na daného OAuth2 poskytovateľa. Nezobrazí sa teda ani štandardný prihlasovací formulár WebJET CMS.
 
 ### Generovanie OAuth2 URL
 
