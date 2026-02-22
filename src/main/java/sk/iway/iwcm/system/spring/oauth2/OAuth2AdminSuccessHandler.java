@@ -92,7 +92,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
             SetCharacterEncodingFilter.registerDataContext(request);
             Adminlog.add(Adminlog.TYPE_USER_LOGON, "OAuth2 - user (ADMIN) successfully loged: name=" + userDetails.getLogin(), -1, -1);
         } catch (Exception ex) {
-            Logger.error(OAuth2AdminSuccessHandler.class, ex);
+            Logger.error(OAuth2AdminSuccessHandler.class, "onAuthenticationSuccess error: " + ex.getMessage());
             handleError(request, response, "oauth2_exception", "/admin/logon/");
         }
     }

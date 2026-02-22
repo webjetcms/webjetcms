@@ -96,7 +96,7 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
             SetCharacterEncodingFilter.registerDataContext(request);
             Adminlog.add(Adminlog.TYPE_USER_LOGON, "OAuth2 - user successfully loged: name=" + userDetails.getLogin(), -1, -1);
         } catch (Exception ex) {
-            Logger.error(OAuth2UserSuccessHandler.class, ex);
+            Logger.error(OAuth2UserSuccessHandler.class, "onAuthenticationSuccess error: " + ex.getMessage());
             handleError(request, response, "oauth2_exception", "/");
         }
     }
