@@ -47,7 +47,7 @@ public class SpringSecurityConf {
 			http.httpBasic(customizer -> {});
 		}
 
-		// OAuth2 login podpora
+		// OAuth2 login support
 		if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {

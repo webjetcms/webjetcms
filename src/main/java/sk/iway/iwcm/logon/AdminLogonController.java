@@ -71,8 +71,6 @@ public class AdminLogonController {
     private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
-    Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
-
     private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
