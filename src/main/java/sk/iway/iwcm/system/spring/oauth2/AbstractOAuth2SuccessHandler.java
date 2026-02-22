@@ -58,6 +58,9 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
      * Creates a new user from OAuth2 data
      */
     protected UserDetails createNewUserFromOAuth2(Authentication authentication, OAuth2User oauth2User, String email) {
+        //extract provider ID like google, facebook, github....
+        String providerId = getProviderId(authentication);
+
         UserDetails userDetails = new UserDetails();
         userDetails.setEmail(email);
 
@@ -88,6 +91,19 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
             }
         }
 
+        //check conflict with username, use email as login
+        UserDetails existingUser = UsersDB.getUser(login);
+        if (existingUser != null) {
+            login = email; // fallback to using email as login if username is already taken
+            Logger.warn(this.getClass(), "Username '" + login + "' already exists, using email as login for new user: " + login);
+        }
+        //check again, if email is also taken, use random login
+        existingUser = UsersDB.getUser(login);
+        if (existingUser != null) {
+            login = "oauth2." + providerId + "." + Password.generateStringHash(32);
+            Logger.warn(this.getClass(), "Email '" + email + "' also exists as login, appending random suffix to create unique login: " + login);
+        }
+
         // Validate that login is not empty before setting it
         if (Tools.isEmpty(login)) {
             Logger.error(this.getClass(), "Cannot create user from OAuth2 data because login could not be determined from username attribute or email.");
@@ -105,8 +121,7 @@ public abstract class AbstractOAuth2SuccessHandler implements AuthenticationSucc
         //set random password as it's required for user creation, but it won't be used for login
         userDetails.setPassword(Password.generateStringHash(32));
 
-        //extract provider ID and try to find default groups
-        String providerId = getProviderId(authentication);
+        //try to find default groups
         String userGroupIds = Constants.getString("oauth2_" + providerId+"DefaultGroups");
         if (Tools.isNotEmpty(userGroupIds)) {
             userDetails.setUserGroupsIds(userGroupIds);

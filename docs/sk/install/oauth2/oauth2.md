@@ -116,6 +116,8 @@ Pre synchronizáciu skupín (iba pre nakonfigurovaných poskytovateľov v `oauth
 - Google neposkytuje `preferred_username` - login bude časť pred @ z emailu (napr. `john.doe` z `john.doe@gmail.com`)
 - Ak je nastavené `oauth2_usernameAttribute=sub`, použije sa atribút `sub` namiesto `preferred_username`
 
+Ak pri vytvorení nového používateľa existuje konflikt prihlasovacieho mena (napr. `john.doe` už existuje), použije sa emailová adresa ako prihlasovacie meno, aby sa predišlo chybe a umožnilo prihlásenie. Ak aj takéto konto existuje, vytvorí sa nové konto `oauth2.google.XXXXXX` kde `XXXXXX` je náhodný alfanumerický reťazec.
+
 ### Konfigurácia atribútu pre login (username)
 
 Názov OAuth2 atribútu používaného pre login používateľa je konfigurovateľný:
