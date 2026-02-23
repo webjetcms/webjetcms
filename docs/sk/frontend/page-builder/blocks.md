@@ -549,9 +549,9 @@ window.pbGetWindowSize = function(name) {
 
 /**
  * Customize tab menu in style dialog
- * @param {} me
- * @param {*} tabMenu
- * @returns
+ * @param {Object} me - page builder instance
+ * @param {JSON} tabMenu - tab menu object
+ * @returns {JSON} modified tab menu
  */
 window.pbBuildTabMenu = function(me, tabMenu) {
 
