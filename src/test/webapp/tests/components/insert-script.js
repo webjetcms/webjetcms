@@ -181,6 +181,43 @@ Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) =>
      });
 });
 
+Scenario('testovanie includeInEditor a inlineEditorAdmin parametra @current', async ({ I, DT, DTE }) => {
+     // Without inlineEditorAdmin=true - script is included normally
+     I.amOnPage("/uvodna-stranka-thymeleaf.html");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // With inlineEditorAdmin=true - script is NOT included (includeInEditor defaults to false)
+     I.amOnPage("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.dontSeeInSource("//Skript bez obmedzeni demo domena");
+
+     // In admin datatable, set includeInEditor=true on the script
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     I.waitForText('Skripty', 5);
+     DT.filterContains('name', 'Skript bez obmedzeni demo domena');
+     DT.waitForLoader();
+     I.click(locate('td').withText('Skript bez obmedzeni demo domena'));
+     DTE.waitForEditor('insertScriptTable');
+     // Switch to scriptPerms tab and check includeInEditor checkbox
+     I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
+     I.forceClick('#DTE_Field_includeInEditor');
+     DTE.save('insertScriptTable');
+
+     // Now with inlineEditorAdmin=true - script IS included (includeInEditor=true)
+     I.amOnPage("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // Cleanup - uncheck includeInEditor back to false
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     I.waitForText('Skripty', 5);
+     DT.filterContains('name', 'Skript bez obmedzeni demo domena');
+     DT.waitForLoader();
+     I.click(locate('td').withText('Skript bez obmedzeni demo domena'));
+     DTE.waitForEditor('insertScriptTable');
+     I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
+     I.forceClick('#DTE_Field_includeInEditor');
+     DTE.save('insertScriptTable');
+});
+
 Scenario('Veci na prerobenie', ({ I }) => {
      // 1.oznacenie zaznamov - kontrola zmenenej anglictiny na slovencinu
      // kontrola 2 vybranych zaznamov
