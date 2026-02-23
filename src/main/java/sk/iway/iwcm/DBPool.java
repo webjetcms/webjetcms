@@ -311,7 +311,7 @@ public class DBPool
 							ds = new WebJetHikariDataSource(hs);
 							dataSourcesTable.put(dbname, ds);
 
-							Logger.println(DBPool.class, "Initialized Datasource " + dbname + " url=" + url);
+							Logger.println(DBPool.class, "Initialized Datasource " + dbname + ", db_type=" + Constants.DB_TYPE + ", url=" + url);
 
 							if (availableDatabases == null)
 							{
