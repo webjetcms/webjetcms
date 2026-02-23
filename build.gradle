@@ -12,11 +12,11 @@ import com.github.jk1.license.filter.LicenseBundleNormalizer
 plugins {
     id 'java'
     id 'war'
-    https://github.com/gretty-gradle-plugin/gretty
+    //https://github.com/gretty-gradle-plugin/gretty
     id 'org.gretty' version "5.0.1"
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
-    http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
+    //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
     id "org.owasp.dependencycheck" version "12.1.6"
     id 'maven-publish'
     //https://docs.gradle.org/current/userguide/jacoco_plugin.html

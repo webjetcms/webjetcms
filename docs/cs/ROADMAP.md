@@ -21,6 +21,7 @@ Vysvětlení použitých piktogramů:
 - Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor.
 - Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi.
 - Skripty - přidat možnost nastavit, zda se má skript vkládat také v editoru stránek, nebo ne.
+- Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole.
 
 ## 2025
 
@@ -52,7 +53,7 @@ Vysvětlení použitých piktogramů:
 - [x] Archiv souborů - předělat do datových tabulek (#57317).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [x] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
-- [ ] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči `ADFS/SAML` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
 - [x] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).

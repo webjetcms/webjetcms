@@ -21,6 +21,7 @@ Explanation of the pictograms used:
 - Forms - add the ability to set the total attachment size for the form, now it can only be set per file.
 - Statistics - edit entry to `seo_bots` via `StatWriteBuffer` for fewer conflicts under high load and clustered database.
 - Scripts - add the option to set whether the script should be inserted in the page editor or not.
+- Forms - add a group of selection and checkboxes `radio/checkbox` connected to the dial, similar to the way we have for `select` field.
 
 ## 2025
 
@@ -52,7 +53,7 @@ Explanation of the pictograms used:
 - [x] Archive files - rebuild into data tables (#57317).
 - [ ] Optional fields - add the option to select multiple items to link to the dial.
 - [x] E-commerce - integration to the payment gateway `GoPay` (#56609).
-- [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
 - [x] Reservations - new app for all-day reservations (#57389).
 - [x] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).

@@ -33,13 +33,13 @@ docker compose -f docker-compose-keycloak.yml down
 
 Pre jednoduché použitie je pripravená verzia konfigurovaná cez súbor [realm-export.json.template](../../../../.devcontainer/keycloak/realm-export.json.template), ktorý obsahuje pripravenú konfiguráciu pre priame použitie. Je potrebné do `hosts` súboru pridať záznam:
 
-```txt
+```shell
 127.0.0.1   keycloak.local
 ```
 
 a do premenných prostredia nastaviť `CODECEPT_DEFAULT_PASSWORD` na heslo, ktoré sa použije pre vytvorenie `admin` používateľa ale aj používateľov pre WebJET CMS `adminuser,testuser,banker`. Sú priradený do skupín `Admini,Bankári,Newsletter`.
 
-```txt
+```shell
 CODECEPT_DEFAULT_PASSWORD=your_password_here
 ```
 
