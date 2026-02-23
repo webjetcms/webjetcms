@@ -30,7 +30,7 @@ window.pbCustomSettings = function(me) {
  * @param {JSON} tabMenu - tab menu object
  * @returns {JSON} modified tab menu
  */
-window.pbBuildTabMenu = function(me, tabMenu) {
+window.pbBuildTabMenuXXX = function(me, tabMenu) {
 
     console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
     //hide first tab
