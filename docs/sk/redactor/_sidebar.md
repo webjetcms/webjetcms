@@ -43,8 +43,8 @@
   - [Štatistika](/redactor/ai/stat/README.md)
 - Aplikácie
   - AB testovanie
-    - [Úvod](/redactor/apps/abtesting/README.md)
-    - [AB Testovanie](/redactor/apps/abtesting/abtesting.md)
+    - [AB testovanie](/redactor/apps/abtesting/README.md)
+    - [Správa A/B testov](/redactor/apps/abtesting/abtesting.md)
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)

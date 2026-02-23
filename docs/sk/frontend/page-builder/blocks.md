@@ -546,6 +546,37 @@ window.pbGetWindowSize = function(name) {
     //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
     return maxWidth;
 }
+
+/**
+ * Customize tab menu in style dialog
+ * @param {Object} me - page builder instance
+ * @param {JSON} tabMenu - tab menu object
+ * @returns {JSON} modified tab menu
+ */
+window.pbBuildTabMenu = function(me, tabMenu) {
+
+    console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
+    //hide first main tab
+    tabMenu.tabs[0].visible = false;
+
+    //move item id=10 to the first position
+    var items = tabMenu.tabs[1].items;
+    const tab10Index = items.findIndex(tab => tab.id === "10");
+    if (tab10Index > -1) {
+        const [tab10] = items.splice(tab10Index, 1);
+        items.unshift(tab10);
+    }
+
+    //hide items 09,11,12
+    items.forEach(tab => {
+        if (["09", "11", "12"].includes(tab.id)) {
+            tab.visible = false;
+        }
+    });
+
+    return tabMenu;
+
+};
 ```
 
 ## ID bloku
