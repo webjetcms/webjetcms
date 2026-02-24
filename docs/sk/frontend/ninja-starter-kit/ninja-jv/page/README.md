@@ -23,15 +23,15 @@ Pre nastavenie voliteľných polí R, S, T a Q je potrebné v sekcii [prekladov�
 
 ```properties
 editor.field_q=Kanonická URL adresa
-editor.field_q.tooltip=Ak je zadaný, použije se tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije se URL adresa stránky.
+editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije sa URL adresa stránky.
 editor.field_q.type=link
 editor.field_r=SEO titulok
 editor.field_r.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **titulku stránky**.\nMôžete tak optimalizovať zobrazený názov stránky na sociálnych sietiach.
 editor.field_s=SEO opis (kľúčové slová)
-editor.field_s.tooltip=Ak je zadaný, použije pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
+editor.field_s.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
 editor.field_t=SEO obrázok
 editor.field_t.type=image
-editor.field_t.tooltip=Ak je zadaný, použije pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
+editor.field_t.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
 
 ```
 
