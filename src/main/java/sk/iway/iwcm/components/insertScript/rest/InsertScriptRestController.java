@@ -65,7 +65,14 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
 
     @Override
     public void afterSave(InsertScriptBean entity, InsertScriptBean saved) {
+        //clear cache
         Cache.getInstance().removeObjectStartsWithName(InsertScriptDB.getCachePrefix(), true);
+    }
+
+    @Override
+    public void afterDelete(InsertScriptBean entity, long id) {
+        //clear cache
+        afterSave(entity, entity);
     }
 
     @Override
