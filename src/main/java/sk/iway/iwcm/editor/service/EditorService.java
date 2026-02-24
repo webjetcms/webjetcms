@@ -733,6 +733,103 @@ public class EditorService {
 	}
 
 	/**
+	 * Computes the unique virtual path for a brand-new page (docId=-1, empty virtualPath)
+	 * given its title and target group, replicating the same uniqueness-loop used by
+	 * {@link #setVirtualPath}. Allows callers such as upload-folder determination to know
+	 * the URL the page will actually receive on first save, including any -2, -3, ...
+	 * suffix added to avoid collisions with existing pages.
+	 *
+	 * @param title   title of the new page
+	 * @param groupId group (folder) where the new page will be created
+	 * @return computed virtual path, e.g. /sk/upratovanie-2.html, or empty string on failure
+	 */
+	public static int computeVirtualPathForNewPage(DocDetails editedDoc, GroupsDB groupsDB, DocDB docDB) {
+		int virtualPathConflictDocId = -1;
+		String domain = groupsDB.getDomain(editedDoc.getGroupId());
+
+		//nastavime ako treba
+		String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
+		DocDetails doc = new DocDetails();
+		doc.setDocId(editedDoc.getDocId());
+		doc.setTitle(editedDoc.getTitle());
+		doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
+		doc.setVirtualPath(editedDoc.getVirtualPath());
+		doc.setGroupId(editedDoc.getGroupId());
+		String virtualPath = DocDB.getURL(doc, groupDiskPath);
+		String ending = virtualPath.endsWith("/") ? "/" : ".html";
+		String editorPageExtension = Constants.getString("editorPageExtension");
+
+		String lastVirtualPath = null;
+		for (long i = 2; i < 1000; i++) {
+
+			//set big number to avoid infinite loop
+			if (i>990) i = Tools.getNow(); //NOSONAR
+
+			if(virtualPath != null && virtualPath.length() > 255) {
+				String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
+				vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
+				virtualPath = vpTmp;
+			}
+
+			int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
+			Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
+
+			if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
+
+			//lebo moze kolidovat uz z hora
+			if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
+
+			doc.setTitle(editedDoc.getTitle() + " " + i);
+			doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
+
+			if ("/".equals(editorPageExtension)) {
+				//nastav cistu, handluje sa to nastavenim title s cislom vyssie
+				doc.setVirtualPath("");
+			}
+			else {
+				if (editedDoc.getVirtualPath().endsWith(".html")) {
+					doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), ".html", "-" + i + ".html"));
+					ending = "-" + i + ".html";
+				} else if (editedDoc.getVirtualPath().endsWith("/")) {
+					doc.setVirtualPath(editedDoc.getVirtualPath() + i + ".html");
+					ending = i + ".html";
+				} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(".html")==false) {
+					//url without last slash and without .html like /aaa/bbb
+					doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
+					ending = i + ".html";
+				} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
+					ending = ".html";
+				}
+			}
+
+			virtualPath = DocDB.getURL(doc, groupDiskPath);
+
+			if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
+				long fixedI = i - 100;
+				if (fixedI < 2) fixedI = 2;
+				//virtualPath is not changing, it is probably main page of folder, add number to the end
+				if (virtualPath.contains(".html")) {
+					//add number before .html
+					virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
+				} else if (virtualPath.endsWith("/")) {
+					//add number before last slash
+					virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
+				} else {
+					virtualPath = virtualPath + "-" + fixedI;
+				}
+			} else {
+				if (i>100) lastVirtualPath = virtualPath;
+			}
+		}
+
+		editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
+
+		Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+
+		return virtualPathConflictDocId;
+	}
+
+	/**
 	 * Nastavi stranke URL adresu (virtual_path), ak uz nejaka ina stranka takuto URL ma, tak prida cislo 1,2,3... na koniec URL adresy
 	 * @param editedDoc
 	 */
@@ -750,83 +847,8 @@ public class EditorService {
 			}
 
 			if (mustGenerateVirtualPath || Tools.isEmpty(editedDoc.getVirtualPath()) || editedDoc.getVirtualPath().indexOf('/') == -1) {
-				//nastavime ako treba
-				String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
-				DocDetails doc = new DocDetails();
-				doc.setDocId(editedDoc.getDocId());
-				doc.setTitle(editedDoc.getTitle());
-				doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
-				doc.setVirtualPath(editedDoc.getVirtualPath());
-				doc.setGroupId(editedDoc.getGroupId());
-				String virtualPath = DocDB.getURL(doc, groupDiskPath);
-				String ending = virtualPath.endsWith("/") ? "/" : ".html";
-				String editorPageExtension = Constants.getString("editorPageExtension");
-
-				String lastVirtualPath = null;
-				for (long i = 2; i < 1000; i++) {
-
-					if (i>990) i = Tools.getNow();
-
-					if(virtualPath != null && virtualPath.length() > 255) {
-						String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
-						vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
-						virtualPath = vpTmp;
-					}
-
-					int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
-					Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
-
-					if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
-
-					//lebo moze kolidovat uz z hora
-					if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
-
-					doc.setTitle(editedDoc.getTitle() + " " + i);
-					doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
-
-					if ("/".equals(editorPageExtension)) {
-						//nastav cistu, handluje sa to nastavenim title s cislom vyssie
-						doc.setVirtualPath("");
-					}
-					else {
-						if (editedDoc.getVirtualPath().endsWith(".html")) {
-							doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), ".html", "-" + i + ".html"));
-							ending = "-" + i + ".html";
-						} else if (editedDoc.getVirtualPath().endsWith("/")) {
-							doc.setVirtualPath(editedDoc.getVirtualPath() + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(".html")==false) {
-							//url without last slash and without .html like /aaa/bbb
-							doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
-							ending = ".html";
-						}
-					}
-
-					virtualPath = DocDB.getURL(doc, groupDiskPath);
-
-					if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
-						long fixedI = i - 100;
-						if (fixedI < 2) fixedI = 2;
-						//virtualPath is not changing, it is probably main page of folder, add number to the end
-						if (virtualPath.contains(".html")) {
-							//add number before .html
-							virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
-						} else if (virtualPath.endsWith("/")) {
-							//add number before last slash
-							virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
-						} else {
-							virtualPath = virtualPath + "-" + fixedI;
-						}
-					} else {
-						if (i>100) lastVirtualPath = virtualPath;
-					}
-				}
-
-				editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
-
-				Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB, docDB);
+				if (virtualPathConflictDocId < 1) virtualPathConflictDocId = virtualPathConflictDocIdDoc;
 			}
 			else if ("cloud".equals(Constants.getInstallName())) {
 				//tiket 15910 - kontrola specialnych znakov v URL

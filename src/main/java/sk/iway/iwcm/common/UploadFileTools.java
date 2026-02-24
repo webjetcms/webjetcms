@@ -9,9 +9,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -23,6 +26,62 @@ public class UploadFileTools {
 
     private UploadFileTools() {
         //utility class
+    }
+
+    /**
+     * Compute the folder name for a new (unsaved) page by delegating to
+     * {@link EditorService#computeVirtualPathForNewPage} so that duplicate-title pages
+     * (which receive a -2, -3, ... URL suffix on save) use the correct upload folder
+     * before the page is even saved.
+     *
+     * Falls back to DocTools.removeChars(newPageTitle, true) on any failure.
+     *
+     * @param newPageTitle - title of the new page
+     * @param groupId - group (folder) where the new page will be created
+     * @return folder name, e.g. "upratovanie-2"
+     */
+    private static String getNewPageVirtualPathFolderName(String newPageTitle, int groupId) {
+        try {
+            DocDetails editedDoc = new DocDetails();
+            editedDoc.setDocId(-1);
+            editedDoc.setTitle(newPageTitle);
+            editedDoc.setNavbar(DB.prepareString(newPageTitle, 128));
+            editedDoc.setVirtualPath("");
+            editedDoc.setGroupId(groupId);
+
+            GroupsDB groupsDB = GroupsDB.getInstance();
+            DocDB docDB = DocDB.getInstance();
+            EditorService.computeVirtualPathForNewPage(editedDoc, groupsDB, docDB);
+
+            String virtualPath = editedDoc.getVirtualPath();
+            if (Tools.isNotEmpty(virtualPath)) {
+                String pageUrlName = getPageUrlName(virtualPath);
+                if (Tools.isNotEmpty(pageUrlName)) {
+                    return pageUrlName;
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(UploadFileTools.class, e);
+        }
+        return DocTools.removeChars(newPageTitle, true);
+    }
+
+    private static String getPageUrlName(String url) {
+        String pageUrlName = null;
+        if (Tools.isNotEmpty(url) && url.length()>5)
+        {
+            if (url.endsWith("/"))
+            {
+                int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf("/");
+                if (predposlednaLomka>1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);
+            }
+            else if (url.endsWith(".html"))
+            {
+                int poslednaLomka = url.lastIndexOf("/");
+                if (poslednaLomka>1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);
+            }
+        }
+        return pageUrlName;
     }
 
     private static String clearVirtualPath(String virtualPath)
@@ -106,19 +165,7 @@ public class UploadFileTools {
                 if (doc != null && group != null && group.getDefaultDocId()!=doc.getDocId())
                 {
                     String url = doc.getVirtualPath();
-                    if (Tools.isNotEmpty(url) && url.length()>5)
-                    {
-                        if (url.endsWith("/"))
-                        {
-                            int predposlednaLomka = url.substring(0, url.length()-1).lastIndexOf("/");
-                            if (predposlednaLomka>1) pageUrlName = url.substring(predposlednaLomka+1, url.length()-1);
-                        }
-                        else if (url.endsWith(".html"))
-                        {
-                            int poslednaLomka = url.lastIndexOf("/");
-                            if (poslednaLomka>1) pageUrlName = url.substring(poslednaLomka+1, url.length()-5);
-                        }
-                    }
+                    pageUrlName = getPageUrlName(url);
 
                     if (Tools.isEmpty(pageUrlName))
                     {
@@ -127,7 +174,7 @@ public class UploadFileTools {
                 }
             } else {
                 if (Tools.isNotEmpty(newPageTitle)) {
-                    pageUrlName = DocTools.removeChars(newPageTitle, true);
+                    pageUrlName = getNewPageVirtualPathFolderName(newPageTitle, groupId);
                 }
             }
 
