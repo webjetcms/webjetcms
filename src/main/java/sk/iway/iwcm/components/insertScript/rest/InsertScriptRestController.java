@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
@@ -60,6 +61,18 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
             }
         }
         super.beforeDuplicate(entity);
+    }
+
+    @Override
+    public void afterSave(InsertScriptBean entity, InsertScriptBean saved) {
+        //clear cache
+        Cache.getInstance().removeObjectStartsWithName(InsertScriptDB.getCachePrefix(), true);
+    }
+
+    @Override
+    public void afterDelete(InsertScriptBean entity, long id) {
+        //clear cache
+        afterSave(entity, entity);
     }
 
     @Override

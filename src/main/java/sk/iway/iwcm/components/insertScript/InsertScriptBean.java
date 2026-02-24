@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -42,6 +41,14 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
 {
     @JsonIgnore
     private static final long serialVersionUID = -1L;
+
+    @PrePersist
+    @PreUpdate
+    private void preSave() {
+        if(includeInEditor == null) {
+            includeInEditor = Boolean.FALSE;
+        }
+    }
 
     @Id
     @GeneratedValue(generator="WJGen_insert_script")
@@ -85,6 +92,10 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType=DataTableColumnType.DATETIME, tab="scriptPerms", title="user.admin.allowLoginEnd")
     Date validTo;
+
+    @Column(name="include_in_editor")
+    @DataTableColumn(inputType=DataTableColumnType.BOOLEAN, tab="scriptPerms", title="components.insert_script.include_in_editor", visible = false)
+    Boolean includeInEditor;
 
     @JsonManagedReference(value="insertScriptBeanGr")
     @OneToMany(mappedBy="insertScriptBeanGr",fetch=FetchType.LAZY,cascade={CascadeType.ALL},orphanRemoval=true)
@@ -210,6 +221,14 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
         this.validTo = validTo;
     }
 
+    public Boolean getIncludeInEditor() {
+        return includeInEditor;
+    }
+
+    public void setIncludeInEditor(Boolean includeInEditor) {
+        this.includeInEditor = includeInEditor;
+    }
+
     public List<InsertScriptGroupBean> getGroupIds() {
         return groupIds;
     }
@@ -265,7 +284,7 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
         try {
             groups = getGroupIds().stream().map(g ->
                 GroupsDB.getInstance().getGroupNamePath(g.groupId) + " (" + g.groupId + ")"
-            ).collect(Collectors.toList());
+            ).toList();
         } catch (Exception e) {
 
         }
@@ -280,7 +299,7 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
                     return "";
                 }
 
-            }).collect(Collectors.toList());
+            }).toList();
         } catch (Exception e) {
 
         }

@@ -181,6 +181,49 @@ Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) =>
      });
 });
 
+function setIncludeInEditor(checked, I, DT, DTE) {
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     DT.waitForLoader();
+     DT.filterContains('name', 'Skript bez obmedzeni');
+     I.click(locate('td.dt-row-edit a').withText('Skript bez obmedzeni'));
+     DTE.waitForEditor('insertScriptTable');
+
+     // Switch to scriptPerms tab and check includeInEditor checkbox
+     I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
+     if (checked) I.checkOption('#DTE_Field_includeInEditor_0');
+     else I.uncheckOption('#DTE_Field_includeInEditor_0');
+     DTE.save();
+}
+
+Scenario('testovanie includeInEditor a inlineEditorAdmin parametra', async ({ I, DT, DTE }) => {
+     setIncludeInEditor(false, I, DT, DTE);
+
+     // Without inlineEditorAdmin=true - script is included normally
+     I.amOnPage("/uvodna-stranka-thymeleaf.html");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // With inlineEditorAdmin=true - script is NOT included (includeInEditor defaults to false)
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.waitForText("!INCLUDE(/components/adresar/main.jsp", 10, "div.row");
+     I.dontSeeInSource("//Skript bez obmedzeni demo domena");
+
+     // In admin datatable, set includeInEditor=true on the script
+     setIncludeInEditor(true, I, DT, DTE);
+
+     // Now with inlineEditorAdmin=true - script IS included (includeInEditor=true)
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // Cleanup - uncheck includeInEditor back to false
+     setIncludeInEditor(false, I, DT, DTE);
+
+     //logout and verify that script is included for normal users
+     I.logout();
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.dontSee("!INCLUDE(/components/adresar/main.jsp", "div.row");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+});
+
 Scenario('Veci na prerobenie', ({ I }) => {
      // 1.oznacenie zaznamov - kontrola zmenenej anglictiny na slovencinu
      // kontrola 2 vybranych zaznamov

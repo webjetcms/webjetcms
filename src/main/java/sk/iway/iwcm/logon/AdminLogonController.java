@@ -270,7 +270,7 @@ public class AdminLogonController {
         String autoRedirectUrl = null;
 
         Map<String, String> logonUrls = OAuth2LoginHelper.getLogonUrls(true, request);
-        if (logonUrls.size() > 0) {
+        if (logonUrls != null && logonUrls.size() > 0) {
             HttpSession session = request.getSession();
             // Nastav explicitný atribút pre OAuth2 admin login
             OAuth2LoginHelper.setAdminLogin(request);

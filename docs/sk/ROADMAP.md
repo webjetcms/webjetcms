@@ -14,15 +14,15 @@ Vysvetlenie použitých piktogramov:
 
 ## 2026
 
-- Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
-- Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
-- Migrácia na Spring Boot projekt.
-- Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
-- Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
-- Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
-- Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
-- Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie.
-- Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pro `select` pole.
+- [ ] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
+- [ ] Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
+- [ ] Migrácia na Spring Boot projekt.
+- [ ] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
+- [ ] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
+- [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
+- [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
+- [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pro `select` pole.
 
 ## 2025
 
