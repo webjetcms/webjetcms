@@ -152,7 +152,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.multistep_form",
     "sk.iway.iwcm.components.form_settings.rest",
     "sk.iway.iwcm.components.apphtmlbox",
-    "sk.iway.iwcm.components.appinquirysimple"
+    "sk.iway.iwcm.components.appinquirysimple",
+    "sk.iway.iwcm.components.appmap"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
