@@ -1803,6 +1803,24 @@ export class DatatablesCkEditor {
 					//console.log("Setting resize interval, that=", that);
 					that.myWindow.setTimeout(function() { that.resizeEditor(that); }, 100);
 					that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
+
+					that.ckEditorInstance.maximalizeWindow = function() {
+						var el = document.querySelector("a.cke_dialog_maximize_button");
+						if (el) {
+							el.click();
+							return true;
+						}
+						return false;
+					};
+
+					that.ckEditorInstance.minimalizeWindow = function() {
+						var el = document.querySelector("a.cke_dialog_minimize_button");
+						if (el) {
+							el.click();
+							return true;
+						}
+						return false;
+					};
 				},
 
 				'getData' : function(e)
