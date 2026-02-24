@@ -204,6 +204,7 @@ Scenario('testovanie includeInEditor a inlineEditorAdmin parametra', async ({ I,
 
      // With inlineEditorAdmin=true - script is NOT included (includeInEditor defaults to false)
      await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.waitForText("!INCLUDE(/components/adresar/main.jsp", 10, "div.row");
      I.dontSeeInSource("//Skript bez obmedzeni demo domena");
 
      // In admin datatable, set includeInEditor=true on the script
@@ -215,6 +216,12 @@ Scenario('testovanie includeInEditor a inlineEditorAdmin parametra', async ({ I,
 
      // Cleanup - uncheck includeInEditor back to false
      setIncludeInEditor(false, I, DT, DTE);
+
+     //logout and verify that script is included for normal users
+     I.logout();
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.dontSee("!INCLUDE(/components/adresar/main.jsp", "div.row");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
 });
 
 Scenario('Veci na prerobenie', ({ I }) => {

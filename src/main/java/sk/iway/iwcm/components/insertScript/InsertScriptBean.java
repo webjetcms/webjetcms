@@ -42,6 +42,14 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     @JsonIgnore
     private static final long serialVersionUID = -1L;
 
+    @PrePersist
+    @PreUpdate
+    private void preSave() {
+        if(includeInEditor == null) {
+            includeInEditor = Boolean.FALSE;
+        }
+    }
+
     @Id
     @GeneratedValue(generator="WJGen_insert_script")
 	@TableGenerator(name="WJGen_insert_script",pkColumnValue="insert_script")

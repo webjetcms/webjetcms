@@ -6,6 +6,10 @@
 
 !>**Upozornenie:** Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7. Pred aktualizáciou [skontrolujte požiadavky](install/versions.md#zmeny-pri-prechode-na-jakarta-verziu).
 
+### Iné menšie zmeny
+
+- Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
+
 ### Bezpečnosť
 
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).

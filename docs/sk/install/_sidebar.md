@@ -10,6 +10,7 @@
   - [Základná konfigurácia](/install/config/README.md)
   - [Externá konfigurácia](/install/external-configuration.md)
   - [Spam ochrana](/install/config/spam-protection.md)
+  - [DB s právami na čítanie](/install/config/ro-user.md)
   - Autorizácia
     - [OAuth2](/install/oauth2/oauth2.md)
     - [Keycloak](/install/oauth2/keycloak.md)
