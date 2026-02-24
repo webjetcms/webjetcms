@@ -161,6 +161,58 @@ END;
 
 ```
 
+Príklad pre MariaDB, meno schémy je `webjetcms_web`, používateľ s právami na čítanie je `webjetcms_web_ro`:
+
+```sql
+GRANT SELECT ON webjetcms_web.* TO 'webjetcms_web_ro'@'%';
+
+GRANT INSERT, UPDATE ON webjetcms_web._adminlog_ TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.banner_stat_clicks TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.banner_stat_views TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.banner_stat_views_day TO 'webjetcms_web_ro'@'%';
+
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.basket_invoice TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.basket_invoice_payments TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.basket_item TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.bazar_advertisements TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.bazar_groups TO 'webjetcms_web_ro'@'%';
+
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.cache TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.calendar TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.calendar_invitation TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.captcha_dictionary TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.cluster_monitoring TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.cluster_refresher TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.contact TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.customer_reviews TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.document_forum TO 'webjetcms_web_ro'@'%';
+GRANT UPDATE ON webjetcms_web.documents TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.emails TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.emails_stat_click TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.emails_unsubscribed TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.forms TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.forum TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.inquiry_answers TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.inquiry_users TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.monitoring TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.pkey_generator TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.questions_answers TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.rating TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.seo_bots TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.stat_error TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE, DELETE ON webjetcms_web.stat_from TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.stat_keys TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.stat_searchengine TO 'webjetcms_web_ro'@'%';
+GRANT INSERT, UPDATE ON webjetcms_web.stat_userlogon TO 'webjetcms_web_ro'@'%';
+
+SET SESSION group_concat_max_len = 1048576;
+SET @sql := (SELECT GROUP_CONCAT(CONCAT('GRANT INSERT, UPDATE, DELETE ON `', table_schema, '`.`', table_name, '` TO "webjetcms_web_ro"@"%"') SEPARATOR '|') FROM information_schema.tables WHERE table_schema = 'webjetcms_web' AND (table_name LIKE 'stat_error%' OR table_name LIKE 'stat_from%' OR table_name LIKE 'stat_views%'));
+SET @proc_stmt := CONCAT('CREATE OR REPLACE PROCEDURE webjetcms_web.tmp_stat_grant() BEGIN ', REPLACE(@sql, '|', CHAR(59, 32)), CHAR(59, 32), ' END');
+EXECUTE IMMEDIATE @proc_stmt;
+CALL webjetcms_web.tmp_stat_grant();
+DROP PROCEDURE IF EXISTS webjetcms_web.tmp_stat_grant;
+```
+
 ## Oracle
 
 Pre Oracle databázu je potrebné vytvoriť `trigger` pre zmenu schémy po prihlásení a nastaviť procedúru pre vytvorenie štatistických tabuliek.
