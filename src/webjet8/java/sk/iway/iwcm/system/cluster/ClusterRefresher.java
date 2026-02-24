@@ -312,7 +312,7 @@ public class ClusterRefresher extends TimerTask
 		new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE refresh_time<=?", new Timestamp(cal.getTimeInMillis()));
 
 		//zmas aj stare konf. premenne statXXX
-		if ("auto".equals(Constants.getString("clusterNames"))) {
+		if ("auto".equals(Constants.getString("clusterNames")) && Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")) {
 			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statDistinctUsers-%", new Timestamp(cal.getTimeInMillis()));
 			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statSessions-%", new Timestamp(cal.getTimeInMillis()));
 		}
