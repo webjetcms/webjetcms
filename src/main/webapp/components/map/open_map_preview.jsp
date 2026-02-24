@@ -14,20 +14,26 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     pageContext.setAttribute("lng", lng);
 
     String place = Tools.isEmpty(Tools.getRequestParameter(request, "object")) ? "Stara vajnorska 21, Bratislava" :Tools.getRequestParameter(request, "object");
-    String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "400" :Tools.getRequestParameter(request, "width");
-    String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400" :Tools.getRequestParameter(request, "height");
-    String widthPercent = Tools.isEmpty(Tools.getRequestParameter(request, "widthPercent")) ? "100" :Tools.getRequestParameter(request, "widthPercent");
-    String heightPercent = Tools.isEmpty(Tools.getRequestParameter(request, "heightPercent")) ? "100" :Tools.getRequestParameter(request, "heightPercent");
-    int zoom = Tools.getIntValue(Tools.getRequestParameter(request, "zoom"), 13);
     String longitude = Tools.isEmpty(Tools.getRequestParameter(request, "longitude")) ? null :Tools.getRequestParameter(request, "longitude");
     String latitude = Tools.isEmpty(Tools.getRequestParameter(request, "latitude")) ? null :Tools.getRequestParameter(request, "latitude");
+
+    boolean sizeInPercent = "true".equals(Tools.getRequestParameter(request, "sizeInPercent"));
+    String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "400" :Tools.getRequestParameter(request, "width");
+    String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400" :Tools.getRequestParameter(request, "height");
+
+    int zoom = Tools.getIntValue(Tools.getRequestParameter(request, "zoom"), 13);
+	// Show controls by default true, so it wont turn off the controll buttons
+	String showControlsStr = Tools.getRequestParameter(request, "showControls");
+    boolean showControls = Tools.isEmpty(showControlsStr) ? true : "true".equals(showControlsStr);
+    boolean scrollwheel = "true".equals(Tools.getRequestParameter(request, "scrollwheel"));
+
     String label = Tools.isEmpty(Tools.getRequestParameter(request, "label")) ? "" :Tools.getRequestParameter(request, "label");
     int view = Tools.getIntValue(Tools.getRequestParameter(request, "view"), 0);
-
     boolean showContentString = "true".equals(Tools.getRequestParameter(request, "showContentString"));
-    boolean sizeInPercent = "true".equals(Tools.getRequestParameter(request, "sizeInPercent"));
-    boolean showControls = "true".equals(Tools.getRequestParameter(request, "showControls"));
-    boolean scrollwheel = "true".equals(Tools.getRequestParameter(request, "scrollwheel"));
+    boolean closeLabel = "true".equals(Tools.getRequestParameter(request, "closeLabel"));
+
+    int offsetX = Tools.getIntValue(Tools.getRequestParameter(request, "offsetX"), 0);
+    int offsetY = Tools.getIntValue(Tools.getRequestParameter(request, "offsetY"), 0);
     %>
 
     <%=Tools.insertJQuery(request) %>
@@ -39,16 +45,16 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
             margin: 0px;
             padding: 0px;
         }
-        #map {
-            width: 100%!important;
-            height: 400px!important;
-        }
     </style>
     </head>
 
     <body>
         <input type="hidden" id="m-lat"><input type="hidden" id="m-lng">
-        <div id="map" style="width: <%=width%>px; height: <%=height%>px;" class="details"></div>
+        <% if(sizeInPercent) { %>
+            <div id="map" style="width: <%=width%>%; height: <%=height%>%;" class="details"></div>
+        <% } else { %>
+            <div id="map" style="width: <%=width%>px; height: <%=height%>px;" class="details"></div>
+        <% } %>
     </body>
 </html>
 
@@ -65,12 +71,33 @@ L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 
 if (<%=latitude%> == null || <%=longitude%> == null) {
     $.get('https://nominatim.openstreetmap.org/search?format=json&q=<%= place %>', function(data){
-        map.setView([data[0].lat, data[0].lon], <%= zoom %>);
-        L.marker([data[0].lat, data[0].lon]).addTo(map);
+        var targetPoint = map.project([data[0].lat, data[0].lon], <%= zoom %>).subtract([<%=offsetX%>, <%=offsetY%>]);
+        var targetLatLng = map.unproject(targetPoint, <%= zoom %>);
+        map.setView(targetLatLng, <%= zoom %>);
+        marker = L.marker([data[0].lat, data[0].lon]).addTo(map);
+        <% if(showContentString) { %>
+            var labelText = "<%=label%>";
+            var contentString = (labelText != "" ? "<b>" + labelText + "</b><br/>" : "") + "<iwcm:text key='components.map.latitude'/>: " + data[0].lat + "<br/><iwcm:text key='components.map.longitude'/>: " + data[0].lon;
+            marker.bindPopup(contentString, {closeButton: <%=closeLabel%>}).openPopup();
+        <% } else if(Tools.isNotEmpty(label)) { %>
+            var contentString = "<b><%=label%></b>";
+            marker.bindPopup(contentString, {closeButton: <%=closeLabel%>}).openPopup();
+        <% } %>
     });
 } else {
-    map.setView([<%=latitude%>, <%=longitude%>], <%= zoom %>);
+    var targetPoint = map.project([<%=latitude%>, <%=longitude%>], <%= zoom %>).subtract([<%=offsetX%>, <%=offsetY%>]);
+    var targetLatLng = map.unproject(targetPoint, <%= zoom %>);
+    map.setView(targetLatLng, <%= zoom %>);
     marker = L.marker([<%=latitude%>, <%=longitude%>]).addTo(map);
+
+    <% if(showContentString) { %>
+        var labelText = "<%=label%>";
+        var contentString = (labelText != "" ? "<b>" + labelText + "</b><br/>" : "") + "<iwcm:text key='components.map.latitude'/>: <%=latitude%><br/><iwcm:text key='components.map.longitude'/>: <%=longitude%>";
+        marker.bindPopup(contentString, {closeButton: <%=closeLabel%>}).openPopup();
+    <% } else if(Tools.isNotEmpty(label)) { %>
+        var contentString = "<b><%=label%></b>";
+        marker.bindPopup(contentString, {closeButton: <%=closeLabel%>}).openPopup();
+    <% } %>
 }
 
 map.on('click', addMarker);
@@ -93,6 +120,15 @@ function addMarker(e){
     if (marker) {
         map.removeLayer(marker);
     }
+
     marker = L.marker(e.latlng).addTo(map);
+    <% if(showContentString) { %>
+        var labelText = "<%=label%>";
+        var newContentString = (labelText != "" ? "<b>" + labelText + "</b><br/>" : "") + "<iwcm:text key='components.map.latitude'/>: " + e.latlng.lat + "<br/><iwcm:text key='components.map.longitude'/>: " + e.latlng.lng;
+        marker.bindPopup(newContentString, {closeButton: <%=closeLabel%>}).openPopup();
+    <% } else if(Tools.isNotEmpty(label)) { %>
+        var newContentString = "<b><%=label%></b>";
+        marker.bindPopup(newContentString, {closeButton: <%=closeLabel%>}).openPopup();
+    <% } %>
 }
 </script>

@@ -22,23 +22,30 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
 
-String place = Tools.isEmpty(Tools.getRequestParameter(request, "object")) ? "Stara vajnorska 21, Bratislava" :Tools.getRequestParameter(request, "object");
-String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "400" :Tools.getRequestParameter(request, "width");
-String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400" :Tools.getRequestParameter(request, "height");
-String widthPercent = Tools.isEmpty(Tools.getRequestParameter(request, "widthPercent")) ? "100" :Tools.getRequestParameter(request, "widthPercent");
-String heightPercent = Tools.isEmpty(Tools.getRequestParameter(request, "heightPercent")) ? "100" :Tools.getRequestParameter(request, "heightPercent");
-int zoom = Tools.getIntValue(Tools.getRequestParameter(request, "zoom"), 13);
-String longitude = Tools.isEmpty(Tools.getRequestParameter(request, "longitude")) ? null :Tools.getRequestParameter(request, "longitude");
-String latitude = Tools.isEmpty(Tools.getRequestParameter(request, "latitude")) ? null :Tools.getRequestParameter(request, "latitude");
-String label = Tools.isEmpty(Tools.getRequestParameter(request, "label")) ? "" :Tools.getRequestParameter(request, "label");
-int view = Tools.getIntValue(Tools.getRequestParameter(request, "view"), 0);
-String key = Tools.getStringValue(Tools.getRequestParameter(request, "key"), Constants.getString("googleMapsApiKey"));
+    String place = Tools.isEmpty(Tools.getRequestParameter(request, "object")) ? "Stara vajnorska 21, Bratislava" :Tools.getRequestParameter(request, "object");
+    String longitude = Tools.isEmpty(Tools.getRequestParameter(request, "longitude")) ? null :Tools.getRequestParameter(request, "longitude");
+    String latitude = Tools.isEmpty(Tools.getRequestParameter(request, "latitude")) ? null :Tools.getRequestParameter(request, "latitude");
 
-boolean showContentString = "true".equals(Tools.getRequestParameter(request, "showContentString"));
-boolean sizeInPercent = "true".equals(Tools.getRequestParameter(request, "sizeInPercent"));
-boolean showControls = "true".equals(Tools.getRequestParameter(request, "showControls"));
+	boolean sizeInPercent = "true".equals(Tools.getRequestParameter(request, "sizeInPercent"));
+    String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "400" :Tools.getRequestParameter(request, "width");
+    String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400" :Tools.getRequestParameter(request, "height");
 
-String markerIcon = Tools.getStringValue(Tools.getRequestParameter(request, "markerIcon"), "");
+    int zoom = Tools.getIntValue(Tools.getRequestParameter(request, "zoom"), 13);
+	// Show controls by default true, so it wont turn off the controll buttons
+	String showControlsStr = Tools.getRequestParameter(request, "showControls");
+    boolean showControls = Tools.isEmpty(showControlsStr) ? true : "true".equals(showControlsStr);
+    boolean scrollwheel = "true".equals(Tools.getRequestParameter(request, "scrollwheel"));
+
+	String label = Tools.isEmpty(Tools.getRequestParameter(request, "label")) ? "" :Tools.getRequestParameter(request, "label");
+    int view = Tools.getIntValue(Tools.getRequestParameter(request, "view"), 0);
+    boolean showContentString = "true".equals(Tools.getRequestParameter(request, "showContentString"));
+    boolean closeLabel = "true".equals(Tools.getRequestParameter(request, "closeLabel"));
+
+	int offsetX = Tools.getIntValue(Tools.getRequestParameter(request, "offsetX"), 0);
+    int offsetY = Tools.getIntValue(Tools.getRequestParameter(request, "offsetY"), 0);
+
+	String key = Tools.getStringValue(Tools.getRequestParameter(request, "key"), Constants.getString("googleMapsApiKey"));
+	String markerIcon = Tools.getStringValue(Tools.getRequestParameter(request, "markerIcon"), "");
 
 String viewMap;
 switch(view){
@@ -72,10 +79,30 @@ function load_map()
 	 {
 	    zoom: <%=zoom%>,
 	    center: latlng,
-	    mapTypeId: google.maps.<%=viewMap%>	//typ mapy
+	    mapTypeId: google.maps.<%=viewMap%>,	//typ mapy
+	    scrollwheel: <%=scrollwheel%>
+	    <%if(!showControls){%>
+			,mapTypeControl: false,
+			fullscreenControl: false,
+			zoomControl: false,
+			streetViewControl: false,
+			cameraControl: false
+	    <%}%>
 	 };
 
     map = new google.maps.Map(document.getElementById("map"), myOptions);
+
+    // Apply offset using OverlayView
+    var ov = new google.maps.OverlayView();
+    ov.onAdd = function() {
+        var proj = this.getProjection();
+        var aPoint = proj.fromLatLngToContainerPixel(latlng);
+        aPoint.x = aPoint.x + <%=offsetX%>;
+        aPoint.y = aPoint.y + <%=offsetY%>;
+        map.setCenter(proj.fromContainerPixelToLatLng(aPoint));
+    };
+    ov.draw = function() {};
+    ov.setMap(map);
 
     if(<%=longitude%> == null || <%=latitude%> == null){	//ak nemame nastavenu zemepisnu sirku a vysku
     	geocoder = new google.maps.Geocoder();
@@ -104,19 +131,31 @@ function setMarker(address, position){
 	      animation: google.maps.Animation.DROP
 	  });
 	var contentString;	//text pre informacne okno
-	if(address == ""){
-		contentString = "<iwcm:text key="components.map.latitude"/>"+": <%=latitude%><br/>"+"<iwcm:text key="components.map.longitude"/>"+": <%=longitude%>"+"<br><%=label%>";
-	}
-	else {
-		contentString = address + "<br>"+"<%=label%>";
-	}
+	var labelText = "<%=label%>";
 	<%if(showContentString){%>
+		// showContentString is true - show coordinates and label
+		if(address == ""){
+			contentString = (labelText != "" ? "<b>"+labelText+"</b><br/>" : "")+"<iwcm:text key='components.map.latitude'/>"+": <%=latitude%><br/>"+"<iwcm:text key='components.map.longitude'/>"+": <%=longitude%>";
+		}
+		else {
+			contentString = (labelText != "" ? "<b>"+labelText+"</b><br/>" : "") + address;
+		}
 		var infowindow = new google.maps.InfoWindow({
 		    content: contentString
 		});
-	<%}%>
+
+		<%if(!closeLabel){%>
+			console.log("Removing close button from InfoWindow");
+			google.maps.event.addListener(infowindow, "domready", function() {
+				document.querySelectorAll("button.gm-ui-hover-effect").forEach(function(el) { el.remove(); });
+			});
+		<%}%>
+
+		// Automatically open the InfoWindow
+		infowindow.open(map, marker);
 
 		google.maps.event.addListener(marker, 'click', function() {
+				console.log("Marker clicked");
 				infowindow.open(map,marker);	//pridam otvorenie informacneho okna po kliknuti na marker
 			});
 
@@ -141,10 +180,100 @@ function setMarker(address, position){
 
 			var coords = { 'lat': lat, 'lng': lng};
 
-				// Put the object into storage
+			// Put the object into storage
 			localStorage.setItem('coords', JSON.stringify(coords));
+
+			// Update InfoWindow content with new coordinates and show it
+			var newContentString = (labelText != "" ? "<b>"+labelText+"</b><br/>" : "")+"<iwcm:text key='components.map.latitude'/>"+": "+lat+"<br/>"+"<iwcm:text key='components.map.longitude'/>"+": "+lng;
+			infowindow.setContent(newContentString);
+			infowindow.open(map, marker);
+
+			// Add click listener to new marker
+			google.maps.event.addListener(marker, 'click', function() {
+				infowindow.open(map, marker);
+			});
+		});
+	<%} else if(!label.isEmpty()) {%>
+		// showContentString is false but label is set - show only label
+		contentString = "<b>"+labelText+"</b>";
+		var infowindow = new google.maps.InfoWindow({
+		    content: contentString
 		});
 
+		<%if(!closeLabel){%>
+			console.log("Removing close button from InfoWindow");
+			google.maps.event.addListener(infowindow, "domready", function() {
+				document.querySelectorAll("button.gm-ui-hover-effect").forEach(function(el) { el.remove(); });
+			});
+		<%}%>
+
+		// Automatically open the InfoWindow
+		infowindow.open(map, marker);
+
+		google.maps.event.addListener(marker, 'click', function() {
+				infowindow.open(map,marker);
+			});
+
+		google.maps.event.addListener(map, "click", function(e) {
+
+			latLng = e.latLng;
+
+			// if marker exists and has a .setMap method, hide it
+			if (marker && marker.setMap) {
+				marker.setMap(null);
+			}
+			marker = new google.maps.Marker({
+				position: latLng,
+				map: map
+			});
+
+			var lat = marker.getPosition().lat();
+			var lng = marker.getPosition().lng();
+
+			document.getElementById("m-lat").value = lat;
+			document.getElementById("m-lng").value = lng;
+
+			var coords = { 'lat': lat, 'lng': lng};
+
+			// Put the object into storage
+			localStorage.setItem('coords', JSON.stringify(coords));
+
+			// Update InfoWindow content - show only label
+			infowindow.setContent("<b>"+labelText+"</b>");
+			infowindow.open(map, marker);
+
+			// Add click listener to new marker
+			google.maps.event.addListener(marker, 'click', function() {
+				infowindow.open(map, marker);
+			});
+		});
+	<%} else {%>
+		// No label shown - just allow moving the pin
+		google.maps.event.addListener(map, "click", function(e) {
+
+			latLng = e.latLng;
+
+			// if marker exists and has a .setMap method, hide it
+			if (marker && marker.setMap) {
+				marker.setMap(null);
+			}
+			marker = new google.maps.Marker({
+				position: latLng,
+				map: map
+			});
+
+			var lat = marker.getPosition().lat();
+			var lng = marker.getPosition().lng();
+
+			document.getElementById("m-lat").value = lat;
+			document.getElementById("m-lng").value = lng;
+
+			var coords = { 'lat': lat, 'lng': lng};
+
+			// Put the object into storage
+			localStorage.setItem('coords', JSON.stringify(coords));
+		});
+	<%}%>
 }
 
 //animacia - momentalne sa nepouziva
@@ -159,20 +288,22 @@ function toggleBounce() {
 	}
 //]]>
 </script>
-	<style type="text/css">
-		body { margin: 0px; padding: 0px; }
-		#map {
-			width: 100%!important;
-			height: 400px!important;
-		}
-	</style>
+
+
+<style type="text/css">
+	body { margin: 0px; padding: 0px; }
+</style>
 </head>
 <body>
 <input type="hidden" id="m-lat"><input type="hidden" id="m-lng">
-<div id="map" style="width: <%=width%>px; height: <%=height%>px;" class="details">
+<%if(sizeInPercent){%>
+	<div id="map" style="width: <%=width%>%; height: <%=height%>%;" class="details">
+<%} else {%>
+	<div id="map" style="width: <%=width%>px; height: <%=height%>px;" class="details">
+<%}%>
 
 <script type="text/javascript">
-	addEvent(window, "load", load_map);
+	window.addEventListener("load", load_map);
 </script>
 </div>
 
