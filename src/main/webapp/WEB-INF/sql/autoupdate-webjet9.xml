@@ -3172,10 +3172,10 @@
                 <void property="author"><string>lbalat</string></void>
                 <void property="date"><string>23.02.2026</string></void>
                 <void property="desc"><string>insert_script - add column include_in_editor</string></void>
-                <void property="mysql"><string>ALTER TABLE insert_script ADD COLUMN include_in_editor TINYINT(1) NOT NULL DEFAULT 0;</string></void>
-                <void property="mssql"><string>ALTER TABLE insert_script ADD include_in_editor BIT NOT NULL DEFAULT 0;</string></void>
-                <void property="oracle"><string>ALTER TABLE insert_script ADD include_in_editor NUMBER(1) DEFAULT 0 NOT NULL;</string></void>
-                <void property="pgsql"><string>ALTER TABLE insert_script ADD COLUMN include_in_editor BOOLEAN NOT NULL DEFAULT FALSE;</string></void>
+                <void property="mysql"><string>ALTER TABLE insert_script ADD COLUMN include_in_editor TINYINT(1) NOT NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE insert_script ADD include_in_editor BIT NOT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE insert_script ADD include_in_editor NUMBER(1) DEFAULT 0 NOT NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE insert_script ADD COLUMN include_in_editor BOOLEAN NOT NULL DEFAULT FALSE</string></void>
             </object>
         </void>
 
