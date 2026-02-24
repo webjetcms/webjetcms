@@ -34,6 +34,17 @@ public class Page {
         return seoTitle;
     }
 
+    public String getCanonical(){
+        String canonical = "";
+        if(doc!=null){
+            canonical = doc.getFieldQ();
+            if(Tools.isEmpty(canonical)){
+                canonical = getUrl();
+            }
+        }
+        return canonical;
+    }
+
     public String getSeoTitleHtml() {
         String seoTitle = "";
         if(doc != null) {
