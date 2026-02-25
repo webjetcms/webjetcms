@@ -113,6 +113,7 @@ class UploadFileToolsTest extends BaseWebjetTest {
 
         //check new docid with existing title
         result = UploadFileTools.getPageUploadSubDir(-1, TEST_GROUP_ID, TEST_TITLE_EXISTING, IMAGE_PREFIX);
+        System.out.println("Result for new page with existing title: " + result);
         expectedDir = IMAGE_PREFIX + "/test-stavov/"+EXPECTED_URL_NAME_EXISTING+"-2";
         assertEquals(expectedDir, result,
             "Upload subdir for new page with existing title should be '" + expectedDir + "'. Got: " + result);
