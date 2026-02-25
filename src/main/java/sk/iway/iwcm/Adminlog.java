@@ -434,7 +434,8 @@ public class Adminlog
 						if (Tools.isNotEmpty(requestBean.getUrl()))
 						{
                             descriptionLocal += "\nURI: "+requestBean.getUrl();
-							if (Tools.isNotEmpty(requestBean.getQueryString()) && requestBean.getUrl().equals("/admin/logon.do")==false) descriptionLocal += "?"+requestBean.getQueryString();
+							boolean isLogon = requestBean.getUrl().startsWith("/admin/logon") || requestBean.getUrl().startsWith("/login/oauth2/");
+							if (Tools.isNotEmpty(requestBean.getQueryString()) && isLogon==false) descriptionLocal += "?"+requestBean.getQueryString();
 						}
 						if (Tools.isNotEmpty(requestBean.getReferrer()))
 						{

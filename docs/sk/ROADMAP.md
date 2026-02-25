@@ -14,14 +14,15 @@ Vysvetlenie použitých piktogramov:
 
 ## 2026
 
-- Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
-- Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
-- Migrácia na Spring Boot projekt.
-- Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
-- Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
-- Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
-- Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
-- Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie.
+- [ ] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
+- [ ] Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
+- [ ] Migrácia na Spring Boot projekt.
+- [ ] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
+- [ ] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
+- [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
+- [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
+- [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pro `select` pole.
 
 ## 2025
 
@@ -53,7 +54,7 @@ Vysvetlenie použitých piktogramov:
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
-- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [x] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [x] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
@@ -82,7 +83,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 - [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
 - [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
-- [ ] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil.
+- [x] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil (#58361).
 - [x] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83, #58129).
 - [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.

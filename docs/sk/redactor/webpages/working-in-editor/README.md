@@ -123,9 +123,15 @@ Linky / odkazy na ďalšie stránky vkladáte podobne ako odkaz na dokument/súb
 
 ## Tlačidlá
 
-Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CSS štýl obsahujúci výraz `btn-` alebo CSS štýl má nastavenú hodnotu `display` obsahujúcu `block`, teda aj napríklad `inline-block` zobrazí sa po kliknutí na takýto odkaz v editore okno nastavenia tlačidla. V ňom je možné jednoducho zmeniť text tlačidla a nastaviť odkaz po kliknutí. Môžete prípadne aj zmeniť farbu pozadia, písma a zaoblenie rohov, štandardne ale tieto hodnoty neodporúčame meniť - mali by byť nastavené podľa CSS štýlov web stránky.
+Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CSS štýl obsahujúci výraz `btn` (nastaviteľné cez konfiguračnú premennú `ckeditor_button_baseClass`) zobrazí sa po kliknutí na takýto odkaz v editore okno nastavenia tlačidla. V ňom je možné jednoducho zmeniť text tlačidla a nastaviť odkaz po kliknutí, štýl tlačidla a podobne.
 
 ![](link_dialog_button.png)
+
+V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, titulok, popis pre čítačky (aria-label) a podobne.
+
+![](link_dialog_button_advanced.png)
+
+Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
 
 ## Vkladanie obrázkov
 

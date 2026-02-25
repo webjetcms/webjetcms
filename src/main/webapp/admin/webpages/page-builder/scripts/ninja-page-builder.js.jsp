@@ -3028,25 +3028,89 @@
             return html;
         },
 
+        /**
+         * Returns default tab menu configuration for the style modal.
+         * Can be customized by defining window.pbBuildTabMenu = function(config) { return config; }
+         * @returns {Object} Tab menu configuration
+         */
+        getTabMenuConfig: function() {
+            return {
+                tabs: [
+                    {
+                        id: "01",
+                        name: '<iwcm:text key="pagebuilder.modal.settings.base"/>',
+                        visible: true,
+                        items: [
+                            { id: "01", name: '<iwcm:text key="pagebuilder.modal.tab.background"/>', visible: true },
+                            { id: "02", name: '<iwcm:text key="pagebuilder.modal.tab.text-align"/>', visible: true },
+                            { id: "03", name: '<iwcm:text key="pagebuilder.modal.tab.margin_padding"/>', visible: true },
+                            { id: "04", name: '<iwcm:text key="pagebuilder.modal.tab.border-radius"/>', visible: true },
+                            { id: "05", name: '<iwcm:text key="pagebuilder.modal.tab.border"/>', visible: true },
+                            { id: "06", name: '<iwcm:text key="pagebuilder.modal.tab.box-shadow"/>', visible: true },
+                        ]
+                    },
+                    {
+                        id: "02",
+                        name: '<iwcm:text key="pagebuilder.modal.settings.advanced"/>',
+                        visible: true,
+                        items: [
+                            { id: "07", name: '<iwcm:text key="pagebuilder.modal.tab.size"/>', visible: true },
+                            { id: "08", name: '<iwcm:text key="pagebuilder.modal.tab.visibility"/>', visible: true },
+                            { id: "09", name: '<iwcm:text key="pagebuilder.modal.tab.animations"/>', visible: true },
+                            { id: "10", name: '<iwcm:text key="pagebuilder.modal.tab.id_class"/>', visible: true },
+                            { id: "11", name: '<iwcm:text key="pagebuilder.modal.tab.connections"/>', visible: true },
+                            { id: "12", name: '<iwcm:text key="pagebuilder.modal.tab.z-index"/>', visible: true }
+                        ]
+                    }
+                ]
+            };
+        },
+
         build_tab_menu: function() {
 
-            var tab = '<div class="tab-menu"><span class="tab-link active" data-tab-id="01"><iwcm:text key="pagebuilder.modal.settings.base"/></span><span class="tab-link"  data-tab-id="02"><iwcm:text key="pagebuilder.modal.settings.advanced"/></span></div>';
+            // Get default configuration
+            var config = this.getTabMenuConfig();
 
-            var style_buttons = '<span class="tab-item-button" data-input-group-id="01"><iwcm:text key="pagebuilder.modal.tab.background"/></span>';
-            style_buttons += '<span class="tab-item-button" data-input-group-id="02"><iwcm:text key="pagebuilder.modal.tab.text-align"/></span>';
-            style_buttons += '<span class="tab-item-button" data-input-group-id="03"><iwcm:text key="pagebuilder.modal.tab.margin_padding"/></span>';
-            style_buttons += '<span class="tab-item-button" data-input-group-id="04"><iwcm:text key="pagebuilder.modal.tab.border-radius"/></span>';
-            style_buttons += '<span class="tab-item-button" data-input-group-id="05"><iwcm:text key="pagebuilder.modal.tab.border"/></span>';
-            style_buttons += '<span class="tab-item-button" data-input-group-id="06"><iwcm:text key="pagebuilder.modal.tab.box-shadow"/></span>';
+            // Allow customization via window.pbBuildTabMenu callback
+            if (typeof window.pbBuildTabMenu === 'function') {
+                config = window.pbBuildTabMenu(this, config);
+            }
 
-            var settings_buttons = '<span class="tab-item-button" data-input-group-id="07"><iwcm:text key="pagebuilder.modal.tab.size"/></span>';
-            settings_buttons += '<span class="tab-item-button" data-input-group-id="08"><iwcm:text key="pagebuilder.modal.tab.visibility"/></span>';
-            settings_buttons += '<span class="tab-item-button" data-input-group-id="09"><iwcm:text key="pagebuilder.modal.tab.animations"/></span>';
-            settings_buttons += '<span class="tab-item-button" data-input-group-id="10"><iwcm:text key="pagebuilder.modal.tab.id_class"/></span>';
-            settings_buttons += '<span class="tab-item-button" data-input-group-id="11"><iwcm:text key="pagebuilder.modal.tab.connections"/></span>';
-            settings_buttons += '<span class="tab-item-button" data-input-group-id="12"><iwcm:text key="pagebuilder.modal.tab.z-index"/></span>';
+            // Build tab menu HTML from configuration
+            var tab = '<div class="tab-menu">';
+            var tabContent = '<div class="tab-content">';
+            var isFirst = true;
 
-            tab += '<div class="tab-content"><div class="tab-item active" data-tab-id="01">'+style_buttons+'</div><div class="tab-item" data-tab-id="02">'+settings_buttons+'</div></div>';
+            for (var i = 0; i < config.tabs.length; i++) {
+                var tabConfig = config.tabs[i];
+
+                // Skip hidden tabs
+                if (tabConfig.visible === false) {
+                    continue;
+                }
+
+                // Build tab link
+                var activeClass = isFirst ? ' active' : '';
+                tab += '<span class="tab-link' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + tabConfig.name + '</span>';
+
+                // Build tab content with item buttons
+                var itemButtons = '';
+                for (var j = 0; j < tabConfig.items.length; j++) {
+                    var item = tabConfig.items[j];
+                    // Skip hidden items
+                    if (item.visible === false) {
+                        continue;
+                    }
+                    itemButtons += '<span class="tab-item-button" data-input-group-id="' + item.id + '">' + item.name + '</span>';
+                }
+
+                tabContent += '<div class="tab-item' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + itemButtons + '</div>';
+                isFirst = false;
+            }
+
+            tab += '</div>';
+            tabContent += '</div>';
+            tab += tabContent;
 
             var me = this;
 

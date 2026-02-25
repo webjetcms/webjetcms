@@ -1,7 +1,5 @@
 # AB testovanie
 
-## Úvod
-
 Aplikácia AB testovanie vám umožňuje vykonať AB testovanie verzie stránok. Je možné vytvoriť B verziu stránky kliknutím na tlačítko Uložiť ako AB test. Vytvorí sa kópia stránky s upravenou URL adresou v ktorej môžete testovať B verziu stránky. WebJET následne automaticky zabezpečí zobrazovanie A a B verzie stránky na pôvodnej URL adrese v definovanom pomere. Návštevník teda stále vidí pôvodnú URL ale namiesto A verzie sa mu automaticky zobrazí B verzia stránky.
 
 ## Čo je AB testovanie

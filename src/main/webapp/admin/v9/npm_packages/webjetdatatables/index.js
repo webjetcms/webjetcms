@@ -1812,6 +1812,14 @@ export const dataTableInit = options => {
                     $('#' + DATA.id + '_modal > div.modal-dialog').removeClass("modal-fullscreen");
                 }
 
+                //change all DTE_Field.form-group.row which have display:block to display: flex, otherwise we have problems with form groups with multiple fields in one row
+                //happened on translation-keys when you first open new record and then edit another one
+                $('#' + DATA.id + '_modal .DTE_Field.form-group.row').each(function () {
+                    if ($(this).css('display') === 'block') {
+                        $(this).css('display', 'flex');
+                    }
+                });
+
                 editorWasOpened = true;
             }
 

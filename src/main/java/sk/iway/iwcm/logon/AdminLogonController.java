@@ -1,9 +1,6 @@
 package sk.iway.iwcm.logon;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,6 +41,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.system.spring.oauth2.OAuth2LoginHelper;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
@@ -185,7 +183,7 @@ public class AdminLogonController {
     }
 
     @GetMapping("logon/")
-    public String showForm(UserForm userForm, HttpServletRequest request, HttpSession session)
+    public String showForm(UserForm userForm, ModelMap model, HttpServletRequest request, HttpSession session)
     {
         Identity user = UsersDB.getCurrentUser(session);
         if (user != null && user.isAdmin())
@@ -206,7 +204,7 @@ public class AdminLogonController {
         }
 
         String adminHost = Constants.getString("multiDomainAdminHost");
-//out.println("adminHost="+adminHost+" domain="+DocDB.getDomain(request));
+        //out.println("adminHost="+adminHost+" domain="+DocDB.getDomain(request));
 
         String serverName = Tools.getServerName(request);
         if (("iwcm.interway.sk".equals(request.getServerName())==false && "localhost".equals(request.getServerName())==false) && Tools.isNotEmpty(adminHost) && (","+adminHost+",").indexOf(","+serverName+",")==-1)
@@ -232,6 +230,21 @@ public class AdminLogonController {
 
         LogonTools.saveAfterLogonRedirect(request);
 
+        // Spracuj OAuth2 chyby zo session
+        String oauth2LogonError = (String)session.getAttribute("oauth2_logon_error");
+        if (oauth2LogonError != null) {
+            Prop prop = Prop.getInstance(request);
+            String errorMessage = switch (oauth2LogonError) {
+                case "accessDenied" -> prop.getText("logon.err.noadmin");
+                case "oauth2_email_not_found" -> prop.getText("logon.err.oauth2_email_not_found");
+                case "oauth2_user_create_failed" -> prop.getText("logon.err.oauth2_user_create_failed");
+                case "oauth2_exception" -> prop.getText("logon.err.oauth2_exception");
+                default -> prop.getText("logon.err.oauth2_unknown");
+            };
+            model.addAttribute("errors", errorMessage);
+            session.removeAttribute("oauth2_logon_error");
+        }
+
         if(request.getParameter("loginName") != null)
         {
             String loginName = request.getParameter("loginName");
@@ -239,7 +252,41 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
+        String autoRedirect = addOAuth2UrlsToModel(request, model);
+        if (Tools.isNotEmpty(autoRedirect)) {
+            model.addAttribute("autoRedirect", autoRedirect);
+            if (Tools.isEmpty(oauth2LogonError)) {
+                if (request.getParameter("logoff") == null) {
+                    // Automatic redirect to first OAuth2 provider instead of showing logon form
+                    return "redirect:" + autoRedirect;
+                }
+            }
+        }
+
         return LOGON_FORM;
+    }
+
+    private String addOAuth2UrlsToModel(HttpServletRequest request, ModelMap model) {
+        String autoRedirectUrl = null;
+
+        Map<String, String> logonUrls = OAuth2LoginHelper.getLogonUrls(true, request);
+        if (logonUrls != null && logonUrls.size() > 0) {
+            HttpSession session = request.getSession();
+            // Nastav explicitný atribút pre OAuth2 admin login
+            OAuth2LoginHelper.setAdminLogin(request);
+
+            // Ak adminAfterLogonRedirect neexistuje, nastav defaultnú hodnotu
+            if (session.getAttribute("adminAfterLogonRedirect") == null) {
+                session.setAttribute("adminAfterLogonRedirect", "/admin/");
+            }
+
+            model.addAttribute("logonUrls", logonUrls);
+            String oauth2AdminLogonAutoRedirect = Constants.getString("oauth2_adminLogonAutoRedirect");
+            if (Tools.isNotEmpty(oauth2AdminLogonAutoRedirect)) {
+                autoRedirectUrl = logonUrls.get(oauth2AdminLogonAutoRedirect); // redirect to specified provider if auto redirect is enabled
+            }
+        }
+        return autoRedirectUrl;
     }
 
     @PostMapping("logon/")
@@ -266,6 +313,7 @@ public class AdminLogonController {
         if (errors.get("ERROR_KEY")!=null) {
             Logger.error(this,"su nejake chyby v logovacom formulari");
             model.addAttribute("errors", errors.get("ERROR_KEY"));
+            addOAuth2UrlsToModel(request, model);
             return LOGON_FORM;
         }
 
@@ -307,6 +355,17 @@ public class AdminLogonController {
     }
 
 
+    /**
+     * Set admin session for oauth2 return after successful authentication
+     * @param request
+     * @return
+     */
+    @GetMapping("logon/setadmin/")
+    @ResponseBody
+    public String setAdmin(HttpServletRequest request) {
+        OAuth2LoginHelper.setAdminLogin(request);
+        return "OK";
+    }
 
     private void determineLanguage(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
         String lng = ResponseUtils.filter(request.getParameter("language"));

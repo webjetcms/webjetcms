@@ -1,9 +1,10 @@
 # Informácie o stránke
+
 | Metóda | Typ | Popis |
 | --- | --- | --- |
-| ${ninja.page.seoTitle} | *String* | Názov |
-| ${ninja.page.seoDescription} | *String* | Popis |
-| ${ninja.page.seoImage} | *String* | Odkaz na obrázok |
+| ${ninja.page.seoTitle} | *String* | Názov stránky (hodnota sa berie z voliteľného poľa R alebo ak je prázdne, tak z titulku) |
+| ${ninja.page.seoDescription} | *String* | Popis stránky (hodnota sa berie z voliteľného poľa S alebo ak je prázdne, tak z perexu) |
+| ${ninja.page.seoImage} | *String* | Odkaz na obrázok (hodnota sa berie z voliteľného poľa T alebo ak je prázdne, tak z perex obrázku) |
 | ${ninja.page.url} | *String* | Url adresa |
 | ${ninja.page.urlDomain} | *String* | Doména |
 | ${ninja.page.urlPath} | *String* | Virtuálna adresa |
@@ -13,9 +14,26 @@
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
 | ${ninja.page.perexPlace} | *String* | Perex miesto stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
+| ${ninja.page.canonical} | *String* | Kanonická URL adresa stránky (hodnota sa berie z voliteľného poľa Q alebo ak je prázdne, tak z URL adresy) |
 | ${ninja.abVariant} | *String* | Identifikátor reprezentujúci verziu stránka vo forme znaku a/b |
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
+
+Pre nastavenie voliteľných polí R, S, T a Q je potrebné v sekcii [prekladové kľúče](../../../../admin/settings/translation-keys/README.md) nastaviť hodnoty nasledovne:
+
+```properties
+editor.field_q=Kanonická URL adresa
+editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije sa URL adresa stránky.
+editor.field_q.type=link
+editor.field_r=SEO titulok
+editor.field_r.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **titulku stránky**.\nMôžete tak optimalizovať zobrazený názov stránky na sociálnych sietiach.
+editor.field_s=SEO opis (kľúčové slová)
+editor.field_s.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
+editor.field_t=SEO obrázok
+editor.field_t.type=image
+editor.field_t.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
+
+```
 
 ## Názov *String*
 
@@ -72,7 +90,7 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:url" content="${ninja.page.url}" />
-<link rel="canonical" href="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
 ```
 
 ## Doména *String*

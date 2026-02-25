@@ -305,6 +305,9 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
     Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button.png');
 
     I.switchTo();
+
+    I.click(locate("div.cke_dialog_container a.cke_dialog_tab").withText("Rozšírené"));
+    Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button_advanced.png');
 });
 
 Scenario('webjet-toolbar', ({ I, Document }) => {

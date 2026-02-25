@@ -6,15 +6,29 @@
 
 !>**Upozornenie:** Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7. Pred aktualizáciou [skontrolujte požiadavky](install/versions.md#zmeny-pri-prechode-na-jakarta-verziu).
 
+### Webové stránky
+
+- Editor stránok - do dialógového okna [Odkaz a Tlačidlo](redactor/webpages/working-in-editor/README.md#tlačidlá) pridaná karta s rozšírenými nastaveniami ako ID, titulok, popis pre čítačky (aria-label) a podobne (#osk115).
+- Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}` (#OSK149).
+
+### Iné menšie zmeny
+
+- Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
+- Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane suffixu `-2`, `-3` atď (#58361).
+
 ### Bezpečnosť
 
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
+- Verzia `SpringSecurity` zvýšena na verziu 7 (#56665).
+- Pridaná možnosť autorizácie cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
 
 ### Pre programátora
 
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
 - Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).
 - Odstránená anotácia `@Temporal` na dátumových stĺpcoch v databázových entitách, odporúčané riešenie je pre nové entity používať `java.time.*` typy. Zdá sa, že Eclipselink/JPA správne deteguje typ `Date` ako dátum a čas a anotácia nie je potrebná. Odporúčame po aktualizácii skontrolovať správanie dátumových polí (#57793).
+- Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
+- Webové stránky - doplnená možnosť upraviť karty okne [Štýl pri použití PageBuilder](frontend/page-builder/blocks.md#podporný-javascript-kód) volaním funkcie `window.pbBuildTabMenu`. Viete tak pre zákazníka zobraziť len relevantné karty a nastavenia bloku (#58345).
 
 ## 2026.0.x
 
@@ -24,6 +38,8 @@
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
+- Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
+- Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).
 
 ## 2026.0
 

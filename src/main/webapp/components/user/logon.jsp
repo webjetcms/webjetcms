@@ -4,6 +4,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.tags.WriteTag" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%
 PageParams pageParams = new PageParams(request);
 //TODO: joruz - pridat to do komponenty pre vkladanie
@@ -22,6 +23,9 @@ if(Tools.isEmpty(googleKey) || Tools.isEmpty(googleSecret)) { google = "false"; 
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
+
+// OAuth2 support
+pageContext.setAttribute("logonUrls", sk.iway.iwcm.system.spring.oauth2.OAuth2LoginHelper.getLogonUrls(false, request));
 
 if(request.getParameter("loginName") != null)
 {
@@ -290,6 +294,18 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</fieldset>
 			</div>
 
+			<logic:present name="logonUrls">
+				<p class="text-center">
+					<iwcm:text key="button.oauth2Login"/>
+				</p>
+				<div class="text-center">
+					<c:forEach var="url" items="${logonUrls}">
+						<a href="${url.value}" class="btn btn-primary">
+							${url.key}
+						</a>
+					</c:forEach>
+				</div>
+			</logic:present>
 
 		</iwcm:notPresent>
 

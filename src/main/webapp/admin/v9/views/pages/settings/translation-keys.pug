@@ -4,8 +4,9 @@ block content
 
     script.
         var translationKeysTable;
+        var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
+
         window.domReady.add(function () {
-            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
 
             translationKeysTable = WJ.DataTable({
                 url: "/admin/v9/settings/translation-keys",

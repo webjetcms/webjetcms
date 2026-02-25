@@ -1,6 +1,6 @@
 # Assumptions and versions
 
-WebJET requires `Java 17` a `Tomcat 9`.
+The current version of WebJET CMS requires `Java 17` a `Tomcat 11`.
 
 The basic project in gradle format can be found at [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -13,7 +13,8 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
-- `2026.0-jakarta` - Stabilized version 2026.0 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
+- `2026.0-jakarta-SNAPSHOT` - regularly updated version from the main repository using `Jakarta namespace`. Requires Tomcat 11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
+- `2026.0-jakarta` - stabilized version 2026.0 for Tomcat 11 application server using `Jakarta namespace`, no daily shifts are added to it.
 - `2026.0` - Stabilized version 2026.0, no daily changes are added.
 - `2025.0-jakarta-SNAPSHOT` - stabilized version 2025.52 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - stabilized version 2025.52, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
@@ -83,7 +84,7 @@ V [Tomcat from version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/
 
 ## Changes when switching to Jakarta version
 
-Version for `jakarta namespace`, requires Tomcat 10/11 application server, uses Spring version 7. Breakthrough changes:
+Version for `jakarta namespace`, requires Tomcat 11 application server, uses Spring version 7. Breakthrough changes:
 - URLs - Spring has introduced exact matches for URLs, if a REST service defines a URL with a slash at the end, it must be used as such. There is a difference in the URL `/admin/rest/service` a `/admin/rest/service/`.
 - In Spring DATA repositories for `IN/NOTIN query` it is necessary to add `@Query`, otherwise the SQL will not be created correctly, example:
 
@@ -106,23 +107,19 @@ V `build.gradle` need to be updated `gretty` configuration and add compilation s
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring

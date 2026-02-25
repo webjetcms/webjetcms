@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -109,6 +108,8 @@ public class EditorService {
 	private boolean pageSavedToPublic = false;
 	//po ulozeni nastavene na true, ak sa stranka ulozila ako pracovna kopia
 	private boolean pageSavedAsWorkVersion = false;
+
+	public static final String DOT_HTML_EXT = ".html";
 
 	@Autowired
     public EditorService(DocDetailsRepository docRepo, DocHistoryRepository historyRepo, DocAtrRepository docAtrRepository,
@@ -733,6 +734,110 @@ public class EditorService {
 	}
 
 	/**
+	 * Computes and assigns a unique virtual path for a page.
+	 *
+	 * <p>This method is primarily intended for brand-new pages (with {@code docId == -1}
+	 * and an empty virtual path), but it can also be used when changing the title or
+	 * group of an existing page. It replicates the same uniqueness loop used by
+	 * {@link #setVirtualPath(DocDetails, GroupsDB, DocDB)} and stores the resulting
+	 * value into {@link DocDetails#setVirtualPath(String)} on the supplied
+	 * {@code editedDoc} instance.</p>
+	 *
+	 * <p>The return value is the {@code docId} of an existing page whose virtual path
+	 * conflicts with the one being computed, or {@code -1} if the computed virtual path
+	 * is unique.</p>
+	 *
+	 * @param editedDoc document being created or edited; its virtual path will be updated in place
+	 * @param groupsDB  groups data access object used to resolve domain and group paths
+	 * @return {@code docId} of the conflicting document, or {@code -1} if no conflict was found
+	 */
+	public static int computeVirtualPathForNewPage(DocDetails editedDoc, GroupsDB groupsDB) {
+		int virtualPathConflictDocId = -1;
+		String domain = groupsDB.getDomain(editedDoc.getGroupId());
+
+		//nastavime ako treba
+		String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
+		DocDetails doc = new DocDetails();
+		doc.setDocId(editedDoc.getDocId());
+		doc.setTitle(editedDoc.getTitle());
+		doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
+		doc.setVirtualPath(editedDoc.getVirtualPath());
+		doc.setGroupId(editedDoc.getGroupId());
+		String virtualPath = DocDB.getURL(doc, groupDiskPath);
+		String ending = virtualPath.endsWith("/") ? "/" : DOT_HTML_EXT;
+		String editorPageExtension = Constants.getString("editorPageExtension");
+
+		String lastVirtualPath = null;
+		for (long i = 2; i < 1000; i++) {
+
+			//set big number to avoid infinite loop
+			if (i>990) i = Tools.getNow(); //NOSONAR
+
+			if(virtualPath != null && virtualPath.length() > 255) {
+				String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
+				vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
+				virtualPath = vpTmp;
+			}
+
+			int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
+			Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
+
+			if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
+
+			//lebo moze kolidovat uz z hora
+			if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
+
+			doc.setTitle(editedDoc.getTitle() + " " + i);
+			doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
+
+			if ("/".equals(editorPageExtension)) {
+				//nastav cistu, handluje sa to nastavenim title s cislom vyssie
+				doc.setVirtualPath("");
+			}
+			else {
+				if (editedDoc.getVirtualPath().endsWith(DOT_HTML_EXT)) {
+					doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), DOT_HTML_EXT, "-" + i + DOT_HTML_EXT));
+					ending = "-" + i + DOT_HTML_EXT;
+				} else if (editedDoc.getVirtualPath().endsWith("/")) {
+					doc.setVirtualPath(editedDoc.getVirtualPath() + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
+				} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(DOT_HTML_EXT)==false) {
+					//url without last slash and without .html like /aaa/bbb
+					doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
+				} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
+					ending = DOT_HTML_EXT;
+				}
+			}
+
+			virtualPath = DocDB.getURL(doc, groupDiskPath);
+
+			if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
+				long fixedI = i - 100;
+				if (fixedI < 2) fixedI = 2;
+				//virtualPath is not changing, it is probably main page of folder, add number to the end
+				if (virtualPath.contains(DOT_HTML_EXT)) {
+					//add number before .html
+					virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(DOT_HTML_EXT)) + "-" + fixedI + DOT_HTML_EXT;
+				} else if (virtualPath.endsWith("/")) {
+					//add number before last slash
+					virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/"; //NOSONAR
+				} else {
+					virtualPath = virtualPath + "-" + fixedI; //NOSONAR
+				}
+			} else {
+				if (i>100) lastVirtualPath = virtualPath;
+			}
+		}
+
+		editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
+
+		Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+
+		return virtualPathConflictDocId;
+	}
+
+	/**
 	 * Nastavi stranke URL adresu (virtual_path), ak uz nejaka ina stranka takuto URL ma, tak prida cislo 1,2,3... na koniec URL adresy
 	 * @param editedDoc
 	 */
@@ -750,83 +855,8 @@ public class EditorService {
 			}
 
 			if (mustGenerateVirtualPath || Tools.isEmpty(editedDoc.getVirtualPath()) || editedDoc.getVirtualPath().indexOf('/') == -1) {
-				//nastavime ako treba
-				String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
-				DocDetails doc = new DocDetails();
-				doc.setDocId(editedDoc.getDocId());
-				doc.setTitle(editedDoc.getTitle());
-				doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
-				doc.setVirtualPath(editedDoc.getVirtualPath());
-				doc.setGroupId(editedDoc.getGroupId());
-				String virtualPath = DocDB.getURL(doc, groupDiskPath);
-				String ending = virtualPath.endsWith("/") ? "/" : ".html";
-				String editorPageExtension = Constants.getString("editorPageExtension");
-
-				String lastVirtualPath = null;
-				for (long i = 2; i < 1000; i++) {
-
-					if (i>990) i = Tools.getNow();
-
-					if(virtualPath != null && virtualPath.length() > 255) {
-						String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
-						vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
-						virtualPath = vpTmp;
-					}
-
-					int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
-					Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
-
-					if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
-
-					//lebo moze kolidovat uz z hora
-					if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
-
-					doc.setTitle(editedDoc.getTitle() + " " + i);
-					doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
-
-					if ("/".equals(editorPageExtension)) {
-						//nastav cistu, handluje sa to nastavenim title s cislom vyssie
-						doc.setVirtualPath("");
-					}
-					else {
-						if (editedDoc.getVirtualPath().endsWith(".html")) {
-							doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), ".html", "-" + i + ".html"));
-							ending = "-" + i + ".html";
-						} else if (editedDoc.getVirtualPath().endsWith("/")) {
-							doc.setVirtualPath(editedDoc.getVirtualPath() + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(".html")==false) {
-							//url without last slash and without .html like /aaa/bbb
-							doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
-							ending = ".html";
-						}
-					}
-
-					virtualPath = DocDB.getURL(doc, groupDiskPath);
-
-					if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
-						long fixedI = i - 100;
-						if (fixedI < 2) fixedI = 2;
-						//virtualPath is not changing, it is probably main page of folder, add number to the end
-						if (virtualPath.contains(".html")) {
-							//add number before .html
-							virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
-						} else if (virtualPath.endsWith("/")) {
-							//add number before last slash
-							virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
-						} else {
-							virtualPath = virtualPath + "-" + fixedI;
-						}
-					} else {
-						if (i>100) lastVirtualPath = virtualPath;
-					}
-				}
-
-				editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
-
-				Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB);
+				if (virtualPathConflictDocId < 1) virtualPathConflictDocId = virtualPathConflictDocIdDoc;
 			}
 			else if ("cloud".equals(Constants.getInstallName())) {
 				//tiket 15910 - kontrola specialnych znakov v URL
@@ -961,7 +991,7 @@ public class EditorService {
 				doc.setData(Tools.replace(doc.getData(), "'" + oldLinkURL2 + "#", "'" + newLinkURL + "#"));
 				doc.setData(Tools.replace(doc.getData(), "\"" + oldLinkURL2 + "#", "\"" + newLinkURL + "#"));
 				//doc.setData(Tools.replace(doc.getData(), " " + oldLinkURL2 + "#", " " + newLinkURL + "#"));
-			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(".html") == false) {
+			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(DOT_HTML_EXT) == false) {
 				//ak je linka bez koncoveho /, toto to vyriesi
 				oldLinkURL2 = oldLinkURL + "/";
 
@@ -1508,7 +1538,7 @@ public class EditorService {
 
 					List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
 					if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
-						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).collect(Collectors.toList());
+						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).toList();
 
 						//Delete all connections from multigroup table
 						MultigroupMappingDB.deleteSlaves(delDocId);
@@ -1659,31 +1689,31 @@ public class EditorService {
 		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
 		DocDetails docDetailsToRecover = docDetailsOpt.get();
 
-		//To check perms and approve for this action
+		//To check permissions and approve for this action before publishing recover event
 		checkPermissions(currentUser, docDetailsToRecover, true);
 
 		//Find last actual (if posible) history id (so we know wehre to recover page)
 		Integer historyId = null;
 		Optional<Integer> historyIdOpt = historyRepo.findMaxHistoryId(recoverDocId, true); //(actual history id)
-		if(historyIdOpt.isPresent())
-			historyId = historyIdOpt.get();
+		if(historyIdOpt.isPresent()) historyId = historyIdOpt.get();
 		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
 
+		String notifyTitle = prop.getText("editor.recover.notifyTitle");
 		if(historyId == null) {
 			//There is no history
-			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+			NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             addNotify(info);
 			return;
 		} else {
 			Optional<Integer> destGroupId = historyRepo.findGroupIdById(Long.valueOf(historyId));
 			if(!destGroupId.isPresent()) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             	addNotify(info);
 				return;
 			}
 			GroupDetails destGroup = groupsDB.getGroup(destGroupId.get());
 			if(destGroup == null) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             	addNotify(info);
 				return;
 			}
@@ -1692,9 +1722,15 @@ public class EditorService {
 			approveService.loadApproveTables(destGroup.getGroupId());
 			if(approveService.needApprove() == false || approveService.isSelfApproved()) {
 				//Have right
+
+				//Publish recover event after successful permission check
+				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+
 				docDetailsToRecover.setGroupId(destGroup.getGroupId());
 				docDetailsToRecover.setAvailable(true);
 				docRepo.save(docDetailsToRecover);
+
+				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
 			} else {
 				//No right
 				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
