@@ -26,7 +26,7 @@ POZOR: také na to, že udělá z `point_left` `point\_left`.
 
  <div class="sidebar-section">Manuál pro provoz</div>
 
-- [:point\_left: Zpět na Úvod](/?back)
+- [:point_left: Zpět na Úvod](/?back)
 - Bezpečnost
   - [Bezpečnostní testy](../sysadmin/pentests/README.md)
   - [Kontrola zranitelností knihoven](../sysadmin/dependency-check/README.md)
@@ -36,14 +36,14 @@ POZOR: také na to, že udělá z `point_left` `point\_left`.
 
 Ukázka tabulky. Zde POZOR na to, aby neudělal z `perex_group_id` `perex\_group\_id` a podobně.
 
-| perex\_group\_id | perex\_group\_name     | domain\_id | available\_groups |
-| -------------- | -------------------- | --------- | ---------------- |
-| 3              | další perex skupina | 1         | NULL             |
-| 645            | deletedPerexGroup    | 1         | NULL             |
-| 794            | kalendář-událostí    | 1         | NULL             |
-| 1438           | další perex skupina | 83        | NULL             |
-| 1439           | deletedPerexGroup    | 83        | NULL             |
-| 1440           | kalendář-událostí    | 83        | NULL             |
+| perex_group_id | perex_group_name      | domain_id | available_groups |
+|----------------|-----------------------|-----------|------------------|
+| 3              | další perex skupina  | 1         | NULL             |
+| 645            | deletedPerexGroup     | 1         | NULL             |
+| 794            | kalendář-událostí     | 1         | NULL             |
+| 1438           | další perex skupina  | 83        | NULL             |
+| 1439           | deletedPerexGroup     | 83        | NULL             |
+| 1440           | kalendář-událostí     | 83        | NULL             |
 
 ## HTML kód
 
