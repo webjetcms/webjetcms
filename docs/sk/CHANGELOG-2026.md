@@ -9,7 +9,7 @@
 ### Iné menšie zmeny
 
 - Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
-- Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane suffixu `-2`, `-3` atď (#58361).
+- Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane suffixu `-2`, `-3` atď (#58361).
 
 ### Bezpečnosť
 
