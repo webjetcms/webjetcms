@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -20,6 +21,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicErrorHandler;
 import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicSuccessHandler;
+import sk.iway.iwcm.system.spring.passkey.PasskeyAuthSuccessHandler;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +32,27 @@ import java.util.stream.Collectors;
 public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
+
+	/**
+	 * BeanPostProcessor that sets a custom AuthenticationSuccessHandler on the
+	 * WebAuthnAuthenticationFilter. Replaces the removed withObjectPostProcessor API
+	 * from Spring Security 6.x. The WebAuthnConfigurer calls postProcess() on the filter,
+	 * which triggers initializeBean(), invoking this BeanPostProcessor.
+	 */
+	@Bean
+	static BeanPostProcessor webAuthnFilterCustomizer() {
+		return new BeanPostProcessor() {
+			@Override
+			public Object postProcessAfterInitialization(Object bean, String beanName) {
+				if (bean instanceof org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter filter
+						&& bean.getClass().getName().contains("WebAuthnAuthenticationFilter")) {
+					filter.setAuthenticationSuccessHandler(new PasskeyAuthSuccessHandler());
+					Logger.info(SpringSecurityConf.class, "PassKey success handler set on WebAuthnAuthenticationFilter");
+				}
+				return bean;
+			}
+		};
+	}
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -56,6 +79,23 @@ public class SpringSecurityConf {
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
 				oauth2.failureHandler(new OAuth2DynamicErrorHandler());
 			});
+		}
+
+		// WebAuthn/PassKey support
+		if (Constants.getBoolean("password_passKeyEnabled")) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - webAuthn (PassKey)");
+			String rpId = Constants.getString("password_passKeyRpId", "localhost");
+			String rpName = Constants.getString("password_passKeyRpName", "WebJET CMS");
+			String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins", "https://localhost");
+
+			http.webAuthn(webAuthn -> {
+				webAuthn.rpId(rpId);
+				webAuthn.rpName(rpName);
+				webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
+				webAuthn.disableDefaultRegistrationPage(true);
+			});
+
+			// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor below
 		}
 
 		// Enable session fixation protection by migrating the session on authentication

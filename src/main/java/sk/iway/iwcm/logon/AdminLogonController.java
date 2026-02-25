@@ -263,6 +263,11 @@ public class AdminLogonController {
             }
         }
 
+        // PassKey support
+        if (Constants.getBoolean("password_passKeyEnabled")) {
+            request.setAttribute("isPassKeyEnabled", true);
+        }
+
         return LOGON_FORM;
     }
 

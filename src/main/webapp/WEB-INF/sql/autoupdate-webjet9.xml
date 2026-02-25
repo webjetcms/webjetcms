@@ -3179,5 +3179,113 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>copilot</string></void>
+                <void property="date"><string>25.02.2026</string></void>
+                <void property="desc"><string>PassKey - create user_entities table for Spring Security WebAuthn</string></void>
+                <void property="mysql"><string>CREATE TABLE user_entities (
+                    id VARCHAR(1000) NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    display_name VARCHAR(255),
+                    PRIMARY KEY (id)
+                )</string></void>
+                <void property="mssql"><string>CREATE TABLE user_entities (
+                    id NVARCHAR(1000) NOT NULL,
+                    name NVARCHAR(255) NOT NULL,
+                    display_name NVARCHAR(255),
+                    PRIMARY KEY (id)
+                )</string></void>
+                <void property="oracle"><string>CREATE TABLE user_entities (
+                    id NVARCHAR2(1000) NOT NULL,
+                    name NVARCHAR2(255) NOT NULL,
+                    display_name NVARCHAR2(255),
+                    PRIMARY KEY (id)
+                )</string></void>
+                <void property="pgsql"><string>CREATE TABLE user_entities (
+                    id VARCHAR(1000) NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    display_name VARCHAR(255),
+                    PRIMARY KEY (id)
+                )</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>copilot</string></void>
+                <void property="date"><string>25.02.2026</string></void>
+                <void property="desc"><string>PassKey - create user_credentials table for Spring Security WebAuthn</string></void>
+                <void property="mysql"><string>CREATE TABLE user_credentials (
+                    credential_id VARCHAR(1000) NOT NULL,
+                    user_entity_user_id VARCHAR(1000) NOT NULL,
+                    public_key BLOB NOT NULL,
+                    signature_count BIGINT DEFAULT 0,
+                    uv_initialized TINYINT(1) NOT NULL DEFAULT 0,
+                    backup_eligible TINYINT(1) NOT NULL DEFAULT 0,
+                    backup_state TINYINT(1) NOT NULL DEFAULT 0,
+                    authenticator_transports VARCHAR(1000),
+                    public_key_credential_type VARCHAR(100),
+                    attestation_object BLOB,
+                    attestation_client_data_json BLOB,
+                    created DATETIME,
+                    last_used DATETIME,
+                    label VARCHAR(1000) NOT NULL,
+                    PRIMARY KEY (credential_id)
+                )</string></void>
+                <void property="mssql"><string>CREATE TABLE user_credentials (
+                    credential_id NVARCHAR(1000) NOT NULL,
+                    user_entity_user_id NVARCHAR(1000) NOT NULL,
+                    public_key IMAGE NOT NULL,
+                    signature_count BIGINT DEFAULT 0,
+                    uv_initialized BIT NOT NULL DEFAULT 0,
+                    backup_eligible BIT NOT NULL DEFAULT 0,
+                    backup_state BIT NOT NULL DEFAULT 0,
+                    authenticator_transports NVARCHAR(1000),
+                    public_key_credential_type NVARCHAR(100),
+                    attestation_object IMAGE,
+                    attestation_client_data_json IMAGE,
+                    created DATETIME,
+                    last_used DATETIME,
+                    label NVARCHAR(1000) NOT NULL,
+                    PRIMARY KEY (credential_id)
+                )</string></void>
+                <void property="oracle"><string>CREATE TABLE user_credentials (
+                    credential_id NVARCHAR2(1000) NOT NULL,
+                    user_entity_user_id NVARCHAR2(1000) NOT NULL,
+                    public_key BLOB NOT NULL,
+                    signature_count NUMBER(19) DEFAULT 0,
+                    uv_initialized NUMBER(1) DEFAULT 0 NOT NULL,
+                    backup_eligible NUMBER(1) DEFAULT 0 NOT NULL,
+                    backup_state NUMBER(1) DEFAULT 0 NOT NULL,
+                    authenticator_transports NVARCHAR2(1000),
+                    public_key_credential_type NVARCHAR2(100),
+                    attestation_object BLOB,
+                    attestation_client_data_json BLOB,
+                    created TIMESTAMP,
+                    last_used TIMESTAMP,
+                    label NVARCHAR2(1000) NOT NULL,
+                    PRIMARY KEY (credential_id)
+                )</string></void>
+                <void property="pgsql"><string>CREATE TABLE user_credentials (
+                    credential_id VARCHAR(1000) NOT NULL,
+                    user_entity_user_id VARCHAR(1000) NOT NULL,
+                    public_key BYTEA NOT NULL,
+                    signature_count BIGINT DEFAULT 0,
+                    uv_initialized BOOLEAN NOT NULL DEFAULT FALSE,
+                    backup_eligible BOOLEAN NOT NULL DEFAULT FALSE,
+                    backup_state BOOLEAN NOT NULL DEFAULT FALSE,
+                    authenticator_transports VARCHAR(1000),
+                    public_key_credential_type VARCHAR(100),
+                    attestation_object BYTEA,
+                    attestation_client_data_json BYTEA,
+                    created TIMESTAMP,
+                    last_used TIMESTAMP,
+                    label VARCHAR(1000) NOT NULL,
+                    PRIMARY KEY (credential_id)
+                )</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

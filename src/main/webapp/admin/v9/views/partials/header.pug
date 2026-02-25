@@ -47,6 +47,10 @@ div.ly-container.container
                         a.dropdown-item(onclick="WJ.openPopupDialog('/admin/2factorauth.jsp')")
                             i.ti.ti-device-mobile-message
                             <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
+                    li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
+                        a.dropdown-item(onclick="WJ.openPopupDialog('/admin/passkey.jsp')")
+                            i.ti.ti-fingerprint
+                            <span data-th-text="\#{passkey.manage.title}" data-th-remove="tag">PassKey</span>
                     li(data-th-if="${layout.hasPermission('cmp_form')}")
                         a.dropdown-item(onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
                             i.ti.ti-key
