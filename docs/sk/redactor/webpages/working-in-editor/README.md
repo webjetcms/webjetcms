@@ -127,11 +127,11 @@ Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CS
 
 ![](link_dialog_button.png)
 
-V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, titulok, popis pro čítačky (aria-label) a podobne.
+V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, titulok, popis pre čítačky (aria-label) a podobne.
 
 ![](link_dialog_button_advanced.png)
 
-Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Viac informácii je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
 
 ## Vkladanie obrázkov
 
