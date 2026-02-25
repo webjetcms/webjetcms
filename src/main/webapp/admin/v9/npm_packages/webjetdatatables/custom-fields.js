@@ -149,7 +149,7 @@ export function update(EDITOR, action) {
 
     action = (action === undefined || action === null) ? "" : action;
 
-    //console.log("Fields=", fields);
+    //console.log("Fields=", fields, "action=", action);
 
     $.each(fields, function(i, v) {
         //If we use numberIdentifier no change, or we use alphabet identifier then upperCase
@@ -166,7 +166,7 @@ export function update(EDITOR, action) {
 
         //
         var value = v.value;
-        if(value == null) {
+        if(value == null && "create" != action) {
             //nebolo poslane v datach, ziskajme priamo z JSONu
             value = json[customPrefix+identifier];
         }
