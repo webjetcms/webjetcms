@@ -8,6 +8,7 @@
 
 ### Webové stránky
 
+- Editor stránok - do dialógového okna [Odkaz a Tlačidlo](redactor/webpages/working-in-editor/README.md#tlačidlá) pridaná karta s rozšírenými nastaveniami ako ID, titulok, popis pre čítačky (aria-label) a podobne (#osk115).
 - Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}` (#OSK149).
 
 ### Iné menšie zmeny
