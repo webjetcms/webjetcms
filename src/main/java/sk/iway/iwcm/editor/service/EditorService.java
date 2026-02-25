@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -109,6 +108,8 @@ public class EditorService {
 	private boolean pageSavedToPublic = false;
 	//po ulozeni nastavene na true, ak sa stranka ulozila ako pracovna kopia
 	private boolean pageSavedAsWorkVersion = false;
+
+	public static final String DOT_HTML_EXT = ".html";
 
 	@Autowired
     public EditorService(DocDetailsRepository docRepo, DocHistoryRepository historyRepo, DocAtrRepository docAtrRepository,
@@ -733,17 +734,24 @@ public class EditorService {
 	}
 
 	/**
-	 * Computes the unique virtual path for a brand-new page (docId=-1, empty virtualPath)
-	 * given its title and target group, replicating the same uniqueness-loop used by
-	 * {@link #setVirtualPath}. Allows callers such as upload-folder determination to know
-	 * the URL the page will actually receive on first save, including any -2, -3, ...
-	 * suffix added to avoid collisions with existing pages.
+	 * Computes and assigns a unique virtual path for a page.
 	 *
-	 * @param title   title of the new page
-	 * @param groupId group (folder) where the new page will be created
-	 * @return computed virtual path, e.g. /sk/upratovanie-2.html, or empty string on failure
+	 * <p>This method is primarily intended for brand-new pages (with {@code docId == -1}
+	 * and an empty virtual path), but it can also be used when changing the title or
+	 * group of an existing page. It replicates the same uniqueness loop used by
+	 * {@link #setVirtualPath(DocDetails, GroupsDB, DocDB)} and stores the resulting
+	 * value into {@link DocDetails#setVirtualPath(String)} on the supplied
+	 * {@code editedDoc} instance.</p>
+	 *
+	 * <p>The return value is the {@code docId} of an existing page whose virtual path
+	 * conflicts with the one being computed, or {@code -1} if the computed virtual path
+	 * is unique.</p>
+	 *
+	 * @param editedDoc document being created or edited; its virtual path will be updated in place
+	 * @param groupsDB  groups data access object used to resolve domain and group paths
+	 * @return {@code docId} of the conflicting document, or {@code -1} if no conflict was found
 	 */
-	public static int computeVirtualPathForNewPage(DocDetails editedDoc, GroupsDB groupsDB, DocDB docDB) {
+	public static int computeVirtualPathForNewPage(DocDetails editedDoc, GroupsDB groupsDB) {
 		int virtualPathConflictDocId = -1;
 		String domain = groupsDB.getDomain(editedDoc.getGroupId());
 
@@ -756,7 +764,7 @@ public class EditorService {
 		doc.setVirtualPath(editedDoc.getVirtualPath());
 		doc.setGroupId(editedDoc.getGroupId());
 		String virtualPath = DocDB.getURL(doc, groupDiskPath);
-		String ending = virtualPath.endsWith("/") ? "/" : ".html";
+		String ending = virtualPath.endsWith("/") ? "/" : DOT_HTML_EXT;
 		String editorPageExtension = Constants.getString("editorPageExtension");
 
 		String lastVirtualPath = null;
@@ -787,18 +795,18 @@ public class EditorService {
 				doc.setVirtualPath("");
 			}
 			else {
-				if (editedDoc.getVirtualPath().endsWith(".html")) {
-					doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), ".html", "-" + i + ".html"));
-					ending = "-" + i + ".html";
+				if (editedDoc.getVirtualPath().endsWith(DOT_HTML_EXT)) {
+					doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), DOT_HTML_EXT, "-" + i + DOT_HTML_EXT));
+					ending = "-" + i + DOT_HTML_EXT;
 				} else if (editedDoc.getVirtualPath().endsWith("/")) {
-					doc.setVirtualPath(editedDoc.getVirtualPath() + i + ".html");
-					ending = i + ".html";
-				} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(".html")==false) {
+					doc.setVirtualPath(editedDoc.getVirtualPath() + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
+				} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(DOT_HTML_EXT)==false) {
 					//url without last slash and without .html like /aaa/bbb
-					doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
-					ending = i + ".html";
+					doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
 				} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
-					ending = ".html";
+					ending = DOT_HTML_EXT;
 				}
 			}
 
@@ -808,14 +816,14 @@ public class EditorService {
 				long fixedI = i - 100;
 				if (fixedI < 2) fixedI = 2;
 				//virtualPath is not changing, it is probably main page of folder, add number to the end
-				if (virtualPath.contains(".html")) {
+				if (virtualPath.contains(DOT_HTML_EXT)) {
 					//add number before .html
-					virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
+					virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(DOT_HTML_EXT)) + "-" + fixedI + DOT_HTML_EXT;
 				} else if (virtualPath.endsWith("/")) {
 					//add number before last slash
-					virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
+					virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/"; //NOSONAR
 				} else {
-					virtualPath = virtualPath + "-" + fixedI;
+					virtualPath = virtualPath + "-" + fixedI; //NOSONAR
 				}
 			} else {
 				if (i>100) lastVirtualPath = virtualPath;
@@ -847,7 +855,7 @@ public class EditorService {
 			}
 
 			if (mustGenerateVirtualPath || Tools.isEmpty(editedDoc.getVirtualPath()) || editedDoc.getVirtualPath().indexOf('/') == -1) {
-				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB, docDB);
+				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB);
 				if (virtualPathConflictDocId < 1) virtualPathConflictDocId = virtualPathConflictDocIdDoc;
 			}
 			else if ("cloud".equals(Constants.getInstallName())) {
@@ -983,7 +991,7 @@ public class EditorService {
 				doc.setData(Tools.replace(doc.getData(), "'" + oldLinkURL2 + "#", "'" + newLinkURL + "#"));
 				doc.setData(Tools.replace(doc.getData(), "\"" + oldLinkURL2 + "#", "\"" + newLinkURL + "#"));
 				//doc.setData(Tools.replace(doc.getData(), " " + oldLinkURL2 + "#", " " + newLinkURL + "#"));
-			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(".html") == false) {
+			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(DOT_HTML_EXT) == false) {
 				//ak je linka bez koncoveho /, toto to vyriesi
 				oldLinkURL2 = oldLinkURL + "/";
 
@@ -1530,7 +1538,7 @@ public class EditorService {
 
 					List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
 					if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
-						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).collect(Collectors.toList());
+						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).toList();
 
 						//Delete all connections from multigroup table
 						MultigroupMappingDB.deleteSlaves(delDocId);
@@ -1690,21 +1698,22 @@ public class EditorService {
 		if(historyIdOpt.isPresent()) historyId = historyIdOpt.get();
 		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
 
+		String notifyTitle = prop.getText("editor.recover.notifyTitle");
 		if(historyId == null) {
 			//There is no history
-			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+			NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             addNotify(info);
 			return;
 		} else {
 			Optional<Integer> destGroupId = historyRepo.findGroupIdById(Long.valueOf(historyId));
 			if(!destGroupId.isPresent()) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             	addNotify(info);
 				return;
 			}
 			GroupDetails destGroup = groupsDB.getGroup(destGroupId.get());
 			if(destGroup == null) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
+				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
             	addNotify(info);
 				return;
 			}
