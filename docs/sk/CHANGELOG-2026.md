@@ -9,6 +9,7 @@
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
+- Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).
 
 ## 2026.0
 
