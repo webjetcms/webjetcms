@@ -155,7 +155,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     })
     private String dir;
 
-    @DataTableColumn( inputType = DataTableColumnType.CHECKBOX, tab = "basic", title="components.file_archiv.files_with_sub_files")
+    @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.file_archiv.files_with_sub_files")
     private Boolean subDirsInclude;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.file_archiv.kod_produktu")
@@ -190,10 +190,10 @@ public class FileArchiveApp extends WebjetComponentAbstract {
 	private String category;
 
 
-    @DataTableColumn( inputType = DataTableColumnType.CHECKBOX, tab = "basic", title="components.file_archiv.show_only_selected_files")
+    @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.file_archiv.show_only_selected_files")
     private Boolean showOnlySelected = false;
 
-    @DataTableColumn( inputType = DataTableColumnType.TEXTAREA, tab = "basic", title="components.file_archiv.show_only_selected_files")
+    @DataTableColumn( inputType = DataTableColumnType.TEXTAREA, tab = "basic", title="&nbsp", className="ai-off")
     private String globalIds;
 
 
@@ -210,13 +210,13 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     )
 	private String orderMain;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.ascending_sort_main_file")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_main_file")
     private Boolean ascMain = true;
 
-    @DataTableColumn( inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.entry_pre_opened")
+    @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.entry_pre_opened")
     private Boolean open = false;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.show_archiv",
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.show_archiv",
         editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
     )
     private Boolean archiv;
@@ -234,10 +234,10 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     )
     private String order;
 
-    @DataTableColumn( inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.ascending_sort_archiv_files")
+    @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_archiv_files")
     private Boolean asc = true;
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.show_patterns",
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.show_patterns",
         editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
     )
     private Boolean showPatterns;
@@ -255,7 +255,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
     )
     private String orderPatterns;
 
-    @DataTableColumn( inputType = DataTableColumnType.CHECKBOX, tab = "advanced", title="components.file_archiv.ascending_sort_pattern_files")
+    @DataTableColumn( inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.file_archiv.ascending_sort_pattern_files")
     private Boolean ascPatterns = true;
 
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = "&nbsp;",
@@ -266,7 +266,8 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.file_archiv.FileArchivatorBean"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,remove,duplicate,import,export,celledit"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "1,desc")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "1,desc"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns-customize", value = "removeEditorFields"),
             }
         )
     })
