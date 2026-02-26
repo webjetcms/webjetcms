@@ -192,9 +192,7 @@ function registerPasskey() {
     })
     .catch(function(error) {
         console.error('PassKey registration error:', error);
-        if (error.name !== 'NotAllowedError') {
-            alert('<iwcm:text key="passkey.manage.registerError"/>');
-        }
+        alert('<iwcm:text key="passkey.manage.registerError"/>' + ' ' + error.message);
     });
 }
 

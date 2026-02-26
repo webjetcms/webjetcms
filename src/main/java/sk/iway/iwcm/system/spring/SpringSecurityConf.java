@@ -81,21 +81,25 @@ public class SpringSecurityConf {
 			});
 		}
 
-		// WebAuthn/PassKey support
-		if (Constants.getBoolean("password_passKeyEnabled")) {
-			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - webAuthn (PassKey)");
-			String rpId = Constants.getString("password_passKeyRpId", "localhost");
-			String rpName = Constants.getString("password_passKeyRpName", "WebJET CMS");
-			String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins", "https://localhost");
+		try {
+			// WebAuthn/PassKey support
+			if (Constants.getBoolean("password_passKeyEnabled")) {
+				Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - webAuthn (PassKey)");
+				String rpId = Constants.getString("password_passKeyRpId");
+				String rpName = Constants.getString("password_passKeyRpName");
+				String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins");
 
-			http.webAuthn(webAuthn -> {
-				webAuthn.rpId(rpId);
-				webAuthn.rpName(rpName);
-				webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
-				webAuthn.disableDefaultRegistrationPage(true);
-			});
+				http.webAuthn(webAuthn -> {
+					webAuthn.rpId(rpId);
+					webAuthn.rpName(rpName);
+					webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
+					webAuthn.disableDefaultRegistrationPage(true);
+				});
 
-			// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor below
+				// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor below
+			}
+		} catch (Exception e) {
+			Logger.error(SpringSecurityConf.class, "Error configuring WebAuthn support", e);
 		}
 
 		// Enable session fixation protection by migrating the session on authentication

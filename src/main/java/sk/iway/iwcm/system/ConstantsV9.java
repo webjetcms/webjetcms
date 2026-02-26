@@ -247,6 +247,11 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
 
 		Constants.setInt("insertScriptCacheMinutes", 60, Constants.MOD_PERFORMANCE, "Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
+
+		Constants.setBoolean("password_passKeyEnabled", false, Constants.MOD_SECURITY, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
+		Constants.setString("password_passKeyRpId", "localhost", Constants.MOD_SECURITY, "Relying Party ID pro PassKey/WebAuthN. Obvykle se jedná o doménu bez subdomén (např. example.com). Pokud není nastavena, použije se základní doména z URL adresy.");
+		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pro PassKey/WebAuthN. Jedná se o název vaší aplikace, který se zobrazí uživatelům při registraci a přihlašování pomocí PassKey.");
+		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
 	}
 
 	/**
