@@ -3183,30 +3183,42 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>copilot</string></void>
                 <void property="date"><string>25.02.2026</string></void>
-                <void property="desc"><string>PassKey - create user_entities table for Spring Security WebAuthn</string></void>
-                <void property="mysql"><string>CREATE TABLE user_entities (
-                    id VARCHAR(1000) NOT NULL,
+                <void property="desc"><string>PassKey - create passkey_user_entities table for WebAuthn (JPA)</string></void>
+                <void property="mysql"><string>CREATE TABLE passkey_user_entities (
+                    passkey_user_entity_id BIGINT NOT NULL AUTO_INCREMENT,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     name VARCHAR(255) NOT NULL,
                     display_name VARCHAR(255),
-                    PRIMARY KEY (id)
-                ) CHARACTER SET latin1</string></void>
-                <void property="mssql"><string>CREATE TABLE user_entities (
-                    id VARCHAR(1000) NOT NULL,
+                    PRIMARY KEY (passkey_user_entity_id),
+                    UNIQUE KEY uk_passkey_ue_webauthn_id (webauthn_user_id),
+                    UNIQUE KEY uk_passkey_ue_name (name)
+                ) CHARACTER SET utf8mb4</string></void>
+                <void property="mssql"><string>CREATE TABLE passkey_user_entities (
+                    passkey_user_entity_id BIGINT IDENTITY(1,1) NOT NULL,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     name VARCHAR(255) NOT NULL,
                     display_name VARCHAR(255),
-                    PRIMARY KEY (id)
+                    PRIMARY KEY (passkey_user_entity_id),
+                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
+                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
                 )</string></void>
-                <void property="oracle"><string>CREATE TABLE user_entities (
-                    id VARCHAR2(1000) NOT NULL,
+                <void property="oracle"><string>CREATE TABLE passkey_user_entities (
+                    passkey_user_entity_id NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    webauthn_user_id VARCHAR2(255) NOT NULL,
                     name VARCHAR2(255) NOT NULL,
                     display_name VARCHAR2(255),
-                    PRIMARY KEY (id)
+                    PRIMARY KEY (passkey_user_entity_id),
+                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
+                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
                 )</string></void>
-                <void property="pgsql"><string>CREATE TABLE user_entities (
-                    id VARCHAR(1000) NOT NULL,
+                <void property="pgsql"><string>CREATE TABLE passkey_user_entities (
+                    passkey_user_entity_id BIGSERIAL NOT NULL,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     name VARCHAR(255) NOT NULL,
                     display_name VARCHAR(255),
-                    PRIMARY KEY (id)
+                    PRIMARY KEY (passkey_user_entity_id),
+                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
+                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
                 )</string></void>
             </object>
         </void>
@@ -3215,10 +3227,12 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>copilot</string></void>
                 <void property="date"><string>25.02.2026</string></void>
-                <void property="desc"><string>PassKey - create user_credentials table for Spring Security WebAuthn</string></void>
-                <void property="mysql"><string>CREATE TABLE user_credentials (
-                    credential_id VARCHAR(1000) NOT NULL,
-                    user_entity_user_id VARCHAR(1000) NOT NULL,
+                <void property="desc"><string>PassKey - create passkey_credentials table for WebAuthn (JPA)</string></void>
+                <void property="mysql"><string>CREATE TABLE passkey_credentials (
+                    passkey_credential_id BIGINT NOT NULL AUTO_INCREMENT,
+                    credential_id VARCHAR(255) NOT NULL,
+                    user_entity_id BIGINT NOT NULL,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key BLOB NOT NULL,
                     signature_count BIGINT DEFAULT 0,
                     uv_initialized TINYINT(1) NOT NULL DEFAULT 0,
@@ -3231,11 +3245,16 @@
                     created DATETIME,
                     last_used DATETIME,
                     label VARCHAR(1000) NOT NULL,
-                    PRIMARY KEY (credential_id)
-                ) CHARACTER SET latin1</string></void>
-                <void property="mssql"><string>CREATE TABLE user_credentials (
-                    credential_id VARCHAR(1000) NOT NULL,
-                    user_entity_user_id VARCHAR(1000) NOT NULL,
+                    PRIMARY KEY (passkey_credential_id),
+                    UNIQUE KEY uk_passkey_cred_id (credential_id),
+                    KEY idx_passkey_cred_user (user_entity_id),
+                    KEY idx_passkey_cred_webauthn_user (webauthn_user_id)
+                ) CHARACTER SET utf8mb4</string></void>
+                <void property="mssql"><string>CREATE TABLE passkey_credentials (
+                    passkey_credential_id BIGINT IDENTITY(1,1) NOT NULL,
+                    credential_id VARCHAR(255) NOT NULL,
+                    user_entity_id BIGINT NOT NULL,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key IMAGE NOT NULL,
                     signature_count BIGINT DEFAULT 0,
                     uv_initialized BIT NOT NULL DEFAULT 0,
@@ -3248,11 +3267,14 @@
                     created DATETIME,
                     last_used DATETIME,
                     label VARCHAR(1000) NOT NULL,
-                    PRIMARY KEY (credential_id)
+                    PRIMARY KEY (passkey_credential_id),
+                    CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>
-                <void property="oracle"><string>CREATE TABLE user_credentials (
-                    credential_id VARCHAR2(1000) NOT NULL,
-                    user_entity_user_id VARCHAR2(1000) NOT NULL,
+                <void property="oracle"><string>CREATE TABLE passkey_credentials (
+                    passkey_credential_id NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    credential_id VARCHAR2(255) NOT NULL,
+                    user_entity_id NUMBER(19) NOT NULL,
+                    webauthn_user_id VARCHAR2(255) NOT NULL,
                     public_key BLOB NOT NULL,
                     signature_count NUMBER(19) DEFAULT 0,
                     uv_initialized NUMBER(1) DEFAULT 0 NOT NULL,
@@ -3265,11 +3287,14 @@
                     created TIMESTAMP,
                     last_used TIMESTAMP,
                     label VARCHAR2(1000) NOT NULL,
-                    PRIMARY KEY (credential_id)
+                    PRIMARY KEY (passkey_credential_id),
+                    CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>
-                <void property="pgsql"><string>CREATE TABLE user_credentials (
-                    credential_id VARCHAR(1000) NOT NULL,
-                    user_entity_user_id VARCHAR(1000) NOT NULL,
+                <void property="pgsql"><string>CREATE TABLE passkey_credentials (
+                    passkey_credential_id BIGSERIAL NOT NULL,
+                    credential_id VARCHAR(255) NOT NULL,
+                    user_entity_id BIGINT NOT NULL,
+                    webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key BYTEA NOT NULL,
                     signature_count BIGINT DEFAULT 0,
                     uv_initialized BOOLEAN NOT NULL DEFAULT FALSE,
@@ -3282,7 +3307,8 @@
                     created TIMESTAMP,
                     last_used TIMESTAMP,
                     label VARCHAR(1000) NOT NULL,
-                    PRIMARY KEY (credential_id)
+                    PRIMARY KEY (passkey_credential_id),
+                    CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>
             </object>
         </void>

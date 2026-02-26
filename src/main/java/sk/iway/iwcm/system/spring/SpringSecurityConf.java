@@ -94,16 +94,16 @@ public class SpringSecurityConf {
 				String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins");
 
 				// Explicitly set repositories as shared objects so WebAuthnConfigurer uses
-				// our JDBC implementations instead of falling back to in-memory Map-based ones
+				// our JPA implementations instead of falling back to in-memory Map-based ones
 				if (passkeyUserCredentialRepository != null) {
 					http.setSharedObject(UserCredentialRepository.class, passkeyUserCredentialRepository);
-					Logger.info(SpringSecurityConf.class, "PassKey: using JDBC UserCredentialRepository: " + passkeyUserCredentialRepository.getClass().getName());
+					Logger.info(SpringSecurityConf.class, "PassKey: using JPA UserCredentialRepository: " + passkeyUserCredentialRepository.getClass().getName());
 				} else {
 					Logger.error(SpringSecurityConf.class, "PassKey: UserCredentialRepository bean not found! Credentials will NOT be persisted to database.");
 				}
 				if (passkeyUserEntityRepository != null) {
 					http.setSharedObject(PublicKeyCredentialUserEntityRepository.class, passkeyUserEntityRepository);
-					Logger.info(SpringSecurityConf.class, "PassKey: using JDBC PublicKeyCredentialUserEntityRepository: " + passkeyUserEntityRepository.getClass().getName());
+					Logger.info(SpringSecurityConf.class, "PassKey: using JPA PublicKeyCredentialUserEntityRepository: " + passkeyUserEntityRepository.getClass().getName());
 				} else {
 					Logger.error(SpringSecurityConf.class, "PassKey: PublicKeyCredentialUserEntityRepository bean not found!");
 				}
