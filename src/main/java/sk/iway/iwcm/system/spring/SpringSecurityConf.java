@@ -24,8 +24,6 @@ import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicSuccessHandler;
 import sk.iway.iwcm.system.spring.passkey.PasskeyAuthSuccessHandler;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled=true)
@@ -55,7 +53,7 @@ public class SpringSecurityConf {
 	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain filterChain(HttpSecurity http) {
 		Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
 		SpringAppInitializer.dtDiff("configureSecurity START");
 
@@ -66,7 +64,7 @@ public class SpringSecurityConf {
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
-			basicAuthEnabled = true;
+			basicAuthEnabled = true; //NOSONAR
 			http.httpBasic(customizer -> {});
 		}
 
@@ -184,7 +182,7 @@ public class SpringSecurityConf {
 		List<ClientRegistration> registrations = clients.stream()
 				.map(this::buildClientRegistration)
 				.filter(registration -> registration != null)
-				.collect(Collectors.toList());
+				.toList();
 		// Ak je zoznam prázdny, vráť anonymnú implementáciu ClientRegistrationRepository namiesto InMemoryClientRegistrationRepository
 		if (registrations.isEmpty()) {
 			return new ClientRegistrationRepository() {
