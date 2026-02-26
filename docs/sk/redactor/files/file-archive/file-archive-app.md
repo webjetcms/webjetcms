@@ -37,15 +37,23 @@ Karta **Základné** slúži na nastavenie filtrovania dokumentov pre zobrazenie
 
 ![](file-archiv-app-tab-base.png)
 
-**Zobraziť len vybrané dokumenty** - ide o špeciálnu možnosť, kedy sa budú ignorovať všetky doterajšie filtre ako **Adresár** / **Kód produktu** atď, a zobrazia sa iba dokumenty, ktoré majú zadané `globalId` v poli **Zobraziť len vybrané dokumenty**
+**Zobraziť len vybrané dokumenty** - ide o špeciálnu možnosť, kedy sa budú ignorovať všetky doterajšie filtre ako **Adresár** / **Kód produktu** atď, a zobrazia sa iba dokumenty, ktoré majú zadané `globalId` v poli **Zobraziť len vybrané dokumenty**.
 
-Všetky doterajšie filtre si zachovajú hodnoty, ale nemajú žiaden vplyv a sú zablokované. Naviac sa ešte zobrazí nová karta **Vybrané dokumenty**.
+Všetky doterajšie filtre si zachovajú hodnoty, ale nemajú žiaden vplyv a sú zablokované. Naviac sa ešte zobrazí nová karta [Vybrané dokumenty](#karta---vybrané-dokumenty), kde môžete manažovať ktoré súbory sú zvolené k zobrazeniu (ideálne ak nepoznáte potrebné `globalId`).
 
 ![](file-archiv-app-tab-base_2.png)
 
 ### Karta - Vybrané dokumenty
 
-Karta sa zobrazí iba v prípade, ak je zvolená možnosť **Zobraziť len vybrané dokumenty**. V karte je vnorená tabuľka, ktorá zobrazuje zadefinované dokumenty z poľa **Zobraziť len vybrané dokumenty** pomocou `globalId` hodnôt. Takto získate náhľad dokumentov, ktoré ste zvolili k zobrazeniu.
+Karta sa zobrazí iba v prípade, ak je zvolená možnosť **Zobraziť len vybrané dokumenty**. V karte je vnorená tabuľka zobrazujúcu **IBA** dokumenty, ktoré je možne použiť ako vybrané dokumenty. Tieto dokumenty musia spĺňať:
+
+- musí to byť hlavný dokument (niehistorická verzia)
+- nesmie to byť vzorový dokument
+- nemôže to byť dokument naplánovaný na nahratie v budúcnosti
+
+Dokumenty v tabuľke môžete označiť a zvoliť tlačidlom <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> čím sa hodnoty ich `globalId` (čiže Globálne Id) zapíše do poľa **Zobraziť len vybrané dokumenty** v karte **Základné**. Naopak tlačidlom <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-x"></i></span></button> sa daný dokument z výberu odoberie. Vďaka tejto karte môžete jednoducho zvoliť ktoré dokumenty chcete zobraziť bez nutnosti poznať ich `globalId`. Logika je samozrejme ošetrená voči duplicite a pod.
+
+Zvolené dokumenty (ktorý hodnota `globalId` je zapísaná v poli **Zobrazit len vybrané dokumenty**) sú v tabuľke farebne označené.
 
 ![](file-archiv-app-tab-selected.png)
 
