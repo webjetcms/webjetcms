@@ -397,13 +397,13 @@ Scenario('File archive app - only selected files', async ({ I, DT, Apps, Documen
     I.clickCss("#pills-dt-component-datatable-filesToShow-tab");
     await checkSelectedFiles(I, ["1496", "1423"]);
 
-    I.say("Check, that I cant see files that are not specific fo this table");
+    I.say("Check, that I cant see files that are not specific for this table");
     DT.filterContains('virtualFileName', 'ScreenshotFile');
     I.see("ScreenshotFile_C");
-    I.dontSee("ScreenshotFile_Pattern"); // Dnt see because its pattern
-    I.dontSee("ScreenshotFile_A"); // dont see becuse its in history version, not main
-    I.dontSee("ScreenshotFile_B"); // dont see becuse its in history version, not main
-    I.dontSee("ScreenshotFile_Future"); // dont see because its Future version, not active
+    I.dontSee("ScreenshotFile_Pattern"); // Don't see because it's pattern
+    I.dontSee("ScreenshotFile_A"); // don't see becuse it's in history version, not main
+    I.dontSee("ScreenshotFile_B"); // don't see becuse it's in history version, not main
+    I.dontSee("ScreenshotFile_Future"); // don't see because it's Future version, not active
 
     I.say("Cancel filter and check that files are still selected");
     DT.filterContains('virtualFileName', '');
@@ -415,7 +415,7 @@ Scenario('File archive app - only selected files', async ({ I, DT, Apps, Documen
     I.clickCss("#pills-dt-component-datatable-basic-tab");
     I.seeInField("#DTE_Field_globalIds", "1496,1423,1422");
 
-    I.say("Go back, do check and na try removing files");
+    I.say("Go back, do check and try removing files");
     I.clickCss("#pills-dt-component-datatable-filesToShow-tab");
     await checkSelectedFiles(I, ["1496", "1423", "1422"]);
     // plus one that was never selected

@@ -47,13 +47,13 @@ Všetky doterajšie filtre si zachovajú hodnoty, ale nemajú žiaden vplyv a s�
 
 Karta sa zobrazí iba v prípade, ak je zvolená možnosť **Zobraziť len vybrané dokumenty**. V karte je vnorená tabuľka zobrazujúcu **IBA** dokumenty, ktoré je možne použiť ako vybrané dokumenty. Tieto dokumenty musia spĺňať:
 
-- musí to byť hlavný dokument (niehistorická verzia)
+- musí to byť hlavný dokument (nie historická verzia)
 - nesmie to byť vzorový dokument
 - nemôže to byť dokument naplánovaný na nahratie v budúcnosti
 
 Dokumenty v tabuľke môžete označiť a zvoliť tlačidlom <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> čím sa hodnoty ich `globalId` (čiže Globálne Id) zapíše do poľa **Zobraziť len vybrané dokumenty** v karte **Základné**. Naopak tlačidlom <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-x"></i></span></button> sa daný dokument z výberu odoberie. Vďaka tejto karte môžete jednoducho zvoliť ktoré dokumenty chcete zobraziť bez nutnosti poznať ich `globalId`. Logika je samozrejme ošetrená voči duplicite a pod.
 
-Zvolené dokumenty (ktorý hodnota `globalId` je zapísaná v poli **Zobrazit len vybrané dokumenty**) sú v tabuľke farebne označené.
+Zvolené dokumenty (ktorých hodnota `globalId` je zapísaná v poli **Zobraziť len vybrané dokumenty**) sú v tabuľke farebne označené.
 
 ![](file-archiv-app-tab-selected.png)
 
