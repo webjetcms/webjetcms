@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -15,15 +16,17 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicErrorHandler;
 import sk.iway.iwcm.system.spring.oauth2.OAuth2DynamicSuccessHandler;
+import sk.iway.iwcm.system.spring.passkey.PasskeyAuthSuccessHandler;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled=true)
@@ -31,8 +34,32 @@ public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
 
+	/**
+	 * BeanPostProcessor that sets a custom AuthenticationSuccessHandler on the
+	 * WebAuthnAuthenticationFilter. Replaces the removed withObjectPostProcessor API
+	 * from Spring Security 6.x. The WebAuthnConfigurer calls postProcess() on the filter,
+	 * which triggers initializeBean(), invoking this BeanPostProcessor.
+	 */
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	static BeanPostProcessor webAuthnFilterCustomizer() {
+		return new BeanPostProcessor() {
+			@Override
+			public Object postProcessAfterInitialization(Object bean, String beanName) {
+				if (bean instanceof org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter filter
+						&& bean.getClass().getName().contains("WebAuthnAuthenticationFilter")) {
+					filter.setAuthenticationSuccessHandler(new PasskeyAuthSuccessHandler());
+					Logger.info(SpringSecurityConf.class, "PassKey success handler set on WebAuthnAuthenticationFilter");
+				}
+				return bean;
+			}
+		};
+	}
+
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) UserCredentialRepository passkeyUserCredentialRepository,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) PublicKeyCredentialUserEntityRepository passkeyUserEntityRepository,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) @org.springframework.beans.factory.annotation.Qualifier("webauthnUserDetailsService") org.springframework.security.core.userdetails.UserDetailsService webauthnUserDetailsService) {
 		Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
 		SpringAppInitializer.dtDiff("configureSecurity START");
 
@@ -43,7 +70,7 @@ public class SpringSecurityConf {
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
-			basicAuthEnabled = true;
+			basicAuthEnabled = true; //NOSONAR
 			http.httpBasic(customizer -> {});
 		}
 
@@ -56,6 +83,48 @@ public class SpringSecurityConf {
 				oauth2.successHandler(new OAuth2DynamicSuccessHandler());
 				oauth2.failureHandler(new OAuth2DynamicErrorHandler());
 			});
+		}
+
+		try {
+			// WebAuthn/PassKey support
+			if (Constants.getBoolean("password_passKeyEnabled")) {
+				Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - webAuthn (PassKey)");
+				String rpId = Constants.getString("password_passKeyRpId");
+				String rpName = Constants.getString("password_passKeyRpName");
+				String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins");
+
+				// Explicitly set repositories as shared objects so WebAuthnConfigurer uses
+				// our JPA implementations instead of falling back to in-memory Map-based ones
+				if (passkeyUserCredentialRepository != null) {
+					http.setSharedObject(UserCredentialRepository.class, passkeyUserCredentialRepository);
+					Logger.info(SpringSecurityConf.class, "PassKey: using JPA UserCredentialRepository: " + passkeyUserCredentialRepository.getClass().getName());
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: UserCredentialRepository bean not found! Credentials will NOT be persisted to database.");
+				}
+				if (passkeyUserEntityRepository != null) {
+					http.setSharedObject(PublicKeyCredentialUserEntityRepository.class, passkeyUserEntityRepository);
+					Logger.info(SpringSecurityConf.class, "PassKey: using JPA PublicKeyCredentialUserEntityRepository: " + passkeyUserEntityRepository.getClass().getName());
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: PublicKeyCredentialUserEntityRepository bean not found!");
+				}
+				if (webauthnUserDetailsService != null) {
+					http.setSharedObject(org.springframework.security.core.userdetails.UserDetailsService.class, webauthnUserDetailsService);
+					Logger.info(SpringSecurityConf.class, "PassKey: using WebjetWebAuthnUserDetailsService");
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: UserDetailsService bean not found!");
+				}
+
+				http.webAuthn(webAuthn -> {
+					webAuthn.rpId(rpId);
+					webAuthn.rpName(rpName);
+					webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
+					webAuthn.disableDefaultRegistrationPage(true);
+				});
+
+				// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor
+			}
+		} catch (Exception e) {
+			Logger.error(SpringSecurityConf.class, "Error configuring WebAuthn support", e);
 		}
 
 		// Enable session fixation protection by migrating the session on authentication
@@ -140,7 +209,7 @@ public class SpringSecurityConf {
 		List<ClientRegistration> registrations = clients.stream()
 				.map(this::buildClientRegistration)
 				.filter(registration -> registration != null)
-				.collect(Collectors.toList());
+				.toList();
 		// Ak je zoznam prázdny, vráť anonymnú implementáciu ClientRegistrationRepository namiesto InMemoryClientRegistrationRepository
 		if (registrations.isEmpty()) {
 			return new ClientRegistrationRepository() {

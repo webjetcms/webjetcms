@@ -21,6 +21,7 @@
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšena na verziu 7 (#56665).
 - Pridaná možnosť autorizácie cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
+- Pridaná podpora prihlasovania do administrácie cez PassKey (WebAuthn) (#56665).
 
 ### Pre programátora
 

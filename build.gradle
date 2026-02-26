@@ -220,6 +220,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-client:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-oauth2-core:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-oauth2-jose:${springSecurityVersion}")
+    //WebAuthn/PassKey support - separated module in Spring Security 7
+    implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")

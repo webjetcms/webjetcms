@@ -59,4 +59,6 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     //get users by id list
     @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
     List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
+
+    UserDetailsEntity findByLogin(String login);
 }

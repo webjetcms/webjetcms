@@ -80,6 +80,85 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             });
         }
 
+        function doPasskeyLogon() {
+            // PassKey authentication flow using Spring Security WebAuthn endpoints
+            fetch('/webauthn/authenticate/options', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('Failed to get authentication options');
+                return response.json();
+            })
+            .then(function(options) {
+                // Convert base64url strings to ArrayBuffers
+                options.challenge = base64urlToBuffer(options.challenge);
+                if (options.allowCredentials) {
+                    options.allowCredentials = options.allowCredentials.map(function(cred) {
+                        cred.id = base64urlToBuffer(cred.id);
+                        return cred;
+                    });
+                }
+                return navigator.credentials.get({ publicKey: options });
+            })
+            .then(function(credential) {
+                // Send the assertion to the server
+                var body = {
+                    id: credential.id,
+                    rawId: bufferToBase64url(credential.rawId),
+                    response: {
+                        authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+                        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+                        signature: bufferToBase64url(credential.response.signature),
+                        userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null
+                    },
+                    type: credential.type,
+                    authenticatorAttachment: credential.authenticatorAttachment,
+                    clientExtensionResults: credential.getClientExtensionResults()
+                };
+                return fetch('/login/webauthn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            })
+            .then(function(response) {
+                if (response.ok || response.redirected) {
+                    window.location.href = response.url || '/admin/v9/';
+                } else {
+                    throw new Error('PassKey authentication failed');
+                }
+            })
+            .catch(function(error) {
+                console.error('PassKey authentication error:', error);
+                if (error.name !== 'NotAllowedError') {
+                    // NotAllowedError means user cancelled the dialog
+                    alert('PassKey authentication failed. Please try again.');
+                }
+            });
+        }
+
+        function base64urlToBuffer(base64url) {
+            var base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            var padding = '='.repeat((4 - base64.length % 4) % 4);
+            var binary = atob(base64 + padding);
+            var bytes = new Uint8Array(binary.length);
+            for (var i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function bufferToBase64url(buffer) {
+            var bytes = new Uint8Array(buffer);
+            var binary = '';
+            for (var i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
         //-->
     </script>
 </head>
@@ -186,6 +265,11 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                 <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
                             </div>
                         </c:forEach>
+                    </c:if>
+                    <c:if test="${isPassKeyEnabled}">
+                        <div class="form-group">
+                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><i class="ti ti-fingerprint"></i> <iwcm:text key="button.passkeyLogin"/></button>
+                        </div>
                     </c:if>
                 </div>
             </form:form>
