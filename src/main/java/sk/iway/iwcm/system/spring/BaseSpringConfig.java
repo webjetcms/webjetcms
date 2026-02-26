@@ -10,7 +10,6 @@ import java.util.Properties;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,7 +18,7 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractJacksonHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -48,8 +47,12 @@ import sk.iway.iwcm.Tools;
 })
 public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 {
-    @Autowired
-    ApplicationContext applicationContext;
+    @SuppressWarnings("unused")
+    private final ApplicationContext applicationContext;
+
+    public BaseSpringConfig(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     private static final Charset UTF8 = StandardCharsets.UTF_8;
 
@@ -97,14 +100,15 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     }
 
     @Override
-    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(), size="+converters.size());
+    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+        Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(builder)");
 
-        for (HttpMessageConverter<?> converter : converters) {
+        builder.registerDefaults();
+        builder.configureMessageConverters(converter -> {
             if (converter instanceof AbstractJacksonHttpMessageConverter<?> jacksonConverter) {
                 configureJacksonDateTimestamps(jacksonConverter);
             }
-        }
+        });
 
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();
         List<MediaType> mediaTypes = new ArrayList<>();
@@ -112,10 +116,10 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         mediaTypes.add(new MediaType("text", "html", UTF8));
         mediaTypes.add(new MediaType("application", "json", UTF8));
         stringConverter.setSupportedMediaTypes(mediaTypes);
-        converters.add(stringConverter);
+        builder.withStringConverter(stringConverter);
 
         //aby isla tlac do PDF (application/octet-stream)
-        converters.add(new ResourceHttpMessageConverter(true));
+        builder.addCustomConverter(new ResourceHttpMessageConverter(true));
     }
 
     @SuppressWarnings("unchecked")
