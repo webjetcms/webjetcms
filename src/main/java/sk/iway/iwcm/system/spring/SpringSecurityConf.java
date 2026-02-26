@@ -16,6 +16,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -53,7 +56,10 @@ public class SpringSecurityConf {
 	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) {
+	public SecurityFilterChain filterChain(HttpSecurity http,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) UserCredentialRepository passkeyUserCredentialRepository,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) PublicKeyCredentialUserEntityRepository passkeyUserEntityRepository,
+			@org.springframework.beans.factory.annotation.Autowired(required = false) @org.springframework.beans.factory.annotation.Qualifier("webauthnUserDetailsService") org.springframework.security.core.userdetails.UserDetailsService webauthnUserDetailsService) {
 		Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
 		SpringAppInitializer.dtDiff("configureSecurity START");
 
@@ -87,6 +93,27 @@ public class SpringSecurityConf {
 				String rpName = Constants.getString("password_passKeyRpName");
 				String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins");
 
+				// Explicitly set repositories as shared objects so WebAuthnConfigurer uses
+				// our JDBC implementations instead of falling back to in-memory Map-based ones
+				if (passkeyUserCredentialRepository != null) {
+					http.setSharedObject(UserCredentialRepository.class, passkeyUserCredentialRepository);
+					Logger.info(SpringSecurityConf.class, "PassKey: using JDBC UserCredentialRepository: " + passkeyUserCredentialRepository.getClass().getName());
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: UserCredentialRepository bean not found! Credentials will NOT be persisted to database.");
+				}
+				if (passkeyUserEntityRepository != null) {
+					http.setSharedObject(PublicKeyCredentialUserEntityRepository.class, passkeyUserEntityRepository);
+					Logger.info(SpringSecurityConf.class, "PassKey: using JDBC PublicKeyCredentialUserEntityRepository: " + passkeyUserEntityRepository.getClass().getName());
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: PublicKeyCredentialUserEntityRepository bean not found!");
+				}
+				if (webauthnUserDetailsService != null) {
+					http.setSharedObject(org.springframework.security.core.userdetails.UserDetailsService.class, webauthnUserDetailsService);
+					Logger.info(SpringSecurityConf.class, "PassKey: using WebjetWebAuthnUserDetailsService");
+				} else {
+					Logger.error(SpringSecurityConf.class, "PassKey: UserDetailsService bean not found!");
+				}
+
 				http.webAuthn(webAuthn -> {
 					webAuthn.rpId(rpId);
 					webAuthn.rpName(rpName);
@@ -94,7 +121,7 @@ public class SpringSecurityConf {
 					webAuthn.disableDefaultRegistrationPage(true);
 				});
 
-				// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor below
+				// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor
 			}
 		} catch (Exception e) {
 			Logger.error(SpringSecurityConf.class, "Error configuring WebAuthn support", e);
