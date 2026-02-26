@@ -192,7 +192,13 @@ td.cke_dialog_ui_vbox_child {
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
 
-    label.cke_dialog_ui_labeled_label {
+    span.cke_dialog_ui_checkbox {
+        display: inline-block;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    label.cke_dialog_ui_labeled_label, span.cke_dialog_ui_checkbox label {
         font-size: 14px;
         line-height: 1.7;
         position: relative;
