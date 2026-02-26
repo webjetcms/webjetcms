@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.AbstractJacksonHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -27,6 +28,9 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
 
 import freemarker.core.Configurable;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -96,6 +100,12 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(), size="+converters.size());
 
+        for (HttpMessageConverter<?> converter : converters) {
+            if (converter instanceof AbstractJacksonHttpMessageConverter<?> jacksonConverter) {
+                configureJacksonDateTimestamps(jacksonConverter);
+            }
+        }
+
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();
         List<MediaType> mediaTypes = new ArrayList<>();
         mediaTypes.add(new MediaType("text", "plain", UTF8));
@@ -106,6 +116,20 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
         //aby isla tlac do PDF (application/octet-stream)
         converters.add(new ResourceHttpMessageConverter(true));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends ObjectMapper> void configureJacksonDateTimestamps(AbstractJacksonHttpMessageConverter<T> jacksonConverter) {
+        T mapper = (T) jacksonConverter.getMapper().rebuild()
+                .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DateTimeFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
+                .build();
+
+        jacksonConverter.registerMappersForType(Object.class, registrations -> {
+            for (MediaType mediaType : jacksonConverter.getSupportedMediaTypes()) {
+                registrations.put(mediaType, mapper);
+            }
+        });
     }
 
     @Override
