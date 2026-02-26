@@ -229,7 +229,7 @@ Scenario('Import', async ({ I, Document, i18n }) => {
     Document.screenshot("/redactor/files/file-archive/import_replace_done.png");
 });
 
-Scenario('File archive editor app', async ({ I, DTE,  Document, i18n }) => {
+Scenario('File archive editor app', async ({ I, DT, DTE,  Document, i18n }) => {
     let confLng = I.getConfLng();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77668");
@@ -264,6 +264,10 @@ Scenario('File archive editor app', async ({ I, DTE,  Document, i18n }) => {
     doTabScreen(I, Document, "file-archiv-app-tab-advanced.png", true);
 
     I.clickCss("#pills-dt-component-datatable-filesToShow-tab");
+    I.click( locate("tr").withChild( locate("td.dt-type-numeric").withTextEquals("1496") ).find("td.dt-select-td") );
+    I.click( locate("tr").withChild( locate("td.dt-type-numeric").withTextEquals("1422") ).find("td.dt-select-td") );
+    I.clickCss("#datatableFieldDTE_Field_filesToSelect_wrapper button.btn-success");
+    DT.waitForLoader();
     doTabScreen(I, Document, "file-archiv-app-tab-selected.png", false);
 
     I.amOnPage("/apps/archiv-suborov/?NO_WJTOOLBAR=true");

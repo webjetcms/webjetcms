@@ -30,7 +30,7 @@ Scenario('Set variable fileArchivAllowExt and verify behaviour', ({ I, DTE, DT, 
     SL.uploadFile(validPdfVirtualFileName, validPdfFileName);
     DTE.save('fileArchiveDataTable');
     DT.filterEquals('virtualFileName', validPdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", validPdfVirtualFileName, "", "files/archiv/", validPdfFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", validPdfVirtualFileName, "", "files/archiv/", validPdfFileName]);
 
     // 3. Overenie nepovelených formátov
     I.say("Phase 3 - Check forbidden format");
