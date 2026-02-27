@@ -34,8 +34,8 @@ Scenario('Add new file and edit', async ({ I, DT, DTE }) => {
     // 3. Overenie ci sa spravne editovalo
     I.say("Phase3 - Verifying if the edit was successful");
     DT.filterEquals('virtualFileName', editablePdfVirtualFileName+'-chan.ge');
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", editablePdfVirtualFileName+'-chan.ge', "", "files/archiv/", editablePdfFileName, "", validFrom, validTo]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", editablePdfVirtualFileName+'-chan.ge', "", "files/archiv/", editablePdfFileName, "", validFrom, validTo]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
 
     // 4. Premenovanie súboru
     I.say("Phase4 - Renaming the file");
