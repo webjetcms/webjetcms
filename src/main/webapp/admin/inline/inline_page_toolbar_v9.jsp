@@ -612,6 +612,21 @@ if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
 
             <div id='wjInlineCkEditorToolbarElement'></div>
         </form>
+        <div class="exit-inline-editor" id="DTE_Field_data-editorTypeSelector">
+            <iwcm:text key="editor.type_select.label.js"/><br>
+            <select onchange="window.parent.switchEditorType(this)">
+                <option value=""><iwcm:text key="editor.type_select.standard.js"/></option>
+                <option value="html"><iwcm:text key="editor.type_select.html.js"/></option>
+                <option value="pageBuilder" selected="selected"><iwcm:text key="editor.type_select.page_builder.js"/></option>
+            </select>
+            <br/>
+            <div>
+                <iwcm:text key="pagebuilder.modal.tab.size"/>:
+                <a href="javascript:window.parent.pbSetWindowSize('phone')" title="<iwcm:text key='pagebuilder.modal.visibility.sm'/>"><img src="/admin/webpages/page-builder/images/device-mobile.svg"/></a>
+                <a href="javascript:window.parent.pbSetWindowSize('tablet')" title="<iwcm:text key='pagebuilder.modal.visibility.md'/>"><img src="/admin/webpages/page-builder/images/device-tablet.svg"/></a>
+                <a href="javascript:window.parent.pbSetWindowSize('desktop')" title="<iwcm:text key='pagebuilder.modal.visibility.xl'/>"><img src="/admin/webpages/page-builder/images/device-desktop.svg"/></a>
+            </div>
+        </div>
     </div>
 </div>
 <div id="inlineEditorToolbarTopPlaceHolder"></div>
