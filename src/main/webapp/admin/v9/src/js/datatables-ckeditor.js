@@ -1962,6 +1962,40 @@ export class DatatablesCkEditor {
 			}
 		}
 
+		if ("pageBuilder"===this.editingMode) {
+			//in pagebuilder there is copy of this element in iframe
+			editorTypeSelector.hide();
+
+			//if there wil be error/404 page revert html mode switcher back
+			setTimeout(function() {
+				//get current mode
+				var currentMode = editorTypeSelector.find("select").val();
+				if (currentMode === "pageBuilder") {
+					console.log("Checking pageBuilder iframe existence and content");
+					var iframe = pageBuilderElement.find("iframe");
+					var found = false;
+					try {
+						if (iframe.length > 0 && iframe[0].contentWindow && iframe[0].contentWindow.$) {
+							var iframeModeSelector = iframe[0].contentWindow.$("div.exit-inline-editor select");
+							if (iframeModeSelector.length > 0) {
+								found = true;
+							}
+						}
+					} catch (e) {
+						console.error("Error accessing pageBuilder iframe:", e);
+					}
+
+					if (found == false) {
+						console.log("PageBuilder iframe not found, reverting to HTML mode");
+						editorTypeSelector.show();
+					}
+				}
+			}, 10000);
+
+		} else {
+			editorTypeSelector.show();
+		}
+
 		this.editorHeightLatest = 0;
 		this.resizeEditor(this);
 	}

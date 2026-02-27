@@ -1,3 +1,6 @@
+@font-face{font-family:"Asap";font-style:normal;font-weight:400;src:url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot);src:local(""),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot?#iefix) format("embedded-opentype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2) format("woff2"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff) format("woff"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.ttf) format("truetype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.svg#Asap) format("svg")}
+@font-face{font-family:"Asap";font-style:normal;font-weight:700;src:url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot);src:local(""),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot?#iefix) format("embedded-opentype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2) format("woff2"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff) format("woff"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.ttf) format("truetype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.svg#Asap) format("svg")}
+
 /* WJ admin variables from ninja.scss */
 $primary: #0063FB;
 $primary-hover: #0049BE;
@@ -60,8 +63,8 @@ $plus-button-size: 26px;
 $plus-button-icon-size: 16px;
 $plus-button-moving-size: 70px;
 $plus-button-radius: 6px;
-$plus-button-index: $minimum-index + 100;
-$plus-button-moving-index: 500;
+$plus-button-index: $minimum-index + 155;
+$plus-button-moving-index: $minimum-index + 155;
 
 $size-changer-size: 26px;
 $size-changer-radius: 6px;
@@ -372,16 +375,16 @@ div.carousel-inner {
 div.exit-inline-editor {
   display: block;
   position: absolute;
-  bottom: 3px;
+  top: 10px;
   right: 0px;
-  padding-right: 10px;
+  padding-right: 8px;
   padding-left: 4px;
   z-index: 101;
   background-color: #f5f5f5;
   font-family: $font-family-base;
-  font-size: 13px;
-  font-weight: normal;
-  line-height: 19px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
 }
 div.exit-inline-editor select {
   border-radius: 6px;
@@ -389,4 +392,8 @@ div.exit-inline-editor select {
   border: 1px solid #868ea5;
   background-color: white;
   padding: 4px;
+}
+div.exit-inline-editor a img {
+  height: 18px;
+  vertical-align: text-bottom;
 }
