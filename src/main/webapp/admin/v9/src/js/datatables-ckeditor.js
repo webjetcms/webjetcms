@@ -1971,7 +1971,6 @@ export class DatatablesCkEditor {
 				//get current mode
 				var currentMode = editorTypeSelector.find("select").val();
 				if (currentMode === "pageBuilder") {
-					console.log("Checking pageBuilder iframe existence and content");
 					var iframe = pageBuilderElement.find("iframe");
 					var found = false;
 					try {
@@ -1986,7 +1985,7 @@ export class DatatablesCkEditor {
 					}
 
 					if (found == false) {
-						console.log("PageBuilder iframe not found, reverting to HTML mode");
+						console.info("PageBuilder iframe not found, reverting to HTML mode");
 						editorTypeSelector.show();
 					}
 				}
