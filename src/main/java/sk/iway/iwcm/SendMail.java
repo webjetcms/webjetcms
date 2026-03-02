@@ -369,6 +369,16 @@ public class SendMail
 				}
 				//wrap message to selector
 				if (isHtmlContent(message)) message = "<div class='email-body'>" + message + "</div>";
+
+				//change element A to DIV.link with ID set to original href
+				if (isHtmlContent(message)) {
+					message = Tools.replace(message, "<a href=", "<div class='link' id=");
+					message = Tools.replace(message, "</a>", "</div>");
+
+					//failsafe
+					message = Tools.replace(message, "<a ", "<div class='link' ");
+					message = Tools.replace(message, "href=", "id=");
+				}
 			}
 
 			if (isHtmlContent(message) || Tools.isNotEmpty(attachmentsList))

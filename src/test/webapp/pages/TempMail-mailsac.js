@@ -31,13 +31,12 @@ module.exports = {
         }
 
         let url = 'https://mailsac.com/inbox/'+name+'%40'+emailDomain;
-        /*await I.executeScript((url) => {
+        await I.executeScript((url) => {
             window.location.href=url;
         }, url);
-        I.wait(5);
-        */
+        I.wait(4);
 
-        I.amOnPage(url);
+        //I.amOnPage(url);
         I.waitForElement("div.inbox span.help-block", 10);
 
         I.switchTo();
@@ -61,10 +60,24 @@ module.exports = {
             links.forEach(link => {
                 const href = link.textContent.trim();
                 link.setAttribute("href", href);
+                const dataHref = link.getAttribute("data-href");
+                if (dataHref) {
+                    link.setAttribute("href", dataHref);
+                }
                 link.setAttribute("target", "_blank");
             });
-
+            //we sending links as div.link with data-href attribute, so we need to change them back to links
+            const divLinks = document.querySelectorAll("div.link");
+            divLinks.forEach(divLink => {
+                const href = divLink.getAttribute("id");
+                const link = document.createElement("a");
+                link.setAttribute("href", href);
+                link.setAttribute("target", "_blank");
+                link.textContent = divLink.textContent;
+                divLink.parentNode.replaceChild(link, divLink);
+            });
         });
+        I.wait(1);
     },
 
     /**
@@ -81,8 +94,6 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     closeEmail(){
-        //because of Unblock links we need to go back and delete last email
-        I.switchToPreviousTab();
         I.click(locate("button").withText("Close"));
     },
 
