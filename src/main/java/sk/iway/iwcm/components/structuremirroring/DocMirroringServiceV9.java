@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
@@ -398,6 +399,35 @@ public class DocMirroringServiceV9 {
                   }
                }
             }
+
+            languages.add(link);
+         }
+      }
+
+      return languages;
+   }
+
+   public static List<LabelValueDetails> getHrefLang(DocDetails currentDoc, HttpServletRequest request) {
+      List<LabelValueDetails> languages = new ArrayList<>();
+      if (currentDoc == null) return languages;
+
+      List<DocDetails> syncedDocs = getDocBySyncId(currentDoc.getSyncId(), 0);
+      GroupsDB groupsDB = GroupsDB.getInstance();
+      DocDB docDB = DocDB.getInstance();
+
+      for (DocDetails syncedDoc : syncedDocs) {
+         if (syncedDoc.isAvailable()==false) continue;
+         GroupDetails syncedDocGroup = groupsDB.getGroup(syncedDoc.getGroupId());
+         if (syncedDocGroup != null) {
+            LabelValueDetails link = new LabelValueDetails();
+
+            String lng = syncedDocGroup.getLng().toLowerCase();
+            if ("cz".equals(lng)) lng = "cs";
+            link.setLabel(lng);
+
+            String href = docDB.getDocLink(syncedDoc.getDocId(), syncedDoc.getExternalLink(), true, request);
+
+            link.setValue(href);
 
             languages.add(link);
          }

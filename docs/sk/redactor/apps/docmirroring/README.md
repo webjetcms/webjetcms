@@ -57,6 +57,24 @@ Ak potrebujete namiesto textových odkazov zobraziť vlajky, nastavte parameter 
 !INCLUDE(/components/structuremirroring/language_switcher.jsp, flagsPath=/images/flags/)!
 ```
 
+## Nastavenie atribútu `hreflang`
+
+Do šablóny stránky môžete ľahko vložiť odkazy na jazykové mutácie pomocou aplikace:
+
+```html
+!INCLUDE(/components/structuremirroring/hreflang.jsp)!
+```
+
+táto aplikácia vytvorí odkazy s atribútom `hreflang` pre všetky jazykové mutácie aktuálnej stránky. Ak je stránka v jazykovej mutácii nastavená na nezobrazovat, nebude sa generovať odkaz.
+
+Príklad výstupu:
+
+```html
+   <link rel="alternate" hreflang="sk" href="https://webjetcms.com/slovensky/domov/podstranka-1.html" />
+   <link rel="alternate" hreflang="en" href="https://webjetcms.com/english/domov/subpage-1.html" />
+   <link rel="alternate" hreflang="de" href="https://webjetcms.com/deutsch/heim/unterseite-1.html" />
+```
+
 ## Automatický preklad
 
 WebJET dokáže automaticky prekladať názov adresára alebo stránky pri jej vytvorení. Je potrebné nasledovné nastavenie:
