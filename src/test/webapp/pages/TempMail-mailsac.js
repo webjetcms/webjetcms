@@ -48,15 +48,23 @@ module.exports = {
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */
-    openLatestEmail(unblockLinksAndImages = true){
+    openLatestEmail(){
         I.say('Otvaram najnovsi mail');
         I.refreshPage();
         I.waitForElement("table.inbox-table td.inbox-subject-td", 240);
         I.clickCss("table.inbox-table tr:nth-of-type(2) td.inbox-subject-td");
         I.waitForElement("table.inbox-table tr:nth-of-type(2) td.active", 10);
         I.wait(1);
-        if (unblockLinksAndImages === true) I.click(locate("a.btn").withText("Unblock links and images"));
-        I.switchToNextTab();
+        I.executeScript(() => {
+            //all links in div.ng-scope have removed href and target, add href by link text and add target="_blank"
+            const links = document.querySelectorAll("div.ng-scope a");
+            links.forEach(link => {
+                const href = link.textContent.trim();
+                link.setAttribute("href", href);
+                link.setAttribute("target", "_blank");
+            });
+
+        });
     },
 
     /**
@@ -110,11 +118,11 @@ module.exports = {
     },
 
     getContentSelector() {
-        return "div#info"; //TODO: check if correct
+        return "div.email-body";
     },
 
     getSubjectSelector() {
-        return "div.subject"; //TODO: check if correct
+        return "div.subject";
     },
 
     /**

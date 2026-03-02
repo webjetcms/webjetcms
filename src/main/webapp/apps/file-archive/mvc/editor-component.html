@@ -5,12 +5,16 @@
         filesInnerTable.rows().deselect();
         const globalIdsEl = document.getElementById("DTE_Field_globalIds");
         if (!globalIdsEl) return;
-        const globalIdsArray = (globalIdsEl.value || "").split(/[,+]/).filter(Boolean);
-        filesInnerTable.rows(function(idx, data, node) {
+        const globalIdsArray = (globalIdsEl.value || "").split(/[,+]/).map(s => s.trim()).filter(Boolean);
+        const rowsApi = filesInnerTable.rows();
+        rowsApi.every(function (rowIdx, tableLoop, rowLoop) {
+            const data = this.data();
+            const node = this.node();
             const globalId = String(data.globalId);
             const isSelected = globalIdsArray.includes(globalId);
-            if (node) { node.classList.toggle("highlighted-file-row", isSelected); }
-            return isSelected;
+            if (node) {
+                node.classList.toggle("highlighted-file-row", isSelected);
+            }
         });
     }
 

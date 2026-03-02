@@ -460,7 +460,8 @@ gretty {
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia
         //'-Dwebjet.useSMTPServer=true',
-        '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
+        '-Dwebjet.smtpServer=localhost',
+        '-Dwebjet.smtpPort=2525',
         "-DwebjetDbname=${System.env.webjetDbname}",
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',

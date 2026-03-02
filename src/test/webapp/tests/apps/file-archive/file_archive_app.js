@@ -257,7 +257,7 @@ Scenario('File archive app - structure and behaviour test', ({ I }) => {
     I.click(locate(".table tr td span").withText("autotest-app-main-history"));
 });
 
-Scenario('File archive app - open files test ', async ({ I }) => {
+Scenario('File archive app - open files test', async ({ I }) => {
     I.closeOtherTabs();
     I.amOnPage('/apps/manazer-dokumentov/archiv-suborov-test-behaviour.html');
     I.waitForElement(".table.tabulkaStandard", 10);
@@ -432,17 +432,17 @@ Scenario('File archive app - only selected files', async ({ I, DT, Apps, Documen
     await Document.waitForTab();
     I.switchToNextTab();
 
-    const showdFilesCount = await I.grabNumberOfVisibleElements("table.tabulkaStandard tr.collapsible");
-    I.assertEqual(showdFilesCount, 2, "Number of shown files in preview is different than expected");
+    const shownFilesCount = await I.grabNumberOfVisibleElements("table.tabulkaStandard tr.collapsible");
+    I.assertEqual(shownFilesCount, 2, "Number of shown files in preview is different than expected");
 });
 
-async function checkSelectedFiles(I, selectedGlobasIds) {
-    for (const globalId of selectedGlobasIds) {
+async function checkSelectedFiles(I, selectedGlobalIds) {
+    for (const globalId of selectedGlobalIds) {
         I.seeElement( locate("tr.highlighted-file-row").withChild( locate("td.dt-type-numeric").withTextEquals(globalId) ) );
     }
 
     const selectedCount = await I.grabNumberOfVisibleElements("tr.highlighted-file-row")
-    I.assertEqual(selectedCount, selectedGlobasIds.length, "Number of selected files is different than expected");
+    I.assertEqual(selectedCount, selectedGlobalIds.length, "Number of selected files is different than expected");
 }
 
 function selectRowsByGlobalId(I, globalIds) {
