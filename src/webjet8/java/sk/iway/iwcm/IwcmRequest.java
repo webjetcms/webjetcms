@@ -1,10 +1,12 @@
 package sk.iway.iwcm;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 {
 	//private final HttpServletRequest original;
 	private Map<String, String[]> changedParameterValues = new HashMap<>();
-	private Map<String, Part> changedParts = new HashMap<>();
+	private List<Part> changedParts = new ArrayList<>();
 	private Locale forcedLocale = null;
 
 	public IwcmRequest(HttpServletRequest original)
@@ -151,25 +153,29 @@ public class IwcmRequest extends HttpServletRequestWrapper
 	public Collection<Part> getParts() throws IOException, ServletException {
 		if (changedParts.size() > 0) {
 			//merge changed parts
-			Map<String, Part> allParts = new HashMap<>();
+			List<Part> allParts = new ArrayList<>();
 			for (Part part : super.getParts()) {
-				allParts.put(part.getName(), part);
+				allParts.add(part);
 			}
-			allParts.putAll(changedParts);
-			return allParts.values();
+			for (Part part : changedParts) {
+				allParts.add(part);
+			}
+			return allParts;
 		}
 		return super.getParts();
 	}
 
 	@Override
 	public Part getPart(String name) throws IOException, ServletException {
-		if (changedParts.containsKey(name)) {
-			return changedParts.get(name);
+		for (Part part : changedParts) {
+			if (part.getName().equals(name)) {
+				return part;
+			}
 		}
 		return super.getPart(name);
 	}
 
 	public void addPart(Part part) {
-		changedParts.put(part.getName(), part);
+		changedParts.add(part);
 	}
 }
