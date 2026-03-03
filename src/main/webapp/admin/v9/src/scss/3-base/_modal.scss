@@ -650,14 +650,20 @@ body.modal-open {
         position: relative;
     }
 
+    .modal-header {
+        padding-top: 4px;
+        padding-bottom: 2px;
+    }
+
     .close {
         display: block;
         visibility: visible;
         opacity: 1;
         position: absolute;
         right: 16px;
-        top: 8px;
+        top: 4px;
         background-color: transparent;
+        z-index: 1; //in nested modal datatable in impressslideshow when you edit row close button was not clickable
 
         &:hover {
             color: $nice-black;
@@ -670,7 +676,7 @@ body.modal-open {
 
     .modal-header div.dialog-buttons {
         right: 48px;
-        top: 8px;
+        top: 4px;
     }
 
     .DTE_Footer {
@@ -971,7 +977,7 @@ html.in-iframe .modal.DTED .modal-dialog {
 html.in-iframe, html.in-iframe-show-table {
 
     .DTE_Header.modal-header {
-        //in gallery app dialog fotos tab iframe needs this
+        //in gallery app dialog photos tab iframe needs this
         margin-top: 0px !important;
         border-bottom-width: 0px !important;
     }

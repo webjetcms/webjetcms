@@ -154,6 +154,15 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 
             if (csrfOK)
             {
+				String[] values = request.getParameterValues("upload_path[]");
+				if (values != null) {
+					for (String value : values) {
+						if (Tools.isNotEmpty(value)) {
+							uploadPaths.add(value);
+						}
+					}
+				}
+
                 for (Part item : items) {
                     if (item.getSubmittedFileName() != null) {
                         String fileName = clearFileName(item.getSubmittedFileName());
