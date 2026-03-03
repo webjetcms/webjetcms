@@ -4,6 +4,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
