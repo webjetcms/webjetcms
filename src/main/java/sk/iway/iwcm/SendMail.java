@@ -367,8 +367,6 @@ public class SendMail
 					if (isHtmlContent(message)) message = "<div class='reply-to'>" + replyTo + " &lt;" + replyTo + "&gt;</div>\n\n" + message;
 					else message = "Reply-To: " + replyTo + "\n\n" + message;
 				}
-				//wrap message to selector
-				if (isHtmlContent(message)) message = "<div class='email-body'>" + message + "</div>";
 
 				//change element A to DIV.link with ID set to original href
 				if (isHtmlContent(message)) {
@@ -379,6 +377,10 @@ public class SendMail
 					message = Tools.replace(message, "<a ", "<div class='link' ");
 					message = Tools.replace(message, "href=", "id=");
 				}
+
+				//wrap message to selector - we need it for better parsing
+				if (isHtmlContent(message) == false) message = Tools.replace(message, "\n", "\n<br>");
+				message = "<div class='email-body'>" + message + "</div>";
 			}
 
 			if (isHtmlContent(message) || Tools.isNotEmpty(attachmentsList))

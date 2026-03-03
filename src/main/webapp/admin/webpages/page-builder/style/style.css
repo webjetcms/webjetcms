@@ -285,6 +285,7 @@
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 0px;
 }
 .pb-empty-placeholder__button::after {
   content: "";
@@ -424,6 +425,8 @@
   background-size: auto 20px;
   transition: background-color 0.3s ease-in-out;
   color: white;
+  border: 0px;
+  background-color: transparent;
 }
 .pb-toolbar__content > .pb-toolbar-button__style {
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgb(221, 223, 230)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brush"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21v-4a4 4 0 1 1 4 4h-4" /><path d="M21 3a16 16 0 0 0 -12.8 10.2" /><path d="M21 3a16 16 0 0 1 -10.2 12.8" /><path d="M10.6 9a9 9 0 0 1 4.4 4.4" /></svg>');
@@ -826,6 +829,10 @@
   background-color: #00A186;
   border-bottom-right-radius: 6px;
 }
+.pb-size-changer button {
+  border: 0px;
+  background-color: transparent;
+}
 .pb-size-changer__down, .pb-size-changer__up, .pb-size-changer__number {
   display: inline-block;
   width: 26px;
@@ -885,6 +892,9 @@
   font-size: 14px;
   line-height: 24px;
 }
+.pb-modal button {
+  border: 0px;
+}
 .pb-modal__header {
   position: relative;
   overflow: hidden;
@@ -905,6 +915,7 @@
   background-position: center;
   background-size: 20px auto;
   transition: opacity 0.3s ease-in-out;
+  background-color: transparent;
 }
 .pb-modal__header__button-show:hover {
   opacity: 1;
@@ -948,31 +959,40 @@
   padding: 0 16px;
   font-size: 13px;
   font-weight: 600;
-  opacity: 0.8;
   text-align: center;
   border-radius: 6px;
   transition: all 0.3s ease-in-out;
 }
 .pb-modal__footer__button-reset:hover, .pb-modal__footer__button-close:hover, .pb-modal__footer__button-save:hover {
   cursor: pointer;
-  opacity: 1;
 }
 .pb-modal__footer__button-close {
   float: left;
-  border: 1px solid #868EA5;
+  border: 1px solid #868EA5 !important;
   background-color: transparent;
   color: #1f2022;
+}
+.pb-modal__footer__button-close:hover {
+  background-color: #13151B;
+  color: white;
 }
 .pb-modal__footer__button-save {
   float: right;
   background-color: #0063FB;
   color: white;
 }
+.pb-modal__footer__button-save:hover {
+  background-color: #0049BE;
+}
 .pb-modal__footer__button-reset {
   text-align: center;
   background-color: transparent;
   color: #686F83;
   font-weight: 400;
+}
+.pb-modal__footer__button-reset:hover {
+  background-color: #13151B;
+  color: white;
 }
 .pb-modal .pb-style-input-group {
   display: none;

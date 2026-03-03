@@ -142,5 +142,13 @@ module.exports = {
      */
     getTempMailDomain() {
         return "@mailsac.com";
+    },
+
+    checkAttachments(attachmentsNames = []) {
+        I.say("Checking attachments in email");
+        /*attachmentsNames.forEach(attachmentName => {
+            I.seeElement( locate("div.attachments").find( locate("a").withText(attachmentName) ) );
+        });*/
+        I.see(attachmentsNames.length + " attachments", "td.active span.ng-binding.ng-scope");
     }
 }
