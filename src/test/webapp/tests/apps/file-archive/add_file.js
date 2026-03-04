@@ -42,8 +42,8 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     // 4. Overenie, že sa súbor nahrá a je na správnom mieste
     I.say("Phase 4 - Check that the file is uploaded and in the right place");
     DT.filterEquals('virtualFileName', validPdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", validPdfVirtualFileName, "", "files/archiv/", validPdfFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", validPdfVirtualFileName, "", "files/archiv/", validPdfFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
 
     // 5. Overenie, že súbor má správny typ a obsah
     I.say("Phase 5 - Check that the file has the correct type and content");
@@ -90,8 +90,8 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     DT.filterContains('fileName', validPdfFileName.split('.')[0]);
     I.see('Záznamy 1 až 2 z 2');
     I.clickCss('.dt-th-id > .dt-column-order');
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", duplicatePdfVirtualFileName, "", "files/archiv/", SL.getVersionName(validPdfFileName,1)]);
-    SL.checkStatus(2, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", duplicatePdfVirtualFileName, "", "files/archiv/", SL.getVersionName(validPdfFileName,1)]);
+    SL.checkStatus(2, 4, ['star', 'map-pin']);
 });
 
 Scenario('Checking icon status and filtering with them works', async ({ I, DT }) => {
@@ -117,7 +117,7 @@ Scenario('Checking icon status and filtering with them works', async ({ I, DT })
             continue;
         } else if (await DT.getRecordCount('fileArchiveDataTable') > 0) {
             I.say("")
-            SL.checkStatus(1, 3, [statusIcons[statusOption]]);
+            SL.checkStatus(1, 4, [statusIcons[statusOption]]);
         }
     }
 });
@@ -148,8 +148,8 @@ Scenario('Add new file in the future and validate', async ({ I, DT, DTE, TempMai
     I.say("Phase2 - Verify that the table contains the entry as red");
     DT.filterEquals('virtualFileName', scheduledDocVirtualFileName);
     I.wait(2);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", scheduledDocVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", scheduledDocFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin', 'calendar-time']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", scheduledDocVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", scheduledDocFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin', 'calendar-time']);
     let lineColor = await SL.getFontColor(1,1);
     I.assertEqual(lineColor, SL.red);
 
@@ -202,8 +202,8 @@ Scenario('Add file in different location', ({ I, DTE, DT }) => {
     // 2. Overenie, že sa súbor nahrá a je na správnom mieste
     I.say("Phase 2 - Check that the file is uploaded and in the right place");
     DT.filterEquals('virtualFileName', validPdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", validPdfVirtualFileName, "", "files/archiv/" + folderName, validPdfFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", validPdfVirtualFileName, "", "files/archiv/" + folderName, validPdfFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
 
     I.amOnPage(SL.elfinder);
     I.doubleClick(`.elfinder-cwd-filename[title^="${folderName}"]`);

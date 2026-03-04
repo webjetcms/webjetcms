@@ -76,6 +76,9 @@ public interface FileArchiveRepository extends DomainIdRepository<FileArchivator
     @Query("SELECT fab FROM FileArchivatorBean fab WHERE fab.globalId IN :globalIds AND fab.referenceId = -1 AND fab.uploaded = -1 AND (fab.referenceToMain IS NULL OR fab.referenceToMain = '') AND fab.domainId = :domainId")
     List<FileArchivatorBean> findAllMainFilesUploadedNotPatternIdsIn(@Param("globalIds") List<Integer> globalIds, @Param("domainId") Integer domainId, Pageable pageable);
 
+    @Query("SELECT fab FROM FileArchivatorBean fab WHERE fab.referenceId = -1 AND fab.uploaded = -1 AND (fab.referenceToMain IS NULL OR fab.referenceToMain = '') AND fab.domainId = :domainId")
+    List<FileArchivatorBean> findAllMainFilesUploadedNotPattern(@Param("domainId") Integer domainId, Pageable pageable);
+
     @Query("SELECT fab.id FROM FileArchivatorBean fab WHERE fab.filePath = :filePath AND fab.fileName = :fileName AND fab.domainId = :domainId")
     Optional<Long> findIdByFilePathAndFileName(@Param("filePath") String filePath, @Param("fileName") String fileName, @Param("domainId") Integer domainId);
 }

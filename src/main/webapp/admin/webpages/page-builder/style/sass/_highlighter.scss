@@ -108,6 +108,11 @@
         animation: eye_catcher_vertical 1s ease-in-out infinite;
     }
 }
+.#{$prefix}-column.som-hover-append:hover > .#{$prefix}-highlighter__right {
+    &::after {
+        animation: eye_catcher_vertical_right 1s ease-in-out infinite;
+    }
+}
 
 .#{$prefix}-container.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
 .#{$prefix}-container.som-hover-prepend:hover > .#{$prefix}-highlighter__top,
@@ -229,5 +234,19 @@
     }
     100% {
         width: 3px;
+    }
+}
+@keyframes eye_catcher_vertical_right {
+    0% {
+        width: 3px;
+        left: -1px;
+    }
+    50% {
+        width: 6px;
+        left: -4px;
+    }
+    100% {
+        width: 3px;
+        left: -1px;
     }
 }

@@ -4,6 +4,10 @@ WebJET CMS podporuje OAuth2 autentifikáciu pre prihlasovanie používateľov pr
 
 Párovanie používateľov sa vykonáva na základe emailu, ktorý musí byť jedinečný. Pri prvom prihlásení cez OAuth2 sa vytvorí nový používateľ v databáze WebJET s nastaveným prihlasovacím meno, menom, priezviskom a autorizáciou. Skupiny používateľov a skupiny práv sa synchronizujú na základe zhody mena. Administrátori sa nastavujú automaticky na základe členstva v skupine definovanej v konfiguračnej premennej `NTLMAdminGroupName`.
 
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ## Konfigurácia
 
 ### Základná konfigurácia

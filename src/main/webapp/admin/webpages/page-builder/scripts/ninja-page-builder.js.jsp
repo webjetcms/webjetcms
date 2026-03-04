@@ -1071,9 +1071,18 @@
 
         create_plus_button: function (el) {
             if($(el).children(this.tagc._plus_button).length < 1) {
+                var text = "<iwcm:text key='pagebuilder.toolbar.add_block'/>";
+                if($(el).hasClass(this.tag.section)) {
+                    text = "<iwcm:text key='pagebuilder.toolbar.add_section'/>";
+                } else if($(el).hasClass(this.tag.container)) {
+                    text = "<iwcm:text key='pagebuilder.toolbar.add_container'/>";
+                } else if($(el).hasClass(this.tag.column)) {
+                    text = "<iwcm:text key='pagebuilder.toolbar.add_column'/>";
+                }
+
                 $(el)
-                    .append(this.build_aside(this.tags.append, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"))
-                    .append(this.build_aside(this.tags.prepend, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>"));
+                    .append(this.build_aside(this.tags.append, null, text))
+                    .append(this.build_aside(this.tags.prepend, null, text));
             }
         },
 
@@ -1167,7 +1176,11 @@
                 title = ' data-title="'+tooltip+'" ';
                 class_name = class_name + ' '+this.options.prefix+'-tooltip';
             }
-            return '<span class="'+class_name+'"'+title+'>'+content+'</span>';
+            var tagName = "button";
+            if (class_name.indexOf("size-changer__number") !== -1) {
+                tagName = "span";
+            }
+            return '<'+tagName+' class="'+class_name+'"'+title+'>'+content+'</'+tagName+'>';
         },
 
         build_aside: function (class_name, content = null, tooltip = null) {

@@ -742,3 +742,5 @@ Auth
 Conf
 OIDC
 localhost
+lang
+displaytag

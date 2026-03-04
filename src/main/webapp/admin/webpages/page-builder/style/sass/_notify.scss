@@ -26,12 +26,14 @@
 
     &__content {
         padding: 0 15px;
+        padding-top: 6px;
+        font-family: "Asap", sans-serif;
         overflow: hidden;
         color: $toolbar-content-color;
 
         span {
-            font-weight: 500;
             font-size: 16px;
+            color: $dark-60;
             display: block;
         }
     }
@@ -45,17 +47,25 @@
             display: inline-block;
             width: auto;
             height: 30px;
-            line-height: 30px;
             padding: 0 16px;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 14px;
             opacity: 0.8;
             text-align: center;
-            border-radius: 6px;
-            background-color: white;
+            border-radius: $modal-radius;
             transition: all 0.3s ease-in-out;
-            cursor: pointer;
-            background-color: $nice-gray-100;
+
+            border: 1px solid $nice-gray-300;
+            background-color: transparent;
+            color: $nice-black;
+
+            font-family: "Asap", sans-serif;
+
+            &:hover {
+                cursor: pointer;
+                opacity: 1;
+                background-color: $secondary;
+                color: white;
+            }
         }
 
     }
