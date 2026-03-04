@@ -17,6 +17,8 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
@@ -29,7 +31,8 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
-    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
 
@@ -90,6 +93,38 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
+
+    @Column(name = "show_stat")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_stat", tab = "stat", hidden = true)
+    private Boolean showStat;
+
+    @Column(name = "chart_type")
+    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.form_items.chart_type", tab = "stat", hidden = true,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "pie_donut", value = "pie_donut"),
+                    @DataTableColumnEditorAttr(key = "pie_classic", value = "pie_classic"),
+                    @DataTableColumnEditorAttr(key = "bar_vertical", value = "bar_vertical"),
+                    @DataTableColumnEditorAttr(key = "bar_horizontal", value = "bar_horizontal"),
+                    @DataTableColumnEditorAttr(key = "table", value = "table"),
+                }
+            )
+        }
+    )
+    private String chartType;
+
+    @Column(name = "top_count")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.form_items.top_count", tab = "stat", hidden = true)
+    private Integer topCount;
+
+    @Column(name = "show_other_count")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_other_count", tab = "stat", hidden = true)
+    private Boolean showOtherCount;
+
+    @Column(name = "compare_insensitive")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.compare_insensitive", tab = "stat", hidden = true)
+    private Boolean compareInsensitive;
 
     @Column(name = "regex_validation")
     private String regexValidation;

@@ -224,6 +224,22 @@
                         .catch(err => console.error(err));
                     }
                 });
+
+                $("#DTE_Field_showStat_0").on("change", function() {
+                    const statAllowed = formItemsDataTable.EDITOR.field("showStat").val()[0];
+
+                    if(statAllowed === true) {
+                        formItemsDataTable.EDITOR.field("chartType").show();
+                        formItemsDataTable.EDITOR.field("topCount").show();
+                        formItemsDataTable.EDITOR.field("showOtherCount").show();
+                        formItemsDataTable.EDITOR.field("compareInsensitive").show();
+                    } else {
+                        formItemsDataTable.EDITOR.field("chartType").hide();
+                        formItemsDataTable.EDITOR.field("topCount").hide();
+                        formItemsDataTable.EDITOR.field("showOtherCount").hide();
+                        formItemsDataTable.EDITOR.field("compareInsensitive").hide();
+                    }
+                });
             }
         });
     });

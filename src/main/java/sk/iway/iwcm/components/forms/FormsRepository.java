@@ -1,5 +1,8 @@
 package sk.iway.iwcm.components.forms;
 
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,4 +27,7 @@ public interface FormsRepository extends FormsRepositoryInterface<FormsEntity>{
     @Modifying
     @Query("UPDATE FormsEntity fe SET fe.formType = 'unknown' WHERE (fe.formType IS NULL OR fe.formType = '') AND fe.createDate IS NULL")
     void setUnknownFormType();
+
+    @Query("SELECT fe.data FROM FormsEntity fe WHERE fe.formName = :formName AND fe.domainId = :domainId AND fe.createDate IS NOT NULL")
+    List<String> getFormAllData(@Param("formName") String formName, @Param("domainId") Integer domainId, Pageable pageable);
 }

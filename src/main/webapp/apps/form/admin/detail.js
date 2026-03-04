@@ -34,6 +34,7 @@
             tabs: [
                 { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: !isArchived },
                 { url: '/apps/form/admin/form-steps/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/form-stats/?formName=' + formName, title: WJ.translate('components.form_stat.navbar_title.js'), active: false },
                 { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: isArchived },
                 { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]

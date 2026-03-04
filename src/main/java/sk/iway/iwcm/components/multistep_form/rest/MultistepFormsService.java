@@ -58,6 +58,7 @@ import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.utils.Pair;
 
 @Service
 public class MultistepFormsService {
@@ -249,6 +250,14 @@ public class MultistepFormsService {
         if(Tools.isEmpty(stepItem.getLabel())) fieldName = prop.getText("components.formsimple.label." + stepItem.getFieldType());
         else fieldName = new Html2Text( StringEscapeUtils.unescapeHtml4(stepItem.getLabel()) ).getText();
         return fieldName;
+    }
+
+    public static final Pair<String, String> getChartStatInfo(HttpServletRequest request) {
+        String formName = Tools.getStringValue(request.getParameter("formName"), "");
+        String itemFormId = Tools.getStringValue(request.getParameter("itemFormId"), "");
+
+        if(Tools.isNotEmpty(formName) && Tools.isNotEmpty(itemFormId)) return new Pair<String,String>(formName, itemFormId);
+        else return null;
     }
 
     /* ********** PUBLIC - support methods ********** */

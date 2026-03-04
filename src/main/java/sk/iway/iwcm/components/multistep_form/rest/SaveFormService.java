@@ -26,6 +26,7 @@ import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
+import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.doc.DocDB;
@@ -157,12 +158,18 @@ public class SaveFormService {
             formsRepository.deleteAllUserSubmitted(formName, CloudToolsForCore.getDomainId(), Long.valueOf(userId));
         }
 
+        Long formEnd = Tools.getNow();
+        Long formStart = (Long) request.getSession().getAttribute(MultistepFormsService.getSessionKey(formName, request) + MultistepFormApp.START_TIME);
+        Long duration = formStart != null ? formEnd - formStart : null;
+        if(duration != null && duration < 1000) duration = 0L;
+
         FormsEntity form = new FormsEntity();
         form.setFormName(formName);
         form.setDomainId(CloudToolsForCore.getDomainId());
         form.setCreateDate(new Date());
         form.setDocId(docId);
         form.setUserId(Long.valueOf(userId));
+        form.setDuration(duration);
 
         // For file save we need formId ... sooo save it as it is and then use id
         form.setData("-");

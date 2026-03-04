@@ -38,4 +38,6 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     List<FormItemEntity> findItemsToDuplicate(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 
     List<FormItemEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
+
+    FormItemEntity findByFormNameAndItemFormId(String formName, String itemFormId);
 }

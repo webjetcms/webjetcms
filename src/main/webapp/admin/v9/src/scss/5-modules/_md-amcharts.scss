@@ -51,6 +51,17 @@ div.amcharts {
         }
     }
 }
+.amcharts {
+    table.table tbody tr:hover {
+        background-color: #0063FB;
+        font-weight: bold;
+    }
+
+    table.table tbody tr td.chart-table-td {
+        background: none;
+        color: white;
+    }
+}
 
 .webjetAnimatedLoader {
     text-align: center;

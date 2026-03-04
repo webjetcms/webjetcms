@@ -64,6 +64,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
     /* Its importtant, that we use "-" and not "_" */
     public static final String DOC_ID = "-docid";
     public static final String PERMITTED = "-permitted";
+    public static final String START_TIME = "-starttime";
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "formslist.nazov_formularu", tab = "basic")
     private String formName;
@@ -108,6 +109,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         String sessionKey = MultistepFormsService.getNewSessionKey(formName, csrf);
         request.getSession().setAttribute(sessionKey + DOC_ID, Tools.getIntValue(request.getParameter("docid"), -1));
         request.getSession().setAttribute(sessionKey + PERMITTED, Boolean.TRUE);
+        request.getSession().setAttribute(sessionKey + START_TIME, Tools.getNow());
 
         //Get and set first step id
         model.addAttribute("stepId", formStepsRepository.getFirstStepId(formName, CloudToolsForCore.getDomainId()).orElse(-1L));
