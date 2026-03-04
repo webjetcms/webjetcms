@@ -62,7 +62,7 @@ public class WebjetWebAuthnUserDetailsService implements org.springframework.sec
         }
 
         for (ModuleInfo mod : Modules.getInstance().getAvailableModules()) {
-            if (identity.isDisabledItem(mod.getItemKey()) == false && identity.isDisabledItem(mod.getItemKey()) == false) {
+            if (identity.isDisabledItem(mod.getItemKey()) == false) {
                 String itemKey = WebjetSecurityService.normalizeUserGroupName(mod.getItemKey());
                 authorities.add(new SimpleGrantedAuthority("ROLE_Permission_" + itemKey));
             }
@@ -70,7 +70,6 @@ public class WebjetWebAuthnUserDetailsService implements org.springframework.sec
             if (mod.getSubmenus() != null) {
                 for (ModuleInfo submod : mod.getSubmenus()) {
                     if (Tools.isEmpty(submod.getItemKey())) continue;
-                    if (identity.isDisabledItem(submod.getItemKey())) continue;
                     if (identity.isDisabledItem(submod.getItemKey())) continue;
 
                     String itemKey = WebjetSecurityService.normalizeUserGroupName(submod.getItemKey());

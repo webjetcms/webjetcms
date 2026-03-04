@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -47,12 +48,9 @@ import sk.iway.iwcm.Tools;
 })
 public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 {
-    @SuppressWarnings("unused")
-    private final ApplicationContext applicationContext;
-
-    public BaseSpringConfig(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    //we need to have autowired like this because we need to use it in the SpringSecurityConf.configureSecurity method, and we cannot autowire it there directly
+    @Autowired
+    ApplicationContext applicationContext;
 
     private static final Charset UTF8 = StandardCharsets.UTF_8;
 

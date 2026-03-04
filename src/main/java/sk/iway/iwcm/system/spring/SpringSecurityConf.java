@@ -59,7 +59,7 @@ public class SpringSecurityConf {
 	public SecurityFilterChain filterChain(HttpSecurity http,
 			@org.springframework.beans.factory.annotation.Autowired(required = false) UserCredentialRepository passkeyUserCredentialRepository,
 			@org.springframework.beans.factory.annotation.Autowired(required = false) PublicKeyCredentialUserEntityRepository passkeyUserEntityRepository,
-			@org.springframework.beans.factory.annotation.Autowired(required = false) @org.springframework.beans.factory.annotation.Qualifier("webauthnUserDetailsService") org.springframework.security.core.userdetails.UserDetailsService webauthnUserDetailsService) {
+			@org.springframework.beans.factory.annotation.Autowired(required = false) @org.springframework.beans.factory.annotation.Qualifier("webauthnUserDetailsService") org.springframework.security.core.userdetails.UserDetailsService webauthnUserDetailsService)  throws Exception {
 		Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
 		SpringAppInitializer.dtDiff("configureSecurity START");
 

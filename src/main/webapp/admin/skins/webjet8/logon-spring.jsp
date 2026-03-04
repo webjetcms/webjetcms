@@ -134,7 +134,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 console.error('PassKey authentication error:', error);
                 if (error.name !== 'NotAllowedError') {
                     // NotAllowedError means user cancelled the dialog
-                    alert('PassKey authentication failed. Please try again.');
+                    alert('<iwcm:text key="passkey.logon.error" />');
                 }
             });
         }
