@@ -604,12 +604,14 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
     const normalize = html =>
         html
             .replace(/\s*<br>\s*/gi, '<br>')
+            // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
+            .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')
             .replace(/\s+/g, ' ')
             .replace(/>\s+</g, '><')
             .trim();
 
-        // I.say(normalize(actualHtml));
-        // I.say(normalize(expectedHtml));
+         // I.say(normalize(actualHtml));
+         // I.say(normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),

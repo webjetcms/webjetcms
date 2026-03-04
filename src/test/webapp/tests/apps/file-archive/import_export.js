@@ -79,13 +79,13 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     DT.waitForLoader();
 
     DT.filterContains('virtualFileName', exportImportPdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", exportImportPdfVirtualFileName, "", "files/archiv/", exportImportPdfFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", exportImportPdfVirtualFileName, "", "files/archiv/", exportImportPdfFileName]);
 
     DT.filterContains('virtualFileName', replacePdfVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", replacePdfVirtualFileName, "", "files/archiv/", replacePdfFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", replacePdfVirtualFileName, "", "files/archiv/", replacePdfFileName]);
 
     DT.filterContains('virtualFileName', futureUploadVirtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", futureUploadVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", futureUploadFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", futureUploadVirtualFileName, "", "files/archiv/files/archiv_insert_later/files/archiv/", futureUploadFileName]);
 
     I.say("Phase6 - Verify in elfinder");
     I.amOnPage(SL.elfinder);

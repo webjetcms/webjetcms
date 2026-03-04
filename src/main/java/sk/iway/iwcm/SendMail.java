@@ -356,6 +356,32 @@ public class SendMail
 			mes.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
 			mes.setSentDate(new java.util.Date());
 
+			if (recipientEmail != null && recipientEmail.contains("@mailsac.com")) {
+				//for mailsac.com testing we need to add subject and reply-to to emai body for easier testing
+				//add subject to body for mailsac because it does not show subject in email list
+				if (isHtmlContent(message)) message = "<div class='subject'>" + subject + "</div>\n\n" + message;
+				else message = "Subject: " + subject + "\n\n" + message;
+
+				//add original email to body also, because it will not show replyTo header
+				if (Tools.isNotEmpty(replyTo)) {
+					if (isHtmlContent(message)) message = "<div class='reply-to'>" + replyTo + " &lt;" + replyTo + "&gt;</div>\n\n" + message;
+					else message = "Reply-To: " + replyTo + "\n\n" + message;
+				}
+
+				//change element A to DIV.link with ID set to original href
+				if (isHtmlContent(message)) {
+					message = Tools.replace(message, "<a href=", "<div class='link' id=");
+					message = Tools.replace(message, "</a>", "</div>");
+
+					//failsafe
+					message = Tools.replace(message, "<a ", "<div class='link' ");
+					message = Tools.replace(message, "href=", "id=");
+				}
+
+				//wrap message to selector - we need it for better parsing
+				if (isHtmlContent(message) == false) message = Tools.replace(message, "\n", "\n<br>");
+				message = "<div class='email-body'>" + message + "</div>";
+			}
 
 			if (isHtmlContent(message) || Tools.isNotEmpty(attachmentsList))
 			{

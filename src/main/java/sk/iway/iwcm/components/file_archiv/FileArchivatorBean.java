@@ -52,6 +52,11 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@DataTableColumn(inputType = DataTableColumnType.ID, tab = "basic")
 	private Long id;
 
+	//
+	@Column(name="global_id")
+	@DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.file_archiv.global_id", tab = "basic", className = "hide-on-create")
+	private Integer globalId;
+
 	@Column(name="virtual_file_name")
 	@DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
@@ -311,9 +316,6 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 
 	@Column(name="md5")
 	private String md5;
-
-	@Column(name="global_id")
-	private Integer globalId;
 
 	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	@Column(name="uploaded")
