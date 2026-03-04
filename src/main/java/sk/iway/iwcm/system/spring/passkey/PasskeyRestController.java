@@ -2,18 +2,14 @@ package sk.iway.iwcm.system.spring.passkey;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.web.webauthn.api.AuthenticatorTransport;
 import org.springframework.security.web.webauthn.api.Bytes;
-import org.springframework.security.web.webauthn.api.CredentialRecord;
-import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
-import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,7 +38,10 @@ public class PasskeyRestController {
     private UserCredentialRepository userCredentialRepository;
 
     @Autowired
-    private PublicKeyCredentialUserEntityRepository userEntityRepository;
+    private PasskeyCredentialRepository credentialRepository;
+
+    @Autowired
+    private PasskeyUserEntityRepository userEntityRepository;
 
     /**
      * List all passkeys for the currently logged-in user.
@@ -58,14 +57,15 @@ public class PasskeyRestController {
             return ResponseEntity.status(403).build();
         }
 
-        PublicKeyCredentialUserEntity userEntity = userEntityRepository.findByUsername(user.getLogin());
-        if (userEntity == null) {
+        Optional<PasskeyUserEntityBean> userEntityOpt = userEntityRepository.findByName(user.getLogin());
+        if (userEntityOpt.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        List<CredentialRecord> credentials = userCredentialRepository.findByUserId(userEntity.getId());
+        // Use JPA repository to get credentials with rpId field
+        List<PasskeyCredentialBean> credentials = credentialRepository.findByUserEntity(userEntityOpt.get());
         List<PasskeyInfoDto> result = credentials.stream()
-                .map(PasskeyInfoDto::fromCredentialRecord)
+                .map(PasskeyInfoDto::fromEntity)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
@@ -85,19 +85,19 @@ public class PasskeyRestController {
             return ResponseEntity.status(403).build();
         }
 
-        // Verify the credential belongs to the current user
-        Bytes credentialIdBytes = Bytes.fromBase64(credentialId);
-        CredentialRecord credential = userCredentialRepository.findByCredentialId(credentialIdBytes);
-        if (credential == null) {
+        // Verify the credential belongs to the current user using JPA repository
+        Optional<PasskeyCredentialBean> credentialOpt = credentialRepository.findByCredentialId(credentialId);
+        if (credentialOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        PublicKeyCredentialUserEntity userEntity = userEntityRepository.findByUsername(user.getLogin());
-        if (userEntity == null || userEntity.getId().equals(credential.getUserEntityUserId()) == false) {
+        PasskeyCredentialBean credential = credentialOpt.get();
+        Optional<PasskeyUserEntityBean> userEntityOpt = userEntityRepository.findByName(user.getLogin());
+        if (userEntityOpt.isEmpty() || credential.getUserEntity().getId().equals(userEntityOpt.get().getId()) == false) {
             return ResponseEntity.status(403).build();
         }
 
-        userCredentialRepository.delete(credentialIdBytes);
+        userCredentialRepository.delete(Bytes.fromBase64(credentialId));
         Logger.info(PasskeyRestController.class, "PassKey deleted for user " + user.getLogin() + ", credentialId=" + credentialId);
 
         return ResponseEntity.ok().build();
@@ -112,19 +112,16 @@ public class PasskeyRestController {
         private String created;
         private String lastUsed;
         private String transports;
+        private String rpId;
 
-        public static PasskeyInfoDto fromCredentialRecord(CredentialRecord record) {
+        public static PasskeyInfoDto fromEntity(PasskeyCredentialBean entity) {
             PasskeyInfoDto dto = new PasskeyInfoDto();
-            dto.credentialId = record.getCredentialId().toBase64UrlString();
-            dto.label = record.getLabel();
-            dto.created = record.getCreated() != null ? record.getCreated().toString() : null;
-            dto.lastUsed = record.getLastUsed() != null ? record.getLastUsed().toString() : null;
-            Set<AuthenticatorTransport> transports = record.getTransports();
-            if (transports != null) {
-                dto.transports = transports.stream()
-                        .map(AuthenticatorTransport::getValue)
-                        .collect(Collectors.joining(", "));
-            }
+            dto.credentialId = entity.getCredentialId();
+            dto.label = entity.getLabel();
+            dto.created = entity.getCreated() != null ? entity.getCreated().toString() : null;
+            dto.lastUsed = entity.getLastUsed() != null ? entity.getLastUsed().toString() : null;
+            dto.transports = entity.getAuthenticatorTransports();
+            dto.rpId = entity.getRpId();
             return dto;
         }
 
@@ -138,5 +135,7 @@ public class PasskeyRestController {
         public void setLastUsed(String lastUsed) { this.lastUsed = lastUsed; }
         public String getTransports() { return transports; }
         public void setTransports(String transports) { this.transports = transports; }
+        public String getRpId() { return rpId; }
+        public void setRpId(String rpId) { this.rpId = rpId; }
     }
 }

@@ -122,6 +122,8 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
     @SuppressWarnings("unchecked")
     private <T extends ObjectMapper> void configureJacksonDateTimestamps(AbstractJacksonHttpMessageConverter<T> jacksonConverter) {
+        //set back datetime serialization to timestamps for jackson 2 compatibility
+        //https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring
         T mapper = (T) jacksonConverter.getMapper().rebuild()
                 .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DateTimeFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)

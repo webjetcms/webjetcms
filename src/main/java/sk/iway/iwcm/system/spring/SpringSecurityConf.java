@@ -87,6 +87,7 @@ public class SpringSecurityConf {
 
 		try {
 			// WebAuthn/PassKey support
+			//to test with invalid SSL/TLS certificate run chrome with --ignore-certificate-errors
 			if (Constants.getBoolean("password_passKeyEnabled")) {
 				Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - webAuthn (PassKey)");
 				String rpId = Constants.getString("password_passKeyRpId");
@@ -115,10 +116,19 @@ public class SpringSecurityConf {
 				}
 
 				http.webAuthn(webAuthn -> {
-					webAuthn.rpId(rpId);
-					webAuthn.rpName(rpName);
-					webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
+					// rpId and rpName are optional when DynamicWebAuthnRelyingPartyOperations bean is available
+					// it determines rpId dynamically from the HTTP request
+					if (Tools.isNotEmpty(rpId)) {
+						webAuthn.rpId(rpId);
+					}
+					if (Tools.isNotEmpty(rpName)) {
+						webAuthn.rpName(rpName);
+					}
+					if (Tools.isNotEmpty(allowedOriginsStr)) {
+						webAuthn.allowedOrigins(Tools.getTokens(allowedOriginsStr, ","));
+					}
 					webAuthn.disableDefaultRegistrationPage(true);
+					Logger.debug(SpringSecurityConf.class, "Configuring webAuthN " + webAuthn.toString());
 				});
 
 				// Note: WebAuthn filter success handler is customized via webAuthnFilterCustomizer BeanPostProcessor

@@ -264,7 +264,7 @@ public class AdminLogonController {
         }
 
         // PassKey support
-        if (Constants.getBoolean("password_passKeyEnabled")) {
+        if (Constants.getBoolean("password_passKeyEnabled") && Tools.isSecure(request)) {
             //test ig current domain against allowed origins for PassKey and set attribute for JSP to conditionally load PassKey JS
              String allowedOrigins = Constants.getString("password_passKeyAllowedOrigins");
              if (Tools.isEmpty(allowedOrigins) || allowedOrigins.contains(Tools.getScheme(request) + "://" + Tools.getServerName(request))) {

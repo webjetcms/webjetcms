@@ -100,6 +100,7 @@ function loadPasskeys() {
         }
         var html = '<table class="passkey-list">';
         html += '<tr><th><iwcm:text key="passkey.manage.colLabel"/></th>';
+        html += '<th><iwcm:text key="passkey.manage.colDomain"/></th>';
         html += '<th><iwcm:text key="passkey.manage.colCreated"/></th>';
         html += '<th><iwcm:text key="passkey.manage.colLastUsed"/></th>';
         html += '<th><iwcm:text key="passkey.manage.colTransports"/></th>';
@@ -108,6 +109,7 @@ function loadPasskeys() {
             var p = passkeys[i];
             html += '<tr>';
             html += '<td>' + escapeHtml(p.label || 'PassKey ' + (i + 1)) + '</td>';
+            html += '<td>' + escapeHtml(p.rpId || '-') + '</td>';
             html += '<td>' + formatDate(p.created) + '</td>';
             html += '<td>' + formatDate(p.lastUsed) + '</td>';
             html += '<td>' + escapeHtml(p.transports || '') + '</td>';

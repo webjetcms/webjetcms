@@ -3245,6 +3245,7 @@
                     created DATETIME,
                     last_used DATETIME,
                     label VARCHAR(1000) NOT NULL,
+                    rp_id VARCHAR(255),
                     PRIMARY KEY (passkey_credential_id),
                     UNIQUE KEY uk_passkey_cred_id (credential_id),
                     KEY idx_passkey_cred_user (user_entity_id),
@@ -3267,6 +3268,7 @@
                     created DATETIME,
                     last_used DATETIME,
                     label VARCHAR(1000) NOT NULL,
+                    rp_id VARCHAR(255),
                     PRIMARY KEY (passkey_credential_id),
                     CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>
@@ -3287,6 +3289,7 @@
                     created TIMESTAMP,
                     last_used TIMESTAMP,
                     label VARCHAR2(1000) NOT NULL,
+                    rp_id VARCHAR2(255),
                     PRIMARY KEY (passkey_credential_id),
                     CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>
@@ -3307,6 +3310,7 @@
                     created TIMESTAMP,
                     last_used TIMESTAMP,
                     label VARCHAR(1000) NOT NULL,
+                    rp_id VARCHAR(255),
                     PRIMARY KEY (passkey_credential_id),
                     CONSTRAINT uk_passkey_cred_id UNIQUE (credential_id)
                 )</string></void>

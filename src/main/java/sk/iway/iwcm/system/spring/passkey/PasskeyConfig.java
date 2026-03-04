@@ -1,6 +1,16 @@
 package sk.iway.iwcm.system.spring.passkey;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+import org.springframework.security.web.webauthn.management.WebAuthnRelyingPartyOperations;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 
 /**
  * Spring configuration for PassKey/WebAuthn support.
@@ -18,11 +28,37 @@ import org.springframework.context.annotation.Configuration;
  *
  * Database tables:
  * - passkey_user_entities (passkey_user_entity_id, webauthn_user_id, name, display_name)
- * - passkey_credentials (passkey_credential_id, credential_id, user_entity_id, webauthn_user_id, ...)
+ * - passkey_credentials (passkey_credential_id, credential_id, user_entity_id, webauthn_user_id, ..., rp_id)
  */
 @Configuration
 public class PasskeyConfig {
-    // All beans are now provided via @Component annotations on adapter classes.
-    // This class is kept for documentation and as a @Configuration marker for the package.
+
+    /**
+     * Provides a dynamic WebAuthnRelyingPartyOperations that determines rpId from the current HTTP request.
+     * This allows passkeys to work across multiple domains automatically.
+     *
+     * The bean is only created when password_passKeyEnabled is true (checked at runtime).
+     */
+    @Bean
+    public WebAuthnRelyingPartyOperations dynamicWebAuthnRelyingPartyOperations(
+            PublicKeyCredentialUserEntityRepository userEntityRepository,
+            UserCredentialRepository userCredentialRepository) {
+
+        String rpName = Constants.getString("password_passKeyRpName");
+        String allowedOriginsStr = Constants.getString("password_passKeyAllowedOrigins");
+
+        Set<String> allowedOrigins = new HashSet<>();
+        if (Tools.isNotEmpty(allowedOriginsStr)) {
+            for (String origin : Tools.getTokens(allowedOriginsStr, ",")) {
+                allowedOrigins.add(origin.trim());
+            }
+        }
+
+        return new DynamicWebAuthnRelyingPartyOperations(
+                userEntityRepository,
+                userCredentialRepository,
+                rpName,
+                allowedOrigins);
+    }
 }
 
