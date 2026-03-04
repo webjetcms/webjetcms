@@ -18,20 +18,57 @@ export const DateType = {
     Auto: "auto"
 }
 
+function throwConstructorError(className, paramName) {
+    throw new Error(`${className}: ${paramName} is required`);
+}
+
 /**
  * Object (chart form) representing LINE type chart
  */
 export class LineChartForm {
-    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
-        this.yAxeNames = yAxeNames;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.dateType = dateType;
-        this.legendTransformationFn = legendTransformationFn;
-        this.hideEmpty = hideEmpty;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
+
+        //console.log(typeof yAxeName_or_config === "object", yAxeName_or_config.yAxeName));
+
+        if(typeof yAxeName_or_config === "object" && Array.isArray(yAxeName_or_config) === false) {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeNames: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                dateType: dateType,
+                legendTransformationFn: legendTransformationFn,
+                hideEmpty: hideEmpty
+            });
+        }
+    }
+
+    initFromConfig(config) {
+
+        console.log("LineChartForm config=", config);
+
+        if (config.yAxeNames == null || config.yAxeNames === undefined) throwConstructorError("LineChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("LineChartForm", "xAxeName");
+        if (!config.chartTitle) throwConstructorError("LineChartForm", "chartTitle");
+        if (!config.chartDivId) throwConstructorError("LineChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("LineChartForm", "chartData");
+        if (config.dateType == null || config.dateType === undefined) throwConstructorError("LineChartForm", "dateType");
+
+         Object.assign(this, {
+            yAxeNames: config.yAxeNames,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            dateType: config.dateType,
+            legendTransformationFn: config.legendTransformationFn,
+            hideEmpty: config.hideEmpty == null ? true : config.hideEmpty
+        });
     }
 }
 
@@ -39,14 +76,38 @@ export class LineChartForm {
  * Object (chart form) representing BAR type chart
  */
 export class BarChartForm {
-    constructor(yAxeName, xAxeName, chartTitle,
-        chartDivId, chartData) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, horizontal = true) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                horizontal: horizontal
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("BarChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("BarChartForm", "xAxeName");
+        if (!config.chartTitle) throwConstructorError("BarChartForm", "chartTitle");
+        if (!config.chartDivId) throwConstructorError("BarChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("BarChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            horizontal: config.horizontal == null ? true : config.horizontal
+        });
     }
 }
 
@@ -54,16 +115,45 @@ export class BarChartForm {
  * Object (chart form) representing PIE type chart
  */
 export class PieChartForm {
-    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.labelKey = labelKey;
-        this.labelTransformationFn = labelTransformationFn;
-        this.chart = undefined;
-        this.chartLegend = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null, innerRadius = 50, leftLegendPosition = false) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelKey: labelKey,
+                labelTransformationFn: labelTransformationFn,
+                innerRadius: innerRadius,
+                leftLegendPosition: leftLegendPosition
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("PieChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("PieChartForm", "xAxeName");
+        if (!config.chartTitle) throwConstructorError("PieChartForm", "chartTitle");
+        if (!config.chartDivId) throwConstructorError("PieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("PieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelKey: config.labelKey,
+            labelTransformationFn: config.labelTransformationFn,
+            innerRadius: config.innerRadius == null ? 50 : config.innerRadius,
+            leftLegendPosition: config.leftLegendPosition == null ? false : config.leftLegendPosition,
+            legendValueText: config.legendValueText
+        });
     }
 }
 
@@ -71,20 +161,45 @@ export class PieChartForm {
  * Object (chart form) representing PIE type chart BUT with two series (inner and outer)
  */
 export class DoublePieChartForm {
-    constructor(yAxeName_inner, yAxeName_outer, xAxeName, chartTitle,
-        chartDivId, chartData, labelSeries = null, labelKey = null) {
-        this.yAxeName_inner = yAxeName_inner;
-        this.yAxeName_outer = yAxeName_outer;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
 
-        this.labelSeries = labelSeries;
-        this.labelKey = labelKey;
+    constructor(yAxeName_inner_or_config, yAxeName_outer, xAxeName, chartTitle, chartDivId, chartData, labelSeries = null, labelKey = null) {
+        if(typeof yAxeName_inner_or_config === "object") {
+            this.initFromConfig(yAxeName_inner_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName_inner: yAxeName_inner_or_config,
+                yAxeName_outer: yAxeName_outer,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelSeries: labelSeries,
+                labelKey: labelKey
+            });
+        }
+    }
 
-        this.chart = undefined;
-        this.chartLegend = undefined;
+    initFromConfig(config) {
+        if (!config.yAxeName_inner) throwConstructorError("DoublePieChartForm", "yAxeName_inner");
+        if (!config.yAxeName_outer) throwConstructorError("DoublePieChartForm", "yAxeName_outer");
+        if (!config.xAxeName) throwConstructorError("DoublePieChartForm", "xAxeName");
+        if (!config.chartTitle) throwConstructorError("DoublePieChartForm", "chartTitle");
+        if (!config.chartDivId) throwConstructorError("DoublePieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("DoublePieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName_inner: config.yAxeName_inner,
+            yAxeName_outer: config.yAxeName_outer,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelSeries: config.labelSeries,
+            labelKey: config.labelKey,
+            chart: undefined,
+            chartLegend: undefined
+        });
     }
 }
 
@@ -756,7 +871,123 @@ async function createLineChart(root, chartForm) {
 
 
 /**
+ * Create axes and series for a HORIZONTAL bar chart (categories on Y axe, values on X axe).
+ * Returns object with { xAxis, yAxis, series }.
+ *
+ * @param {am5.Root} root
+ * @param {am5xy.XYChart} chart
+ * @param {BarChartForm} chartForm
+ * @returns {{ xAxis, yAxis, series }}
+ */
+function createBarChartHorizontal(root, chart, chartForm) {
+    //Define render specification (we need reverse render type)
+    var yRenderer = am5xy.AxisRendererY.new(root, {
+        minGridDistance: 30,
+        inversed: true
+    });
+    yRenderer.grid.template.set("location", 1);
+
+    //Create Y axe (categories)
+    var yAxis = chart.yAxes.push(
+        am5xy.CategoryAxis.new(root, {
+            maxDeviation: 0,
+            categoryField: chartForm.yAxeName,
+            renderer: yRenderer
+        })
+    );
+
+    //Create X axe (values)
+    var xAxis = chart.xAxes.push(
+        am5xy.ValueAxis.new(root, {
+            maxDeviation: 0,
+            min: 0,
+            extraMax: 0.1,
+            renderer: am5xy.AxisRendererX.new(root, {
+                strokeOpacity: 0.1
+            })
+        })
+    );
+
+    //Create series
+    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: chartForm.xAxeName,
+        categoryYField: chartForm.yAxeName
+    }));
+
+    //Apply horizontal column styling (rounded right side)
+    series.columns.template.setAll({
+        cornerRadiusTR: 5,
+        cornerRadiusBR: 5,
+        strokeOpacity: 0
+    });
+
+    //Set data in category axe (required for BAR charts)
+    yAxis.data.setAll(chartForm.chartData);
+
+    return { xAxis, yAxis, series };
+}
+
+/**
+ * Create axes and series for a VERTICAL bar chart (categories on X axe, values on Y axe).
+ * Returns object with { xAxis, yAxis, series }.
+ *
+ * @param {am5.Root} root
+ * @param {am5xy.XYChart} chart
+ * @param {BarChartForm} chartForm
+ * @returns {{ xAxis, yAxis, series }}
+ */
+function createBarChartVertical(root, chart, chartForm) {
+    var xRenderer = am5xy.AxisRendererX.new(root, {
+        minGridDistance: 30
+    });
+
+    //Create X axe (categories)
+    var xAxis = chart.xAxes.push(
+        am5xy.CategoryAxis.new(root, {
+            maxDeviation: 0,
+            categoryField: chartForm.yAxeName,
+            renderer: xRenderer
+        })
+    );
+
+    //Create Y axe (values)
+    var yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            maxDeviation: 0,
+            min: 0,
+            extraMax: 0.1,
+            renderer: am5xy.AxisRendererY.new(root, {
+                strokeOpacity: 0.1
+            })
+        })
+    );
+
+    //Create series
+    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: chartForm.xAxeName,
+        categoryXField: chartForm.yAxeName
+    }));
+
+    //Apply vertical column styling (rounded top side)
+    series.columns.template.setAll({
+        cornerRadiusTL: 5,
+        cornerRadiusTR: 5,
+        strokeOpacity: 0
+    });
+
+    //Set data in category axe (required for BAR charts)
+    xAxis.data.setAll(chartForm.chartData);
+
+    return { xAxis, yAxis, series };
+}
+
+/**
  * Create BAR type chart and set all setting around chart. The created chart is set in BarChartForm.chart param.
+ * Supports horizontal (default) and vertical bar orientations via chartForm.horizontal flag.
  *
  * @param {am5.Root} root
  * @param {BarChartForm} chartForm
@@ -775,41 +1006,17 @@ async function createBarChart(root, chartForm) {
     //!! set created chart into BarChartForm.chart
     chartForm.chart = chart;
 
-    //Define render specification (we need reverse render type)
-    var yRenderer = am5xy.AxisRendererY.new(root, {
-        minGridDistance: 30,
-        inversed: true
-    });
-    yRenderer.grid.template.set("location", 1);
+    //Normalize orientation flag (default is horizontal)
+    var isHorizontal = chartForm.horizontal !== false;
 
-    //Create Y axe
-    var yAxis = chart.yAxes.push(
-        am5xy.CategoryAxis.new(root, {
-            maxDeviation: 0,
-            categoryField: chartForm.yAxeName,
-            renderer: yRenderer
-        })
-    );
-
-    //Create X axe
-    var xAxis = chart.xAxes.push(
-        am5xy.ValueAxis.new(root, {
-            maxDeviation: 0,
-            min: 0,
-            extraMax: 0.1,
-            renderer: am5xy.AxisRendererX.new(root, {
-                strokeOpacity: 0.1
-            })
-        })
-    );
-
-    //Cretate series
-    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueXField: chartForm.xAxeName,
-        categoryYField: chartForm.yAxeName
-    }));
+    //Create axes and series based on orientation
+    var barConfig;
+    if (isHorizontal) {
+        barConfig = createBarChartHorizontal(root, chart, chartForm);
+    } else {
+        barConfig = createBarChartVertical(root, chart, chartForm);
+    }
+    var series = barConfig.series;
 
     //Create tooltip
     var tooltip = am5.Tooltip.new(root, {
@@ -823,13 +1030,6 @@ async function createBarChart(root, chartForm) {
     });
     series.set("tooltip", tooltip);
 
-    // Rounded corners for columns
-    series.columns.template.setAll({
-        cornerRadiusTR: 5,
-        cornerRadiusBR: 5,
-        strokeOpacity: 0
-    });
-
     // Make each column to be of a different color
     series.columns.template.adapters.add("fill", function(fill, target) {
         return chart.get("colors").getIndex(series.columns.indexOf(target));
@@ -838,8 +1038,6 @@ async function createBarChart(root, chartForm) {
         return chart.get("colors").getIndex(series.columns.indexOf(target));
     });
 
-    //Set data (for BAR is pecific to set data in series and in Y axe at same time)
-    yAxis.data.setAll(chartForm.chartData);
     series.data.setAll(chartForm.chartData);
 
     //Add cursor
@@ -861,15 +1059,20 @@ async function createBarChart(root, chartForm) {
  */
 async function createPieChart(root, chartForm) {
     //Create chart instance
-    var chart = root.container.children.push(
+    var chart = null;
+
+    chart = root.container.children.push(
         am5percent.PieChart.new(root, {
-            innerRadius: am5.percent(50),
-            layout: root.verticalLayout
+            innerRadius: am5.percent(chartForm.innerRadius),
+            layout: chartForm.leftLegendPosition === true ? root.horizontalLayout : root.verticalLayout
         })
     );
 
     //!! set created chart into PieChartForm.chart
     chartForm.chart = chart;
+
+    let legendValueText = "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]";
+    if(chartForm.legendValueText != null) legendValueText = chartForm.legendValueText;
 
     //Create series
     var series = chart.series.push(
@@ -877,7 +1080,7 @@ async function createPieChart(root, chartForm) {
             valueField: chartForm.yAxeName,
             categoryField: chartForm.xAxeName,
             legendLabelText: "{category}",
-            legendValueText: "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]" //Format legend
+            legendValueText: legendValueText //Format legend
         })
     );
 
@@ -900,12 +1103,30 @@ async function createPieChart(root, chartForm) {
         series.data.setAll(chartForm.chartData);
 
     //Create legend
-    var legend = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50),
-        layout: root.gridLayout
-    }));
+    var legend;
+    if(chartForm.leftLegendPosition === true) {
+        legend = chart.children.unshift(am5.Legend.new(root, {
+            centerY: am5.percent(50),
+            y: am5.percent(50),
+            x: 15,
+            layout: root.verticalLayout
+        }));
+
+        // set width and max width of labels
+        legend.labels.template.setAll({
+            maxWidth: 140,
+            width: 140,
+            oversizedBehavior: "wrap"
+        });
+    } else {
+        legend = chart.children.push(am5.Legend.new(root, {
+            centerX: am5.percent(50),
+            x: am5.percent(50),
+            layout: root.gridLayout
+        }));
+    }
     legend.data.setAll(series.dataItems);
+
 
     //!! Set ticks color
     //If you dont know (like me), TICKS are that stupid lines that connect pie slices with label
@@ -1105,6 +1326,20 @@ function updatePieSumLabels(chartForm) {
                 setPieSumLabel(chartForm);
             }
         });
+    });
+}
+
+/**
+ * Destroy chart in entered chart div.
+ * @param {*} chartForm
+ */
+export async function destroyChart(chartForm) {
+    //console.log("Destroying chart in div: " + chartForm.chartDivId);
+
+    am5.array.each(am5.registry.rootElements, function(root) {
+        if (root && root.dom && root.dom.id == chartForm.chartDivId) {
+            root.dispose();
+        }
     });
 }
 
