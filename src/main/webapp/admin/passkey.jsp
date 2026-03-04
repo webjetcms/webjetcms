@@ -9,6 +9,8 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%
 request.setAttribute("cmpName", "users.passkey");
+request.setAttribute("dialogTitleKey", "passkey.manage.title");
+request.setAttribute("dialogDescKey", "passkey.manage.instructions");
 %>
 <%@ include file="layout_top_dialog.jsp" %>
 
@@ -66,8 +68,6 @@ request.setAttribute("cmpName", "users.passkey");
 </style>
 
 <div class="padding10" style="min-width: 800px; min-height: 400px;">
-
-    <p><iwcm:text key="passkey.manage.instructions"/></p>
 
     <div id="passkey-list-container">
         <div class="passkey-empty"><iwcm:text key="passkey.manage.loading"/></div>

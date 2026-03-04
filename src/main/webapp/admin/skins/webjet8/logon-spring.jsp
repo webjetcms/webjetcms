@@ -268,7 +268,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     </c:if>
                     <c:if test="${isPassKeyEnabled}">
                         <div class="form-group">
-                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><i class="ti ti-fingerprint"></i> <iwcm:text key="button.passkeyLogin"/></button>
+                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>
                         </div>
                     </c:if>
                 </div>
