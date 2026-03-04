@@ -8,42 +8,40 @@ V ľavom menu sa pre viac doménové web sídla zobrazuje výber domény. V stro
 
 ![](domain-select.png)
 
-### Zobrazenie priečinkov Systém a Kôš
+### Karty web stránok
 
-Špeciálne priečinky Systém (obsahuje stránky potrebné pre šablónu ako hlavička a pätička) a Kôš (obsahuje zmazané stránky) sa zobrazujú v karte Systém alebo Kôš.
+V pravej sekcii je možné zobraziť nasledovné karty:
 
-Zobrazenie v karte Systém je závislé od konfigurácie WebJETu:
+- **Aktívne** - zobrazuje štandardný zoznam web stránok vo vybranom priečinku v stromovej štruktúre.
+- **Naposledy upravené** - zobrazuje zoznam vašich posledné upravených stránok.
+- **Neschválené** - ak schvaľujete zmeny vo web stránkach zobrazia sa v tejto karte stránky, ktoré čakajú na vaše schválenie.
+- **Systémové** - zobrazuje systémové stránky šablóny ako sú hlavičky, pätičky a podobne.
+- **Zmazané** - zobrazuje zoznam zmazaných priečinkov a web stránok.
+- **Priečinky** - prepne zobrazenie zo zoznamu web stránok na zoznam priečinkov. Kliknutím na priečinok v stromovej štruktúre sa zobrazí zvolený priečinok a jeho pod priečinky. Ak označíte v stromovej štruktúre viaceré priečinky (napr. pomocou stlačenia klávesy `CTRL`) zobrazia sa označené priečinky. Tabuľkové zobrazenie priečinkov umožňuje napr. vykonávať hromadné operácie s priečinkami (napr. zmena šablóny), použiť funkciu Upraviť v zobrazení mriežky alebo funkciu Duplikovať.
 
-- štandardne zobrazí obsah priečinka ```/System``` (globálny priečinok pre všetky domény)
-- ak je zapnutý režim **lokálneho Systém priečinka** (nastavená konfiguračná premenná ```templatesUseDomainLocalSystemFolder``` na ```true```) a pre aktuálne zvolenú doménu existuje lokálny System priečinok zobrazí jeho obsah
-- ak je zapnutý režim hľadania Systém priečinka **rekurzívne v stromovej štruktúre** (nastavená konfiguračná premenná ```templatesUseRecursiveSystemFolder``` na ```true```) zobrazí priečinkovú štruktúru obsahujúcu priečinok System
+!>**Upozornenie**: zobrazenie priečinkov musíte najskôr zapnúť v [nastavenia zobrazenia stromovej štruktúry](#nastavenie-zobrazenia-stromovej-štruktúry).
 
-Okrem Systém priečinka sa v tejto karte zobrazuje aj priečinok `/files` s plno textovým indexom pre vyhľadávanie v súboroch (ak je plno textové vyhľadávanie aktívne). V tomto priečinku sa nachádzajú texty získané zo súborov, pričom text sa používa pri vyhľadávaní v súboroch.
+![](../../_media/changelog/2021q1/2021-13-awaiting-approve.png)
 
-V karte Kôš sa zobrazuje obsah priečinka ```/System/Kôš```.
+Zobrazenie v karte Systémové je závislé od konfigurácie WebJETu:
 
-Tieto priečinky sa nezobrazujú v karte Priečinky (sú filtrované), ak ale z nejakého dôvodu potrebujete vidieť presnú stromovú štruktúru bez filtrovania, kliknite na kartu Priečinky so stlačenou klávesou `shift`. V takom prípade sa vypne filtrovanie a zobrazia sa všetky priečinky v aktuálne zvolenej doméne a priečinky, ktoré doménu nemajú nastavenú.
+- štandardne zobrazí obsah priečinka `/System` (globálny priečinok pre všetky domény)
+- ak je zapnutý režim **lokálneho Systémového priečinka** (nastavená konfiguračná premenná `templatesUseDomainLocalSystemFolder` na `true`) a pre aktuálne zvolenú doménu existuje lokálny `System` priečinok zobrazí jeho obsah
+- ak je zapnutý režim hľadania `System` priečinka **rekurzívne v stromovej štruktúre** (nastavená konfiguračná premenná `templatesUseRecursiveSystemFolder` na `true`) zobrazí priečinkovú štruktúru obsahujúcu priečinok `System`
+
+Okrem `System` priečinka sa v tejto karte zobrazuje aj priečinok `/files` s plno textovým indexom pre vyhľadávanie v súboroch (ak je plno textové vyhľadávanie aktívne). V tomto priečinku sa nachádzajú texty získané zo súborov, pričom text sa používa pri vyhľadávaní v súboroch.
+
+V karte Zmazané sa zobrazuje obsah priečinka `/System/Kôš`.
+
+Tieto priečinky sa nezobrazujú v karte Aktívne (sú filtrované), ak ale z nejakého dôvodu potrebujete vidieť presnú stromovú štruktúru bez filtrovania, kliknite na kartu Aktívne so stlačenou klávesou `shift`. V takom prípade sa vypne filtrovanie a zobrazia sa všetky priečinky v aktuálne zvolenej doméne a priečinky, ktoré doménu nemajú nastavenú.
 
 ![](system-folder.png)
 
 ### Zapamätanie naposledy otvoreného priečinka
 
-Zoznam web stránok si v rámci jedného prihlásenia pamätá naposledy otvorený priečinok, pri návrate na zoznam web stránok sa priečinok znova otvorí. Zapamätanie priečinka sa zmaže pri prepnutí domény, alebo pri zadaní adresy ```/admin/v9/webpages/web-pages-list/?groupid=0```, čiže adresa stránky s parametrom ```groupid=0```.
+Zoznam web stránok si v rámci jedného prihlásenia pamätá naposledy otvorený priečinok, pri návrate na zoznam web stránok sa priečinok znova otvorí. Zapamätanie priečinka sa zmaže pri prepnutí domény, alebo pri zadaní adresy `/admin/v9/webpages/web-pages-list/?groupid=0`, čiže adresa stránky s parametrom `groupid=0`.
 
-Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliadača zobrazuje adresa stránky s parametrom ```groupid```, ktorý reprezentuje ID priečinka. Pri obnove stránky, alebo zaslaní odkazu, sa otvorí priečinková štruktúra podľa ID v adresnom riadku. Na úvodnej stránke si môžete do bloku Záložky [pridať adresu stránky aj s ID priečinka](https://youtu.be/G5Ts04jSMX8) a vytvoriť tak na úvodnej stránke odkaz do vnorenej priečinkovej štruktúry.
-
-### Karty web stránok
-
-V pravej sekcii je možné zobraziť nasledovné karty:
-
-- **Web stránky** - zobrazuje štandardný zoznam web stránok vo vybranom priečinku v stromovej štruktúre.
-- **Naposledy upravené** - zobrazuje zoznam vašich posledné upravených stránok.
-- **Čakajúce na schválenie** - ak schvaľujete zmeny vo web stránkach zobrazia sa v tejto karte stránky, ktoré čakajú na vaše schválenie.
-- **Priečinky** - prepne zobrazenie zo zoznamu web stránok na zoznam priečinkov. Kliknutím na priečinok v stromovej štruktúre sa zobrazí zvolený priečinok a jeho pod priečinky. Ak označíte v stromovej štruktúre viaceré priečinky (napr. pomocou stlačenia klávesy ```CTRL```) zobrazia sa označené priečinky. Tabuľkové zobrazenie priečinkov umožňuje napr. vykonávať hromadné operácie s priečinkami (napr. zmena šablóny), použiť funkciu Upraviť v zobrazení mriežky alebo funkciu Duplikovať.
-
-!>**Upozornenie**: zobrazenie priečinkov musíte najskôr zapnúť v [nastavenia zobrazenia stromovej štruktúry](#nastavenie-zobrazenia-stromovej-štruktúry).
-
-![](../../_media/changelog/2021q1/2021-13-awaiting-approve.png)
+Zároveň pri prechádzaní stromovej štruktúry sa v adresnom riadku prehliadača zobrazuje adresa stránky s parametrom `groupid`, ktorý reprezentuje ID priečinka. Pri obnove stránky, alebo zaslaní odkazu, sa otvorí priečinková štruktúra podľa ID v adresnom riadku. Na úvodnej stránke si môžete do bloku Záložky [pridať adresu stránky aj s ID priečinka](https://youtu.be/G5Ts04jSMX8) a vytvoriť tak na úvodnej stránke odkaz do vnorenej priečinkovej štruktúry.
 
 ### Zobraziť stránky aj z podadresárov
 
@@ -89,7 +87,7 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 
 - **ID** - Pred názvom zobrazí aj ID adresára vo forme #ID. Zobrazenie je vhodné, ak potrebujete manuálne do niektorej aplikácie zadať ID priečinka, alebo migrujete stránky medzi prostrediami a potrebujete rýchlo skontrolovať nastavenie vložených aplikácií.
 - **Poradie usporiadania** - Za názvom zobrazí poradie usporiadania vo forme (poradie).
-- **Web Stránky** - Zobrazí v stromovej štruktúre aj web stránky. **Upozornenie:** znižuje výkon a rýchlosť načítania údajov. Možnosť odporúčame zapnúť len ak potrebujete presúvať web stránky pomocou funkcie ```Drag&Drop```.
+- **Web Stránky** - Zobrazí v stromovej štruktúre aj web stránky. **Upozornenie:** znižuje výkon a rýchlosť načítania údajov. Možnosť odporúčame zapnúť len ak potrebujete presúvať web stránky pomocou funkcie `Drag&Drop`.
 - **Priečinky stromovej štruktúry ako tabuľku** - Zobrazí kartu Priečinky v datatabuľke. Umožňuje používať funkcie datatabuľky ako hromadné operácie, duplikovať, upraviť v zobrazení mriežky atď. s priečinkami stromovej štruktúry.
 - **Pomer šírky stĺpcov strom:tabuľka** - Nastaví pomer šírky stĺpcov zobrazenej stromovej štruktúry a datatabuľky pre lepšie využitie šírky monitora. Štandardný pomer je 4:8. Upozornenie: pri niektorých pomeroch a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
 - **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
@@ -102,7 +100,7 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 
 ## Vyhľadávanie v stromovej štruktúre
 
-Filter nad stromovou štruktúrou Vám umožní rýchle vyhľadávanie priečinkov podľa ich názvu. Vyhľadávanie funguje v **celej stromovej štruktúre**, čiže nie je potrebné otvárať priečinky pre ich prehľadanie. Vyhľadávanie medzi jednotlivými kartami **Priečinok** / **Systém** / **Kôš** je oddelené, čiže v karte **Systém** vyhľadávaním nenájdete priečinky patriace do karty **Kôš** atď.
+Filter nad stromovou štruktúrou Vám umožní rýchle vyhľadávanie priečinkov podľa ich názvu. Vyhľadávanie funguje v **celej stromovej štruktúre**, čiže nie je potrebné otvárať priečinky pre ich prehľadanie. Vyhľadávanie medzi jednotlivými kartami **Aktívne** / **Systémové** / **Zmazané** je oddelené, čiže v karte **Systémové** vyhľadávaním nenájdete priečinky patriace do karty **Zmazané** atď.
 
 ![](jstree-search-form.png)
 
