@@ -45,6 +45,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
