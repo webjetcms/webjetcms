@@ -67,7 +67,7 @@ if (path == null)
 if (path == null) path = "??? unknown path ???";
 
 
-if (path.endsWith("/undefined") || path.endsWith(".map"))
+if (path.endsWith("/undefined") || path.endsWith(".map") || "/css/page.css".equals(path))
 {
 	response.setStatus(404);
 	out.println("<html><body>"+text+"</body></html>");
