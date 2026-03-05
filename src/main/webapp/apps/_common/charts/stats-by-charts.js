@@ -49,6 +49,9 @@ export class StatsByCharts {
                 else if(newChartDef.type === ChartType.Bar_Vertical || newChartDef.type === ChartType.Bar_Horizontal) {
                     this._renderBarChart(newChartDef, chartUniqueId);
                 }
+                else if(newChartDef.type === ChartType.Table) {
+                    this._renderTableChart(newChartDef, chartUniqueId);
+                }
             }
         });
     }
@@ -78,28 +81,26 @@ export class StatsByCharts {
                 chartContainer.classList.add("stat-chart-wrapper");
                 this.wrapper.appendChild(chartContainer);
 
-                if(chartDef.type !== ChartType.Table) {
-                    // Here will be inserted chart
-                    const chartDiv = document.createElement("div");
-                    chartDiv.id = chartUniqueId;
-                    chartDiv.classList.add("amcharts");
-                    chartContainer.appendChild(chartDiv);
+                 // Here will be inserted chart
+                const chartDiv = document.createElement("div");
+                chartDiv.id = chartUniqueId;
+                chartDiv.classList.add("amcharts");
+                chartContainer.appendChild(chartDiv);
 
-                    const button = document.createElement("button");
-                    button.classList.add("btn", "btn-sm", "btn-outline-secondary", "chart-more-btn");
+                const button = document.createElement("button");
+                button.classList.add("btn", "btn-sm", "btn-outline-secondary", "chart-more-btn");
 
-                    button.addEventListener("click", this.chartSettingBtnFn ? this.chartSettingBtnFn.bind(this, chartDef) : () => {
-                        console.log("click on chart settings", chartDef.id);
-                    });
+                button.addEventListener("click", this.chartSettingBtnFn ? this.chartSettingBtnFn.bind(this, chartDef) : () => {
+                    console.log("click on chart settings", chartDef.id);
+                });
 
-                    const spanIcon = document.createElement("span");
-                    const icon = document.createElement("i");
-                    icon.classList.add("ti", "ti-settings");
-                    spanIcon.appendChild(icon);
-                    button.appendChild(spanIcon);
+                const spanIcon = document.createElement("span");
+                const icon = document.createElement("i");
+                icon.classList.add("ti", "ti-settings");
+                spanIcon.appendChild(icon);
+                button.appendChild(spanIcon);
 
-                    chartContainer.prepend(button);
-                }
+                chartContainer.prepend(button);
 
                 if(chartDef.type === ChartType.Pie_Donut || chartDef.type === ChartType.Pie_Classic) {
                     this._renderPieChart(chartDef, chartUniqueId);
@@ -108,46 +109,7 @@ export class StatsByCharts {
                     this._renderBarChart(chartDef, chartUniqueId);
                 }
                 else if(chartDef.type === ChartType.Table) {
-                    const header = document.createElement("h6");
-                    header.classList.add("amchart-header");
-                    header.textContent = chartDef.title;
-                    chartContainer.prepend(header);
-
-                    const tableWrapper = document.createElement("div");
-                    tableWrapper.id = chartUniqueId;
-                    tableWrapper.classList.add("amcharts");
-
-                    const table = document.createElement("table");
-                    table.classList.add("table", "tabulkaStandard");
-
-                    const tbody = document.createElement("tbody");
-                    chartDef.values.forEach(row => {
-                        const tr = document.createElement("tr");
-
-                        const tdName = document.createElement("td");
-                        tdName.textContent = row.name;
-                        tdName.classList.add("chart-table-td");
-
-                        const tdCount = document.createElement("td");
-                        tdCount.textContent = row.count;
-                        tdCount.style.textAlign = "right";
-                        tdCount.classList.add("chart-table-td");
-
-                        tr.appendChild(tdName);
-                        tr.appendChild(tdCount);
-                        tbody.appendChild(tr);
-                    });
-                    table.appendChild(tbody);
-
-                    const wrapper2 = document.createElement("div");
-                    wrapper2.appendChild(table);
-                    wrapper2.style.position = "relative";
-                    wrapper2.style.width = "100%";
-                    wrapper2.style.height = "100%";
-                    wrapper2.style.padding = "15px";
-
-                    tableWrapper.appendChild(wrapper2);
-                    chartContainer.appendChild(tableWrapper);
+                    this._renderTableChart(chartDef, chartUniqueId);
                 }
             });
         }
@@ -162,7 +124,8 @@ export class StatsByCharts {
             chartData: chartDef.values,
             innerRadius: chartDef.type === ChartType.Pie_Donut ? 75 : 0,
             leftLegendPosition: true,
-            legendValueText: "[bold]{count}[/]"
+            legendValueText: "[bold]{count}[/]",
+            colorScheme: chartDef.chart_colorScheme
         }
 
         let pieChart = new ChartTools.PieChartForm(chartConfig);
@@ -177,11 +140,27 @@ export class StatsByCharts {
                 chartTitle: chartDef.title,
                 chartDivId: chartUniqueId,
                 chartData: chartDef.values,
-                horizontal: chartDef.type === ChartType.Bar_Horizontal
+                horizontal: chartDef.type === ChartType.Bar_Horizontal,
+                colorScheme: chartDef.chart_colorScheme
             }
 
             let barChart = new ChartTools.BarChartForm(chartConfig);
             ChartTools.createAmchart(barChart);
             this.chartsInstances[chartDef.id] = barChart;
+    }
+
+    _renderTableChart(chartDef, chartUniqueId) {
+        const chartConfig = {
+            categoryName: "name",
+            valueName: "count",
+            chartTitle: chartDef.title,
+            chartDivId: chartUniqueId,
+            chartData: chartDef.values,
+            colorScheme: chartDef.chart_colorScheme
+        }
+
+        let tableChart = new ChartTools.TableChartForm(chartConfig);
+        ChartTools.createAmchart(tableChart);
+        this.chartsInstances[chartDef.id] = tableChart;
     }
 }

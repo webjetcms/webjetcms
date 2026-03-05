@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -17,8 +16,6 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
@@ -99,19 +96,7 @@ public class FormItemEntity extends BaseEditorFields {
     private Boolean showStat;
 
     @Column(name = "chart_type")
-    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.form_items.chart_type", tab = "stat", hidden = true,
-        editor = {
-            @DataTableColumnEditor(
-                options = {
-                    @DataTableColumnEditorAttr(key = "pie_donut", value = "pie_donut"),
-                    @DataTableColumnEditorAttr(key = "pie_classic", value = "pie_classic"),
-                    @DataTableColumnEditorAttr(key = "bar_vertical", value = "bar_vertical"),
-                    @DataTableColumnEditorAttr(key = "bar_horizontal", value = "bar_horizontal"),
-                    @DataTableColumnEditorAttr(key = "table", value = "table"),
-                }
-            )
-        }
-    )
+    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.form_items.chart_type", tab = "stat", hidden = true)
     private String chartType;
 
     @Column(name = "top_count")
@@ -125,6 +110,14 @@ public class FormItemEntity extends BaseEditorFields {
     @Column(name = "compare_insensitive")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.compare_insensitive", tab = "stat", hidden = true)
     private Boolean compareInsensitive;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title =  "components.form_items.useColorScheme", tab = "stat", className = "image-radio-horizontal image-radio-chart-colorset")
+    private Boolean useColorScheme;
+
+    @Column(name = "color_scheme")
+    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "&nbsp;", tab = "stat", className = "image-radio-horizontal image-radio-chart-colorset")
+    private String colorScheme;
 
     @Column(name = "regex_validation")
     private String regexValidation;

@@ -67,7 +67,9 @@ export class LineChartForm {
             chartData: config.chartData,
             dateType: config.dateType,
             legendTransformationFn: config.legendTransformationFn,
-            hideEmpty: config.hideEmpty == null ? true : config.hideEmpty
+            hideEmpty: config.hideEmpty == null ? true : config.hideEmpty,
+
+            colorScheme: config.colorScheme
         });
     }
 }
@@ -106,7 +108,9 @@ export class BarChartForm {
             chartTitle: config.chartTitle,
             chartDivId: config.chartDivId,
             chartData: config.chartData,
-            horizontal: config.horizontal == null ? true : config.horizontal
+            horizontal: config.horizontal == null ? true : config.horizontal,
+
+            colorScheme: config.colorScheme
         });
     }
 }
@@ -152,7 +156,9 @@ export class PieChartForm {
             labelTransformationFn: config.labelTransformationFn,
             innerRadius: config.innerRadius == null ? 50 : config.innerRadius,
             leftLegendPosition: config.leftLegendPosition == null ? false : config.leftLegendPosition,
-            legendValueText: config.legendValueText
+            legendValueText: config.legendValueText,
+
+            colorScheme: config.colorScheme
         });
     }
 }
@@ -197,11 +203,94 @@ export class DoublePieChartForm {
             chartData: config.chartData,
             labelSeries: config.labelSeries,
             labelKey: config.labelKey,
-            chart: undefined,
-            chartLegend: undefined
+
+            colorScheme: config.colorScheme
         });
     }
 }
+
+export class TableChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.categoryName) throwConstructorError("TableChartForm", "categoryName");
+        if (!config.valueName) throwConstructorError("TableChartForm", "valueName");
+        if (!config.chartDivId) throwConstructorError("TableChartForm", "chartDivId");
+
+        Object.assign(this, {
+            categoryName: config.categoryName,
+            valueName: config.valueName,
+            chartDivId: config.chartDivId,
+
+            chartTitle: config.chartTitle,
+            chartData: config.chartData,
+
+            colorScheme: config.colorScheme,
+
+            // PERMANENT
+            isCustomChart: true
+        });
+    }
+}
+
+// Recomennded is white all the time (do not depends on light/dark theme) because colors in charts are pretty dark
+const tooltipLabelColor = "#ffffff";
+
+// All charts
+const lightTheme_labelColor = "#000000";
+const darkTheme_labelColor = "#ffffff";
+
+// Pie chart
+const lightTheme_pieChart_tickColor = "#000000";
+const darkTheme_pieChart_tickColor = "#ffffff";
+
+// Bar chart
+const barChart_strokeColor = "#DDDFE6";
+
+// Line chart
+const lineChart_strokeColor = "#DDDFE6";
+
+const blue40 = "#8FA3FF";
+const green30 = "#51DCBD";
+const yellow30 = "#F6BE3F";
+const red40 = "#FF8389";
+const ocen30 = "#76D4EB";
+const set1 = [blue40, green30, yellow30, red40, ocen30];
+
+const blue50 = "#6486FF";
+const green40 = "#00BE9F";
+const yellow40 = "#D5A000";
+const red50 = "#FF4B58";
+const ocen40 = "#3AB7D0";
+const set2 = [blue50, green40, yellow40, red50, ocen40];
+
+const blue60 = "#0063FB";
+const green50 = "#00A186";
+const yellow50 = "#B48700";
+const red60 = "#E00028";
+const ocen50 = "#009CB4";
+const set3 = [blue60, green50, yellow50, red60, ocen50];
+
+const blue70 = "#0049BE";
+const green60 = "#007E69";
+const yellow60 = "#8E6A00";
+const red70 = "#A9001C";
+const ocen60 = "#007B8E";
+const set4 = [blue70, green60, yellow60, red70, ocen60];
+
+const blue80 = "#003289";
+const green70 = "#005E4D";
+const yellow70 = "#6A4E00";
+const red80 = "#790011";
+const ocen70 = "#005B6A";
+const set5 = [blue80, green70, yellow70, red80, ocen70];
+
+const setBlue = [blue40, blue50, blue60, blue70, blue80];
+const setGreen = [green30, green40, green50, green60, green70];
+const setRed = [red40, red50, red60, red70, red80];
+const setYellow = [yellow30, yellow40, yellow50, yellow60, yellow70];
 
 /**
  * Object to store chart date axe configuration values 'timeUnit' & 'count'
@@ -582,6 +671,11 @@ async function computeAxeInterval(chartData, dateValueName) {
  * @param {Bolean} update only in the case of True - the header wont be added to chart div
  */
 export async function createAmchart(chartForm, update) {
+    if(chartForm.isCustomChart === true) {
+        await _createCustomChart(chartForm, update);
+        return;
+    }
+
     //Create chart root
     var root = am5.Root.new(chartForm.chartDivId);
 
@@ -630,6 +724,16 @@ export async function createAmchart(chartForm, update) {
     }
 }
 
+async function _createCustomChart(chartForm, update) {
+    //Add title to chart div
+    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
+    $('#' + chartForm.chartDivId).before(htmlCode);
+
+    if(chartForm instanceof TableChartForm) {
+        createTableChart(chartForm);
+    }
+}
+
 /**
  * Create LINE type chart and set all setting around chart. The created chart is set in LineChartForm.chart param.
  *
@@ -647,6 +751,8 @@ async function createLineChart(root, chartForm) {
             height: chartForm.chartData.size > 8 ? am5.percent(90) : am5.percent(95)
         })
     );
+
+    chart.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
 
     //!! set created chart into LineChartForm.chart
     chartForm.chart = chart;
@@ -697,6 +803,16 @@ async function createLineChart(root, chartForm) {
         })
     );
 
+    xAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(lineChart_strokeColor),
+        strokeOpacity: 1
+    });
+
+    yAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(lineChart_strokeColor),
+        strokeOpacity: 1
+    });
+
     //Loop through map of data. Every item in map is representing a different dataset
     //Maybe want show visits stat's on different pages, key param visit is same, but every page stat's are represented by different dataset
     for (const [dataSetName, dataSetData] of chartForm.chartData.entries()) {
@@ -742,7 +858,7 @@ async function createLineChart(root, chartForm) {
                 tooltipIntervalOffset: 0
             });
             tooltip.label.setAll({
-                fill: am5.color("#FFFFFF"),
+                fill: am5.color(tooltipLabelColor),
                 textAlign: "center",
                 textValign: "middle"
             });
@@ -1003,6 +1119,13 @@ async function createBarChart(root, chartForm) {
         }
     ));
 
+    // SET COLORS
+    chart.set("colors",
+        window.am5.ColorSet.new(root, {
+            colors: getColorScheme(chartForm.colorScheme)
+        })
+    );
+
     //!! set created chart into BarChartForm.chart
     chartForm.chart = chart;
 
@@ -1016,6 +1139,18 @@ async function createBarChart(root, chartForm) {
     } else {
         barConfig = createBarChartVertical(root, chart, chartForm);
     }
+
+    // Change grid line color
+    barConfig.xAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(barChart_strokeColor),
+        strokeOpacity: 1
+    });
+
+    barConfig.yAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(barChart_strokeColor),
+        strokeOpacity: 1
+    });
+
     var series = barConfig.series;
 
     //Create tooltip
@@ -1024,7 +1159,7 @@ async function createBarChart(root, chartForm) {
         autoTextColor: false
     })
     tooltip.label.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(tooltipLabelColor),
         textAlign: "center",
         textValign: "middle"
     });
@@ -1084,6 +1219,8 @@ async function createPieChart(root, chartForm) {
         })
     );
 
+    series.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
+
     //Format labels
     series.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
 
@@ -1131,10 +1268,10 @@ async function createPieChart(root, chartForm) {
     //!! Set ticks color
     //If you dont know (like me), TICKS are that stupid lines that connect pie slices with label
     series.ticks.template.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(lightTheme_pieChart_tickColor),
         fillOpacity: 1,
         opacity: 1,
-        stroke: am5.color("#FFFFFF"),
+        stroke: am5.color(lightTheme_pieChart_tickColor),
         strokeOpacity: 1,
         //strokeWidth: 1.5
     });
@@ -1148,7 +1285,7 @@ async function createPieChart(root, chartForm) {
         autoTextColor: false
     });
     tooltip.label.setAll({
-        fill: am5.color("#FFFFFF")
+        fill: am5.color(tooltipLabelColor)
     });
     series.set("tooltip", tooltip);
 
@@ -1186,6 +1323,8 @@ async function createDoublePieChart(root, chartForm) {
         })
     );
 
+    series_inner.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
+
     var series_outer = chart.series.push(
         am5percent.PieSeries.new(root, {
             valueField: chartForm.yAxeName_outer,
@@ -1194,6 +1333,8 @@ async function createDoublePieChart(root, chartForm) {
             legendValueText: "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]" //Format legend
         })
     );
+
+    series_outer.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
 
     //set chart slices (parts)
     series_inner.slices.template.setAll({
@@ -1222,10 +1363,10 @@ async function createDoublePieChart(root, chartForm) {
     //!! Set ticks color
     //If you dont know (like me), TICKS are that stupid lines that connect pie slice with label
     series_outer.ticks.template.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(lightTheme_pieChart_tickColor),
         fillOpacity: 1,
         opacity: 1,
-        stroke: am5.color("#FFFFFF"),
+        stroke: am5.color(lightTheme_pieChart_tickColor),
         strokeOpacity: 1
     })
 
@@ -1237,14 +1378,14 @@ async function createDoublePieChart(root, chartForm) {
         labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_inner + "})",
         autoTextColor: false
     })
-    tooltip_inner.label.setAll({ fill: am5.color("#FFFFFF") });
+    tooltip_inner.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_inner.set("tooltip", tooltip_inner);
 
     var tooltip_outer = am5.Tooltip.new(root, {
         labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_outer + "})",
         autoTextColor: false
     })
-    tooltip_outer.label.setAll({ fill: am5.color("#FFFFFF") });
+    tooltip_outer.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_outer.set("tooltip", tooltip_outer);
 }
 
@@ -1293,7 +1434,7 @@ function setPieSumLabel(chartForm) {
         fontSize: 40,
         fontWeight: "500",
         populateText: true,
-        fill: am5.color(0x555555),
+        fill: am5.color(lightTheme_labelColor),
         oversizedBehavior: "fit"
     }));
 
@@ -1334,13 +1475,24 @@ function updatePieSumLabels(chartForm) {
  * @param {*} chartForm
  */
 export async function destroyChart(chartForm) {
-    //console.log("Destroying chart in div: " + chartForm.chartDivId);
+    if(chartForm.isCustomChart === true) {
+        // This is not amchart
+        await _destroyCustomChart(chartForm);
+    } else {
+        // Remove amchart root
+        am5.array.each(am5.registry.rootElements, function(root) {
+            if (root && root.dom && root.dom.id == chartForm.chartDivId) {
+                root.dispose();
+            }
+        });
+    }
+}
 
-    am5.array.each(am5.registry.rootElements, function(root) {
-        if (root && root.dom && root.dom.id == chartForm.chartDivId) {
-            root.dispose();
-        }
-    });
+async function _destroyCustomChart(chartForm) {
+    if(chartForm instanceof TableChartForm) {
+        const tableDiv = document.getElementById(chartForm.chartDivId);
+        tableDiv.innerHTML = "";
+    }
 }
 
 /**
@@ -1951,4 +2103,72 @@ function isNumberParamValid(value, cantBeNegative = true) {
     if(!cantBeNegative && value < 0) return false;
     //Number is valid
     return true;
+}
+
+/* TABLE CHART SECTION has nothing with amchart */
+
+async function createTableChart(chartForm) {
+    const table = document.createElement("table");
+    table.classList.add("table", "tabulkaStandard");
+
+    const tbody = document.createElement("tbody");
+    chartForm.chartData.forEach(row => {
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        tdName.textContent = row.name;
+        tdName.classList.add("chart-table-td");
+        const tdCount = document.createElement("td");
+        tdCount.textContent = row.count;
+        tdCount.style.textAlign = "right";
+        tdCount.classList.add("chart-table-td");
+        tr.appendChild(tdName);
+        tr.appendChild(tdCount);
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    const wrapper2 = document.createElement("div");
+    wrapper2.appendChild(table);
+    wrapper2.style.position = "relative";
+    wrapper2.style.width = "100%";
+    wrapper2.style.height = "100%";
+    wrapper2.style.padding = "15px";
+
+    const kks = document.getElementById(chartForm.chartDivId);
+    if(kks) {
+        kks.appendChild(wrapper2);
+    }
+}
+
+function getColorScheme(selectedColorScheme) {
+    let useColorScheme = [];
+
+    if(selectedColorScheme === null) {
+        //useColorScheme = [...set1, ...set3, ...set5];
+        useColorScheme = setGreen;
+    } else if("set1" === selectedColorScheme) {
+        useColorScheme = set1;
+    } else if("set2" === selectedColorScheme) {
+        useColorScheme = set2;
+    } else if("set3" === selectedColorScheme) {
+        useColorScheme = set3;
+    } else if("set4" === selectedColorScheme) {
+        useColorScheme = set4;
+    } else if("set5" === selectedColorScheme) {
+        useColorScheme = set5;
+    } else if("set_blue" === selectedColorScheme) {
+        useColorScheme = setBlue;
+    } else if("set_green" === selectedColorScheme) {
+        useColorScheme = setGreen;
+    } else if("set_red" === selectedColorScheme) {
+        useColorScheme = setRed;
+    } else if("set_yellow" === selectedColorScheme) {
+        useColorScheme = setYellow;
+    } else {
+        console.warn("Selected color scheme is not valid, using default one.");
+        //useColorScheme = [...set1, ...set3, ...set5];
+        useColorScheme = setGreen;
+    }
+
+    return useColorScheme.map(function(color) { return window.am5.color(color); });
 }

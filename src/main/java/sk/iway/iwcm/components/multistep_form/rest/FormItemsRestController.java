@@ -1,7 +1,5 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
-import static sk.iway.iwcm.Tools.getRealPath;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,10 +34,12 @@ import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.support.FormChartType;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.utils.Pair;
 
@@ -85,6 +85,20 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
+        page.addOptions("chartType", FormChartType.getOptions(getProp()), "label", "value", false);
+
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("set1", "set1", "/apps/_common/charts/images/overlapping_circles_set1.png"));
+        optionsMap.add(new OptionDto("set2", "set2", "/apps/_common/charts/images/overlapping_circles_set2.png"));
+        optionsMap.add(new OptionDto("set3", "set3", "/apps/_common/charts/images/overlapping_circles_set3.png"));
+        optionsMap.add(new OptionDto("set4", "set4", "/apps/_common/charts/images/overlapping_circles_set4.png"));
+        optionsMap.add(new OptionDto("set5", "set5", "/apps/_common/charts/images/overlapping_circles_set5.png"));
+        optionsMap.add(new OptionDto("set_blue", "set_blue", "/apps/_common/charts/images/overlapping_circles_set_blue.png"));
+        optionsMap.add(new OptionDto("set_green", "set_green", "/apps/_common/charts/images/overlapping_circles_set_green.png"));
+        optionsMap.add(new OptionDto("set_red", "set_red", "/apps/_common/charts/images/overlapping_circles_set_red.png"));
+        optionsMap.add(new OptionDto("set_yellow", "set_yellow", "/apps/_common/charts/images/overlapping_circles_set_yellow.png"));
+        page.addOptions("colorScheme", optionsMap, "label", "value", true);
+
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -175,6 +189,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
                 originalEntity.setTopCount( entity.getTopCount() );
                 originalEntity.setShowOtherCount( entity.getShowOtherCount() );
                 originalEntity.setCompareInsensitive( entity.getCompareInsensitive() );
+                originalEntity.setColorScheme( entity.getColorScheme() );
                 return formItemsRepository.save( originalEntity );
             }
 
@@ -286,4 +301,5 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(inputClasses == null || inputClasses.size() < 1) return regexIds;
         else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
     }
+
 }

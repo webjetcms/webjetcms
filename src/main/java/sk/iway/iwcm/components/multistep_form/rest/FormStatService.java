@@ -56,7 +56,6 @@ public class FormStatService {
         return allData;
     }
 
-
     public final JSONArray getFormStatChartData(String formName, String itemFormId, HttpServletRequest request) {
         if(Tools.isEmpty(formName) || Tools.isEmpty(itemFormId)) return null;
         List<String> allFormData = kokos(formName);
@@ -64,7 +63,6 @@ public class FormStatService {
     }
 
     /* ------------------------- */
-
 
 
     private String computeAverageDuration(String formName) {
@@ -152,6 +150,7 @@ public class FormStatService {
             jsonObject.put("id", key);
             jsonObject.put("type", allowed.get(key).getChartType());
             jsonObject.put("title", columnNames.getOrDefault(key, key));
+            jsonObject.put("chart_colorScheme", allowed.get(key).getColorScheme());
 
             // values must be combination of value and count
             jsonObject.put("values", prepareDataForChart(entry.getValue(), allowed.get(key).getTopCount(), allowed.get(key).getShowOtherCount()) );
@@ -206,7 +205,7 @@ public class FormStatService {
     }
 
     private Map<String, FormItemEntity> getAllowedItems(String formName, String itemFormId) {
-        String sql = "SELECT item_form_id, chart_type, top_count, show_other_count, compare_insensitive FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat IS TRUE AND f.step_id=s.id";
+        String sql = "SELECT item_form_id, chart_type, top_count, show_other_count, compare_insensitive, color_scheme FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat IS TRUE AND f.step_id=s.id";
         List<Object> sqlParams = new ArrayList<>();
         sqlParams.add(formName);
         sqlParams.add(CloudToolsForCore.getDomainId());
@@ -244,6 +243,7 @@ public class FormStatService {
         fe.setTopCount( rs.getInt("top_count") );
         fe.setShowOtherCount( rs.getBoolean("show_other_count") );
         fe.setCompareInsensitive( rs.getBoolean("compare_insensitive") );
+        fe.setColorScheme( rs.getString("color_scheme") );
         return fe;
     }
 }

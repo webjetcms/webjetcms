@@ -372,8 +372,16 @@ body.modal-open {
                     background-color: white;
                 }
             }
+
+            &.image-radio-chart-colorset {
+                img {
+                    width: 100%;
+                    height: 40px;
+                }
+            }
         }
     }
+
     &-header {
         display: block;
         padding-top: 8px;

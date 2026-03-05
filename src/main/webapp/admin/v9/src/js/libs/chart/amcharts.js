@@ -34,26 +34,19 @@ export class WebjetTheme extends am5.Theme {
       secondaryButtonDown: Color.fromHex(0x0054d5)
     });
 
-    this.rule("ColorSet").setAll({
-        colors : [
-          am5.color("#0061f5"),
-          am5.color("#00a186"),
-          am5.color("#b48700"),
-          am5.color("#e00028"),
-          am5.color("#009cb4"),
-          am5.color("#003288"),
-          am5.color("#005e4d"),
-          am5.color("#6a4e00"),
-          am5.color("#a9001c"),
-          am5.color("#005b6a")
-        ]
-    });
     this.rule("Label").setAll({
       fontSize: "12px",
-      fontFamily: "Asap, sans-serif"
+      fontFamily: "Asap, sans-serif",
+      fill: am5.color(0x000000)
     });
     this.rule("Legend").setAll({
       paddingTop: 4
+    });
+    this.rule("PointedRectangle", ["tooltip", "background"]).setAll({
+      fill: am5.color(0xFFFFFF),
+      fillOpacity: 0.95,
+      stroke: am5.color(0xCCCCCC),
+      strokeOpacity: 1
     });
     this.rule("Container", ["legend", "marker"]).setAll({
       width: 11,

@@ -27,13 +27,11 @@
 
 <script type="module" th:inline="javascript">
 
-    import { StatsByCharts } from '/apps/_common/stats-by-charts.js';
+    import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
 
     fetch("/rest/multistep-form-stat/get-stat-data?form-name=" + urlFormName)
         .then(response => response.json())
         .then(data => {
-            // console.log("Received data:", data);
-
             document.getElementById("responsesCount").textContent = data.totalResponses;
             document.getElementById("averageDuration").textContent = data.averageDuration;
             document.getElementById("durationDays").textContent = "15";
@@ -77,58 +75,94 @@
 
 </script>
 
-<div class="row">
-    <div class="col-4 header-wrapper-outher">
-        <div class="header-wrapper-inner">
-            <span class="title">RESPONSES</span>
-            <div class="stats-with-icon">
-                <span id="responsesCount">50</span>
-                <span>
+<div class="row header-container">
+    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
+        <div class="row kokos" style="background: #A3EED9;">
+            <div class="col-4 col-sm-4 icon-div">
+                <span style="color: #51DCBD;">
                     <i class="ti ti-users"></i>
                 </span>
             </div>
+            <div class="col-8 col-sm-8" style="color: #004235;">
+                <span class="title" data-th-text="#{form.stats.responses}">RESPONSES</span>
+                <span id="responsesCount" class="value">0</span>
+            </div>
         </div>
     </div>
 
-    <div class="col-4 header-wrapper-outher">
-        <div class="header-wrapper-inner">
-            <span class="title">AVERAGE DURATION</span>
-            <div class="stats-with-icon">
-                <span id="averageDuration">50</span>
-                <span>
+    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
+        <div class="row kokos" style="background: #D9DEFF;">
+            <div class="col-4 col-sm-4 icon-div">
+                <span style="color: #B8C3FF;">
                     <i class="ti ti-alarm"></i>
                 </span>
             </div>
+            <div class="col-8 col-sm-8" style="color: #003289;">
+                <span class="title" data-th-text="#{form.stats.averageDuration}">AVERAGE DURATION</span>
+                <span id="averageDuration" class="value">0</span>
+            </div>
         </div>
     </div>
 
-    <div class="col-4 header-wrapper-outher">
-        <div class="header-wrapper-inner">
-            <span class="title">DURATION</span>
-            <div class="stats-with-icon">
-                <span id="durationDays">50</span>
-                <span>
-                    <i class="ti ti-calendar"></i>
+    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
+        <div class="row kokos" style="background: #FFDAA3;">
+            <div class="col-4 col-sm-4 icon-div">
+                <span style="color: #F6BE3F;">
+                   <i class="ti ti-calendar"></i>
                 </span>
+            </div>
+            <div class="col-8 col-sm-8" style="color: #4A3600;">
+                <span class="title" data-th-text="#{form.stats.duration}">DURATION</span>
+                <span id="durationDays" class="value">0</span>
             </div>
         </div>
     </div>
 </div>
 
-<div id="chartContainer">
-</div>
+<div id="chartContainer"></div>
 
 <style>
+    .header-container {
+        margin: 0px 5px;
+    }
+
     .header-wrapper-outher {
+        color: black;
+        padding: 0px;
+    }
+
+    .kokos {
+        margin: 15px 10px;
         padding: 15px;
-        color: white;
+        border-radius: 10px;
+        display: flex;
+        border: 1px solid #DDDFE6;
+
+        div.icon-div {
+            text-align: center;
+        }
+
+        span.title {
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        span.value {
+            font-size: 2rem;
+            font-weight: 600;
+            display: block;
+        }
+
+        i {
+            font-size: 5rem;
+        }
     }
 
     .header-wrapper-inner {
         padding: 15px;
-        background: #2b303b;
+        background: #F3F3F6;
         border-radius: 10px;
-        font-size: 2rem;
 
         .stats-with-icon {
             display: flex;

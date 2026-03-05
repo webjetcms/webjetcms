@@ -1,6 +1,6 @@
 div.stat-chart-wrapper {
 
-    padding: 15p;
+    padding: 0px 15px;
 
     button.chart-more-btn {
         white-space: nowrap;
@@ -9,8 +9,8 @@ div.stat-chart-wrapper {
 
         float: right;
         position: relative;
-        top: 28px;
-        right: 15px;
+        top: 29px;
+        right: 9px;
         z-index: 999;
 
         background-color: white;
@@ -18,7 +18,7 @@ div.stat-chart-wrapper {
     }
 
     button.chart-more-btn:hover {
-        background-color: #0063FB;
+        background-color: black;
         color: white;
         border-color: #b3b8c7;
         border-width: 1px;
