@@ -33,13 +33,13 @@
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-- Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na Spring Security 7, aby sa chyba password encodera nepremenila na internú výnimku a request sa korektne zamietol (#58369).
+- Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na Spring Security 7, aby sa chyba `password encoder` nepremenila na internú výnimku a požiadavka sa korektne zamietla (#58369).
 - Pridaná podpora prihlasovania do administrácie cez Prihlasovacie kľúče/`PassKey`/`WebAuthn` (#58369).
 
 ### Pre programátora
 
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
-- Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí seriaizovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).
+- Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí serializovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).
 - Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).
 - Odstránená anotácia `@Temporal` na dátumových stĺpcoch v databázových entitách, odporúčané riešenie je pre nové entity používať `java.time.*` typy. Zdá sa, že Eclipselink/JPA správne deteguje typ `Date` ako dátum a čas a anotácia nie je potrebná. Odporúčame po aktualizácii skontrolovať správanie dátumových polí (#57793).
 - Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
