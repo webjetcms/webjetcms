@@ -54,3 +54,56 @@ window.pbBuildTabMenuXXX = function(me, tabMenu) {
     return tabMenu;
 
 };
+
+/**
+ * Callback function to modify pasted HTML from word before it is inserted into editor
+ * @param {*} html - pasted HTML code
+ * @param {*} editor - editor instance
+ * @returns
+ */
+window.afterPasteFromWordCallback = function(html, editor) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        console.log("afterPasteFromWordCallback called, html=", html, "editor=", editor);
+        //custom code to modify pasted html from word before it is inserted into editor
+    }
+    return html;
+};
+
+/**
+ * Callback function to modify HTML code from editor before it is returned from get() method of wysiwyg field type
+ * @param {*} html - HTML code from editor
+ * @param {*} conf - configuration
+ * @returns
+ */
+window.wysiwygGetCallback = function(html, conf) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        console.log("wysiwygGetCallback called, html=", html, "conf=", conf);
+        //custom code to modify html before it is returned from get() method of wysiwyg field type
+
+        const replacements = [
+            ['×', '&times;'],
+            ['"', '&quot;'],
+            ["'", '&apos;'],
+            ['„', '&bdquo;'],
+            ['“', '&ldquo;'],
+            ['”', '&rdquo;'],
+            ['‚', '&sbquo;'],
+            ['‘', '&lsquo;'],
+            ['’', '&rsquo;'],
+            [' Eur(?![\\p{L}])', '&nbsp;&euro;'],
+            [' €(?![\\p{L}])', '&nbsp;&euro;'],
+            [' GB(?![\\p{L}])', '&nbsp;GB'],
+            [' MB(?![\\p{L}])', '&nbsp;MB'],
+            [' kB(?![\\p{L}])', '&nbsp;kB'],
+            [' TB(?![\\p{L}])', '&nbsp;TB'],
+            [' x (?![\\p{L}])', '&nbsp;&times; '],
+        ];
+        replacements.forEach(([search, replace]) => {
+            const regex = new RegExp(search, 'gu'); // 'g' = globálne nahradenie, 'u' = podpora Unicode (\p{L})
+            html = html.replace(regex, replace);
+        });
+
+        console.log("wysiwygGetCallback modified html=", html);
+    }
+    return html;
+};

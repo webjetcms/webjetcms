@@ -1651,6 +1651,17 @@ export class DatatablesCkEditor {
 					html = html.replace(/<i>/gi, "<em>");
 					html = html.replace(/<\/i>/gi, "</em>");
 
+					//console.log("window.afterPasteFromWordCallback=", window.afterPasteFromWordCallback, "window=", window, "this=", this);
+					try {
+						if (typeof window.afterPasteFromWordCallback != "undefined") {
+							html = window.afterPasteFromWordCallback(html, this);
+						} else if (typeof this.window.$.afterPasteFromWordCallback != "undefined") {
+							html = this.window.$.afterPasteFromWordCallback(html, this);
+						}
+					} catch (error) {
+						console.error("Error in afterPasteFromWordCallback:", error);
+					}
+
 					evt.data.dataValue = html;
 
 					//console.log("html2=", evt.data.dataValue);
