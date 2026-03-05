@@ -1363,6 +1363,18 @@ public class Tools
 	}
 
 	/**
+	 * Vrati scheme (http alebo https) na zaklade requestu, pouziva Tools.isSecure
+	 * @param request
+	 * @return
+	 */
+	public static String getScheme(HttpServletRequest request)
+	{
+		String scheme = "http";
+		if (Tools.isSecure(request)) scheme = "https";
+		return scheme;
+	}
+
+	/**
 	 * Ziska hodnotu cookie daneho mena
 	 * @param cookies
 	 * @param name

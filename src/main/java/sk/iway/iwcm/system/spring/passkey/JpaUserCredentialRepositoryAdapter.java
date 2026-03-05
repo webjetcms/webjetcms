@@ -91,6 +91,12 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         entity.setLastUsed(record.getLastUsed());
         entity.setLabel(record.getLabel());
 
+        // Store the rpId (domain) from DynamicWebAuthnRelyingPartyOperations
+        String rpId = DynamicWebAuthnRelyingPartyOperations.getCurrentRpId();
+        if (Tools.isNotEmpty(rpId)) {
+            entity.setRpId(rpId);
+        }
+
         credentialRepository.save(entity);
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                 "PassKey JPA: save credential SUCCESS, id=" + entity.getId());

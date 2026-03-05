@@ -141,4 +141,13 @@ public class PasskeyCredentialBean {
     @NotBlank
     @Size(max = 1000)
     private String label;
+
+    /**
+     * The Relying Party ID (domain) for which this credential was registered.
+     * WebAuthn credentials are domain-bound - a credential registered for one domain
+     * cannot be used on a different domain.
+     */
+    @Column(name = "rp_id")
+    @Size(max = 255)
+    private String rpId;
 }
