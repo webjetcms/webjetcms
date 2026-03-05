@@ -80,7 +80,34 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             });
         }
 
+        function checkPasskeyAvailability() {
+            // Hide passkey button if WebAuthn API is not available (e.g. insecure context, TLS errors)
+            if (!window.PublicKeyCredential) {
+                document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                return;
+            }
+            // Additionally check platform authenticator availability
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                .then(function(available) {
+                    if (!available) {
+                        document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                });
+        }
+
+        function showPasskeyError(message) {
+            var wrapper = document.getElementById('passkey-error-wrapper');
+            if (wrapper) {
+                wrapper.querySelector('span').textContent = message;
+                wrapper.style.display = 'block';
+            }
+        }
+
         function doPasskeyLogon() {
+            document.getElementById('passkey-error-wrapper')?.style?.setProperty('display', 'none');
             // PassKey authentication flow using Spring Security WebAuthn endpoints
             fetch('/webauthn/authenticate/options', {
                 method: 'POST',
@@ -132,9 +159,14 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             })
             .catch(function(error) {
                 console.error('PassKey authentication error:', error);
-                if (error.name !== 'NotAllowedError') {
-                    // NotAllowedError means user cancelled the dialog
-                    alert('<iwcm:text key="passkey.logon.error" />');
+                if (error.name === 'NotAllowedError') {
+                    // Check if it's a TLS certificate error (not just user cancellation)
+                    if (error.message && (error.message.indexOf('TLS') !== -1 || error.message.indexOf('certificate') !== -1 || error.message.indexOf('certificate errors') !== -1)) {
+                        showPasskeyError('<iwcm:text key="passkey.logon.error.tls" />');
+                    }
+                    // Otherwise user cancelled the dialog - do nothing
+                } else {
+                    showPasskeyError('<iwcm:text key="passkey.logon.error" />');
                 }
             });
         }
@@ -267,7 +299,10 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </c:forEach>
                     </c:if>
                     <c:if test="${isPassKeyEnabled}">
-                        <div class="form-group">
+                        <div id="passkey-error-wrapper" class="alert alert-danger" style="display:none;">
+                            <span></span>
+                        </div>
+                        <div id="passkey-login-btn-wrapper" class="form-group">
                             <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>
                         </div>
                     </c:if>
@@ -385,6 +420,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
     jQuery(document).ready(function() {
         try {
+            checkPasskeyAvailability();
             bindPasswordStrength();
             $("#username").focus();
         } catch (e) {console.log(e);}

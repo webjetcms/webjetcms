@@ -263,16 +263,7 @@ public class AdminLogonController {
             }
         }
 
-        // PassKey support
-        if (Constants.getBoolean("password_passKeyEnabled") && Tools.isSecure(request)) {
-            //test if current domain against allowed origins for PassKey and set attribute for JSP to conditionally load PassKey JS
-            String allowedOrigins = Constants.getString("password_passKeyAllowedOrigins");
-            if (Tools.isEmpty(allowedOrigins) || allowedOrigins.contains(Tools.getScheme(request) + "://" + Tools.getServerName(request))) {
-                request.setAttribute("isPassKeyEnabled", true);
-            } else {
-                Logger.warn(AdminLogonController.class, "Current origin " + Tools.getScheme(request) + "://" + Tools.getServerName(request) + " is not in allowed origins for PassKey. PassKey login will be disabled.");
-            }
-        }
+        addPasskeyToModel(request, model);
 
         return LOGON_FORM;
     }
@@ -300,6 +291,24 @@ public class AdminLogonController {
         return autoRedirectUrl;
     }
 
+    /**
+     * Add PassKey/WebAuthn support to the model for the logon form.
+     * @param request
+     * @param model
+     */
+    private void addPasskeyToModel(HttpServletRequest request, ModelMap model) {
+        // PassKey support
+        if (Constants.getBoolean("password_passKeyEnabled") && Tools.isSecure(request)) {
+            //test if current domain against allowed origins for PassKey and set attribute for JSP to conditionally load PassKey JS
+            String allowedOrigins = Constants.getString("password_passKeyAllowedOrigins");
+            if (Tools.isEmpty(allowedOrigins) || allowedOrigins.contains(Tools.getScheme(request) + "://" + Tools.getServerName(request))) {
+                request.setAttribute("isPassKeyEnabled", true);
+            } else {
+                Logger.warn(AdminLogonController.class, "Current origin " + Tools.getScheme(request) + "://" + Tools.getServerName(request) + " is not in allowed origins for PassKey. PassKey login will be disabled.");
+            }
+        }
+    }
+
     @PostMapping("logon/")
     public String submit(@ModelAttribute("userForm") UserForm userForm, BindingResult result, ModelMap model, HttpServletRequest request, HttpServletResponse response) {
         if (InitServlet.verify(request) == false)
@@ -325,6 +334,7 @@ public class AdminLogonController {
             Logger.error(this,"su nejake chyby v logovacom formulari");
             model.addAttribute("errors", errors.get("ERROR_KEY"));
             addOAuth2UrlsToModel(request, model);
+            addPasskeyToModel(request, model);
             return LOGON_FORM;
         }
 
