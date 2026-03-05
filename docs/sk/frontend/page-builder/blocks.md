@@ -579,7 +579,7 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 };
 ```
 
-Ak je to potrebné môžete pridať vlastnú funkciu pre čistenie HTML kódu po vložení z Microsoft Office alebo pri získaní HTML kódu. Upozorňujeme, že funkcia `wysiwygGetCallback` sa môže volať viac krát, nemusí isť len o finálne získanie HTML kódu pred uložením stránky. Zároveň platí, že editor stránok modifikuje HTML kód, entity a podobne, je teda vhodné čistenie HTML kódu a náhradu znakov/entít vykonať aj vo funkcii `wysiwygGetCallback`.
+Ak je to potrebné môžete pridať vlastnú funkciu pre čistenie HTML kódu po vložení z Microsoft Office alebo pri získaní HTML kódu. Upozorňujeme, že funkcia `wysiwygGetCallback` sa môže volať viackrát, nemusí ísť len o finálne získanie HTML kódu pred uložením stránky. Zároveň platí, že editor stránok modifikuje HTML kód, entity a podobne, je teda vhodné čistenie HTML kódu a náhradu znakov/entít vykonať aj vo funkcii `wysiwygGetCallback`.
 
 ```javascript
 /**

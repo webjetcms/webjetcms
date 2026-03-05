@@ -205,10 +205,10 @@ export function typeWysiwyg() {
             //console.log("WYSIWYG get, conf=", conf, "returning=", html);
 
             try {
-                if (typeof window.wysiwygGetCallback != "undefined") {
+                if (typeof window.wysiwygGetCallback === "function") {
                     html = window.wysiwygGetCallback(html, conf);
                 } else {
-                    let pageBuilderIframe = $("#"+conf.id+"-pageBuilderIframe");
+                    let pageBuilderIframe = $("#"+conf._id+"-pageBuilderIframe");
                     if (pageBuilderIframe.length > 0 && pageBuilderIframe[0].contentWindow && typeof pageBuilderIframe[0].contentWindow.wysiwygGetCallback === "function") {
                         html = pageBuilderIframe[0].contentWindow.wysiwygGetCallback(html, conf);
                     }

@@ -1653,9 +1653,9 @@ export class DatatablesCkEditor {
 
 					//console.log("window.afterPasteFromWordCallback=", window.afterPasteFromWordCallback, "window=", window, "this=", this);
 					try {
-						if (typeof window.afterPasteFromWordCallback != "undefined") {
+						if (typeof window.afterPasteFromWordCallback === "function") {
 							html = window.afterPasteFromWordCallback(html, this);
-						} else if (typeof this.window.$.afterPasteFromWordCallback != "undefined") {
+						} else if (this.window && this.window.$ && typeof this.window.$.afterPasteFromWordCallback === "function") {
 							html = this.window.$.afterPasteFromWordCallback(html, this);
 						}
 					} catch (error) {
@@ -1996,7 +1996,7 @@ export class DatatablesCkEditor {
 					}
 
 					if (found == false) {
-						console.info("PageBuilder iframe not found, reverting to HTML mode");
+						//console.info("PageBuilder iframe not found, reverting to HTML mode");
 						editorTypeSelector.show();
 					}
 				}

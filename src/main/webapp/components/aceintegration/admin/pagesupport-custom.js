@@ -30,26 +30,28 @@ window.pbCustomSettings = function(me) {
  * @param {JSON} tabMenu - tab menu object
  * @returns {JSON} modified tab menu
  */
-window.pbBuildTabMenuXXX = function(me, tabMenu) {
+window.pbBuildTabMenu = function(me, tabMenu) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
 
-    console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
-    //hide first tab
-    tabMenu.tabs[0].visible = false;
+        console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
+        //hide first tab
+        tabMenu.tabs[0].visible = false;
 
-    //move tab id=10 to the first position
-    var items = tabMenu.tabs[1].items;
-    const tab10Index = items.findIndex(tab => tab.id === "10");
-    if (tab10Index > -1) {
-        const [tab10] = items.splice(tab10Index, 1);
-        items.unshift(tab10);
-    }
-
-    //hide 09,11,12
-    items.forEach(tab => {
-        if (["09", "11", "12"].includes(tab.id)) {
-            tab.visible = false;
+        //move tab id=10 to the first position
+        var items = tabMenu.tabs[1].items;
+        const tab10Index = items.findIndex(tab => tab.id === "10");
+        if (tab10Index > -1) {
+            const [tab10] = items.splice(tab10Index, 1);
+            items.unshift(tab10);
         }
-    });
+
+        //hide 09,11,12
+        items.forEach(tab => {
+            if (["09", "11", "12"].includes(tab.id)) {
+                tab.visible = false;
+            }
+        });
+    }
 
     return tabMenu;
 
