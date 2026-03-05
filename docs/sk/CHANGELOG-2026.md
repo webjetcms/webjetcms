@@ -33,6 +33,7 @@
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na Spring Security 7, aby sa chyba password encodera nepremenila na internú výnimku a request sa korektne zamietol (#58369).
 - Pridaná podpora prihlasovania do administrácie cez Prihlasovacie kľúče/`PassKey`/`WebAuthn` (#58369).
 
 ### Pre programátora
