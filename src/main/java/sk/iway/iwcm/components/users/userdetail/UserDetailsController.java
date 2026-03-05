@@ -244,7 +244,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             //Generate default login
             if(entity.getEditorFields()!=null && Tools.isEmpty(entity.getEditorFields().getLogin())) {
                 String autoLogin = Tools.isEmpty(entity.getUserGroupsIds()) == true ? "" : entity.getUserGroupsIds() + "-";
-                autoLogin += entity.get__rowNum__() + "-" + Password.generatePassword(4);
+                autoLogin += entity.getRowNum() + "-" + Password.generatePassword(4);
                 if( Tools.isNotEmpty(entity.getLastName()) ) autoLogin = DocTools.removeCharsDir( entity.getLastName() ).toLowerCase() + "-" + autoLogin;
                 entity.getEditorFields().setLogin(autoLogin);
             }

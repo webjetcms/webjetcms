@@ -44,7 +44,7 @@ public class CookieManagerBean extends ActiveRecord implements Serializable
 	@TableGenerator(name="WJGen_cookies",pkColumnValue="cookies")
 	@Column(name="cookie_id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
-	private int cookieId;
+	int cookieId;
 
     @Column(name="cookie_name")
     @DataTableColumn(
@@ -146,12 +146,12 @@ public class CookieManagerBean extends ActiveRecord implements Serializable
 	@Column(name="description")
 	String description;
 
-	public int getcookieId()
+	public int getCookieId()
 	{
 		return cookieId;
 	}
 
-	public void setcookieId(int cookieId)
+	public void setCookieId(int cookieId)
 	{
 		this.cookieId = cookieId;
 	}
@@ -159,13 +159,13 @@ public class CookieManagerBean extends ActiveRecord implements Serializable
 	@Override
 	public void setId(int id)
 	{
-		setcookieId(id);
+		setCookieId(id);
 	}
 
 	@Override
 	public int getId()
 	{
-		return getcookieId();
+		return getCookieId();
 	}
 
 	public int getDomainId()

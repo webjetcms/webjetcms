@@ -9,6 +9,7 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import sk.iway.iwcm.database.nestedsets.CommonNestedSetBean;
 
@@ -33,7 +34,8 @@ public abstract class ActiveRecordBase
 	//pouziva sa pri importe ako cislo riadku v XLSx subore
 	@Transient
 	@JsonInclude(Include.NON_NULL)
-	private Integer __rowNum__;
+	@JsonProperty("__rowNum__")
+	private Integer rowNum;
 
 	public boolean save()
 	{
@@ -76,7 +78,7 @@ public abstract class ActiveRecordBase
 						continue;
 
 					Object value = PropertyUtils.getProperty(this, property);
-					if ( value!=null && value instanceof ActiveRecordBase)
+					if ( value instanceof ActiveRecordBase)
 					{
 						//zabran rekurzivnej lavine
 						toString.append(property).append(" = ");
@@ -92,7 +94,7 @@ public abstract class ActiveRecordBase
 		}
 		catch (StackOverflowError ex)
 		{
-		   sk.iway.iwcm.Logger.error(ActiveRecord.class, ex.getMessage(), ex);
+		   sk.iway.iwcm.Logger.error(ActiveRecordBase.class, ex.getMessage(), ex);
 		}
 		catch (Exception ex)
 		{
@@ -102,12 +104,14 @@ public abstract class ActiveRecordBase
 		return toString.toString();
 	}
 
-	public Integer get__rowNum__() {
-		return __rowNum__;
+	@JsonProperty("__rowNum__")
+	public Integer getRowNum() {
+		return rowNum;
 	}
 
-	public void set__rowNum__(Integer __rowNum__) {
-		this.__rowNum__ = __rowNum__;
+	@JsonProperty("__rowNum__")
+	public void setRowNum(Integer rowNum) {
+		this.rowNum = rowNum;
 	}
 
 

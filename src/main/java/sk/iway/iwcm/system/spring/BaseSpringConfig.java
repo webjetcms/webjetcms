@@ -30,6 +30,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.cfg.DateTimeFeature;
 
 import freemarker.core.Configurable;
@@ -46,6 +47,7 @@ import sk.iway.iwcm.Tools;
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
 })
+@SuppressWarnings({"java:S6813"})
 public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 {
     //we need to have autowired like this because we need to use it in the SpringSecurityConf.configureSecurity method, and we cannot autowire it there directly
@@ -127,6 +129,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         T mapper = (T) jacksonConverter.getMapper().rebuild()
                 .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DateTimeFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
                 .build();
 
         jacksonConverter.registerMappersForType(Object.class, registrations -> {
