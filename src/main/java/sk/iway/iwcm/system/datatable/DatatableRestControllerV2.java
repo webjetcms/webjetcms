@@ -1264,7 +1264,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			setImporting(true);
 			setSkipWrongData(skipWrongData);
 		}
-		//InitBinder/validateEditor moze nastavit notifikaciu, musime zachovat
+		//InitBinder/validateEditor can set notification object, we must preserve it
 		if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 
 		boolean isDuplicate = false;
