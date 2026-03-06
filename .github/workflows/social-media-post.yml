@@ -1,0 +1,111 @@
+# Workflow: Generate social media post after a pull request is merged.
+#
+# Triggered when a PR is merged into main.  Uses GitHub Models API (Copilot LLM)
+# as the primary LLM, with Google Gemini as fallback.  The generated post and any
+# screenshots found in the PR are sent to a configured e-mail address.
+#
+# Required repository secrets:
+#   EMAIL_SERVER     – SMTP server hostname (e.g. smtp.gmail.com)
+#   EMAIL_PORT       – SMTP port (default: 465)
+#   EMAIL_USERNAME   – sender e-mail address / login
+#   EMAIL_PASSWORD   – sender password or app-password
+#   EMAIL_RECIPIENT  – recipient e-mail address
+#
+# Optional repository secrets:
+#   GEMINI_API_KEY   – Google Gemini API key (used as LLM fallback)
+
+name: Generate Social Media Post
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  generate-post:
+    # Run only on actual merges, not plain PR closes
+    if: github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: read
+      # Required for GitHub Models API (Copilot LLM)
+      models: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # -----------------------------------------------------------------------
+      # Generate the social-media post via LLM
+      # -----------------------------------------------------------------------
+      - name: Generate social media post
+        id: generate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: python .github/scripts/generate_social_post.py
+
+      # -----------------------------------------------------------------------
+      # Send the result by e-mail
+      # The 'attachments' field is skipped when no screenshots were found, so
+      # we send two variants: one with attachments and one without.
+      # -----------------------------------------------------------------------
+      - name: Send e-mail with screenshots
+        if: steps.generate.outputs.has_screenshots == 'true' && env.EMAIL_SERVER != ''
+        uses: dawidd6/action-send-mail@v3
+        env:
+          EMAIL_SERVER: ${{ secrets.EMAIL_SERVER }}
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER }}
+          server_port: ${{ secrets.EMAIL_PORT || 465 }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: >-
+            Social media post: PR #${{ github.event.pull_request.number }}
+            – ${{ github.event.pull_request.title }}
+          to: ${{ secrets.EMAIL_RECIPIENT }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: file://post_content.txt
+          attachments: screenshots/*
+
+      - name: Send e-mail without screenshots
+        if: steps.generate.outputs.has_screenshots != 'true' && env.EMAIL_SERVER != ''
+        uses: dawidd6/action-send-mail@v3
+        env:
+          EMAIL_SERVER: ${{ secrets.EMAIL_SERVER }}
+        with:
+          server_address: ${{ secrets.EMAIL_SERVER }}
+          server_port: ${{ secrets.EMAIL_PORT || 465 }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: >-
+            Social media post: PR #${{ github.event.pull_request.number }}
+            – ${{ github.event.pull_request.title }}
+          to: ${{ secrets.EMAIL_RECIPIENT }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: file://post_content.txt
+
+      # -----------------------------------------------------------------------
+      # Always print the post in the workflow log so the result is visible even
+      # when e-mail is not configured.
+      # -----------------------------------------------------------------------
+      - name: Print generated post
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Generated social media post:"
+          echo "=========================================="
+          cat post_content.txt 2>/dev/null || echo "(post_content.txt not found)"
