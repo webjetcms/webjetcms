@@ -2,19 +2,11 @@
 #
 # Triggered when a PR is merged into main.  Uses GitHub Models API (Copilot LLM)
 # as the primary LLM, with Google Gemini as fallback.  The generated post is
-# always posted as a comment on the merged PR.  Optionally it can also be sent
-# by e-mail (with screenshots as attachments) when the e-mail secrets are set.
+# posted as a comment on the merged PR – no additional secrets are required.
 #
 # Required permissions (automatically provided by GITHUB_TOKEN):
 #   pull-requests: write  – to post the comment on the merged PR
 #   models: read          – for GitHub Models API (Copilot LLM)
-#
-# Optional repository secrets (only needed for the e-mail delivery):
-#   EMAIL_SERVER     – SMTP server hostname (e.g. smtp.gmail.com)
-#   EMAIL_PORT       – SMTP port (default: 465)
-#   EMAIL_USERNAME   – sender e-mail address / login
-#   EMAIL_PASSWORD   – sender password or app-password
-#   EMAIL_RECIPIENT  – recipient e-mail address
 #
 # Optional repository secrets:
 #   GEMINI_API_KEY   – Google Gemini API key (used as LLM fallback)
@@ -25,17 +17,24 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  # Allow manual runs against any existing PR for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to generate a post for'
+        required: true
+        type: string
 
 jobs:
   generate-post:
-    # Run only on actual merges, not plain PR closes
-    if: github.event.pull_request.merged == true
+    # On pull_request events run only for actual merges; workflow_dispatch always runs
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
 
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      # Required to post a comment on the merged PR
+      # Required to post a comment on the PR
       pull-requests: write
       # Required for GitHub Models API (Copilot LLM)
       models: read
@@ -48,6 +47,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      # -----------------------------------------------------------------------
+      # When triggered manually, fetch PR details from the GitHub API so that
+      # subsequent steps work identically to the pull_request event trigger.
+      # -----------------------------------------------------------------------
+      - name: Fetch PR details (manual run only)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: parseInt('${{ github.event.inputs.pr_number }}'),
+            });
+            core.exportVariable('PR_TITLE', pr.title);
+            core.exportVariable('PR_BODY', pr.body || '');
+            core.exportVariable('PR_NUMBER', String(pr.number));
+            core.exportVariable('PR_URL', pr.html_url);
+            core.exportVariable('REPO', context.repo.owner + '/' + context.repo.repo);
+            core.exportVariable('MANUAL_PR_NUMBER', String(pr.number));
 
       # -----------------------------------------------------------------------
       # Generate the social-media post via LLM
@@ -65,7 +85,7 @@ jobs:
         run: python .github/scripts/generate_social_post.py
 
       # -----------------------------------------------------------------------
-      # Post the generated social-media post as a comment on the merged PR.
+      # Post the generated social-media post as a comment on the PR.
       # This requires no additional secrets – GITHUB_TOKEN is sufficient.
       # Only runs when the generate step succeeded and produced the output file.
       # -----------------------------------------------------------------------
@@ -80,55 +100,21 @@ jobs:
               return;
             }
             const post = fs.readFileSync('post_content.txt', 'utf8');
+            // workflow_dispatch: use the fetched PR number; pull_request: use event payload
+            const prNumber = parseInt(
+              process.env.MANUAL_PR_NUMBER ||
+              '${{ github.event.pull_request.number }}'
+            );
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
+              issue_number: prNumber,
               body: post,
             });
 
       # -----------------------------------------------------------------------
-      # Optionally send the result by e-mail when EMAIL_SERVER secret is set.
-      # Screenshots are attached when the script found and downloaded any.
-      # -----------------------------------------------------------------------
-      - name: Send e-mail with screenshots
-        if: steps.generate.outputs.has_screenshots == 'true' && env.EMAIL_SERVER != ''
-        uses: dawidd6/action-send-mail@v3
-        env:
-          EMAIL_SERVER: ${{ secrets.EMAIL_SERVER }}
-        with:
-          server_address: ${{ secrets.EMAIL_SERVER }}
-          server_port: ${{ secrets.EMAIL_PORT || 465 }}
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: >-
-            Social media post: PR #${{ github.event.pull_request.number }}
-            – ${{ github.event.pull_request.title }}
-          to: ${{ secrets.EMAIL_RECIPIENT }}
-          from: ${{ secrets.EMAIL_USERNAME }}
-          body: file://post_content.txt
-          attachments: screenshots/*
-
-      - name: Send e-mail without screenshots
-        if: steps.generate.outputs.has_screenshots != 'true' && env.EMAIL_SERVER != ''
-        uses: dawidd6/action-send-mail@v3
-        env:
-          EMAIL_SERVER: ${{ secrets.EMAIL_SERVER }}
-        with:
-          server_address: ${{ secrets.EMAIL_SERVER }}
-          server_port: ${{ secrets.EMAIL_PORT || 465 }}
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: >-
-            Social media post: PR #${{ github.event.pull_request.number }}
-            – ${{ github.event.pull_request.title }}
-          to: ${{ secrets.EMAIL_RECIPIENT }}
-          from: ${{ secrets.EMAIL_USERNAME }}
-          body: file://post_content.txt
-
-      # -----------------------------------------------------------------------
-      # Always print the post in the workflow log so the result is visible even
-      # without any delivery method configured.
+      # Always print the post in the workflow log so the result is visible
+      # directly in the Actions run summary.
       # -----------------------------------------------------------------------
       - name: Print generated post
         if: always()
