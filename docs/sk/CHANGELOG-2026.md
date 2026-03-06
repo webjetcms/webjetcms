@@ -35,6 +35,7 @@
 
 - Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na Spring Security 7, aby sa chyba `password encoder` nepremenila na internú výnimku a požiadavka sa korektne zamietla (#58369).
 - Pridaná podpora prihlasovania do administrácie cez Prihlasovacie kľúče/`PassKey`/`WebAuthn` (#58369).
+- Používatelia - ak do poľa heslo zadáte znak `*` vygeneruje sa nové bezpečné heslo a zobrazí sa vám v notifikácii (#58369).
 
 ### Pre programátora
 

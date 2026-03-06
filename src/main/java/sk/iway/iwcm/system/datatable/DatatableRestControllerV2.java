@@ -1263,9 +1263,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isImporting) {
 			setImporting(true);
 			setSkipWrongData(skipWrongData);
-			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
-			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
+		//InitBinder/validateEditor moze nastavit notifikaciu, musime zachovat
+		if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
+
 		boolean isDuplicate = false;
 		setDuplicate(false);
 

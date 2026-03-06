@@ -33,6 +33,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.layout.MenuService;
@@ -800,6 +801,28 @@ public class LogonTools {
         callLogonLogoffInterceptor(user, request);
 
         return errors;
+    }
+
+    /**
+     * Load user perms, set user to session and spring context.
+     * You should call this method when you get Identity from custom logon method
+     * such as OAuth2 or PassKey or another provider.
+     * @param identity
+     * @param request
+     */
+    public static void logonUserWithAllChecks(Identity identity, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        LogonTools.setUserPerms(identity);
+        UsersDB.setDisabledItems(identity);
+        LogonTools.setUserToSession(session, identity);
+
+        // Establish Spring Security context
+        Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
+        SecurityContextHolder.getContext().setAuthentication(springAuth);
+
+        // Update request context for correct logging
+        SetCharacterEncodingFilter.registerDataContext(request);
     }
 
     public static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)

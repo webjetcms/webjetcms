@@ -106,6 +106,13 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             }
         }
 
+        function showPasskeyInfo() {
+            var wrapper = document.getElementById('passkey-info-wrapper');
+            if (wrapper) {
+                wrapper.style.display = 'block';
+            }
+        }
+
         function doPasskeyLogon() {
             document.getElementById('passkey-error-wrapper')?.style?.setProperty('display', 'none');
             // PassKey authentication flow using Spring Security WebAuthn endpoints
@@ -163,8 +170,10 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     // Check if it's a TLS certificate error (not just user cancellation)
                     if (error.message && (error.message.indexOf('TLS') !== -1 || error.message.indexOf('certificate') !== -1 || error.message.indexOf('certificate errors') !== -1)) {
                         showPasskeyError('<iwcm:text key="passkey.logon.error.tls" />');
+                    } else {
+                        // User cancelled or has no passkey registered - show setup hint
+                        showPasskeyInfo();
                     }
-                    // Otherwise user cancelled the dialog - do nothing
                 } else {
                     showPasskeyError('<iwcm:text key="passkey.logon.error" />');
                 }
@@ -301,6 +310,9 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <c:if test="${isPassKeyEnabled}">
                         <div id="passkey-error-wrapper" class="alert alert-danger" style="display:none;">
                             <span></span>
+                        </div>
+                        <div id="passkey-info-wrapper" class="alert alert-info" style="display:none;">
+                            <span><iwcm:text key="passkey.logon.info"/></span>
                         </div>
                         <div id="passkey-login-btn-wrapper" class="form-group">
                             <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>

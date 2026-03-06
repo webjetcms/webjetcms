@@ -173,6 +173,70 @@ public class Password
 		return (ret).toString();
 	}
 
+	/**
+	 * Generate strong password in form of XXXXXX-XXXXXX-XXXXXX (3 parts, each of 6 chars)
+	 * with random chars and digits and special chars with uppercase and lowercase letters
+	 * @return
+	 */
+	public static String generateStrongPassword()
+	{
+		StringBuilder password = new StringBuilder();
+
+		//skip o as it can be confused with 0 and l as it can be confused with 1
+		String allowedChars = "abcdefghijkmnpqrstuvwxyz";
+		String numbers = "123456789";
+		String specialChars = "!.@%*()+-=/:<>";
+
+		int minNumbers = Integer.max(Constants.getInt("passwordAdminMinCountOfDigits"), 2);
+		int minSpecialChars = Integer.max(Constants.getInt("passwordMinCountOfSpecialSigns"), 2);
+		int minUpperCase = Integer.max(Constants.getInt("passwordAdminMinUpperCaseLetters"), 2);
+		int minLowerCase = Integer.max(Constants.getInt("passwordMinLowerCaseLetters"), 2);
+
+		//add required number of digits
+		for (int i = 0; i < minNumbers; i++) {
+			password.append(numbers.charAt(rand.nextInt(numbers.length())));
+		}
+		//add required number of special chars
+		for (int i = 0; i < minSpecialChars; i++) {
+			password.append(specialChars.charAt(rand.nextInt(specialChars.length())));
+		}
+		//add required number of uppercase letters
+		for (int i = 0; i < minUpperCase; i++) {
+			password.append((""+allowedChars.charAt(rand.nextInt(allowedChars.length()))).toUpperCase());
+		}
+		//add required number of lowercase letters
+		for (int i = 0; i < minLowerCase; i++) {
+			password.append(allowedChars.charAt(rand.nextInt(allowedChars.length())));
+		}
+
+		int minPasswordLength = 18;
+		//add random chars until we reach min password length
+		while (password.length() < minPasswordLength) {
+			password.append(allowedChars.charAt(rand.nextInt(allowedChars.length())));
+		}
+
+		//shuffle the characters in the password - split password into array of chars, shuffle it and then join it back to string
+		char[] passwordChars = password.toString().toCharArray();
+		for (int i = 0; i < passwordChars.length; i++) {
+			int randomIndex = rand.nextInt(passwordChars.length);
+			//swap chars
+			char temp = passwordChars[i];
+			passwordChars[i] = passwordChars[randomIndex];
+			passwordChars[randomIndex] = temp;
+		}
+
+		//add dash sign every 6 chars
+		StringBuilder finalPassword = new StringBuilder();
+		for (int i = 0; i < passwordChars.length; i++) {
+			finalPassword.append(passwordChars[i]);
+			if ((i + 1) % 6 == 0 && i != passwordChars.length - 1) {
+				finalPassword.append("-");
+			}
+		}
+
+		return finalPassword.toString();
+	}
+
 	private static String getKey() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("5d16798e32165b9844c");

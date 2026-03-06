@@ -27,7 +27,7 @@ request.setAttribute("dialogDescKey", "passkey.manage.instructions");
     border-collapse: collapse;
 }
 .passkey-list th, .passkey-list td {
-    padding: 8px 12px;
+    padding: 8px 12px !important;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
@@ -51,10 +51,8 @@ request.setAttribute("dialogDescKey", "passkey.manage.instructions");
     color: #666;
 }
 #passkey-register-section {
-    margin-top: 15px;
+    margin-bottom: 15px;
     padding: 15px;
-    background: #f8f9fa;
-    border-radius: 4px;
 }
 #passkey-register-section label {
     font-weight: bold;
@@ -69,10 +67,6 @@ request.setAttribute("dialogDescKey", "passkey.manage.instructions");
 
 <div class="padding10" style="min-width: 800px; min-height: 400px;">
 
-    <div id="passkey-list-container">
-        <div class="passkey-empty"><iwcm:text key="passkey.manage.loading"/></div>
-    </div>
-
     <div id="passkey-register-section">
         <label for="passkey-label"><iwcm:text key="passkey.manage.newLabel"/></label>
         <div style="display: flex; align-items: center;">
@@ -82,6 +76,10 @@ request.setAttribute("dialogDescKey", "passkey.manage.instructions");
                 <i class="ti ti-fingerprint"></i> <iwcm:text key="passkey.manage.register"/>
             </button>
         </div>
+    </div>
+
+    <div id="passkey-list-container">
+        <div class="passkey-empty"><iwcm:text key="passkey.manage.loading"/></div>
     </div>
 
 </div>

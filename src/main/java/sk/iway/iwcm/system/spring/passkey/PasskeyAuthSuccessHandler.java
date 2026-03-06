@@ -8,15 +8,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.LogonTools;
-import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -62,18 +59,11 @@ public class PasskeyAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             // Establish WebJET CMS session (Identity) - same pattern as OAuth2AdminSuccessHandler
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
-            HttpSession session = request.getSession();
-            LogonTools.setUserToSession(session, identity);
-
-            // Establish Spring Security context
-            Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
-            SecurityContextHolder.getContext().setAuthentication(springAuth);
-
-            // Update request context for correct logging
-            SetCharacterEncodingFilter.registerDataContext(request);
+            LogonTools.logonUserWithAllChecks(identity, request);
             Adminlog.add(Adminlog.TYPE_USER_LOGON, "PassKey - user (ADMIN) successfully logged: name=" + userDetails.getLogin(), -1, -1);
 
             // Check for saved redirect URL
+            HttpSession session = request.getSession();
             String afterLogonRedirect = (String) session.getAttribute("adminAfterLogonRedirect");
             if (afterLogonRedirect != null) {
                 session.removeAttribute("adminAfterLogonRedirect");

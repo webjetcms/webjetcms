@@ -38,7 +38,7 @@
             :key="index"
         >
           <span>
-            <img v-if="user.photo" :src="`/thumb${user.photo}?w=30&h=30&ip=5`" alt="">
+            <img v-if="user.photo" :src="getPhotoUrl(user.photo)" alt="">
             <span v-else class="no-photo ti ti-user fs-3"></span>
             <a class="name" v-text="user.fullName" :href="`mailto:${user.email}`"></a>
           </span>
@@ -119,6 +119,11 @@ export default {
   methods: {
     showAll: function() {
       this.allUsers = true;
+    },
+
+    getPhotoUrl(photo) {
+      if (photo.startsWith('http')) return photo;
+      return `/thumb${photo}?w=30&h=30&ip=5`;
     },
 
     async removeSession(sessionId) {

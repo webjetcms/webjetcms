@@ -220,7 +220,11 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
 		if ("random".equals(entity.getPassword()) || "*".equals(entity.getPassword())) {
 			// generate password
-			entity.setPassword(generateUserPassword());
+            String newPassword = generateUserPassword();
+            entity.setPassword(newPassword);
+
+            //show password in notification
+            addNotify(new NotifyBean(getProp().getText("logon.password"), newPassword, NotifyType.INFO));
         }
 
         Prop prop = Prop.getInstance(request);
@@ -402,6 +406,6 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
     }
 
     private final String generateUserPassword() {
-        return Password.generateStringHash(5) + Password.generatePassword(5);
+        return Password.generateStrongPassword();
     }
 }
