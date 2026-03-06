@@ -1,0 +1,126 @@
+# Workflow: Generate social media post after a pull request is merged.
+#
+# Triggered when a PR is merged into main.  Uses GitHub Models API (Copilot LLM)
+# as the primary LLM, with Google Gemini as fallback.  The generated post is
+# posted as a comment on the merged PR – no additional secrets are required.
+#
+# Required permissions (automatically provided by GITHUB_TOKEN):
+#   pull-requests: write  – to post the comment on the merged PR
+#   models: read          – for GitHub Models API (Copilot LLM)
+#
+# Optional repository secrets:
+#   GEMINI_API_KEY   – Google Gemini API key (used as LLM fallback)
+
+name: Generate Social Media Post
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  # Allow manual runs against any existing PR for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request number to generate a post for'
+        required: true
+        type: string
+
+jobs:
+  generate-post:
+    # On pull_request events run only for actual merges; workflow_dispatch always runs
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # Required to post a comment on the PR
+      pull-requests: write
+      # Required for GitHub Models API (Copilot LLM)
+      models: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # -----------------------------------------------------------------------
+      # When triggered manually, fetch PR details from the GitHub API so that
+      # subsequent steps work identically to the pull_request event trigger.
+      # -----------------------------------------------------------------------
+      - name: Fetch PR details (manual run only)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: parseInt('${{ github.event.inputs.pr_number }}'),
+            });
+            core.exportVariable('PR_TITLE', pr.title);
+            core.exportVariable('PR_BODY', pr.body || '');
+            core.exportVariable('PR_NUMBER', String(pr.number));
+            core.exportVariable('PR_URL', pr.html_url);
+            core.exportVariable('REPO', context.repo.owner + '/' + context.repo.repo);
+            core.exportVariable('MANUAL_PR_NUMBER', String(pr.number));
+
+      # -----------------------------------------------------------------------
+      # Generate the social-media post via LLM
+      # -----------------------------------------------------------------------
+      - name: Generate social media post
+        id: generate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: python .github/scripts/generate_social_post.py
+
+      # -----------------------------------------------------------------------
+      # Post the generated social-media post as a comment on the PR.
+      # This requires no additional secrets – GITHUB_TOKEN is sufficient.
+      # Only runs when the generate step succeeded and produced the output file.
+      # -----------------------------------------------------------------------
+      - name: Post social media post as PR comment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('post_content.txt')) {
+              core.warning('post_content.txt not found, skipping PR comment.');
+              return;
+            }
+            const post = fs.readFileSync('post_content.txt', 'utf8');
+            // workflow_dispatch: use the fetched PR number; pull_request: use event payload
+            const prNumber = parseInt(
+              process.env.MANUAL_PR_NUMBER ||
+              '${{ github.event.pull_request.number }}'
+            );
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: post,
+            });
+
+      # -----------------------------------------------------------------------
+      # Always print the post in the workflow log so the result is visible
+      # directly in the Actions run summary.
+      # -----------------------------------------------------------------------
+      - name: Print generated post
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Generated social media post:"
+          echo "=========================================="
+          cat post_content.txt 2>/dev/null || echo "(post_content.txt not found)"
+
