@@ -3,7 +3,7 @@
 
 Uses GitHub Models API (Copilot LLM) as primary LLM, falls back to Google Gemini.
 Outputs:
-  - post_content.txt   : formatted email body with the generated post
+  - post_content.txt   : Markdown-formatted comment body with the generated post
   - screenshots/       : directory with any screenshots found in the PR
   - screenshot_list.txt: newline-separated list of downloaded screenshot paths
 """
@@ -17,6 +17,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# Maximum character length for the generated social media post
+POST_MAX_CHARS = 220
 
 # ---------------------------------------------------------------------------
 # Prompt building
@@ -37,7 +39,7 @@ Changed files:
 {file_summary}
 
 Requirements:
-- Maximum 220 characters
+- Maximum {POST_MAX_CHARS} characters
 - Start with a sentence about what was improved
 - Add 1-3 relevant emojis
 - Add relevant hashtags and a question at the end
@@ -263,18 +265,27 @@ def write_outputs(
     downloaded: list[str],
 ) -> None:
     """Write post_content.txt, screenshot_list.txt and GitHub Actions outputs."""
+    lines: list[str] = []
+    lines.append("## 📢 Návrh príspevku na sociálne siete")
+    lines.append("")
+    lines.append("> " + post.replace("\n", "\n> "))
+    lines.append("")
+    lines.append(f"*Počet znakov: {len(post)} / {POST_MAX_CHARS}*")
+    if downloaded:
+        lines.append("")
+        lines.append(f"**Priložené screenshoty ({len(downloaded)}):**")
+        for s in downloaded:
+            lines.append(f"- `{s}`")
+    lines.append("")
+    lines.append(
+        "<sub>Príspevok vygenerovaný automaticky po mergnutí PR pomocou LLM. "
+        "Skontrolujte ho pred zverejnením.</sub>"
+    )
+
+    content = "\n".join(lines)
+
     with open("post_content.txt", "w", encoding="utf-8") as fh:
-        fh.write(f"Social Media Post for PR #{pr_number}\n")
-        fh.write(f"PR: {pr_url}\n")
-        fh.write(f"Title: {pr_title}\n")
-        fh.write("\n" + "=" * 60 + "\n\n")
-        fh.write(post)
-        fh.write("\n\n" + "=" * 60 + "\n")
-        fh.write(f"\nCharacter count: {len(post)}\n")
-        if downloaded:
-            fh.write(f"\nAttached screenshots ({len(downloaded)}):\n")
-            for s in downloaded:
-                fh.write(f"  - {s}\n")
+        fh.write(content)
 
     with open("screenshot_list.txt", "w", encoding="utf-8") as fh:
         for s in downloaded:

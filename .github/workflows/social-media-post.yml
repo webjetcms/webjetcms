@@ -1,10 +1,15 @@
 # Workflow: Generate social media post after a pull request is merged.
 #
 # Triggered when a PR is merged into main.  Uses GitHub Models API (Copilot LLM)
-# as the primary LLM, with Google Gemini as fallback.  The generated post and any
-# screenshots found in the PR are sent to a configured e-mail address.
+# as the primary LLM, with Google Gemini as fallback.  The generated post is
+# always posted as a comment on the merged PR.  Optionally it can also be sent
+# by e-mail (with screenshots as attachments) when the e-mail secrets are set.
 #
-# Required repository secrets:
+# Required permissions (automatically provided by GITHUB_TOKEN):
+#   pull-requests: write  – to post the comment on the merged PR
+#   models: read          – for GitHub Models API (Copilot LLM)
+#
+# Optional repository secrets (only needed for the e-mail delivery):
 #   EMAIL_SERVER     – SMTP server hostname (e.g. smtp.gmail.com)
 #   EMAIL_PORT       – SMTP port (default: 465)
 #   EMAIL_USERNAME   – sender e-mail address / login
@@ -30,7 +35,8 @@ jobs:
 
     permissions:
       contents: read
-      pull-requests: read
+      # Required to post a comment on the merged PR
+      pull-requests: write
       # Required for GitHub Models API (Copilot LLM)
       models: read
 
@@ -59,9 +65,31 @@ jobs:
         run: python .github/scripts/generate_social_post.py
 
       # -----------------------------------------------------------------------
-      # Send the result by e-mail
-      # The 'attachments' field is skipped when no screenshots were found, so
-      # we send two variants: one with attachments and one without.
+      # Post the generated social-media post as a comment on the merged PR.
+      # This requires no additional secrets – GITHUB_TOKEN is sufficient.
+      # Only runs when the generate step succeeded and produced the output file.
+      # -----------------------------------------------------------------------
+      - name: Post social media post as PR comment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('post_content.txt')) {
+              core.warning('post_content.txt not found, skipping PR comment.');
+              return;
+            }
+            const post = fs.readFileSync('post_content.txt', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: post,
+            });
+
+      # -----------------------------------------------------------------------
+      # Optionally send the result by e-mail when EMAIL_SERVER secret is set.
+      # Screenshots are attached when the script found and downloaded any.
       # -----------------------------------------------------------------------
       - name: Send e-mail with screenshots
         if: steps.generate.outputs.has_screenshots == 'true' && env.EMAIL_SERVER != ''
@@ -100,7 +128,7 @@ jobs:
 
       # -----------------------------------------------------------------------
       # Always print the post in the workflow log so the result is visible even
-      # when e-mail is not configured.
+      # without any delivery method configured.
       # -----------------------------------------------------------------------
       - name: Print generated post
         if: always()
@@ -109,3 +137,4 @@ jobs:
           echo "Generated social media post:"
           echo "=========================================="
           cat post_content.txt 2>/dev/null || echo "(post_content.txt not found)"
+
