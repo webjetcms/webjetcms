@@ -14,9 +14,9 @@ import lombok.Setter;
 
 /**
  * JPA entity representing a WebAuthn user entity (passkey_user_entities table).
- * Maps between WJA admin users and WebAuthn user handles.
+ * Maps between WebJET users and WebAuthn user handles.
  *
- * Each entry represents one admin user who has registered at least one passkey.
+ * Each entry represents one user who has registered at least one passkey.
  * The webauthnUserId is the opaque user handle used by the WebAuthn protocol.
  */
 @Entity
@@ -40,7 +40,7 @@ public class PasskeyUserEntityBean {
     private String webauthnUserId;
 
     /**
-     * Username (login name) of the admin user.
+     * Username (login name) of the WebJET user.
      * Maps to PublicKeyCredentialUserEntity.name.
      */
     @Column(name = "name", nullable = false, unique = true)
