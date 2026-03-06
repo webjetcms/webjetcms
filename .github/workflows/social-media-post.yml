@@ -70,6 +70,22 @@ jobs:
             core.exportVariable('MANUAL_PR_NUMBER', String(pr.number));
 
       # -----------------------------------------------------------------------
+      # For pull_request events, export PR details via GITHUB_ENV so they are
+      # available to subsequent steps (avoids the env: block overriding them).
+      # -----------------------------------------------------------------------
+      - name: Set PR environment variables (pull_request event)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            core.exportVariable('PR_TITLE', pr.title);
+            core.exportVariable('PR_BODY', pr.body || '');
+            core.exportVariable('PR_NUMBER', String(pr.number));
+            core.exportVariable('PR_URL', pr.html_url);
+            core.exportVariable('REPO', context.repo.owner + '/' + context.repo.repo);
+
+      # -----------------------------------------------------------------------
       # Generate the social-media post via LLM
       # -----------------------------------------------------------------------
       - name: Generate social media post
@@ -77,11 +93,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          REPO: ${{ github.repository }}
         run: python .github/scripts/generate_social_post.py
 
       # -----------------------------------------------------------------------
