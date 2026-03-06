@@ -89,8 +89,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             // Additionally check platform authenticator availability
             PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
                 .then(function(available) {
-                    if (!available) {
-                        document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                    if (available) {
+                        document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'block');
                     }
                 })
                 .catch(function() {
@@ -314,7 +314,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <div id="passkey-info-wrapper" class="alert alert-info" style="display:none;">
                             <span><iwcm:text key="passkey.logon.info"/></span>
                         </div>
-                        <div id="passkey-login-btn-wrapper" class="form-group">
+                        <div id="passkey-login-btn-wrapper" class="form-group" style="display:none;">
                             <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>
                         </div>
                     </c:if>
@@ -432,9 +432,9 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
     jQuery(document).ready(function() {
         try {
-            checkPasskeyAvailability();
             bindPasswordStrength();
             $("#username").focus();
+            checkPasskeyAvailability();
         } catch (e) {console.log(e);}
 
         //preserve hash
