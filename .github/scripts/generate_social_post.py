@@ -57,8 +57,9 @@ Respond with ONLY the post text, nothing else."""
 
 _MODEL_GITHUB = "gpt-4o"
 _MODEL_GEMINI = "gemini-3.1-pro-preview"
-# Maximum tokens for the LLM response (1000 gives comfortable headroom for a quality post)
-_POST_MAX_TOKENS = 1000
+# Maximum tokens for the LLM response (2048 gives safe headroom; Slovak text with diacritics
+# can consume more tokens than English, and the model may add preamble before the post)
+_POST_MAX_TOKENS = 10000
 
 
 def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, str, dict] | None:
@@ -146,9 +147,15 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, 
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            post = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+            candidate = result["candidates"][0]
+            finish_reason = candidate.get("finishReason", "UNKNOWN")
+            if finish_reason not in ("STOP", "MAX_TOKENS"):
+                print(f"Gemini unexpected finishReason: {finish_reason}", file=sys.stderr)
+            if finish_reason == "MAX_TOKENS":
+                print("Warning: Gemini response was cut off by MAX_TOKENS limit.", file=sys.stderr)
+            post = candidate["content"]["parts"][0]["text"].strip()
             usage = result.get("usageMetadata", {})
             token_info = {
                 "prompt": usage.get("promptTokenCount", 0),
