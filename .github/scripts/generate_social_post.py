@@ -18,7 +18,7 @@ import urllib.request
 from pathlib import Path
 
 # Maximum character length for the generated social media post
-POST_MAX_CHARS = 220
+POST_MAX_CHARS = 1220
 
 # ---------------------------------------------------------------------------
 # Prompt building
@@ -40,8 +40,10 @@ Changed files:
 
 Requirements:
 - Maximum {POST_MAX_CHARS} characters
-- Start with a sentence about what was improved
-- Add 1-3 relevant emojis
+- Start with paragraph about what was improved and what will be main benefit for the users.
+- Add 1 relevant emoji
+- Continue with more details in a 2-4 paragraphs, but keep it concise and engaging. Here you can add more technical details if relevant, but still in an easy-to-understand way.
+- IMPORTANT: Focus on user benefits, not features.
 - Add relevant hashtags and a question at the end
 - Write in Slovak language
 - Tone: friendly, easy to understand for non-technical users
@@ -53,15 +55,24 @@ Respond with ONLY the post text, nothing else."""
 # LLM back-ends
 # ---------------------------------------------------------------------------
 
-def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> str | None:
-    """Try to generate post using GitHub Models API (Copilot LLM, gpt-4o-mini)."""
+_MODEL_GITHUB = "gpt-4o"
+_MODEL_GEMINI = "gemini-3.1-pro"
+# Maximum tokens for the LLM response (1000 gives comfortable headroom for a quality post)
+_POST_MAX_TOKENS = 1000
+
+
+def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, str, dict] | None:
+    """Try to generate post using GitHub Models API (Copilot LLM, gpt-4o).
+
+    Returns (post_text, model_name, token_info) or None on failure.
+    """
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
         print("GITHUB_TOKEN not available, skipping GitHub Models API.", file=sys.stderr)
         return None
 
     payload = {
-        "model": "gpt-4o-mini",
+        "model": _MODEL_GITHUB,
         "messages": [
             {
                 "role": "system",
@@ -72,7 +83,7 @@ def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> str 
             },
             {"role": "user", "content": build_prompt(pr_title, pr_body, pr_files)},
         ],
-        "max_tokens": 300,
+        "max_tokens": _POST_MAX_TOKENS,
         "temperature": 0.7,
     }
 
@@ -89,7 +100,14 @@ def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> str 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            return result["choices"][0]["message"]["content"].strip()
+            post = result["choices"][0]["message"]["content"].strip()
+            usage = result.get("usage", {})
+            token_info = {
+                "prompt": usage.get("prompt_tokens", 0),
+                "completion": usage.get("completion_tokens", 0),
+                "total": usage.get("total_tokens", 0),
+            }
+            return post, _MODEL_GITHUB, token_info
     except urllib.error.HTTPError as exc:
         body_text = exc.read().decode("utf-8", errors="replace")[:500]
         print(f"GitHub Models API HTTP {exc.code}: {body_text}", file=sys.stderr)
@@ -99,8 +117,11 @@ def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> str 
         return None
 
 
-def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> str | None:
-    """Generate post using Google Gemini API."""
+def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, str, dict] | None:
+    """Generate post using Google Gemini API.
+
+    Returns (post_text, model_name, token_info) or None on failure.
+    """
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         print("GEMINI_API_KEY not set, skipping Gemini API.", file=sys.stderr)
@@ -108,12 +129,12 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> str | None:
 
     payload = {
         "contents": [{"parts": [{"text": build_prompt(pr_title, pr_body, pr_files)}]}],
-        "generationConfig": {"maxOutputTokens": 300, "temperature": 0.7},
+        "generationConfig": {"maxOutputTokens": _POST_MAX_TOKENS, "temperature": 0.7},
     }
 
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.0-flash:generateContent?key={api_key}"
+        f"{_MODEL_GEMINI}:generateContent?key={api_key}"
     )
     req = urllib.request.Request(
         url,
@@ -124,7 +145,14 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> str | None:
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read().decode("utf-8"))
-            return result["candidates"][0]["content"]["parts"][0]["text"].strip()
+            post = result["candidates"][0]["content"]["parts"][0]["text"].strip()
+            usage = result.get("usageMetadata", {})
+            token_info = {
+                "prompt": usage.get("promptTokenCount", 0),
+                "completion": usage.get("candidatesTokenCount", 0),
+                "total": usage.get("totalTokenCount", 0),
+            }
+            return post, _MODEL_GEMINI, token_info
     except urllib.error.HTTPError as exc:
         body_text = exc.read().decode("utf-8", errors="replace")[:500]
         print(f"Gemini API HTTP {exc.code}: {body_text}", file=sys.stderr)
@@ -263,6 +291,8 @@ def write_outputs(
     pr_number: str,
     pr_url: str,
     downloaded: list[str],
+    model_used: str = "",
+    token_info: dict | None = None,
 ) -> None:
     """Write post_content.txt, screenshot_list.txt and GitHub Actions outputs."""
     lines: list[str] = []
@@ -277,8 +307,13 @@ def write_outputs(
         for s in downloaded:
             lines.append(f"- `{s}`")
     lines.append("")
+    model_info = ""
+    if model_used:
+        model_info = f" | model: `{model_used}`"
+        if token_info and token_info.get("total"):
+            model_info += f" | tokeny: {token_info['total']} (prompt: {token_info['prompt']}, odpoveď: {token_info['completion']})"
     lines.append(
-        "<sub>Príspevok vygenerovaný automaticky po mergnutí PR pomocou LLM. "
+        f"<sub>Príspevok vygenerovaný automaticky po mergnutí PR pomocou LLM{model_info}. "
         "Skontrolujte ho pred zverejnením.</sub>"
     )
 
@@ -327,17 +362,24 @@ def main() -> None:
     pr_files = get_pr_files(repo, pr_number, token)
     print(f"Changed files: {len(pr_files)}")
 
-    # Generate the post – try GitHub Models first, then Gemini, then a hard fallback
-    post: str | None = None
+    # Generate the post.
+    # If GEMINI_API_KEY is set, prefer Gemini (higher quality), otherwise fall back to GitHub Models.
+    result: tuple[str, str, dict] | None = None
+    model_used = "fallback"
+    token_info: dict = {}
 
-    print("Trying GitHub Models API (Copilot LLM)...")
-    post = call_github_models(pr_title, pr_body, pr_files)
+    if os.environ.get("GEMINI_API_KEY"):
+        print("Trying Google Gemini API (priority)...")
+        result = call_gemini(pr_title, pr_body, pr_files)
 
-    if not post:
-        print("Trying Google Gemini API...")
-        post = call_gemini(pr_title, pr_body, pr_files)
+    if not result:
+        print("Trying GitHub Models API (Copilot LLM)...")
+        result = call_github_models(pr_title, pr_body, pr_files)
 
-    if not post:
+    if result:
+        post, model_used, token_info = result
+        print(f"Model used: {model_used}, tokens: {token_info.get('total', 'N/A')}")
+    else:
         # Basic hardcoded fallback so the workflow never fails silently
         print("Warning: all LLM back-ends failed, using built-in fallback.", file=sys.stderr)
         truncated_title = pr_title[:100]
@@ -358,7 +400,7 @@ def main() -> None:
     print(f"Downloaded/copied {len(downloaded)} screenshot(s)")
 
     # Write all output files
-    write_outputs(post, pr_title, pr_number, pr_url, downloaded)
+    write_outputs(post, pr_title, pr_number, pr_url, downloaded, model_used=model_used, token_info=token_info)
     print("\n::notice::Social media post generation complete.")
 
 
