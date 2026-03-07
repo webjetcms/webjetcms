@@ -56,7 +56,7 @@ Respond with ONLY the post text, nothing else."""
 # ---------------------------------------------------------------------------
 
 _MODEL_GITHUB = "gpt-4o"
-_MODEL_GEMINI = "gemini-3.1-pro"
+_MODEL_GEMINI = "gemini-3.1-pro-preview"
 # Maximum tokens for the LLM response (1000 gives comfortable headroom for a quality post)
 _POST_MAX_TOKENS = 1000
 
