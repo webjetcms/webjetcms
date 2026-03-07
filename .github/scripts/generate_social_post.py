@@ -24,10 +24,17 @@ POST_MAX_CHARS = 1220
 # Prompt building
 # ---------------------------------------------------------------------------
 
-def build_prompt(pr_title: str, pr_body: str, pr_files: list[str]) -> str:
+def build_prompt(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: str = "") -> str:
     """Build the LLM prompt to generate the social media post."""
     file_summary = "\n".join(pr_files[:20]) if pr_files else "No changed files listed."
     body = (pr_body or "")[:3000]
+
+    doc_section = ""
+    if doc_patches:
+        doc_section = f"""
+
+Changed documentation content (docs/sk/):
+{doc_patches}"""
 
     return f"""Based on this GitHub pull request, create a short, friendly social media post for regular users (not developers).
 
@@ -36,7 +43,7 @@ PR Description:
 {body}
 
 Changed files:
-{file_summary}
+{file_summary}{doc_section}
 
 Requirements:
 - Maximum {POST_MAX_CHARS} characters
@@ -59,10 +66,10 @@ _MODEL_GITHUB = "gpt-4o"
 _MODEL_GEMINI = "gemini-3.1-pro-preview"
 # Maximum tokens for the LLM response (2048 gives safe headroom; Slovak text with diacritics
 # can consume more tokens than English, and the model may add preamble before the post)
-_POST_MAX_TOKENS = 10000
+_POST_MAX_TOKENS = 15000
 
 
-def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, str, dict] | None:
+def call_github_models(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: str = "") -> tuple[str, str, dict] | None:
     """Try to generate post using GitHub Models API (Copilot LLM, gpt-4o).
 
     Returns (post_text, model_name, token_info) or None on failure.
@@ -82,7 +89,7 @@ def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> tupl
                     "about software updates for regular, non-technical users."
                 ),
             },
-            {"role": "user", "content": build_prompt(pr_title, pr_body, pr_files)},
+            {"role": "user", "content": build_prompt(pr_title, pr_body, pr_files, doc_patches)},
         ],
         "max_tokens": _POST_MAX_TOKENS,
         "temperature": 0.7,
@@ -118,7 +125,7 @@ def call_github_models(pr_title: str, pr_body: str, pr_files: list[str]) -> tupl
         return None
 
 
-def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, str, dict] | None:
+def call_gemini(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: str = "") -> tuple[str, str, dict] | None:
     """Generate post using Google Gemini API.
 
     Returns (post_text, model_name, token_info) or None on failure.
@@ -129,7 +136,7 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, 
         return None
 
     payload = {
-        "contents": [{"parts": [{"text": build_prompt(pr_title, pr_body, pr_files)}]}],
+        "contents": [{"parts": [{"text": build_prompt(pr_title, pr_body, pr_files, doc_patches)}]}],
         "generationConfig": {"maxOutputTokens": _POST_MAX_TOKENS, "temperature": 0.7},
     }
 
@@ -176,8 +183,11 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, 
 # GitHub API helpers
 # ---------------------------------------------------------------------------
 
-def get_pr_files(repo: str, pr_number: str, token: str) -> list[str]:
-    """Return list of filenames changed in the PR (max 100 files)."""
+def get_pr_files(repo: str, pr_number: str, token: str) -> list[dict]:
+    """Return list of file objects changed in the PR (max 100 files).
+
+    Each item is a dict with at least 'filename' and 'patch' (unified diff, may be absent).
+    """
     if not all([repo, pr_number, token]):
         return []
 
@@ -192,11 +202,36 @@ def get_pr_files(repo: str, pr_number: str, token: str) -> list[str]:
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            files = json.loads(resp.read().decode("utf-8"))
-            return [f["filename"] for f in files]
+            return json.loads(resp.read().decode("utf-8"))
     except Exception as exc:  # noqa: BLE001
         print(f"Failed to get PR files: {exc}", file=sys.stderr)
         return []
+
+
+def get_doc_patches(pr_file_objects: list[dict], max_chars: int = 8000) -> str:
+    """Extract unified diff patches for changed markdown files under docs/sk/.
+
+    Returns a single string with all patches concatenated, trimmed to max_chars.
+    """
+    parts: list[str] = []
+    total = 0
+    for f in pr_file_objects:
+        fname = f.get("filename", "")
+        if not (fname.startswith("docs/sk/") and fname.endswith(".md")):
+            continue
+        patch = f.get("patch", "")
+        if not patch:
+            continue
+        header = f"### {fname}\n"
+        chunk = header + patch + "\n"
+        if total + len(chunk) > max_chars:
+            remaining = max_chars - total
+            if remaining > len(header):
+                parts.append(header + patch[: remaining - len(header)])
+            break
+        parts.append(chunk)
+        total += len(chunk)
+    return "".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -227,13 +262,10 @@ def find_screenshots(pr_body: str, pr_files: list[str]) -> list[str]:
             for m in pattern.finditer(pr_body):
                 found.append(m.group(1))
 
-    # Include image files that were added/modified in docs
+    # Include image files that were added/modified in docs/sk
     for fname in pr_files:
         ext = Path(fname).suffix.lower()
-        if ext in _IMAGE_EXT and (
-            fname.startswith("docs/")
-            or "screenshot" in fname.lower()
-        ):
+        if ext in _IMAGE_EXT and fname.startswith("docs/sk/"):
             found.append(fname)
 
     # Deduplicate while preserving order
@@ -369,8 +401,22 @@ def main() -> None:
     print(f"Generating social media post for PR #{pr_number}: {pr_title}")
 
     # Fetch changed files from the GitHub API
-    pr_files = get_pr_files(repo, pr_number, token)
+    pr_file_objects = get_pr_files(repo, pr_number, token)
+    pr_files = [f["filename"] for f in pr_file_objects]
     print(f"Changed files: {len(pr_files)}")
+
+    # Extract documentation patches from docs/sk/ markdown files
+    doc_patches = get_doc_patches(pr_file_objects)
+    if doc_patches:
+        print(f"Documentation patches collected: {len(doc_patches)} chars")
+    else:
+        print("No documentation patches found in docs/sk/")
+
+    # Print the full prompt for inspection in the CI log
+    full_prompt = build_prompt(pr_title, pr_body, pr_files, doc_patches)
+    print("\n--- PROMPT START ---")
+    print(full_prompt)
+    print("--- PROMPT END ---\n")
 
     # Generate the post.
     # If GEMINI_API_KEY is set, prefer Gemini (higher quality), otherwise fall back to GitHub Models.
@@ -380,11 +426,11 @@ def main() -> None:
 
     if os.environ.get("GEMINI_API_KEY"):
         print("Trying Google Gemini API (priority)...")
-        result = call_gemini(pr_title, pr_body, pr_files)
+        result = call_gemini(pr_title, pr_body, pr_files, doc_patches)
 
     if not result:
         print("Trying GitHub Models API (Copilot LLM)...")
-        result = call_github_models(pr_title, pr_body, pr_files)
+        result = call_github_models(pr_title, pr_body, pr_files, doc_patches)
 
     if result:
         post, model_used, token_info = result
