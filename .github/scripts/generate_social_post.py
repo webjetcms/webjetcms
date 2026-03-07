@@ -139,7 +139,10 @@ def call_gemini(pr_title: str, pr_body: str, pr_files: list[str]) -> tuple[str, 
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Referer": "https://github.com/webjetcms/webjetcms",
+        },
         method="POST",
     )
     try:
