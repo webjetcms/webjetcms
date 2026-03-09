@@ -65,7 +65,7 @@ public class PasskeyRestController {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        List<PasskeyCredentialBean> credentials = credentialRepository.findByWebauthnUserId(userEntityOpt.get().getWebauthnUserId());
+        List<PasskeyCredentialBean> credentials = credentialRepository.findByUserId(userEntityOpt.get().getId());
         List<PasskeyInfoDto> result = credentials.stream()
                 .map(PasskeyInfoDto::fromEntity)
                 .collect(Collectors.toList());
@@ -95,8 +95,7 @@ public class PasskeyRestController {
 
         PasskeyCredentialBean credential = credentialOpt.get();
         Optional<UserDetailsEntity> userEntityOpt = userDetailsRepository.findFirstByLoginAndDomainId(user.getLogin(), UsersDB.getDomainId());
-        if (userEntityOpt.isEmpty() || Tools.isEmpty(userEntityOpt.get().getWebauthnUserId())
-                || credential.getWebauthnUserId().equals(userEntityOpt.get().getWebauthnUserId()) == false) {
+        if (userEntityOpt.isEmpty() || credential.getUserId().equals(userEntityOpt.get().getId()) == false) {
             return ResponseEntity.status(403).build();
         }
 

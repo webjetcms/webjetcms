@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
@@ -43,12 +44,11 @@ public class PasskeyCredentialBean {
     private String credentialId;
 
     /**
-     * WebAuthn user handle (Base64URL encoded) of the user who owns this credential.
+     * FK to users.user_id - the WebJET user who owns this credential.
      */
-    @Column(name = "webauthn_user_id", nullable = false)
-    @NotBlank
-    @Size(max = 255)
-    private String webauthnUserId;
+    @Column(name = "user_id", nullable = false)
+    @NotNull
+    private Long userId;
 
     /**
      * COSE-encoded public key bytes.

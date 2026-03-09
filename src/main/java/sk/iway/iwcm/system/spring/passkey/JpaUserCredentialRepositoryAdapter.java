@@ -21,6 +21,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * JPA-backed adapter implementing Spring Security's UserCredentialRepository.
@@ -34,9 +37,13 @@ import sk.iway.iwcm.Tools;
 public class JpaUserCredentialRepositoryAdapter implements UserCredentialRepository {
 
     private final PasskeyCredentialRepository credentialRepository;
+    private final UserDetailsRepository userDetailsRepository;
 
-    public JpaUserCredentialRepositoryAdapter(PasskeyCredentialRepository credentialRepository) {
+    public JpaUserCredentialRepositoryAdapter(
+            PasskeyCredentialRepository credentialRepository,
+            UserDetailsRepository userDetailsRepository) {
         this.credentialRepository = credentialRepository;
+        this.userDetailsRepository = userDetailsRepository;
     }
 
     @Override
@@ -49,6 +56,13 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
                 "PassKey JPA: save credential, credentialId=" + credId
                 + ", userId=" + webauthnUserId + ", label=" + record.getLabel());
 
+        Optional<UserDetailsEntity> userOpt = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnUserId, UsersDB.getDomainId());
+        if (userOpt.isEmpty()) {
+            Logger.error(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: Cannot save credential - user not found for webauthnUserId=" + webauthnUserId);
+            throw new IllegalStateException("User not found for webauthnUserId=" + webauthnUserId);
+        }
+
         // Check if credential already exists (update case)
         Optional<PasskeyCredentialBean> existingOpt = credentialRepository.findByCredentialId(credId);
         PasskeyCredentialBean entity;
@@ -60,7 +74,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
             entity.setCredentialId(credId);
         }
 
-        entity.setWebauthnUserId(webauthnUserId);
+        entity.setUserId(userOpt.get().getId());
         entity.setPublicKey(record.getPublicKey().getBytes());
         entity.setSignatureCount(record.getSignatureCount());
         entity.setUvInitialized(record.isUvInitialized());
@@ -101,7 +115,13 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
                     "PassKey JPA: findByCredentialId result=null");
             return null;
         }
-        return toCredentialRecord(entity.get());
+        Optional<UserDetailsEntity> user = userDetailsRepository.findById(entity.get().getUserId());
+        if (user.isEmpty() || Tools.isEmpty(user.get().getWebauthnUserId())) {
+            Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: findByCredentialId user not found for userId=" + entity.get().getUserId());
+            return null;
+        }
+        return toCredentialRecord(entity.get(), user.get().getWebauthnUserId());
     }
 
     @Override
@@ -111,12 +131,20 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                 "PassKey JPA: findByUserId=" + webauthnUserId);
 
-        List<PasskeyCredentialBean> entities = credentialRepository.findByWebauthnUserId(webauthnUserId);
+        Optional<UserDetailsEntity> user = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnUserId, UsersDB.getDomainId());
+        if (user.isEmpty()) {
+            Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: findByUserId user not found");
+            return Collections.emptyList();
+        }
+
+        List<PasskeyCredentialBean> entities = credentialRepository.findByUserId(user.get().getId());
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                 "PassKey JPA: findByUserId result count=" + entities.size());
 
+        final String webauthnId = webauthnUserId;
         return entities.stream()
-                .map(this::toCredentialRecord)
+                .map(e -> toCredentialRecord(e, webauthnId))
                 .collect(Collectors.toList());
     }
 
@@ -133,11 +161,11 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     /**
      * Convert a JPA entity to Spring Security's CredentialRecord.
      */
-    private CredentialRecord toCredentialRecord(PasskeyCredentialBean entity) {
+    private CredentialRecord toCredentialRecord(PasskeyCredentialBean entity, String webauthnUserId) {
         ImmutableCredentialRecord.ImmutableCredentialRecordBuilder builder = ImmutableCredentialRecord.builder();
 
         builder.credentialId(Bytes.fromBase64(entity.getCredentialId()));
-        builder.userEntityUserId(Bytes.fromBase64(entity.getWebauthnUserId()));
+        builder.userEntityUserId(Bytes.fromBase64(webauthnUserId));
         builder.publicKey(new ImmutablePublicKeyCose(entity.getPublicKey()));
         builder.signatureCount(entity.getSignatureCount() != null ? entity.getSignatureCount() : 0);
         builder.uvInitialized(entity.getUvInitialized() != null && entity.getUvInitialized());
