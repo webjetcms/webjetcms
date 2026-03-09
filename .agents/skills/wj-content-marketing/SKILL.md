@@ -1,7 +1,8 @@
 ---
 name: wj-content-marketing
 description: Analyze recent git commits and changes to suggest blog posts, tweets, emails, changelog updates, press releases, and other marketing content based on what was shipped
-license: source page https://awesome.tools/blog/cursor-marketing
+metadata:
+  source: https://awesome.tools/blog/cursor-marketing
 ---
 
 # Content Marketing from Shipments
@@ -169,6 +170,6 @@ When user requests content suggestions, follow this workflow:
 ## Notes
 
 - Use diff output to AI to write what's new (as mentioned in the thread)
-- Focus on customer-centric messaging (see [customer-centric-messaging.md](mdc:docs/customer-centric-messaging.md))
+- Focus on customer-centric messaging (see [customer-centric-messaging.md](references/customer-centric-messaging.md))
 - Treat every release like a launch event to maximize Perplexity/search discovery
 - Quality traffic comes from early engagement rallying
