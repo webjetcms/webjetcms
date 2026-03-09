@@ -267,7 +267,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     private Integer domainId;
 
     @Column(name = "webauthn_user_id")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
+    @JsonIgnore
     private String webauthnUserId;
 
     //@Column(name = "mobile_device")
