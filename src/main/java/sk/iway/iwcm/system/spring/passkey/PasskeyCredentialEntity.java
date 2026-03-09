@@ -27,7 +27,7 @@ import lombok.Setter;
 @Table(name = "passkey_credentials")
 @Getter
 @Setter
-public class PasskeyCredentialBean {
+public class PasskeyCredentialEntity {
 
     @Id
     @Column(name = "passkey_credential_id")
@@ -51,11 +51,11 @@ public class PasskeyCredentialBean {
     private Long userId;
 
     /**
-     * COSE-encoded public key bytes.
+     * COSE-encoded public key, stored as Base64URL string.
      */
-    @Column(name = "public_key", nullable = false)
     @Lob
-    private byte[] publicKey;
+    @Column(name = "public_key", nullable = false)
+    private String publicKey;
 
     /**
      * Signature counter from the authenticator, used to detect cloning.
@@ -96,18 +96,18 @@ public class PasskeyCredentialBean {
     private String publicKeyCredentialType;
 
     /**
-     * Raw attestation object bytes from registration.
+     * Raw attestation object from registration, stored as Base64URL string.
      */
-    @Column(name = "attestation_object")
     @Lob
-    private byte[] attestationObject;
+    @Column(name = "attestation_object")
+    private String attestationObject;
 
     /**
-     * Raw attestation client data JSON bytes from registration.
+     * Attestation client data JSON from registration.
      */
-    @Column(name = "attestation_client_data_json")
     @Lob
-    private byte[] attestationClientDataJson;
+    @Column(name = "attestation_client_data_json")
+    private String attestationClientDataJson;
 
     /**
      * When this credential was created.

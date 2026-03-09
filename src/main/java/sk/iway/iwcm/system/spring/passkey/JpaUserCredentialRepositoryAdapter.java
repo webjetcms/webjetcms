@@ -1,5 +1,6 @@
 package sk.iway.iwcm.system.spring.passkey;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -64,18 +65,18 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         }
 
         // Check if credential already exists (update case)
-        Optional<PasskeyCredentialBean> existingOpt = credentialRepository.findByCredentialId(credId);
-        PasskeyCredentialBean entity;
+        Optional<PasskeyCredentialEntity> existingOpt = credentialRepository.findByCredentialId(credId);
+        PasskeyCredentialEntity entity;
 
         if (existingOpt.isPresent()) {
             entity = existingOpt.get();
         } else {
-            entity = new PasskeyCredentialBean();
+            entity = new PasskeyCredentialEntity();
             entity.setCredentialId(credId);
         }
 
         entity.setUserId(userOpt.get().getId());
-        entity.setPublicKey(record.getPublicKey().getBytes());
+        entity.setPublicKey(new Bytes(record.getPublicKey().getBytes()).toBase64UrlString());
         entity.setSignatureCount(record.getSignatureCount());
         entity.setUvInitialized(record.isUvInitialized());
         entity.setBackupEligible(record.isBackupEligible());
@@ -84,9 +85,9 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         entity.setPublicKeyCredentialType(record.getCredentialType() != null
                 ? record.getCredentialType().getValue() : null);
         entity.setAttestationObject(record.getAttestationObject() != null
-                ? record.getAttestationObject().getBytes() : null);
+                ? record.getAttestationObject().toBase64UrlString() : null);
         entity.setAttestationClientDataJson(record.getAttestationClientDataJSON() != null
-                ? record.getAttestationClientDataJSON().getBytes() : null);
+                ? new String(record.getAttestationClientDataJSON().getBytes(), StandardCharsets.UTF_8) : null);
         entity.setCreated(record.getCreated());
         entity.setLastUsed(record.getLastUsed());
         entity.setLabel(record.getLabel());
@@ -109,7 +110,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                 "PassKey JPA: findByCredentialId=" + credId);
 
-        Optional<PasskeyCredentialBean> entity = credentialRepository.findByCredentialId(credId);
+        Optional<PasskeyCredentialEntity> entity = credentialRepository.findByCredentialId(credId);
         if (entity.isEmpty()) {
             Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                     "PassKey JPA: findByCredentialId result=null");
@@ -138,7 +139,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
             return Collections.emptyList();
         }
 
-        List<PasskeyCredentialBean> entities = credentialRepository.findByUserId(user.get().getId());
+        List<PasskeyCredentialEntity> entities = credentialRepository.findByUserId(user.get().getId());
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
                 "PassKey JPA: findByUserId result count=" + entities.size());
 
@@ -161,12 +162,12 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     /**
      * Convert a JPA entity to Spring Security's CredentialRecord.
      */
-    private CredentialRecord toCredentialRecord(PasskeyCredentialBean entity, String webauthnUserId) {
+    private CredentialRecord toCredentialRecord(PasskeyCredentialEntity entity, String webauthnUserId) {
         ImmutableCredentialRecord.ImmutableCredentialRecordBuilder builder = ImmutableCredentialRecord.builder();
 
         builder.credentialId(Bytes.fromBase64(entity.getCredentialId()));
         builder.userEntityUserId(Bytes.fromBase64(webauthnUserId));
-        builder.publicKey(new ImmutablePublicKeyCose(entity.getPublicKey()));
+        builder.publicKey(new ImmutablePublicKeyCose(Bytes.fromBase64(entity.getPublicKey()).getBytes()));
         builder.signatureCount(entity.getSignatureCount() != null ? entity.getSignatureCount() : 0);
         builder.uvInitialized(entity.getUvInitialized() != null && entity.getUvInitialized());
         builder.backupEligible(entity.getBackupEligible() != null && entity.getBackupEligible());
@@ -177,11 +178,11 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         if (Tools.isNotEmpty(entity.getPublicKeyCredentialType())) {
             builder.credentialType(PublicKeyCredentialType.valueOf(entity.getPublicKeyCredentialType()));
         }
-        if (entity.getAttestationObject() != null) {
-            builder.attestationObject(new Bytes(entity.getAttestationObject()));
+        if (Tools.isNotEmpty(entity.getAttestationObject())) {
+            builder.attestationObject(Bytes.fromBase64(entity.getAttestationObject()));
         }
-        if (entity.getAttestationClientDataJson() != null) {
-            builder.attestationClientDataJSON(new Bytes(entity.getAttestationClientDataJson()));
+        if (Tools.isNotEmpty(entity.getAttestationClientDataJson())) {
+            builder.attestationClientDataJSON(new Bytes(entity.getAttestationClientDataJson().getBytes(StandardCharsets.UTF_8)));
         }
         if (entity.getCreated() != null) {
             builder.created(entity.getCreated());
