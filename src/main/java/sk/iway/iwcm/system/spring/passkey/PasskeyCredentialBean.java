@@ -4,16 +4,12 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
@@ -47,16 +43,7 @@ public class PasskeyCredentialBean {
     private String credentialId;
 
     /**
-     * Reference to the user entity that owns this credential.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_entity_id", nullable = false)
-    @NotNull
-    private PasskeyUserEntityBean userEntity;
-
-    /**
-     * WebAuthn user handle (Base64URL encoded), denormalized for fast lookup.
-     * Must match userEntity.webauthnUserId.
+     * WebAuthn user handle (Base64URL encoded) of the user who owns this credential.
      */
     @Column(name = "webauthn_user_id", nullable = false)
     @NotBlank

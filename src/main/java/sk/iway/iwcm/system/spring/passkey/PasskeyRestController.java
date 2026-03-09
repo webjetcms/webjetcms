@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -41,7 +44,7 @@ public class PasskeyRestController {
     private PasskeyCredentialRepository credentialRepository;
 
     @Autowired
-    private PasskeyUserEntityRepository userEntityRepository;
+    private UserDetailsRepository userDetailsRepository;
 
     /**
      * List all passkeys for the currently logged-in user.
@@ -57,13 +60,12 @@ public class PasskeyRestController {
             return ResponseEntity.status(403).build();
         }
 
-        Optional<PasskeyUserEntityBean> userEntityOpt = userEntityRepository.findByName(user.getLogin());
-        if (userEntityOpt.isEmpty()) {
+        Optional<UserDetailsEntity> userEntityOpt = userDetailsRepository.findFirstByLoginAndDomainId(user.getLogin(), UsersDB.getDomainId());
+        if (userEntityOpt.isEmpty() || Tools.isEmpty(userEntityOpt.get().getWebauthnUserId())) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
-        // Use JPA repository to get credentials with rpId field
-        List<PasskeyCredentialBean> credentials = credentialRepository.findByUserEntity(userEntityOpt.get());
+        List<PasskeyCredentialBean> credentials = credentialRepository.findByWebauthnUserId(userEntityOpt.get().getWebauthnUserId());
         List<PasskeyInfoDto> result = credentials.stream()
                 .map(PasskeyInfoDto::fromEntity)
                 .collect(Collectors.toList());
@@ -85,15 +87,16 @@ public class PasskeyRestController {
             return ResponseEntity.status(403).build();
         }
 
-        // Verify the credential belongs to the current user using JPA repository
+        // Verify the credential belongs to the current user
         Optional<PasskeyCredentialBean> credentialOpt = credentialRepository.findByCredentialId(credentialId);
         if (credentialOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         PasskeyCredentialBean credential = credentialOpt.get();
-        Optional<PasskeyUserEntityBean> userEntityOpt = userEntityRepository.findByName(user.getLogin());
-        if (userEntityOpt.isEmpty() || credential.getUserEntity().getId().equals(userEntityOpt.get().getId()) == false) {
+        Optional<UserDetailsEntity> userEntityOpt = userDetailsRepository.findFirstByLoginAndDomainId(user.getLogin(), UsersDB.getDomainId());
+        if (userEntityOpt.isEmpty() || Tools.isEmpty(userEntityOpt.get().getWebauthnUserId())
+                || credential.getWebauthnUserId().equals(userEntityOpt.get().getWebauthnUserId()) == false) {
             return ResponseEntity.status(403).build();
         }
 

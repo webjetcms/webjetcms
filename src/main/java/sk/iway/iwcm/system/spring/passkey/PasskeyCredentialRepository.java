@@ -37,13 +37,6 @@ public interface PasskeyCredentialRepository extends JpaRepository<PasskeyCreden
     List<PasskeyCredentialBean> findByWebauthnUserIdAndRpId(String webauthnUserId, String rpId);
 
     /**
-     * Find all credentials belonging to a user entity.
-     * @param userEntity the user entity
-     * @return list of credentials
-     */
-    List<PasskeyCredentialBean> findByUserEntity(PasskeyUserEntityBean userEntity);
-
-    /**
      * Delete a credential by its WebAuthn credential ID.
      * @param credentialId the credential ID
      */

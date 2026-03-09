@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import sk.iway.iwcm.Logger;
+
 import org.springframework.security.web.webauthn.api.AuthenticatorTransport;
 import org.springframework.security.web.webauthn.api.Bytes;
 import org.springframework.security.web.webauthn.api.CredentialRecord;
@@ -18,7 +20,6 @@ import org.springframework.security.web.webauthn.management.UserCredentialReposi
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
 /**
@@ -33,13 +34,9 @@ import sk.iway.iwcm.Tools;
 public class JpaUserCredentialRepositoryAdapter implements UserCredentialRepository {
 
     private final PasskeyCredentialRepository credentialRepository;
-    private final PasskeyUserEntityRepository userEntityRepository;
 
-    public JpaUserCredentialRepositoryAdapter(
-            PasskeyCredentialRepository credentialRepository,
-            PasskeyUserEntityRepository userEntityRepository) {
+    public JpaUserCredentialRepositoryAdapter(PasskeyCredentialRepository credentialRepository) {
         this.credentialRepository = credentialRepository;
-        this.userEntityRepository = userEntityRepository;
     }
 
     @Override
@@ -52,16 +49,6 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
                 "PassKey JPA: save credential, credentialId=" + credId
                 + ", userId=" + webauthnUserId + ", label=" + record.getLabel());
 
-        // Find the user entity by WebAuthn user ID
-        Optional<PasskeyUserEntityBean> userEntityOpt = userEntityRepository.findByWebauthnUserId(webauthnUserId);
-        if (userEntityOpt.isEmpty()) {
-            Logger.error(JpaUserCredentialRepositoryAdapter.class,
-                    "PassKey JPA: Cannot save credential - user entity not found for webauthnUserId=" + webauthnUserId);
-            throw new IllegalStateException("User entity not found for webauthnUserId=" + webauthnUserId);
-        }
-
-        PasskeyUserEntityBean userEntity = userEntityOpt.get();
-
         // Check if credential already exists (update case)
         Optional<PasskeyCredentialBean> existingOpt = credentialRepository.findByCredentialId(credId);
         PasskeyCredentialBean entity;
@@ -73,7 +60,6 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
             entity.setCredentialId(credId);
         }
 
-        entity.setUserEntity(userEntity);
         entity.setWebauthnUserId(webauthnUserId);
         entity.setPublicKey(record.getPublicKey().getBytes());
         entity.setSignatureCount(record.getSignatureCount());

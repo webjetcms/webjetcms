@@ -3183,43 +3183,11 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>copilot</string></void>
                 <void property="date"><string>25.02.2026</string></void>
-                <void property="desc"><string>PassKey - create passkey_user_entities table for WebAuthn (JPA)</string></void>
-                <void property="mysql"><string>CREATE TABLE passkey_user_entities (
-                    passkey_user_entity_id BIGINT NOT NULL AUTO_INCREMENT,
-                    webauthn_user_id VARCHAR(255) NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    display_name VARCHAR(255),
-                    PRIMARY KEY (passkey_user_entity_id),
-                    UNIQUE KEY uk_passkey_ue_webauthn_id (webauthn_user_id),
-                    UNIQUE KEY uk_passkey_ue_name (name)
-                ) CHARACTER SET utf8mb4</string></void>
-                <void property="mssql"><string>CREATE TABLE passkey_user_entities (
-                    passkey_user_entity_id BIGINT IDENTITY(1,1) NOT NULL,
-                    webauthn_user_id VARCHAR(255) NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    display_name VARCHAR(255),
-                    PRIMARY KEY (passkey_user_entity_id),
-                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
-                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
-                )</string></void>
-                <void property="oracle"><string>CREATE TABLE passkey_user_entities (
-                    passkey_user_entity_id NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
-                    webauthn_user_id VARCHAR2(255) NOT NULL,
-                    name VARCHAR2(255) NOT NULL,
-                    display_name VARCHAR2(255),
-                    PRIMARY KEY (passkey_user_entity_id),
-                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
-                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
-                )</string></void>
-                <void property="pgsql"><string>CREATE TABLE passkey_user_entities (
-                    passkey_user_entity_id BIGSERIAL NOT NULL,
-                    webauthn_user_id VARCHAR(255) NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    display_name VARCHAR(255),
-                    PRIMARY KEY (passkey_user_entity_id),
-                    CONSTRAINT uk_passkey_ue_webauthn_id UNIQUE (webauthn_user_id),
-                    CONSTRAINT uk_passkey_ue_name UNIQUE (name)
-                )</string></void>
+                <void property="desc"><string>PassKey - add webauthn_user_id column to users table</string></void>
+                <void property="mysql"><string>ALTER TABLE users ADD COLUMN webauthn_user_id VARCHAR(255) DEFAULT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE users ADD webauthn_user_id VARCHAR(255) NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE users ADD webauthn_user_id VARCHAR2(255) DEFAULT NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE users ADD COLUMN webauthn_user_id VARCHAR(255) DEFAULT NULL</string></void>
             </object>
         </void>
 
@@ -3231,7 +3199,6 @@
                 <void property="mysql"><string>CREATE TABLE passkey_credentials (
                     passkey_credential_id BIGINT NOT NULL AUTO_INCREMENT,
                     credential_id VARCHAR(255) NOT NULL,
-                    user_entity_id BIGINT NOT NULL,
                     webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key BLOB NOT NULL,
                     signature_count BIGINT DEFAULT 0,
@@ -3248,13 +3215,11 @@
                     rp_id VARCHAR(255),
                     PRIMARY KEY (passkey_credential_id),
                     UNIQUE KEY uk_passkey_cred_id (credential_id),
-                    KEY idx_passkey_cred_user (user_entity_id),
                     KEY idx_passkey_cred_webauthn_user (webauthn_user_id)
                 ) CHARACTER SET utf8mb4</string></void>
                 <void property="mssql"><string>CREATE TABLE passkey_credentials (
                     passkey_credential_id BIGINT IDENTITY(1,1) NOT NULL,
                     credential_id VARCHAR(255) NOT NULL,
-                    user_entity_id BIGINT NOT NULL,
                     webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key IMAGE NOT NULL,
                     signature_count BIGINT DEFAULT 0,
@@ -3275,7 +3240,6 @@
                 <void property="oracle"><string>CREATE TABLE passkey_credentials (
                     passkey_credential_id NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
                     credential_id VARCHAR2(255) NOT NULL,
-                    user_entity_id NUMBER(19) NOT NULL,
                     webauthn_user_id VARCHAR2(255) NOT NULL,
                     public_key BLOB NOT NULL,
                     signature_count NUMBER(19) DEFAULT 0,
@@ -3296,7 +3260,6 @@
                 <void property="pgsql"><string>CREATE TABLE passkey_credentials (
                     passkey_credential_id BIGSERIAL NOT NULL,
                     credential_id VARCHAR(255) NOT NULL,
-                    user_entity_id BIGINT NOT NULL,
                     webauthn_user_id VARCHAR(255) NOT NULL,
                     public_key BYTEA NOT NULL,
                     signature_count BIGINT DEFAULT 0,

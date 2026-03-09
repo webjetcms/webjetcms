@@ -10,22 +10,23 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * JPA-backed adapter implementing Spring Security's PublicKeyCredentialUserEntityRepository.
  * Bridges between Spring Security's WebAuthn API (which works with Bytes IDs and
- * PublicKeyCredentialUserEntity interface) and our JPA PasskeyUserEntityBean entities.
- *
- * This replaces the previous JdbcPublicKeyCredentialUserEntityRepository that had
- * persistence issues with the project's DataSource/connection pool.
+ * PublicKeyCredentialUserEntity interface) and the users table via UserDetailsRepository.
  */
 @Component
 public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredentialUserEntityRepository {
 
-    private final PasskeyUserEntityRepository repository;
+    private final UserDetailsRepository userDetailsRepository;
 
-    public JpaPublicKeyCredentialUserEntityAdapter(PasskeyUserEntityRepository repository) {
-        this.repository = repository;
+    public JpaPublicKeyCredentialUserEntityAdapter(UserDetailsRepository userDetailsRepository) {
+        this.userDetailsRepository = userDetailsRepository;
     }
 
     @Override
@@ -33,33 +34,25 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
     public void save(PublicKeyCredentialUserEntity userEntity) {
         String webauthnId = userEntity.getId().toBase64UrlString();
         String username = userEntity.getName();
-        String displayName = userEntity.getDisplayName();
 
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: save userEntity, webauthnId=" + webauthnId + ", name=" + username);
 
-        // Check if entity already exists by WebAuthn ID or username
-        Optional<PasskeyUserEntityBean> existing = repository.findByWebauthnUserId(webauthnId);
+        Optional<UserDetailsEntity> existing = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnId, UsersDB.getDomainId());
         if (existing.isEmpty()) {
-            existing = repository.findByName(username);
+            existing = userDetailsRepository.findFirstByLoginAndDomainId(username, UsersDB.getDomainId());
         }
 
-        PasskeyUserEntityBean entity;
         if (existing.isPresent()) {
-            entity = existing.get();
-            entity.setWebauthnUserId(webauthnId);
-            entity.setName(username);
-            entity.setDisplayName(displayName);
+            UserDetailsEntity user = existing.get();
+            user.setWebauthnUserId(webauthnId);
+            userDetailsRepository.save(user);
+            Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
+                    "PassKey JPA: save userEntity SUCCESS, userId=" + user.getId());
         } else {
-            entity = new PasskeyUserEntityBean();
-            entity.setWebauthnUserId(webauthnId);
-            entity.setName(username);
-            entity.setDisplayName(displayName);
+            Logger.error(JpaPublicKeyCredentialUserEntityAdapter.class,
+                    "PassKey JPA: Cannot save userEntity - user not found for username=" + username);
         }
-
-        repository.save(entity);
-        Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
-                "PassKey JPA: save userEntity SUCCESS, id=" + entity.getId());
     }
 
     @Override
@@ -68,17 +61,16 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: findByUsername=" + username);
 
-        Optional<PasskeyUserEntityBean> entity = repository.findByName(username);
-        if (entity.isEmpty()) {
+        Optional<UserDetailsEntity> user = userDetailsRepository.findFirstByLoginAndDomainId(username, UsersDB.getDomainId());
+        if (user.isEmpty() || Tools.isEmpty(user.get().getWebauthnUserId())) {
             Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                     "PassKey JPA: findByUsername result=null");
             return null;
         }
 
-        PublicKeyCredentialUserEntity result = toSpringSecurityEntity(entity.get());
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: findByUsername result=found");
-        return result;
+        return toSpringSecurityEntity(user.get());
     }
 
     @Override
@@ -88,14 +80,14 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: findById=" + webauthnId);
 
-        Optional<PasskeyUserEntityBean> entity = repository.findByWebauthnUserId(webauthnId);
-        if (entity.isEmpty()) {
+        Optional<UserDetailsEntity> user = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnId, UsersDB.getDomainId());
+        if (user.isEmpty()) {
             Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                     "PassKey JPA: findById result=null");
             return null;
         }
 
-        return toSpringSecurityEntity(entity.get());
+        return toSpringSecurityEntity(user.get());
     }
 
     @Override
@@ -105,17 +97,24 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
         Logger.info(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: delete userEntity webauthnId=" + webauthnId);
 
-        repository.deleteByWebauthnUserId(webauthnId);
+        Optional<UserDetailsEntity> user = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnId, UsersDB.getDomainId());
+        if (user.isPresent()) {
+            user.get().setWebauthnUserId(null);
+            userDetailsRepository.save(user.get());
+        }
     }
 
-    /**
-     * Convert a JPA entity to Spring Security's PublicKeyCredentialUserEntity.
-     */
-    private PublicKeyCredentialUserEntity toSpringSecurityEntity(PasskeyUserEntityBean entity) {
+    private PublicKeyCredentialUserEntity toSpringSecurityEntity(UserDetailsEntity user) {
+        StringBuilder displayName = new StringBuilder();
+        if (Tools.isNotEmpty(user.getFirstName())) displayName.append(user.getFirstName()).append(" ");
+        if (Tools.isNotEmpty(user.getLastName())) displayName.append(user.getLastName());
+        String display = displayName.toString().trim();
+        if (Tools.isEmpty(display)) display = user.getLogin();
+
         return ImmutablePublicKeyCredentialUserEntity.builder()
-                .id(Bytes.fromBase64(entity.getWebauthnUserId()))
-                .name(entity.getName())
-                .displayName(entity.getDisplayName())
+                .id(Bytes.fromBase64(user.getWebauthnUserId()))
+                .name(user.getLogin())
+                .displayName(display)
                 .build();
     }
 }
