@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
@@ -26,6 +27,7 @@ import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.users.UserDetails;
 
@@ -33,6 +35,7 @@ import sk.iway.iwcm.users.UserDetails;
 public class FormStatService {
 
     private static final int PAGE_SIZE = 1000;
+    private static final String NOT_ANSWERED = "Nezodpovedané";
 
     private final FormsRepository formsRepository;
     private final FormsServiceImpl formsService;
@@ -52,6 +55,8 @@ public class FormStatService {
         allData.put("chartData", getFormStatChartData(formName, allFormData, getAllowedItems(formName, null), request));
         allData.put("totalResponses", allFormData.size());
         allData.put("averageDuration", computeAverageDuration(formName));
+        allData.put("durationDays", computeDurationDays(formName));
+        allData.put("lastResponseDateTime", getLastResponseDateTime(formName));
 
         return allData;
     }
@@ -62,14 +67,42 @@ public class FormStatService {
         return getFormStatChartData(formName, allFormData, getAllowedItems(formName, itemFormId), request);
     }
 
+    public static final String DEFAULT_COLORSET_NAME = "set3";
+    public static final List<OptionDto> getColorSchemeOptions() {
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("set1", "set1", "/apps/_common/charts/images/overlapping_circles_set1.png"));
+        optionsMap.add(new OptionDto("set2", "set2", "/apps/_common/charts/images/overlapping_circles_set2.png"));
+        optionsMap.add(new OptionDto("set3", "set3", "/apps/_common/charts/images/overlapping_circles_set3.png"));
+        optionsMap.add(new OptionDto("set4", "set4", "/apps/_common/charts/images/overlapping_circles_set4.png"));
+        optionsMap.add(new OptionDto("set5", "set5", "/apps/_common/charts/images/overlapping_circles_set5.png"));
+        optionsMap.add(new OptionDto("set_blue", "set_blue", "/apps/_common/charts/images/overlapping_circles_set_blue.png"));
+        optionsMap.add(new OptionDto("set_green", "set_green", "/apps/_common/charts/images/overlapping_circles_set_green.png"));
+        optionsMap.add(new OptionDto("set_red", "set_red", "/apps/_common/charts/images/overlapping_circles_set_red.png"));
+        optionsMap.add(new OptionDto("set_yellow", "set_yellow", "/apps/_common/charts/images/overlapping_circles_set_yellow.png"));
+        return optionsMap;
+    }
+
     /* ------------------------- */
 
+    private String getLastResponseDateTime(String formName) {
+        FormsEntity lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, CloudToolsForCore.getDomainId());
+        if(lastOne == null) return "";
+        return Tools.formatDateTime(lastOne.getCreateDate());
+    }
+
+    private String computeDurationDays(String formName) {
+        Long formCreationEpoch = new SimpleQuery().forLong("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NULL", formName, CloudToolsForCore.getDomainId());
+        if(formCreationEpoch == null || formCreationEpoch <= 0) return "0";
+        long currentEpoch = Tools.getNow() / 1000;
+        long durationDays = (currentEpoch - formCreationEpoch) / (60 * 60 * 24);
+        return String.valueOf(durationDays);
+    }
 
     private String computeAverageDuration(String formName) {
         Long totalDuration = 0L;
         int validCount = 0;
 
-        for (Number duration : new SimpleQuery().forListNumber("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ?", formName, CloudToolsForCore.getDomainId())) {
+        for (Number duration : new SimpleQuery().forListNumber("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL", formName, CloudToolsForCore.getDomainId())) {
             if(duration != null && duration.longValue() > 0) {
                 totalDuration += duration.longValue();
                 validCount++;
@@ -124,20 +157,58 @@ public class FormStatService {
                 if (Tools.isEmpty(key) || allowed.containsKey(key) == false) continue;
 
                 String value = tildeIndex < field.length() - 1 ? field.substring(tildeIndex + 1) : "";
-                allData.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+
+                if(Tools.isEmpty(value)) {
+                    if(Tools.isTrue(allowed.get(key).getShowUnanswered())) value = NOT_ANSWERED;
+                    else continue;
+                }
+
+                if("checkboxgroup".equals(allowed.get(key).getFieldType())) {
+                    for(String v : parseKKs(value)) {
+                        if(Tools.isEmpty(v)) continue;
+                        allData.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
+                    }
+                }
+                else if("select".equals(allowed.get(key).getFieldType())) {
+                    String options[] = parseKKs(allowed.get(key).getValue());
+                    boolean found = false;
+                    for(String option : options) {
+                        if(option.endsWith(":" + value)) {
+                            found = true;
+                            allData.computeIfAbsent(key, k -> new ArrayList<>()).add(option.substring(0, option.lastIndexOf(":")));
+                            break;
+                        }
+                    }
+
+                    if(found == false) allData.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+                }
+                else {
+                    allData.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+                }
             }
         }
 
         // Sort data to match allowed items order
         List<String> allowedKeys = new ArrayList<>(allowed.keySet());
-        allData = allData.entrySet().stream()
+        for (String allowedKey : allowedKeys) allData.putIfAbsent(allowedKey, new ArrayList<>());
+
+        Map<String, List<String>> sortedData = allData.entrySet().stream()
                 .sorted((e1, e2) -> Integer.compare(
                     allowedKeys.indexOf(e1.getKey()),
                     allowedKeys.indexOf(e2.getKey())
                 ))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-        return allData;
+        return sortedData;
+    }
+
+    private String[] parseKKs(String value) {
+        if(Tools.isEmpty(value)) return new String[0];
+        if(value.indexOf("|") != -1) {
+            return Tools.getTokens(value, "|");
+        } else {
+            return Tools.getTokens(value, ",");
+        }
     }
 
     private JSONArray mapDataToJsonArray(Map<String, List<String>> mapData, Map<String, String> columnNames, Map<String, FormItemEntity> allowed) {
@@ -153,7 +224,7 @@ public class FormStatService {
             jsonObject.put("chart_colorScheme", allowed.get(key).getColorScheme());
 
             // values must be combination of value and count
-            jsonObject.put("values", prepareDataForChart(entry.getValue(), allowed.get(key).getTopCount(), allowed.get(key).getShowOtherCount()) );
+            jsonObject.put("values", prepareDataForChart(entry.getValue(), allowed.get(key).getTopCount(), allowed.get(key).getShowOtherCount(), allowed.get(key).getCompareInsensitive()) );
 
             jsonArray.put(jsonObject);
         }
@@ -161,35 +232,45 @@ public class FormStatService {
         return jsonArray;
     }
 
-    private JSONArray prepareDataForChart(List<String> values, int maxCountAllowed, boolean allowOtherCount) {
+    private JSONArray prepareDataForChart(List<String> values, int maxCountAllowed, boolean allowOtherCount, boolean compareInsensitive) {
         JSONArray valuesArray = new JSONArray();
 
         HashMap<String, Integer> valueCountMap = new HashMap<>();
-        for(String value : values) valueCountMap.put(value, valueCountMap.getOrDefault(value, 0) + 1);
+
+        //
+        if(compareInsensitive) {
+            for(String value : values) {
+                String normalizedValue = Tools.normalize(value);
+                valueCountMap.put(normalizedValue, valueCountMap.getOrDefault(normalizedValue, 0) + 1);
+            }
+        } else {
+            for(String value : values) valueCountMap.put(value, valueCountMap.getOrDefault(value, 0) + 1);
+        }
+
         //sort map DESC
         valueCountMap = valueCountMap.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         int count = 0;
-        int othercount = 0;
+        int otherCount = 0;
         for(Map.Entry<String, Integer> valueCountEntry : valueCountMap.entrySet()) {
             if(count >= maxCountAllowed) {
-                if(allowOtherCount) othercount += valueCountEntry.getValue();
+                if(allowOtherCount) otherCount += valueCountEntry.getValue();
                 continue;
             }
 
             JSONObject valueCountObject = new JSONObject();
-            valueCountObject.put("name", Tools.isEmpty(valueCountEntry.getKey()) ? "EMPTY" : valueCountEntry.getKey());
+            valueCountObject.put("name", valueCountEntry.getKey());
             valueCountObject.put("count", valueCountEntry.getValue());
             valuesArray.put(valueCountObject);
             count++;
         }
 
-        if(allowOtherCount && othercount > 0) {
+        if(allowOtherCount && otherCount > 0) {
             JSONObject otherCountObject = new JSONObject();
             otherCountObject.put("name", "OTHER");
-            otherCountObject.put("count", othercount);
+            otherCountObject.put("count", otherCount);
             valuesArray.put(otherCountObject);
         }
 
@@ -205,7 +286,7 @@ public class FormStatService {
     }
 
     private Map<String, FormItemEntity> getAllowedItems(String formName, String itemFormId) {
-        String sql = "SELECT item_form_id, chart_type, top_count, show_other_count, compare_insensitive, color_scheme FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat IS TRUE AND f.step_id=s.id";
+        String sql = "SELECT item_form_id, value, field_type, chart_type, top_count, show_other_count, show_unanswered, compare_insensitive, color_scheme FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat IS TRUE AND f.step_id=s.id";
         List<Object> sqlParams = new ArrayList<>();
         sqlParams.add(formName);
         sqlParams.add(CloudToolsForCore.getDomainId());
@@ -218,14 +299,16 @@ public class FormStatService {
         sql += " ORDER BY s.sort_priority ASC, f.sort_priority ASC";
 
         Map<String, FormItemEntity> values = new LinkedHashMap<>();
+        List<String> previous = new ArrayList<>();
+        previous.add("");
         new ComplexQuery().setSql(sql).setParams(sqlParams.toArray()).list(new Mapper<FormItemEntity>() {
 			@Override
 			public FormItemEntity map(ResultSet rs) throws SQLException {
                 FormItemEntity stepItem = resultSetToEntity(rs);
 
                 // Radio's act like separe items but if they have same itemFormId AND are one after another they are GROUP (so as only one note in DB)
-                // String previous = values.size() > 0 ? values.get( values.size() - 1).getItemFormId() : "";
-                // if("radio".equals(stepItem.getFieldType()) &&  previous.equals(stepItem.getItemFormId())) return null;
+                if("radio".equals(stepItem.getFieldType()) &&  previous.get(0).equals(stepItem.getItemFormId())) return null;
+                previous.set(0, stepItem.getItemFormId());
 
                 values.put(stepItem.getItemFormId(), stepItem);
 
@@ -239,9 +322,12 @@ public class FormStatService {
     private FormItemEntity resultSetToEntity(ResultSet rs) throws SQLException{
         FormItemEntity fe = new FormItemEntity();
         fe.setItemFormId( rs.getString("item_form_id") );
+        fe.setValue( rs.getString("value") );
+        fe.setFieldType( rs.getString("field_type") );
         fe.setChartType( rs.getString("chart_type") );
         fe.setTopCount( rs.getInt("top_count") );
         fe.setShowOtherCount( rs.getBoolean("show_other_count") );
+        fe.setShowUnanswered( rs.getBoolean("show_unanswered") );
         fe.setCompareInsensitive( rs.getBoolean("compare_insensitive") );
         fe.setColorScheme( rs.getString("color_scheme") );
         return fe;

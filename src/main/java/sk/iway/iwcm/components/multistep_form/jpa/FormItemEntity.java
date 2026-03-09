@@ -107,6 +107,10 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_other_count", tab = "stat", hidden = true)
     private Boolean showOtherCount;
 
+    @Column(name = "show_unanswered")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_unanswered", tab = "stat", hidden = true)
+    private Boolean showUnanswered;
+
     @Column(name = "compare_insensitive")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.compare_insensitive", tab = "stat", hidden = true)
     private Boolean compareInsensitive;

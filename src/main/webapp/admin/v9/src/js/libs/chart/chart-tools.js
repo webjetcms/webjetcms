@@ -54,7 +54,6 @@ export class LineChartForm {
 
         if (config.yAxeNames == null || config.yAxeNames === undefined) throwConstructorError("LineChartForm", "yAxeName");
         if (!config.xAxeName) throwConstructorError("LineChartForm", "xAxeName");
-        if (!config.chartTitle) throwConstructorError("LineChartForm", "chartTitle");
         if (!config.chartDivId) throwConstructorError("LineChartForm", "chartDivId");
         if (config.chartData == null || config.chartData === undefined) throwConstructorError("LineChartForm", "chartData");
         if (config.dateType == null || config.dateType === undefined) throwConstructorError("LineChartForm", "dateType");
@@ -98,7 +97,6 @@ export class BarChartForm {
     initFromConfig(config) {
         if (!config.yAxeName) throwConstructorError("BarChartForm", "yAxeName");
         if (!config.xAxeName) throwConstructorError("BarChartForm", "xAxeName");
-        if (!config.chartTitle) throwConstructorError("BarChartForm", "chartTitle");
         if (!config.chartDivId) throwConstructorError("BarChartForm", "chartDivId");
         if (config.chartData == null || config.chartData === undefined) throwConstructorError("BarChartForm", "chartData");
 
@@ -142,7 +140,6 @@ export class PieChartForm {
     initFromConfig(config) {
         if (!config.yAxeName) throwConstructorError("PieChartForm", "yAxeName");
         if (!config.xAxeName) throwConstructorError("PieChartForm", "xAxeName");
-        if (!config.chartTitle) throwConstructorError("PieChartForm", "chartTitle");
         if (!config.chartDivId) throwConstructorError("PieChartForm", "chartDivId");
         if (config.chartData == null || config.chartData === undefined) throwConstructorError("PieChartForm", "chartData");
 
@@ -190,7 +187,6 @@ export class DoublePieChartForm {
         if (!config.yAxeName_inner) throwConstructorError("DoublePieChartForm", "yAxeName_inner");
         if (!config.yAxeName_outer) throwConstructorError("DoublePieChartForm", "yAxeName_outer");
         if (!config.xAxeName) throwConstructorError("DoublePieChartForm", "xAxeName");
-        if (!config.chartTitle) throwConstructorError("DoublePieChartForm", "chartTitle");
         if (!config.chartDivId) throwConstructorError("DoublePieChartForm", "chartDivId");
         if (config.chartData == null || config.chartData === undefined) throwConstructorError("DoublePieChartForm", "chartData");
 
@@ -251,6 +247,7 @@ const barChart_strokeColor = "#DDDFE6";
 
 // Line chart
 const lineChart_strokeColor = "#DDDFE6";
+const lineChart_legendMaxTextLength = 30;
 
 const blue40 = "#8FA3FF";
 const green30 = "#51DCBD";
@@ -300,6 +297,15 @@ class DateAxisInterval {
         this.timeUnit = timeUnit;
         this.count = count;
     }
+}
+
+function trimLegendText(text, maxLength = lineChart_legendMaxTextLength) {
+    if (text == null) return "";
+
+    const normalized = String(text).trim();
+    if (normalized.length <= maxLength) return normalized;
+
+    return normalized.slice(0, maxLength) + "...";
 }
 
 //Set component visibility based on selected option
@@ -884,11 +890,15 @@ async function createLineChart(root, chartForm) {
                 });
             }
 
-            if(chartForm.legendTransformationFn != null) {
-                series.adapters.add("legendLabelText", (text, target) => {
-                    return chartForm.legendTransformationFn(seriesName);
-                });
-            }
+            series.adapters.add("legendLabelText", (text, target) => {
+                let legendText = seriesName;
+
+                if(chartForm.legendTransformationFn != null) {
+                    legendText = chartForm.legendTransformationFn(seriesName);
+                }
+
+                return trimLegendText(legendText);
+            });
 
             //Add data to series
             series.data.setAll(dataSetData);
@@ -1039,6 +1049,17 @@ function createBarChartHorizontal(root, chart, chartForm) {
         strokeOpacity: 0
     });
 
+    //Trim long category labels on Y axe
+    yRenderer.labels.template.adapters.add("text", function(text, target) {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let originalCategory = dataItem?.dataContext?.name;
+            let newCategory = trimLegendText(originalCategory);
+            return newCategory;
+        }
+
+        return text;
+    });
     //Set data in category axe (required for BAR charts)
     yAxis.data.setAll(chartForm.chartData);
 
@@ -1093,6 +1114,18 @@ function createBarChartVertical(root, chart, chartForm) {
         cornerRadiusTL: 5,
         cornerRadiusTR: 5,
         strokeOpacity: 0
+    });
+
+    //Trim long category labels on X axe
+    xRenderer.labels.template.adapters.add("text", function(text, target) {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let originalCategory = dataItem?.dataContext?.name;
+            let newCategory = trimLegendText(originalCategory);
+            return newCategory;
+        }
+
+        return text;
     });
 
     //Set data in category axe (required for BAR charts)
@@ -1198,7 +1231,7 @@ async function createPieChart(root, chartForm) {
 
     chart = root.container.children.push(
         am5percent.PieChart.new(root, {
-            innerRadius: am5.percent(chartForm.innerRadius),
+            innerRadius: chartForm.innerRadius > 0 ? am5.percent(chartForm.innerRadius) : null,
             layout: chartForm.leftLegendPosition === true ? root.horizontalLayout : root.verticalLayout
         })
     );
@@ -1224,16 +1257,15 @@ async function createPieChart(root, chartForm) {
     //Format labels
     series.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
 
-    if(chartForm.labelTransformationFn != null) {
-        series.labels.template.adapters.add("text", (text, target) => {
-            const dataItem = target.dataItem;
-            if (dataItem) {
-                let newCategory = chartForm.labelTransformationFn(dataItem.dataContext.label);
-                return text.replace("{category}", newCategory);
-            }
-            return text;
-        });
-    }
+    series.labels.template.adapters.add("text", (text, target) => {
+        const dataItem = target._dataItem;
+        if (dataItem) {
+            let newCategory = dataItem?.dataContext?.name;
+            if(chartForm.labelTransformationFn != null) { newCategory = chartForm.labelTransformationFn(newCategory); }
+            return text.replace("{category}", trimLegendText(newCategory));
+        }
+        return text;
+    });
 
     //We are setting data in series only if data length is more than 0, or error occur
     if(chartForm.chartData != undefined && chartForm.chartData.length > 0)
@@ -1262,6 +1294,17 @@ async function createPieChart(root, chartForm) {
             layout: root.gridLayout
         }));
     }
+
+    legend.labels.template.adapters.add("text", (text, target) => {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let newCategory = dataItem?.dataContext?.name;
+            return text.replace("{category}", trimLegendText(newCategory));
+        }
+
+        return text
+    });
+
     legend.data.setAll(series.dataItems);
 
 
@@ -2144,8 +2187,7 @@ function getColorScheme(selectedColorScheme) {
     let useColorScheme = [];
 
     if(selectedColorScheme === null) {
-        //useColorScheme = [...set1, ...set3, ...set5];
-        useColorScheme = setGreen;
+        useColorScheme = [...set1, ...set3, ...set5];
     } else if("set1" === selectedColorScheme) {
         useColorScheme = set1;
     } else if("set2" === selectedColorScheme) {
@@ -2166,8 +2208,7 @@ function getColorScheme(selectedColorScheme) {
         useColorScheme = setYellow;
     } else {
         console.warn("Selected color scheme is not valid, using default one.");
-        //useColorScheme = [...set1, ...set3, ...set5];
-        useColorScheme = setGreen;
+        useColorScheme = [...set1, ...set3, ...set5];
     }
 
     return useColorScheme.map(function(color) { return window.am5.color(color); });

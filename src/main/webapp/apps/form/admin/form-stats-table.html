@@ -1,5 +1,5 @@
 <script data-th-inline="javascript">
-    console.log("Initializing form stats table...");
+    // console.log("Initializing form stats table...");
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -46,6 +46,17 @@
                 detail: { id: urlItemFormId }
             });
             window.parent.dispatchEvent(event);
+        });
+
+        formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            $("#DTE_Field_useColorScheme_0").on("change", function() {
+                const useColorScheme = formItemsDataTable.EDITOR.field("useColorScheme").val()[0];
+                if(useColorScheme) {
+                    formItemsDataTable.EDITOR.field("colorScheme").enable();
+                } else {
+                    formItemsDataTable.EDITOR.field("colorScheme").disable();
+                }
+            });
         });
     });
 </script>

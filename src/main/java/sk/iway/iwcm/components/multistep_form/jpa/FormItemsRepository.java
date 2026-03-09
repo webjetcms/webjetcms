@@ -39,5 +39,8 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
 
     List<FormItemEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
 
-    FormItemEntity findByFormNameAndItemFormId(String formName, String itemFormId);
+    // Basically, we need find first only because joined radio buttons that have same itemFormId but are separate items
+    FormItemEntity findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(String formName, String itemFormId);
+
+    Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
 }

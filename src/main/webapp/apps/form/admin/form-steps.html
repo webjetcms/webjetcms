@@ -233,11 +233,24 @@
                         formItemsDataTable.EDITOR.field("topCount").show();
                         formItemsDataTable.EDITOR.field("showOtherCount").show();
                         formItemsDataTable.EDITOR.field("compareInsensitive").show();
+                        formItemsDataTable.EDITOR.field("useColorScheme").show();
+                        formItemsDataTable.EDITOR.field("colorScheme").show();
                     } else {
                         formItemsDataTable.EDITOR.field("chartType").hide();
                         formItemsDataTable.EDITOR.field("topCount").hide();
                         formItemsDataTable.EDITOR.field("showOtherCount").hide();
                         formItemsDataTable.EDITOR.field("compareInsensitive").hide();
+                        formItemsDataTable.EDITOR.field("useColorScheme").hide();
+                        formItemsDataTable.EDITOR.field("colorScheme").hide();
+                    }
+                });
+
+                $("#DTE_Field_useColorScheme_0").on("change", function() {
+                    const useColorScheme = formItemsDataTable.EDITOR.field("useColorScheme").val()[0];
+                    if(useColorScheme) {
+                        formItemsDataTable.EDITOR.field("colorScheme").enable();
+                    } else {
+                        formItemsDataTable.EDITOR.field("colorScheme").disable();
                     }
                 });
             }

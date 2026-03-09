@@ -3190,7 +3190,8 @@
                     ADD COLUMN show_stat TINYINT(1) NOT NULL DEFAULT 0,
                     ADD COLUMN top_count INT NULL,
                     ADD COLUMN show_other_count TINYINT(1) NOT NULL DEFAULT 0,
-                    ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT 'bar',
+                    ADD COLUMN show_unanswered TINYINT(1) NOT NULL DEFAULT 0,
+                    ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT 'bar_horizontal',
                     ADD COLUMN compare_insensitive TINYINT(1) NOT NULL DEFAULT 0
                 </string></void>
 
@@ -3200,7 +3201,8 @@
                         show_stat BIT NOT NULL CONSTRAINT DF_form_items_show_stat DEFAULT 0,
                         top_count INT NULL,
                         show_other_count BIT NOT NULL CONSTRAINT DF_form_items_show_other_count DEFAULT 0,
-                        chart_type VARCHAR(255) NOT NULL CONSTRAINT DF_form_items_chart_type DEFAULT '',
+                        show_unanswered BIT NOT NULL CONSTRAINT DF_form_items_show_unanswered DEFAULT 0,
+                        chart_type VARCHAR(255) NOT NULL CONSTRAINT DF_form_items_chart_type DEFAULT 'bar_horizontal',
                         compare_insensitive BIT NOT NULL CONSTRAINT DF_form_items_compare_insensitive DEFAULT 0;
                 </string></void>
 
@@ -3210,7 +3212,8 @@
                         show_stat NUMBER(1) DEFAULT 0 NOT NULL,
                         top_count NUMBER NULL,
                         show_other_count NUMBER(1) DEFAULT 0 NOT NULL,
-                        chart_type VARCHAR2(255) DEFAULT '' NOT NULL,
+                        show_unanswered NUMBER(1) DEFAULT 0 NOT NULL,
+                        chart_type VARCHAR2(255) DEFAULT 'bar_horizontal' NOT NULL,
                         compare_insensitive NUMBER(1) DEFAULT 0 NOT NULL
                     );
                 </string></void>
@@ -3220,7 +3223,8 @@
                     ADD COLUMN show_stat BOOLEAN NOT NULL DEFAULT FALSE,
                     ADD COLUMN top_count INTEGER NULL,
                     ADD COLUMN show_other_count BOOLEAN NOT NULL DEFAULT FALSE,
-                    ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT '',
+                    ADD COLUMN show_unanswered BOOLEAN NOT NULL DEFAULT FALSE,
+                    ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT 'bar_horizontal',
                     ADD COLUMN compare_insensitive BOOLEAN NOT NULL DEFAULT FALSE;
                 </string></void>
 

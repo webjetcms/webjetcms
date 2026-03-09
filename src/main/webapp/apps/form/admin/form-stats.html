@@ -34,7 +34,8 @@
         .then(data => {
             document.getElementById("responsesCount").textContent = data.totalResponses;
             document.getElementById("averageDuration").textContent = data.averageDuration;
-            document.getElementById("durationDays").textContent = "15";
+            document.getElementById("durationDays").textContent = data.durationDays;
+            document.getElementById("lastResponseDateTime").textContent = data.lastResponseDateTime;
 
             let instance = new StatsByCharts(
                 {
@@ -52,7 +53,6 @@
             );
 
             instance.createCharts(data.chartData);
-
 
             window.addEventListener("stat-chart-update", async (e) => {
                 const chartId = e?.detail?.id;
@@ -75,45 +75,51 @@
 
 </script>
 
-<div class="row header-container">
-    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
-        <div class="row kokos" style="background: #A3EED9;">
-            <div class="col-4 col-sm-4 icon-div">
-                <span style="color: #51DCBD;">
-                    <i class="ti ti-users"></i>
-                </span>
+<div class="row header-container g-3">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--green">
+            <div class="stat-card__icon">
+                <i class="ti ti-users"></i>
             </div>
-            <div class="col-8 col-sm-8" style="color: #004235;">
-                <span class="title" data-th-text="#{form.stats.responses}">RESPONSES</span>
-                <span id="responsesCount" class="value">0</span>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.responses_count}">RESPONSES</span>
+                <span id="responsesCount" class="stat-card__value">0</span>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
-        <div class="row kokos" style="background: #D9DEFF;">
-            <div class="col-4 col-sm-4 icon-div">
-                <span style="color: #B8C3FF;">
-                    <i class="ti ti-alarm"></i>
-                </span>
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--blue">
+            <div class="stat-card__icon">
+                <i class="ti ti-alarm"></i>
             </div>
-            <div class="col-8 col-sm-8" style="color: #003289;">
-                <span class="title" data-th-text="#{form.stats.averageDuration}">AVERAGE DURATION</span>
-                <span id="averageDuration" class="value">0</span>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.average_duration}">AVERAGE_DURATION</span>
+                <span id="averageDuration" class="stat-card__value">0</span>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-lg-4 header-wrapper-outher">
-        <div class="row kokos" style="background: #FFDAA3;">
-            <div class="col-4 col-sm-4 icon-div">
-                <span style="color: #F6BE3F;">
-                   <i class="ti ti-calendar"></i>
-                </span>
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--orange">
+            <div class="stat-card__icon">
+                <i class="ti ti-calendar"></i>
             </div>
-            <div class="col-8 col-sm-8" style="color: #4A3600;">
-                <span class="title" data-th-text="#{form.stats.duration}">DURATION</span>
-                <span id="durationDays" class="value">0</span>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.duration_days}">DURATION</span>
+                <span id="durationDays" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--red">
+            <div class="stat-card__icon">
+                <i class="ti ti-calendar"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.last_response}">LAST RESPONSE</span>
+                <span id="lastResponseDateTime" class="stat-card__value">0</span>
             </div>
         </div>
     </div>
@@ -123,59 +129,71 @@
 
 <style>
     .header-container {
-        margin: 0px 5px;
+        margin: 0 5px 20px;
     }
 
     .header-wrapper-outher {
-        color: black;
-        padding: 0px;
+        padding: 0;
     }
 
-    .kokos {
-        margin: 15px 10px;
-        padding: 15px;
-        border-radius: 10px;
+    .stat-card {
         display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 10px;
+        padding: 20px;
+        border-radius: 12px;
         border: 1px solid #DDDFE6;
-
-        div.icon-div {
-            text-align: center;
-        }
-
-        span.title {
-            font-size: 1rem;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        span.value {
-            font-size: 2rem;
-            font-weight: 600;
-            display: block;
-        }
-
-        i {
-            font-size: 5rem;
-        }
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        overflow: hidden;
     }
 
-    .header-wrapper-inner {
-        padding: 15px;
-        background: #F3F3F6;
-        border-radius: 10px;
+    /* Color themes */
+    .stat-card--green  { background: #A3EED9; color: #004235; }
+    .stat-card--blue   { background: #D9DEFF; color: #003289; }
+    .stat-card--orange { background: #FFDAA3; color: #4A3600; }
+    .stat-card--red    { background: #FFD6D7; color: #790011; }
 
-        .stats-with-icon {
-            display: flex;
-            justify-content: space-between;
-        }
+    .stat-card--green  .stat-card__icon { color: #51DCBD; }
+    .stat-card--blue   .stat-card__icon { color: #B8C3FF; }
+    .stat-card--orange .stat-card__icon { color: #F6BE3F; }
+    .stat-card--red    .stat-card__icon { color: #FFB3B5; }
 
-        .title {
-            font-size: 1rem;
-            color: #888888;
-        }
+    .stat-card__icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        i {
-            font-size: 2rem;
-        }
+    .stat-card__icon i {
+        font-size: 4rem;
+        line-height: 1;
+    }
+
+    .stat-card__content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .stat-card__title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-card__value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.1;
+        word-break: break-word;
     }
 </style>

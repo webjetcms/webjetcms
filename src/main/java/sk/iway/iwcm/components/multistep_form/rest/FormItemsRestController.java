@@ -39,7 +39,6 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
-import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.utils.Pair;
 
@@ -86,19 +85,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
         page.addOptions("chartType", FormChartType.getOptions(getProp()), "label", "value", false);
-
-        List<OptionDto> optionsMap = new ArrayList<>();
-        optionsMap.add(new OptionDto("set1", "set1", "/apps/_common/charts/images/overlapping_circles_set1.png"));
-        optionsMap.add(new OptionDto("set2", "set2", "/apps/_common/charts/images/overlapping_circles_set2.png"));
-        optionsMap.add(new OptionDto("set3", "set3", "/apps/_common/charts/images/overlapping_circles_set3.png"));
-        optionsMap.add(new OptionDto("set4", "set4", "/apps/_common/charts/images/overlapping_circles_set4.png"));
-        optionsMap.add(new OptionDto("set5", "set5", "/apps/_common/charts/images/overlapping_circles_set5.png"));
-        optionsMap.add(new OptionDto("set_blue", "set_blue", "/apps/_common/charts/images/overlapping_circles_set_blue.png"));
-        optionsMap.add(new OptionDto("set_green", "set_green", "/apps/_common/charts/images/overlapping_circles_set_green.png"));
-        optionsMap.add(new OptionDto("set_red", "set_red", "/apps/_common/charts/images/overlapping_circles_set_red.png"));
-        optionsMap.add(new OptionDto("set_yellow", "set_yellow", "/apps/_common/charts/images/overlapping_circles_set_yellow.png"));
-        page.addOptions("colorScheme", optionsMap, "label", "value", true);
-
+        page.addOptions("colorScheme", FormStatService.getColorSchemeOptions(), "label", "value", true);
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -158,7 +145,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
 
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            entity = formItemsRepository.findByFormNameAndItemFormId(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            entity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
             return processFromEntity(entity, ProcessItemAction.GETONE);
         }
 
@@ -175,19 +162,20 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         return processFromEntity(entity, ProcessItemAction.GETONE);
     }
 
-
-
     @Override
     public FormItemEntity insertItem(FormItemEntity entity) {
         Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
         if(chartStatInfo != null) {
-            FormItemEntity originalEntity = formItemsRepository.findByFormNameAndItemFormId(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
             if(entity != null) {
+                entity = processToEntity(entity, null);
+
                 // copy only allowed params
                 originalEntity.setShowStat( entity.getShowStat() );
                 originalEntity.setChartType( entity.getChartType() );
                 originalEntity.setTopCount( entity.getTopCount() );
                 originalEntity.setShowOtherCount( entity.getShowOtherCount() );
+                originalEntity.setShowUnanswered( entity.getShowUnanswered() );
                 originalEntity.setCompareInsensitive( entity.getCompareInsensitive() );
                 originalEntity.setColorScheme( entity.getColorScheme() );
                 return formItemsRepository.save( originalEntity );
@@ -216,6 +204,23 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             //Set itemFormId
             String itemFormId = multistepFormsService.getValidItemFormId(entity); // generate unique
             entity.setItemFormId(itemFormId);
+        }
+
+        // sort_priority bugfix - when new item have same sort_priority as existing one, get max sort_priority for step and add 10
+        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId().longValue(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
+        if(samePriorityCount > 0) {
+            int maxSortPriority = formItemsRepository.findAll((root, query, builder) ->
+                    builder.and(
+                        builder.equal(root.get("formName"), entity.getFormName()),
+                        builder.equal(root.get("stepId"), entity.getStepId().longValue())
+                    ),
+                    PageRequest.of(0, 1, Sort.by(Sort.Order.desc("sortPriority")))
+                ).getContent().stream()
+                .findFirst()
+                .map(FormItemEntity::getSortPriority)
+                .orElse(0);
+
+            entity.setSortPriority(maxSortPriority + 10);
         }
     }
 
@@ -268,10 +273,22 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(ProcessItemAction.GETONE.equals(action)) {
             entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
 
-            if(Tools.isEmpty(entity.getChartType())) entity.setChartType("pie-clasic");
+            // IF colorScheme is set, useColorScheme is true and vice versa
+            entity.setUseColorScheme( Tools.isNotEmpty( entity.getColorScheme() ) );
+
+            if(Tools.isEmpty(entity.getChartType())) entity.setChartType( FormChartType.BAR_HORIZONTAL.getKey() );
+            if(Tools.isEmpty(entity.getColorScheme())) entity.setColorScheme( FormStatService.DEFAULT_COLORSET_NAME );
             if(entity.getTopCount() == null) entity.setTopCount(5);
         }
 
+        return entity;
+    }
+
+    @Override
+    public FormItemEntity processToEntity(FormItemEntity entity, ProcessItemAction action) {
+        // When usage of colorScheme is not allowed, remove value
+        if(Tools.isTrue(entity.getShowStat()) && Tools.isTrue(entity.getUseColorScheme())) return entity;
+        entity.setColorScheme("");
         return entity;
     }
 
