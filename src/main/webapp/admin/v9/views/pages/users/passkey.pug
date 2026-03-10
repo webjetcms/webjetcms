@@ -15,6 +15,7 @@ block content
                 columns: columns,
                 id: "passkeyDataTable",
                 fetchOnEdit: true,
+                idAutoOpener: false
             });
 
             // Hide create button - passkey registration uses the WebAuthn browser flow
@@ -33,6 +34,8 @@ block content
                     }
                 }
             });
+
+            window.passkeyDataTable = passkeyDataTable;
         });
 
         function registerPasskey(label, callback) {
