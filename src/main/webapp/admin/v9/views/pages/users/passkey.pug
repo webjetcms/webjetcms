@@ -24,7 +24,6 @@ block content
             passkeyDataTable.hideButton("export");
 
             passkeyDataTable.EDITOR.on("initSubmit", function( e, action ) {
-                console.log("Som precreate event, e=", e, "action=", action);
                 if ("create" === action) {
                     const label = passkeyDataTable.EDITOR.field("label").val();
                     if (label && label.trim().length > 1) {
@@ -39,8 +38,6 @@ block content
         });
 
         function registerPasskey(label, callback) {
-            if (!label) label = "PassKey";
-
             // Step 1: Get registration options from Spring Security
             fetch('/webauthn/register/options', {
                 method: 'POST',

@@ -133,6 +133,9 @@ const WJ = (() => {
             iframe.attr('src', options.url);
             iframe.attr('width', options.width);
             iframe.attr('height', options.height);
+            iframe.show();
+        } else {
+            iframe.hide();
         }
 
         let closeAfterSave = options.closeAfterSave;
