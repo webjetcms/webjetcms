@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Repository;
  * Provides CRUD operations and custom finders for WebAuthn credential management.
  */
 @Repository
-public interface PasskeyCredentialRepository extends JpaRepository<PasskeyCredentialEntity, Long> {
+public interface PasskeyCredentialRepository extends JpaRepository<PasskeyCredentialEntity, Long>, JpaSpecificationExecutor<PasskeyCredentialEntity> {
 
     /**
      * Find a credential by its WebAuthn credential ID (Base64URL encoded).

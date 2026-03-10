@@ -78,5 +78,13 @@
         {
             "text": "Ensure commit messages are relevant to the changes made."
         }
+    ],
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/build/**",
+        "**/bin/**",
+        "**/null/**",
+        "**/logs/**"
     ]
 }

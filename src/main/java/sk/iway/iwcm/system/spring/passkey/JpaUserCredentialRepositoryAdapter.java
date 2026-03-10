@@ -68,11 +68,13 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         Optional<PasskeyCredentialEntity> existingOpt = credentialRepository.findByCredentialId(credId);
         PasskeyCredentialEntity entity;
 
+        boolean isNew = false;
         if (existingOpt.isPresent()) {
             entity = existingOpt.get();
         } else {
             entity = new PasskeyCredentialEntity();
             entity.setCredentialId(credId);
+            isNew = true;
         }
 
         entity.setUserId(userOpt.get().getId());
@@ -89,7 +91,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         entity.setAttestationClientDataJson(record.getAttestationClientDataJSON() != null
                 ? new String(record.getAttestationClientDataJSON().getBytes(), StandardCharsets.UTF_8) : null);
         entity.setCreated(record.getCreated());
-        entity.setLastUsed(record.getLastUsed());
+        if (isNew == false) entity.setLastUsed(record.getLastUsed());
         entity.setLabel(record.getLabel());
 
         // Store the rpId (domain) from DynamicWebAuthnRelyingPartyOperations
