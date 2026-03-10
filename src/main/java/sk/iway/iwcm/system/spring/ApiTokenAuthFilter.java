@@ -21,6 +21,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.logon.AdminLogonController;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -85,6 +86,9 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 					user.setValid(true);
 					LogonTools.setUserToSession(request.getSession(), user);
 					request.setAttribute("csrfDisabled", "1");
+
+					//set domain by webpages group permsissions
+					AdminLogonController.determineRootWebPageDirectory(request.getSession(), user);
 
 					return true;
 				}
