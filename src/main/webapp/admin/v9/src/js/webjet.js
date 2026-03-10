@@ -129,15 +129,19 @@ const WJ = (() => {
     function openIframeModal(options) {
 
         const iframe = $('#modalIframeIframeElement');
-        iframe.attr('src', options.url);
-        iframe.attr('width', options.width);
-        iframe.attr('height', options.height);
+        if (typeof options.url != "undefined" && options.url != null) {
+            iframe.attr('src', options.url);
+            iframe.attr('width', options.width);
+            iframe.attr('height', options.height);
+        }
 
         let closeAfterSave = options.closeAfterSave;
         if(closeAfterSave == undefined || closeAfterSave == null) closeAfterSave = true;
 
         //nastav height aj na modal-body, inak ho renderovalo o par px vyssie ako iframe
-        $('#modalIframe div.modal-body').css('height', options.height + 'px');
+        var $modalBody = $('#modalIframe div.modal-body');
+        $modalBody.css('height', options.height + 'px');
+        $modalBody.css('overflow', "")
 
         //nastav velkost
         const borderWidth = 2;
@@ -184,6 +188,7 @@ const WJ = (() => {
         let $modalIframe = $("#modalIframe");
         $modalIframe.removeClass("close-button-over");
         $modalIframe.removeClass("nopadding");
+        $modalIframe.find(".modal-body .modal-body-content").html("");
         if (typeof options.closeButtonPosition != "undefined") {
             if (options.closeButtonPosition.indexOf("close-button-over")!=-1) $modalIframe.addClass("close-button-over");
             if (options.closeButtonPosition.indexOf("nopadding")!=-1) $modalIframe.addClass("nopadding");
@@ -200,6 +205,9 @@ const WJ = (() => {
         iframe.attr('src', "about:blank");
         modalIframe.hide();
         $('.modal-backdrop').removeClass('modalIframeShown');
+
+        let $modalIframe = $("#modalIframe");
+        $modalIframe.find(".modal-body .modal-body-content").html("");
 
         if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
     }
@@ -241,6 +249,54 @@ const WJ = (() => {
         if (height > windowHeight) height = windowHeight;
         if (height > 300) options.height = height;
         openIframeModal(options);
+    }
+
+    function openModal(options) {
+        let url = options.url;
+        options.url = null;
+
+        //verify window height and adjust it
+        var height = options.height || 600;
+        var windowHeight = $(window).height() - 80;
+        if (height > windowHeight) height = windowHeight;
+        options.height = height;
+
+        var width = options.width || 800;
+        var windowWidth = $(window).width() - 80;
+        if (width > windowWidth) width = windowWidth;
+        options.width = width;
+
+        openIframeModal(options);
+
+        var $modalBody = $('#modalIframe div.modal-body');
+        $modalBody.css('overflow', "auto")
+
+        //load URL into modal-body-content DIV
+        $.ajax({
+            url: url,
+            success: function(data) {
+                let htmlCode = data;
+
+                let $modalIframe = $("#modalIframe");
+                const container = $modalIframe.find(".modal-body .modal-body-content")[0];
+                container.innerHTML = htmlCode;
+                // Znovu vytvor každý script element
+                container.querySelectorAll("script").forEach(oldScript => {
+                    const newScript = document.createElement("script");
+                    [...oldScript.attributes].forEach(a => newScript.setAttribute(a.name, a.value));
+
+                    let scriptContent = oldScript.textContent;
+                    //wrap scriptContent into anonymous function so variables will have scope
+                    scriptContent = "(function() {\n" + scriptContent + "\n})();";
+
+                    newScript.textContent = scriptContent;
+                    oldScript.replaceWith(newScript);
+                });
+
+                //fire domready events
+                window.domReady.fire();
+            },
+        });
     }
 
     function _showIframeModal() {
@@ -1345,6 +1401,9 @@ const WJ = (() => {
         },
         openIframeModalDatatable: options => {
             return openIframeModalDatatable(options);
+        },
+        openModal: options => {
+            return openModal(options);
         },
         openElFinder: (options) => {
             return openElFinder(options);

@@ -48,7 +48,7 @@ div.ly-container.container
                             i.ti.ti-device-mobile-message
                             <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
                     li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
-                        a.dropdown-item(href="/admin/v9/users/passkey/")
+                        a.dropdown-item(onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
                             i.ti.ti-fingerprint
                             <span data-th-text="\#{passkey.manage.title}" data-th-remove="tag">PassKey</span>
                     li(data-th-if="${layout.hasPermission('cmp_form')}")
