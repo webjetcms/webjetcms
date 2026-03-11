@@ -39,11 +39,11 @@ Na prihlasovacej stránke kliknite na tlačidlo **Použiť prístupový kľúč*
 
 **Windows (Windows Hello)**
 
-Systém zobrazí výzvu Windows Hello. Overte sa odtlačkom prsta, rozpoznaním tváre alebo zadaním PIN-u zariadenia. Po úspešnom overení budete automaticky prihlásený.
+Systém zobrazí výzvu `Windows Hello`. Overte sa odtlačkom prsta, rozpoznaním tváre alebo zadaním PIN-u zariadenia. Po úspešnom overení budete automaticky prihlásený.
 
 **macOS / iOS (Touch ID / Face ID)**
 
-Systém zobrazí výzvu Touch ID alebo Face ID. Priložte prst na snímač alebo pozerajte do kamery. Po úspešnom overení budete automaticky prihlásený.
+Systém zobrazí výzvu `Touch ID` alebo `Face ID`. Priložte prst na snímač alebo pozerajte do kamery. Po úspešnom overení budete automaticky prihlásený.
 
 **Mobilné zariadenie (Android / iOS)**
 
@@ -72,9 +72,9 @@ Nový prístupový kľúč pridáte kliknutím na ikonu <button class="btn btn-s
 
 ![](passkey-register.png)
 
-Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a kliknutím na ikonu koša. Verejný kľúč sa ale takto odstráni len v databáze WebJET CMS, samotný privátny kľúč zostáva uložený vo vašom zariadení. Ak sa chcete uistiť, že kľúč už nebude možné použiť, musíte ho odstrániť aj z nastavení vášho zariadenia (napríklad v nastavení Windows Hello alebo Apple heslách).
+Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a kliknutím na ikonu koša. Verejný kľúč sa ale takto odstráni len v databáze WebJET CMS, samotný privátny kľúč zostáva uložený vo vašom zariadení. Ak sa chcete uistiť, že kľúč už nebude možné použiť, musíte ho odstrániť aj z nastavení vášho zariadenia (napríklad v nastavení `Windows Hello` alebo `Apple heslách`).
 
-!>**Upozornenie:** Prístupový kľúč je viazaný na konkrétne zariadenie a prehliadač. Ak sa chcete prihlasovať z viacerých zariadení, zaregistrujte ho na každom zariadení zvlášť, alebo využite cloud synchronizačnú službu na prenos kľúčov medzi zariadeniami (napríklad iCloud Kľúčenka, Google Password Manager).
+!>**Upozornenie:** Prístupový kľúč je viazaný na konkrétne zariadenie a prehliadač. Ak sa chcete prihlasovať z viacerých zariadení, zaregistrujte ho na každom zariadení zvlášť, alebo využite cloud synchronizačnú službu na prenos kľúčov medzi zariadeniami (napríklad iCloud kľúčenka, `Google Password Manager`).
 
 Možnosť prihlasovania prístupovým kľúčom môžete vypnúť nastavením konfiguračnej premennej `password_passKeyEnabled` na hodnotu `false`.
 

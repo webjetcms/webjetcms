@@ -57,3 +57,7 @@ Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
     I.dontSee("Firefox PC desktop", baseSelector);
 
 });
+
+Scenario('logoff', ({ I }) => {
+    I.logout();
+});

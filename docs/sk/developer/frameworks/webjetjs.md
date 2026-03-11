@@ -176,7 +176,7 @@ Príklad HTML kódu pre použitie ```onclick="WJ.openElFinderButton(this);"```:
 </div>
 ```
 
-## Modálne okno s aktuálnym kontextem
+## Modálne okno s aktuálnym kontextom
 
 Pre otvorenie modálneho okna s aktuálnym kontextom stránky (CSS štýly, JavaScript súbory a objekty) je možné použiť volanie `WJ.openModal`. Načítaná URL adresa nebude vložená do `iframe` elementu ale bude vykonaná vrámci aktuálne načítanej web stránky. Príklad použitia:
 
