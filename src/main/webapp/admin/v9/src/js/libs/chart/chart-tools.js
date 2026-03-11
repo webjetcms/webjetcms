@@ -49,14 +49,10 @@ export class LineChartForm {
     }
 
     initFromConfig(config) {
-
-        console.log("LineChartForm config=", config);
-
         if (config.yAxeNames == null || config.yAxeNames === undefined) throwConstructorError("LineChartForm", "yAxeName");
         if (!config.xAxeName) throwConstructorError("LineChartForm", "xAxeName");
         if (!config.chartDivId) throwConstructorError("LineChartForm", "chartDivId");
         if (config.chartData == null || config.chartData === undefined) throwConstructorError("LineChartForm", "chartData");
-        if (config.dateType == null || config.dateType === undefined) throwConstructorError("LineChartForm", "dateType");
 
          Object.assign(this, {
             yAxeNames: config.yAxeNames,
@@ -64,10 +60,9 @@ export class LineChartForm {
             chartTitle: config.chartTitle,
             chartDivId: config.chartDivId,
             chartData: config.chartData,
-            dateType: config.dateType,
+            dateType: config.dateType == null ? DateType.Auto : config.dateType,
             legendTransformationFn: config.legendTransformationFn,
             hideEmpty: config.hideEmpty == null ? true : config.hideEmpty,
-
             colorScheme: config.colorScheme
         });
     }
@@ -107,7 +102,6 @@ export class BarChartForm {
             chartDivId: config.chartDivId,
             chartData: config.chartData,
             horizontal: config.horizontal == null ? true : config.horizontal,
-
             colorScheme: config.colorScheme
         });
     }
@@ -154,7 +148,6 @@ export class PieChartForm {
             innerRadius: config.innerRadius == null ? 50 : config.innerRadius,
             leftLegendPosition: config.leftLegendPosition == null ? false : config.leftLegendPosition,
             legendValueText: config.legendValueText,
-
             colorScheme: config.colorScheme
         });
     }
@@ -199,8 +192,27 @@ export class DoublePieChartForm {
             chartData: config.chartData,
             labelSeries: config.labelSeries,
             labelKey: config.labelKey,
-
             colorScheme: config.colorScheme
+        });
+    }
+}
+
+export class WordCloudForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("WordCloudForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("WordCloudForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            xAxeName: config.xAxeName,
+            yAxeName: config.yAxeName,
+            mode: config.mode == null ? "word" : config.mode,
         });
     }
 }
@@ -727,6 +739,8 @@ export async function createAmchart(chartForm, update) {
         createLineChart(root, chartForm);
     } else if(chartForm instanceof DoublePieChartForm) {
         createDoublePieChart(root, chartForm);
+    } else if(chartForm instanceof WordCloudForm) {
+        crateWordCloudChart(root, chartForm);
     }
 }
 
@@ -1382,12 +1396,12 @@ async function createDoublePieChart(root, chartForm) {
     //set chart slices (parts)
     series_inner.slices.template.setAll({
         strokeWidth: 3,
-        stroke: am5.color("#2b303b")
+        stroke: am5.color("#ffffff")
     });
 
     series_outer.slices.template.setAll({
         strokeWidth: 3,
-        stroke: am5.color("#2b303b")
+        stroke: am5.color("#ffffff")
     });
 
     //
@@ -2177,16 +2191,16 @@ async function createTableChart(chartForm) {
     wrapper2.style.height = "100%";
     wrapper2.style.padding = "15px";
 
-    const kks = document.getElementById(chartForm.chartDivId);
-    if(kks) {
-        kks.appendChild(wrapper2);
+    const chartContainer = document.getElementById(chartForm.chartDivId);
+    if(chartContainer) {
+        chartContainer.appendChild(wrapper2);
     }
 }
 
 function getColorScheme(selectedColorScheme) {
     let useColorScheme = [];
 
-    if(selectedColorScheme === null) {
+    if(selectedColorScheme === null || selectedColorScheme.length === 0) {
         useColorScheme = [...set1, ...set3, ...set5];
     } else if("set1" === selectedColorScheme) {
         useColorScheme = set1;
@@ -2212,4 +2226,62 @@ function getColorScheme(selectedColorScheme) {
     }
 
     return useColorScheme.map(function(color) { return window.am5.color(color); });
+}
+
+function crateWordCloudChart(root, chartForm) {
+    if(chartForm.mode === "line" && (!chartForm.xAxeName || !chartForm.yAxeName)) {
+        console.warn("WordCloud chart cannot be generated, because xAxeName or yAxeName is missing.");
+        return;
+    } else if(chartForm.mode === "word" && typeof chartForm.chartData !== "string") {
+        console.warn("WordCloud chart cannot be generated, because chartData is not a string.");
+        return;
+    }
+
+    // Create chart instance
+    var chart = root.container.children.push(
+        am5.ZoomableContainer.new(root, {
+            width: am5.p100,
+            height: am5.p100,
+            wheelable: false,
+            pinchZoom: true
+        })
+    );
+
+    // Set created chart into WordCloudForm.chart
+    chartForm.chart = chart;
+
+    // Add zoom tools for line mode
+    if(chartForm.mode === "line") {
+        chart.children.push(am5.ZoomTools.new(root, {
+            target: chart
+        }));
+    }
+
+    // Configure word cloud series based on mode
+    var series = chart.contents.children.push(am5wc.WordCloud.new(root, {
+        maxCount: 100,
+        minWordLength: chartForm.mode === "line" ? 1 : 2,
+        maxFontSize: am5.percent(35)
+    }));
+
+    // Set data based on mode
+    if(chartForm.mode === "word") {
+        series.set("text", chartForm.chartData);
+    } else if(chartForm.mode === "line") {
+        series.set("categoryField", chartForm.xAxeName);
+        series.set("valueField", chartForm.yAxeName);
+        series.data.setAll(chartForm.chartData);
+    } else {
+        console.warn("WordCloud chart cannot be generated, because mode is invalid:", chartForm.mode);
+        return;
+    }
+
+    // Configure labels
+    series.labels.template.setAll({
+        paddingTop: 5,
+        paddingBottom: 5,
+        paddingLeft: 5,
+        paddingRight: 5,
+        fontFamily: "Courier New"
+    });
 }

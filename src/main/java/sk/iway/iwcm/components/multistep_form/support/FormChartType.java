@@ -7,11 +7,12 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 public enum FormChartType {
-    TABLE("table"),
     BAR_VERTICAL("bar_vertical"),
     BAR_HORIZONTAL("bar_horizontal"),
     PIE_CLASSIC("pie_classic"),
-    PIE_DONUT("pie_donut");
+    PIE_DONUT("pie_donut"),
+    WORD_CLOUD("word_cloud"),
+    TABLE("table");
 
     private static final String KEY_PREFIX = "components.stats_by_charts.chart_type.";
 

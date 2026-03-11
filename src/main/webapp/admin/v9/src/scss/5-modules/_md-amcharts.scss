@@ -13,8 +13,6 @@ div.amcharts {
 
     > div:before {
         content: '';
-        //background: #2b303b;
-        //background: #b3b8c7;
         background: #F3F3F6;
         width: calc(100% - 0px);
         height: calc(100% + 16px);
@@ -74,7 +72,6 @@ div.amcharts {
 
     table.table tbody tr td.chart-table-td {
         background: none;
-        //color: white;
         color: black;
     }
 }

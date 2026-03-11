@@ -3,6 +3,7 @@ const ChartType = {
     Pie_Classic: "pie_classic",
     Bar_Vertical: "bar_vertical",
     Bar_Horizontal: "bar_horizontal",
+    Word_Cloud: "word_cloud",
     Table: "table"
 };
 
@@ -43,6 +44,7 @@ export class StatsByCharts {
 
             const destroyReponse = await this._destroyChartBeforeUpdate(newChartDef.id);
             if(destroyReponse === true) {
+                console.log(newChartDef.type);
                 if(newChartDef.type === ChartType.Pie_Donut || newChartDef.type === ChartType.Pie_Classic) {
                     this._renderPieChart(newChartDef, chartUniqueId);
                 }
@@ -110,6 +112,8 @@ export class StatsByCharts {
                 }
                 else if(chartDef.type === ChartType.Table) {
                     this._renderTableChart(chartDef, chartUniqueId);
+                } else if(chartDef.type === ChartType.Word_Cloud) {
+                    this._renderWordCloudChart(chartDef, chartUniqueId);
                 }
             });
         }
@@ -162,5 +166,20 @@ export class StatsByCharts {
         let tableChart = new ChartTools.TableChartForm(chartConfig);
         ChartTools.createAmchart(tableChart);
         this.chartsInstances[chartDef.id] = tableChart;
+    }
+
+    _renderWordCloudChart(chartDef, chartUniqueId) {
+        const chartConfig = {
+            chartDivId: chartUniqueId,
+            chartData: chartDef.values,
+            chartTitle: chartDef.title,
+            mode: "line",
+            xAxeName: "name",
+            yAxeName: "count"
+        }
+
+        let wordCloudChart = new ChartTools.WordCloudForm(chartConfig);
+        ChartTools.createAmchart(wordCloudChart);
+        this.chartsInstances[chartDef.id] = wordCloudChart;
     }
 }
