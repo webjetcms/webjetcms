@@ -1,4 +1,4 @@
-Feature('apps.passkey');
+Feature('admin.passkey');
 
 Before(({ I, login }) => {
     login('admin');
