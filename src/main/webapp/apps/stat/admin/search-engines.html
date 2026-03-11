@@ -111,7 +111,15 @@
         async function createAmcharts() {
             window.initAmcharts().then(module => {
                 $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
-                    barChartQueries = new ChartTools.BarChartForm("queryName", "queryCount", '[[#{stat.graph.searchQueriesBars}]]', "searchEngines-barQueries", result['content']);
+                    const barConfig = {
+                        yAxeName: "queryName",
+                        xAxeName: "queryCount",
+                        chartTitle: '[[#{stat.graph.searchQueriesBars}]]',
+                        chartDivId: "searchEngines-barQueries",
+                        chartData: result['content']
+                    }
+
+                    barChartQueries = new ChartTools.BarChartForm(barConfig);
                     ChartTools.createAmchart(barChartQueries);
 
                     let pieChartData = searchEnginesDataTable.DATA.json.data;

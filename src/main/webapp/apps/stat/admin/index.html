@@ -219,7 +219,17 @@
                         );
 
                     $.ajax({url: getGraphUrl(), success: function(result) {
-                        lineChartVisits = new ChartTools.LineChartForm(yAxeNames, "dayDate", '[[#{stat.top.lineChart}]]', "stat-lineVisits", convertData(result['content']), ChartTools.DateType.Days);
+
+                        const lineConfig = {
+                            yAxeNames: yAxeNames,
+                            xAxeName: "dayDate",
+                            chartTitle: '[[#{stat.top.lineChart}]]',
+                            chartDivId: "stat-lineVisits",
+                            chartData: convertData(result['content']),
+                            dateType: ChartTools.DateType.Days
+                        }
+
+                        lineChartVisits = new ChartTools.LineChartForm(lineConfig);
 
                         ChartTools.createAmchart(lineChartVisits);
 
