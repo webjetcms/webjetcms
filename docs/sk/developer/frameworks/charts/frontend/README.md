@@ -10,7 +10,7 @@ Inicializácia `Amchart5` sa vykonáva volaním ```window.initAmcharts()```. Po 
 
 Okrem objektu so samotnou knižnicou sú následne dostupné aj objekty ```window.am5xy``` a ```window.am5percent```, ktoré sú nevyhnuté k vytváraniu a práci s grafmi amcharts.
 
-Okrem nastavenia licencie sa v tomto súbore nastavujú aj témy pre grafy. Tieto témy ovplyvnia vzhľad grafov, animácie ako aj použitú paletu farieb. Okrem použitých amcharts tém, využívame aj vlastnú tému pre nastavenie palety farieb, ktoré majú grafy využívať. Táto téma sa nachádza v súbore [amcharts.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) ako trieda `WebjetTheme`.
+Okrem nastavenia licencie sa v tomto súbore nastavujú aj témy pre grafy. Tieto témy ovplyvnia vzhľad grafov a animácie. Okrem použitých amcharts tém, využívame aj vlastnú tému pre rôzne grafické úpravy prvkov v grafoch. Táto téma sa nachádza v súbore [amcharts.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) ako trieda `WebjetTheme`.
 
 # Práca s grafmi
 
@@ -31,8 +31,17 @@ window.initAmcharts().then(module => {
     //Získanie dát pre graf pomocou ajax volania
     $.ajax({url: getGraphUrl(), success: function(result) {
 
+        // Vytvorenie objektu konfigurácie grafu (obsahuje všetky potrebné parametre k vytvoreniu grafu)
+        const pieConfig = {
+            yAxeName: "visits",
+            xAxeName: "name",
+            chartTitle: '[[#{stat.top.pieChart}]]',
+            chartDivId: "top-pieVisits",
+            chartData: result['content']
+        };
+
         //Vytvorenie inštancie FORMULÁRU grafu a jej uloženie do premennej
-        pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{stat.top.pieChart}]]', "top-pieVisits", result['content']);
+        pieChartVisits = new ChartTools.PieChartForm(pieConfig);
 
         //Vytvorenie grafu pomocou premennej s inštanciou FORMULÁRU grafu
         ChartTools.createAmchart(pieChartVisits);
@@ -46,15 +55,20 @@ window.initAmcharts().then(module => {
 </div>
 ```
 
-Toto bola ukážka ako môže vyzerať vytvorenie/nastavenie grafu. Dôležitá je tu trieda ```PieChartForm```, ktorá reprezentuje graf typu ```PIE```, jeho dáta a všetky parametre potrebné k správnemu vytvoreniu a nastaveniu grafu. Podpora pre 3 typy grafov je reprezentovaná prostredníctvom 3 tried (alebo ako sme spomenuli formulárov) dostupných z ```window.ChartTools``` :
+Toto bola ukážka ako môže vyzerať vytvorenie/nastavenie grafu. Dôležitá je tu trieda ```PieChartForm```, ktorá reprezentuje graf typu ```PIE```, jeho dáta a všetky parametre potrebné k správnemu vytvoreniu a nastaveniu grafu. Podpora pre rôzne typy grafov je reprezentovaná prostredníctvom samostatných tried (alebo ako sme spomenuli formulárov) dostupných z ```window.ChartTools``` :
 
--   trieda ```PieChartForm```, reprezentuje grafy typu ```Pie```
--   trieda ```DoublePieChartForm```, reprezentuje grafy typu ```Pie```, ktorý pozostáva z dvoch vnorených grafov typu ```Pie```
--   trieda ```BarChartForm```, reprezentuje grafy typu ```Bar```
--   trieda ```LineChartForm```, reprezentuje grafy typu ```Line```
-
+- trieda ```PieChartForm```, reprezentuje grafy typu ```Pie```
+- trieda ```DoublePieChartForm```, reprezentuje grafy typu ```Pie```, ktorý pozostáva z dvoch vnorených grafov typu ```Pie```
+- trieda ```BarChartForm```, reprezentuje grafy typu ```Bar```
+- trieda ```LineChartForm```, reprezentuje grafy typu ```Line```
 
 Bližšie informácie o tom čo robia jednotlivé parametre týchto tried, aký majú formát a dopad na vygenerovaný graf sú opísané v súbore [dokumentácií](statjs.md).
+
+!>**Upozornenie:** historicky sa využíval zápis bez konfiguračného objektu, kde sa parametre zadávali priamo do konštruktora triedy formuláru grafu. Tento spôsob je síce stále podporovaný, ale neodporúčame ho používať. Ukážka takéhoto zápisu:
+
+```javascript
+    pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{stat.top.pieChart}]]', "top-pieVisits", result['content']);
+```
 
 ### HTML element grafu
 
@@ -70,8 +84,18 @@ Pri niektorých grafoch si môžeme všimnúť úpravu získaných dát predtým
         //Úprava získaných dáta pre graf s použitím convertDataForLineChart() fn
         let convertedData = ChartTools.convertDataForLineChart(result);
 
+        //
+        const lineConfig = {
+            yAxeNames: ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]),
+            xAxeName: "dayDate",
+            chartTitle: '[[#{stat.top.lineChart}]]',
+            chartDivId: "top-lineVisits",
+            chartData: convertedData,
+            dateType: ChartTools.DateType.Days
+        };
+
         //Použitie upravených dát pri vytváraní grafu typu LINE
-        lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.top.lineChart}]]', "top-lineVisits", convertedData, ChartTools.DateType.Days);
+        lineChartVisits = new ChartTools.LineChartForm(lineConfig);
         ChartTools.createAmchart(lineChartVisits);
     }});
 ```

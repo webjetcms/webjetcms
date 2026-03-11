@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('screenshot double pie chart from reservation stat', ({I, Document}) => { 
+Scenario('screenshot double pie chart from reservation stat', ({I, Document}) => {
     I.amOnPage("/apps/reservation/admin/reservation-stat/");
 
     I.waitForVisible("#monthFilter");

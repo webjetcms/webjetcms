@@ -2,19 +2,46 @@
 
 Táto časť sa zoberá spoločnými funkciami na prácu s grafmi, ktoré ponúka súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), ktorý je dostupný ako ```window.ChartTools``` objekt.
 
+!>**Upozornenie:** historicky sa využíval zápis bez konfiguračného objektu, kde sa parametre zadávali priamo do konštruktora triedy formuláru grafu. Tento spôsob je síce stále podporovaný, ale neodporúčame ho používať.
+
 ## Graf typu BAR
 
 Graf typu **BAR** je vytváraný pomocou inštancie triedy ```BarChartForm```, ktorá je dostupná ako ```ChartTools.BarChartForm```.
 
 ```javascript
 export class BarChartForm {
-    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, horizontal = true) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                horizontal: horizontal
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("BarChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("BarChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("BarChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("BarChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            horizontal: config.horizontal == null ? true : config.horizontal,
+            colorScheme: config.colorScheme
+        });
     }
 }
 ```
@@ -26,9 +53,10 @@ Jednotlivé parametre triedy  slúžia na:
 - `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
 - `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
 - `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (yAxeName) a premenná hodnoty kategórie(xAxeName).
-- `chart`, chart predstavuje náš graf, ktorý bude pri vytvorení automaticky uložený do tohto parametra triedy.
+- `horizontal`, boolean hodnota určujúca, či graf bude horizontálny alebo vertikálny.
+- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
 
-**Pozor**, parameter `chart` sa nedá nastaviť skrz konštruktor a slúži na pozadí ako pomocná premenná.
+!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
@@ -37,7 +65,15 @@ Príklad použitia **BAR** grafu zo súboru [search-engine.html](../../../../../
 ```javascript
     $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
 
-        barChartQueries = new ChartTools.BarChartForm("queryName", "queryCount", '[[#{stat.graph.searchQueriesBars}]]', "searchEngines-barQueries", result['content']);
+        const barConfig = {
+            yAxeName: "queryName",
+            xAxeName: "queryCount",
+            chartTitle: '[[#{stat.graph.searchQueriesBars}]]',
+            chartDivId: "searchEngines-barQueries",
+            chartData: result['content']
+        }
+
+        barChartQueries = new ChartTools.BarChartForm(barConfig);
 
         ChartTools.createAmchart(barChartQueries);
     }});
@@ -53,16 +89,46 @@ Graf typu **PIE** je vytváraný pomocou inštancie triedy ```PieChartForm```, k
 
 ```javascript
 export class PieChartForm {
-    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.labelKey = labelKey;
-        this.labelTransformationFn = labelTransformationFn;
-        this.chart = undefined;
-        this.chartLegend = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null, innerRadius = 50, leftLegendPosition = false) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelKey: labelKey,
+                labelTransformationFn: labelTransformationFn,
+                innerRadius: innerRadius,
+                leftLegendPosition: leftLegendPosition
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("PieChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("PieChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("PieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("PieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelKey: config.labelKey,
+            labelTransformationFn: config.labelTransformationFn,
+            innerRadius: config.innerRadius == null ? 50 : config.innerRadius,
+            leftLegendPosition: config.leftLegendPosition == null ? false : config.leftLegendPosition,
+            legendValueText: config.legendValueText,
+
+            colorScheme: config.colorScheme
+        });
     }
 }
 ```
@@ -74,12 +140,14 @@ Jednotlivé parametre triedy  slúžia na:
 - `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
 - `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
 - `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (xAxeName) a premenná hodnoty kategórie(yAxeName).
-- `labelKey`, **nepovinná** textová hodnota predstavujúcu prekladový kľuč s nadpisom k sumáru
-- `labelTransformationFn`, **nepovinná** funkcia, ktorá sa použije na transformáciu textu v štítokoch kategórií (formát ako taký ostane rovnaký, iba sa zmení text), Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
-- `chart`, predstavuje náš graf, ktorý bude pri vytvorení automaticky uložený do tohto parametra triedy.
-- `chartLegend`, predstavuje nastavenú legendu grafu. Nenastavuje ju používateľ, nastavená automaticky a je potrebná na pozadí pri aktualizovaní grafu.
+- `labelKey`, textová hodnota predstavujúcu prekladový kľuč s nadpisom k sumáru
+- `labelTransformationFn`, funkcia, ktorá sa použije na transformáciu textu v štítokoch kategórií (formát ako taký ostane rovnaký, iba sa zmení text), Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
+- `innerRadius`, číselná hodnota predstavujúca vnútorný polomer grafu v rozsahu 0 - 100, kde 0 znamená klasický koláčový graf a hodnota > 0 znamená graf typu donut.
+- `leftLegendPosition`, logická hodnota určujúca, či sa legenda zobrazí na ľavej strane grafu.
+- `legendValueText`, textová hodnota predstavujúca textovy **format** legendy
+- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
 
-**Pozor**, parametre `chart` a `chartLegend` sa nedajú nastaviť skrz konštruktor a slúžia na pozadí ako pomocné premenné.
+!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
@@ -88,15 +156,26 @@ Príklad použitia **PIE** grafu zo súboru [referer.html](../../../../../../src
 ```javascript
     $.ajax({url: getGraphUrl(), success: function(result) {
 
-        pieChartVisits = new ChartTools.PieChartForm("visits", "serverName", '[[#{stat.referer.pieChart}]]', "referer-pieReferer", result['content']);
+        const pieConfig = {
+            yAxeName: "visits",
+            xAxeName: "serverName",
+            chartTitle: '[[#{stat.referer.pieChart}]]',
+            chartDivId: "referer-pieReferer",
+            chartData: result['content']
+        }
 
+        pieChartVisits = new ChartTools.PieChartForm(pieConfig);
         ChartTools.createAmchart(pieChartVisits);
     }});
 ```
 
 Výsledný vygenerovaný graf aj s nadpisom
 
-![](pie-chart.png)
+![](pie-chart-donut.png)
+
+Verzia grafu, kde `innerRadius` je nastavenený na 0, tedy klasický koláčový graf a `leftLegendPosition` je nastavený na `true`, tedy legenda je umiestnenená na ľavej strane grafu.
+
+![](pie-chart-classic.png)
 
 ### Parameter ```labelKey```
 
@@ -104,7 +183,7 @@ Parameter ```labelKey``` je špeciálny v tom, že nie je povinný pri vytváran
 
 Vďaka tomu môžete mať prehľadne v grafe celkovú hodnotu dát sérii. Veľkosť písma sa automatický upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát grafu sa hodnota automatický prepočíta.
 
-**Pozor**, neodporúčame dlhý text inak bude font textu veľmi malý.
+!>**Upozornenie:**, neodporúčame dlhý text inak bude font textu veľmi malý.
 
 Graf typu **PIE** s takýmto nastavením aktuálne nemáme, ale môžete sa pozrieť na sekciu s graf typu **DOUBLE_PIE**, kde je takýto text viditeľný.
 
@@ -114,17 +193,43 @@ Graf typu **DOUBLE_PIE** je vytváraný pomocou inštancie triedy ```DoublePieCh
 
 ```javascript
 export class DoublePieChartForm {
-    constructor(yAxeName_inner, yAxeName_outer, xAxeName, chartTitle, chartDivId, chartData, labelSeries, labelKey) {
-        this.yAxeName_inner = yAxeName_inner;
-        this.yAxeName_outer = yAxeName_outer;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.labelSeries = labelSeries;
-        this.labelKey = labelKey;
-        this.chart = undefined;
-        this.chartLegend = undefined;
+
+    constructor(yAxeName_inner_or_config, yAxeName_outer, xAxeName, chartTitle, chartDivId, chartData, labelSeries = null, labelKey = null) {
+        if(typeof yAxeName_inner_or_config === "object") {
+            this.initFromConfig(yAxeName_inner_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName_inner: yAxeName_inner_or_config,
+                yAxeName_outer: yAxeName_outer,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelSeries: labelSeries,
+                labelKey: labelKey
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName_inner) throwConstructorError("DoublePieChartForm", "yAxeName_inner");
+        if (!config.yAxeName_outer) throwConstructorError("DoublePieChartForm", "yAxeName_outer");
+        if (!config.xAxeName) throwConstructorError("DoublePieChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("DoublePieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("DoublePieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName_inner: config.yAxeName_inner,
+            yAxeName_outer: config.yAxeName_outer,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelSeries: config.labelSeries,
+            labelKey: config.labelKey,
+            colorScheme: config.colorScheme
+        });
     }
 }
 ```
@@ -137,12 +242,11 @@ Jednotlivé parametre triedy  slúžia na:
 - `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
 - `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
 - `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (xAxeName) a premenná hodnoty kategórie(yAxeName).
-- `labelSeries`, **nepovinná** textová hodnota na označenie série k súčtu s povolenými hodnotami `inner` a `outer`
-- `labelKey`, **nepovinná** textová hodnota na prekladový kľuč s textom, ktorý bude slúžiť ako nadpis pre súčet hodnôt
-- `chart`, predstavuje náš graf, ktorý bude pri vytvorení automaticky uložený do tohto parametra triedy.
-- `chartLegend`, predstavuje nastavenú legendu grafu. Nenastavuje ju používateľ, nastavená automaticky a je potrebná na pozadí pri aktualizovaní grafu.
+- `labelSeries`, textová hodnota na označenie série k súčtu s povolenými hodnotami `inner` a `outer`
+- `labelKey`, textová hodnota na prekladový kľuč s textom, ktorý bude slúžiť ako nadpis pre súčet hodnôt
+- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
 
-**Pozor**, parametre `chart` a `chartLegend` sa nedajú nastaviť skrz konštruktor a slúžia na pozadí ako pomocné premenné.
+!>**Upozornenie:** povinné parametre sú `yAxeName_inner`, `yAxeName_outer`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
@@ -151,7 +255,18 @@ Príklad použitia **DOUBLE_PIE** grafu zo súboru [reservation-stat.html](../..
 ```javascript
     $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
 
-        doublePieChartTimeUsers = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.hours_user_chart.title}]]', "reservationStat-doublePieTimeUsers", result, "outer", "reservation.reservation_stat.hours_user_chart.label.js");
+        const doublePIeConfig = {
+            yAxeName_inner: "valueB",
+            yAxeName_outer: "valueA",
+            xAxeName: "category",
+            chartTitle: '[[#{reservation.reservation_stat.hours_user_chart.title}]]',
+            chartDivId: "reservationStat-doublePieTimeUsers",
+            chartData: result,
+            labelSeries: "outer",
+            labelKey: "reservation.reservation_stat.hours_user_chart.label.js"
+        };
+
+        doublePieChartTimeUsers = new ChartTools.DoublePieChartForm(doublePIeConfig);
 
         ChartTools.createAmchart(doublePieChartTimeUsers);
     }});
@@ -174,7 +289,7 @@ Parameter `labelSeries` sa používa na nastavenie toho, ktorú sériu dát chce
 
 Vďaka tomu môžete mať prehľadne v grafe celkovú hodnotu dát sérii. Veľkosť písma sa automatický upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát grafu sa hodnota automatický prepočíta.
 
-**Pozor**, neodporúčame dlhý text inak bude font textu veľmi malý.
+!>**Upozornenie:** , neodporúčame dlhý text inak bude font textu veľmi malý.
 
 ## Graf typu LINE
 
@@ -182,16 +297,46 @@ Graf typu **LINE** je vytváraný pomocou inštancie triedy ```LineChartForm```,
 
 ```javascript
 export class LineChartForm {
-    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
-        this.yAxeNames = yAxeNames;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.dateType = dateType;
-        this.legendTransformationFn = legendTransformationFn;
-        this.hideEmpty = hideEmpty;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
+
+        //console.log(typeof yAxeName_or_config === "object", yAxeName_or_config.yAxeName));
+
+        if(typeof yAxeName_or_config === "object" && Array.isArray(yAxeName_or_config) === false) {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeNames: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                dateType: dateType,
+                legendTransformationFn: legendTransformationFn,
+                hideEmpty: hideEmpty
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (config.yAxeNames == null || config.yAxeNames === undefined) throwConstructorError("LineChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("LineChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("LineChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("LineChartForm", "chartData");
+
+         Object.assign(this, {
+            yAxeNames: config.yAxeNames,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            dateType: config.dateType == null ? DateType.Auto : config.dateType,
+            legendTransformationFn: config.legendTransformationFn,
+            hideEmpty: config.hideEmpty == null ? true : config.hideEmpty,
+
+            colorScheme: config.colorScheme
+        });
     }
 }
 ```
@@ -204,11 +349,11 @@ Jednotlivé parametre triedy  slúžia na:
 - `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
 - `chartData`, (podrobnejšie rozobrané v samostatnej pod-kapitole)
 - `dateType`, (podrobnejšie rozobrané v samostatnej pod-kapitole)
-- `legendTransformationFn`, **nepovinná** funkcia, ktorá sa použije na transformáciu textu v legende grafu. Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
-- `hideEmpty`, **nepovinná** logická hodnota, ktorá určuje či sa majú v grafe zobraziť tooltipy aj pre prázdne hodnoty (null alebo 0). Predvolená hodnota je `true`, čo znamená že prázdne hodnoty sa nezobrazia. Aplikuje sa to iba ak graf zobrazuje viac ako 8 čiar.
-- `chart`, chart predstavuje náš graf, ktorý bude pri vytvorení automaticky uložený do tohto parametra triedy.
+- `legendTransformationFn`, funkcia, ktorá sa použije na transformáciu textu v legende grafu. Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
+- `hideEmpty`, logická hodnota, ktorá určuje či sa majú v grafe zobraziť tooltipy aj pre prázdne hodnoty (null alebo 0). Predvolená hodnota je `true`, čo znamená že prázdne hodnoty sa nezobrazia. Aplikuje sa to iba ak graf zobrazuje viac ako 8 čiar.
+- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
 
-**Pozor**, parameter `chart` sa nedá nastaviť skrz konštruktor a slúži na pozadí ako pomocná premenná.
+!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
@@ -221,11 +366,22 @@ Príklad použitia **LINE** grafu
             ["stat.visits.js", "stat.sessions.js", "stat.unique_users.js"]
         );
 
-    await $.ajax({url: getGraphUrl(), success: function(result) {
+    $.ajax({url: getGraphUrl(), success: function(result) {
 
-        lineChartVisits = new ChartTools.LineChartForm(yAxeNames, "dayDate", '[[#{stat.top.lineChart}]]', "stat-lineVisits", convertData(result['content']), ChartTools.DateType.Days);
+        const lineConfig = {
+            yAxeNames: yAxeNames,
+            xAxeName: "dayDate",
+            chartTitle: '[[#{stat.top.lineChart}]]',
+            chartDivId: "stat-lineVisits",
+            chartData: convertData(result['content']),
+            dateType: ChartTools.DateType.Days
+        }
+
+        lineChartVisits = new ChartTools.LineChartForm(lineConfig);
 
         ChartTools.createAmchart(lineChartVisits);
+
+        WJ.hideLoader();
     }});
 ```
 

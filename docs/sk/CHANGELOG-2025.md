@@ -139,6 +139,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - MultiWeb - doplnená kontrola práv pre skupiny médií a značky (#58317-0).
 - Zoznam formulárov - nastavenie [spracovateľa formulárov](custom-apps/apps/multistep-forms/README.md), pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
 - Číselníky - doplnené odstránenie medzier na začiatku a konci poľa typu reťazec v dátach číselníka (#OSK233).
+- `imageradio` - pridaná možnosť nastaviť pole typu `imageradio` ako `disabled` (#58333).
 
 ### Oprava chýb
 
@@ -148,6 +149,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Datatables - opravené filtrovanie kedy sa viacero `serverSide:false` tabuliek na stránke navzájom ovplyvňovalo pri filtrovaní (#58313).
 - Elektronický obchod - opravené odosielanie email notifikácie, pri zmene stavu objednávky (#58313).
 - Elektronický obchod - opravené automatické nastavenie stavu objednávky po zmene platieb (#58313).
+- `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore databuľky (#58333).
 
 ### Dokumentácia
 
