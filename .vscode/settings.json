@@ -84,5 +84,8 @@
         "**/bin/**",
         "**/null/**",
         "**/logs/**"
-    ]
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "./gradlew": true
+    }
 }
