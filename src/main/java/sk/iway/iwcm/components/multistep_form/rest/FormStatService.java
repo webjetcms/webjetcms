@@ -27,7 +27,6 @@ import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.users.UserDetails;
 
@@ -65,21 +64,6 @@ public class FormStatService {
         if(Tools.isEmpty(formName) || Tools.isEmpty(itemFormId)) return null;
         List<String> allFormData = kokos(formName);
         return getFormStatChartData(formName, allFormData, getAllowedItems(formName, itemFormId), request);
-    }
-
-    public static final String DEFAULT_COLORSET_NAME = "set3";
-    public static final List<OptionDto> getColorSchemeOptions() {
-        List<OptionDto> optionsMap = new ArrayList<>();
-        optionsMap.add(new OptionDto("set1", "set1", "/apps/_common/charts/images/overlapping_circles_set1.png"));
-        optionsMap.add(new OptionDto("set2", "set2", "/apps/_common/charts/images/overlapping_circles_set2.png"));
-        optionsMap.add(new OptionDto("set3", "set3", "/apps/_common/charts/images/overlapping_circles_set3.png"));
-        optionsMap.add(new OptionDto("set4", "set4", "/apps/_common/charts/images/overlapping_circles_set4.png"));
-        optionsMap.add(new OptionDto("set5", "set5", "/apps/_common/charts/images/overlapping_circles_set5.png"));
-        optionsMap.add(new OptionDto("set_blue", "set_blue", "/apps/_common/charts/images/overlapping_circles_set_blue.png"));
-        optionsMap.add(new OptionDto("set_green", "set_green", "/apps/_common/charts/images/overlapping_circles_set_green.png"));
-        optionsMap.add(new OptionDto("set_red", "set_red", "/apps/_common/charts/images/overlapping_circles_set_red.png"));
-        optionsMap.add(new OptionDto("set_yellow", "set_yellow", "/apps/_common/charts/images/overlapping_circles_set_yellow.png"));
-        return optionsMap;
     }
 
     /* ------------------------- */

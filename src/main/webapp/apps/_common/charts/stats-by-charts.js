@@ -1,12 +1,3 @@
-const ChartType = {
-    Pie_Donut: "pie_donut",
-    Pie_Classic: "pie_classic",
-    Bar_Vertical: "bar_vertical",
-    Bar_Horizontal: "bar_horizontal",
-    Word_Cloud: "word_cloud",
-    Table: "table"
-};
-
 export class StatsByCharts {
 
     constructor(options = {}) {
@@ -45,13 +36,13 @@ export class StatsByCharts {
             const destroyReponse = await this._destroyChartBeforeUpdate(newChartDef.id);
             if(destroyReponse === true) {
                 console.log(newChartDef.type);
-                if(newChartDef.type === ChartType.Pie_Donut || newChartDef.type === ChartType.Pie_Classic) {
+                if(newChartDef.type === ChartTools.ChartType.Pie_Donut || newChartDef.type === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartType.Bar_Vertical || newChartDef.type === ChartType.Bar_Horizontal) {
+                else if(newChartDef.type === ChartTools.ChartType.Bar_Vertical || newChartDef.type === ChartTools.ChartType.Bar_Horizontal) {
                     this._renderBarChart(newChartDef, chartUniqueId);
                 }
-                else if(newChartDef.type === ChartType.Table) {
+                else if(newChartDef.type === ChartTools.ChartType.Table) {
                     this._renderTableChart(newChartDef, chartUniqueId);
                 }
             }
@@ -104,15 +95,15 @@ export class StatsByCharts {
 
                 chartContainer.prepend(button);
 
-                if(chartDef.type === ChartType.Pie_Donut || chartDef.type === ChartType.Pie_Classic) {
+                if(chartDef.type === ChartTools.ChartType.Pie_Donut || chartDef.type === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartType.Bar_Vertical || chartDef.type === ChartType.Bar_Horizontal) {
+                else if(chartDef.type === ChartTools.ChartType.Bar_Vertical || chartDef.type === ChartTools.ChartType.Bar_Horizontal) {
                     this._renderBarChart(chartDef, chartUniqueId);
                 }
-                else if(chartDef.type === ChartType.Table) {
+                else if(chartDef.type === ChartTools.ChartType.Table) {
                     this._renderTableChart(chartDef, chartUniqueId);
-                } else if(chartDef.type === ChartType.Word_Cloud) {
+                } else if(chartDef.type === ChartTools.ChartType.Word_Cloud) {
                     this._renderWordCloudChart(chartDef, chartUniqueId);
                 }
             });
@@ -126,7 +117,7 @@ export class StatsByCharts {
             chartTitle: chartDef.title,
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
-            innerRadius: chartDef.type === ChartType.Pie_Donut ? 75 : 0,
+            innerRadius: chartDef.type === ChartTools.ChartType.Pie_Donut ? 75 : 0,
             leftLegendPosition: true,
             legendValueText: "[bold]{count}[/]",
             colorScheme: chartDef.chart_colorScheme
@@ -144,7 +135,7 @@ export class StatsByCharts {
                 chartTitle: chartDef.title,
                 chartDivId: chartUniqueId,
                 chartData: chartDef.values,
-                horizontal: chartDef.type === ChartType.Bar_Horizontal,
+                horizontal: chartDef.type === ChartTools.ChartType.Bar_Horizontal,
                 colorScheme: chartDef.chart_colorScheme
             }
 

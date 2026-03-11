@@ -34,7 +34,8 @@ import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
-import sk.iway.iwcm.components.multistep_form.support.FormChartType;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -84,8 +85,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
-        page.addOptions("chartType", FormChartType.getOptions(getProp()), "label", "value", false);
-        page.addOptions("colorScheme", FormStatService.getColorSchemeOptions(), "label", "value", true);
+        page.addOptions("chartType", ChartType.getOptions(getProp()), "label", "value", false);
+        page.addOptions("colorScheme", StatService.getColorSchemeOptions(), "label", "value", true);
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -276,8 +277,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             // IF colorScheme is set, useColorScheme is true and vice versa
             entity.setUseColorScheme( Tools.isNotEmpty( entity.getColorScheme() ) );
 
-            if(Tools.isEmpty(entity.getChartType())) entity.setChartType( FormChartType.BAR_HORIZONTAL.getKey() );
-            if(Tools.isEmpty(entity.getColorScheme())) entity.setColorScheme( FormStatService.DEFAULT_COLORSET_NAME );
+            if(Tools.isEmpty(entity.getChartType())) entity.setChartType( ChartType.BAR_HORIZONTAL.getKey() );
+            if(Tools.isEmpty(entity.getColorScheme())) entity.setColorScheme( StatService.DEFAULT_COLORSET_NAME );
             if(entity.getTopCount() == null) entity.setTopCount(5);
         }
 

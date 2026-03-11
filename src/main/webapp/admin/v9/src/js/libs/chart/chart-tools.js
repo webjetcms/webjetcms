@@ -1,9 +1,13 @@
 //Use to identified in URL what type of data we want
 export const ChartType = {
-    Not_Chart: "notChart",
     Line: "line",
-    Pie: "pie",
-    Bar: "bar"
+    Bar_Vertical: "bar_vertical",
+    Bar_Horizontal: "bar_horizontal",
+    Pie_Classic: "pie_classic",
+    Pie_Donut: "pie_donut",
+    Word_Cloud: "word_cloud",
+    Table: "table",
+    Not_Chart: "not_chart"
 }
 
 //! string must stay as they are, because they are used as day format type
@@ -1067,7 +1071,7 @@ function createBarChartHorizontal(root, chart, chartForm) {
     yRenderer.labels.template.adapters.add("text", function(text, target) {
         const dataItem = target._dataItem;
         if(dataItem) {
-            let originalCategory = dataItem?.dataContext?.name;
+            let originalCategory = dataItem?.dataContext[chartForm.yAxeName];
             let newCategory = trimLegendText(originalCategory);
             return newCategory;
         }
@@ -1134,7 +1138,7 @@ function createBarChartVertical(root, chart, chartForm) {
     xRenderer.labels.template.adapters.add("text", function(text, target) {
         const dataItem = target._dataItem;
         if(dataItem) {
-            let originalCategory = dataItem?.dataContext?.name;
+            let originalCategory = dataItem?.dataContext[chartForm.xAxeName];
             let newCategory = trimLegendText(originalCategory);
             return newCategory;
         }
@@ -1254,7 +1258,7 @@ async function createPieChart(root, chartForm) {
     chartForm.chart = chart;
 
     let legendValueText = "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]";
-    if(chartForm.legendValueText != null) legendValueText = chartForm.legendValueText;
+    if(chartForm.legendValueText !== null && chartForm.legendValueText !== undefined) legendValueText = chartForm.legendValueText;
 
     //Create series
     var series = chart.series.push(
@@ -1274,8 +1278,8 @@ async function createPieChart(root, chartForm) {
     series.labels.template.adapters.add("text", (text, target) => {
         const dataItem = target._dataItem;
         if (dataItem) {
-            let newCategory = dataItem?.dataContext?.name;
-            if(chartForm.labelTransformationFn != null) { newCategory = chartForm.labelTransformationFn(newCategory); }
+            let newCategory = dataItem?.dataContext[chartForm.xAxeName];
+            if(chartForm.labelTransformationFn != null && chartForm.labelTransformationFn != undefined) { newCategory = chartForm.labelTransformationFn(newCategory); }
             return text.replace("{category}", trimLegendText(newCategory));
         }
         return text;
@@ -1312,7 +1316,7 @@ async function createPieChart(root, chartForm) {
     legend.labels.template.adapters.add("text", (text, target) => {
         const dataItem = target._dataItem;
         if(dataItem) {
-            let newCategory = dataItem?.dataContext?.name;
+            let newCategory = dataItem?.dataContext[chartForm.xAxeName];
             return text.replace("{category}", trimLegendText(newCategory));
         }
 
@@ -2200,7 +2204,7 @@ async function createTableChart(chartForm) {
 function getColorScheme(selectedColorScheme) {
     let useColorScheme = [];
 
-    if(selectedColorScheme === null || selectedColorScheme.length === 0) {
+    if(selectedColorScheme === null || selectedColorScheme === undefined || selectedColorScheme.length === 0) {
         useColorScheme = [...set1, ...set3, ...set5];
     } else if("set1" === selectedColorScheme) {
         useColorScheme = set1;

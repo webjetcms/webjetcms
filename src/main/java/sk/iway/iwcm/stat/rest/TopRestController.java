@@ -68,7 +68,7 @@ public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
         if(filter.getChartType() == ChartType.NOT_CHART) {
             return columnsToPageItems(
                 StatNewDB.getTopPages(MAX_SIZE, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId(), null, filter.getFilterBotsOut()));
-        } else if(filter.getChartType()  == ChartType.PIE) {
+        } else if(filter.getChartType()  == ChartType.PIE_DONUT) {
             return columnsToPieChartData(
                 StatNewDB.getTopPages(MAX_SIZE, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId(), null, filter.getFilterBotsOut()));
         }
