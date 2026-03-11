@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.users.userdetail;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,4 +60,8 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     //get users by id list
     @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
     List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
+
+    Optional<UserDetailsEntity> findByWebauthnUserIdAndDomainId(String webauthnUserId, Integer domainId);
+
+    Optional<UserDetailsEntity> findFirstByLoginAndDomainId(String login, Integer domainId);
 }

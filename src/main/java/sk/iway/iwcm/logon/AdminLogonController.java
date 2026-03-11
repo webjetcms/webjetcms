@@ -25,6 +25,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
@@ -154,7 +156,7 @@ public class AdminLogonController {
             this.determineLanguage(session, request, response);
             this.determineDefaultWebPagesDirectory(user, session);
             this.checkForNewHelp(session, user);
-            this.determineRootWebPageDirectory(session, user);
+            determineRootWebPageDirectory(session, user);
 
             if (Tools.isNotEmpty(changePasswordAuth)) {
                 // Delete admin log - so change password action will no longer be available
@@ -263,6 +265,8 @@ public class AdminLogonController {
             }
         }
 
+        addPasskeyToModel(request, model);
+
         return LOGON_FORM;
     }
 
@@ -287,6 +291,24 @@ public class AdminLogonController {
             }
         }
         return autoRedirectUrl;
+    }
+
+    /**
+     * Add PassKey/WebAuthn support to the model for the logon form.
+     * @param request
+     * @param model
+     */
+    private void addPasskeyToModel(HttpServletRequest request, ModelMap model) {
+        // PassKey support
+        if (Constants.getBoolean("password_passKeyEnabled") && Tools.isSecure(request)) {
+            //test if current domain against allowed origins for PassKey and set attribute for JSP to conditionally load PassKey JS
+            String[] allowedOrigins = Constants.getArray("password_passKeyAllowedOrigins");
+            if (allowedOrigins.length == 0 || Tools.containsOneItem(allowedOrigins, Tools.getScheme(request) + "://" + Tools.getServerName(request))) {
+                request.setAttribute("isPassKeyEnabled", true);
+            } else {
+                Logger.warn(AdminLogonController.class, "Current origin " + Tools.getScheme(request) + "://" + Tools.getServerName(request) + " is not in allowed origins for PassKey. PassKey login will be disabled.");
+            }
+        }
     }
 
     @PostMapping("logon/")
@@ -314,6 +336,7 @@ public class AdminLogonController {
             Logger.error(this,"su nejake chyby v logovacom formulari");
             model.addAttribute("errors", errors.get("ERROR_KEY"));
             addOAuth2UrlsToModel(request, model);
+            addPasskeyToModel(request, model);
             return LOGON_FORM;
         }
 
@@ -341,7 +364,7 @@ public class AdminLogonController {
         this.determineLanguage(session, request, response);
         this.determineDefaultWebPagesDirectory(user, session);
         this.checkForNewHelp(session, user);
-        this.determineRootWebPageDirectory(session, user);
+        determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
         String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
@@ -383,7 +406,7 @@ public class AdminLogonController {
     }
 
 
-    private void determineRootWebPageDirectory(HttpSession session, Identity user) {
+    public static void determineRootWebPageDirectory(HttpSession session, Identity user) {
         if (Tools.isNotEmpty(user.getEditableGroups())) {
             //prestav v session default host na prvy z editable groups
             int groupId = getUserFirstEditableGroup(user);
@@ -469,6 +492,11 @@ public class AdminLogonController {
         if (root != null && Tools.isNotEmpty(root.getDomainName()))
         {
             session.setAttribute("preview.editorDomainName", root.getDomainName());
+
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                rb.setDomain(root.getDomainName());
+            }
         }
     }
 

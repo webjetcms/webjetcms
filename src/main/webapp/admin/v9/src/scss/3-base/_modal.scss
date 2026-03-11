@@ -792,14 +792,34 @@ div.DTE_Bubble_Background {
                 }
             }
         }
+        .modal-footer {
+            padding-bottom: 0px;
+        }
         .modal-body {
             padding: 0px;
             iframe {
                 border: 0px;
             }
-        }
-        .modal-footer {
-            padding-bottom: 0px;
+            //inner modal opened by WJ.openDialog like passkey.pug
+            .modal-body-content {
+                padding-left: 15px;
+                padding-right: 15px;
+
+                .modal-footer {
+                    padding-bottom: 8px;
+                }
+
+                .modal.DTED {
+                    .modal-header {
+                        .btn-close-editor {
+                            padding: 5px 6px;
+                            font-size: 6px;
+                            right: 16px;
+                            top: 8px;
+                        }
+                    }
+                }
+            }
         }
     }
 

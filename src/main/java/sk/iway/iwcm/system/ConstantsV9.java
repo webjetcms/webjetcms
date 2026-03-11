@@ -248,6 +248,11 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
 
 		Constants.setInt("insertScriptCacheMinutes", 60, Constants.MOD_PERFORMANCE, "Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
+
+		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_SECURITY, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
+		Constants.setString("password_passKeyRpId", "", Constants.MOD_SECURITY, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
+		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
+		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
 	}
 
 	/**
@@ -256,7 +261,7 @@ public class ConstantsV9 {
 	 * @return
 	 * @deprecated use Constants.getArray(name)
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public static String[] getArray(String name) {
 		return Constants.getArray(name);
 	}

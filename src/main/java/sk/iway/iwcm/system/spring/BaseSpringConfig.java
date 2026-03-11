@@ -18,7 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.AbstractJacksonHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -27,6 +28,10 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
 
 import freemarker.core.Configurable;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -42,8 +47,10 @@ import sk.iway.iwcm.Tools;
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
 })
+@SuppressWarnings({"java:S6813"})
 public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 {
+    //we need to have autowired like this because we need to use it in the SpringSecurityConf.configureSecurity method, and we cannot autowire it there directly
     @Autowired
     ApplicationContext applicationContext;
 
@@ -93,8 +100,15 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     }
 
     @Override
-    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(), size="+converters.size());
+    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+        Logger.println(BaseSpringConfig.class, "-------> configureMessageConverters(builder)");
+
+        builder.registerDefaults();
+        builder.configureMessageConverters(converter -> {
+            if (converter instanceof AbstractJacksonHttpMessageConverter<?> jacksonConverter) {
+                configureJackson3(jacksonConverter);
+            }
+        });
 
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();
         List<MediaType> mediaTypes = new ArrayList<>();
@@ -102,10 +116,27 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         mediaTypes.add(new MediaType("text", "html", UTF8));
         mediaTypes.add(new MediaType("application", "json", UTF8));
         stringConverter.setSupportedMediaTypes(mediaTypes);
-        converters.add(stringConverter);
+        builder.withStringConverter(stringConverter);
 
         //aby isla tlac do PDF (application/octet-stream)
-        converters.add(new ResourceHttpMessageConverter(true));
+        builder.addCustomConverter(new ResourceHttpMessageConverter(true));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends ObjectMapper> void configureJackson3(AbstractJacksonHttpMessageConverter<T> jacksonConverter) {
+        //set for jackson 2 compatibility
+        //https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring
+        T mapper = (T) jacksonConverter.getMapper().rebuild()
+                .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DateTimeFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+                .build();
+
+        jacksonConverter.registerMappersForType(Object.class, registrations -> {
+            for (MediaType mediaType : jacksonConverter.getSupportedMediaTypes()) {
+                registrations.put(mediaType, mapper);
+            }
+        });
     }
 
     @Override

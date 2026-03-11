@@ -208,6 +208,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-groups")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/permission-groups")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/self")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/users/passkey")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/files/index")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/files/dialog")),

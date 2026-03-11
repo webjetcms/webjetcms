@@ -55,6 +55,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.system.jpa",
     "sk.iway.iwcm.system.jpaconverters",
     "sk.iway.iwcm.system.ntlm",
+    "sk.iway.iwcm.system.spring.passkey",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.users",
     "sk.iway.iwcm.xls",

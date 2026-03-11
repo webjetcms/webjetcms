@@ -38,6 +38,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -111,8 +112,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
 
             // Overenie
             verify(response).sendRedirect("/admin/");
-            logonToolsMock.verify(() -> LogonTools.setUserToSession(eq(session), any(Identity.class)));
-            verify(securityContext).setAuthentication(authentication);
+            logonToolsMock.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
         }
     }
 

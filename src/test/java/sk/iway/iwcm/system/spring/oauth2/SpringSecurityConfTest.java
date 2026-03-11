@@ -56,7 +56,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         when(httpSecurity.build()).thenReturn(mock(DefaultSecurityFilterChain.class));
 
         // Spustenie testu
-        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity);
+        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity, null, null, null);
 
         // Overenie
         assertNotNull(filterChain);
@@ -82,7 +82,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         when(httpSecurity.build()).thenReturn(mock(DefaultSecurityFilterChain.class));
 
         // Spustenie testu
-        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity);
+        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity, null, null, null);
 
         // Overenie
         assertNotNull(filterChain);
@@ -110,7 +110,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         when(httpSecurity.build()).thenReturn(mock(DefaultSecurityFilterChain.class));
 
         // Spustenie testu
-        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity);
+        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity, null, null, null);
 
         // Overenie
         assertNotNull(filterChain);
@@ -304,7 +304,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
         when(httpSecurity.build()).thenReturn(mock(DefaultSecurityFilterChain.class));
 
         // Spustenie testu
-        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity);
+        SecurityFilterChain filterChain = springSecurityConf.filterChain(httpSecurity, null, null, null);
 
         // Overenie
         assertNotNull(filterChain);
