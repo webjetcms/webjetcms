@@ -744,7 +744,6 @@ OIDC
 localhost
 lang
 displaytag
-serializovať
 autentifikátora
 phishingovým
 serializovať
@@ -752,3 +751,6 @@ LLM
 refaktorovaná
 PICTURE
 SPAM-om
+deaktiváciu
+penetračnom
+deaktivácie
