@@ -41,6 +41,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.logon.AdminLogonController;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -816,6 +817,9 @@ public class LogonTools {
         LogonTools.setUserPerms(identity);
         UsersDB.setDisabledItems(identity);
         LogonTools.setUserToSession(session, identity);
+
+        //set domain by webpages group permsissions
+		AdminLogonController.determineRootWebPageDirectory(request.getSession(), identity);
 
         // Establish Spring Security context
         Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);

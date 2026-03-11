@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
- * Spring DATA repository for PasskeyCredentialBean (passkey_credentials table).
+ * Spring DATA repository for PasskeyCredentialEntity (passkey_credentials table).
  * Provides CRUD operations and custom finders for WebAuthn credential management.
  */
 @Repository

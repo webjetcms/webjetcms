@@ -254,19 +254,28 @@ const WJ = (() => {
         openIframeModal(options);
     }
 
+    /**
+     * Open modal with current context/JS/CSS objects. Used for dynamically load datatables into dialog.
+     * @see passkey.pug for example of usage
+     * @param {JSON} options
+     */
     function openModal(options) {
         let url = options.url;
         options.url = null;
 
         //verify window height and adjust it
         var height = options.height || 600;
-        var windowHeight = $(window).height() - 80;
+        var headerHeight = 32;
+        var footerHeight = 47;
+        var windowHeight = $(window).height() - 40 - headerHeight - footerHeight;
         if (height > windowHeight) height = windowHeight;
+        if (height < 300) height = 300;
         options.height = height;
 
-        var width = options.width || 800;
+        var width = options.width || 900;
         var windowWidth = $(window).width() - 80;
         if (width > windowWidth) width = windowWidth;
+        if (width < 300) width = 300;
         options.width = width;
 
         openIframeModal(options);

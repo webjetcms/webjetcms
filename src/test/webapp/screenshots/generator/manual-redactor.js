@@ -433,7 +433,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
     }
 });
 
-Scenario('logon', async ({ I, Document, i18n }) => {
+Scenario('logon', ({ I, Document, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
     I.amOnPage('/admin/logon/?language='+I.getConfLng()+'&id=2');
     I.selectOption("#language", i18n.get("English"));

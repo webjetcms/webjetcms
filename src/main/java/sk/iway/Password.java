@@ -185,7 +185,7 @@ public class Password
 		//skip o as it can be confused with 0 and l as it can be confused with 1
 		String allowedChars = "abcdefghijkmnpqrstuvwxyz";
 		String numbers = "123456789";
-		String specialChars = "!.@%*()+-=/:<>";
+		String specialChars = "!.@%*()+=/:<>";
 
 		int minNumbers = Integer.max(Constants.getInt("passwordAdminMinCountOfDigits"), 2);
 		int minSpecialChars = Integer.max(Constants.getInt("passwordMinCountOfSpecialSigns"), 2);

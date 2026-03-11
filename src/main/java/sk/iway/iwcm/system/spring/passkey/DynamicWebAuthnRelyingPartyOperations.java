@@ -48,12 +48,6 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
      */
     private final ConcurrentHashMap<String, Webauthn4JRelyingPartyOperations> operationsCache = new ConcurrentHashMap<>();
 
-    /**
-     * ThreadLocal to store the current rpId for use in credential save operations.
-     * This is needed because WebAuthnRelyingPartyOperations doesn't pass rpId to all methods.
-     */
-    private static final ThreadLocal<String> currentRpId = new ThreadLocal<>();
-
     public DynamicWebAuthnRelyingPartyOperations(
             PublicKeyCredentialUserEntityRepository userEntityRepository,
             UserCredentialRepository userCredentialRepository,
@@ -66,27 +60,11 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
     }
 
     /**
-     * Get the current rpId from ThreadLocal. Used by JpaUserCredentialRepositoryAdapter
-     * to store the rpId with the credential.
-     * @return the current rpId or null
-     */
-    public static String getCurrentRpId() {
-        return currentRpId.get();
-    }
-
-    /**
-     * Clear the current rpId from ThreadLocal. Should be called after request processing.
-     */
-    public static void clearCurrentRpId() {
-        currentRpId.remove();
-    }
-
-    /**
      * Determine the rpId from the current HTTP request.
      * Falls back to configured default if no request is available.
      * @return the rpId (domain) for the current request
      */
-    private String determineRpId() {
+    public static String determineRpId() {
         String defaultRpId = Constants.getString("password_passKeyRpId");
 
         HttpServletRequest request = getCurrentRequest();
@@ -107,7 +85,7 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
      * Get the current HTTP request from Spring's RequestContextHolder.
      * @return the current request or null
      */
-    private HttpServletRequest getCurrentRequest() {
+    private static HttpServletRequest getCurrentRequest() {
         try {
             ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             return attrs != null ? attrs.getRequest() : null;
@@ -178,7 +156,6 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
     public PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(
             PublicKeyCredentialCreationOptionsRequest request) {
         String rpId = determineRpId();
-        currentRpId.set(rpId);
         Logger.debug(DynamicWebAuthnRelyingPartyOperations.class,
                 "createPublicKeyCredentialCreationOptions for rpId: " + rpId);
         return getOperations(rpId).createPublicKeyCredentialCreationOptions(request);
@@ -187,7 +164,6 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
     @Override
     public CredentialRecord registerCredential(RelyingPartyRegistrationRequest request) {
         String rpId = determineRpId();
-        currentRpId.set(rpId);
         Logger.debug(DynamicWebAuthnRelyingPartyOperations.class,
                 "registerCredential for rpId: " + rpId);
         return getOperations(rpId).registerCredential(request);
@@ -197,7 +173,6 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
     public PublicKeyCredentialRequestOptions createCredentialRequestOptions(
             PublicKeyCredentialRequestOptionsRequest request) {
         String rpId = determineRpId();
-        currentRpId.set(rpId);
         Logger.debug(DynamicWebAuthnRelyingPartyOperations.class,
                 "createCredentialRequestOptions for rpId: " + rpId);
         return getOperations(rpId).createCredentialRequestOptions(request);
@@ -206,7 +181,6 @@ public class DynamicWebAuthnRelyingPartyOperations implements WebAuthnRelyingPar
     @Override
     public PublicKeyCredentialUserEntity authenticate(RelyingPartyAuthenticationRequest request) {
         String rpId = determineRpId();
-        currentRpId.set(rpId);
         Logger.debug(DynamicWebAuthnRelyingPartyOperations.class,
                 "authenticate for rpId: " + rpId);
         return getOperations(rpId).authenticate(request);

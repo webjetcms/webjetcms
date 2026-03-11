@@ -27,8 +27,8 @@ import sk.iway.iwcm.Tools;
  * Enabled when Constants.getBoolean("password_passKeyEnabled") is true.
  *
  * Database tables:
- * - passkey_user_entities (passkey_user_entity_id, webauthn_user_id, name, display_name)
- * - passkey_credentials (passkey_credential_id, credential_id, user_entity_id, webauthn_user_id, ..., rp_id)
+ * - users (extended with webauthn_user_id column to store the WebAuthn user identifier)
+ * - passkey_credentials (passkey_credential_id, credential_id, user_id, webauthn_user_id, ..., rp_id)
  */
 @Configuration
 public class PasskeyConfig {
@@ -36,8 +36,6 @@ public class PasskeyConfig {
     /**
      * Provides a dynamic WebAuthnRelyingPartyOperations that determines rpId from the current HTTP request.
      * This allows passkeys to work across multiple domains automatically.
-     *
-     * The bean is only created when password_passKeyEnabled is true (checked at runtime).
      */
     @Bean
     public WebAuthnRelyingPartyOperations dynamicWebAuthnRelyingPartyOperations(

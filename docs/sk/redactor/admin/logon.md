@@ -61,14 +61,18 @@ a výberom položky **Prístupový kľúč**.
 
 Zobrazí sa správca prístupových kľúčov.
 
-![](passkey-register.png)
+![](passkey-table.png)
+
+Nový prístupový kľúč pridáte kliknutím na ikonu <button class="btn btn-sm btn-success"><span><i class="ti ti-plus"></i></span></button>
 
 1. Do poľa **Názov nového prístupového kľúča** zadajte pomenovanie (napr. Môj notebook), aby ste kľúče ľahko rozlíšili.
-2. Kliknite na tlačidlo **Registrovať nový prístupový kľúč**.
+2. Kliknite na tlačidlo **Pridať**.
 3. Prehliadač vás vyzve na overenie totožnosti biometriou alebo PIN-om zariadenia.
 4. Po úspešnom overení sa kľúč zobrazí v zozname zaregistrovaných kľúčov.
 
-Zaregistrovaný kľúč môžete kedykoľvek odstrániť kliknutím na ikonu koša v príslušnom riadku zoznamu.
+![](passkey-register.png)
+
+Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a kliknutím na ikonu koša. Verejný kľúč sa ale takto odstráni len v databáze WebJET CMS, samotný privátny kľúč zostáva uložený vo vašom zariadení. Ak sa chcete uistiť, že kľúč už nebude možné použiť, musíte ho odstrániť aj z nastavení vášho zariadenia (napríklad v nastavení Windows Hello alebo Apple heslách).
 
 !>**Upozornenie:** Prístupový kľúč je viazaný na konkrétne zariadenie a prehliadač. Ak sa chcete prihlasovať z viacerých zariadení, zaregistrujte ho na každom zariadení zvlášť, alebo využite cloud synchronizačnú službu na prenos kľúčov medzi zariadeniami (napríklad iCloud Kľúčenka, Google Password Manager).
 

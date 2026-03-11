@@ -95,14 +95,13 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         entity.setLabel(record.getLabel());
 
         // Store the rpId (domain) from DynamicWebAuthnRelyingPartyOperations
-        String rpId = DynamicWebAuthnRelyingPartyOperations.getCurrentRpId();
+        String rpId = DynamicWebAuthnRelyingPartyOperations.determineRpId();
         if (Tools.isNotEmpty(rpId)) {
             entity.setRpId(rpId);
         }
 
         credentialRepository.save(entity);
-        Logger.debug(JpaUserCredentialRepositoryAdapter.class,
-                "PassKey JPA: save credential SUCCESS, id=" + entity.getId());
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class, "PassKey JPA: save credential SUCCESS, id=" + entity.getId());
     }
 
     @Override
@@ -218,7 +217,18 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
         return Arrays.stream(transports.split(","))
                 .map(String::trim)
                 .filter(s -> s.isEmpty() == false)
-                .map(AuthenticatorTransport::valueOf)
+                .map(this::getAuthenticatorTransportByValue)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /**
+     * Lookup AuthenticatorTransport by its spec value (e.g., "internal").
+     */
+    private Optional<AuthenticatorTransport> getAuthenticatorTransportByValue(String value) {
+        return Arrays.stream(AuthenticatorTransport.values())
+                .filter(t -> t.getValue().equals(value))
+                .findFirst();
     }
 }

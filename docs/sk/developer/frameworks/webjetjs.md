@@ -176,6 +176,16 @@ Príklad HTML kódu pre použitie ```onclick="WJ.openElFinderButton(this);"```:
 </div>
 ```
 
+## Modálne okno s aktuálnym kontextem
+
+Pre otvorenie modálneho okna s aktuálnym kontextom stránky (CSS štýly, JavaScript súbory a objekty) je možné použiť volanie `WJ.openModal`. Načítaná URL adresa nebude vložená do `iframe` elementu ale bude vykonaná vrámci aktuálne načítanej web stránky. Príklad použitia:
+
+```pugjs
+a.dropdown-item.passkey(onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
+```
+
+Samotný načítaný HTML súbor nesmie obsahovať vloženú `hlavičku/menu`, aby nevznikla duplicita JavaScript/HTML/CSS objektov. Príkladom súboru je [passkey.pug](../../../../src/main/webapp/admin/v9/views/pages/users/passkey.pug).
+
 ## Udržiavanie spojenia so serverom (refresher)
 
 Aby nedochádzalo k vypršaniu prihlásenia používateľa (napr. pri dlhej editácii web stránky) je v minútovom intervale volaná REST služba ```/admin/rest/refresher```. Tá udrží session a zároveň kontroluje nové správy pre administrátora. Ak existujú nové správy zobrazí vyskakovacie okno.
