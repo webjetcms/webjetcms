@@ -4,10 +4,10 @@
 export default {
     sourceLanguage: 'sk',
     //outputLanguages: ['en-US'],
-    outputLanguages: ['en-US'],
+    outputLanguages: ['cs'],
     directories: [
-        //['sk', '$langcode$'],
-        ['sk/translation-test', '$langcode$/translation-test'],
+        ['sk', '$langcode$'],
+        //['sk/translation-test', '$langcode$/translation-test'],
     ],
     //translationEngine: "deepl"
     translationEngine: "google"
