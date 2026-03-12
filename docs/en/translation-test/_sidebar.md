@@ -13,5 +13,5 @@
 - Migration
   - [Migration between environments](/install/migrate-dev-prod.md)
 - MultiWeb
-- [Introduction](/install/multiweb/README.md)
-- [Configuration](/install/multiweb/config.md)
+  - [Introduction](/install/multiweb/README.md)
+  - [Configuration](/install/multiweb/config.md)

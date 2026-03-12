@@ -59,7 +59,7 @@ Tabulka s mezerami v hlavičce:
 V MD souboru může být i HTML kód, například YouTube video. Zde nesmí zapomenout na uvozovky za `allow` atributem.
 
 <div class="video-container">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometr; autoplay; clipboard-write; encrypted-media; allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Changelog
@@ -130,8 +130,8 @@ Citace s více odstavci:
 1. První bod
 2. Druhý bod
 3. Třetí bod
-1. Vnořený první bod
-2. Vnořený druhý bod
+   1. Vnořený první bod
+   2. Vnořený druhý bod
 4. Čtvrtý bod
 
 Seznam s delším textem:

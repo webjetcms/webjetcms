@@ -143,11 +143,11 @@ List with longer text:
 ## Unordered lists - nested
 
 - Main point A
-- Nested point A1
-- Nested point A2
-- Deeply embedded point A2a
-- Deeply embedded point A2b
-- Nested point A3
+  - Nested point A1
+  - Nested point A2
+    - Deeply embedded point A2a
+    - Deeply embedded point A2b
+  - Nested point A3
 - Main point B
 - Main point C
 
@@ -217,7 +217,7 @@ This is the second line after the soft-break.
 
 ## Escaped characters
 
-These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, [square bracket\], \#grid\`, \&ampersand\.
+These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, \[square bracket\], \#grid\`, \&ampersand\.
 
 ## Images
 
@@ -268,13 +268,13 @@ Inline <code>HTML code</code> and <a href="https://www.google.com">HTML link</a>
 
 - First item on the list.
 
-This paragraph belongs to the first bullet point and is indented.
+    This paragraph belongs to the first bullet point and is indented.
 
 - Second item on the list.
 
-This paragraph belongs to the second point on the list.
+    This paragraph belongs to the second point on the list.
 
-> Quote nested in a list point.
+    > Quote nested in a list point.
 
 - Third item in the list with the code:
 

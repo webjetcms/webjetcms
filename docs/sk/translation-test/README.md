@@ -217,7 +217,7 @@ Toto je druhý riadok po soft-break.
 
 ## Únikové znaky (Escaped characters)
 
-Tieto znaky musia zostať neporušené po preklade: \*hviezdička\*, \_podčiarkovník\_, \`spätný apostrof\`, \[hranatá zátvorka\], \#mriežka\`, \&ampersand\.
+Tieto znaky musia zostať neporušené po preklade: \*hviezdička\*, \_podčiarkovník\_, \`spätný apostrof\`, \[hranatá zátvorka\], \#mriežka, spätný apostrof \`, \&ampersand\.
 
 ## Obrázky
 
@@ -268,16 +268,16 @@ Inline <code>HTML kód</code> a <a href="https://www.google.com">HTML odkaz</a>.
 
 - Prvý bod zoznamu.
 
-  Tento odsek patrí k prvému bodu zoznamu a je odsadený.
+    Tento odsek patrí k prvému bodu zoznamu a je odsadený.
 
 - Druhý bod zoznamu.
 
-  Tento odsek patrí k druhému bodu zoznamu.
+    Tento odsek patrí k druhému bodu zoznamu.
 
-  > Citácia vnorená do bodu zoznamu.
+    > Citácia vnorená do bodu zoznamu.
 
 - Tretí bod zoznamu s kódom:
 
-  ```javascript
-  const value = config.get('domain_id');
-  ```
+    ```javascript
+    const value = config.get('domain_id');
+    ```
