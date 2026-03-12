@@ -615,7 +615,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 	 */
 	public String getNavbar()
 	{
-		if (Tools.isEmpty(navbar))
+		if (navbar == null || navbar.length()<1)
 		{
 			navbar = getGroupName();
 		}
@@ -835,7 +835,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 	public String getUrlDirName()
 	{
-		if (Tools.isEmpty(urlDirName))
+		if (urlDirName == null || urlDirName.length()<1)
 		{
 			urlDirName = getNavbarNameNoAparam();
 			if (urlDirName != null && urlDirName.contains("<") && urlDirName.contains(">")) urlDirName = Tools.html2text(Tools.replace(urlDirName, "&#47;", "/"));
