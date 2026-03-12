@@ -87,7 +87,7 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 					LogonTools.setUserToSession(request.getSession(), user);
 					request.setAttribute("csrfDisabled", "1");
 
-					//set domain by webpages group permsissions
+					//set domain by webpages group permissions
 					AdminLogonController.determineRootWebPageDirectory(request.getSession(), user);
 
 					return true;

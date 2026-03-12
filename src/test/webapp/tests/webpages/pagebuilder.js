@@ -613,7 +613,7 @@ function checkNewPageTemplate(groupId, hasTemplate, I, DT, DTE) {
 
 Scenario("NewPageDocIdTemplate is used for new page", ({I, DT, DTE}) => {
 
-    //negative scenatio - blank page
+    //negative scenario - blank page
     checkNewPageTemplate(34495, false, I, DT, DTE);
 
     //positive scenario - template with 2 columns
