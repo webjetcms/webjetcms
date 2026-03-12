@@ -1288,6 +1288,8 @@ public class Constants {
 				"Parametre metadata removera, pre zmensenie obrazka cez imageMagick nastavte na {filePath} -resize 1920x1080 {filePath}, alebo {filePath} -strip -quality 92 -interlace Plane -sampling-factor 4:2:0 {filePath} pre odstranenie metadat a znizenie velkosti suboru");
 		setString("metadataRemoverExtensions", "jpg,jpeg,png,gif", "editor;files;gallery",
 				"Povolene pripony, z ktorych sa budu odstranovat metadata.");
+		setLong("metadataRemoveMinFileSize", 0, "editor;files;gallery",
+				"Minimalna velkost suboru pre odstranovanie metadat, v bytech. Nastavte na pozadovanu hodnotu ak nechcete upravovat male subory/obrazky.");
 
 		setBoolean("groupCreateBlankWebpageAfterCreate", true, MOD_EDITOR,
 				"Ak je nastavene na true bude po vytvoreni noveho adresara automaticky vytvorena aj prazdna web stranka s rovnakym nazvom");

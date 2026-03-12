@@ -601,3 +601,37 @@ Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
 
     I.wjSetDefaultWindowSize();
 });
+
+function checkNewPageTemplate(groupId, hasTemplate, I, DT, DTE) {
+    I.switchTo();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + groupId);
+    DT.waitForLoader();
+
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+    DTE.waitForCkeditor();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    if (hasTemplate === true) {
+        I.waitForText("Toto je stlpec 1", 10, "div.column-content p");
+        I.see("Toto je nadpis stránky", "div.column-content h1");
+        I.dontSee("Nová web stránka", "div.column-content p");
+    } else {
+        I.waitForText("Nová web stránka", 10, "div.column-content p");
+        I.dontSee("Toto je stlpec 1", "div.column-content");
+        I.dontSee("Toto je nadpis stránky", "div.column-content");
+    }
+}
+
+Scenario("NewPageDocIdTemplate is used for new page", ({I, DT, DTE}) => {
+
+    //negative scenario - blank page
+    checkNewPageTemplate(34495, false, I, DT, DTE);
+
+    //positive scenario - template with 2 columns
+    checkNewPageTemplate(112952, true, I, DT, DTE);
+
+});

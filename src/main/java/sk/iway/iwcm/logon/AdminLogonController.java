@@ -70,7 +70,7 @@ public class AdminLogonController {
 
     private static final String LOGON_FORM = "/admin/skins/webjet8/logon-spring";
     private static final String CHANGE_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-change-password";
-    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
+    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa"; //NOSONAR
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
     private final UserDetailsRepository userDetailsRepository;
