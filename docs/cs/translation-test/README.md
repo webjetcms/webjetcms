@@ -81,3 +81,203 @@ V changelogu máme různé podivné konstrukce.
 
 ### Různé formátování
 
+Zde je tučný text **tučný**, kurzíva *kurzíva*, ale i jejich kombinace ***tučná kurzíva***. Dále je zde ~~přeškrtnutý text~~ a text s `inline kódom`.
+
+Odkaz s názvem (title): [Google](https://www.google.com "Vyhledávač Google").
+
+Referenční odkaz: [WebJET CMS][webjet] a další [odkaz][webjet].
+
+[webjet]: https://www.webjetcms.sk "WebJET CMS"
+
+## Nadpisy všech úrovní
+
+### H3 nadpis sekce
+
+#### H4 nadpis pod-sekce
+
+##### H5 nadpis
+
+###### H6 nadpis
+
+## Citace
+
+Jednoduchá citace:
+
+> Toto je citace. Může obsahovat **tučný text**, *kurzivu* nebo `kód`.
+
+Vnořená citace:
+
+> Vnější citace s nějakým textem.
+>
+> > Vnořená citace dovnitř.
+> >
+> > > Ještě hlubší citace.
+
+Citace s více odstavci:
+
+> První odstavec citace obsahuje text, který může být delší.
+>
+> Druhý odstavec téže citace.
+
+## Upozornění (Alerts/Admonitions)
+
+!> Toto je varování (warning). Obsahuje důležitou informaci na kterou je třeba si dát pozor.
+
+?> Toto je tip (info). Obsahuje užitečnou informaci pro uživatele.
+
+## Uspořádané seznamy
+
+1. První bod
+2. Druhý bod
+3. Třetí bod
+1. Vnořený první bod
+2. Vnořený druhý bod
+4. Čtvrtý bod
+
+Seznam s delším textem:
+
+1. **První bod** – obsahuje tlustý text a popis co se stane při této volbě.
+2. *Druhý bod* – obsahuje kurzívu a další popis.
+3. Třetí bod s odkazem na [dokumentaci](https://www.google.com).
+
+## Neuspořádané seznamy – vnořené
+
+- Hlavní bod A
+  - Vnořený bod A1
+  - Vnořený bod A2
+    - Hluboce vnořený bod A2a
+    - Hluboce vnořený bod A2b
+  - Vnořený bod A3
+- Hlavní bod B
+- Hlavní bod C
+
+## Seznam úloh (Task list)
+
+- [x] Dokončený úkol
+- [x] Další dokončený úkol
+- [ ] Nedokončený úkol
+- [ ] Další nedokončená úloha s **tučným** textem
+
+## Horizontální čára
+
+Text před horizontální čarou.
+
+---
+
+Text za horizontální čarou.
+
+## Kódové bloky
+
+Blok s jazykem SQL:
+
+```sql
+SELECT wp.doc_id, wp.title, wp.perex_group_id
+FROM web_pages wp
+WHERE wp.domain_id = 1
+  AND wp.deleted = 0
+ORDER BY wp.doc_id;
+```
+
+Blok s jazykem Java:
+
+```java
+@RestController
+@RequestMapping("/api/v1/pages")
+public class PageRestController {
+    @GetMapping("/{id}")
+    public ResponseEntity<PageBean> getPage(@PathVariable Long id) {
+        return ResponseEntity.ok(pageService.getPage(id));
+    }
+}
+```
+
+Blok s jazykem `Bash`:
+
+```bash
+./gradlew appStart -Pprofile=local
+```
+
+Blok s jazykem YAML:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/webjet
+    username: webjet
+    password: webjet
+```
+
+## Pevný řádkový zlom (Hard line break)
+
+Toto je první řádek.\
+Toto je druhý řádek po pevném zlomu.
+
+Toto je první řádek se dvěma mezerami na konci (hard break před ním).
+Toto je druhý řádek po soft-break.
+
+## Únikové znaky (Escaped characters)
+
+Tyto znaky musí zůstat neporušené po překladu: \*hvězdička\*, \_podtržítko\_, \`spätný apostrof\`, [hranatá závorka\], \#mřížka\`, \&ampersand\.
+
+## Obrázky
+
+Obrázek s alt textem:
+
+![Alternativní popis obrázku](../frontend/setup/picture-element.png)
+
+Obrázek s alt textem a `title`:
+
+![Alternativní popis obrázku](../frontend/setup/picture-element.png "Titulek obrázku")
+
+Referenční obrázek:
+
+![Logo][logo]
+
+[logo]: ../frontend/setup/picture-element.png "Logo WebJET"
+
+## Smíšené formátování v textu
+
+Toto je odstavec s **tučným**, *kurzivním* a ***tučně-kurzivním*** textem. Obsahuje také `inline kód`, ~~přeškrtnutý text~~ a [odkaz na Google](https://www.google.com). Také může obsahovat URL adresu: https://www.webjetcms.sk.
+
+Další odstavec s kombinací formátování ve větě: Při nastavování hodnoty `domain_id` v tabulce `web_pages` je třeba použít správnou hodnotu **před uložením záznamu**, jinak může dojít k chybě.
+
+## Tabulka s různým formátováním v buňkách
+
+| Sloupec | Tlustý text | Kód | Odkaz |
+| -------- | ----------- | ----- | ------- |
+| Řádek 1 | **tlustý** | `kód_hodnota` | [odkaz](https://www.google.com) |
+| Řádek 2 | *kurziva* | `NULL` | [Dokumentace](../frontend/setup/ckeditor.md) |
+| Řádek 3 | ~~přeškrtnuto~~ | `perex_group_id` | – |
+
+Tabulka se zarovnáním sloupců:
+
+| Levý sloupec | Střední sloupec | Pravý sloupec |
+|:------------|:--------------:|-------------:|
+| vlevo       | střed          | vpravo       |
+| hodnota A   | hodnota B      | hodnota C    |
+
+## Inline HTML
+
+Text s inline HTML: toto je <strong>tlustý HTML text</strong> a toto je <em>HTML kurzíva</em>.
+
+Inline <code>HTML kód</code> a <a href="https://www.google.com">HTML odkaz</a>.
+
+<p>Odstavec v HTML značce s <strong>tučným</strong> textem a <a href="https://www.google.com" title="Google">odkazem</a>.</p>
+
+## Víceřádkové seznamy s odstavci
+
+- První bod seznamu.
+
+  Tento odstavec patří k prvnímu bodu seznamu a je odsazen.
+
+- Druhý bod seznamu.
+
+  Tento odstavec patří k druhému bodu seznamu.
+
+  > Citace vnořená do bodu seznamu.
+
+- Třetí bod seznamu s kódem:
+
+  ```javascript
+  const value = config.get('domain_id');
+  ```

@@ -4,7 +4,7 @@
 export default {
     sourceLanguage: 'sk',
     //outputLanguages: ['en-US'],
-    outputLanguages: ['cs'],
+    outputLanguages: ['en-US'],
     directories: [
         //['sk', '$langcode$'],
         ['sk/translation-test', '$langcode$/translation-test'],
