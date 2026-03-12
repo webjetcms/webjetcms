@@ -1,6 +1,6 @@
 # Test prekladov
 
-Cieľom tohto súboru je testovať prekladač a zachovanie formátovania. Tento súbor by mal obsahovat rôzne typy formátovania, ako sú **tučný text**, *kurzíva*, `kód`, a odkazy [Google](https://www.google.com).
+Cieľom tohto súboru je testovať prekladač a zachovanie formátovania. Tento súbor by mal obsahovať rôzne typy formátovania, ako sú **tučný text**, *kurzíva*, `kód`, a odkazy [Google](https://www.google.com).
 
 Pre testovanie nastavte v súbore `deepmark.config.mjs` hodnotu `javascript` nasledovne:
 
@@ -18,7 +18,7 @@ Taktiež by mal obsahovať zoznamy, tu je dôležité, že za týmto nadpisom **
 
 Dôležité je, aby zachoval štruktúru, prázdne riadky a podobne.
 
-## Sidebar problém
+## `Sidebar` problém
 
 Tu zmaže prázdny riadok za `point_left`, čo spôsobí, že sa tento odkaz spojí s ďalším textom. POZOR: otestujte správanie aj v `_sidebar.md` súbore, pretože tu to niekedy funguje správne.
 
@@ -37,14 +37,22 @@ POZOR: tiež na to, že spraví z `point_left` `point\_left`.
 
 Ukážka tabuľky. Tu POZOR na to, aby nespravil z `perex_group_id` `perex\_group\_id` a podobne.
 
-| perex_group_id | perex_group_name      | domain_id | available_groups |
-|----------------|-----------------------|-----------|------------------|
-| 3              | ďalšia perex skupina  | 1         | NULL             |
-| 645            | deletedPerexGroup     | 1         | NULL             |
-| 794            | kalendár-udalostí     | 1         | NULL             |
-| 1438           | ďalšia perex skupina  | 83        | NULL             |
-| 1439           | deletedPerexGroup     | 83        | NULL             |
-| 1440           | kalendár-udalostí     | 83        | NULL             |
+| perex_group_id | perex_group_name      | `domain_id` | `available_groups` |
+|----------------|-----------------------|-------------|--------------------|
+| 3              | ďalšia perex skupina  | 1           | test               |
+| 645            | `deletedPerexGroup`   | 1           | `NULL`             |
+| 794            | kalendár-udalostí     | 1           |                    |
+| 1438           | ďalšia perex skupina  | 83          | pekný deň          |
+| 1439           | `deletedPerexGroup`   | 83          | `NULL`             |
+| 1440           | kalendár-udalostí     | 83          | `NULL`             |
+
+Tabuľka s medzerami v hlavičke:
+
+| Kód modulu | Popis | Dôvod deaktivácie |
+| --- | --- | --- |
+| `cmp_forum` | Fórum a diskusné fórum | Znižuje riziko XSS a spam útokov |
+| `cmp_blog` | Blog | Znižuje riziko XSS a spam útokov |
+| `cmp_dmail` | Distribučný zoznam (newsletter) | Znižuje riziko spam útokov cez hromadné rozosielanie |
 
 ## HTML kód
 
@@ -70,3 +78,6 @@ V changelogu máme rôzne podivné konštrukcie.
 - Pridaná možnosť vkladať [vlastné ikony](../frontend/setup/ckeditor.md#svg-ikony) definované v spoločnom SVG súbore (#58181).
 
 ![](../frontend/setup/svgicon.png)
+
+### Rôzne formátovania
+
