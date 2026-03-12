@@ -13,6 +13,7 @@ public enum ChartType {
     BAR_HORIZONTAL("bar_horizontal"),
     PIE_CLASSIC("pie_classic"),
     PIE_DONUT("pie_donut"),
+    DOUBLE_PIE("double_pie"),
     WORD_CLOUD("word_cloud"),
     TABLE("table"),
     NOT_CHART("not_chart");
@@ -50,6 +51,7 @@ public enum ChartType {
             case "bar_horizontal" -> BAR_HORIZONTAL;
             case "pie_classic" -> PIE_CLASSIC;
             case "pie_donut" -> PIE_DONUT;
+            case "double_pie" -> DOUBLE_PIE;
             case "word_cloud" -> WORD_CLOUD;
             case "table" -> TABLE;
             case "not_chart" -> NOT_CHART;

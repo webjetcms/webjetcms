@@ -40,7 +40,7 @@
         });
 
         formItemsDataTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
-            console.log("DataTable submitSuccess event:", { e, json, data, action });
+            //console.log("DataTable submitSuccess event:", { e, json, data, action });
 
             const event = new CustomEvent("stat-chart-update", {
                 detail: { id: urlItemFormId }

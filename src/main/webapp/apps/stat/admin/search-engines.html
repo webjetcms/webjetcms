@@ -9,6 +9,7 @@
     var searchEnginesQueryDataTable;
     var searchEnginesDataTable;
     let barChartQueries;
+    let wordCloudChartQueries;
     let pieChartEngines;
 
     WJ.breadcrumb({
@@ -122,6 +123,18 @@
                     barChartQueries = new ChartTools.BarChartForm(barConfig);
                     ChartTools.createAmchart(barChartQueries);
 
+                    const wordCloudConfig = {
+                        chartTitle: '[[#{stat.graph.searchQueriesBars}]]',
+                        chartDivId: "searchEngines-wordCloudQueries",
+                        chartData: result['content'],
+                        yAxeName: "queryCount",
+                        xAxeName: "queryName",
+                        mode: "line"
+                    }
+
+                    wordCloudChartQueries = new ChartTools.WordCloudChartForm(wordCloudConfig);
+                    ChartTools.createAmchart(wordCloudChartQueries);
+
                     let pieChartData = searchEnginesDataTable.DATA.json.data;
                     pieChartEngines = new ChartTools.PieChartForm("accesCount", "serverName", '[[#{stat_searchengines.searchEnginesCount}]]', "searchEngines-pieEngines", pieChartData);
                     ChartTools.createAmchart(pieChartEngines);
@@ -150,6 +163,9 @@
             await $.ajax({url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) {
                 barChartQueries.chartData = result['content'];
                 ChartTools.updateChart(barChartQueries);
+
+                wordCloudChartQueries.chartData = result['content'];
+                ChartTools.updateChart(wordCloudChartQueries);
             }});
 
             //Search engine section should not be influenced by webPageSelect and searchEngineSelect
@@ -262,8 +278,13 @@
     </div>
 </div>
 
-<div id="graphsDiv" class="hide-while-loading">
-    <div id="searchEngines-barQueries" class="amcharts"></div>
+<div id="graphsDiv" class="row hide-while-loading">
+    <div class="col-md-12 col-lg-6">
+        <div id="searchEngines-barQueries" class="amcharts"></div>
+    </div>
+    <div class="col-md-12 col-lg-6">
+        <div id="searchEngines-wordCloudQueries" class="amcharts"></div>
+    </div>
 </div>
 
 <div id="tableDiv">

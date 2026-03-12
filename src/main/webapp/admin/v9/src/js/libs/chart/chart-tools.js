@@ -5,6 +5,7 @@ export const ChartType = {
     Bar_Horizontal: "bar_horizontal",
     Pie_Classic: "pie_classic",
     Pie_Donut: "pie_donut",
+    Double_Pie: "double_pie",
     Word_Cloud: "word_cloud",
     Table: "table",
     Not_Chart: "not_chart"
@@ -201,14 +202,14 @@ export class DoublePieChartForm {
     }
 }
 
-export class WordCloudForm {
+export class WordCloudChartForm {
     constructor(config) {
         this.initFromConfig(config);
     }
 
     initFromConfig(config) {
-        if (!config.chartDivId) throwConstructorError("WordCloudForm", "chartDivId");
-        if (config.chartData == null || config.chartData === undefined) throwConstructorError("WordCloudForm", "chartData");
+        if (!config.chartDivId) throwConstructorError("WordCloudChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("WordCloudChartForm", "chartData");
 
         Object.assign(this, {
             chartDivId: config.chartDivId,
@@ -227,18 +228,15 @@ export class TableChartForm {
     }
 
     initFromConfig(config) {
-        if (!config.categoryName) throwConstructorError("TableChartForm", "categoryName");
-        if (!config.valueName) throwConstructorError("TableChartForm", "valueName");
+        if (config.paramsNames == null || config.paramsNames === undefined || Array.isArray(config.paramsNames) == false) throwConstructorError("TableChartForm", "paramsNames");
         if (!config.chartDivId) throwConstructorError("TableChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TableChartForm", "chartData");
 
         Object.assign(this, {
-            categoryName: config.categoryName,
-            valueName: config.valueName,
+            paramsNames: config.paramsNames,
             chartDivId: config.chartDivId,
-
             chartTitle: config.chartTitle,
             chartData: config.chartData,
-
             colorScheme: config.colorScheme,
 
             // PERMANENT
@@ -743,7 +741,7 @@ export async function createAmchart(chartForm, update) {
         createLineChart(root, chartForm);
     } else if(chartForm instanceof DoublePieChartForm) {
         createDoublePieChart(root, chartForm);
-    } else if(chartForm instanceof WordCloudForm) {
+    } else if(chartForm instanceof WordCloudChartForm) {
         crateWordCloudChart(root, chartForm);
     }
 }
@@ -1138,7 +1136,7 @@ function createBarChartVertical(root, chart, chartForm) {
     xRenderer.labels.template.adapters.add("text", function(text, target) {
         const dataItem = target._dataItem;
         if(dataItem) {
-            let originalCategory = dataItem?.dataContext[chartForm.xAxeName];
+            let originalCategory = dataItem?.dataContext[chartForm.yAxeName];
             let newCategory = trimLegendText(originalCategory);
             return newCategory;
         }
@@ -1596,6 +1594,16 @@ export async function updateChart(chartForm) {
         //this type of charts MUST have exactly 2 series
         chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
         chartForm.chart.series.values[1].data.setAll(chartForm.chartData);
+    } else if(chartForm instanceof WordCloudChartForm) {
+        // WordCloud chart dont need remove series, just set new data to series
+        const wordCloudSeries = chartForm.chart.contents.children.getIndex(0);
+        if (wordCloudSeries) {
+            if (chartForm.mode === "word") {
+                wordCloudSeries.set("text", chartForm.chartData);
+            } else if (chartForm.mode === "line") {
+                wordCloudSeries.data.setAll(chartForm.chartData);
+            }
+        }
     }
 }
 
@@ -2169,21 +2177,19 @@ function isNumberParamValid(value, cantBeNegative = true) {
 /* TABLE CHART SECTION has nothing with amchart */
 
 async function createTableChart(chartForm) {
+
+
     const table = document.createElement("table");
     table.classList.add("table", "tabulkaStandard");
 
     const tbody = document.createElement("tbody");
     chartForm.chartData.forEach(row => {
         const tr = document.createElement("tr");
-        const tdName = document.createElement("td");
-        tdName.textContent = row.name;
-        tdName.classList.add("chart-table-td");
-        const tdCount = document.createElement("td");
-        tdCount.textContent = row.count;
-        tdCount.style.textAlign = "right";
-        tdCount.classList.add("chart-table-td");
-        tr.appendChild(tdName);
-        tr.appendChild(tdCount);
+
+        chartForm.paramsNames.forEach(async paramName => {
+            tr.appendChild(await insertTableColumn(row, paramName));
+        });
+
         tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -2199,6 +2205,13 @@ async function createTableChart(chartForm) {
     if(chartContainer) {
         chartContainer.appendChild(wrapper2);
     }
+}
+
+async function insertTableColumn(rowData, paramName) {
+    const td = document.createElement("td");
+    td.textContent = rowData[paramName];
+    td.classList.add("chart-table-td");
+    return td;
 }
 
 function getColorScheme(selectedColorScheme) {
@@ -2251,15 +2264,14 @@ function crateWordCloudChart(root, chartForm) {
         })
     );
 
-    // Set created chart into WordCloudForm.chart
+    // Set created chart into WordCloudChartForm.chart
     chartForm.chart = chart;
 
-    // Add zoom tools for line mode
-    if(chartForm.mode === "line") {
-        chart.children.push(am5.ZoomTools.new(root, {
-            target: chart
-        }));
-    }
+    // Add zoom tools for line mode - for now, zoom tools are not required
+    // Leaving code here for future useage
+    //     chart.children.push(am5.ZoomTools.new(root, {
+    //         target: chart
+    //     }));
 
     // Configure word cloud series based on mode
     var series = chart.contents.children.push(am5wc.WordCloud.new(root, {

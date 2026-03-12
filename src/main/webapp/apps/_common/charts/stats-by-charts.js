@@ -35,7 +35,6 @@ export class StatsByCharts {
 
             const destroyReponse = await this._destroyChartBeforeUpdate(newChartDef.id);
             if(destroyReponse === true) {
-                console.log(newChartDef.type);
                 if(newChartDef.type === ChartTools.ChartType.Pie_Donut || newChartDef.type === ChartTools.ChartType.Pie_Classic) {
                     this._renderPieChart(newChartDef, chartUniqueId);
                 }
@@ -44,6 +43,8 @@ export class StatsByCharts {
                 }
                 else if(newChartDef.type === ChartTools.ChartType.Table) {
                     this._renderTableChart(newChartDef, chartUniqueId);
+                } else if(newChartDef.type === ChartTools.ChartType.Word_Cloud) {
+                    this._renderWordCloudChart(newChartDef, chartUniqueId);
                 }
             }
         });
@@ -146,8 +147,7 @@ export class StatsByCharts {
 
     _renderTableChart(chartDef, chartUniqueId) {
         const chartConfig = {
-            categoryName: "name",
-            valueName: "count",
+            paramsNames: ["name", "count"],
             chartTitle: chartDef.title,
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
@@ -169,7 +169,7 @@ export class StatsByCharts {
             yAxeName: "count"
         }
 
-        let wordCloudChart = new ChartTools.WordCloudForm(chartConfig);
+        let wordCloudChart = new ChartTools.WordCloudChartForm(chartConfig);
         ChartTools.createAmchart(wordCloudChart);
         this.chartsInstances[chartDef.id] = wordCloudChart;
     }
