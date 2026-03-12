@@ -41,7 +41,8 @@
     "scr:current:en": "CODECEPT_URL='https://iwcm.interway.sk' CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "scr:current:cs": "CODECEPT_URL='https://iwcm.interway.sk' CODECEPT_LNG=cs CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "ff:scr:current:en": "CODECEPT_URL='https://iwcm.interway.sk' CODECEPT_BROWSER=firefox CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
-    "scr:current:prod:en": "CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'"
+    "scr:current:prod:en": "CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
+    "a11y": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps --grep '@a11y'"
   },
   "author": "Lubos Balat, InterWay, a. s.",
   "devDependencies": {
@@ -51,6 +52,7 @@
     "allure-codeceptjs": "^3.0.8",
     "allure-commandline": "^2.32.0",
     "codeceptjs": "^3.6.10",
+    "codeceptjs-a11y-helper": "^1.5.9",
     "codeceptjs-chai": "^2.3.5",
     "mochawesome": "^7.1.3",
     "moment": "^2.30.1",

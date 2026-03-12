@@ -232,3 +232,17 @@ Scenario('NTLM prihlasenie', async ({ I }) => {
 
     I.see("Chyba 404 - požadovaná stránka neexistuje");
 });
+
+Scenario('logon page a11y check @a11y', async ({ I }) => {
+    I.amOnPage('/admin/');
+    let ret = await I.runA11yCheck();
+    console.log("ret=", ret);
+});
+
+Scenario('welcome page a11y check @a11y', async ({ I }) => {
+    I.amOnPage('/admin/');
+    I.relogin("admin");
+    I.amOnPage("/components/aceintegration/admin/a11y.html");
+    let ret = await I.runA11yCheck();
+    console.log("ret=", ret);
+});

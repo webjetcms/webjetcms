@@ -1,4 +1,5 @@
 const { setHeadlessWhen } = require('@codeceptjs/configure');
+const { output } = require('codeceptjs');
 const { devices } = require('playwright');
 
 // turn on headless mode when running with HEADLESS=true environment variable
@@ -69,7 +70,7 @@ exports.config = {
       }
     },
     CustomWebjetHelper: {
-      require: './custom_helper.js'
+      require: './helpers/custom_helper.js'
     },
     ChaiWrapper: {
       //https://www.npmjs.com/package/codeceptjs-chai
@@ -96,6 +97,12 @@ exports.config = {
     },
     JSONResponse: {},
     FileSystem: {},
+    A11yHelper: {
+      require: './helpers/a11yhelper.js',
+      outputDir: '../../../build/test/allure-results',
+      skipFailures: false,
+      reporter: "html"
+    }
   },
   include: {
     I: './steps_file.js',
