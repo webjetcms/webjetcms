@@ -217,7 +217,7 @@ This is the second line after the soft-break.
 
 ## Escaped characters
 
-These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, \[square bracket\], \#grid\`, \&ampersand\.
+These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, \[square bracket\], \#grid, backslash \`, \&ampersand\.
 
 ## Images
 
@@ -276,8 +276,8 @@ Inline <code>HTML code</code> and <a href="https://www.google.com">HTML link</a>
 
     > Quote nested in a list point.
 
-- Third item in the list with the code:
+- Third item on the list with the code:
 
-  ```javascript
-  const value = config.get('domain_id');
-  ```
+    ```javascript
+    const value = config.get('domain_id');
+    ```
