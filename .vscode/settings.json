@@ -40,8 +40,6 @@
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
 
     "spellright.language": [
-        "cs_CZ",
-        "en_US",
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,
@@ -78,5 +76,16 @@
         {
             "text": "Ensure commit messages are relevant to the changes made."
         }
-    ]
+    ],
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/build/**",
+        "**/bin/**",
+        "**/null/**",
+        "**/logs/**"
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "./gradlew": true
+    }
 }

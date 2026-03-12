@@ -38,7 +38,7 @@ Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.see(userName);
     I.see(userSurname);
-    I.click(TempMail.getContentSelector()+" > p > a");
+    I.click(TempMail.getContentSelector()+" a");
     I.wait(2);
     I.switchToNextTab();
 
@@ -86,7 +86,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.wait(2);
-    I.click( TempMail.getContentSelector()+" > p > a");
+    I.click( TempMail.getContentSelector()+" a");
 
     I.switchToNextTab();
     I.waitForElement(locate(".modal-content > .modal-header > .modal-title").withText("Newsletter"), 10);

@@ -363,12 +363,27 @@ export function resizeTabContent(EDITOR) {
 function calculateAutoHeight(DATA) {
     const scrollBody = $('#' + DATA.id + '_wrapper').find('.dt-scroll-body');
     const inIframe = $("html").hasClass("in-iframe-show-table");
+    const inModalDialog = $('#' + DATA.id + '_wrapper').parents(".modal-body-content").length > 0;
 
     var vh = document.documentElement.clientHeight;
     var lyHeader = 0;
     var breadcrumb = 0;
 
-    if (inIframe==false) {
+    if (inModalDialog == true) {
+        //v modalu sa berie vyska breadcrumb z modal-header, ktora obsahuje aj breadcrumb
+        vh = $('#' + DATA.id + '_wrapper').parents(".modal-body").outerHeight();
+        var breadcrumbElemets = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
+        //console.log("breadcrumbElemets=", breadcrumbElemets);
+        if (breadcrumbElemets.length>0) {
+            //iterate all breadcrumbs and get total sum of outerHeight
+            breadcrumbElemets.each(function() {
+                let $this = $(this);
+                //if display is none skip
+                if ($this.css("display")=="none") return;
+                breadcrumb += $this.outerHeight();
+            });
+        }
+    } else if (inIframe==false) {
         if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
         var breadcrumbElemets = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
         //console.log("breadcrumbElemets=", breadcrumbElemets);

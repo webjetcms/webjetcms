@@ -52,6 +52,16 @@ public class UsersDB
 	}
 
 	/**
+	 * Vrati ID domeny, v ktorej sa nachadzame, v multiwebu je to ID aktualnej domeny, v standardnom WJ je to vzdy 1
+	 * @return
+	 */
+	public static int getDomainId() {
+		if (InitServlet.isTypeCloud()) return CloudToolsForCore.getDomainId();
+
+		return 1;
+	}
+
+	/**
 	 * Specialna verzia UsersDB.getDomainIdSqlWhere pre USERS tabulku, kde pre NIE CLOUD WJ nerozlisujeme userov podla domen
 	 * @param addAnd
 	 * @return

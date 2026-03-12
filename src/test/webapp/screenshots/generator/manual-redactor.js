@@ -19,7 +19,8 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.clickCss("#pills-system-tab");
     DT.waitForLoader();
-    Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1360, 300);
+    I.jstreeClick("Hlavičky");
+    Document.screenshot("/redactor/webpages/system-folder.png", 1360, 450);
 
     I.say("listy naposledy upravene a cakajuce na schvalenie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");

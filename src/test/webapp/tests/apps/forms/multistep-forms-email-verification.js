@@ -27,13 +27,15 @@ Scenario('Check email verification', async ({ I, TempMail }) => {
     await TempMail.login(verifyEmail);
     await TempMail.openLatestEmail();
 
-    const verifyCode = await I.executeScript(() => {
-        const info = document.querySelector("div#info");
+    var contentSelector = TempMail.getContentSelector();
+
+    const verifyCode = await I.executeScript((contentSelector) => {
+        const info = document.querySelector(contentSelector);
         const html = info.innerHTML;
 
         const match = html.match(/\b\d{5}\b/);
         return match ? match[0] : null;
-    });
+    }, contentSelector);
     I.say("'Verify code from mail is : " + verifyCode);
     I.closeCurrentTab();
 
