@@ -628,13 +628,14 @@ task writePom() {
         Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
         //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
         resolvedArtifacts.each {
+            def group = it.getModuleVersion().getId().getGroup();
             def version = it.getModuleVersion().getId().getVersion();
             def currentVersion = resolvedVersionMap.get(it.getName());
             def mostRecent = version;
             if (currentVersion != null) mostRecent = mostRecentVersion([currentVersion, version]);
 
-            println("resolvedVersion: name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
-            resolvedVersionMap.put(it.getName(), mostRecent);
+            println("resolvedVersion: group="+group+" name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
+            resolvedVersionMap.put(group + ":" + it.getName(), mostRecent);
         }
 
         // Update dependencies with resolved versions
@@ -648,13 +649,13 @@ task writePom() {
             def version = it.get("version").first().value().first()
             //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
-            def artifactVersion = resolvedVersionMap.get(artifactName)
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
             Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
                 //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
                 if (mostRecent.equals(version)==false) {
-                    println "---> changing version: " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
+                    println "---> changing version: " + groupId + ":" + artifactName + " " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
                     versionNode.value = mostRecent
                 }
             }
