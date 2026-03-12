@@ -8,13 +8,28 @@ V súbore [app.js](../../../../../../src/main/webapp/admin/v9/src/js/app.js) je 
 
 Inicializácia `Amchart5` sa vykonáva volaním ```window.initAmcharts()```. Po inicializácii sa vyvolá udalosť ```WJ.initAmcharts.success``` na ```window``` objekte. Na túto udalosť je možné počúvať a následne už použiť objekt ```window.am5```, cez ktorý je knižnica dostupná. Lepšie riešenie je ale použiť ```then``` funkciu ako ```window.initAmcharts().then(module => { ... } );```.
 
-Okrem objektu so samotnou knižnicou sú následne dostupné aj objekty ```window.am5xy``` a ```window.am5percent```, ktoré sú nevyhnuté k vytváraniu a práci s grafmi amcharts.
+Okrem objektu so samotnou knižnicou sú následne dostupné aj objekty ```window.am5xy```, ```window.am5percent``` a ```window.am5wc```, ktoré sú nevyhnuté k vytváraniu a práci s grafmi amcharts.
 
 Okrem nastavenia licencie sa v tomto súbore nastavujú aj témy pre grafy. Tieto témy ovplyvnia vzhľad grafov a animácie. Okrem použitých amcharts tém, využívame aj vlastnú tému pre rôzne grafické úpravy prvkov v grafoch. Táto téma sa nachádza v súbore [amcharts.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) ako trieda `WebjetTheme`.
 
 # Práca s grafmi
 
-Pre prácu s grafmi sme vytvorili javascript súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), ktorý je dostupný ako ```window.ChartTools``` objekt. Tento súbor obsahuje vlastné funkcie a triedy, ktoré poskytujú zjednodušenú prácu s grafmi, vytvorenými pomocou knižnice ```Amchart5```. Cieľom bolo vytvoriť modulárny kód, ktorý bude vedieť vytvoriť/nastaviť/upravovať grafy podľa určitých špecifikácií. Tento kód podporuje tvorbu grafov typu ```Line```, ```Pie```, ```DoublePie``` a ```Bar``` a stará sa o všetky logické ako aj grafické nastavenia grafov.
+Pre prácu s grafmi sme vytvorili javascript súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), ktorý je dostupný ako ```window.ChartTools``` objekt. Tento súbor obsahuje vlastné funkcie a triedy, ktoré poskytujú zjednodušenú prácu s grafmi, vytvorenými pomocou knižnice ```Amchart5```. Cieľom bolo vytvoriť modulárny kód, ktorý bude vedieť vytvoriť/nastaviť/upravovať grafy podľa určitých špecifikácií.
+
+Tento kód podporuje tvorbu grafov typu:
+
+- `LINE`
+- `BAR_VERTICAL`
+- `BAR_HORIZONTAL`
+- `PIE_CLASSIC`
+- `PIE_DONUT`
+- `DOUBLE_PIE`
+- `WORD_CLOUD`
+- `TABLE`
+
+a stará sa o všetky logické ako aj grafické nastavenia grafov.
+
+!>**Upozornenie:** Grafy typu `TABLE` reálne nevyužívaju `Amchart5` knižnicu, ale využívajú sa skrz rovnaký súbor aby boli pokope.
 
 ## Vytvorenie nového grafu
 
@@ -55,12 +70,13 @@ window.initAmcharts().then(module => {
 </div>
 ```
 
-Toto bola ukážka ako môže vyzerať vytvorenie/nastavenie grafu. Dôležitá je tu trieda ```PieChartForm```, ktorá reprezentuje graf typu ```PIE```, jeho dáta a všetky parametre potrebné k správnemu vytvoreniu a nastaveniu grafu. Podpora pre rôzne typy grafov je reprezentovaná prostredníctvom samostatných tried (alebo ako sme spomenuli formulárov) dostupných z ```window.ChartTools``` :
+Toto bola ukážka ako môže vyzerať vytvorenie/nastavenie grafu. Dôležitá je tu trieda ```PieChartForm```, ktorá reprezentuje graf typu ```PIE_DONUT```, jeho dáta a všetky parametre potrebné k správnemu vytvoreniu a nastaveniu grafu. Podpora pre rôzne typy grafov je reprezentovaná prostredníctvom samostatných tried (alebo ako sme spomenuli formulárov) dostupných z ```window.ChartTools``` :
 
-- trieda ```PieChartForm```, reprezentuje grafy typu ```Pie```
-- trieda ```DoublePieChartForm```, reprezentuje grafy typu ```Pie```, ktorý pozostáva z dvoch vnorených grafov typu ```Pie```
-- trieda ```BarChartForm```, reprezentuje grafy typu ```Bar```
-- trieda ```LineChartForm```, reprezentuje grafy typu ```Line```
+- trieda `LineChartForm`, reprezentuje grafy typu `LINE`
+- trieda `BarChartForm`, reprezentuje grafy typu `BAR_VERTICAL` a `BAR_HORIZONTAL`
+- trieda `PieChartForm`, reprezentuje grafy typu `PIE_CLASSIC` a `PIE_DONUT`
+- trieda `DoublePieChartForm`, reprezentuje grafy typu `DOUBLE_PIE` (takže v podstate dvojitý graf typu `PIE_DONUT`)
+- trieda `WordCloudForm`, reprezentuje grafy typu `WORD_CLOUD`
 
 Bližšie informácie o tom čo robia jednotlivé parametre týchto tried, aký majú formát a dopad na vygenerovaný graf sú opísané v súbore [dokumentácií](statjs.md).
 
@@ -124,7 +140,7 @@ Príklad použitia:
 
 Ako sme mohli vidieť v ukážke vyššie, dáta grafu môžeme zmeniť kedykoľvek počas behu programu. Stačí ak vo vytvorenej inštancií formulára grafu vymeníme staré dáta grafu za nové a pomocou dostupnej funkcie ```updateChart()``` spustíme aktualizáciu grafu, ktorá sa o všetko potrebné postará.
 
-## Aktualizovanie tabuľky
+## Aktualizovanie datatabuľky
 
 Niekedy pri filtrovaní dát grafu pomocou externého filtra chceme filtrovať aj dáta tabuľky, ale to môže byť problém, keďže externý filter nemusí byť prepojený s tabuľkou (alebo máme viac tabuliek a iba jedná z nich môže byť prepojená s externým filtrom). Preto potrebujeme spôsob ako tieto tabuľky filtrovať.
 

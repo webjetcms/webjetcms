@@ -1,12 +1,44 @@
 # Spoločné JS funkcie
 
-Táto časť sa zoberá spoločnými funkciami na prácu s grafmi, ktoré ponúka súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), ktorý je dostupný ako ```window.ChartTools``` objekt.
+Táto časť popisuje spoločné funkcie na prácu s grafmi, ktoré poskytuje súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js). Funkcie sú dostupné cez objekt `window.ChartTools`.
 
-!>**Upozornenie:** historicky sa využíval zápis bez konfiguračného objektu, kde sa parametre zadávali priamo do konštruktora triedy formuláru grafu. Tento spôsob je síce stále podporovaný, ale neodporúčame ho používať.
+!>**Upozornenie:** Historicky sa používal zápis bez konfiguračného objektu, kde sa parametre zadávali priamo do konštruktora triedy. Tento spôsob je stále podporovaný, ale neodporúčame ho používať.
 
-## Graf typu BAR
+## Prehľad tried a typov grafov
 
-Graf typu **BAR** je vytváraný pomocou inštancie triedy ```BarChartForm```, ktorá je dostupná ako ```ChartTools.BarChartForm```.
+| Trieda | Dostupná ako | Typ grafu |
+|--------|--------------|-----------|
+| `LineChartForm` | `ChartTools.LineChartForm` | Čiarový graf s dátumovou osou |
+| `BarChartForm` | `ChartTools.BarChartForm` | Stĺpcový graf (horizontálny / vertikálny) |
+| `PieChartForm` | `ChartTools.PieChartForm` | Koláčový graf (klasický alebo donut) |
+| `DoublePieChartForm` | `ChartTools.DoublePieChartForm` | Dvojvrstvový koláčový graf |
+| `WordCloudChartForm` | `ChartTools.WordCloudChartForm` | Oblak slov |
+| `TableChartForm` | `ChartTools.TableChartForm` | Jednoduchá tabuľka v dizajne grafov |
+
+## Enumerácia `ChartType`
+
+Konštantný objekt `ChartType` sa používa na identifikáciu typu dát pri AJAX volaniach na backend. Je dostupný ako `ChartTools.ChartType`.
+
+| Hodnota | Reťazec | Popis |
+|---------|---------|-------|
+| `ChartType.Line` | `"line"` | Čiarový graf |
+| `ChartType.Bar_Vertical` | `"bar_vertical"` | Vertikálny stĺpcový graf |
+| `ChartType.Bar_Horizontal` | `"bar_horizontal"` | Horizontálny stĺpcový graf |
+| `ChartType.Pie_Classic` | `"pie_classic"` | Klasický koláčový graf |
+| `ChartType.Pie_Donut` | `"pie_donut"` | Donut koláčový graf |
+| `ChartType.Double_Pie` | `"double_pie"` | Dvojvrstvový koláčový graf |
+| `ChartType.Word_Cloud` | `"word_cloud"` | Oblak slov |
+| `ChartType.Table` | `"table"` | Tabuľkový komponent |
+| `ChartType.Not_Chart` | `"not_chart"` | Špeciálny prípad bez grafu |
+
+```javascript
+// Príklad použitia pri zostavení URL pre AJAX volanie
+$.ajax({ url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) { ... }});
+```
+
+## Graf typu `BAR`
+
+Graf typu **`BAR`** sa vytvára pomocou inštancie triedy `BarChartForm`, ktorá je dostupná ako `ChartTools.BarChartForm`.
 
 ```javascript
 export class BarChartForm {
@@ -46,21 +78,21 @@ export class BarChartForm {
 }
 ```
 
-Jednotlivé parametre triedy  slúžia na:
+Jednotlivé parametre triedy slúžia na:
 
-- `yAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu osi Y (predstavuje kategóriu).
-- `xAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu osi X (predstavuje hodnotu kategórie).
-- `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
-- `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
-- `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (yAxeName) a premenná hodnoty kategórie(xAxeName).
-- `horizontal`, boolean hodnota určujúca, či graf bude horizontálny alebo vertikálny.
-- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
+- `yAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu osi Y (kategóriu).
+- `xAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu osi X (hodnotu kategórie).
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je pole objektov reprezentujúcich dáta grafu. Každý objekt musí obsahovať premennú kategórie (`yAxeName`) aj premennú hodnoty kategórie (`xAxeName`).
+- `horizontal` je logická hodnota, ktorá určuje, či bude graf horizontálny alebo vertikálny.
+- `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
 
-!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
+!>**Upozornenie:** Povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
-Príklad použitia **BAR** grafu zo súboru [search-engine.html](../../../../../../src/main/webapp/apps/stat/admin/search-engines.html)
+Príklad použitia **`BAR`** grafu zo súboru [search-engine.html](../../../../../../src/main/webapp/apps/stat/admin/search-engines.html)
 
 ```javascript
     $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
@@ -79,13 +111,17 @@ Príklad použitia **BAR** grafu zo súboru [search-engine.html](../../../../../
     }});
 ```
 
-Výsledný vygenerovaný graf aj s nadpisom
+Výsledný vygenerovaný graf typu `BAR_HORIZONTAL` aj s nadpisom:
 
-![](bar-chart.png)
+![](bar-chart-horizontal.png)
 
-## Graf typu PIE
+Ak je parameter `horizontal` nastavený na `false`, výsledkom je graf typu `BAR_VERTICAL`. V ukážke nižšie je zároveň upravená farebná schéma cez parameter `colorScheme`.
 
-Graf typu **PIE** je vytváraný pomocou inštancie triedy ```PieChartForm```, ktorá je dostupná ako ```ChartTools.PieChartForm```.
+![](bar-chart-vertical.png)
+
+## Graf typu `PIE`
+
+Graf typu **`PIE`** sa vytvára pomocou inštancie triedy `PieChartForm`, ktorá je dostupná ako `ChartTools.PieChartForm`.
 
 ```javascript
 export class PieChartForm {
@@ -133,25 +169,25 @@ export class PieChartForm {
 }
 ```
 
-Jednotlivé parametre triedy  slúžia na:
+Jednotlivé parametre triedy slúžia na:
 
-- `yAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu kategórie.
-- `xAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu predstavujúcu kategóriu.
-- `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
-- `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
-- `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (xAxeName) a premenná hodnoty kategórie(yAxeName).
-- `labelKey`, textová hodnota predstavujúcu prekladový kľuč s nadpisom k sumáru
-- `labelTransformationFn`, funkcia, ktorá sa použije na transformáciu textu v štítokoch kategórií (formát ako taký ostane rovnaký, iba sa zmení text), Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
-- `innerRadius`, číselná hodnota predstavujúca vnútorný polomer grafu v rozsahu 0 - 100, kde 0 znamená klasický koláčový graf a hodnota > 0 znamená graf typu donut.
-- `leftLegendPosition`, logická hodnota určujúca, či sa legenda zobrazí na ľavej strane grafu.
-- `legendValueText`, textová hodnota predstavujúca textovy **format** legendy
-- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
+- `yAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu kategórie.
+- `xAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu kategórie.
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je pole objektov reprezentujúcich dáta grafu. Každý objekt musí obsahovať premennú kategórie (`xAxeName`) aj premennú hodnoty kategórie (`yAxeName`).
+- `labelKey` je textová hodnota predstavujúca prekladový kľúč pre nadpis sumára.
+- `labelTransformationFn` je funkcia na transformáciu textu v štítkoch kategórií. Formát ostáva rovnaký, mení sa iba text. Funkcia musí mať jeden vstupný parameter (pôvodný text) a musí vrátiť transformovaný text.
+- `innerRadius` je číselná hodnota vnútorného polomeru grafu v rozsahu 0 - 100. Hodnota 0 znamená klasický koláčový graf, hodnota väčšia ako 0 znamená donut.
+- `leftLegendPosition` je logická hodnota určujúca, či sa legenda zobrazí na ľavej strane grafu.
+- `legendValueText` je textová hodnota definujúca textový formát legendy.
+- `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
 
-!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
+!>**Upozornenie:** Povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
-Príklad použitia **PIE** grafu zo súboru [referer.html](../../../../../../src/main/webapp/apps/stat/admin/referer.html)
+Príklad použitia **`PIE`** grafu zo súboru [referer.html](../../../../../../src/main/webapp/apps/stat/admin/referer.html)
 
 ```javascript
     $.ajax({url: getGraphUrl(), success: function(result) {
@@ -169,27 +205,27 @@ Príklad použitia **PIE** grafu zo súboru [referer.html](../../../../../../src
     }});
 ```
 
-Výsledný vygenerovaný graf aj s nadpisom
+Výsledný vygenerovaný graf typu `PIE_DONUT` aj s nadpisom:
 
 ![](pie-chart-donut.png)
 
-Verzia grafu, kde `innerRadius` je nastavenený na 0, tedy klasický koláčový graf a `leftLegendPosition` je nastavený na `true`, tedy legenda je umiestnenená na ľavej strane grafu.
+Ak je parameter `innerRadius` nastavený na 0, výsledkom je klasický koláčový graf typu `PIE_CLASSIC`. Parametrom `leftLegendPosition` nastaveným na `true` sa legenda presunie do ľavej časti grafu.
 
 ![](pie-chart-classic.png)
 
-### Parameter ```labelKey```
+### Parameter `labelKey`
 
-Parameter ```labelKey``` je špeciálny v tom, že nie je povinný pri vytváraní inštancie triedy ```PieChartForm```. Môžete to vidieť v predchádzajúcej ukážke použitia, nakoľko tam chýba. Ak by ste ho však zadali, tak sa použije ako prekladový kľuč k získaniu textu. Tento text sa automatický nastaví do stredu grafu ako nadpis a pod ním sa zobrazí vypočítaná hodnota reprezentujúca celkový sumár hodnôt v sérii grafu.
+Parameter `labelKey` je špeciálny tým, že pri vytváraní inštancie `PieChartForm` nie je povinný. V predchádzajúcej ukážke preto nie je uvedený. Ak ho však zadáte, použije sa ako prekladový kľúč na získanie textu. Tento text sa automaticky zobrazí v strede grafu ako nadpis a pod ním sa zobrazí vypočítaná hodnota reprezentujúca celkový súčet série.
 
-Vďaka tomu môžete mať prehľadne v grafe celkovú hodnotu dát sérii. Veľkosť písma sa automatický upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát grafu sa hodnota automatický prepočíta.
+Vďaka tomu máte v grafe okamžitý prehľad o celkovej hodnote dát. Veľkosť písma sa automaticky upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát sa hodnota automaticky prepočíta.
 
-!>**Upozornenie:**, neodporúčame dlhý text inak bude font textu veľmi malý.
+!>**Upozornenie:** Neodporúčame používať príliš dlhý text, inak bude písmo v strede grafu veľmi malé.
 
-Graf typu **PIE** s takýmto nastavením aktuálne nemáme, ale môžete sa pozrieť na sekciu s graf typu **DOUBLE_PIE**, kde je takýto text viditeľný.
+Podobné správanie nájdete aj pri grafe typu **`DOUBLE_PIE`**.
 
-## Graf typu DOUBLE_PIE
+## Graf typu `DOUBLE_PIE`
 
-Graf typu **DOUBLE_PIE** je vytváraný pomocou inštancie triedy ```DoublePieChartForm```, ktorá je dostupná ako ```ChartTools.DoublePieChartForm```. Ide o variáciu grafu typu **PIE**, ktorý však obsahuje dve vnorené časti.
+Graf typu **`DOUBLE_PIE`** sa vytvára pomocou inštancie triedy `DoublePieChartForm`, ktorá je dostupná ako `ChartTools.DoublePieChartForm`. Ide o variant grafu typu **`PIE`** s dvoma vnorenými časťami.
 
 ```javascript
 export class DoublePieChartForm {
@@ -234,23 +270,23 @@ export class DoublePieChartForm {
 }
 ```
 
-Jednotlivé parametre triedy  slúžia na:
+Jednotlivé parametre triedy slúžia na:
 
-- `yAxeName_inner`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu kategórie. Ide o vnútorný kruh.
-- `yAxeName_outer`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu kategórie. Ide o vonkajší kruh.
-- `xAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu predstavujúcu kategóriu.
-- `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
-- `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
-- `chartData`, pole objektov, ktoré reprezentujú dáta grafu. V každom objekte musí byť spomínaná premenná kategórie (xAxeName) a premenná hodnoty kategórie(yAxeName).
-- `labelSeries`, textová hodnota na označenie série k súčtu s povolenými hodnotami `inner` a `outer`
-- `labelKey`, textová hodnota na prekladový kľuč s textom, ktorý bude slúžiť ako nadpis pre súčet hodnôt
-- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
+- `yAxeName_inner` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu vnútornej časti grafu.
+- `yAxeName_outer` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu vonkajšej časti grafu.
+- `xAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva textovú hodnotu kategórie.
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je pole objektov reprezentujúcich dáta grafu. Každý objekt musí obsahovať premennú kategórie (`xAxeName`) aj premenné hodnôt (`yAxeName_inner`, `yAxeName_outer`).
+- `labelSeries` je textová hodnota určujúca sériu pre súčet; povolené hodnoty sú `inner` a `outer`.
+- `labelKey` je textová hodnota predstavujúca prekladový kľúč pre nadpis súčtu.
+- `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
 
-!>**Upozornenie:** povinné parametre sú `yAxeName_inner`, `yAxeName_outer`, `xAxeName`, `chartDivId` a `chartData`.
+!>**Upozornenie:** Povinné parametre sú `yAxeName_inner`, `yAxeName_outer`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
-Príklad použitia **DOUBLE_PIE** grafu zo súboru [reservation-stat.html](../../../../../../src/main/webapp/apps/reservation/admin/reservation-stat.html)
+Príklad použitia **`DOUBLE_PIE`** grafu zo súboru [reservation-stat.html](../../../../../../src/main/webapp/apps/reservation/admin/reservation-stat.html)
 
 ```javascript
     $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
@@ -272,28 +308,92 @@ Príklad použitia **DOUBLE_PIE** grafu zo súboru [reservation-stat.html](../..
     }});
 ```
 
-Výsledný vygenerovaný graf, s nadpisom nad grafom, ktorý obsahuje aj voliteľný popisom v strede grafu s číselným sumárom hodnôt
+Výsledný vygenerovaný graf s nadpisom obsahuje aj voliteľný popis v strede grafu s číselným súčtom hodnôt:
 
 ![](double-pie-chart.png)
 
-### Parametre ```labelKey``` a ```labelSeries```
+### Parametre `labelKey` a `labelSeries`
 
-Parametre ```labelKey``` a ```labelSeries``` sú špeciálne v tom, že nie sú povinné pri vytváraní inštancie triedy ```DoublePieChartForm```. Ak však zadané sú, slúžia k nastaveniu informácie o sumáre hodnôt v strede grafu.
+Parametre `labelKey` a `labelSeries` sú špeciálne tým, že pri vytváraní inštancie `DoublePieChartForm` nie sú povinné. Ak ich zadáte, slúžia na zobrazenie sumára hodnôt v strede grafu.
 
-Parametre `labelKey` sa použije ako prekladový kľuč k získaniu textu. Tento text sa automatický nastaví do stredu grafu ako nadpis pre vypočítanú hodnotu.
+Parameter `labelKey` sa použije ako prekladový kľúč na získanie textu. Tento text sa automaticky nastaví do stredu grafu ako nadpis vypočítanej hodnoty.
 
-Parameter `labelSeries` sa používa na nastavenie toho, ktorú sériu dát chceme mať spočítanú. môže nadobudnúť hodnotu:
+Parameter `labelSeries` určuje, ktorá séria sa má spočítať. Môže nadobudnúť hodnotu:
 
-- `inner`, spočítajú sa hodnoty vnútorného grafu (`yAxeName_inner`)
-- `outer`, spočítajú sa hodnoty vonkajšieho grafu (`yAxeName_outer`)
+- `inner` pre súčet hodnôt vnútorného grafu (`yAxeName_inner`)
+- `outer` pre súčet hodnôt vonkajšieho grafu (`yAxeName_outer`)
 
-Vďaka tomu môžete mať prehľadne v grafe celkovú hodnotu dát sérii. Veľkosť písma sa automatický upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát grafu sa hodnota automatický prepočíta.
+Takto získate prehľadnú informáciu o celkovej hodnote vybranej série. Veľkosť písma sa automaticky upraví tak, aby sa text zmestil do vnútra grafu. Po zmene dát sa hodnota automaticky prepočíta.
 
-!>**Upozornenie:** , neodporúčame dlhý text inak bude font textu veľmi malý.
+!>**Upozornenie:** Neodporúčame používať príliš dlhý text, inak bude písmo v strede grafu veľmi malé.
 
-## Graf typu LINE
+## Graf typu `WORD_CLOUD`
 
-Graf typu **LINE** je vytváraný pomocou inštancie triedy ```LineChartForm```, ktorá je dostupná ako ```ChartTools.LineChartForm```. Oproti grafom ako **BAR** alebo **PIE** je jedinečný v schopnosti zobraziť viacero rôznych hodnôt pre viaceré datasety. Práve táto schopnosť grafu typu **LINE** vyžaduje aj špeciálne vstupné a konfiguračné hodnoty, ktoré sú opísané v nasledujúcich pod-kapitolách.
+Graf typu **`WORD_CLOUD`** sa vytvára pomocou inštancie triedy `WordCloudChartForm`, ktorá je dostupná ako `ChartTools.WordCloudChartForm`.
+
+```javascript
+export class WordCloudChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("WordCloudChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("WordCloudChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            xAxeName: config.xAxeName,
+            yAxeName: config.yAxeName,
+            mode: config.mode == null ? "word" : config.mode,
+        });
+    }
+}
+```
+
+Jednotlivé parametre triedy slúžia na:
+
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je pole objektov reprezentujúcich dáta grafu. V každom objekte musí byť premenná kategórie (`xAxeName`) aj premenná hodnoty kategórie (`yAxeName`).
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `yAxeName` je textová hodnota reprezentujúca názov premennej s číselnou hodnotou kategórie.
+- `xAxeName` je textová hodnota reprezentujúca názov premennej s textovou hodnotou kategórie.
+- `mode` určuje, v akom režime bude graf fungovať. Povolené hodnoty sú:
+  - `"word"` (predvolená hodnota) - vstupný `chartData` je reťazec (dlhý text), z ktorého sa automaticky extrahujú slová a ich frekvencie. Parametre `xAxeName` a `yAxeName` sa v tomto režime nevyžadujú.
+  - `"line"` - vstupný `chartData` je pole objektov, kde každý objekt obsahuje textovú (`xAxeName`) a číselnú (`yAxeName`) hodnotu. V tomto režime sú `xAxeName` a `yAxeName` povinné.
+
+!>**Upozornenie:** Povinné parametre sú `chartDivId`, `chartData` a za určitých podmienok aj `yAxeName` / `xAxeName`.
+
+### Príklad použitia
+
+Príklad použitia **`WORD_CLOUD`** grafu zo súboru [search-engine.html](../../../../../../src/main/webapp/apps/stat/admin/search-engines.html)
+
+```javascript
+    $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+
+        const wordCloudConfig = {
+             chartTitle: '[[#{stat.graph.searchQueriesBars}]]',
+             chartDivId: "searchEngines-wordCloudQueries",
+             chartData: result['content'],
+             yAxeName: "queryCount",
+             xAxeName: "queryName",
+             mode: "line"
+         }
+
+         wordCloudChartQueries = new ChartTools.WordCloudChartForm(wordCloudConfig);
+         ChartTools.createAmchart(wordCloudChartQueries);
+    }});
+```
+
+Výsledný vygenerovaný graf s nadpisom:
+
+![](wordcloud-chart.png)
+
+## Graf typu `LINE`
+
+Graf typu **`LINE`** sa vytvára pomocou inštancie triedy `LineChartForm`, ktorá je dostupná ako `ChartTools.LineChartForm`. V porovnaní s grafmi **`BAR`** alebo **`PIE`** je špecifický tým, že dokáže zobrazovať viacero hodnôt pre viacero datasetov. Preto vyžaduje aj špecifické vstupné a konfiguračné parametre, ktoré sú popísané v nasledujúcich podkapitolách.
 
 ```javascript
 export class LineChartForm {
@@ -341,23 +441,23 @@ export class LineChartForm {
 }
 ```
 
-Jednotlivé parametre triedy  slúžia na:
+Jednotlivé parametre triedy slúžia na:
 
-- `yAxeName`, (podrobnejšie rozobrané v samostatnej pod-kapitole)
-- `xAxeName`, textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva číselnú hodnotu osi Y (zaznamenaná hodnota).
-- `chartTitle`, textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
-- `chartDivId`, textová hodnota reprezentujúca ID div elementu, ktorý má zobraziť vytváraný graf.
-- `chartData`, (podrobnejšie rozobrané v samostatnej pod-kapitole)
-- `dateType`, (podrobnejšie rozobrané v samostatnej pod-kapitole)
-- `legendTransformationFn`, funkcia, ktorá sa použije na transformáciu textu v legende grafu. Funkcia musí mať jeden vstupný parameter, ktorý predstavuje pôvodný text a musí vrátiť text transformovaný.
-- `hideEmpty`, logická hodnota, ktorá určuje či sa majú v grafe zobraziť tooltipy aj pre prázdne hodnoty (null alebo 0). Predvolená hodnota je `true`, čo znamená že prázdne hodnoty sa nezobrazia. Aplikuje sa to iba ak graf zobrazuje viac ako 8 čiar.
-- `colorScheme`, textová hodnota určujúca farebnú schému grafu.
+- `yAxeNames` je špeciálna konfigurácia Y osí (podrobnejšie v samostatnej podkapitole).
+- `xAxeName` je textová hodnota reprezentujúca názov premennej v objekte, ktorá uchováva hodnotu osi X (zvyčajne dátum).
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad grafom.
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa graf vykreslí.
+- `chartData` je dátová štruktúra pre graf (podrobnejšie v samostatnej podkapitole).
+- `dateType` určuje granularitu dátumovej osi (podrobnejšie v samostatnej podkapitole).
+- `legendTransformationFn` je funkcia, ktorá transformuje text v legende grafu. Funkcia musí mať jeden vstupný parameter (pôvodný text) a musí vrátiť transformovaný text.
+- `hideEmpty` je logická hodnota určujúca, či sa majú v grafe zobrazovať tooltip-y aj pre prázdne hodnoty (`null` alebo `0`). Predvolená hodnota je `true`, takže prázdne hodnoty sa nezobrazia. Aplikuje sa iba vtedy, ak graf zobrazuje viac ako 8 čiar.
+- `colorScheme` je textová hodnota určujúca farebnú schému grafu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
 
-!>**Upozornenie:** povinné parametre sú `yAxeName`, `xAxeName`, `chartDivId` a `chartData`.
+!>**Upozornenie:** Povinné parametre sú `yAxeNames`, `xAxeName`, `chartDivId` a `chartData`.
 
 ### Príklad použitia
 
-Príklad použitia **LINE** grafu
+Príklad použitia **LINE** grafu zo súboru [index.html](../../../../../../src/main/webapp/apps/stat/admin/index.html)
 
 ```javascript
     let yAxeNames =
@@ -385,17 +485,19 @@ Príklad použitia **LINE** grafu
     }});
 ```
 
-Výsledný vygenerovaný graf aj s nadpisom
+Výsledný vygenerovaný graf s nadpisom:
 
 ![](line-chart.png)
 
-### Parameter yAxeName
+### Parameter `yAxeNames`
 
-Ako sme mohli z príkladu použitia vidieť, parameter **yAxeName** má výrazne odlišný tvar ako pri grafoch PIE a BAR, kde ide iba o textovú hodnotu. Rozdiel je v schopnosti LINE grafu zobraziť viaceré číselné parametre z datasetu ako samostatné čiary. Pre vygenerovanie správneho tvaru **yAxeName** využívame pripravenú funkciu ```getLineChartYAxeNameObjs()``` zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js). To, ako táto funkcia funguje, nie je podstatné. Nás zaujíma iba fakt, že vstupné parametre tvoria 2 polia s textovými hodnotami.
+Ako vidno z príkladu, parameter **`yAxeNames`** má iný tvar ako pri grafoch **`PIE`** a **`BAR`**, kde ide o jednu textovú hodnotu. Dôvodom je, že graf **`LINE`** dokáže zobrazovať viacero číselných parametrov datasetu ako samostatné čiary.
 
-Prvé pole obsahuje názov parametrov objektov z dát pre graf, reprezentujúce nejaké číselné hodnoty, ktoré chceme zobraziť ako samostatné čiary na grafe. Druhé pole obsahuje prekladové kľúče, ktoré sa v rovnakom poradí mapujú k názvom parametrov a reprezentujú danú čiaru grafu v legende grafu.
+Na vytvorenie správneho tvaru parametra **`yAxeNames`** sa používa pomocná funkcia `getLineChartYAxeNameObjs()` zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js). Pre používateľa je dôležité najmä to, že vstup tvoria dve polia textových hodnôt.
 
-Príklad použitia sme videli v predchádzajúcej kapitole. Vidíme, že chceme zobraziť 3 číselné parametre a to ```visits```, ```sessions``` a ```uniqueUsers```. V priloženom obrázku vidíme 3 vygenerované čiary reprezentujúce tieto parametre a v legende grafu vidíme napríkad namiesto názvu parametra ```visits``` textovú hodnotu **Videnia**, ktorá bola získana z prekladového kľúča ```stat.visits.js``` (kľuč bol namapovaný k parametru lebo sa nachádzali na rovnakých pozíciách v poliach).
+Prvé pole obsahuje názvy parametrov objektov v dátach (číselné hodnoty, ktoré sa majú vykresliť ako samostatné čiary). Druhé pole obsahuje prekladové kľúče, ktoré sa v rovnakom poradí mapujú na tieto názvy a určujú text v legende.
+
+V ukážke vyššie sa zobrazujú tri parametre: `visits`, `sessions` a `uniqueUsers`. V legende sa potom namiesto technických názvov zobrazia lokalizované texty získané z prekladových kľúčov, napríklad hodnota pre `stat.visits.js`.
 
 ```javascript
     let yAxeNames =
@@ -405,51 +507,53 @@ Príklad použitia sme videli v predchádzajúcej kapitole. Vidíme, že chceme 
         );
 ```
 
-Samozrejme, prekladové kľúče (niektoré alebo všetky) nie sú povinné a môžu byť nahradené hodnotou ```undefined```. !! Musí byť však dodržaný rovnaký počet parametrov v ocboch poliach, aj keď ide iba o ```undefined``` hodnoty.
+Prekladové kľúče nie sú povinné. Niektoré alebo všetky hodnoty môžete nahradiť `undefined`. Musí však zostať zachovaný rovnaký počet položiek v oboch poliach.
 
-Príklad použitia ```getLineChartYAxeNameObjs``` s prázdnou hodnotou prekladového kľúča.
+Príklad použitia `getLineChartYAxeNameObjs()` bez prekladového kľúča:
 
 ```javascript
     let yAxeNames = ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]);
 ```
 
-### Parameter chartData
+### Parameter `chartData`
 
-Pre LINE graf majú dáta špecifický formát ako mapa obsahujúca listy objektov, kde každý prvok v mape (list objektov) predstavuje rozdielny dataset. Z týchto objektov v liste môžeme zobraziť 1 alebo viac číselných hodnôt ako samostatné čiary v grafe. Pri zobrazovaní týchto dát pomocou LINE grafu môžu nastať 3 rozdielne situácie.
+Pri grafe **LINE** majú dáta špecifický formát: ide o mapu obsahujúcu zoznamy objektov, kde každý prvok mapy (zoznam objektov) reprezentuje samostatný dataset.
 
 ```java
 Map<List<T>>
 ```
 
-**1 dataset a 1 parameter**
+Pri vizualizácii týchto dát môžu nastať štyri základné scenáre:
 
-1 dataset znamená, že mapa obsahuje iba jeden prvok reprezentovaný listom objektov. Parameter **yAxeName** obsahuje iba 1 prvok, čo znamená, že výsledný LINE graf bude zobrazovať iba 1 čiaru, ktorej identifikačný názov v legende grafu bude reprezentovaný prekladovým kľúčom z parametra **yAxeName**.
+1. **1 dataset, 1 parameter**
+Mapa obsahuje jeden dataset (jeden zoznam objektov). Parameter **`yAxeNames`** obsahuje jednu položku, preto výsledný graf zobrazuje jednu čiaru.
 
-**1 dataset N parametrov**
+2. **1 dataset, N parametrov**
+Mapa obsahuje jeden dataset a parameter **`yAxeNames`** obsahuje viac položiek. Výsledný graf zobrazuje viac čiar pre rovnaký dataset.
 
-1 dataset znamená, že mapa obsahuje iba jeden prvok reprezentovaný listom objektov. Parameter **yAxeName** obsahuje N prvkov, čo znamená, že výsledný LINE graf bude zobrazovať N čiar, ktorých identifikačný názov v legende grafu bude reprezentovaný prekladovými kľúčmi z parametra **yAxeName**. Takže ide o viacero číselných parametrov z rovnakej série dát.
+Takýto typ grafu je použitý aj v ukážke vyššie.
 
-Takýto typ grafu sme videli v ukážke grafu, vyššie v tejto kapitole.
+3. **M datasetov, 1 parameter**
+Mapa obsahuje M datasetov a parameter **`yAxeNames`** obsahuje jednu položku. Výsledný graf zobrazuje M čiar, každú pre iný dataset, ale vždy pre rovnaký číselný parameter (napr. `visits`).
 
-**M datasetov 1 parametrov**
+4. **M datasetov, N parametrov**
+Ide o kombináciu predchádzajúcich prípadov. Výsledný graf obsahuje M × N čiar. Názov položky v legende sa vytvorí kombináciou kľúča datasetu z mapy a prekladového názvu parametra z **`yAxeNames`**.
 
-M datasetov znamená, že mapa obsahuje M prvok reprezentovaných ako listy objektov. Parameter **yAxeName** obsahuje iba 1 prvok, čo znamená, že výsledný LINE graf bude zobrazovať M čiar, ktorých identifikačný názov v legende grafu bude reprezentovaný kľúčom z mapy. Tento kľúč označoval jednotlivé datasety. Vo výsledku graf bude zobrazovať rovnaký číselný parameter (napr. `visits`) ale pre niekoľko rozdielnych sérii dát.
+### Parameter `dateType`
 
-**M datasetov N parametrov**
+Posledný špecifický parameter grafu **`LINE`** je **`dateType`**. Keďže os X je dátumová, je potrebné správne nastaviť jej granularitu.
 
-Tento prípad je kombinácia predošlých. Vo výsledku bude graf obsahovať M * N čiar, ktorých identifikačný názov v legende grafu bude reprezentovaný ako kombinácia kľúča mapy (identifikátor datasetu) cez pomlčku ("-") spojený s hodnotou prekladového kľúča z parametra **yAxeName**. Vo výsledku tak graf bude zobrazovať niekoľko číselných hodnôt pre niekoľko rozdielnych listov dát (datasetov).
+Príklad: Ak os X zobrazuje interval 1 roka a hodnoty sú vzdialené po týždni, vhodná granularita sú týždne s krokom 1. Ak os X zobrazuje niekoľko dní a hodnoty sú po 5 minútach, granularita má byť minútová s krokom 5.
 
-### Parameter dateType
+Na nastavenie granularity sa používa enumerácia `DateType` zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
 
-Posledný špeciálny parameter LINE grafu je **dateType**. Nakoľko X osa grafu je dátumová, vzniká tu potreba správnej granulity tejto osi. To znamená, že ak X osa grafu zobrazuje interval 1 rok a dátumové hodnoty sú od seba vzdialené 1 týždeň, chceme aby granulita bola nastavená na týždne s krokom 1. V inom prípade, ak X osa grafu zobrazuje interval niekoľko dni a dátumové hodnoty sú od seba vzdialené 5 minút, schéme X osi grafu nastaviť granulitu na minúty s krokom 5.
+Hodnota **`DateType.Auto`** sa používa vtedy, keď chcete výber granularity nechať na predvolenej logike v súbore `chart-tools.js`. Táto logika určí vhodnú granularitu aj optimálny krok podľa dát.
 
-K nastaveniu granulity využívame poskytnutú enumeráciu ```DateType``` zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
+Hodnota **`DateType.Day_1`** je špeciálna pre prípad, keď potrebujete rozsah presne 1 deň. Vtedy sa ignoruje parameter **`xAxeName`** (dátumová hodnota) a použije sa parameter `hour`, ktorý musí byť v dátach prítomný ako celé číslo v rozsahu 0 - 23.
 
-Hodnota **DateType.Auto** sa nastavuje, ak chceme nastavenie granulity nechať na prednastavenú logiku (ktorá je v súbore chart-tools.js). Tá okrem správneho výberu hodnoty granulity nastaví aj najlepší krok tak, aby to vyhovovalo dátam grafu.
+Môže nastať aj situácia ako na stránke **Návštevnosť** v sekcii štatistiky, kde je granularita dát určená na backende podľa zvoleného zoskupenia. V takom prípade nemusí automatická granularita cez **`DateType.Auto`** vyhovovať (napríklad pri intervale 3 rokov môžu byť dáta stále po dňoch).
 
-Hodnota **DateType.Day_1** je špeciálna hodnota, ktorá sa používa v prípade potreby nastavenia rozsahu presne na 1 deň. V takom prípade sa odignoruje parameter označený ako **xAxeName** (predstavujúci dátumovú hodnotu) a využije sa parameter ```hour```, ktorý musí byť obsiahnutý v dátach pre graf a to v číselnom formáte v rozsahu 0 - 23 (predstavujúci celé hodiny dňa).
-
-Ešte môže nastať situácia ako v prípade stránky **Návštevnosť** zo sekcie štatistika, kde dáta pre LINE graf sú špecifický granulované na BackEnd-e podľa zadaného zoskupenia. To znamená že automatická granulácia nastavená pomocou **DateType.Auto** fungovať nebude, nakoľko aj pri nastavenom intervale na 3 roky budú dáta stále granulované po dňoch. Pre tento prípad enumerácia ```DateType``` ponúka aj možnosť ručného nastavenia granulácie a to na hodnoty:
+Pre takéto prípady ponúka `DateType` aj manuálne nastavenie:
 
 - `DateType.Seconds`
 - `DateType.Minutes`
@@ -458,17 +562,20 @@ Ešte môže nastať situácia ako v prípade stránky **Návštevnosť** zo sek
 - `DateType.Weeks`
 - `DateType.Months`
 
-V prípade ručného nastavenia granulácie, logik okolo grafu vypočíta iba krok ale nastavenú granuláciu ponechá, aj keby bola nastavená nesprávne. Treba si dať pozor pri ručnom nastavovaní granulácie, nakoľko nastavenie väčšej hodnoty ako je potrebné začne skresľovať graf a nastavenie menšej hodnoty ako je potrebné poškodí fungovanie ```Tooltip``` logiky.
+Pri manuálnom nastavení graf vypočíta iba krok, ale zvolenú granularitu ponechá. Preto je potrebné zvoliť ju správne:
+
+- príliš veľká granularita môže graf skresliť
+- príliš malá granularita môže zhoršiť fungovanie logiky `Tooltip`
 
 ## Špeciálne (LIVE) grafy
 
-Spomenieme aj špeciálne grafy, ktoré sú využité v sekcií `Monitorovanie servera - Aktuálne hodnoty`. Jedná sa o špeciálne grafy typu LINE, ktoré sa dokážu automaticky aktualizovať. Tieto grafy a logika ich obsluhujúca je nastavená napevno pre túto stránku a nedá sa znovu použiť na iných stránkach. Implementované použitie je v súbore [vue-amchart-monitoring-server.vue](../../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
+V sekcii `Monitorovanie servera - Aktuálne hodnoty` sa používajú špeciálne grafy typu **`LINE`**, ktoré sa dokážu automaticky aktualizovať. Ich logika je pripravená špecificky pre túto stránku a nie je určená na opakované použitie na iných stránkach. Implementácia je v súbore [vue-amchart-monitoring-server.vue](../../../../../../src/main/webapp/admin/v9/src/vue/components/webjet-server-monitoring/components/vue-amchart-monitoring-server.vue).
 
-Na vytvorenie grafov je opäť využitá logika poskytnutá súborom [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) a jedná sa o funkciu `createServerMonitoringChart()`. Jej vstupné parametre sú iba id div elementu v ktorom bude graf zobrazený a textová hodnota typu grafu. Podporovaný je typ `memoryAmchart` a `cpuAmchart`.
+Na vytvorenie grafov sa opäť využíva logika zo súboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), konkrétne funkcia `createServerMonitoringChart()`. Jej vstupnými parametrami sú iba ID elementu `div`, v ktorom sa graf zobrazí, a textová hodnota typu grafu. Podporované typy sú `memoryAmchart` a `cpuAmchart`.
 
 ### Príklad použitia
 
-Príklad vytvorenia monitoring grafov
+Príklad vytvorenia monitorovacích grafov:
 
 ```javascript
     if(this.type == "memoryAmchart") {
@@ -482,21 +589,205 @@ Príklad vytvorenia monitoring grafov
     }
 ```
 
-Aktualizovanie hodnôt týchto grafov sa vykonáva pomocou funkcie `addData()` zo súboru `chart-tools.js`, ktorej vstupné parametre sú:
+Aktualizácia hodnôt týchto grafov sa vykonáva funkciou `addData()` zo súboru `chart-tools.js`. Vstupné parametre sú:
 
-- `allSeries`, všetky série grafu (čiary), dajú sa získať z inštancie grafu
-- `xAxis`, X osa grafu, dá sa získať z inštancie grafu
-- `data`, nové dáta, ktoré sa pridajú už k existujúcim dátam
-- `type`, textový typ dát, ktorý bol spomenutý pri vytváraní grafu
+- `allSeries` sú všetky série grafu (čiary), ktoré získate z inštancie grafu
+- `xAxis` je os X, ktorú získate z inštancie grafu
+- `data` sú nové dáta, ktoré sa pridajú k existujúcim hodnotám
+- `type` je textový typ dát použitý pri vytváraní grafu
 
-Príklad aktualizácie monitoring grafu
+Príklad aktualizácie monitorovacieho grafu:
 
 ```javascript
     ChartTools.addData(this.chart.series.values, this.chart.xAxes.values[0],  this.chartData, this.type);
 ```
 
-V tomto prípade je podstatné práve to ako sme z inštancie grafu získali `allSeries` a `xAxis`.
+V tomto prípade je kľúčové, ako sa z inštancie grafu získajú hodnoty `allSeries` a `xAxis`.
 
-Ukážka oboch LIVE grafov za aplikácie `Monitorovanie servera - Aktuálne hodnoty` aj s vygenerovanými nadpismi
+Ukážka oboch LIVE grafov zo sekcie `Monitorovanie servera - Aktuálne hodnoty` aj s vygenerovanými nadpismi:
 
 ![](live-chart.png)
+
+## Špeciálny graf typu TABLE
+
+Graf typu **TABLE** sa vytvára pomocou inštancie triedy `TableChartForm`, ktorá je dostupná ako `ChartTools.TableChartForm`.
+
+Ide o špeciálny prípad, pretože nejde o graf typu `amCharts`. Komponent predstavuje jednoduchú tabuľku bez pokročilých funkcií, ako sú triedenie, filtrovanie alebo interaktívne ovládanie. Jej hlavnou výhodou je jednotný dizajn zdieľaný s ostatnými grafmi, vďaka čomu vizuálne zapadá medzi ostatné grafické prvky v rozhraní. Riešenie je vhodné najmä v situáciách, keď potrebujete zobraziť viac parametrov naraz v jednom riadku tabuľky a zároveň zachovať konzistentný vzhľad celej sekcie.
+
+```javascript
+export class TableChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (config.paramsNames == null || config.paramsNames === undefined || Array.isArray(config.paramsNames) == false) throwConstructorError("TableChartForm", "paramsNames");
+        if (!config.chartDivId) throwConstructorError("TableChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TableChartForm", "chartData");
+
+        Object.assign(this, {
+            paramsNames: config.paramsNames,
+            chartDivId: config.chartDivId,
+            chartTitle: config.chartTitle,
+            chartData: config.chartData,
+            colorScheme: config.colorScheme,
+
+            // PERMANENT
+            isCustomChart: true
+        });
+    }
+}
+```
+
+Jednotlivé parametre triedy slúžia na:
+
+- `paramsNames` je pole názvov parametrov, ktoré sa majú zobraziť v tabuľke.
+- `chartDivId` je textová hodnota reprezentujúca ID elementu `div`, v ktorom sa tabuľka vykreslí.
+- `chartTitle` je textová hodnota reprezentujúca nadpis, ktorý sa zobrazí vo forme hlavičky nad tabuľkou.
+- `chartData` je pole objektov reprezentujúcich dáta tabuľky. Každý objekt musí obsahovať parametre uvedené v `paramsNames`.
+- `colorScheme` je textová hodnota určujúca farebnú schému komponentu (povolené hodnoty sú popísané v sekcii [Farebné schémy](#farebné-schémy)).
+
+!>**Upozornenie:** Povinné parametre sú `paramsNames`, `chartDivId` a `chartData`.
+
+### Príklad použitia
+
+```javascript
+    $.ajax({url: getUrl(), success: function(result) {
+
+        const tableChartConfig = {
+            paramsNames: ["name", "count"],
+            chartDivId: "some_div_id",
+            chartTitle: '[[#{some_translation_key}]]',
+            chartData: result
+        }
+
+        tableChart = new ChartTools.TableChartForm(tableChartConfig);
+
+        ChartTools.createAmchart(tableChart);
+    }});
+```
+
+Príklad, ako môže takýto tabuľkový graf vyzerať:
+
+![](table-chart.png)
+
+## Správa grafov
+
+### Aktualizácia grafu - `updateChart()`
+
+Po zmene dát v inštancii `ChartForm` je potrebné zavolať funkciu `updateChart()`, ktorá graf prekreslí s novými hodnotami.
+
+```javascript
+// Zmena dát v chartForm objekte
+barChartQueries.chartData = newData;
+// Aktualizácia grafu
+ChartTools.updateChart(barChartQueries);
+```
+
+Funkcia funguje pre všetky typy grafov (`BarChartForm`, `PieChartForm`, `LineChartForm`, `DoublePieChartForm`, `WordCloudChartForm`). Dáta musia byť pred volaním `updateChart()` priradené do príslušného `chartForm` objektu.
+
+!>**Upozornenie:** Pri grafe typu **`LINE`** nie je možné aktualizovať iba dáta - celý graf sa zničí a vytvorí znova. Ostatné typy grafov aktualizujú iba dátovú sériu.
+
+### Zničenie grafu - `destroyChart()`
+
+Na odstránenie grafu z DOM a uvoľnenie pamäte amCharts použite funkciu `destroyChart()`:
+
+```javascript
+ChartTools.destroyChart(barChartQueries);
+```
+
+Funkcia funguje pre všetky typy grafov. Pre `TableChartForm` vymaže obsah `div` elementu.
+
+## Farebné schémy
+
+Parameter `colorScheme` je voliteľný pre všetky typy grafov. Ak nie je zadaný, použije sa predvolená farebná schéma (kombinácia `set1 + set3 + set5`).
+
+| Hodnota | Popis |
+|---------|-------|
+| *(neuvedené)* | Predvolená schéma - kombinácia `set1 + set3 + set5` |
+| `"set1"` | Svetlé odtiene - modrá, zelená, žltá, červená, oceánska |
+| `"set2"` | Stredné odtiene - modrá, zelená, žltá, červená, oceánska |
+| `"set3"` | Sýtejšie odtiene - modrá, zelená, žltá, červená, oceánska |
+| `"set4"` | Tmavé odtiene - modrá, zelená, žltá, červená, oceánska |
+| `"set5"` | Veľmi tmavé odtiene - modrá, zelená, žltá, červená, oceánska |
+| `"set_blue"` | Päť odtieňov modrej (od svetlej po tmavú) |
+| `"set_green"` | Päť odtieňov zelenej (od svetlej po tmavú) |
+| `"set_red"` | Päť odtieňov červenej (od svetlej po tmavú) |
+| `"set_yellow"` | Päť odtieňov žltej (od svetlej po tmavú) |
+
+```javascript
+const barConfig = {
+    yAxeName: "queryName",
+    xAxeName: "queryCount",
+    chartDivId: "some-bar-div",
+    chartData: result['content'],
+    colorScheme: "set_blue"   // použijú sa odtiene modrej
+}
+```
+
+## Pomocné funkcie
+
+Okrem tried na tvorbu grafov exportuje `chart-tools.js` aj viaceré pomocné funkcie.
+
+### `setVisibility(selectedOption)`
+
+Prepína viditeľnosť `div` elementov `#tableDiv`, `#tableDiv_2`, `#graphsDiv`, `#graphsDiv_2` podľa zvolenej hodnoty. Používa sa na stránkach, kde sa zobrazuje tabuľka aj grafy a používateľ si môže prepínať zobrazenie.
+
+| Hodnota `selectedOption` | Správanie |
+|--------------------------|-----------|
+| `"graph"` | Zobrazí len grafy, skryje tabuľky |
+| `"table"` | Zobrazí len tabuľky, skryje grafy |
+| `"tableGraph"` | Zobrazí aj tabuľky aj grafy |
+
+```javascript
+ChartTools.setVisibility("graph");
+```
+
+### `getDateRange(defaultRangeDaysValue)`
+
+Vráti reťazec s časovým rozsahom vo formáte `daterange:timestamp_od-timestamp_do` na základe hodnôt filtrov v hornej lište stránky (`.dt-filter-from-dayDate`, `.dt-filter-to-dayDate`). Ak filtre nie sú vyplnené, použije sa predvolený rozsah `defaultRangeDaysValue` dní od aktuálneho dátumu.
+
+```javascript
+let dateRange = ChartTools.getDateRange(30); // posledných 30 dní ako predvolený rozsah
+```
+
+### `convertDataForLineChart(dataToConvert)`
+
+Skonvertuje dáta z formátu `Map<String, List<T>>` (ako ich vracia backend) do formátu `Map` vhodného pre `LineChartForm`. Automaticky zoradí každý dataset podľa poľa `dayDate`.
+
+```javascript
+let convertedData = ChartTools.convertDataForLineChart(result['content']);
+```
+
+### `getLineChartYAxeNameObjs(yAxeNames, nameToShowKey)`
+
+Vytvorí pole konfiguračných objektov pre parameter `yAxeNames` grafu **`LINE`**. Podrobnejšie je funkcia popísaná v sekcii [Parameter yAxeNames](#parameter-yaxenames).
+
+### `filterColumns(wantedColumns, allColumns)` / `filterColumnsOut(unWanted, allColumns)`
+
+Pomocné funkcie na filtrovanie stĺpcov DataTable podľa názvov. `filterColumns` vráti len stĺpce so zadanými názvami, `filterColumnsOut` vráti všetky stĺpce okrem zadaných.
+
+```javascript
+let columns = ChartTools.filterColumns(["name", "count"], DATA.columns);
+let columns = ChartTools.filterColumnsOut(["id", "createdDate"], DATA.columns);
+```
+
+### `setSearchEnginesSelect(dataUrl, valueToSelect)` / `setWebPagesSelect(dataUrl, valueToSelect)` / `setSelect(dataUrl, valueToSelect, elementId)`
+
+Asynchrónne načítajú zoznam možností pre `<select>` prvky zo zadanej URL a automaticky vyberú položku podľa `valueToSelect`. Funkcie `setSearchEnginesSelect` a `setWebPagesSelect` pracujú s konkrétnymi ID elementov (`#searchEngineSelect`, `#webPageSelect`), funkcia `setSelect` pracuje s ľubovoľným ID zadaným cez `elementId`.
+
+```javascript
+await ChartTools.setSelect("/admin/rest/stat/pages", selectedPageId, "webPageSelect");
+```
+
+### `saveSearchCriteria(DATA)` / `getSearchCriteria()`
+
+Slúžia na ukladanie a načítanie kritérií vyhľadávania do/z `sessionStorage` pod kľúčom `webjet.apps.stat.filter`. Vďaka tomu si všetky stránky štatistík pamätajú naposledy použitý filter aj po prechode medzi stránkami.
+
+```javascript
+// Uložíme kritériá po ich zmene
+ChartTools.saveSearchCriteria(DATA);
+
+// Načítame kritériá pri inicializácii stránky
+let defaultSearch = ChartTools.getSearchCriteria();
+```

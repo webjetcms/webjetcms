@@ -33,10 +33,15 @@ Scenario('screenshot pie chart from referer', async ({I, DTE, Document}) => {
     await I.executeScript(() => {
         let allCharts = document.querySelectorAll(".stat-chart-wrapper");
         allCharts.forEach(chart => {
-            if(chart.id !== "form-stats_select-1_container") chart.style.display = "none";
-            else chart.style.paddingBottom = "10px";
+            if(chart.id !== "form-stats_suhlaspodmienky-1_container") chart.style.display = "none";
+            else {
+                chart.style.paddingBottom = "10px";
+
+                const settingsBtn = chart.querySelector(".chart-more-btn");
+                if(settingsBtn) settingsBtn.style.display = "none";
+            }
         });
     });
     I.wait(1);
-    Document.screenshotElement("#form-stats_select-1_container", "/developer/frameworks/charts/frontend/pie-chart-classic.png");
+    Document.screenshotElement("#form-stats_suhlaspodmienky-1_container", "/developer/frameworks/charts/frontend/pie-chart-classic.png");
 });
