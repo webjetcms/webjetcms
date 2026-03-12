@@ -28,6 +28,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
@@ -70,7 +72,7 @@ public class AdminLogonController {
 
     private static final String LOGON_FORM = "/admin/skins/webjet8/logon-spring";
     private static final String CHANGE_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-change-password";
-    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
+    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa"; //NOSONAR
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
     private final UserDetailsRepository userDetailsRepository;
@@ -156,7 +158,7 @@ public class AdminLogonController {
             this.determineLanguage(session, request, response);
             this.determineDefaultWebPagesDirectory(user, session);
             this.checkForNewHelp(session, user);
-            this.determineRootWebPageDirectory(session, user);
+            determineRootWebPageDirectory(session, user);
 
             if (Tools.isNotEmpty(changePasswordAuth)) {
                 // Delete admin log - so change password action will no longer be available
@@ -293,7 +295,7 @@ public class AdminLogonController {
         this.determineLanguage(session, request, response);
         this.determineDefaultWebPagesDirectory(user, session);
         this.checkForNewHelp(session, user);
-        this.determineRootWebPageDirectory(session, user);
+        determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
         String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
@@ -324,7 +326,7 @@ public class AdminLogonController {
     }
 
 
-    private void determineRootWebPageDirectory(HttpSession session, Identity user) {
+    public static void determineRootWebPageDirectory(HttpSession session, Identity user) {
         if (Tools.isNotEmpty(user.getEditableGroups())) {
             //prestav v session default host na prvy z editable groups
             int groupId = getUserFirstEditableGroup(user);
@@ -410,6 +412,10 @@ public class AdminLogonController {
         if (root != null && Tools.isNotEmpty(root.getDomainName()))
         {
             session.setAttribute("preview.editorDomainName", root.getDomainName());
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                rb.setDomain(root.getDomainName());
+            }
         }
     }
 
