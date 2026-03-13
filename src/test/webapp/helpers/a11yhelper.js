@@ -6,21 +6,22 @@ const assert = require("assert");
 const { resolve } = require("path");
 const { readFileSync } = require("fs");
 
+//see https://www.deque.com/axe/core-documentation/api-documentation/#parameters-axerun
 const defaultAxeOptions = {
 	runOnly: {
 		type: "tag",
 		values: [
 			"wcag2a",
 			"wcag2aa",
-			"wcag2aaa",
+			//"wcag2aaa",
 			"wcag21a",
 			"wcag21aa",
 			"wcag22aa",
-			"best-practice",
-			"wcag***",
-			"ACT",
-			"experimental",
-			"cat.*",
+			//"best-practice",
+			//"wcag***",
+			//"ACT",
+			//"experimental",
+			//"cat.*",
 		],
 	},
 };

@@ -28,7 +28,7 @@ module.exports = {
             0,
             `${violations.length} accessibility violation${
                 violations.length === 1 ? '' : 's'
-            } ${violations.length === 1 ? 'was' : 'were'} detected:\n\n${errorMessage}`,
+            } ${violations.length === 1 ? 'was' : 'were'} detected:\n\n${errorMessage}\n`,
         );
     }
 
