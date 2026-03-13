@@ -1,5 +1,12 @@
 export class StatsByCharts {
 
+    /**
+     * Creates a new StatsByCharts instance.
+     * @param {Object} options - Configuration options.
+     * @param {string} options.targetSelector - CSS selector of the element where charts will be rendered.
+     * @param {string} [options.id="stats-by-charts"] - Unique ID prefix used for chart DOM elements.
+     * @param {Function} [options.chartSettingBtnFn] - Callback invoked when a chart's settings button is clicked.
+     */
     constructor(options = {}) {
         this.targetSelector = options.targetSelector || null;
         this.id = options.id || "stats-by-charts";
@@ -7,6 +14,11 @@ export class StatsByCharts {
         this.chartSettingBtnFn = options.chartSettingBtnFn || null;
     }
 
+    /**
+     * Initialises the chart wrapper and renders all charts defined in the provided array.
+     * Waits for the amCharts library to load before rendering.
+     * @param {Object[]} chartsDefinitions - Array of chart definition objects to render.
+     */
     createCharts(chartsDefinitions) {
         if (!this.targetSelector) {
             // Secure
@@ -25,10 +37,14 @@ export class StatsByCharts {
             window.initAmcharts().then(module => {
                 this._renderCharts(chartsDefinitions);
             });
-
         }
     }
 
+    /**
+     * Updates one or more existing charts with new definitions.
+     * Destroys each matching chart instance before re-rendering it with the new data.
+     * @param {Object[]} newChartsDefinitions - Array of chart definition objects containing updated data.
+     */
     async updateChart(newChartsDefinitions) {
         newChartsDefinitions.forEach(async newChartDef => {
             const chartUniqueId = this.id + "_" + newChartDef.id;
@@ -43,13 +59,22 @@ export class StatsByCharts {
                 }
                 else if(newChartDef.type === ChartTools.ChartType.Table) {
                     this._renderTableChart(newChartDef, chartUniqueId);
-                } else if(newChartDef.type === ChartTools.ChartType.Word_Cloud) {
+                }
+                else if(newChartDef.type === ChartTools.ChartType.Word_Cloud) {
                     this._renderWordCloudChart(newChartDef, chartUniqueId);
+                }
+                else if(newChartDef.type === ChartTools.ChartType.Double_Pie) {
+                    this._renderDoublePieChart(newChartDef, chartUniqueId);
                 }
             }
         });
     }
 
+    /**
+     * Destroys an existing chart instance and removes its header element from the DOM.
+     * @param {string|null} chartId - The ID of the chart to destroy.
+     * @returns {Promise<boolean>} Resolves to `true` if the chart was found and destroyed, `false` otherwise.
+     */
     async _destroyChartBeforeUpdate(chartId = null) {
         if(chartId && this.chartsInstances[chartId]) {
             // Remove chart instance from root (amchart)
@@ -64,6 +89,11 @@ export class StatsByCharts {
         return false;
     }
 
+    /**
+     * Creates DOM containers and settings buttons for each chart, then delegates rendering
+     * to the appropriate type-specific render method.
+     * @param {Object[]} chartsDefinitions - Array of chart definition objects to render.
+     */
     _renderCharts(chartsDefinitions) {
         if(this.wrapper && chartsDefinitions) {
             chartsDefinitions.forEach(chartDef => {
@@ -104,17 +134,26 @@ export class StatsByCharts {
                 }
                 else if(chartDef.type === ChartTools.ChartType.Table) {
                     this._renderTableChart(chartDef, chartUniqueId);
-                } else if(chartDef.type === ChartTools.ChartType.Word_Cloud) {
+                }
+                else if(chartDef.type === ChartTools.ChartType.Word_Cloud) {
                     this._renderWordCloudChart(chartDef, chartUniqueId);
+                }
+                else if(chartDef.type === ChartTools.ChartType.Double_Pie) {
+                    this._renderDoublePieChart(chartDef, chartUniqueId);
                 }
             });
         }
     }
 
+    /**
+     * Renders a pie or donut chart using the provided chart definition.
+     * @param {Object} chartDef - Chart definition object (type, title, values, axis names, colour scheme).
+     * @param {string} chartUniqueId - Unique DOM element ID for the chart.
+     */
     _renderPieChart(chartDef, chartUniqueId) {
         const chartConfig = {
-            yAxeName: "count",
-            xAxeName: "name",
+            yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "count"),
+            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
             chartTitle: chartDef.title,
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
@@ -129,10 +168,15 @@ export class StatsByCharts {
         this.chartsInstances[chartDef.id] = pieChart;
     }
 
+    /**
+     * Renders a vertical or horizontal bar chart using the provided chart definition.
+     * @param {Object} chartDef - Chart definition object (type, title, values, axis names, colour scheme).
+     * @param {string} chartUniqueId - Unique DOM element ID for the chart.
+     */
     _renderBarChart(chartDef, chartUniqueId) {
             const chartConfig = {
-                yAxeName: "name",
-                xAxeName: "count",
+                yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "name"),
+                xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "count"),
                 chartTitle: chartDef.title,
                 chartDivId: chartUniqueId,
                 chartData: chartDef.values,
@@ -145,9 +189,17 @@ export class StatsByCharts {
             this.chartsInstances[chartDef.id] = barChart;
     }
 
+    /**
+     * Renders a table chart using the provided chart definition.
+     * Falls back to ["name", "count"] column names when `paramsNames` is missing or invalid.
+     * @param {Object} chartDef - Chart definition object (title, values, paramsNames, colour scheme).
+     * @param {string} chartUniqueId - Unique DOM element ID for the chart.
+     */
     _renderTableChart(chartDef, chartUniqueId) {
+        let paramsNames = chartDef.paramsNames == null || chartDef.paramsNames === undefined || Array.isArray(chartDef.paramsNames) == false ? ["name", "count"] : chartDef.paramsNames;
+
         const chartConfig = {
-            paramsNames: ["name", "count"],
+            paramsNames: paramsNames,
             chartTitle: chartDef.title,
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
@@ -159,18 +211,58 @@ export class StatsByCharts {
         this.chartsInstances[chartDef.id] = tableChart;
     }
 
+    /**
+     * Renders a word-cloud chart using the provided chart definition.
+     * @param {Object} chartDef - Chart definition object (title, values, axis names).
+     * @param {string} chartUniqueId - Unique DOM element ID for the chart.
+     */
     _renderWordCloudChart(chartDef, chartUniqueId) {
         const chartConfig = {
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
             chartTitle: chartDef.title,
             mode: "line",
-            xAxeName: "name",
-            yAxeName: "count"
+            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
+            yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "count")
         }
 
         let wordCloudChart = new ChartTools.WordCloudChartForm(chartConfig);
         ChartTools.createAmchart(wordCloudChart);
         this.chartsInstances[chartDef.id] = wordCloudChart;
+    }
+
+    /**
+     * Renders a double (nested) pie chart using the provided chart definition.
+     * @param {Object} chartDef - Chart definition object (title, values, inner/outer axis names).
+     * @param {string} chartUniqueId - Unique DOM element ID for the chart.
+     */
+    _renderDoublePieChart(chartDef, chartUniqueId) {
+        const chartConfig = {
+            yAxeName_inner: this._ifInvalidRetunDefault(chartDef.yAxeName_inner, "count"),
+            yAxeName_outer: this._ifInvalidRetunDefault(chartDef.yAxeName_outer, "count"),
+            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
+            chartDivId: chartUniqueId,
+            chartData: chartDef.values,
+            chartTitle: chartDef.title
+        }
+
+        let doublePieChart = new ChartTools.DoublePieChartForm(chartConfig);
+        ChartTools.createAmchart(doublePieChart);
+        this.chartsInstances[chartDef.id] = doublePieChart;
+    }
+
+    /**
+     * Returns `defaultValue` when `value` is `null`, `undefined`, or an empty string;
+     * otherwise returns `value` unchanged.
+     * @param {*} value - The value to check.
+     * @param {*} defaultValue - The fallback value to use when `value` is invalid.
+     * @returns {*} The original value or the default.
+     */
+    _ifInvalidRetunDefault(value, defaultValue) {
+        if(value === undefined || value === null || value.length < 1) {
+            return defaultValue;
+        } else {
+            return value;
+        }
     }
 }
