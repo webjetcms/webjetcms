@@ -64,23 +64,6 @@ class A11yHelper extends Helper {
 
 		await injectAxe(page);
 
-		/*await checkA11y(
-			page,
-			_opts.context,
-			{
-				axeOptions: _opts.axeOptions,
-				detailedReport: _opts.detailedReport,
-				detailedReportOptions: _opts.detailedReportOptions,
-			},
-			_opts.skipFailures,
-			_opts.reporter,
-			{
-				outputDir: _opts.outputDir,
-				reportFileName: fileName,
-			},
-		);
-        */
-
         const context = _opts.context;
         const axeOptions = {
             axeOptions: _opts.axeOptions,
@@ -95,7 +78,7 @@ class A11yHelper extends Helper {
         };
         const violations = await getViolations(page, context, axeOptions?.axeOptions)
 
-        console.log("violations=", violations);
+        //console.log("violations=", violations);
 
         if (violations.length > 0) {
             await createHtmlReport({
@@ -107,15 +90,7 @@ class A11yHelper extends Helper {
 
         //reporterWithOptions = new TerminalReporterV2(axeOptions?.verbose ?? false)
 
-        assert.strictEqual(
-            violations.length,
-            0,
-            `${violations.length} accessibility violation${
-                violations.length === 1 ? '' : 's'
-            } ${violations.length === 1 ? 'was' : 'were'} detected`,
-        );
-
-        return violations.length == 0;
+        return violations;
 	}
 
 	async _before() {

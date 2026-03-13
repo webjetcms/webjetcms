@@ -114,6 +114,7 @@ exports.config = {
     TempMail: './pages/TempMail.js',
     Apps: './pages/Apps.js',
     i18n: './pages/i18n.js',
+    a11y: './pages/a11y.js',
   },
   bootstrap: null,
   mocha: {
