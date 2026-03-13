@@ -101,8 +101,10 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
         function showPasskeyError(message) {
             var wrapper = document.getElementById('passkey-error-wrapper');
             if (wrapper) {
-                wrapper.querySelector('span').textContent = message;
                 wrapper.style.display = 'block';
+                requestAnimationFrame(function() {
+                    wrapper.querySelector('span').textContent = message;
+                });
             }
         }
 
@@ -204,6 +206,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     </script>
 </head>
 <body id="login" class="login">
+<a href="#main-content" class="skip-link"><iwcm:text key="admin.skipToMainContent"/></a>
 
 <div class="welcome-title">
     <h1><c:out value="${title}"/></h1>
@@ -211,7 +214,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 </div>
 
 <!-- LOGIN CONTENT Start -->
-<div class="container">
+<main class="container" id="main-content" tabindex="-1">
     <div class="container-inner">
         <div class="content">
 
@@ -220,7 +223,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
                 <div class="form-group language-select">
                     <div class="custom-select">
-                        <i class="ti ti-world"></i>
+                        <i class="ti ti-world" aria-hidden="true"></i>
                         <span class="selected-value"></span>
                         <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)" aria-label='<%=prop.getText("logon.language")%>'>
                             <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
@@ -283,39 +286,39 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <div class="form-group">
                             <label class="control-label" for="username"><iwcm:text key="logon.usernameOrEmail"/></label>
                             <div class="input-icon">
-                                <i class="ti ti-user"></i>
-                                <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                                <i class="ti ti-user" aria-hidden="true"></i>
+                                <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="username"/>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="control-label" for="password"><iwcm:text key="user.password"/></label>
                             <div class="input-icon">
-                                <i class="ti ti-lock"></i>
-                                <form:password path="password" id="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" aria-describedby="password-strength-help"/>
+                                <i class="ti ti-lock" aria-hidden="true"></i>
+                                <form:password path="password" id="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="current-password" aria-describedby="password-strength-help"/>
                             </div>
                             <div class="password-strength-info" id="password-strength-help"></div>
                         </div>
                         <div class="form-group">
-                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
-                            <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();document.getElementById('login-name').focus();"><iwcm:text key="logon.forgotYourPassword"/></button>
                         </div>
                     </c:if>
                     <c:if test="${isOAuth2Enabled}">
                         <c:forEach var="url" items="${logonUrls}">
                             <div class="form-group">
-                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
+                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
                             </div>
                         </c:forEach>
                     </c:if>
                     <c:if test="${isPassKeyEnabled}">
-                        <div id="passkey-error-wrapper" class="alert alert-danger" style="display:none;">
+                        <div id="passkey-error-wrapper" class="alert alert-danger" role="alert" style="display:none;">
                             <span></span>
                         </div>
-                        <div id="passkey-info-wrapper" class="alert alert-info" style="display:none;">
+                        <div id="passkey-info-wrapper" class="alert alert-info" role="status" style="display:none;">
                             <span><iwcm:text key="passkey.logon.info"/></span>
                         </div>
                         <div id="passkey-login-btn-wrapper" class="form-group" style="display:none;">
-                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>
+                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;" aria-hidden="true"></i></button>
                         </div>
                     </c:if>
                 </div>
@@ -335,22 +338,22 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <div class="form-group">
                         <label class="control-label" for="login-name"><iwcm:text key="logon.usernameOrEmail"/></label>
                         <div class="input-icon">
-                            <i class="ti ti-user"></i>
-                            <input type="text" name="loginName" id="login-name" value="" class="form-control placeholder-no-fix" aria-describedby="login-name-help" />
+                            <i class="ti ti-user" aria-hidden="true"></i>
+                            <input type="text" name="loginName" id="login-name" value="" class="form-control placeholder-no-fix" autocomplete="username" aria-describedby="login-name-help" />
                             <input type="text" name="language" value="${lng}" class="form-control" hidden/>
                         </div>
                         <div class="password-strength-info" id="login-name-help"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
                     </div>
                     <div class="form-group">
-                        <button type="submit" id="register-submit-btn" class="btn btn-primary"><iwcm:text key="logon.recoverPassword"/><i class="ti ti-arrow-right"></i></button>
-                        <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#logon-form-wrapper').show();$('#sendPassword').hide();"><iwcm:text key="button.login"/></button>
+                        <button type="submit" id="register-submit-btn" class="btn btn-primary"><iwcm:text key="logon.recoverPassword"/><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+                        <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#logon-form-wrapper').show();$('#sendPassword').hide();document.getElementById('username').focus();"><iwcm:text key="button.login"/></button></button>
                     </div>
                 </form>
             </div>
 
         </div>
     </div>
-</div>
+</main>
 <!-- LOGIN ERROR Ende -->
 
 
