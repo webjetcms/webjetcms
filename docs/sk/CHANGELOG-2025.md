@@ -87,6 +87,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/form/form-step-email-verification-2.png)
 
+- Pridaná sekcia [Štatistika](redactor/apps/multistep-form/stat.md) pre zvolené položky viac-krokového formuláru (#58333).
+
+![](redactor/apps/multistep-form/stat-section.png)
+
 ### Presmerovania
 
 - Pridané možnosť ukončiť platnosť presmerovania v stanovenom čase a možnosť zadať poznámku s informáciou na čo presmerovanie slúži. Presmerovania, ktoré už nie sú časovo platné sa zobrazia červenou farbou (#58105).
@@ -140,6 +144,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Zoznam formulárov - nastavenie [spracovateľa formulárov](custom-apps/apps/multistep-forms/README.md), pomocou autocomplete poľa, ktorý ponúka triedy implementujúce `FormProcessorInterface` (#58313).
 - Číselníky - doplnené odstránenie medzier na začiatku a konci poľa typu reťazec v dátach číselníka (#OSK233).
 - `imageradio` - pridaná možnosť nastaviť pole typu `imageradio` ako `disabled` (#58333).
+- Dizajn všetkých grafov v celom projekte bol prerobený z `dark` režimu na `light` (#58333).
 
 ### Oprava chýb
 
@@ -183,6 +188,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Dátové tabuľky - pridaná BE podpora pre `row-reorder`, kedy je možné meniť poradie záznamov priamo v dátovej tabuľke pomocou drag&drop (#58161).
 - Udalosti - pridaná udalosť [Aktualizácia kódov v texte](developer/backend/events.md#aktualizácia-kódov-v-texte) pre možnosť úprav kódov v texte stránky typu `!CUSTOM_CODE!` a podobne (#54273-63).
 - Dátové tabuľky - pridané [Spring udalosti](developer/backend/events-datatable.md) pre možnosť úprav dát v zákazníckych inštaláciách (#54273-63).
+
+- Grafy - nástroj/knižnica [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na prácu s `amcharts` grafmi bol aktualizovaný, priali sa nové funkcionality, nové grafy a vylepšila sa logika (#58333).
+- Grafy - pridaná nová vysokoúrovňová trieda/knižnica [stats-by-charts.js](../../src/main/webapp/apps/_common/charts/stats-by-charts.js) na rýchle vytváranie celých sekcií štatistík s využitím [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na vytváranie grafov (#58333).
 
 ### Testovanie
 
