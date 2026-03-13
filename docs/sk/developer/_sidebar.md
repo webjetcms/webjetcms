@@ -56,6 +56,7 @@
 - Testovanie
     - [Testovanie](/developer/testing/README.md)
     - [Preklady textov](/developer/testing/i18n.md)
+    - [Testovanie prístupnosti](/developer/testing/a11y.md)
     - [Automatické testovanie DataTables](/developer/testing/datatable.md)
     - [DataTables - testovanie importu](/developer/testing/datatable-import.md)
     - [Generovanie screenshotov dokumentácie](/developer/testing/screenshots.md)
