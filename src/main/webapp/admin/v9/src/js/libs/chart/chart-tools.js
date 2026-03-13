@@ -715,7 +715,6 @@ export async function createAmchart(chartForm, update) {
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
-        am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
 
@@ -1788,7 +1787,6 @@ export async function createServerMonitoringChart(rootName, type) {
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
-        am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
 

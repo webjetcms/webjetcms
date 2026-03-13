@@ -3,7 +3,6 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import * as am5wc from "@amcharts/amcharts5/wc";
 import * as am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import * as dark from "@amcharts/amcharts5/themes/Dark";
 import { Color } from "@amcharts/amcharts5/.internal/core/util/Color";
 
 import am5locales_sk_SK from "@amcharts/amcharts5/locales/sk_SK";
@@ -57,7 +56,6 @@ export class WebjetTheme extends am5.Theme {
     //scrollbar width
     this.rule("Scrollbar", ["horizontal"]).setAll({
       minHeight: 6,
-      fillOpacity: 1,
     });
     this.rule("Scrollbar", ["vertical"]).setAll({
       minWidth: 6
@@ -84,6 +82,18 @@ export class WebjetTheme extends am5.Theme {
         display.lineTo(4, 6.5);
       }
     });
+
+    // Scrollbar thumb
+    this.rule("RoundedRectangle", ["scrollbar", "thumb"]).setAll({
+      fill: am5.color(0xb3b8c7),
+      fillOpacity: 1
+    });
+
+    // Scrollbar background (track)
+    this.rule("Graphics", ["scrollbar", "background"]).setAll({
+      fill: am5.color(0xb3b8c7),
+      fillOpacity: 1
+    });
   }
 }
 
@@ -92,7 +102,6 @@ window.am5xy = am5xy;
 window.am5percent = am5percent;
 window.am5wc = am5wc;
 window.am5themes_Animated = am5themes_Animated.default;
-window.am5_dark = dark.default;
 window.am5locales_sk_SK = am5locales_sk_SK;
 window.am5locales_cs_CZ = am5locales_cs_CZ;
 window.am5locales_en_US = am5locales_en_US;
