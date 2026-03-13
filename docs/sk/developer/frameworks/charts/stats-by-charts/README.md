@@ -16,6 +16,21 @@ Objekty **môžu navyše obsahovať**:
 
 - `title` – nadpis, ktorý sa použije pre vygenerovaný graf
 - `chart_colorScheme` – hodnota [farebnej schémy](../backend/README.md#farebná-schéma-grafov), ktorá sa má použiť pre **tento špecifický graf**
+- `xAxeName` – názov poľa v objekte `values`, ktoré reprezentuje os X grafu
+- `yAxeName` – názov poľa v objekte `values`, ktoré reprezentuje os Y grafu
+
+Predvolené hodnoty `xAxeName` / `yAxeName` sa líšia podľa typu grafu:
+
+| Typ grafu | `xAxeName` | `yAxeName` |
+| --- | --- | --- |
+| `PIE_CLASSIC` / `PIE_DONUT` | `"name"` | `"count"` |
+| `BAR_VERTICAL` / `BAR_HORIZONTAL` | `"count"` | `"name"` |
+| `WORD_CLOUD` | `"name"` | `"count"` |
+
+Grafy `DOUBLE_PIE` a `TABLE` používajú namiesto `yAxeName` špecifické vlastnosti:
+
+- pre typ `DOUBLE_PIE`: `yAxeName_inner` (predvolene `"count"`) a `yAxeName_outer` (predvolene `"count"`); os X ostáva `xAxeName` (predvolene `"name"`)
+- pre typ `TABLE`: `paramsNames` – pole názvov polí zobrazených v tabuľke (predvolene `["name", "count"]`)
 
 ## Čo trieda robí
 
@@ -30,12 +45,12 @@ Objekty **môžu navyše obsahovať**:
 - Umožňuje aktualizáciu jednotlivého grafu bez obnovy celej stránky – stará inštancia sa zničí a nová sa vytvorí na tom istom mieste.
 - Ku každému grafu automaticky pridá tlačidlo nastavení s voliteľnou callback funkciou.
 
-!> **Upozornenie:** Grafy typu `line` triedou `StatsByCharts` **nie sú** podporované, nakoľko vyžadujú špecifické nastavenie zo strany programátora na frontendovej strane.
+!> **Upozornenie:** Grafy typu `LINE` triedou `StatsByCharts` **nie sú** podporované, nakoľko vyžadujú špecifické nastavenie zo strany programátora na frontend-ovej strane.
 
 ## Výhody oproti priamemu použitiu `chart-tools.js`
 
 | | `chart-tools.js` priamo | `StatsByCharts` |
-|---|---|---|
+| --- | --- | --- |
 | Inicializácia amcharts | manuálne `window.initAmcharts().then(...)` | automaticky |
 | Vytvorenie DOM elementov | manuálne (`<div id="...">`) | automaticky |
 | Viacero grafov | každý zvlášť | iterácia cez pole dát |
@@ -43,7 +58,7 @@ Objekty **môžu navyše obsahovať**:
 | Aktualizácia grafu | manuálne zrušiť + znovu vytvoriť | `updateChart()` |
 | Tlačidlo nastavení | manuálne | automaticky, s callback podporou |
 
-`chart-tools.js` ostáva vhodnou voľbou, ak potrebujete plnú kontrolu nad individuálnym grafom (napr. jeden graf s vlastnou logikou, typ `LINE` alebo `DOUBLE_PIE`). `StatsByCharts` je vhodná tam, kde backend vracia pole grafov s ich konfiguráciou.
+`chart-tools.js` ostáva vhodnou voľbou, ak potrebujete plnú kontrolu nad individuálnym grafom (napr. jeden graf s vlastnou logikou, typ `LINE`). `StatsByCharts` je vhodná tam, kde backend vracia pole grafov s ich konfiguráciou.
 
 ## API
 
@@ -54,7 +69,7 @@ new StatsByCharts(options)
 ```
 
 | Parameter | Typ | Popis |
-|---|---|---|
+| --- | --- | --- |
 | `options.targetSelector` | `string` | CSS selektor elementu, do ktorého sa vložia grafy (povinný) |
 | `options.id` | `string` | Prefix pre unikátne ID grafov (predvolene `"stats-by-charts"`) |
 | `options.chartSettingBtnFn` | `function` | Callback volaný po kliknutí na tlačidlo nastavení grafu; dostane objekt `chartDef` ako argument |
@@ -69,7 +84,7 @@ Vytvorí všetky grafy naraz. Volajte po načítaní dát z REST API.
 
 #### `updateChart(newChartsDefinitions)`
 
-Aktualizuje jeden alebo viac existujúcich grafov. Používa sa typicky ako odpoveď na udalosť `stat-chart-update`.
+Aktualizuje jeden alebo viac existujúcich grafov.
 
 - Zničí starú inštanciu grafu, odstráni hlavičku a vykreslí nový graf s aktualizovanými dátami.
 
@@ -145,4 +160,6 @@ fetch("/get_new_chart_data")
     });
 ```
 
-!> **Upozornenie:** Ak má objekt s novými dátami zmenený parameter `type`, trieda automaticky zničí starý graf a vykreslí úplne nový graf požadovaného typu.
+Ukážka vygenerovanej štatistiky z príkladu vyššie:
+
+![](example-1.png)
