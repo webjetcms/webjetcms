@@ -3216,7 +3216,7 @@
                     PRIMARY KEY (passkey_credential_id),
                     UNIQUE KEY uk_passkey_cred_id (credential_id),
                     KEY idx_passkey_cred_user_id (user_id)
-                ) CHARACTER SET utf8mb4</string></void>
+                )</string></void>
                 <void property="mssql"><string>CREATE TABLE passkey_credentials (
                     passkey_credential_id BIGINT IDENTITY(1,1) NOT NULL,
                     credential_id VARCHAR(255) NOT NULL,
