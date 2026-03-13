@@ -27,6 +27,19 @@
 
 <script type="module" th:inline="javascript">
 
+    window.domReady.add(function () {
+        WJ.headerTabs({
+            id: 'tabsFilter',
+            tabs: [
+                { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: false },
+                { url: '/apps/form/admin/form-steps/?formName=' + urlFormName, title: WJ.translate('components.form_items.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/form-stats/?formName=' + urlFormName, title: WJ.translate('components.form_stat.navbar_title.js'), active: true },
+                { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: false },
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
+            ]
+        });
+    });
+
     import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
 
     fetch("/rest/multistep-form-stat/get-stat-data?form-name=" + urlFormName)
@@ -60,7 +73,6 @@
                     fetch("/rest/multistep-form-stat/get-chart-data?form-name=" + urlFormName + "&item-form-id=" + chartId)
                         .then(response => response.json())
                         .then(data => {
-                            console.log("NEW DATA : ", data);
                             instance.updateChart(data);
                         })
                         .catch(error => {
@@ -115,7 +127,7 @@
     <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
         <div class="stat-card h-100 stat-card--red">
             <div class="stat-card__icon">
-                <i class="ti ti-calendar"></i>
+                <i class="ti ti-calendar-pause"></i>
             </div>
             <div class="stat-card__content">
                 <span class="stat-card__title" data-th-text="#{components.form_stat.last_response}">LAST RESPONSE</span>

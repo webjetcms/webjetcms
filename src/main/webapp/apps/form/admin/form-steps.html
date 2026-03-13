@@ -75,6 +75,17 @@
     }
 
     window.domReady.add(function () {
+        WJ.headerTabs({
+            id: 'tabsFilter',
+            tabs: [
+                { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: false },
+                { url: '/apps/form/admin/form-steps/?formName=' + urlFormName, title: WJ.translate('components.form_items.navbar_title.js'), active: true },
+                { url: '/apps/form/admin/form-stats/?formName=' + urlFormName, title: WJ.translate('components.form_stat.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: false },
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
+            ]
+        });
+
         formStepsDataTable = WJ.DataTable({
             url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
             serverSide: true,
@@ -232,6 +243,7 @@
                         formItemsDataTable.EDITOR.field("chartType").show();
                         formItemsDataTable.EDITOR.field("topCount").show();
                         formItemsDataTable.EDITOR.field("showOtherCount").show();
+                        formItemsDataTable.EDITOR.field("showUnanswered").show();
                         formItemsDataTable.EDITOR.field("compareInsensitive").show();
                         formItemsDataTable.EDITOR.field("useColorScheme").show();
                         formItemsDataTable.EDITOR.field("colorScheme").show();
@@ -239,6 +251,7 @@
                         formItemsDataTable.EDITOR.field("chartType").hide();
                         formItemsDataTable.EDITOR.field("topCount").hide();
                         formItemsDataTable.EDITOR.field("showOtherCount").hide();
+                        formItemsDataTable.EDITOR.field("showUnanswered").hide();
                         formItemsDataTable.EDITOR.field("compareInsensitive").hide();
                         formItemsDataTable.EDITOR.field("useColorScheme").hide();
                         formItemsDataTable.EDITOR.field("colorScheme").hide();
