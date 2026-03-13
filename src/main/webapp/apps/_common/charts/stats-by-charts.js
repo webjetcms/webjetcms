@@ -80,7 +80,7 @@ export class StatsByCharts {
             // Remove chart instance from root (amchart)
             await ChartTools.destroyChart(this.chartsInstances[chartId]);
 
-            // Remove allso headline, because it would stack up
+            // Remove also headline, because it would stack up
             const headline = document.getElementById(this.id + "_" + chartId + "_container").querySelector(".amchart-header");
             if(headline) { headline.remove(); }
 
@@ -152,8 +152,8 @@ export class StatsByCharts {
      */
     _renderPieChart(chartDef, chartUniqueId) {
         const chartConfig = {
-            yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "count"),
-            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
+            yAxeName: this._ifInvalidReturnDefault(chartDef.yAxeName, "count"),
+            xAxeName: this._ifInvalidReturnDefault(chartDef.xAxeName, "name"),
             chartTitle: chartDef.title,
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
@@ -175,8 +175,8 @@ export class StatsByCharts {
      */
     _renderBarChart(chartDef, chartUniqueId) {
             const chartConfig = {
-                yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "name"),
-                xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "count"),
+                yAxeName: this._ifInvalidReturnDefault(chartDef.yAxeName, "name"),
+                xAxeName: this._ifInvalidReturnDefault(chartDef.xAxeName, "count"),
                 chartTitle: chartDef.title,
                 chartDivId: chartUniqueId,
                 chartData: chartDef.values,
@@ -222,8 +222,8 @@ export class StatsByCharts {
             chartData: chartDef.values,
             chartTitle: chartDef.title,
             mode: "line",
-            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
-            yAxeName: this._ifInvalidRetunDefault(chartDef.yAxeName, "count")
+            xAxeName: this._ifInvalidReturnDefault(chartDef.xAxeName, "name"),
+            yAxeName: this._ifInvalidReturnDefault(chartDef.yAxeName, "count")
         }
 
         let wordCloudChart = new ChartTools.WordCloudChartForm(chartConfig);
@@ -238,9 +238,9 @@ export class StatsByCharts {
      */
     _renderDoublePieChart(chartDef, chartUniqueId) {
         const chartConfig = {
-            yAxeName_inner: this._ifInvalidRetunDefault(chartDef.yAxeName_inner, "count"),
-            yAxeName_outer: this._ifInvalidRetunDefault(chartDef.yAxeName_outer, "count"),
-            xAxeName: this._ifInvalidRetunDefault(chartDef.xAxeName, "name"),
+            yAxeName_inner: this._ifInvalidReturnDefault(chartDef.yAxeName_inner, "count"),
+            yAxeName_outer: this._ifInvalidReturnDefault(chartDef.yAxeName_outer, "count"),
+            xAxeName: this._ifInvalidReturnDefault(chartDef.xAxeName, "name"),
             chartDivId: chartUniqueId,
             chartData: chartDef.values,
             chartTitle: chartDef.title
@@ -258,7 +258,7 @@ export class StatsByCharts {
      * @param {*} defaultValue - The fallback value to use when `value` is invalid.
      * @returns {*} The original value or the default.
      */
-    _ifInvalidRetunDefault(value, defaultValue) {
+    _ifInvalidReturnDefault(value, defaultValue) {
         if(value === undefined || value === null || value.length < 1) {
             return defaultValue;
         } else {

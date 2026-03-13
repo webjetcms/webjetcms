@@ -65,7 +65,7 @@
         window.initAmcharts().then(module => {
             $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
 
-                const doublePIeConfig = {
+                const doublePieConfig = {
                     yAxeName_inner: "valueB",
                     yAxeName_outer: "valueA",
                     xAxeName: "category",
@@ -76,7 +76,7 @@
                     labelKey: "reservation.reservation_stat.hours_user_chart.label.js"
                 };
 
-                doublePieChartTimeUsers = new ChartTools.DoublePieChartForm(doublePIeConfig);
+                doublePieChartTimeUsers = new ChartTools.DoublePieChartForm(doublePieConfig);
                 ChartTools.createAmchart(doublePieChartTimeUsers);
 
                 $.ajax({url: getGraphUrl("pie", "objects"), success: function(result) {

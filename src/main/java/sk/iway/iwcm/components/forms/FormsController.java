@@ -111,7 +111,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         entity.setDocId(-1);
         entity.setDomainId(CloudToolsForCore.getDomainId());
         entity.setCreateDate(null);
-        // Field durration is used as createDate for pattern forms
+        // Field duration is used as createDate for pattern forms
         entity.setDuration(Tools.getNow() / 1000);
 
         //default use lowercase form name, remove special chars

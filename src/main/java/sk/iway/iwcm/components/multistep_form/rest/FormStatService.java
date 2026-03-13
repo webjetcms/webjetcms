@@ -34,7 +34,7 @@ import sk.iway.iwcm.users.UserDetails;
 public class FormStatService {
 
     private static final int PAGE_SIZE = 1000;
-    private static final String NOT_ANSWERED = "Nezodpovedané";
+    private static final String NOT_ANSWERED = "components.stats_by_charts.unanswered";
 
     private final FormsRepository formsRepository;
     private final FormsServiceImpl formsService;
@@ -48,7 +48,7 @@ public class FormStatService {
     public final JSONObject getFormStatData(String formName, HttpServletRequest request) {
         if(Tools.isEmpty(formName)) return null;
 
-        List<String> allFormData = kokos(formName);
+        List<String> allFormData = getAllFormData(formName);
 
         JSONObject allData = new JSONObject();
         allData.put("chartData", getFormStatChartData(formName, allFormData, getAllowedItems(formName, null), request));
@@ -62,7 +62,7 @@ public class FormStatService {
 
     public final JSONArray getFormStatChartData(String formName, String itemFormId, HttpServletRequest request) {
         if(Tools.isEmpty(formName) || Tools.isEmpty(itemFormId)) return null;
-        List<String> allFormData = kokos(formName);
+        List<String> allFormData = getAllFormData(formName);
         return getFormStatChartData(formName, allFormData, getAllowedItems(formName, itemFormId), request);
     }
 
@@ -103,13 +103,14 @@ public class FormStatService {
     }
 
     private JSONArray getFormStatChartData(String formName, List<String> allFormData, Map<String, FormItemEntity> allowed, HttpServletRequest request) {
-        Map<String, List<String>> mapData = convertFromListToMap(allFormData, allowed);
-        Map<String, String> columnNames = getColumnNames(formName, new UserDetails(request), Prop.getInstance(request));
+        Prop prop = Prop.getInstance(request);
+        Map<String, List<String>> mapData = convertFromListToMap(allFormData, allowed, prop.getText(NOT_ANSWERED));
+        Map<String, String> columnNames = getColumnNames(formName, new UserDetails(request), prop);
 
         return mapDataToJsonArray(mapData, columnNames, allowed);
     }
 
-    private List<String> kokos(String formName) {
+    private List<String> getAllFormData(String formName) {
         List<String> allFormData = new ArrayList<>();
         int domainId = CloudToolsForCore.getDomainId();
         int pageNumber = 0;
@@ -123,7 +124,7 @@ public class FormStatService {
         return allFormData;
     }
 
-    private Map<String, List<String>> convertFromListToMap(List<String> allFormData, Map<String, FormItemEntity> allowed) {
+    private Map<String, List<String>> convertFromListToMap(List<String> allFormData, Map<String, FormItemEntity> allowed, String notAnsweredText) {
         Map<String, List<String>> allData = new LinkedHashMap<>();
 
         // Build map from form data
@@ -143,7 +144,7 @@ public class FormStatService {
                 String value = tildeIndex < field.length() - 1 ? field.substring(tildeIndex + 1) : "";
 
                 if(Tools.isEmpty(value)) {
-                    if(Tools.isTrue(allowed.get(key).getShowUnanswered())) value = NOT_ANSWERED;
+                    if(Tools.isTrue(allowed.get(key).getShowUnanswered())) value = notAnsweredText;
                     else continue;
                 }
 
@@ -270,7 +271,7 @@ public class FormStatService {
     }
 
     private Map<String, FormItemEntity> getAllowedItems(String formName, String itemFormId) {
-        String sql = "SELECT item_form_id, value, field_type, chart_type, top_count, show_other_count, show_unanswered, compare_insensitive, color_scheme FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat IS TRUE AND f.step_id=s.id";
+        String sql = "SELECT item_form_id, value, field_type, chart_type, top_count, show_other_count, show_unanswered, compare_insensitive, color_scheme FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.show_stat = 1 AND f.step_id=s.id";
         List<Object> sqlParams = new ArrayList<>();
         sqlParams.add(formName);
         sqlParams.add(CloudToolsForCore.getDomainId());

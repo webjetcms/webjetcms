@@ -10,7 +10,7 @@ Scenario('screenshot stat section', ({I, Document}) => {
     Document.screenshotElement("#form-stats", "/developer/frameworks/charts/stats-by-charts/example-1.png");
 });
 
-Scenario('screenshot stat section', ({I, Document}) => {
+Scenario('screenshot stat section 2', ({I, Document}) => {
     I.amOnPage("/apps/form/admin/form-stats/?formName=stattestform");
     I.resizeWindow(900, 1800);
 

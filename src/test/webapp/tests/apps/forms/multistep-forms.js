@@ -588,7 +588,7 @@ Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
         I.seeElement(".DTE_Field_Name_topCount");
         I.seeElement(".DTE_Field_Name_colorScheme");
 
-        I.say("Check color scheem disability/enabling");
+        I.say("Check color scheme disability/enabling");
         I.seeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
         I.checkOption("#DTE_Field_useColorScheme_0");
         I.dontSeeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
