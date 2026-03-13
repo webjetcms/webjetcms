@@ -9,6 +9,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -111,5 +112,13 @@ public class LayoutBean {
      */
     public boolean isTypeCloud() {
         return InitServlet.isTypeCloud();
+    }
+
+    /**
+     * Vrati jazyk v ISO formatu, napr. sk-SK, cz-CS, en-GB
+     * @return
+     */
+    public String getLngIso() {
+        return PageLng.getUserLngIso(lng);
     }
 }

@@ -2,7 +2,7 @@ include ../pug/mixins
 
 div.navbar-brand
     a(href="/admin/v9/")
-        img(data-th-src="${'/admin/v9/dist/images/logo-' + layout.brand + '.svg'}" alt='' data-toggle="tooltip" data-th-title="\#{admin.top.webjet_version} + ${' '+layout.version}")
+        img(data-th-src="${'/admin/v9/dist/images/logo-' + layout.brand + '.svg'}" data-th-alt='\#{welcome.left_menu}' data-toggle="tooltip" data-th-title="\#{admin.top.webjet_version} + ${' '+layout.version}")
 
 div.md-large-menu
     div.md-large-menu__wrapper.clearfix

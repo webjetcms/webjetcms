@@ -36,7 +36,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
     request.setAttribute("isOAuth2Enabled", Tools.isNotEmpty(Constants.getString("oauth2_clients")));
 %><!DOCTYPE html>
-<html>
+<html lang="<%= sk.iway.iwcm.PageLng.getUserLngIso(lng) %>">
 <head>
     <meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" >
     <title>WebJET CMS</title>
@@ -222,7 +222,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <div class="custom-select">
                         <i class="ti ti-world"></i>
                         <span class="selected-value"></span>
-                        <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)">
+                        <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)" aria-label='<%=prop.getText("logon.language")%>'>
                             <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
                             <form:option value="cz"><iwcm:text key="logon.language.czech"/></form:option>
                             <form:option value="en"><iwcm:text key="logon.language.english"/></form:option>
@@ -237,12 +237,12 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
                     <iwcm:present name="errors">
                         <div class="alert-wrapper">
-                            <div class="alert alert-danger">
+                            <div role="alert" class="alert alert-danger">
                                 <span>
                                     <iwcm:text key="user.form.errors"/>
                                 </span>
                             </div>
-                            <div class="infotext">
+                            <div role="alert" class="infotext">
                                 <ul>
                                     <li>
                                         ${errors}
@@ -252,21 +252,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                     </iwcm:present>
                     <iwcm:present name="cancelChangePasswordAction">
-                        <div class="alert alert-success">
+                        <div role="alert" class="alert alert-success">
                             <span>
                                 <iwcm:text key="logon.change_password.action_canceled"/>
                             </span>
                         </div>
                     </iwcm:present>
                     <iwcm:present name="changePasswordActionFailed">
-                        <div class="alert alert-danger">
+                        <div role="alert" class="alert alert-danger">
                             <span>
                                 <iwcm:text key="logon.password.invalid_parameters"/>
                             </span>
                         </div>
                     </iwcm:present>
                     <c:if test="${param.act eq 'changePasswordActionSuccess'}">
-                        <div class="alert alert-success">
+                        <div role="alert" class="alert alert-success">
                             <span>
                                 <iwcm:text key="logon.password.change_successful"/>
                             </span>
@@ -274,26 +274,26 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     </c:if>
 
                     <iwcm:present name="passResultEmail">
-                        <div class="alert alert-success">
+                        <div role="alert" class="alert alert-success">
                             <span><iwcm:text key="logon.lost_password_send_success"/></span>
                         </div>
                     </iwcm:present>
 
                     <c:if test="${autoRedirect == null}">
                         <div class="form-group">
-                            <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
+                            <label class="control-label" for="username"><iwcm:text key="logon.usernameOrEmail"/></label>
                             <div class="input-icon">
                                 <i class="ti ti-user"></i>
                                 <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="control-label"><iwcm:text key="user.password"/></label>
+                            <label class="control-label" for="password"><iwcm:text key="user.password"/></label>
                             <div class="input-icon">
                                 <i class="ti ti-lock"></i>
-                                <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                                <form:password path="password" id="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" aria-describedby="password-strength-help"/>
                             </div>
-                            <div class="password-strength-info"></div>
+                            <div class="password-strength-info" id="password-strength-help"></div>
                         </div>
                         <div class="form-group">
                             <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
@@ -333,13 +333,13 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             <div id="sendPassword" style="display: none;">
                 <form id="sendPasswd" name="f_passwd" method="get" action="/admin/logon/">
                     <div class="form-group">
-                        <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
+                        <label class="control-label" for="login-name"><iwcm:text key="logon.usernameOrEmail"/></label>
                         <div class="input-icon">
                             <i class="ti ti-user"></i>
-                            <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
+                            <input type="text" name="loginName" id="login-name" value="" class="form-control placeholder-no-fix" aria-describedby="login-name-help" />
                             <input type="text" name="language" value="${lng}" class="form-control" hidden/>
                         </div>
-                        <div class="password-strength-info"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
+                        <div class="password-strength-info" id="login-name-help"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
                     </div>
                     <div class="form-group">
                         <button type="submit" id="register-submit-btn" class="btn btn-primary"><iwcm:text key="logon.recoverPassword"/><i class="ti ti-arrow-right"></i></button>
