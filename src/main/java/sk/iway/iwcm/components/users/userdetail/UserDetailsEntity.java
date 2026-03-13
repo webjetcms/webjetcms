@@ -266,6 +266,10 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @Column(name = "domain_id")
     private Integer domainId;
 
+    @Column(name = "webauthn_user_id")
+    @JsonIgnore
+    private String webauthnUserId;
+
     //@Column(name = "mobile_device")
     //private String mobileDevice;
 

@@ -220,6 +220,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-oauth2-client:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-oauth2-core:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-oauth2-jose:${springSecurityVersion}")
+    //WebAuthn/PassKey support - separated module in Spring Security 7
+    implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
@@ -264,9 +266,9 @@ dependencies {
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
-    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1'
-    providedCompile 'jakarta.el:jakarta.el-api:5.0.1'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:4.0.0'
+    providedCompile 'jakarta.el:jakarta.el-api:6.0.0'
 
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
@@ -460,7 +462,8 @@ gretty {
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia
         //'-Dwebjet.useSMTPServer=true',
-        '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
+        '-Dwebjet.smtpServer=localhost',
+        '-Dwebjet.smtpPort=2525',
         "-DwebjetDbname=${System.env.webjetDbname}",
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
@@ -625,13 +628,14 @@ task writePom() {
         Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
         //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
         resolvedArtifacts.each {
+            def group = it.getModuleVersion().getId().getGroup();
             def version = it.getModuleVersion().getId().getVersion();
             def currentVersion = resolvedVersionMap.get(it.getName());
             def mostRecent = version;
             if (currentVersion != null) mostRecent = mostRecentVersion([currentVersion, version]);
 
-            println("resolvedVersion: name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
-            resolvedVersionMap.put(it.getName(), mostRecent);
+            println("resolvedVersion: group="+group+" name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
+            resolvedVersionMap.put(group + ":" + it.getName(), mostRecent);
         }
 
         // Update dependencies with resolved versions
@@ -645,13 +649,13 @@ task writePom() {
             def version = it.get("version").first().value().first()
             //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
-            def artifactVersion = resolvedVersionMap.get(artifactName)
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
             Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
                 //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
                 if (mostRecent.equals(version)==false) {
-                    println "---> changing version: " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
+                    println "---> changing version: " + groupId + ":" + artifactName + " " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
                     versionNode.value = mostRecent
                 }
             }

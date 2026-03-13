@@ -187,3 +187,14 @@ Aktuálne sú podporované nasledovné udalosti:
 - ```WJ.PageBuilder.elementDuplicated``` - duplikovaný element
 - ```WJ.PageBuilder.elementMoved``` - presunutý element
 
+## Zobrazenie nepotrebných blokov
+
+Cez Page Builder sa zobrazujú aj bloky ako hlavička, pätička, menu atď., čo v niektorých prípadoch nemusí byť žiadúce. Jednoduché riešenie je tieto bloky cez CSS štýl schovať. V režime editora je na `body` elemente CSS trieda `is-edit-mode` ktorá vám umožní schovať nepotrebné elementy.
+
+Ak potrebujete len deaktivovať odkazy, môžete nastaviť v CSS štýle `pointer-events: none`:
+
+```css
+.is-edit-mode .header a {
+    pointer-events: none;
+}
+```

@@ -101,6 +101,7 @@ import sk.iway.iwcm.users.UsersDB;
  *  Abstraktny univerzalny RestController na pracu s DataTables Editor-om
  *
  */
+@SuppressWarnings({"java:S6813", "java:S119", "java:S3776"})
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
@@ -139,7 +140,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo !=null && repo instanceof DomainIdRepository) checkDomainId = true;
+			if (repo instanceof DomainIdRepository) checkDomainId = true;
 		}
 
 		this.entityClass = entityClass;
@@ -289,8 +290,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(itemBy);
 				Object value = bw.getPropertyValue(idColumnName != null ? idColumnName : "id");
-				if (value instanceof Number) {
-					id = ((Number)value).longValue();
+				if (value instanceof Number number) {
+					id = number.longValue();
 				}
 			} catch (Exception ex) {
 				//failsafe
@@ -619,7 +620,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if(pageable != null) {
 			Sort sort = pageable.getSort();
 			//remove all sort for fields starting with editorFields.
-			if(sort != null && sort.isSorted()) {
+			if(sort != null && sort.isSorted()) { //NOSONAR
 				Iterator<Order> iter = sort.iterator();
 				while(iter.hasNext()) {
 					Sort.Order order = iter.next();
@@ -871,7 +872,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	private static String firstToLower(String value) {
-		if (value == null || value.length() == 0) {
+		if (Tools.isEmpty(value)) {
 			return "";
 		}
 
@@ -1262,9 +1263,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isImporting) {
 			setImporting(true);
 			setSkipWrongData(skipWrongData);
-			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
-			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
+		//InitBinder/validateEditor can set notification object, we must preserve it
+		if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
+
 		boolean isDuplicate = false;
 		setDuplicate(false);
 
@@ -1300,8 +1302,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			T entity = datatableRequest.getData().get(id);
 
-			if (entity instanceof ActiveRecordBase) {
-				Integer rowNum = ((ActiveRecordBase)entity).get__rowNum__();
+			if (entity instanceof ActiveRecordBase activeRecordBase) {
+				Integer rowNum = activeRecordBase.getRowNum();
 				setLastImportedRow(rowNum);
 			} else {
 				if (isImporting()) setLastImportedRow(rowCounter);
@@ -1689,7 +1691,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				String idColumnName = getIdColumnName(entity);
 
 				// Get entity ID using id column name
-				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName); //NOSONAR
 
 				// Get new value for this entity
 				Integer newValue = rowReorderDto.getNewValueById(entityId);
@@ -1997,9 +1999,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public static boolean jpaToBoolean(Object value) {
 		if (value == null) return false;
-		if (value instanceof Boolean) return (Boolean)value;
-		if (value instanceof Number) {
-			return ((Number)value).intValue() == 1 ? true : false;
+		if (value instanceof Boolean booleanValue) return booleanValue;
+		if (value instanceof Number number) {
+			return number.intValue() == 1 ? true : false;
 		}
 		return false;
 	}
@@ -2133,7 +2135,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		StringBuilder errExplanation = new StringBuilder();
 		errExplanation.append(propertyName);
-		errExplanation.append(" - ").append( err.getRejectedValue() == null ? "EMPTY" : err.getRejectedValue().toString() );
+		errExplanation.append(" - ").append( err.getRejectedValue() == null ? "EMPTY" : err.getRejectedValue().toString() ); //NOSONAR
 		errExplanation.append(" - ").append( err.getDefaultMessage() );
 
 		int lastImportedRow = getLastImportedRow() == null ? 0 : getLastImportedRow().intValue();
@@ -2168,10 +2170,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 
 				//also skip if editor.attr.disabled=disabled
-				DataTableColumnEditor editor[] = annotation.editor();
+				DataTableColumnEditor[] editor = annotation.editor();
 				if (editor.length > 0) {
 					boolean isDisabled = false;
-					DataTableColumnEditorAttr attrs[] = editor[0].attr();
+					DataTableColumnEditorAttr[] attrs = editor[0].attr();
 					if (attrs.length > 0) {
 						for (DataTableColumnEditorAttr attr : attrs) {
 							if ("disabled".equals(attr.key())) {

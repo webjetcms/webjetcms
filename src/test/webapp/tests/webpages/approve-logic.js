@@ -14,7 +14,7 @@ Before(({ I, TempMail }) => {
         var randomShort = I.getRandomTextShort();
         testerEmail = "wjtester." + randomShort
         tester2Email = "wjtester2." + randomShort;
-        emailDomain = "@fexpost.com";
+        emailDomain = TempMail.getTempMailDomain();
     }
 });
 

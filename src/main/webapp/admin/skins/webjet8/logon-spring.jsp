@@ -80,6 +80,126 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             });
         }
 
+        function checkPasskeyAvailability() {
+            // Hide passkey button if WebAuthn API is not available (e.g. insecure context, TLS errors)
+            if (!window.PublicKeyCredential) {
+                document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                return;
+            }
+            // Additionally check platform authenticator availability
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                .then(function(available) {
+                    if (available) {
+                        document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'block');
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('passkey-login-btn-wrapper')?.style?.setProperty('display', 'none');
+                });
+        }
+
+        function showPasskeyError(message) {
+            var wrapper = document.getElementById('passkey-error-wrapper');
+            if (wrapper) {
+                wrapper.querySelector('span').textContent = message;
+                wrapper.style.display = 'block';
+            }
+        }
+
+        function showPasskeyInfo() {
+            var wrapper = document.getElementById('passkey-info-wrapper');
+            if (wrapper) {
+                wrapper.style.display = 'block';
+            }
+        }
+
+        function doPasskeyLogon() {
+            document.getElementById('passkey-error-wrapper')?.style?.setProperty('display', 'none');
+            // PassKey authentication flow using Spring Security WebAuthn endpoints
+            fetch('/webauthn/authenticate/options', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('Failed to get authentication options');
+                return response.json();
+            })
+            .then(function(options) {
+                // Convert base64url strings to ArrayBuffers
+                options.challenge = base64urlToBuffer(options.challenge);
+                if (options.allowCredentials) {
+                    options.allowCredentials = options.allowCredentials.map(function(cred) {
+                        cred.id = base64urlToBuffer(cred.id);
+                        return cred;
+                    });
+                }
+                return navigator.credentials.get({ publicKey: options });
+            })
+            .then(function(credential) {
+                // Send the assertion to the server
+                var body = {
+                    id: credential.id,
+                    rawId: bufferToBase64url(credential.rawId),
+                    response: {
+                        authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+                        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+                        signature: bufferToBase64url(credential.response.signature),
+                        userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null
+                    },
+                    type: credential.type,
+                    authenticatorAttachment: credential.authenticatorAttachment,
+                    clientExtensionResults: credential.getClientExtensionResults()
+                };
+                return fetch('/login/webauthn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            })
+            .then(function(response) {
+                if (response.ok || response.redirected) {
+                    window.location.href = response.url || '/admin/v9/';
+                } else {
+                    throw new Error('PassKey authentication failed');
+                }
+            })
+            .catch(function(error) {
+                console.error('PassKey authentication error:', error);
+                if (error.name === 'NotAllowedError') {
+                    // Check if it's a TLS certificate error (not just user cancellation)
+                    if (error.message && (error.message.indexOf('TLS') !== -1 || error.message.indexOf('certificate') !== -1 || error.message.indexOf('certificate errors') !== -1)) {
+                        showPasskeyError('<iwcm:text key="passkey.logon.error.tls" />');
+                    } else {
+                        // User cancelled or has no passkey registered - show setup hint
+                        showPasskeyInfo();
+                    }
+                } else {
+                    showPasskeyError('<iwcm:text key="passkey.logon.error" />');
+                }
+            });
+        }
+
+        function base64urlToBuffer(base64url) {
+            var base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            var padding = '='.repeat((4 - base64.length % 4) % 4);
+            var binary = atob(base64 + padding);
+            var bytes = new Uint8Array(binary.length);
+            for (var i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function bufferToBase64url(buffer) {
+            var bytes = new Uint8Array(buffer);
+            var binary = '';
+            for (var i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
         //-->
     </script>
 </head>
@@ -186,6 +306,17 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                 <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="doOauthLogon('${url.value}')"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
                             </div>
                         </c:forEach>
+                    </c:if>
+                    <c:if test="${isPassKeyEnabled}">
+                        <div id="passkey-error-wrapper" class="alert alert-danger" style="display:none;">
+                            <span></span>
+                        </div>
+                        <div id="passkey-info-wrapper" class="alert alert-info" style="display:none;">
+                            <span><iwcm:text key="passkey.logon.info"/></span>
+                        </div>
+                        <div id="passkey-login-btn-wrapper" class="form-group" style="display:none;">
+                            <button type="button" name="passkey-login-submit" id="passkey-login-submit" class="btn btn-primary" onclick="doPasskeyLogon()"><iwcm:text key="button.passkeyLogin"/><i class="ti ti-fingerprint" style="font-size: 20px;"></i></button>
+                        </div>
                     </c:if>
                 </div>
             </form:form>
@@ -303,6 +434,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
         try {
             bindPasswordStrength();
             $("#username").focus();
+            checkPasskeyAvailability();
         } catch (e) {console.log(e);}
 
         //preserve hash

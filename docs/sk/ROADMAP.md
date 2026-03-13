@@ -15,14 +15,14 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [ ] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
-- [ ] Headless CMS - pripraviť REST rozhrania pre použitie WebJET CMS v headless móde.
-- [ ] Migrácia na Spring Boot projekt.
+- [ ] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde.
+- [ ] Migrácia na `Spring Boot` projekt.
 - [ ] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
 - [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 - [ ] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
 - [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
-- [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pro `select` pole.
+- [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole.
 
 ## 2025
 
@@ -64,7 +64,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Elektronický obchod - do emailu pridať `JSON-LD` dáta https://schema.seznam.cz/objednavky/dokumentace/.
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
-- [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#56665).
+- [x] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
 - [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
 - [x] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
@@ -280,7 +280,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] ~~(presun do 2023.40)+Číselníky - v exporte sa nenachádza atribút, že je záznam zmazaný a potom po importe sa záznam aktivuje.~~
 - [ ] ~~(presun do 2023.40)Na úvodnej obrazovke implementovať mini aplikáciu todo.~~
 - [ ] ~~(presun do 2023.40)+DT - po pridaní záznamu pre stránkovať na stranu, kde sa záznam nachádza (typicky posledná strana)~~
-- [x] +Doplniť preklady textov z pug súborov (napr. gallery.pug), hľadať napr. písmeno á alebo podobné, ktoré by sa v nepreložených textoch mohlo nachádzať.
+- [x] +Doplniť preklady textov z pug súborov (napr. `gallery.pug`), hľadať napr. písmeno á alebo podobné, ktoré by sa v nepreložených textoch mohlo nachádzať.
 - [x] +Pridať možnosť ponechať okno editora otvorené po uložení (viď. https://datatables.net/forums/discussion/32727/how-to-keep-editing-window-open, closeOnComplete, https://editor.datatables.net/reference/api/submit()). Realizované pomocou klávesovej skratky ```CTRL+s/CMD+s``` (#54273-26).
 - [x] ```Combine``` / mazanie dát - pri zmazaní všetkých dát v cache preniesť korektne aj na ```Cluster``` a tam tiež zmazať rovnako, aktuálne ```ClusterRefresher``` zmaže len cache, nie ```DocDB/GroupsDB``` a nenastaví nový čas pre ```combime``` (#54673).
 - [x] +REST - pridať možnosť definovania API kľúčov (tokenov) používaných namiesto generovaných CSRF tokenov pre volanie REST externými službami (#54941).
@@ -526,6 +526,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +úprava dokumentácie na formát ```docsify``` a presun na server http://docs.webjetcms.sk/ (#52384)
 - [x] +aktualizácia testovacieho frameworku codeceptjs na verziu 3.0.4 (#52444)
 
+<!-- spellcheck-off -->
 <!-- deepmark-ignore-start -->
 <script type="text/javascript">
 setTimeout(function() {

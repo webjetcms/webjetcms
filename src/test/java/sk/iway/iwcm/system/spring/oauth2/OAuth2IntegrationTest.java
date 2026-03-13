@@ -131,8 +131,8 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
             // Overenie úspešného presmerovania
             verify(response).sendRedirect("/admin/");
 
-            // Overenie nastavenia používateľa do session
-            logonToolsMock.verify(() -> LogonTools.setUserToSession(eq(session), any(Identity.class)));
+            // Overenie prihlásenia používateľa
+            logonToolsMock.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
 
             // Overenie, že používateľ bol načítaný, nie vytvorený
             usersDBMock.verify(() -> UsersDB.getUserByEmail("integration@example.com", 1), times(1));
@@ -240,8 +240,8 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
             // Provider ID nie je rozpoznaný, takže skupiny nie sú synchronizované
             // Používateľ už má admin práva z mock-u, preto je overenie úspešné
 
-            // Overenie nastavenia používateľa do session
-            logonToolsMock.verify(() -> LogonTools.setUserToSession(eq(session), any(Identity.class)));
+            // Overenie prihlásenia používateľa
+            logonToolsMock.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
         }
     }
 

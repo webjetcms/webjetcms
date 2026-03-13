@@ -407,3 +407,8 @@ button.btn-as-link {
     width: 100%;
   }
 }
+
+.screenshotHighlight {
+    outline: 1px solid #FF4B58;
+    box-shadow: 0 0 12px #FF4B58;
+}

@@ -984,6 +984,11 @@ export const dataTableInit = options => {
             shown = true;
             fullyShown = false;
 
+            var modalContainer = "body";
+            var isInModalDialog = false;
+            if ($(dte.TABLE.header()[0]).parents(".modal-body-content").length > 0) isInModalDialog = true;
+            //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
+            if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
@@ -1000,9 +1005,16 @@ export const dataTableInit = options => {
                 .one('hidden', function () {
                     shown = false;
                 })
-                .appendTo( 'body' );
+                .appendTo( modalContainer );
 
             modal.show();
+            window.modal = modal;
+
+            if (isInModalDialog) {
+                var backdrop = modal._backdrop._element;
+                //move backdrop element into modelContainer
+                $(backdrop).appendTo(modalContainer);
+            }
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {

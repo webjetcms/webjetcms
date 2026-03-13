@@ -201,8 +201,23 @@ export function typeWysiwyg() {
             } catch (e) {
                 console.error(e);
             }
-            //console.log("WYSIWYG get, conf=", conf, "returning=", conf._input.val());
-            return conf._input.val();
+            var html = conf._input.val();
+            //console.log("WYSIWYG get, conf=", conf, "returning=", html);
+
+            try {
+                if (typeof window.wysiwygGetCallback === "function") {
+                    html = window.wysiwygGetCallback(html, conf);
+                } else {
+                    let pageBuilderIframe = $("#"+conf._id+"-pageBuilderIframe");
+                    if (pageBuilderIframe.length > 0 && pageBuilderIframe[0].contentWindow && typeof pageBuilderIframe[0].contentWindow.wysiwygGetCallback === "function") {
+                        html = pageBuilderIframe[0].contentWindow.wysiwygGetCallback(html, conf);
+                    }
+                }
+            } catch (e) {
+                console.error("Error in wysiwygGetCallback:", e);
+            }
+
+            return html;
         },
 
         set: function ( conf, val ) {

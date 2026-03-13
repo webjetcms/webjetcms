@@ -16,7 +16,12 @@
     overflow: hidden;
     box-shadow: $modal-box-shadow;
 
-    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, left 0.4s ease-in-out;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+
+    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+
+    font-family: "Asap", sans-serif;
 
     &__header {
         position: relative;
@@ -70,6 +75,7 @@
                 }
                 &:hover {
                     cursor: pointer;
+                    color: $primary;
                 }
             }
 
@@ -80,11 +86,8 @@
     &__content {
         padding:0;
         width: 100%;
-        max-height: 60vh;
 
         overflow-y: scroll;
-        height: 100%;
-        max-height: 85%;
         background-color: $modal-body-background;
         backdrop-filter: $modal-body-filter;
 
@@ -393,10 +396,8 @@
             display: inline-block;
             width: auto;
             height: 30px;
-            line-height: 30px;
             padding: 0 16px;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 14px;
             opacity: 0.8;
             text-align: center;
             border-radius: $modal-radius;
@@ -406,9 +407,13 @@
             background-color: transparent;
             color: $nice-black;
 
+            font-family: "Asap", sans-serif;
+
             &:hover {
                 cursor: pointer;
                 opacity: 1;
+                background-color: $secondary;
+                color: white;
             }
         }
 

@@ -37,7 +37,7 @@ Scenario('Pattern basic tests', ({ I, DTE, DT}) => {
     // 3. Overenie ze vzor nema vzor
     I.say("Phase3 - Pattern does not have pattern tab");
     DT.filterEquals('virtualFileName', patternVirtualFileName);
-    SL.checkStatus(1, 3, ['star', 'map-pin', 'texture']);
+    SL.checkStatus(1, 4, ['star', 'map-pin', 'texture']);
     I.clickCss('button.buttons-select-all');
     SL.editFile(patternVirtualFileName);
     I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");

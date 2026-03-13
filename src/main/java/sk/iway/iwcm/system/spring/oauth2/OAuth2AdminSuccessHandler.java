@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import sk.iway.iwcm.Adminlog;
@@ -14,7 +13,6 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
-import sk.iway.iwcm.system.spring.WebjetAuthentificationProvider;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -82,10 +80,9 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
-            HttpSession session = request.getSession();
-            LogonTools.setUserToSession(session, identity);
-            Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
-            SecurityContextHolder.getContext().setAuthentication(springAuth);
+
+            LogonTools.logonUserWithAllChecks(identity, request);
+
             response.sendRedirect("/admin/");
 
             //update request bean to current user for correct logging

@@ -1,0 +1,234 @@
+package sk.iway.iwcm.system.spring.passkey;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import sk.iway.iwcm.Logger;
+
+import org.springframework.security.web.webauthn.api.AuthenticatorTransport;
+import org.springframework.security.web.webauthn.api.Bytes;
+import org.springframework.security.web.webauthn.api.CredentialRecord;
+import org.springframework.security.web.webauthn.api.ImmutableCredentialRecord;
+import org.springframework.security.web.webauthn.api.ImmutablePublicKeyCose;
+import org.springframework.security.web.webauthn.api.PublicKeyCredentialType;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * JPA-backed adapter implementing Spring Security's UserCredentialRepository.
+ * Bridges between Spring Security's WebAuthn API (which works with CredentialRecord
+ * interface and Bytes IDs) and our JPA PasskeyCredentialBean entities.
+ *
+ * This replaces the previous JdbcUserCredentialRepository that had persistence
+ * issues with the project's DataSource/connection pool.
+ */
+@Component
+public class JpaUserCredentialRepositoryAdapter implements UserCredentialRepository {
+
+    private final PasskeyCredentialRepository credentialRepository;
+    private final UserDetailsRepository userDetailsRepository;
+
+    public JpaUserCredentialRepositoryAdapter(
+            PasskeyCredentialRepository credentialRepository,
+            UserDetailsRepository userDetailsRepository) {
+        this.credentialRepository = credentialRepository;
+        this.userDetailsRepository = userDetailsRepository;
+    }
+
+    @Override
+    @Transactional
+    public void save(CredentialRecord record) {
+        String credId = record.getCredentialId().toBase64UrlString();
+        String webauthnUserId = record.getUserEntityUserId().toBase64UrlString();
+
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                "PassKey JPA: save credential, credentialId=" + credId
+                + ", userId=" + webauthnUserId + ", label=" + record.getLabel());
+
+        Optional<UserDetailsEntity> userOpt = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnUserId, UsersDB.getDomainId());
+        if (userOpt.isEmpty()) {
+            Logger.error(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: Cannot save credential - user not found for webauthnUserId=" + webauthnUserId);
+            throw new IllegalStateException("User not found for webauthnUserId=" + webauthnUserId);
+        }
+
+        // Check if credential already exists (update case)
+        Optional<PasskeyCredentialEntity> existingOpt = credentialRepository.findByCredentialId(credId);
+        PasskeyCredentialEntity entity;
+
+        boolean isNew = false;
+        if (existingOpt.isPresent()) {
+            entity = existingOpt.get();
+        } else {
+            entity = new PasskeyCredentialEntity();
+            entity.setCredentialId(credId);
+            isNew = true;
+        }
+
+        entity.setUserId(userOpt.get().getId());
+        entity.setPublicKey(new Bytes(record.getPublicKey().getBytes()).toBase64UrlString());
+        entity.setSignatureCount(record.getSignatureCount());
+        entity.setUvInitialized(record.isUvInitialized());
+        entity.setBackupEligible(record.isBackupEligible());
+        entity.setBackupState(record.isBackupState());
+        entity.setAuthenticatorTransports(serializeTransports(record.getTransports()));
+        entity.setPublicKeyCredentialType(record.getCredentialType() != null
+                ? record.getCredentialType().getValue() : null);
+        entity.setAttestationObject(record.getAttestationObject() != null
+                ? record.getAttestationObject().toBase64UrlString() : null);
+        entity.setAttestationClientDataJson(record.getAttestationClientDataJSON() != null
+                ? new String(record.getAttestationClientDataJSON().getBytes(), StandardCharsets.UTF_8) : null);
+        entity.setCreated(record.getCreated());
+        if (isNew == false) entity.setLastUsed(record.getLastUsed());
+        entity.setLabel(record.getLabel());
+
+        // Store the rpId (domain) from DynamicWebAuthnRelyingPartyOperations
+        String rpId = DynamicWebAuthnRelyingPartyOperations.determineRpId();
+        if (Tools.isNotEmpty(rpId)) {
+            entity.setRpId(rpId);
+        }
+
+        credentialRepository.save(entity);
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class, "PassKey JPA: save credential SUCCESS, id=" + entity.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CredentialRecord findByCredentialId(Bytes credentialId) {
+        String credId = credentialId.toBase64UrlString();
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                "PassKey JPA: findByCredentialId=" + credId);
+
+        Optional<PasskeyCredentialEntity> entity = credentialRepository.findByCredentialId(credId);
+        if (entity.isEmpty()) {
+            Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: findByCredentialId result=null");
+            return null;
+        }
+        Optional<UserDetailsEntity> user = userDetailsRepository.findById(entity.get().getUserId());
+        if (user.isEmpty() || Tools.isEmpty(user.get().getWebauthnUserId())) {
+            Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: findByCredentialId user not found for userId=" + entity.get().getUserId());
+            return null;
+        }
+        return toCredentialRecord(entity.get(), user.get().getWebauthnUserId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CredentialRecord> findByUserId(Bytes userId) {
+        String webauthnUserId = userId.toBase64UrlString();
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                "PassKey JPA: findByUserId=" + webauthnUserId);
+
+        Optional<UserDetailsEntity> user = userDetailsRepository.findByWebauthnUserIdAndDomainId(webauthnUserId, UsersDB.getDomainId());
+        if (user.isEmpty()) {
+            Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                    "PassKey JPA: findByUserId user not found");
+            return Collections.emptyList();
+        }
+
+        List<PasskeyCredentialEntity> entities = credentialRepository.findByUserId(user.get().getId());
+        Logger.debug(JpaUserCredentialRepositoryAdapter.class,
+                "PassKey JPA: findByUserId result count=" + entities.size());
+
+        final String webauthnId = webauthnUserId;
+        return entities.stream()
+                .map(e -> toCredentialRecord(e, webauthnId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void delete(Bytes credentialId) {
+        String credId = credentialId.toBase64UrlString();
+        Logger.info(JpaUserCredentialRepositoryAdapter.class,
+                "PassKey JPA: delete credentialId=" + credId);
+
+        credentialRepository.deleteByCredentialId(credId);
+    }
+
+    /**
+     * Convert a JPA entity to Spring Security's CredentialRecord.
+     */
+    private CredentialRecord toCredentialRecord(PasskeyCredentialEntity entity, String webauthnUserId) {
+        ImmutableCredentialRecord.ImmutableCredentialRecordBuilder builder = ImmutableCredentialRecord.builder();
+
+        builder.credentialId(Bytes.fromBase64(entity.getCredentialId()));
+        builder.userEntityUserId(Bytes.fromBase64(webauthnUserId));
+        builder.publicKey(new ImmutablePublicKeyCose(Bytes.fromBase64(entity.getPublicKey()).getBytes()));
+        builder.signatureCount(entity.getSignatureCount() != null ? entity.getSignatureCount() : 0);
+        builder.uvInitialized(entity.getUvInitialized() != null && entity.getUvInitialized());
+        builder.backupEligible(entity.getBackupEligible() != null && entity.getBackupEligible());
+        builder.backupState(entity.getBackupState() != null && entity.getBackupState());
+        builder.transports(deserializeTransports(entity.getAuthenticatorTransports()));
+        builder.label(entity.getLabel());
+
+        if (Tools.isNotEmpty(entity.getPublicKeyCredentialType())) {
+            builder.credentialType(PublicKeyCredentialType.valueOf(entity.getPublicKeyCredentialType()));
+        }
+        if (Tools.isNotEmpty(entity.getAttestationObject())) {
+            builder.attestationObject(Bytes.fromBase64(entity.getAttestationObject()));
+        }
+        if (Tools.isNotEmpty(entity.getAttestationClientDataJson())) {
+            builder.attestationClientDataJSON(new Bytes(entity.getAttestationClientDataJson().getBytes(StandardCharsets.UTF_8)));
+        }
+        if (entity.getCreated() != null) {
+            builder.created(entity.getCreated());
+        }
+        if (entity.getLastUsed() != null) {
+            builder.lastUsed(entity.getLastUsed());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Serialize a set of AuthenticatorTransport values to a comma-separated string.
+     */
+    private String serializeTransports(Set<AuthenticatorTransport> transports) {
+        if (transports == null || transports.isEmpty()) {
+            return null;
+        }
+        return transports.stream()
+                .map(AuthenticatorTransport::getValue)
+                .collect(Collectors.joining(","));
+    }
+
+    /**
+     * Deserialize a comma-separated string to a set of AuthenticatorTransport values.
+     */
+    private Set<AuthenticatorTransport> deserializeTransports(String transports) {
+        if (Tools.isEmpty(transports)) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(transports.split(","))
+                .map(String::trim)
+                .filter(s -> s.isEmpty() == false)
+                .map(this::getAuthenticatorTransportByValue)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    /**
+     * Lookup AuthenticatorTransport by its spec value (e.g., "internal").
+     */
+    private Optional<AuthenticatorTransport> getAuthenticatorTransportByValue(String value) {
+        return Arrays.stream(AuthenticatorTransport.values())
+                .filter(t -> t.getValue().equals(value))
+                .findFirst();
+    }
+}
