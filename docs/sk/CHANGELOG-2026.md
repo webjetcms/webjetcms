@@ -23,7 +23,7 @@
 
 ### Testovanie
 
-- Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` a `axe-playwright` integrovaných do CodeceptJS cez `A11yHelper`, testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
+- Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` integrovaných do CodeceptJS. Testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
 
 ### Iné menšie zmeny
 

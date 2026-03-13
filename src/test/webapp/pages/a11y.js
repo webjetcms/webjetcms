@@ -3,6 +3,9 @@ const allure = require("allure-js-commons");
 
 module.exports = {
 
+    /**
+     * a11y check method. Internally use axe and a11yhelper.js to check WCAG violations
+     */
     async check() {
         //https://allurereport.org/docs/codeceptjs-reference/#tag
         await allure.tags("accessibility");
