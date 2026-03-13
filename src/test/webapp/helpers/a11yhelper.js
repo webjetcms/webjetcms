@@ -2,7 +2,6 @@
 // based on: https://github.com/kobenguyent/codeceptjs-a11y-helper/blob/main/src/index.ts
 
 const { Helper } = codeceptjs;
-const assert = require("assert");
 const { resolve } = require("path");
 const { readFileSync } = require("fs");
 
@@ -52,7 +51,7 @@ class A11yHelper extends Helper {
 	 * @param  {Options} opts - The options data
 	 */
 	async runA11yCheck(opts) {
-        console.log("WJ: runA11yCheck, opts=", opts);
+        //console.log("WJ: runA11yCheck, opts=", opts);
 
 		const { checkA11y, injectAxe, getViolations } = await import("axe-playwright");
         const { CreateReport, createHtmlReport, Options } = await import('axe-html-reporter');
@@ -86,10 +85,7 @@ class A11yHelper extends Helper {
                 results: { violations },
                 options,
             });
-            //testResultDependsOnViolations(violations, skipFailures)
-        } else console.log('There were no violations to save in report')
-
-        //reporterWithOptions = new TerminalReporterV2(axeOptions?.verbose ?? false)
+        }
 
         return violations;
 	}
@@ -99,7 +95,6 @@ class A11yHelper extends Helper {
 	}
 
 	async _failed(test) {
-        console.log("_failed");
 		this._handleArtifacts(test);
 		if (allure) {
 			await this._attachArtifacts(test);
@@ -107,7 +102,7 @@ class A11yHelper extends Helper {
 	}
 
 	async _passed(test) {
-        console.log("_passed");
+        //console.log("_passed");
 	}
 
 	_handleArtifacts(test) {

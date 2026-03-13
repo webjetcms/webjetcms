@@ -4,6 +4,7 @@ const allure = require("allure-js-commons");
 module.exports = {
 
     async check() {
+        //https://allurereport.org/docs/codeceptjs-reference/#tag
         await allure.tags("accessibility");
         let violations = await I.runA11yCheck();
 

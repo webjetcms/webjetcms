@@ -1,6 +1,4 @@
 const { setHeadlessWhen } = require('@codeceptjs/configure');
-const { output } = require('codeceptjs');
-const { devices } = require('playwright');
 
 // turn on headless mode when running with HEADLESS=true environment variable
 // HEADLESS=true npx codecept run

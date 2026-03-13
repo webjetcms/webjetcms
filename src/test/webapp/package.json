@@ -42,7 +42,7 @@
     "scr:current:cs": "CODECEPT_URL='https://iwcm.interway.sk' CODECEPT_LNG=cs CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "ff:scr:current:en": "CODECEPT_URL='https://iwcm.interway.sk' CODECEPT_BROWSER=firefox CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "scr:current:prod:en": "CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
-    "a11y": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}'"
+    "a11y": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' CODECEPT_SHOW=false codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}'"
   },
   "author": "Lubos Balat, InterWay, a. s.",
   "devDependencies": {
