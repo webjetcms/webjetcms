@@ -78,6 +78,14 @@ Update types:
 
 ### 6. Update the CHANGELOG
 
+Find the ticket number from the name of the current git branch:
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+The branch has the format `feature/XXXX-description` or `hotfix/XXXX-description` — the ticket number is `XXXX` (the digits between `/` and the first `-`).
+
 Open the file `/docs/sk/CHANGELOG-2026.md` and find the section `## 2026.0-SNAPSHOT`. Add or append a record in the format:
 
 ```
