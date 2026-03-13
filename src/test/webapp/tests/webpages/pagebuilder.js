@@ -611,6 +611,11 @@ function checkNewPageTemplate(groupId, hasTemplate, I, DT, DTE) {
     DTE.waitForEditor();
 
     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+
+    //verify title and navbar
+    DTE.seeInField("title", "Nová web stránka");
+    DTE.seeInField("navbar", "Nová web stránka");
+
     I.clickCss("#pills-dt-datatableInit-content-tab");
     DTE.waitForCkeditor();
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
