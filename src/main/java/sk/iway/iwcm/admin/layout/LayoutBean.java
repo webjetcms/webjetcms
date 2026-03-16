@@ -115,7 +115,7 @@ public class LayoutBean {
     }
 
     /**
-     * Vrati jazyk v ISO formatu, napr. sk-SK, cz-CS, en-GB
+     * Vrati jazyk v ISO formatu, napr. sk-SK, cs-CZ, en-GB
      * @return
      */
     public String getLngIso() {

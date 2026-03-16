@@ -12,7 +12,7 @@ Scenario('positive scenario', async ({ I, a11y }) => {
     await a11y.check();
 });
 
-Scenario("verify a11y reports not attached to basic bug", async ({ I, a11y }) => {
+Scenario("verify a11y reports not attached to basic bug", async ({ I }) => {
     I.amOnPage("/admin/v9/");
     //I.see("hahaha");
 });
