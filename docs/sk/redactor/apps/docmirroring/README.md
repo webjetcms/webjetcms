@@ -59,13 +59,13 @@ Ak potrebujete namiesto textových odkazov zobraziť vlajky, nastavte parameter 
 
 ## Nastavenie atribútu `hreflang`
 
-Do šablóny stránky môžete ľahko vložiť odkazy na jazykové mutácie pomocou aplikace:
+Do šablóny stránky môžete ľahko vložiť odkazy na jazykové mutácie pomocou aplikácie:
 
 ```html
 !INCLUDE(/components/structuremirroring/hreflang.jsp)!
 ```
 
-táto aplikácia vytvorí odkazy s atribútom `hreflang` pre všetky jazykové mutácie aktuálnej stránky. Ak je stránka v jazykovej mutácii nastavená na nezobrazovat, nebude sa generovať odkaz.
+táto aplikácia vytvorí odkazy s atribútom `hreflang` pre všetky jazykové mutácie aktuálnej stránky. Ak je stránka v jazykovej mutácii nastavená na nezobrazovať, nebude sa generovať odkaz.
 
 Príklad výstupu:
 
