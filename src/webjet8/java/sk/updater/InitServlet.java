@@ -4338,6 +4338,20 @@ public class InitServlet extends HttpServlet
         files.add("/WEB-INF/classes/sk/iway/iwcm/system/struts/UnknownAction.class");
         files.add("/WEB-INF/classes/sk/iway/iwcm/xls/ImportXLSForm.class");
 
+		//16.2.2026 - diff VS v2025.40
+		files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java");
+        files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/payment_methods/rest/PaymentMethod.java");
+		files.add("/components/app-impress_slideshow/editor_component.jsp");
+        files.add("/components/basket/admin_pricelist_import.jsp");
+        files.add("/components/basket/admin_transports_list.jsp");
+        files.add("/components/basket/export_excel.jsp");
+        files.add("/components/basket/import_excel.jsp");
+        files.add("/components/formsimple/editor_component.jsp");
+		files.add("/components/insert_script/editor_component.jsp");
+        files.add("/components/news/editor_component.jsp");
+        files.add("/components/news/editor_component_velocity.jsp");
+        files.add("/components/news/perex_group_not.jsp");
+
 		for (String file : files)
 		{
 			File f = new File(sc.getRealPath(file));
