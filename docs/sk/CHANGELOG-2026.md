@@ -26,6 +26,7 @@
 - Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` integrovaných do CodeceptJS. Testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
 - Zlepšená prístupnosť / opravené WCAG chyby na stránkach:
   - Prihlásenie do administrácie (#58389-2).
+  - Úvod / menu položky / hlavička (#58389-3).
 
 ### Iné menšie zmeny
 
