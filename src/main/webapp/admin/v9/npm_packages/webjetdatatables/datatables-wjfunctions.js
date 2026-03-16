@@ -1049,6 +1049,10 @@ export function updateFilterSelect(DATA, fieldName) {
             //zrus vsetky options
             select.options.length = 0;
             select.add(new Option("", ""));
+
+            //add title attribute to first empty option, because selectpicker show first option as placeholder
+            select.options[0].setAttribute("title", WJ.translate('datatables.select.all.js'));
+
             //pridaj options podla DATA objektu
             for (var index in DATA.columns) {
                 //console.log("index: ", index);
@@ -1149,7 +1153,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
                     </select>
                 </div>`;
             }
-            html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
+            html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" aria-label="${columnTitle}" />
             `;
         }
 

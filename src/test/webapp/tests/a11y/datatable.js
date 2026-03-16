@@ -4,8 +4,14 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('basic datatable @current', async ({ I, a11y }) => {
+Scenario('basic datatable', async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
+    await a11y.check();
+    I.amOnPage("/apps/news/admin/");
+    await a11y.check();
+    I.amOnPage("/admin/v9/users/user-list/");
+    await a11y.check();
+    I.amOnPage("/apps/basket/admin/");
     await a11y.check();
 });
 

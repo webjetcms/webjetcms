@@ -236,7 +236,7 @@
         });
 
         //
-        $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label>[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
+        $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label for="currencySelect">[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
         ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
 
         $("#currencySelect").on("change", function() {
