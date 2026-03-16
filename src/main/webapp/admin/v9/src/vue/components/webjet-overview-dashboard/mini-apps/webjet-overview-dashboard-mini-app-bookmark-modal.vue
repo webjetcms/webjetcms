@@ -47,7 +47,7 @@
                                                     aria-describedby="path-error"
                                                 />
                                             </div>
-                                            <div ref="path-error" id="path-error" class="form-text text-danger small invisible" role="alert" aria-hidden="true">
+                                            <div ref="path-error" id="path-error" class="form-text text-danger small invisible" role="alert">
                                                 {{ this.$WJ.translate('admin.welcome.bookmarks.dialog.requiredField.js') }}
                                             </div>
                                         </div>

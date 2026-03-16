@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('dashboard @current', async ({ I, a11y }) => {
+Scenario('dashboard', async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
     await a11y.check();
 });

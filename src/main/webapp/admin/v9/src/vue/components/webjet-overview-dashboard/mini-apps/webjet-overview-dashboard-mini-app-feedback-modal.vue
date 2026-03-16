@@ -26,7 +26,7 @@
                                                     rows="7"
                                                     aria-describedby="feedback-text-error"
                                                 ></textarea>
-                                                <div ref="text-error" id="feedback-text-error" class="form-text text-danger small invisible" role="alert" aria-hidden="true">
+                                                <div ref="text-error" id="feedback-text-error" class="form-text text-danger small invisible" role="alert">
                                                     {{ this.$WJ.translate('admin.welcome.feedback.dialog.error.js') }}
                                                 </div>
                                             </div>
