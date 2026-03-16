@@ -1,13 +1,13 @@
 <template>
     <div>
-        <div ref="modal" id="feedback_modal" class="modal fade DTED" aria-modal="true" role="dialog">
+        <div ref="modal" id="feedback_modal" class="modal fade DTED" aria-modal="true" role="dialog" aria-labelledby="feedback-modal-title">
             <form @submit.prevent="sendForm()" class="form-horizontal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <h5 class="modal-title">{{ this.$WJ.translate('admin.welcome.feedback.dialog.title.js') }}</h5>
+                                    <h5 class="modal-title" id="feedback-modal-title">{{ this.$WJ.translate('admin.welcome.feedback.dialog.title.js') }}</h5>
                                 </div>
                             </div>
                         </div>
@@ -15,7 +15,7 @@
                             <div class="modal-body-bg">
                                 <div class="from-content">
                                     <div class="DTE_Field form-group row required">
-                                        <label class="col-sm-4 col-form-label">{{ this.$WJ.translate('admin.welcome.feedback.dialog.feedback_text.js') }} </label>
+                                        <label class="col-sm-4 col-form-label" for="feedback-group-text">{{ this.$WJ.translate('admin.welcome.feedback.dialog.feedback_text.js') }} </label>
                                         <div class="col-sm-7">
                                             <div class="DTE_Field_InputControl">
                                                 <textarea
@@ -24,8 +24,9 @@
                                                     id="feedback-group-text"
                                                     cols="30"
                                                     rows="7"
+                                                    aria-describedby="feedback-text-error"
                                                 ></textarea>
-                                                <div ref="text-error" class="form-text text-danger small invisible">
+                                                <div ref="text-error" id="feedback-text-error" class="form-text text-danger small invisible" role="alert" aria-hidden="true">
                                                     {{ this.$WJ.translate('admin.welcome.feedback.dialog.error.js') }}
                                                 </div>
                                             </div>
@@ -42,6 +43,7 @@
                                                         class="fa-progress-bar float-end"
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         viewBox="-1 -1 34 34"
+                                                        aria-hidden="true"
                                                     >
                                                         <circle
                                                             cx="16"
@@ -61,16 +63,17 @@
                                                 <div id="toast-container-upload"></div>
                                             </div>
                                             <div id="upload-toastr-template" style="display: none">
-                                                <i class="ti ti-polaroid"></i>
+                                                <i class="ti ti-polaroid" aria-hidden="true"></i>
                                                 <span>{FILE_NAME}</span>
-                                                <i class="ti ti-circle-check float-end"></i>
-                                                <i class="ti ti-alert-triangle float-end"></i>
-                                                <i class="ti ti-loader-2 ti-spin float-end"></i>
-                                                <i class="ti ti-alert-circle float-end"></i>
+                                                <i class="ti ti-circle-check float-end" aria-hidden="true"></i>
+                                                <i class="ti ti-alert-triangle float-end" aria-hidden="true"></i>
+                                                <i class="ti ti-loader-2 ti-spin float-end" aria-hidden="true"></i>
+                                                <i class="ti ti-alert-circle float-end" aria-hidden="true"></i>
                                                 <svg
                                                     class="fa-progress-bar float-end"
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="-1 -1 34 34"
+                                                    aria-hidden="true"
                                                 >
                                                     <circle
                                                         cx="16"
@@ -112,7 +115,7 @@
                             <div class="DTE_Form_Buttons">
                                 <span class="buttons-footer-left">
                                     <button type="button" class="btn btn-link" @click="$WJ.showHelpWindow()">
-                                        <i class="ti ti-help me-1"></i>{{ this.$WJ.translate('button.help') }}
+                                        <i class="ti ti-help me-1" aria-hidden="true"></i>{{ this.$WJ.translate('button.help') }}
                                     </button>
                                 </span>
                                 <button
@@ -120,15 +123,16 @@
                                     type="button"
                                     class="btn btn-outline-secondary btn-close-editor"
                                 >
-                                    <i class="ti ti-x"></i> {{ this.$WJ.translate('button.cancel') }}
+                                    <i class="ti ti-x" aria-hidden="true"></i> {{ this.$WJ.translate('button.cancel') }}
                                 </button>
                                 <button
                                     :class="{ disabled: feedbackSubmitDisabled }"
+                                    :disabled="feedbackSubmitDisabled"
                                     type="submit"
                                     class="btn btn-primary"
                                     tabindex="0"
                                 >
-                                    <i class="ti ti-check"></i> {{ this.$WJ.translate('button.send') }}
+                                    <i class="ti ti-check" aria-hidden="true"></i> {{ this.$WJ.translate('button.send') }}
                                 </button>
                             </div>
                         </div>

@@ -2,7 +2,13 @@
 
 rm -rf ../../../build/test/
 rm -rf ../../../build/test-results/
-npm run a11y
+if [ "$1" = "current" ]; then
+  npm run a11y:current
+elif [ "$1" = "pause" ]; then
+  npm run a11y:pause
+else
+  npm run a11y
+fi
 
 echo "Setting categories"
 cp allure/categories.json ../../../build/test/allure-results

@@ -318,7 +318,7 @@ div.tabbable-custom ul.nav-tabs li.active a {
     background-color: transparent;
 }
 
-div.menu-wrapper a:hover, div.menu-wrapper a:focus {
+div.menu-wrapper a:hover, div.menu-wrapper a:focus, nav.menu-wrapper a:hover, nav.menu-wrapper a:focus {
     text-decoration: none;
 }
 .tabbable-custom.tabbable-full-width>.tab-content {

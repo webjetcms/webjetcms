@@ -483,7 +483,7 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshotElement("div.ly-header", "/redactor/admin/header-logoff.png");
 
     Document.screenshotElement("div.md-large-menu", "/redactor/admin/menu-main-sections.png");
-    Document.screenshotElement("div.menu-wrapper", "/redactor/admin/menu-items.png");
+    Document.screenshotElement("nav.menu-wrapper", "/redactor/admin/menu-items.png");
 
     Document.screenshotElement("div.js-domain-toggler", "/redactor/admin/domain-selector.png");
 

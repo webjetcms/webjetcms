@@ -88,6 +88,8 @@
     "chat.tools.terminal.autoApprove": {
         "./gradlew": true,
         "git rev-parse": true,
-        "git merge-base": true
+        "git merge-base": true,
+        "uniq": true,
+        "awk": true
     }
 }
