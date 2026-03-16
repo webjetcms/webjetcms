@@ -15,16 +15,17 @@ Scenario('basic datatable', async ({ I, a11y }) => {
     await a11y.check();
 });
 
-Scenario('filter', async ({ I, a11y }) => {
+Scenario('filter', async ({ I, DT, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     DT.filterContains("tempName", "page");
     await a11y.check();
 });
 
-Scenario('editor - with error messages', async ({ I, DT, DTE, a11y }) => {
+Scenario('editor - with error messages @current', async ({ I, DT, DTE, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
+    //save empty form to trigger error messages
     DTE.save();
     I.pressKey("Escape");
     await a11y.check();

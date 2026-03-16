@@ -245,7 +245,7 @@ export const dataTableInit = options => {
         multipleSeparator: " + "
     };
 
-    const DIALOG_BUTTONS = '<div class="dialog-buttons"><span class="show-help" onclick="WJ.showHelpWindow()"><i class="ti ti-help" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"></i></span><span class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i></span><span class="minimize"><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></span></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button class="btn btn-outline-secondary maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button class="btn btn-outline-secondary minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
