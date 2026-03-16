@@ -13,6 +13,10 @@ Scenario('logon form', async ({ I, a11y }) => {
     await a11y.check();
 });
 
+Scenario("wrong password wait", async ({ I }) => {
+    //wait 11 seconds to wrong password timeout
+    I.wait(11);
+});
 
 Scenario('send password', async ({ I, a11y }) => {
     I.amOnPage('/admin/');
