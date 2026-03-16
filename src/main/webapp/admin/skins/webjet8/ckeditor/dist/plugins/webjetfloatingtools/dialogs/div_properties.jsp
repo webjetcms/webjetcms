@@ -126,8 +126,7 @@ function getData()
 		})
 	});
 
-	//console.log("GET data");
-	//console.log(result);
+	//console.log("GET data, result=", result);
 
 	return result;
 }
@@ -135,7 +134,6 @@ function getData()
 function setData(arr)
 {
 	//console.log("Set data, arr=", arr);
-	//console.log(arr);
 
 	$.each(arr, function(i, v) {
 		var tab = $('#tab' + (i + 1));
@@ -158,22 +156,18 @@ function setData(arr)
 
 		if (typeof v.width != 'undefined' && v.width != '') {
 			tab.find('.widthOwn').prop('checked', true);
-			$.uniform.update();
 			tab.find('.width').val(v.width);
 		}
 		else {
 			tab.find('.widthOwn').prop('checked', false);
-			$.uniform.update();
 		}
 
 		if (typeof v.height != 'undefined' && v.height != '') {
 			tab.find('.heightOwn').prop('checked', true);
-			$.uniform.update();
 			tab.find('.height').val(v.height);
 		}
 		else {
 			tab.find('.heightOwn').prop('checked', false);
-			$.uniform.update();
 		}
 
 		widthHeightOwnChanged();
@@ -318,7 +312,7 @@ div.div-properties-item { border-bottom:2px solid blue; margin-bottom: 10px; }
 
 					    	<br/>
 					    	<div style="text-align: right">
-					    		<a href="#div-properties-advanced${i}" data-toggle="collapse"><iwcm:text key="editor.div_properties.advanced"/></a>
+					    		<a href="#div-properties-advanced${i}" data-bs-toggle="collapse"><iwcm:text key="editor.div_properties.advanced"/></a>
 					    	</div>
 					  	</div>
 				  	</div>
