@@ -21,9 +21,11 @@
 - Pridané zobrazenie hodnoty **Globálne Id** pre dokumenty (#58357).
 - Pridaná možnosť zvoliť dokumenty k zobrazeniu v aplikácii pomocou ich `globalId` hodnoty vo vnorenej tabuľke, viac v časti [Karta - Vybrané dokumenty](redactor/files/file-archive/file-archive-app.md#karta---vybrané-dokumenty) (#58357).
 
-### Testovanie
+### Prístupnosť
 
 - Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` integrovaných do CodeceptJS. Testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
+- Zlepšená prístupnosť / opravené WCAG chyby na stránkach:
+  - Prihlásenie do administrácie (#58389-2).
 
 ### Iné menšie zmeny
 
@@ -51,6 +53,7 @@
 
 ### Pre programátora
 
+- AI - nový `AI skill` pre opravu A11Y/WCAG chýb, stačí použiť nástroj `/wj-accessibility`.
 - Aktualizované závislosti na minimálne požiadavky pre Tomcat 11 (Tomcat 10 už nie je podporovaný). `Stripes` validácie - upravené vykonávanie EL výrazov z odstráneného `jakarta.servlet.jsp.el` na `jakarta.el` kvôli kompatibilite s `jakarta.servlet.jsp-api:4.0.0` (#58385).
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
 - Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí serializovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).

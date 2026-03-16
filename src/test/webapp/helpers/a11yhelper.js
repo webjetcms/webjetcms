@@ -99,10 +99,12 @@ class A11yHelper extends Helper {
 		if (allure) {
 			await this._attachArtifacts(test);
 		}
+		this._cleanup();
 	}
 
 	async _passed(test) {
         //console.log("_passed");
+		this._cleanup();
 	}
 
 	_handleArtifacts(test) {
@@ -128,6 +130,10 @@ class A11yHelper extends Helper {
 				}
 			}
 		}
+	}
+
+	_cleanup() {
+		fileName = null;
 	}
 }
 
