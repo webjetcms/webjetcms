@@ -2034,13 +2034,16 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true"/>
+                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true" aria-label="${WJ.translate('datatables.button.celledit.js')}" />
                         <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
                 className: 'custom-control form-switch buttons-select-cel',
                 attr: {
-                    title: WJ.translate('datatables.button.celledit.js'),
+                    title: "",
+                    "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
-                    "data-dtbtn": "celledit"
+                    "data-dtbtn": "celledit",
+                    "aria-label": "",
+                    "aria-controls": ""
                 },
                 action: function (e, node, el) {
                     //console.log("action, el=", el, "disbled=", $(el).hasClass("is-disabled"));

@@ -793,7 +793,7 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
             var headline = DATA.columns[dataIndex].title;
 
             if ($('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-dt-column="' + inputIndex + '"]').length < 1) {
-                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[dataIndex].data + '" data-dt-column="' + inputIndex + '"><span  class="dt-filter-labels__link__headline">' + headline + '</span><i class="ti ti-x" style="font-size: 0.9rem"></i></a>');
+                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[dataIndex].data + '" data-dt-column="' + inputIndex + '" aria-label="' + WJ.translate('datatables.filter.remove.js') + ' ' + WJ.htmlToText(headline) + '"><span class="dt-filter-labels__link__headline" aria-hidden="true">' + headline + '</span><i class="ti ti-x" style="font-size: 0.9rem" aria-hidden="true"></i></a>');
             }
 
             $('#' + DATA.id + '_wrapper th[data-dt-column="' + inputIndex + '"]').addClass("has-filter-active");
@@ -1106,6 +1106,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         var i = $(this).attr("data-dt-column");
         if (typeof i === "undefined" || i === null) i = index;
         var fieldName = DATA.columns[i].data;
+        var columnTitle = WJ.htmlToText(DATA.columns[i].title || '');
 
         //console.log("Iterating, i=", i, "fieldName=", fieldName, " col=", DATA.columns[i], "this=", this);
 
@@ -1114,14 +1115,14 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
                 <div class="input-group" data-filter-type="text">`;
         var inputGroupAfter = `
 
-                        <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-${fieldName}" type="submit">
-                            <i class="ti ti-search"></i>
+                        <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-${fieldName}" type="submit" aria-label="${WJ.translate('datatables.button.filter.js')} ${columnTitle}">
+                            <i class="ti ti-search" aria-hidden="true"></i>
                         </button>
 
                 </div>
             </form>`;
         var html = `
-                <select class="filter-input-prepend">
+                <select class="filter-input-prepend" aria-label="${WJ.translate('datatables.select.type.js')}">
                     <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
                     <option value="startwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
                     <option value="endwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
@@ -1134,12 +1135,12 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         }*/
         html += `
                 </select>
-                <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" />`;
+                <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" aria-label="${columnTitle}" />`;
 
         if ($(this).hasClass("dt-format-selector")) {
             html = `
-            <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
-                <i class="ti ti-square-check"></i>
+            <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}" aria-label="${WJ.translate('datatables.button.select_all.js')}">
+                <i class="ti ti-square-check" aria-hidden="true"></i>
             </button>`;
             if (DATA.serverSide === false) {
                 html += `<div style="display: none">
@@ -1155,7 +1156,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         if ($(this).hasClass("dt-format-boolean-true") || $(this).hasClass("dt-format-boolean-yes") || $(this).hasClass("dt-format-boolean-one")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="boolean">';
             html = `
-            <select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">
+            <select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}" aria-label="${columnTitle}">
                 <option value="">${WJ.translate('datatables.select.all.js')}</option>
                 <option value="true">${WJ.translate('button.yes')}</option>
                 <option value="false">${WJ.translate('button.no')}</option>
@@ -1166,15 +1167,15 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         if ($(this).hasClass("dt-format-number") || $(this).hasClass("dt-format-percentage")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="number">';
             html = `
-            <input class="min filter-input form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="max filter-input form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="min filter-input form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max filter-input form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-number--decimal") || $(this).hasClass("dt-format-percentage--decimal") || $(this).hasClass("dt-format-number--text")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="number-decimal">';
             html = `
-            <input class="min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-date") || $(this).hasClass("dt-format-date-time") || $(this).hasClass("dt-format-date--text")
@@ -1199,8 +1200,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
 
 
             html = `
-            <input class="${dateFormat} min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-            <input class="${dateFormat} max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+            <input class="${dateFormat} min form-control filter-input form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.from.js')}"/>
+            <input class="${dateFormat} max form-control filter-input form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}" aria-label="${columnTitle} ${WJ.translate('datatables.input.to.js')}"/>`;
         }
 
         if ($(this).hasClass("dt-format-none")) {
@@ -1211,7 +1212,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
 
         if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
-            html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">`;
+            html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}" aria-label="${columnTitle}">`;
             //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu
             let options = DATA.columns[i].editor.options;
             //console.log("Options=", options);
@@ -1234,8 +1235,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         } else {
             if ($(this).hasClass("dt-format-selector")) {
                 html = `
-                <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
-                    <i class="ti ti-square-check"></i>
+                <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}" aria-label="${WJ.translate('datatables.button.select_all.js')}">
+                    <i class="ti ti-square-check" aria-hidden="true"></i>
                 </button>
                 `;
                 $(this).html(inputGroupBefore + html + "</div></form>");

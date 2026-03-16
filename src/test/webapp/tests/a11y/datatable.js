@@ -4,8 +4,14 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('basic datatable', async ({ I, a11y }) => {
+Scenario('basic datatable @current', async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
+    await a11y.check();
+});
+
+Scenario('filter', async ({ I, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.filterContains("tempName", "page");
     await a11y.check();
 });
 
