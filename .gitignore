@@ -73,3 +73,6 @@ src/main/webapp/templates/el*
 
 # Licensed DT Editor
 src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
+
+# Test agents
+.agents/skills/i-*

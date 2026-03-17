@@ -103,7 +103,7 @@ public class MirroringService {
     public List<LabelValue> getStatusIconOptions (Prop prop) {
         List<LabelValue> icons = new ArrayList<>();
 
-        icons.add(new LabelValue("<i class=\"ti ti-exclamation-circle\" style=\"color: #ff4b58;\"></i> " + prop.getText("components.mirroring.multiple_mapping_err"), "multipleErr:true"));
+        icons.add(new LabelValue("<i class=\"ti ti-exclamation-circle\" style=\"color: #E00028;\"></i> " + prop.getText("components.mirroring.multiple_mapping_err"), "multipleErr:true"));
         icons.add(new LabelValue("<i class=\"ti ti-alert-triangle\" style=\"color: #fabd00;\"></i> " + prop.getText("components.mirroring.uneven_nesting_err"), "nestingWarn:true"));
 
         return icons;

@@ -1637,7 +1637,7 @@ table.table.dataTable > tbody > tr.selected a {
     color: white;
 }
 table.table.dataTable > tbody > tr.selected.is-not-public a {
-    color: #FF4B58;
+    color: $danger;
 }
 
 //inner datatable in editor

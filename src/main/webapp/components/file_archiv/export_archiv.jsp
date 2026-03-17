@@ -131,12 +131,12 @@
                     else out.print("<span> <b>" + mainStr + "</b> : " + fBean.getVirtualPath() +"</span>");
                 } else {
                     // AWAITING UPLOAD
-                    if(Tools.isNotEmpty(fBean.getReferenceToMain())) out.print("<span style='color: #ff4b58 !important;'> <b>" + mainStrAwaiting + patternStr + "</b> : " + fBean.getVirtualPath() +"</span>");
-                    else out.print("<span style='color: #ff4b58 !important;'> <b>" + mainStrAwaiting + "</b> : " + fBean.getVirtualPath() +"</span>");
+                    if(Tools.isNotEmpty(fBean.getReferenceToMain())) out.print("<span style='color: #E00028 !important;'> <b>" + mainStrAwaiting + patternStr + "</b> : " + fBean.getVirtualPath() +"</span>");
+                    else out.print("<span style='color: #E00028 !important;'> <b>" + mainStrAwaiting + "</b> : " + fBean.getVirtualPath() +"</span>");
                 }
             } else {
                 if(fBean.getDateUploadLater() != null && fBean.getDateUploadLater().after(new Date(Tools.getNow())))
-                    out.print("<span style='color: #ff4b58 !important;'> - " + waitingStr + " : " + fBean.getVirtualPath() +"</span>");
+                    out.print("<span style='color: #E00028 !important;'> - " + waitingStr + " : " + fBean.getVirtualPath() +"</span>");
                 else
                     out.print("<span> - " + historyStr + " : " + fBean.getVirtualPath() +"</span>");
             }

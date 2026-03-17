@@ -1496,7 +1496,7 @@ export const dataTableInit = options => {
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
-                        tabsHtml += '<li class="nav-item' + classNameAppend + '">';
+                        tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
                         tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
