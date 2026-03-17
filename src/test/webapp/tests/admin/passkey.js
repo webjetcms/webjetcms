@@ -4,6 +4,9 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+// to test with invalid SSL/TLS certificate run chrome with --ignore-certificate-errors
+// /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors
+
 Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
 
     I.clickCss("#dropdownMenuUser");

@@ -28,6 +28,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
@@ -486,9 +487,23 @@ public class AdminLogonController {
      */
     private static void setSessionGroup(int groupId, HttpSession session)
     {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        GroupDetails root = groupsDB.getGroup(groupId);
+        if (InitServlet.isTypeCloud()) {
+            //for multiweb verify domain match
+            GroupDetails domainGroup = groupsDB.getGroup(CloudToolsForCore.getDomainId());
+            if (domainGroup == null) {
+                Logger.error(AdminLogonController.class, "Domain group not found for domain id: " + CloudToolsForCore.getDomainId());
+                return;
+            }
+            if (root == null || root.getDomainName().equals(domainGroup.getDomainName()) == false) {
+                root = domainGroup;
+                groupId = domainGroup.getGroupId();
+            }
+        }
+
         session.setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
-        GroupDetails root = GroupsDB.getInstance().getGroup(groupId);
         if (root != null && Tools.isNotEmpty(root.getDomainName()))
         {
             session.setAttribute("preview.editorDomainName", root.getDomainName());
