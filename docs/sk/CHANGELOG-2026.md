@@ -75,13 +75,14 @@
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
+- Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
 - Prieskumník - opravené nahrávanie viacerých súborov cez drag & drop (#58317-2).
 - Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).
 - Webové stránky - Page Builder - pri vytvorení novej stránky sa použije hodnota nastavená v poli HTML kód novej stránky priečinka. Stránka teda nemusí byť prázdna, ale môže obsahovať pripravené bloky (#osk378).
 - Webové stránky - Nastavenie bloku - opravené nastavenie pozadí a pokročilých nastavení (#TB2456).
-- Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii.
-- Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami.
+- Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii (#58317-03).
+- Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
 - Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 
 ## 2026.0
