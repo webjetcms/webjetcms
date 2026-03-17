@@ -1,48 +1,43 @@
-# Responsible Vulnerability Disclosure
+# Responsible Vulnerability Reporting
 
-We take the security of WebJET CMS seriously. If you have discovered a security vulnerability, please report it responsibly to allow us to fix it before it is publicly disclosed.
+We take the security of WebJET CMS very seriously. If you have discovered a security vulnerability, we ask that you report it responsibly and allow us to fix it before it is made public.
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+**Please do not report security vulnerabilities via public GitHub issues.**
 
-## How to Report a Vulnerability
+## How to report a vulnerability
 
-Report security vulnerabilities using our responsible disclosure form:
+Report security vulnerabilities via our responsible reporting form:
 
-**[Responsible Vulnerability Disclosure](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)**
+**[Responsible Vulnerability Reporting](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/) **
 
-## What to Include
+or send an email to `zranitelnosti@interway.sk`, you can use the PGP key `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`.
+
+## What to include in the report
 
 When reporting a vulnerability, please include:
 
-- Type of vulnerability (e.g. SQL injection, XSS, authentication bypass)
-- Full paths of source file(s) related to the vulnerability
+- Vulnerability type (e.g. SQL injection, XSS, authentication bypass)
+- Paths to files related to the vulnerability
 - Location of the affected source code (tag/branch/commit or direct URL)
-- Step-by-step instructions to reproduce the issue
-- Proof-of-concept or exploit code (if possible)
-- Impact of the vulnerability and how an attacker could exploit it
+- Steps to reproduce the problem
+- `Proof-of-concept` or `exploit` code (if possible)
+- The impact of the vulnerability and how an attacker could exploit it
 
-## What to Expect
+## What to expect
 
-- We will acknowledge receipt of your report
-- We will investigate and work to confirm the issue
-- We will release a fix as soon as possible depending on complexity
-- We will notify you when the vulnerability has been fixed
+- We will confirm receipt of your report.
+- We will check and confirm the problem.
+- We will fix the vulnerability as soon as possible depending on its complexity
+- We will notify you when the vulnerability is fixed
 
-## GitHub Setup
+## Supported versions
 
-GitHub allows you to configure a repository security policy. The `.github/SECURITY.md` file is displayed on the **Security** tab of the repository and GitHub automatically links to this file when issues are reported. We recommend:
+We provide security updates for the latest stable release of WebJET CMS. We recommend always using the latest version.
 
-1. Verifying that the `.github/SECURITY.md` file is present in the repository.
-2. In GitHub, go to **Settings → Code security and analysis** and enable **Private vulnerability reporting** to allow private reporting of vulnerabilities directly through GitHub.
+## Safety documentation
 
-## Supported Versions
+For more information about security configuration and `hardening` WebJET CMS, see:
 
-We provide security updates for the latest stable release of WebJET CMS. We recommend always running the latest version.
-
-## Security Documentation
-
-For more information about security configuration and hardening of WebJET CMS, see:
-
-- [Safety tests](/sysadmin/pentests/README.md)
-- [Vulnerability scanning of libraries](/sysadmin/dependency-check/README.md)
-- [WebJET update](/sysadmin/update/README.md)
+- [Security Tests](../pentests/README.md)
+- [Library Vulnerability Check](../dependency-check/README.md)
+- [WebJET Update](../update/README.md)

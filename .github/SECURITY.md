@@ -12,6 +12,8 @@ Report security vulnerabilities using our responsible disclosure form:
 
 **[Zodpovedné oznamovanie zraniteľností / Responsible Vulnerability Disclosure](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)**
 
+Or send email to: `zranitelnosti@interway.sk` with PGP key `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`.
+
 ### What to Include
 
 When reporting a vulnerability, please include:
@@ -38,6 +40,6 @@ We provide security updates for the latest stable release of WebJET CMS. We reco
 
 For more information about security configuration and hardening of WebJET CMS, see:
 
-- [Security documentation (SK)](https://docs.webjetcms.sk/sk/#/sysadmin/responsible-disclosure/README)
-- [Penetration testing guide](https://docs.webjetcms.sk/en/#/sysadmin/pentests/README)
-- [Vulnerability scanning of libraries](https://docs.webjetcms.sk/en/#/sysadmin/dependency-check/README)
+- [Security documentation](../docs/en/sysadmin/responsible-disclosure/README)
+- [Penetration testing guide](../docs/en/sysadmin/pentests/README)
+- [Vulnerability scanning of libraries](../docs/en/sysadmin/dependency-check/README)
