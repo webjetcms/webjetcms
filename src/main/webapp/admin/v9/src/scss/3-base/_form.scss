@@ -38,6 +38,10 @@ textarea {}
     background-color: $purple !important;
     border-color: $purple !important;
 }
+.btn-danger {
+    background-color: $danger-btn-bg !important;
+    border-color: $danger-btn-bg !important;
+}
 
 .btn-outline-secondary {
     border-color: $input-border-color;
