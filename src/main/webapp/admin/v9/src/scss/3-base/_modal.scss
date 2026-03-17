@@ -89,7 +89,7 @@ body.modal-open {
                 padding: 0px;
                 h5 {
                     font-size: 15px;
-                    color: #646979;
+                    color: $dark-60;
                     font-weight: 700;
                 }
             }
@@ -387,7 +387,7 @@ body.modal-open {
             padding:0;
         }
 
-        button.close, div.dialog-buttons span {
+        button.close, div.dialog-buttons button {
             display: inline-block;
             cursor: pointer;
             color: $nice-gray-300;
@@ -405,8 +405,11 @@ body.modal-open {
             }
 
             &:hover {
-                color: $nice-black;
-                background-color: $nice-gray-300;
+                color: $white;
+                background-color: $secondary;
+                .ti {
+                    color: $white;
+                }
             }
         }
         button.close, div.dialog-buttons {
@@ -439,7 +442,7 @@ body.modal-open {
                 max-width: $modal-xl;
             }
 
-            div.dialog-buttons span.minimize {
+            div.dialog-buttons button.minimize {
                 display: none;
             }
 
@@ -985,10 +988,10 @@ html.in-iframe .modal.DTED .modal-dialog {
     }
 
     div.dialog-buttons {
-        span.maximize {
+        button.maximize {
             display: none;
         }
-        span.minimize {
+        button.minimize {
             display: inline-block;
         }
     }

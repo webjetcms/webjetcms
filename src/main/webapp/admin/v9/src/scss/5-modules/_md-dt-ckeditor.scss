@@ -11,7 +11,7 @@
         font-weight: 400;
         padding: 6px 12px !important;
         background-color: white;
-        border: 1px solid #868EA5;
+        border: 1px solid $nice-gray-300;
         border-radius: 6px !important;
         transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         width: auto;
@@ -21,7 +21,7 @@
         box-shadow: none;
         background-image: none;
         span {
-            color: #13151B;
+            color: $secondary;
             font-size: 16px;
             padding: 0px !important;
             background-color: transparent;
@@ -30,7 +30,7 @@
             border: 0px;
         }
         &:hover {
-            background-color: #13151b;
+            background-color: $secondary;
             background-image: none;
             span {
                 color: white;
@@ -57,8 +57,8 @@
 table.cke_dialog {
     div.cke_dialog_title {
         background-image: none !important;
-        background-color: #F3F3F6;
-        color: #13151B;
+        background-color: $nice-gray;
+        color: $secondary;
         border-bottom: 0px solid #dee2e6;
         font-family: "Asap", sans-serif;
         font-size: 18px;
@@ -68,7 +68,7 @@ table.cke_dialog {
         padding-left: 15px;
     }
     .cke_dialog_body {
-        background-color: #F3F3F6;
+        background-color: $nice-gray;
 
         .cke_dialog_contents {
             background-color: white;
@@ -76,7 +76,7 @@ table.cke_dialog {
 
         .cke_dialog_close_button {
             background: none !important;
-            border: 1px solid #868EA5;
+            border: 1px solid $nice-gray-300;
             border-radius: 6px;
             padding: 5px 5px 3px 5px;
             right: 16px;
@@ -88,7 +88,7 @@ table.cke_dialog {
 
                 &::before {
                     font-family: 'tabler-icons-filled';
-                    color: #13151B;
+                    color: $secondary;
                     content: $ti-icon-x;
                     font-size: 18px;
                     cursor: pointer;
@@ -97,7 +97,7 @@ table.cke_dialog {
         }
     }
     div.cke_dialog_tabs {
-        background-color: #F3F3F6;
+        background-color: $nice-gray;
         margin-top: 0px;
         height: auto;
         min-height: 31px;
@@ -106,7 +106,7 @@ table.cke_dialog {
     }
     div.cke_dialog_tabs a {
         font-family: "Asap", sans-serif;
-        color: #646979;
+        color: $dark-60;
         padding: 6px 0px 12px 0px;
         margin-right: 16px;
         font-size: 15px;
@@ -114,12 +114,12 @@ table.cke_dialog {
 
         &.cke_dialog_tab_selected {
             margin-top: 0px;
-            border-top-color: #F3F3F6;
-            color: #0063FB;
-            border-bottom-color: #0063FB;
+            border-top-color: $nice-gray;
+            color: $primary;
+            border-bottom-color: $primary;
         }
         &:hover {
-            color: #0063FB;
+            color: $primary;
         }
     }
     table.cke_dialog_contents {
@@ -136,7 +136,7 @@ table.cke_dialog.cke_single_page table.cke_dialog_contents {
 
 .cke_dialog_contents_body {
     background-color: #fff !important;
-    border-top: 1px solid #DDDFE6 !important;
+    border-top: 1px solid $nice-gray-100 !important;
 
     .cke_dialog_ui_vbox.cke_dialog_page_contents {
         min-height: auto !important;
@@ -158,10 +158,10 @@ td.cke_dialog_ui_vbox_child {
             font-size: 16px;
             font-weight: 400;
             line-height: 1.5;
-            color: #23262E;
+            color: $input-color;
             background-color: #fff;
             background-clip: padding-box;
-            border: 1px solid #868EA5;
+            border: 1px solid $nice-gray-300;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -181,10 +181,10 @@ td.cke_dialog_ui_vbox_child {
         font-size: 1rem;
         font-weight: 400;
         line-height: 1.5;
-        color: #23262E;
+        color: $input-color;
         background-color: #fff;
         background-clip: padding-box;
-        border: 1px solid #868EA5;
+        border: 1px solid $nice-gray-300;
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
@@ -229,15 +229,15 @@ td.cke_dialog_ui_vbox_child {
                     text-align: right;
                     white-space: nowrap;
                     display: inline-flex;
-                    border-color: #868EA5;
+                    border-color: $nice-gray-300;
                     font-family: "Asap", sans-serif;
                     font-size: 16px;
                     font-weight: 400;
                     line-height: 1.5;
-                    color: #23262E;
+                    color: $input-color;
                     background-color: #fff;
                     background-clip: padding-box;
-                    border: 1px solid #868EA5;
+                    border: 1px solid $nice-gray-300;
                     border-radius: 6px;
                 }
             }
@@ -269,7 +269,7 @@ table.urlFormTable {
 }
 
 div.cke_dialog_ui_labeled_content_append {
-    border: 1px solid #868EA5;
+    border: 1px solid $nice-gray-300;
     border-radius: 6px;
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
@@ -286,7 +286,7 @@ div.cke_dialog_ui_labeled_content_append {
         }
     }
     &:hover {
-        background-color: #13151B;
+        background-color: $secondary;
         .cke_dialog_ui_input_text {
             i.ti {
                 color: white;
@@ -298,6 +298,6 @@ div.wj-picture-url-input {
     .cke_dialog_ui_input_text {
         border-top-right-radius: 0px !important;
         border-bottom-right-radius: 0px !important;
-        background-color: #f3f3f6 !important;
+        background-color: $nice-gray !important;
     }
 }

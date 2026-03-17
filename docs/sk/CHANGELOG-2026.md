@@ -27,6 +27,8 @@
 - Zlepšená prístupnosť / opravené WCAG chyby na stránkach:
   - Prihlásenie do administrácie (#58389-2).
   - Úvod / menu položky / hlavička (#58389-3).
+  - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
+  - Dátové tabuľky, editor (#58389-4).
 
 ### Iné menšie zmeny
 

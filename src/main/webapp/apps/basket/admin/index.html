@@ -236,7 +236,7 @@
         });
 
         //
-        $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label>[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
+        $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label for="currencySelect">[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
         ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
 
         $("#currencySelect").on("change", function() {
@@ -283,9 +283,9 @@
                         let diff = priceToPayVAT - payedPrice;
                         if(diff < 0) {
                             diff = Math.abs(diff);
-                            bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.overpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                            bonusText = " (<span style='color: #E00028;'>" + WJ.translate('components.basket.invoice.payments.overpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
                         } else if(diff > 0) {
-                            bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.underpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                            bonusText = " (<span style='color: #E00028;'>" + WJ.translate('components.basket.invoice.payments.underpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
                         } else {
                             //nothing - all payed good
                         }
@@ -331,7 +331,7 @@
 
 <style>
     table.datatableInit tbody tr.payment-not-confirmed td {
-        color: #FF4B58;
+        color: #E00028;
     }
     #currencySelect_wrapper {
         width: 120px;
