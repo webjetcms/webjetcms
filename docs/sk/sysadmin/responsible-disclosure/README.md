@@ -6,11 +6,11 @@ Bezpečnosť WebJET CMS berieme veľmi vážne. Ak ste objavili bezpečnostnú z
 
 ## Ako nahlásiť zraniteľnosť
 
-Bezpečnostné zraniteľnosti nahláste prostredníctvom nášho formulára pre zodpovedné oznamovanie:
+Bezpečnostné zraniteľnosti môžete nahlásiť cez:
 
-**[Zodpovedné oznamovanie zraniteľností](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)**
-
-alebo pošlite email na `zranitelnosti@interway.sk`, môžete použiť PGP kľúč `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`.
+- formulár na našej web stránke [Zodpovedné oznamovanie zraniteľností](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)
+- emailom na adresu `zranitelnosti@interway.sk`, môžete použiť PGP kľúč `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`
+- cez [GitHub Report a vulnerability](https://github.com/webjetcms/webjetcms/security)
 
 ## Čo uviesť v hlásení
 

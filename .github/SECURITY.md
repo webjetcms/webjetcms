@@ -8,11 +8,11 @@ We take security vulnerabilities seriously. If you discover a security vulnerabi
 
 ### How to Report
 
-Report security vulnerabilities using our responsible disclosure form:
+You can report security vulnerabilities via:
 
-**[Zodpovedné oznamovanie zraniteľností / Responsible Vulnerability Disclosure](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)**
-
-Or send email to: `zranitelnosti@interway.sk` with PGP key `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`.
+- form on our website [Responsible Vulnerability Reporting](https://www.interway.sk/sluzby-riesenia/zodpovedne-oznamovanie-zranitelnosti/)
+- by email to the address `zranitelnosti@interway.sk`, you can use the PGP key `38F5F695642A7A1C73AF6C7E90DC0AF8975E50AD`
+- via [GitHub Report a vulnerability](https://github.com/webjetcms/webjetcms/security)
 
 ### What to Include
 
