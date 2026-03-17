@@ -2038,7 +2038,7 @@ export const dataTableInit = options => {
                         <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
                 className: 'custom-control form-switch buttons-select-cel',
                 attr: {
-                    title: "",
+                    title: "", //set to empty because arua is on input checkbox
                     "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
                     "data-dtbtn": "celledit",

@@ -8,7 +8,7 @@ Scenario('basic datatable', async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     //mark first row as selected to reveal buttons
     I.forceClick(".dt-scroll-body tbody tr:nth-child(1) td.dt-select-td");
-    I.wait(1);
+    I.waitForElement(".dt-buttons button.btn-danger:not(.disabled)", 5);
 
     await a11y.check();
     I.amOnPage("/apps/news/admin/");
