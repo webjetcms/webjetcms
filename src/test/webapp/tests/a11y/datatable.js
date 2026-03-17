@@ -21,7 +21,7 @@ Scenario('filter', async ({ I, DT, a11y }) => {
     await a11y.check();
 });
 
-Scenario('editor - with error messages @current', async ({ I, DT, DTE, a11y }) => {
+Scenario('editor - with error messages', async ({ I, DT, DTE, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
