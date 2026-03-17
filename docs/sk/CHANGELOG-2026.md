@@ -37,6 +37,7 @@
 
 ### Bezpečnosť
 
+- Pridaný súbor `.github/SECURITY.md` so [zodpovedným oznamovaním zraniteľností](sysadmin/responsible-disclosure/README.md) a odkazom na formulár na nahlásenie zraniteľnosti. V GitHub nastaveniach (`Settings → Code security and analysis`) je odporúčané aktivovať `Private vulnerability reporting` (#187).
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
