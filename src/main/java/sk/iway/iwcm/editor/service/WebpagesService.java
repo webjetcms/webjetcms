@@ -382,25 +382,6 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Vrati ciselnik pre zoznam sablon
-	 */
-	public List<LabelValueDetails> getOptionsTemplates(UserDetails currentUser, GroupDetails group) {
-		TemplatesDB templatesDB = TemplatesDB.getInstance();
-		List<TemplateDetails> allTemps;
-		if (group != null) allTemps = templatesDB.getTemplates(group.getGroupId(), group.getTempId());
-		else allTemps = templatesDB.getTemplatesSaved();
-
-		List<TemplateDetails> templateDetailsList = TemplatesDB.filterTemplatesByUser(currentUser, allTemps);
-		List<LabelValueDetails> templateNames = new ArrayList<>();
-
-		templateDetailsList.forEach(templateDetails ->
-			templateNames.add(new LabelValueDetails(templateDetails.getTempName(), String.valueOf(templateDetails.getTempId())))
-		);
-
-		return templateNames;
-	}
-
-	/**
 	 * Vrati ciselnik pre vyber jazyka
 	 */
 	public List<LabelValueDetails> getOptionsLanguages(HttpServletRequest request) {
