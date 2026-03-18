@@ -559,6 +559,7 @@
 			'kindPSD'         : 'Adobe Photoshop-Dokument',
 			'kindXBITMAP'     : 'X Bitmap-Bild',
 			'kindPXM'         : 'Pixelmator-Bild',
+			'kindWEBP'        : 'WEBP-Bild',
 			// media
 			'kindAudio'       : 'Audiodatei',
 			'kindAudioMPEG'   : 'MPEG Audio',
