@@ -202,7 +202,7 @@ public class ConstantsV9 {
 		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "Maximal length of AI request/response stored in audit");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
-		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
+		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
 		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
 

@@ -55,7 +55,17 @@ public class ImageTools
 	public static boolean isImage(String fileName)
 	{
 		String ext = FileTools.getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg");
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp");
+	}
+
+	/**
+	 * Returns true if fileName is image file and can be resized (ends with .jpg, png... but not .svg)
+	 * @param fileName
+	 * @return
+	 */
+	public static boolean isResizableImage(String fileName)
+	{
+		return isImage(fileName) && fileName.toLowerCase().endsWith(".svg") == false;
 	}
 
 	public static int resizeImage(IwcmFile imageFile, int width, int height)
@@ -64,7 +74,7 @@ public class ImageTools
 		{
 			String srcUrlLC  = imageFile.getName().toLowerCase();
 
-			if (imageFile.isFile() && (srcUrlLC.endsWith(".jpg") || srcUrlLC.endsWith(".jpeg") || srcUrlLC.endsWith(".gif") || srcUrlLC.endsWith(".png")))
+			if (imageFile.isFile() && isResizableImage(srcUrlLC))
 			{
 				if (GalleryDB.existsImageMagickConvertCommand()){
 					return resizeImageImageMagick(imageFile,width,height);

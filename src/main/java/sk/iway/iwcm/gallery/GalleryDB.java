@@ -69,6 +69,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.GalleryDBTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -4511,8 +4512,7 @@ public class GalleryDB
 		//ak je vypnute fast otestuj, ci sa nejedna o adresar, ak ano, nemoze to byt obrazok
 		if (Constants.getBoolean("galleryUseFastLoading")==false && file.isFile()==false) return false;
 
-		String suffix = FileTools.getFileExtension(file.getName()).toLowerCase();
-		if ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix) || "gif".equals(suffix))
+		if (FileTools.isImage(file.getName()))
 		{
 			return true;
 		}
@@ -4531,8 +4531,7 @@ public class GalleryDB
 		//ak je vypnute fast vratime rovno ci je to adresar
 		if (Constants.getBoolean("galleryUseFastLoading")==false) return file.isDirectory();
 
-		String suffix = FileTools.getFileExtension(file.getName()).toLowerCase();
-		if ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix) || "gif".equals(suffix) || "bmp".equals(suffix) || "zip".equals(suffix))
+		if (FileTools.isImage(file.getName()))
 		{
 			return false;
 		}
@@ -4723,9 +4722,9 @@ public class GalleryDB
 	public static void applyWatermarkOnUpload(IwcmFile obrazok)
 	{
 		if(obrazok == null || obrazok.exists() == false) return;
-		String suffix = FileTools.getFileExtension(obrazok.getName().toLowerCase());
-		boolean shouldPerformWatermarking = existImageMagickCompositeCommand() && Constants.getBoolean("galleryWatermarkApplyOnUpload")
-														&& ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix));
+		boolean shouldPerformWatermarking = existImageMagickCompositeCommand()
+				&& Constants.getBoolean("galleryWatermarkApplyOnUpload")
+				&& ImageTools.isResizableImage(obrazok.getName());
 
 		String[] exceptions = Tools.getTokens(Constants.getString("galleryWatermarkApplyOnUploadExceptions"), ",");
 		if (exceptions != null && exceptions.length>0)

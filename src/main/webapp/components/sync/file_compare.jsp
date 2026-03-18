@@ -66,7 +66,7 @@ boolean isImage = false;
 
 if(file1!= null && file2!=null)
 {
-	if(file1.endsWith(".gif") || file1.endsWith(".jpg") || file1.endsWith(".bmp") || file1.endsWith(".png") || file1.endsWith(".jpeg"))
+	if(file1.endsWith(".gif") || file1.endsWith(".jpg") || file1.endsWith(".bmp") || file1.endsWith(".png") || file1.endsWith(".jpeg") || file1.endsWith(".webp"))
 		isImage=true;
 	else
 	{

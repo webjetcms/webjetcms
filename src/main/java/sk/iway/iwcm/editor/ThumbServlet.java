@@ -24,6 +24,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.GalleryDBTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.gallery.GalleryBean;
@@ -120,7 +121,7 @@ public class ThumbServlet extends HttpServlet
 		}
 
 		String ext = FileTools.getFileExtension(imagePath).toLowerCase();
-		if (ext.equals("jpg")==false && ext.equals("jpeg")==false && ext.equals("gif")==false && ext.equals("png")==false && ext.equals("bmp")==false)
+		if (ImageTools.isResizableImage(imagePath) == false)
 		{
 			//sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 			response.setStatus(302);
