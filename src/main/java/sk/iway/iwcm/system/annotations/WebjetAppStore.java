@@ -23,4 +23,7 @@ public @interface WebjetAppStore {
 
     String componentPath() default ""; //If this APP is for old JSP components enter path to JSP file, eg. /components/gallery/gallery.jsp
     String customHtml() default "";
+
+    // If true, app will not show in shop (for example we use it for Captcha.java)
+    boolean dontShow() default false;
 }

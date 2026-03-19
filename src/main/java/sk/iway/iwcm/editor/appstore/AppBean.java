@@ -31,6 +31,7 @@ public class AppBean
 	private String variant = "";
     private String descKey;
 	private boolean custom = false;
+	private boolean dontShow = false;
 	private String componentPath;
 
 	private String lng;
@@ -212,6 +213,14 @@ public class AppBean
 
 	public void setCustom(boolean custom) {
 		this.custom = custom;
+	}
+
+	public boolean isDontShow() {
+		return dontShow;
+	}
+
+	public void setDontShow(boolean dontShow) {
+		this.dontShow = dontShow;
 	}
 
 	public String getComponentPath() {

@@ -286,7 +286,8 @@ function componentClick(componentName, width, height)
 				String domain = DocDB.getDomain(request);
 				if (domain != null) domain = domain.toLowerCase();
 
-				List<AppBean> appsListAll = AppManager.getAppsList(request);
+				// second params true - filter out hidden apps
+				List<AppBean> appsListAll = AppManager.getAppsList(request, true);
 				List<AppBean> appsList = new ArrayList<AppBean>();
 				for (AppBean app : appsListAll)
 				{
