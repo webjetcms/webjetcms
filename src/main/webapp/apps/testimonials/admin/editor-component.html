@@ -1,0 +1,72 @@
+<script>
+
+    var innerTable = null;
+    let checkShowName = false;
+    let checkShowPhoto = false;
+
+    function appBeforeXhr(data) {
+        var paramsString = data.parameters != null ? JSON.stringify(data.parameters) : "";
+        var params = paramsString.split(",").map(param => param.trim());
+
+        params.forEach(param => {
+            if(param.startsWith("showName=")) {
+                let value = param.split("=")[1].trim();
+                checkShowName = value === "yes" || value === "true";
+            } else if(param.startsWith("showPhoto=")) {
+                let value = param.split("=")[1].trim();
+                checkShowPhoto = value === "yes" || value === "true";
+            }
+        });
+    }
+
+    function appAfterInit(response, componentDatatable, componentPath, isInsert) {
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            if(checkShowName) {
+                $("#DTE_Field_showName_0").prop("checked", true);
+                $("#DTE_Field_showName_0").trigger("change");
+            }
+
+            if(checkShowPhoto) {
+                $("#DTE_Field_showPhoto_0").prop("checked", true);
+                $("#DTE_Field_showPhoto_0").trigger("change");
+            }
+        });
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if("DTE_Field_editorData" === event.detail.conf.id) {
+                if(innerTable != null) return;
+                innerTable = event.detail.conf.datatable;
+
+                innerTable.EDITOR.on( 'open', function( e, mode, action ) {
+                    // Show/hide redirectUrl based on doRedirectUrl
+                    $("#DTE_Field_doRedirectUrl_0").on('change', function() {
+                        const value = innerTable.EDITOR.field("doRedirectUrl").val();
+                        if(value != null && Array.isArray(value) && value[0] === true) {
+                            innerTable.EDITOR.field("redirectUrl").show();
+                        } else {
+                            innerTable.EDITOR.field("redirectUrl").hide();
+                            innerTable.EDITOR.field("redirectUrl").val("");
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+        // Prepare include FIRST !!
+        let include = "!INCLUDE(" + componentPath;
+
+        let showName = params.showName != null ? params.showName[0] : true;
+        params.showName = showName === true ? "yes" : "no";
+
+        let showPhoto = params.showPhoto != null ? params.showPhoto[0] : "yes";
+        params.showPhoto = showPhoto === true ? "yes" : "no";
+
+        let defaultInclude = convertObjectToInludeParams(params);
+        include += ", " + defaultInclude;
+
+        include += ")!";
+        return include;
+    }
+</script>
