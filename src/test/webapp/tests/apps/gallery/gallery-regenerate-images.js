@@ -208,26 +208,26 @@ async function setResizeMode(resizeMode, resizeModeLabel, I, DT, DTE, Document, 
      }
 }
 
-Scenario("resize mode - A @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - A", async ({ I, DT, DTE, Document }) => {
      await setResizeMode('A', "Presný rozmer", I, DT, DTE, Document);
 });
-Scenario("resize mode - C @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - C", async ({ I, DT, DTE, Document }) => {
      await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document);
      await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document, 400, 400);
      await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document, 200, 400);
 });
-Scenario("resize mode - H @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - H", async ({ I, DT, DTE, Document }) => {
      await setResizeMode('H', "Presná výška", I, DT, DTE, Document);
 });
-Scenario("resize mode - N @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - N", async ({ I, DT, DTE, Document }) => {
      //DO NOT use N mode, it will change the original image and break other tests, so we will not automate it for now
 });
-Scenario("resize mode - S @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - S", async ({ I, DT, DTE, Document }) => {
      await setResizeMode('S', "Zobrazenie na mieru", I, DT, DTE, Document);
 });
-Scenario("resize mode - W @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode - W", async ({ I, DT, DTE, Document }) => {
      await setResizeMode('W', "Presná šírka", I, DT, DTE, Document);
 });
-Scenario("resize mode reset @current", async ({ I, DT, DTE, Document }) => {
+Scenario("resize mode reset", async ({ I, DT, DTE, Document }) => {
      await setResizeMode(null, "Zobrazenie na mieru", I, DT, DTE, Document);
 });
