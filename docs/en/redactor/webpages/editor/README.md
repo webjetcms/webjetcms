@@ -9,23 +9,25 @@ If you go to create a new web page, you first need to set the correct directory 
 In the "Content" tab you can edit the content of the web page itself. Page editing offers standard document content editing functions similar to those commonly used in MS Word and Excel. Most of the commands are accessed using the formatting buttons from the editor toolbar. Contextual functions are accessed by right-clicking over the appropriate page object, e.g. an image, table, selected block of text, etc.
 
 Several types of editors are available depending on the setting of the template group or template (Page Editor Type field). The following editor types are currently supported:
+
 - Standard - editor type `WYSIWYG`, a visual editor in which what you see on the screen is also saved. The work is similar to working in MS Word, where you can easily select text, set bold font, insert images, etc.
 - HTML editor - when opened, the HTML code of the page is displayed. It is designed for special pages whose code would be broken with an editor like `WYSIWYG`, e.g. bulk email pages that contain all HTML code, including the header and footer. In this case, the code is typically supplied from an external agency and is just embedded into the page without the need to change it.
-- Page Builder - mode of composing web pages from [prepared blocks](pagebuilder.md), allows you to easily edit blocks, add, move order, etc. It is designed to create complex web pages.
+- Page Builder - mode of composing web pages from [prepared blocks](../pagebuilder.md), allows you to easily edit blocks, add, move order, etc. It is designed to create complex web pages.
 
 ## Basic card
 
 The most important parameter of every web page is its title (headline). The title is entered in the text field in the Basic tab. If you create a new web page in an empty folder, the system automatically takes the title from the name of this folder. Otherwise, when you create a new web page, the text "New Web Page" is there, which of course you must change to a meaningful title that defines the content of the web page. The title is normally entered with both accents and spaces as plain text.
 
-The folder home page has synchronized by default [the name of the web page with the name of the folder](group.md#synchronisation-of-folder-name-and-web-page).
+The folder home page has synchronized by default [the name of the web page with the name of the folder](../group.md#synchronise-folder-name-and-web-page).
 
-![](editor/tab-basic.png)
+![](tab-basic.png)
 
 Every page that is to be publicly viewable on the website must have "Yes" entered in the **View**. If it does not have this setting, it is unavailable to the visitor. It will only be available for the logged in administrator to see how the web page will actually look like during the creation process.
 
 ### Inclusion in the tree structure
 
 You can save the web page to **multiple folders**, a list of which can be found in the Classification section of the tree structure. The main folder is labeled as the Parent Folder, additional folders are in the Web Page Copy v. Technically, copies of the web page will be created in all the selected folders. When any page is saved, all data is copied to the other copies of the web page except:
+
 - URL address - the page and its copies can have their URL address modified if necessary (unless the Automatically generate URL from menu item name option is selected)
 - Layout order - if necessary, you can set the appropriate layout order for the page copy
 
@@ -46,19 +48,21 @@ If you change the page URL, a redirect is automatically created in the Path Redi
 #### Automatically generate a URL from the menu item name
 
 If you select this option, the URL of the page will change automatically:
+
 - when changing the value of the field Name of the menu item
 - when changing the value of the URL field, the address of the folder where the web page is located but also of the parent folders
 - when moving a web page to another folder
 
 When you change the URL of a page, a redirect is automatically created in the Path Redirects application from the old URL to the new one.
 
-![](virtual-path-title.png)
+![](../virtual-path-title.png)
 
 #### Inherit the beginning of a URL from a directory
 
 With this option, you can specify the end URL of the web page, with the start URL taken from the parent directories. This is useful if you need the page to always have the same ending URL, for example `404.html` or `cta.html`.
 
 The URL value will change when:
+
 - when changing the value of the URL field, the address of the folder where the web page is located but also of the parent folders
 - when moving a web page to another folder
 
@@ -66,7 +70,7 @@ while as written above the end part is taken according to the specified value.
 
 When you change the URL of a page, a redirect is automatically created in the Path Redirects application from the old URL to the new one.
 
-![](virtual-path-inherit.png)
+![](../virtual-path-inherit.png)
 
 ### Editor's note
 
@@ -76,11 +80,12 @@ Allows you to display information such as: **Please note: there is a link to the
 
 ## Managing multiple domains
 
-If WebJET [set up to manage multiple domains](../../frontend/setup/README.md#management-of-multiple-domains) so on the Basic tab, the Domain field is displayed for folders in the root folder.
+If WebJET [set up to manage multiple domains](../../../frontend/setup/README.md#managing-multiple-domains) so on the Basic tab, the Domain field is displayed for folders in the root folder.
 
 ### Creating a new domain
 
 If you need to create a new domain, follow these steps:
+
 - Click on the icon to add a new folder
 - Enter the necessary data such as Folder Name, etc.
 - Change the Parent Folder to the Root Folder.
@@ -89,13 +94,14 @@ If you need to create a new domain, follow these steps:
 
 The folder is created and a new domain is created in WebJET CMS and the list of web pages is automatically switched to it. The available domains are displayed in the administration header in the domain selection box. You can switch between them via this selection box.
 
-![](../webpages/domain-select.png)
+![](../../webpages/domain-select.png)
 
 Note: in addition to adding the domain in WebJET CMS, you need to set it up on the application server. The application server only manages domains it knows. If you are using Tomcat, the server administrator in `conf/server.xml` Set up `defaultHost="domena.sk"` on the elements `<Engine` for routing all domains to `domena.sk`, or must implicitly define the domain using `<Alias>www.domena.sk</Alias>` for the respective `<Host` elements. Of course, we also recommend creating httpS certificates for individual domains.
 
 ### Renaming a domain
 
 You rename the domain in the folder's edit window. In the Domain field, enter a new value and select **Change domain redirects, configuration variables and translation texts with domain prefix**. When this option is ticked, changes are made:
+
 - The specified domain is also set for all subdomains.
 - The domain is also set for the folder `Systém`.
 - Changes the domain from the old value to the new value in path redirection, configuration variables, and translation texts.
@@ -108,7 +114,7 @@ Each web page must have a design template set up. The correct setting of the tem
 
 In the fields, you can change the header/footer/menu and free objects in the selected template if necessary (if you need a different footer or a specific menu on the page, for example).
 
-![](editor-templates-tab.png)
+![](../editor-templates-tab.png)
 
 The template selection box contains a pencil icon, clicking on it opens the template editing dialog (if you need to edit some of its properties, for example). Click on the + icon to create a new template.
 
@@ -120,19 +126,19 @@ In the Navigation tab, you can edit additional options for displaying the page i
 
 The Arrangement Order field determines the order of the page in the menu and in the sitemap. The higher the number the lower the page will be placed.
 
-![](editor/tab-menu.png)
+![](tab-menu.png)
 
 ## Card access
 
 In the "Access" section, you can manage who can access the page and under what conditions. If the page is intended for a bulk email application, it is also possible to define the assignment to an email group (newsletter type).
 
-![](editor/tab-access.png)
+![](tab-access.png)
 
 ## The perex card
 
 In the Perex tab, you can set the validity of a page view, or set it to be delayed or changed. You can also assign appropriate tags to the page to categorize it.
 
-![](editor/tab-perex.png)
+![](tab-perex.png)
 
 Fields **Start date**, **End date** a **Date of the event** are usually only used for news, press releases, events and conferences. Field **Start date** a **End date** However, they also have a special feature if you want to time the publishing or cancellation of a page from a certain point in time in the future. This function is activated by checking the box **Schedule a page change after this date**, respectively. **Publish a page after this date**. The value of the fields **Start date** a **End date** must be filled in for all events and conferences in the event calendar. For news, just enter the start date.
 
@@ -144,19 +150,19 @@ You can define the image via the icon behind the field **Image**.
 
 If you have timed the publication of a web page and want to be as **author of the page** informed, just set the configuration variable `webpagesNotifyAutorOnPublish`. The preset value is **true** that is, whenever a new version of the web page is published, the following information email is sent to its author.
 
-![](editor/publish-email-notification.png)
+![](publish-email-notification.png)
 
 The end of the email contains a link to a page where you can check the new version of the page. If you do not want these informational emails, you must set the value of the configuration variable `webpagesNotifyAutorOnPublish` at **false**.
 
-This event will [Audited by](../../sysadmin/audit/README.md) where the audit type is `SAVEDOC` and the description of the audited action shall include information `publishStatus: Webpage was published` so you can easily find publishing actions.
+This event will [Audited by](../../../sysadmin/audit/README.md) where the audit type is `SAVEDOC` and the description of the audited action shall include information `publishStatus: Webpage was published` so you can easily find publishing actions.
 
-![](editor/publish-audit-logs.png)
+![](publish-audit-logs.png)
 
 ## Media card
 
-In the Media tab, you can manage documents and files related to the page. For more information, see [Media section](media.md).
+In the Media tab, you can manage documents and files related to the page. For more information, see [Media section](../media.md).
 
-![](media.png)
+![](../media.png)
 
 Clicking on the "add" button will bring up a form to add a link.
 
@@ -172,9 +178,9 @@ The arrangement defines the order of the links. Media assigned to different grou
 
 ## Optional fields tab
 
-In the Optional Fields tab, you can set optional attributes (values, texts) for the web page and directory according to your needs. The values can then be transferred and used in the page template. Types (text, number, selection field, file selection...) and field names can be set as required, see the section [Optional fields](../../frontend/webpages/customfields/README.md).
+In the Optional Fields tab, you can set optional attributes (values, texts) for the web page and directory according to your needs. The values can then be transferred and used in the page template. Types (text, number, selection field, file selection...) and field names can be set as required, see the section [Optional fields](../../../frontend/webpages/customfields/README.md).
 
-![](../../frontend/webpages/customfields/webpages.png)
+![](../../../frontend/webpages/customfields/webpages.png)
 
 ## History tab
 
@@ -182,9 +188,9 @@ The History tab displays the published historical versions of the web page and t
 
 In the case of approving/rejecting a page, the name of the user who approved or rejected the version is also displayed.
 
-More information is in the section [History](history.md).
+More information is in the section [History](../history.md).
 
-![](history.png)
+![](../history.png)
 
 ## Save working version
 
@@ -196,13 +202,13 @@ Each time you save a working version, it will remain in the History tab, so you 
 
 At the same time, saving the working version does not close the editor window, so you can continue working.
 
-![](save-work-version.png)
+![](../save-work-version.png)
 
 ## Page preview
 
 Click on the button `Náhľad` in the footer of the editor window, a new tab opens in the browser with a preview of the complete page without the need to save it. You can make changes to the page and see how it will look after saving.
 
-At the same time, if you do not close the preview window, the preview is automatically updated when you save the page. This is an advantageous use with the [Save working version](#save-the-working-version) where you can move the preview window to a second monitor and keep it open while you work. Each time you save, the preview is automatically updated.
+At the same time, if you do not close the preview window, the preview is automatically updated when you save the page. This is an advantageous use with the [Save working version](#save-working-version) where you can move the preview window to a second monitor and keep it open while you work. Each time you save, the preview is automatically updated.
 
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -216,21 +222,23 @@ We recommend that you leave the page editor when you have finished your work and
 
 Applications have this property, so the workflow applies to all parts, not just the page editor.
 
-![](../../developer/datatables-editor/editor-locking.png)
+![](../../../developer/datatables-editor/editor-locking.png)
 
 ## Toolbar
 
 When you view the web page, the WebJET toolbar is displayed in the upper right corner:
 
-![](webjet-toolbar.png)
+![](../webjet-toolbar.png)
 
 In addition to the date of the last modification, the website offers the following options when you click on:
+
 - DocID web page opens the page in the web page editor.
 - The folder name will display the web page folder.
 - The template name will open the page template in the editor.
 - The name of the user who last changed the web page will open a new email message to that editor.
 
 The toolbar displays:
+
 - If you have visited the Web pages section in the administration before viewing the team page.
 - Configuration variable `disableWebJETToolbar` is set to `false`.
 

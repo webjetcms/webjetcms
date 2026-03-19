@@ -40,7 +40,7 @@
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
 
     "spellright.language": [
-        "sk_SK"
+        "en_US"
     ],
     "spellright.groupDictionaries": false,
     "spellright.documentTypes": [
@@ -90,6 +90,7 @@
         "git rev-parse": true,
         "git merge-base": true,
         "uniq": true,
-        "awk": true
+        "awk": true,
+        "read": true
     }
 }

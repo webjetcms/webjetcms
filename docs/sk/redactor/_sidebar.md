@@ -14,7 +14,7 @@
   - [Export a import](/redactor/datatables/export-import.md)
 - Web stránky
   - [Základná práca](/redactor/webpages/README.md)
-  - [Editácia web stránky](/redactor/webpages/editor.md)
+  - [Editácia web stránky](/redactor/webpages/editor/README.md)
   - [Práca v editore](/redactor/webpages/working-in-editor/README.md)
   - [Priečinok web stránky](/redactor/webpages/group.md)
   - [História](/redactor/webpages/history.md)
