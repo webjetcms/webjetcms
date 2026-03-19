@@ -658,6 +658,7 @@ body.modal-open {
         right: 16px;
         top: 8px;
         background-color: transparent;
+        z-index: 20;
 
         &:hover {
             color: $nice-black;
