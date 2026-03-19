@@ -173,3 +173,61 @@ Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I, DT }) => {
 
      await regenerateWatermark(I, 'original');
 });
+
+async function setResizeMode(resizeMode, resizeModeLabel, I, DT, DTE, Document, width=400, height=200) {
+     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/watermark/subfolder2");
+     DT.waitForLoader();
+     I.jstreeWaitForLoader();
+     I.jstreeWaitForLoader();
+
+     I.clickCss(".tree-col .dt-buttons button.buttons-edit");
+     DTE.waitForEditor("galleryDimensionDatatable");
+     I.clickCss('#pills-dt-galleryDimensionDatatable-sizes-tab');
+
+     DTE.selectOption("resizeMode", resizeModeLabel); // napr. orezat na mieru
+
+     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-regenerateImages_0').find('.form-check-label')); // pregenerovat obrazky
+     I.wait(0.5);
+     I.seeCheckboxIsChecked('#DTE_Field_editorFields-regenerateImages_0');
+
+     if (resizeMode !== null) {
+          DTE.fillField("normalWidth", width);
+          DTE.fillField("normalHeight", height);
+     } else {
+          DTE.fillField("normalWidth", "750");
+          DTE.fillField("normalHeight", "560");
+     }
+
+     DTE.save();
+
+     if (resizeMode !== null) {
+          let sizeAppend = "-" + width + "x" + height;
+
+          I.amOnPage('/images/gallery/watermark/subfolder2/puppy-2785074.jpg');
+          await Document.compareScreenshotElement('img', 'resize-mode/puppy-'+resizeMode+sizeAppend+'.png', null, null, 6);
+     }
+}
+
+Scenario("resize mode - A @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode('A', "Presný rozmer", I, DT, DTE, Document);
+});
+Scenario("resize mode - C @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document);
+     await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document, 400, 400);
+     await setResizeMode('C', "Orezať na mieru", I, DT, DTE, Document, 200, 400);
+});
+Scenario("resize mode - H @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode('H', "Presná výška", I, DT, DTE, Document);
+});
+Scenario("resize mode - N @current", async ({ I, DT, DTE, Document }) => {
+     //DO NOT use N mode, it will change the original image and break other tests, so we will not automate it for now
+});
+Scenario("resize mode - S @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode('S', "Zobrazenie na mieru", I, DT, DTE, Document);
+});
+Scenario("resize mode - W @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode('W', "Presná šírka", I, DT, DTE, Document);
+});
+Scenario("resize mode reset @current", async ({ I, DT, DTE, Document }) => {
+     await setResizeMode(null, "Zobrazenie na mieru", I, DT, DTE, Document);
+});

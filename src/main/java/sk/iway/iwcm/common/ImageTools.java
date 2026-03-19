@@ -9,7 +9,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -17,8 +19,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
@@ -76,7 +76,7 @@ public class ImageTools
 
 			if (imageFile.isFile() && isResizableImage(srcUrlLC))
 			{
-				if (GalleryDB.existsImageMagickConvertCommand()){
+				if (existsImageMagickConvertCommand()){
 					return resizeImageImageMagick(imageFile,width,height);
 				}
 				else{
@@ -102,7 +102,11 @@ public class ImageTools
 	{
 		GalleryDB.stripExif(imageFile.getAbsolutePath());
 
-		String[] args = new String[]{"imagemagick","from","-resize",width+"x"+height+"!","to"};
+		List<String> args = new ArrayList<String>();
+		args.add("from");
+		args.add("-resize");
+		args.add(width+"x"+height+"!");
+		args.add("to");
 		return executeImageMagick(imageFile, args);
 	}
 
@@ -205,7 +209,7 @@ public class ImageTools
 
 			if (imageFile.isFile() && (srcUrlLC.endsWith(".jpg") || srcUrlLC.endsWith(".jpeg") || srcUrlLC.endsWith(".gif") || srcUrlLC.endsWith(".png")))
 			{
-				if (GalleryDB.existsImageMagickConvertCommand()){
+				if (existsImageMagickConvertCommand()){
 					return cropImageImageMagick(imageFile, width, height, startX, startY);
 				}
 				else{
@@ -233,8 +237,12 @@ public class ImageTools
 	{
 		GalleryDB.stripExif(imageFile.getAbsolutePath());
 
-		String[] args = new String[]{"imagemagick", "from", "-crop", width+"x"+height+"+"+startX+"+"+startY, "to"};
-		return executeImageMagick(imageFile,args);
+		List<String> args = new ArrayList<String>();
+		args.add("from");
+		args.add("-crop");
+		args.add(width+"x"+height+"+"+startX+"+"+startY);
+		args.add("to");
+		return executeImageMagick(imageFile, args);
 	}
 
 	/**
@@ -312,7 +320,7 @@ public class ImageTools
 
 			if (imageFile.isFile() && (srcUrlLC.endsWith(".jpg") || srcUrlLC.endsWith(".jpeg") || srcUrlLC.endsWith(".gif") || srcUrlLC.endsWith(".png")))
 			{
-				if (GalleryDB.existsImageMagickConvertCommand()){
+				if (existsImageMagickConvertCommand()){
 					return rotateImageImageMagick(imageFile, angle);
 				}else{
 					return rotateImageGraphics2D(imageFile, angle);
@@ -338,39 +346,55 @@ public class ImageTools
 	{
 		GalleryDB.stripExif(imageFile.getAbsolutePath());
 
-		String[] args = new String[]{"imagemagick", "from", "-rotate", Double.toString(angle), "to"};
-		return executeImageMagick(imageFile,args);
+		List<String> args = new ArrayList<String>();
+		args.add("from");
+		args.add("-rotate");
+		args.add(Double.toString(angle));
+		args.add("to");
+		return executeImageMagick(imageFile, args);
 	}
 
 	/**
+	 * Executes ImageMagick command. Handles IwcmFSDB storage, if image is stored in DB, it is first written to disk, then processed and finally written back to DB.
 	 * @param imageFile
-	 * @param angle
-	 * @param args
+	 * @param args - list of arguments, replaces from and to placeholders with real file paths, if they are present in args
+	 * @return
 	 */
-	private static int executeImageMagick(IwcmFile imageFile, String[] args)
+	public static int executeImageMagick(IwcmFile imageFile, List<String> args)
 	{
-		int fromIndex = ArrayUtils.indexOf(args, "from");
-		int toIndex = ArrayUtils.indexOf(args, "to");
-		if (fromIndex < 0 || toIndex < 0)
-		{
-			throw new IllegalArgumentException("String argument array parameter must contain 'from' and 'to' ");
-		}
-		if (IwcmFsDB.useDBStorage(imageFile.getVirtualPath()))
+		return executeImageMagick(imageFile, imageFile, args);
+	}
+
+	/**
+	 * Executes ImageMagick command. Handles IwcmFSDB storage, if image is stored in DB, it is first written to disk, then processed and finally written back to DB.
+	 * @param from
+	 * @param to
+	 * @param args - list of arguments, replaces from and to placeholders with real file paths, if they are present in args
+	 * @return
+	 */
+	public static int executeImageMagick(IwcmFile from, IwcmFile to, List<String> args) {
+		//args can contains placeholders for from and to file paths because of IwcmFSDB storage, so we need to find out where they are
+		int fromIndex = args.indexOf("from");
+		int toIndex = args.indexOf("to");
+
+		if (IwcmFsDB.useDBStorage(from.getVirtualPath()))
 		{
 			try
 			{
-				String temporaryOriginal = IwcmFsDB.getTempFilePath(imageFile.getPath());
-				String temporaryProcessed = IwcmFsDB.getTempFilePath(imageFile.getPath() + ".new");
-				File temporaryProcessedFile = new File(temporaryProcessed);
-				File imageFileFile = new File(imageFile.getAbsolutePath());
-				IwcmFsDB.writeFileToDisk(imageFileFile, temporaryProcessedFile);
-				args[fromIndex] = temporaryOriginal;
-				args[toIndex] = temporaryProcessed;
-				int result = GalleryDB.executeImageMagickCommand(args);
+				String temporaryFrom = IwcmFsDB.getTempFilePath(from.getPath());
+				String temporaryTo = IwcmFsDB.getTempFilePath(getTempFilePath(from.getPath()));
+
+				//write from file to temp file disk
+				IwcmFsDB.writeFileToDisk(new File(from.getAbsolutePath()), new File(temporaryFrom), true);
+
+				if (fromIndex != -1) args.set(fromIndex, temporaryFrom);
+				if (toIndex != -1) args.set(toIndex, temporaryTo);
+
+				int result = executeImageMagickCommand(args);
 				if (result == 0)
 				{
-					IwcmFsDB.writeFileToDB(temporaryProcessedFile, imageFileFile);
-					if (new File(temporaryOriginal).delete() && temporaryProcessedFile.delete())
+					IwcmFsDB.writeFileToDB(new File(temporaryTo), new File(to.getAbsolutePath()));
+					if (new File(temporaryFrom).delete() && new File(temporaryTo).delete())
 					{
 						return 0;
 					}
@@ -387,17 +411,129 @@ public class ImageTools
 		}
 		else
 		{
-			IwcmFile processed = new IwcmFile(imageFile.getAbsolutePath() + ".new");
-			args[fromIndex] = imageFile.getAbsolutePath();
-			args[toIndex] = processed.getAbsolutePath();
-			int result = GalleryDB.executeImageMagickCommand(args);
+			//usualy from and to is same file, we need temp to file and then replace to with this temp file
+			IwcmFile toTemp = new IwcmFile(getTempFilePath(from.getAbsolutePath()));
+			if (fromIndex != -1) args.set(fromIndex, from.getAbsolutePath());
+			if (toIndex != -1) args.set(toIndex, toTemp.getAbsolutePath());
+			int result = executeImageMagickCommand(args);
 			if (result == 0)
 			{
-				FileTools.copyFile(processed, imageFile);
-				return processed.delete() ? 0 : -1;
+				FileTools.copyFile(toTemp, to);
+				return toTemp.delete() ? 0 : -1;
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Returns temporary file path for given path. If path is /path/to/file.jpg, temp file path will be /path/to/file.tmp.jpg
+	 * @param path
+	 * @return
+	 */
+	private static String getTempFilePath(String path) {
+		int dotIndex = path.lastIndexOf('.');
+		if (dotIndex != -1)
+		{
+			return path.substring(0, dotIndex) + ".tmp" + path.substring(dotIndex);
+		}
+		else
+		{
+			return path + ".tmp";
+		}
+	}
+
+	/**
+	 * Executes ImageMagick command with given parameters.
+	 * Automatically add path to ImageMagick runtime file as first parameter.
+	 * @param args
+	 */
+	private static int executeImageMagickCommand(List<String> args)
+	{
+		args.add(0, getImageMagicDir()+File.separatorChar+getRuntimeFile());
+		Runtime rt = Runtime.getRuntime();
+		Process process = null;
+		try
+		{
+			//odstraneny if nie je potrebny
+			StringBuilder params = new StringBuilder();
+			for (int i = 0; i < args.size(); i++)
+			{
+				params.append(' ').append(args.get(i));
+			}
+			Logger.debug(ImageTools.class, "LONGCMD:\n" + params);
+
+			process= rt.exec(args.toArray(new String[0]));
+
+			InputStream stderr = process.getErrorStream();
+			BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
+			String line = null;
+			while ((line = br.readLine()) != null)
+			{
+				Logger.debug(ImageTools.class, line);
+			}
+			br.close();
+
+			int ret = process.waitFor();
+			//convert vrati 1 namiesto 0 lebo pri -debug hlasi, ze destination subor neexistuje/nepozna .new priponu
+			if (ret==1) ret = 0;
+
+			return ret;
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns ImageMagick runtime file name based on current Operating System. magick/magick.exe
+	 * If fallback to v6 convert/convert.exe if magick/magick.exe does not exist.
+	 * @return - image magick runtime file by current Operating System
+	 */
+	private static String getRuntimeFile()
+	{
+		String runtimeFile = "magick";
+		if (System.getProperty("os.name").indexOf("Windows") != -1)
+		{
+			runtimeFile  = "magick.exe";
+		}
+		File f = new File(getImageMagicDir() + File.separatorChar + runtimeFile);
+		if (f.exists() == false) {
+			//falback to ld v6 convert command
+			runtimeFile = "convert";
+			if (System.getProperty("os.name").indexOf("Windows") != -1)
+			{
+				runtimeFile  = "convert.exe";
+			}
+		}
+		return runtimeFile;
+	}
+
+	private static String getImageMagicDir()
+	{
+		return Constants.getString("imageMagickDir");
+	}
+
+	/**
+	 * Checks if ImageMagick convert command exists in configured directory.
+	 * @return
+	 */
+	public static boolean existsImageMagickConvertCommand()
+	{
+		String imageMagickDir = getImageMagicDir();
+		boolean convertExists = false;
+		String runtimeFile = getRuntimeFile();
+
+		if (Tools.isNotEmpty(imageMagickDir))
+		{
+			File f = new File(imageMagickDir + File.separatorChar + runtimeFile);
+			if (f.exists() && f.canRead())
+			{
+				convertExists = true;
+			}
+		}
+		return convertExists;
 	}
 
 	/**
@@ -511,7 +647,7 @@ public class ImageTools
 		if (Constants.getBoolean("galleryConvertCmykToRgb") == false)
 			return;
 
-		String imageMagickDir = GalleryDB.getImageMagicDir();
+		String imageMagickDir = getImageMagicDir();
 		boolean isCmyk = false;
 		boolean identifyExist = false;
 		boolean convertExists = false;
@@ -537,14 +673,10 @@ public class ImageTools
 
 			if (Tools.isNotEmpty(imageMagickDir) && convertExists && identifyExist && Tools.isNotEmpty(Constants.getString("galleryConvertCmykToRgbInputProfilePath")) && Tools.isNotEmpty(Constants.getString("galleryConvertCmykToRgbOutputProfilePath")))
 			{
-				Logger.debug(GalleryDB.class, "executing image magick: " + imageMagickDir + File.separatorChar + identifyFile);
+				Logger.debug(ImageTools.class, "executing image magick: " + imageMagickDir + File.separatorChar + identifyFile);
 				Runtime rt = Runtime.getRuntime();
 
 				String[] args = new String[3];
-
-
-
-
 				args[0] = imageMagickDir + File.separatorChar + identifyFile;
 				args[1] = "-verbose";
 				args[2] = filePath;
@@ -603,13 +735,13 @@ public class ImageTools
 					{
 						params.append(' ').append(args[i]);
 					}
-					Logger.debug(GalleryDB.class, "LONGCMD:\n" + params);
+					Logger.debug(ImageTools.class, "LONGCMD:\n" + params);
 					proc = rt.exec(args);
 					stderr = proc.getInputStream();
 					br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
 					while ((line = br.readLine()) != null)
 					{
-						Logger.debug(GalleryDB.class, line);
+						Logger.debug(ImageTools.class, line);
 					}
 					br.close();
 					int exitValue = proc.waitFor();
@@ -618,7 +750,7 @@ public class ImageTools
 						IwcmFsDB.writeFileToDB(new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))), new File(IwcmFsDB.getVirtualPath(filePath)));
 						new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))).delete();
 					}
-					Logger.debug(GalleryDB.class, "ExitValue: " + exitValue);
+					Logger.debug(ImageTools.class, "ExitValue: " + exitValue);
 				}
 			}
 

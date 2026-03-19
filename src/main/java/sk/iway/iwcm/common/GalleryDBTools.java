@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +17,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DebugTimer;
@@ -96,24 +96,9 @@ public class GalleryDBTools {
 
 
         /** Overim, ci na serveri existuje ImageMagic **/
-        String imageMagickDir = GalleryDB.getImageMagicDir();
-        // mame ho aj dostupny
-        boolean convertExists = false;
-        String runtimeFile = GalleryDB.getRuntimeFile();
-
-        if (Tools.isNotEmpty(imageMagickDir))
+        if (ImageTools.existsImageMagickConvertCommand())
         {
-            File f = new File(imageMagickDir + File.separatorChar + runtimeFile);
-            if (f.exists() && f.canRead())
-            {
-                convertExists = true;
-            }
-        }
-
-        if (Tools.isNotEmpty(imageMagickDir) && convertExists)
-        {
-
-            return cropAndResizeImageMagick(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality);
+            return cropAndResizeImageMagick(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality, ip);
         }
         else
         {
@@ -121,17 +106,18 @@ public class GalleryDBTools {
         }
     }
 
-    private static int cropAndResizeImageMagick(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality)
+    private static int cropAndResizeImageMagick(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality, int ip)
     {
         finalWidth = limitMaxSize(finalWidth);
         finalHeight = limitMaxSize(finalHeight);
 
         List<String> args = new ArrayList<String>();
 
-        args.add(""); //toto sa neskor nahradi za convert prikaz v executeImageMagickCommand
-        args.add(from.getAbsolutePath());
-        args.add("-crop");
-        args.add(cwidth+"x"+cheight+"+"+cleft+"+"+ctop);
+        args.add("from");
+        if (cwidth > 0 && cheight > 0) {
+            args.add("-crop");
+            args.add(cwidth+"x"+cheight+"+"+cleft+"+"+ctop);
+        }
         args.add("-resize");
         if (exactFinalSize) args.add(finalWidth+"x"+finalHeight+"!");
         else  args.add(finalWidth+"x"+finalHeight);
@@ -144,24 +130,30 @@ public class GalleryDBTools {
 
         if (from.getAbsolutePath().endsWith(".gif")) args.add("+repage");
 
+        boolean galleryStripExif = Constants.getBoolean("galleryStripExif");
+
         if (fillColor == null)
         {
-            args.add("-strip");
-            args.add(to.getAbsolutePath());
+            if (galleryStripExif) args.add("-strip");
+            args.add("to");
         }
         else
         {
             args.add("-gravity");
-            args.add("center");
+            if (ip == 3) {
+                args.add("West");
+            } else {
+                args.add("Center");
+            }
             args.add("-background");
             args.add("#"+fillColor);
             args.add("-extent");
             args.add(finalWidth+"x"+finalHeight);
-            args.add("-strip");
-            args.add(to.getAbsolutePath());
+            if (galleryStripExif) args.add("-strip");
+            args.add("to");
         }
 
-        return GalleryDB.executeImageMagickCommand(args.toArray(new String[0]));
+        return ImageTools.executeImageMagick(from, to, args);
     }
 
     private static int cropAndResizeJava(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality, int ip)
