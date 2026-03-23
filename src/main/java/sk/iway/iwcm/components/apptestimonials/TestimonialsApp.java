@@ -68,9 +68,7 @@ public class TestimonialsApp extends WebjetComponentAbstract {
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-
         options.put("style", DatatableTools.getImageRadioOptions("/components/app-testimonials/admin-styles/"));
-
         return options;
     }
 }

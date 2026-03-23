@@ -100,7 +100,7 @@
         $("#previewIframe").show();
     }
 
-    function addShowMapButtons(parentId, btnKey = "Zobrazit náhled mapy") {
+    function addShowMapButtons(parentId, btnKey = "components.map.show_map_preview.js") {
         const wrapper = document.createElement("div");
         wrapper.classList.add("row");
         wrapper.style.marginTop = "15px";
@@ -111,7 +111,7 @@
 
         const button = document.createElement("button");
         button.classList.add("btn", "btn-primary");
-        button.innerText = btnKey;
+        button.innerText = WJ.translate(btnKey);
         button.addEventListener("click", function() {
             showLookup();
             document.getElementById("pills-dt-component-datatable-basic-tab").click();
@@ -160,7 +160,7 @@
             callCkEditorMethod('maximalizeWindow');
 
             // Add buttons to show map preview
-            addShowMapButtons("panel-body-dt-component-datatable-basic", "Zobrazit");
+            addShowMapButtons("panel-body-dt-component-datatable-basic", "components.map.show.js");
             addShowMapButtons("panel-body-dt-component-datatable-mapSettings");
             addShowMapButtons("panel-body-dt-component-datatable-pinSettings");
 

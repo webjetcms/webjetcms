@@ -30,6 +30,12 @@
                 $("#DTE_Field_showPhoto_0").prop("checked", true);
                 $("#DTE_Field_showPhoto_0").trigger("change");
             }
+
+            // set style text-align : center
+            const imageRadioInput = document.querySelector("#panel-body-dt-component-datatable-basic div.DTE_Field_Type_imageRadio div[data-dte-e=\"input\"]");
+            if(imageRadioInput != null) {
+                imageRadioInput.style.textAlign = "center";
+            }
         });
 
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
