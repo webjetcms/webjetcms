@@ -107,18 +107,36 @@ Code quality improvements, better patterns, or minor issues that are not blockin
 #### Positive Observations
 Good patterns, clean code, or improvements worth acknowledging.
 
+#### Missing CHANGELOG / ROADMAP Entries
+Flag if the CHANGELOG entry in `/docs/sk/CHANGELOG-2026.md` is missing for this branch's ticket number, or if a matching ROADMAP item is not checked off.
+
 For each finding, include:
 - **File and location** (line numbers or method names)
 - **What was found** (clear description of the issue)
 - **Why it matters** (impact or risk)
 - **Suggested fix** (concrete recommendation, with code example if helpful)
 
-### 8. Final Summary
+### 8. Check CHANGELOG Entry
+
+Find the ticket number from the current git branch:
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+The branch has the format `feature/XXXX-description` or `hotfix/XXXX-description` — the ticket number is `XXXX` (the digits between `/` and the first `-`).
+
+Check if `/docs/sk/CHANGELOG-2026.md` contains an entry with `(#XXXX)` in the `## 2026.0-SNAPSHOT` section. If not, report it as a missing CHANGELOG entry.
+
+Also check `/docs/sk/ROADMAP.md` — if the change matches a planned item, verify it is checked off with `(#XXXX)`.
+
+### 9. Final Summary
 
 Provide a brief overall assessment:
 - How many files were reviewed
 - Overall risk level (low / medium / high)
 - Whether the changes are safe to commit or need further work
+- Whether CHANGELOG entry is present
 
 ## Rules
 
