@@ -67,6 +67,14 @@ public class FilePathTools
 	}
 
 	/**
+	 * Returns true if external folders are enabled (cloudStaticFilesDir is set), false otherwise
+	 * @return
+	 */
+	public static boolean isExternalDirs() {
+		return Tools.isNotEmpty(Constants.getString("cloudStaticFilesDir"));
+	}
+
+	/**
 	 * Hellper pre ziskanie virtual path z realnej cesty, nepouzivat napriamo, len cez IwcmFsDB.getVirtualPath
 	 * @param realPath
 	 * @return

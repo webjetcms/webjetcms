@@ -22,6 +22,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadService;
+import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
@@ -36,7 +37,6 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -398,8 +398,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     private String getBaseGalleryPath() {
-        String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
-        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) return Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
-        else return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        return Constants.getString("imagesRootDir") + AdminTools.getDomainNameFileAliasAppend() + "/" + Constants.getString("galleryDirName");
     }
 }
