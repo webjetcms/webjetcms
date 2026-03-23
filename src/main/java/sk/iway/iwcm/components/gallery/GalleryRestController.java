@@ -397,7 +397,13 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         return newDimension;
     }
 
-    private String getBaseGalleryPath() {
-        return Constants.getString("imagesRootDir") + AdminTools.getDomainNameFileAliasAppend() + "/" + Constants.getString("galleryDirName");
+    /**
+     * Return base gallery path for current domain, e.g. /images/gallery or /images/domainalias/gallery
+     * @return
+     */
+    public static String getBaseGalleryPath() {
+        String baseDir = Constants.getString("imagesRootDir") + AdminTools.getDomainNameFileAliasAppend() + "/" + Constants.getString("galleryDirName");
+        baseDir = Tools.replace(baseDir, "//", "/");
+        return baseDir;
     }
 }
