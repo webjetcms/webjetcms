@@ -454,7 +454,9 @@ public class ImageTools
 		Process process = null;
 		try
 		{
-			//odstraneny if nie je potrebny
+			//inject additional params based on file type and operation
+			addImageMagickCustomParams(args);
+
 			StringBuilder params = new StringBuilder();
 			for (int i = 0; i < args.size(); i++)
 			{
@@ -484,6 +486,87 @@ public class ImageTools
 			sk.iway.iwcm.Logger.error(e);
 		}
 		return -1;
+	}
+
+	private static void addImageMagickCustomParams(List<String> args)
+	{
+		String operation = null;
+		for (String arg : args) {
+			if (arg.startsWith("-resize") || arg.startsWith("-crop") || arg.startsWith("-rotate")) {
+				operation = arg.substring(1);
+				break;
+			}
+		}
+
+		if (operation == null) {
+			return;
+		}
+
+		String ext = "unknown";
+		//iterate params, detect image type and check isImageType() method
+		for (String arg : args) {
+			if (arg.contains(".")) {
+				String fileExt = FileTools.getFileExtension(arg);
+				if (isImage("file." + fileExt)) {
+					ext = fileExt;
+					break;
+				}
+			}
+		}
+		if ("jpeg".equalsIgnoreCase(ext)) {
+			ext = "jpg";
+		}
+
+		//check custom params by Constants key imageMagickCustomParams_[mode]_[ext], for example imageMagickCustomParams_resize_jpg, then imageMagickCustomParams_resize, then imageMagickCustomParams_jpg then imageMagickCustomParams
+		String customParamsKey = "imageMagickCustomParams_" + operation + "_" + ext;
+		String customParams = Constants.getString(customParamsKey);
+		if (Tools.isEmpty(customParams)) {
+			customParamsKey = "imageMagickCustomParams_" + operation;
+			customParams = Constants.getString(customParamsKey);
+
+			if (Tools.isEmpty(customParams)) {
+				customParamsKey = "imageMagickCustomParams";
+				customParams = Constants.getString(customParamsKey);
+			}
+
+			customParamsKey = "imageMagickCustomParams_" + ext;
+			String customParamsExt = Constants.getString(customParamsKey);
+			if (Tools.isNotEmpty(customParamsExt)) {
+				if (Tools.isNotEmpty(customParams)) {
+					customParams += " " + customParamsExt;
+				}
+				else {
+					customParams = customParamsExt;
+				}
+			}
+		}
+
+		if (Tools.isNotEmpty(customParams)) {
+			String[] customParamsArray = Tools.getTokens(customParams, " ", true);
+
+			//if contains compressionLevel remove -quality xx param
+			for (String customParam : customParamsArray) {
+				if (customParam.contains("compression-level") || customParam.contains("quality")) {
+					//remove -quality xx parameter
+					for (int i = 0; i < args.size(); i++) {
+						if ("-quality".equals(args.get(i))) {
+							args.remove(i); //remove -quality
+							if (i < args.size()) {
+								args.remove(i); //remove quality value
+							}
+							break;
+						}
+					}
+				}
+			}
+
+			int counter = 0;
+			for (String customParam : customParamsArray) {
+				//we need to add custom params after from file path which is first parameter
+				args.add(1 + counter, customParam);
+				counter++;
+			}
+		}
 	}
 
 	/**

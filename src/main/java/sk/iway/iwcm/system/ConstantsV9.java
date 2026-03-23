@@ -253,6 +253,15 @@ public class ConstantsV9 {
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_SECURITY, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
 		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
 		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
+
+		//image magick custom params
+		Constants.setString("imageMagickCustomParams", "-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "images", "Custom parameters for ImageMagick operations, e.g. for thumbnail generation. Format is as args for command line, e.g. -strip -interlace Plane -quality 85");
+		Constants.setString("imageMagickCustomParams_resize", "", "images", "Custom parameters for ImageMagick resize operation, e.g. for thumbnail generation. Format is as args for command line, e.g. -strip -interlace Plane -quality 85");
+		Constants.setString("imageMagickCustomParams_crop", "", "images", "Custom parameters for ImageMagick crop operation. Format is as args for command line, e.g. -strip -interlace Plane -quality 85");
+		Constants.setString("imageMagickCustomParams_rotate", "", "images", "Custom parameters for ImageMagick rotate operation. Format is as args for command line, e.g. -strip -interlace Plane -quality 85");
+		Constants.setString("imageMagickCustomParams_jpg", "-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick convert operation for JPG format. Format is as args for command line, e.g. -define jpeg:optimize-coding=true");
+		Constants.setString("imageMagickCustomParams_png", "-define png:compression-level=9 -define png:compression-filter=5 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick convert operation for PNG format. Format is as args for command line, e.g. -define png:compression-level=9");
+		Constants.setString("imageMagickCustomParams_webp", "-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick convert operation for WebP format. Format is as args for command line, e.g. -define webp:compression-level=9");
 	}
 
 	/**
