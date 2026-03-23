@@ -20,6 +20,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
+import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
@@ -55,7 +56,7 @@ public class ImageTools
 	public static boolean isImage(String fileName)
 	{
 		String ext = FileTools.getFileExtension(fileName);
-		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp");
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg") || ext.equalsIgnoreCase("webp") || ext.equalsIgnoreCase("bmp");
 	}
 
 	/**
@@ -382,7 +383,7 @@ public class ImageTools
 			try
 			{
 				String temporaryFrom = IwcmFsDB.getTempFilePath(from.getPath());
-				String temporaryTo = IwcmFsDB.getTempFilePath(getTempFilePath(from.getPath()));
+				String temporaryTo = IwcmFsDB.getTempFilePath(getTempFilePath(to.getPath()));
 
 				//write from file to temp file disk
 				IwcmFsDB.writeFileToDisk(new File(from.getAbsolutePath()), new File(temporaryFrom), true);
@@ -412,7 +413,7 @@ public class ImageTools
 		else
 		{
 			//usualy from and to is same file, we need temp to file and then replace to with this temp file
-			IwcmFile toTemp = new IwcmFile(getTempFilePath(from.getAbsolutePath()));
+			IwcmFile toTemp = new IwcmFile(getTempFilePath(to.getAbsolutePath()));
 			if (fromIndex != -1) args.set(fromIndex, from.getAbsolutePath());
 			if (toIndex != -1) args.set(toIndex, toTemp.getAbsolutePath());
 			int result = executeImageMagickCommand(args);
@@ -426,19 +427,20 @@ public class ImageTools
 	}
 
 	/**
-	 * Returns temporary file path for given path. If path is /path/to/file.jpg, temp file path will be /path/to/file.tmp.jpg
+	 * Returns temporary file path for given path. If path is /path/to/file.jpg, temp file path will be /path/to/file.tmp-timestamp-random.jpg
 	 * @param path
 	 * @return
 	 */
 	private static String getTempFilePath(String path) {
 		int dotIndex = path.lastIndexOf('.');
+		String append = ".tmp-" + System.currentTimeMillis() + "-" + Password.generatePassword(5);
 		if (dotIndex != -1)
 		{
-			return path.substring(0, dotIndex) + ".tmp" + path.substring(dotIndex);
+			return path.substring(0, dotIndex) + append + path.substring(dotIndex);
 		}
 		else
 		{
-			return path + ".tmp";
+			return path + append;
 		}
 	}
 
@@ -562,8 +564,8 @@ public class ImageTools
 
 			int counter = 0;
 			for (String customParam : customParamsArray) {
-				//we need to add custom params after from file path which is first parameter
-				args.add(1 + counter, customParam);
+				//we need to add custom params after from file path like: convert file.jpg [custom params] -resize 100x100! file.jpg
+				args.add(2 + counter, customParam);
 				counter++;
 			}
 		}

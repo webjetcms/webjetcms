@@ -59,7 +59,7 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
         {
             return false;
         }
-        String className = profile.getClass().getSimpleName();
+        String className = profile.getDomainClass().getSimpleName();
         String[] skippedClasses = {"EnumerationTypeBean", "TemplatesGroupBean"};
         for (String skippedClass : skippedClasses)
         {
