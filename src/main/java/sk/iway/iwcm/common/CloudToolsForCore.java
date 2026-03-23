@@ -317,7 +317,12 @@ public class CloudToolsForCore {
 
                     for (String folder : folders)
                     {
-                        if (FileBrowserTools.hasForbiddenSymbol(folder)) continue;
+                        if (Tools.isEmpty(folder)) continue;
+
+                        // * is forbidden, we must remove it before check
+                        String folderNoAsterisk = folder;
+                        if (folderNoAsterisk.endsWith("/*")) folderNoAsterisk = folderNoAsterisk.substring(0, folderNoAsterisk.length() - 1);
+                        if (FileBrowserTools.hasForbiddenSymbol(folderNoAsterisk)) continue;
 
                         boolean addFolder = false;
                         if (folder.startsWith("/images/") || folder.startsWith("/files/")) addFolder = true;

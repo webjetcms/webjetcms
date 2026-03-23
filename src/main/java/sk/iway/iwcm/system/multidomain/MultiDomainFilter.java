@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.FileCache;
 import sk.iway.iwcm.io.IwcmFile;
@@ -123,17 +124,17 @@ public class MultiDomainFilter implements Filter
       	}
       }
 
-   	if (Tools.isNotEmpty(domainAlias) && path.equals(rewrite)==false)
-   	{
-      	//Logger.debug(MultiDomainFilter.class, "rewrite="+rewrite);
+		if (Tools.isNotEmpty(domainAlias) && path.equals(rewrite)==false)
+		{
+			//Logger.debug(MultiDomainFilter.class, "rewrite="+rewrite);
 
-      	WrappedRequest wRequest = new WrappedRequest(req, rewrite);
+			WrappedRequest wRequest = new WrappedRequest(req, rewrite);
 
-         //wRequest.getRequestDispatcher(wRequest.getServletPath()).forward(wRequest, response);
-         chain.doFilter(wRequest, response);
+			//wRequest.getRequestDispatcher(wRequest.getServletPath()).forward(wRequest, response);
+			chain.doFilter(wRequest, response);
 
-         return;
-   	}
+			return;
+		}
      	chain.doFilter(request, response);
 	}
 
@@ -162,20 +163,19 @@ public class MultiDomainFilter implements Filter
 	 */
 	public static String rewriteUrlToLocal(String path, String domainAlias)
 	{
-		if (Tools.isNotEmpty(domainAlias))
-   	{
+		if (Tools.isNotEmpty(domainAlias) && FilePathTools.isExternalDirs()==false)
+   		{
 			for (String dir : getMultiDirs())
-	      {
-		      if (path.startsWith("/"+dir+"/"))
-		      {
-		      	if (path.startsWith("/"+dir+"/"+domainAlias+"/")==false && path.startsWith("/"+dir))
-	      		{
-		      		return "/"+dir+"/"+domainAlias+path.substring(dir.length()+1);
-	      		}
-
-		      }
-	      }
-   	}
+	      	{
+				if (path.startsWith("/"+dir+"/"))
+				{
+					if (path.startsWith("/"+dir+"/"+domainAlias+"/")==false && path.startsWith("/"+dir))
+					{
+						return "/"+dir+"/"+domainAlias+path.substring(dir.length()+1);
+					}
+				}
+	      	}
+   		}
 		return path;
 	}
 
