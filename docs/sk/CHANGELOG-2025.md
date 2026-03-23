@@ -55,6 +55,8 @@
 - Štýl - [výber štýlu](frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor) definovaného pre element napr. `p.paragraph-green,p.paragraph-red-border,p.paragraph-yellow-background` alebo `section.test-section,section.test-section-green` umožňuje nastaviť viaceré štýly súčasne. Opakovaným zvolením už nastaveného štýlu sa tento štýl odstráni (#OSK140).
 - Upravený text pre publikovanie stránky do budúcnosti na **Naplánovať zmenu stránky po tomto dátume**, pri zvolení tejto možnosti sa aj zmení tlačidlo na uloženie na text **Naplánovať** pre jasnejšiu informáciu pre používateľa (#58253).
 
+- Vkladanie aplikácií - doplnená možnosť maximalizovať a minimalizovať okno pre vkladanie aplikácií do stránky (#57409).
+
 ### Aplikácie
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
@@ -75,6 +77,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/app-testimonials/editor-style.png)
 
+- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
+
+![](redactor/apps/htmlbox/editor-block.png)
+
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#58073).
 
 - [Novinky](redactor/apps/news/README.md)
@@ -84,10 +90,6 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Formulár ľahko](redactor/apps/formsimple/README.md)
 
 ![](redactor/apps/formsimple/editor-dialog-items.png)
-
-- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
-
-![](redactor/apps/htmlbox/editor-block.png)
 
 ### Formuláre
 
