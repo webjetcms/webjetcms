@@ -7,12 +7,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.ThymeleafEvent;
-import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
 @Component
