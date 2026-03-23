@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.form.FormMailAction;
@@ -46,22 +45,19 @@ public class FilePathTools
 	 */
 	public static boolean isExternalDir(String virtualPath)
 	{
-		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"))
+		if (isExternalDirs())
 		{
-			if (Tools.isNotEmpty(Constants.getString("cloudStaticFilesDir")))
-			{
-				virtualPath = normalizeVirtualPath(virtualPath);
-				String virtualPathLC = virtualPath.toLowerCase();
-				//jeeff: toto som zrusil aby sme nemuseli pri uprave CSS menit X webov || virtualPathLC.startsWith("/css") || virtualPathLC.startsWith("/jscripts")
-				if (virtualPathLC.startsWith("/images") ||
-					 virtualPathLC.startsWith("/files") ||
-					 virtualPathLC.startsWith("/shared") ||
-					 virtualPath.startsWith(Constants.getString("thumbServletCacheDir")) ||
-					 virtualPath.startsWith(FormMailAction.FORM_FILE_DIR) ||
-					 //kvoli pentestom, tu mozu byt rozbalovane importy, mali by byt pre kazdy host separe (okrem cloudu, kde to nechceme)
-					 ("cloud".equals(Constants.getInstallName())==false && virtualPathLC.startsWith("/web-inf/tmp/"))
-					) return true;
-			}
+			virtualPath = normalizeVirtualPath(virtualPath);
+			String virtualPathLC = virtualPath.toLowerCase();
+			//jeeff: toto som zrusil aby sme nemuseli pri uprave CSS menit X webov || virtualPathLC.startsWith("/css") || virtualPathLC.startsWith("/jscripts")
+			if (virtualPathLC.startsWith("/images") ||
+					virtualPathLC.startsWith("/files") ||
+					virtualPathLC.startsWith("/shared") ||
+					virtualPath.startsWith(Constants.getString("thumbServletCacheDir")) ||
+					virtualPath.startsWith(FormMailAction.FORM_FILE_DIR) ||
+					//kvoli pentestom, tu mozu byt rozbalovane importy, mali by byt pre kazdy host separe (okrem cloudu, kde to nechceme)
+					("cloud".equals(Constants.getInstallName())==false && virtualPathLC.startsWith("/web-inf/tmp/"))
+				) return true;
 		}
 		return false;
 	}

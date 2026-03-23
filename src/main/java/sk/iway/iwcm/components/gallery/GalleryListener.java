@@ -31,6 +31,7 @@ public class GalleryListener {
 
             //set baseDir to open in jstree
             String baseDir = Constants.getString("imagesRootDir") + AdminTools.getDomainNameFileAliasAppend() + "/" + Constants.getString("galleryDirName");
+            baseDir = Tools.replace(baseDir, "//", "/");
             model.addAttribute("baseDir", baseDir);
 
             String dir = event.getSource().getRequest().getParameter("dir");
