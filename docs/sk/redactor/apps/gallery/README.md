@@ -1,6 +1,6 @@
 # Galéria
 
-Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotografií. Obrázky z digitálneho fotoaparátu stačí nahrať do galérie. WebJET fotografie automaticky zmenší na požadovaný formát. Z každej fotky sa vytvárajú 3 kópie:
+Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotografií. Obrázky z digitálneho fotoaparátu stačí nahrať do galérie. WebJET fotografie automaticky zmenší na požadovaný formát. Podporované sú formáty `JPG`, `JPEG`, `GIF`, `PNG` a `WebP`. Z každej fotky sa vytvárajú 3 kópie:
 
 - Náhľadový obrázok - fotka v malom rozlíšení, cca 160x120 bodov, používa sa v zozname obrázkov
 - Obrázok v bežnom rozlíšení – fotka v rozlíšení pre bežný monitor, teda cca 600x400 bodov – táto fotka sa zobrazí po kliknutí na náhľadový obrázok
@@ -122,8 +122,7 @@ Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbliž
 
 ## Možné konfiguračné premenné
 
-- `imageMagickDir` - Ak je nastavené použije sa na zmenu veľkosti obrázkov príkaz `convert` z balíka `ImageMagick` (predvolená hodnota: `/usr/bin`).
-- `galleryAlwaysUseImageMagick` - ak je nastavené na `true`, tak zmena veľkosti obrázkov rozmeru < 500 bodov sa tiež bude vykonávať volaním externého programu `ImageMagick` (predvolená hodnota: `true`).
+- `imageMagickDir` - Ak je nastavené použije sa na zmenu veľkosti obrázkov `ImageMagick`. Systém najprv hľadá príkaz `magick` (verzia 7), ak neexistuje použije sa `convert` (verzia 6) (predvolená hodnota: `/usr/bin`).
 - `galleryWatermarkSaturation` - Nastavuje transparentnosť vodotlače vo výslednom obrázku. Číslo 0-100, 0 znamená úplnú priesvitnosť, 100 nepriesvitnosť. (predvolená hodnota: 70).
 - `galleryWatermarkGravity` - Pozícia vodotlače vo výslednom obrázku. Možnosti podľa svetových strán v angličtine: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast` (predvolená hodnota: `Center`).
 - `galleryEnableWatermarking` - Vypne / zapne vodotlač pre obrázky. Vodotlač môže výrazne spomaľovať veľké importy obrázkov kvôli rekurzívnemu hľadaniu nastavenia vodotlače. (predvolená hodnota: `true`).
