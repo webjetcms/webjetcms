@@ -425,12 +425,15 @@ public class AdminTools {
      */
     public static String getDomainNameFileAliasAppend()
     {
+        //do not use domainAlias for cloudStaticFilesDir
+        if (Constants.getBoolean("multiDomainEnabled") == false || FilePathTools.isExternalDirs()) return "";
+
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         if (rb != null)
         {
             String domain = rb.getDomain();
             String domainAlias = MultiDomainFilter.getDomainAlias(domain);
-            if (Tools.isNotEmpty(domainAlias) && Tools.isEmpty(Constants.getString("cloudStaticFilesDir")))
+            if (Tools.isNotEmpty(domainAlias))
             {
                 Logger.debug(IwcmFsVolume.class, "getDomainNameFileAliasAppend, domain:"+domain+" return: /"+domainAlias);
                 return "/"+domainAlias;
