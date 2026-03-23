@@ -71,6 +71,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Administrácia - doplnené presmerovanie po prihlásení ak pôvodná cesta začína na `/components` a obsahuje `/admin` (#58317-4).
 - Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
@@ -79,6 +80,7 @@
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
 - Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
+- Multiweb - opravené používanie doménových aliasov pri použití externých priečinkov - nastavená konfiguračná premenná `cloudStaticFilesDir` (#58317-4).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
 - Prieskumník - opravené nahrávanie viacerých súborov cez drag & drop (#58317-2).
 - Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).

@@ -136,14 +136,16 @@ public class UploadFileTools {
             path.append(prefix);
         }
 
-        String domainAlias = AdminTools.getDomainNameFileAliasAppend();
-        if (Tools.isNotEmpty(domainAlias))
-        {
-            if (prefix.startsWith("/images/gallery")) {
-                path.setLength(0);
-                path.append("/images"+domainAlias+prefix.substring("/images".length()));
-            } else {
-                path.append(domainAlias);
+        if (FilePathTools.isExternalDirs()==false) {
+            String domainAlias = AdminTools.getDomainNameFileAliasAppend();
+            if (Tools.isNotEmpty(domainAlias))
+            {
+                if (prefix.startsWith("/images/gallery")) {
+                    path.setLength(0);
+                    path.append("/images"+domainAlias+prefix.substring("/images".length()));
+                } else {
+                    path.append(domainAlias);
+                }
             }
         }
 
