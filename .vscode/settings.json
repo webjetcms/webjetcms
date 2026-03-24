@@ -90,6 +90,7 @@
         "git rev-parse": true,
         "git merge-base": true,
         "uniq": true,
-        "awk": true
+        "awk": true,
+        "read": true
     }
 }

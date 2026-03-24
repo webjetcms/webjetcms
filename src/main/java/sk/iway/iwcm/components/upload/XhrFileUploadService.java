@@ -38,7 +38,7 @@ import java.util.Optional;
 @Service
 public class XhrFileUploadService {
 
-    private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4";
+    private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4 webp";
     private static final String BASE_DIR = "WEB-INF/tmp/";
     private static final String FINAL_PREFIX = "final_";
     private static final String SEPARATOR = "__upload__";

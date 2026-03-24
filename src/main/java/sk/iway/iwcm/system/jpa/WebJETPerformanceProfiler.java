@@ -49,8 +49,26 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
 
 	@Override
 	public boolean shouldLogProfile()
-   {
-      return "debug".equals(Constants.getString("logLevel"));
+    {
+        return "debug".equals(Constants.getString("logLevel"));
+	}
+
+    public boolean shouldLogProfile(Profile profile)
+    {
+        if (shouldLogProfile() == false)
+        {
+            return false;
+        }
+        String className = profile.getDomainClass().getSimpleName();
+        String[] skippedClasses = {"EnumerationTypeBean", "TemplatesGroupBean"};
+        for (String skippedClass : skippedClasses)
+        {
+            if (className.equals(skippedClass))
+            {
+                return false;
+            }
+        }
+        return true;
 	}
 
 
@@ -76,7 +94,7 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
       String sql = query.getSQLString();
       Object result = null;
       try {
-          if (shouldLogProfile())
+          if (shouldLogProfile(profile))
           {
               sb.append("JPA:");
 
@@ -131,7 +149,7 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
          	 ExecutionTimeMonitor.recordSqlExecution(sql, profile.getTotalTime());
           }
           addProfile(profile);
-          if (shouldLogProfile())
+          if (shouldLogProfile(profile))
           {
               long profileEndTime = System.currentTimeMillis();
               long totalTimeIncludingProfiling = profileEndTime - profileStartTime;// Try to remove the profiling time from the total time.

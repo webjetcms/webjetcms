@@ -557,6 +557,7 @@
 			'kindPSD'         : 'Adobe Photoshop obrázok',
 			'kindXBITMAP'     : 'X bitmap obrázok',
 			'kindPXM'         : 'Pixelmator obrázok',
+			'kindWEBP'        : 'WEBP obrázok',
 			// media
 			'kindAudio'       : 'Zvukový súbor',
 			'kindAudioMPEG'   : 'MPEG zvuk',
