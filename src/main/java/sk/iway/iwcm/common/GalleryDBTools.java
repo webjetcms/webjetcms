@@ -94,7 +94,6 @@ public class GalleryDBTools {
         //zakladna ochrana pred code injection
         if (fillColor!=null && fillColor.length()!=6) fillColor = null;
 
-
         /** Overim, ci na serveri existuje ImageMagic **/
         if (ImageTools.existsImageMagickConvertCommand())
         {
@@ -208,11 +207,16 @@ public class GalleryDBTools {
             Image smallImage = null;
 
             /*** Orezanie ***/
-            smallImage = originalBufferedImage.getSubimage(cleft, ctop, cwidth, cheight);
-            BufferedImage bi = new BufferedImage(cwidth, cheight, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = bi.createGraphics();
-            g.drawImage(smallImage, 0, 0, null);
-            timer.diff("croped");
+            BufferedImage bi;
+            if (cwidth > 0 && cheight > 0) {
+                smallImage = originalBufferedImage.getSubimage(cleft, ctop, cwidth, cheight);
+                bi = new BufferedImage(cwidth, cheight, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g = bi.createGraphics();
+                g.drawImage(smallImage, 0, 0, null);
+                timer.diff("croped");
+            } else {
+                bi = originalBufferedImage;
+            }
 
             /*** Zmena velkosti obrazku ***/
             smallImage = bi.getScaledInstance(resizeWidth, resizeHeight, scaleType);

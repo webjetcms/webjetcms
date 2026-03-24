@@ -12,6 +12,10 @@ Before(({ I, login }) => {
 });
 
 Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
+    Document.setConfigValue("imageMagickDir", "/usr/bin");
+    //for local development localconf will set correct default values
+    I.amOnPage("/localconf.jsp");
+
     //navigate to files section
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9wcm9kdWt0b3ZhLXN0cmFua2E_E'); //images/produktova-stranka
     I.waitForElement('.elfinder-navbar-wrapper', 10);
@@ -39,14 +43,38 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.say('Verifying webp file is visible in elfinder');
     I.seeElement('.elfinder-cwd-filename[title="tree.webp"]');
 
+    //
     I.say('Displaying webp image via /thumb prefix and comparing screenshot');
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=400&h=400&ip=5');
     I.waitForElement('img', 10);
     await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb.png', null, null, 5);
+
+    //
+    I.say('Displaying webp image via /thumb prefix with no IP');
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=490');
+    I.waitForElement('img', 10);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-noip.png', null, null, 5);
+
+    //disable imageMagick, try standard Java resize method
+    Document.setConfigValue("imageMagickDir", "/usr/local/XXbin");
+
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=300&h=400&ip=5');
+    I.waitForElement('img', 10);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java.png', null, null, 5);
+
+    //noip
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=480');
+    I.waitForElement('img', 10);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java-noip.png', null, null, 5);
 });
 
-Scenario('webp cleanup', async ({ I }) => {
+Scenario('webp cleanup', async ({ I, Document }) => {
     I.say('Deleting all autotest-webp- folders');
+
+    //revert imageMagickDir to valid path for cleanup
+    Document.setConfigValue("imageMagickDir", "/usr/bin");
+    I.amOnPage("/localconf.jsp");
+
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9wcm9kdWt0b3ZhLXN0cmFua2E_E'); //images/produktova-stranka
     I.waitForElement('.elfinder-navbar-wrapper', 10);
     I.waitForElement("#iwcm_2_L2ltYWdlcy9wcm9kdWt0b3ZhLXN0cmFua2EvbW9uZXkuanBn", 10); //money.jpg file
