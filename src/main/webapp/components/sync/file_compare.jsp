@@ -66,8 +66,10 @@ boolean isImage = false;
 
 if(file1!= null && file2!=null)
 {
-	if(file1.endsWith(".gif") || file1.endsWith(".jpg") || file1.endsWith(".bmp") || file1.endsWith(".png") || file1.endsWith(".jpeg") || file1.endsWith(".webp"))
+	if(sk.iway.iwcm.common.ImageTools.isImage(file1))
+	{
 		isImage=true;
+	}
 	else
 	{
 		file1Data=getFileContent(new IwcmFile(sk.iway.iwcm.Tools.getRealPath(Tools.getRequestParameter(request, "firstFile"))));

@@ -487,6 +487,13 @@ public class ImageTools
 		{
 			sk.iway.iwcm.Logger.error(e);
 		}
+		finally
+		{
+			if (process != null)
+			{
+				process.destroy();
+			}
+		}
 		return -1;
 	}
 
