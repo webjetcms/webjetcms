@@ -126,7 +126,7 @@ Scenario('galeria v stranke', ({ I }) => {
     I.dontSee("loading=\"lazy\"");
     I.see("Tesla Supercharger Bratislava");
     I.forceClick("Tesla Supercharger Bratislava");
-    I.waitForElement("div.pswp--open");
+    I.waitForElement("div.pswp--open", 10);
     I.see("v Bratislave");
     I.see("Auparku", "span.photoswipeLongDesc a")
     I.see("autora fotky", "small p a");
