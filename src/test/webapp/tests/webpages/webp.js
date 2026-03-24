@@ -39,7 +39,7 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.seeElement('.elfinder-cwd-filename[title="tree.webp"]');
 
     I.say('Displaying webp image via /thumb prefix and comparing screenshot');
-    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=200&h=200&ip=5');
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=400&h=400&ip=5');
     I.waitForElement('img', 10);
     await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb.png', null, null, 5);
 });
