@@ -31,6 +31,7 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
 
     I.say('Uploading webp image');
     I.click('.elfinder-button-icon.elfinder-button-icon-upload');
+    //from: https://developers.google.com/speed/webp/gallery1 / https://commons.wikimedia.org/wiki/File:Frühling_blühender_Kirschenbaum.jpg
     I.attachFile('input[type=file]', 'tests/webpages/tree.webp');
     await I.clickIfVisible('.elfinder-confirm-accept');
     I.waitForText('tree.webp', 10, '.elfinder-cwd-wrapper');
