@@ -152,21 +152,37 @@ Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbliž
 
 Pri operáciách s obrázkami cez `ImageMagick` (zmena veľkosti, orezanie, otočenie) je možné nastaviť vlastné parametre pomocou konfiguračných premenných. Parametre sa zapisujú vo formáte príkazového riadku, napr. `-strip -interlace Plane -quality 85`.
 
-- `imageMagickCustomParams` - Základné vlastné parametre pre všetky `ImageMagick` operácie. Použijú sa ak nie je nastavený špecifickejší parameter pre danú operáciu alebo formát (predvolená hodnota: `-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0`).
+Hodnota konfiguračnej premennej môže obsahovať **dva riadky** oddelené novým riadkom:
+
+- **Riadok 1** - parametre vložené **pred operáciu** (za vstupný súbor), napr. `-filter Lanczos`
+- **Riadok 2** - parametre vložené **za operáciu** (pred výstupný súbor), napr. `-define png:compression-level=9`
+
+Ak je zadaný len jeden riadok (bez nového riadku), všetky parametre sa vložia pred operáciu.
+
+Príklad výsledného príkazu pri dvoch riadkoch:
+
+```sh
+magick vstup.png -filter Lanczos -strip -resize 640x427! -interlace Plane -sampling-factor 4:2:0 vystup.png
+            ↑ riadok 1 (pred operáciou)                   ↑ riadok 2 (za operáciou)
+```
+
+- `imageMagickCustomParams` - Základné vlastné parametre pre všetky `ImageMagick` operácie. Použijú sa ak nie je nastavený špecifickejší parameter pre danú operáciu alebo formát (predvolená hodnota: `-filter Lanczos` riadok 1, `-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0` riadok 2).
 - `imageMagickCustomParams_resize` - Vlastné parametre pre operáciu zmeny veľkosti (predvolená hodnota: ).
 - `imageMagickCustomParams_crop` - Vlastné parametre pre operáciu orezania (predvolená hodnota: ).
 - `imageMagickCustomParams_rotate` - Vlastné parametre pre operáciu otočenia (predvolená hodnota: ).
-- `imageMagickCustomParams_jpg` - Vlastné parametre pre formát `JPG` (predvolená hodnota: `-define jpeg:optimize-coding=true`).
-- `imageMagickCustomParams_png` - Vlastné parametre pre formát `PNG` (predvolená hodnota: `-define png:compression-level=9 -define png:compression-filter=5 -define png:compression-strategy=1`).
-- `imageMagickCustomParams_webp` - Vlastné parametre pre formát WebP (predvolená hodnota: `-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50`).
+- `imageMagickCustomParams_jpg` - Vlastné parametre pre formát `JPG` (predvolená hodnota: `-define jpeg:optimize-coding=true` na riadku 2).
+- `imageMagickCustomParams_png` - Vlastné parametre pre formát `PNG` (predvolená hodnota: `-define png:compression-level=9 -define png:compression-strategy=1` na riadku 2).
+- `imageMagickCustomParams_webp` - Vlastné parametre pre formát WebP (predvolená hodnota: `-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50` na riadku 2).
 
 **Poradie vyhľadávania parametrov:**
 
 Systém hľadá nastavenie v nasledovnom poradí podľa špecifickosti (na príklade operácie `resize` pre formát `jpg`):
 
 1. `imageMagickCustomParams_resize_jpg` - najšpecifickejšie, pre konkrétnu operáciu a formát
-2. Ak nie je nastavená, hľadá sa `imageMagickCustomParams_resize` (parametre pre operáciu) + `imageMagickCustomParams_jpg` (parametre pre formát) - tieto sa **skombinujú** (spoja)
+2. Ak nie je nastavená, hľadá sa `imageMagickCustomParams_resize` (parametre pre operáciu) + `imageMagickCustomParams_jpg` (parametre pre formát) - tieto sa **skombinujú** (spoja) riadok po riadku
 3. Ak nie je nastavená ani pre operáciu, použije sa `imageMagickCustomParams` (základné parametre) + `imageMagickCustomParams_jpg` (parametre pre formát)
+
+Pri kombinovaní parametrov sa riadky kombinujú samostatne - riadok 1 základných parametrov sa spojí s riadkom 1 formátových parametrov a rovnako riadok 2.
 
 Ak vlastné parametre obsahujú nastavenie `compression-level` alebo `quality`, automaticky sa odstráni prípadný existujúci parameter `-quality` z príkazu, aby nedošlo ku konfliktu.
 

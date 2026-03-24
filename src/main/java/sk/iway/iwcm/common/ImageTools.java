@@ -490,7 +490,14 @@ public class ImageTools
 		return -1;
 	}
 
-	private static void addImageMagickCustomParams(List<String> args)
+	/**
+	 * Injects custom ImageMagick parameters into the command args based on operation type and file format.
+	 * Config values can contain two lines separated by newline:
+	 * - Line 1: params injected BEFORE the operation (after input file), e.g. -filter Lanczos
+	 * - Line 2: params injected AFTER the operation (before output file), e.g. -define png:compression-level=9
+	 * If only one line is present, all params are injected before the operation (backward compatible).
+	 */
+	static void addImageMagickCustomParams(List<String> args)
 	{
 		String operation = null;
 		for (String arg : args) {
@@ -534,20 +541,28 @@ public class ImageTools
 			customParamsKey = "imageMagickCustomParams_" + ext;
 			String customParamsExt = Constants.getString(customParamsKey);
 			if (Tools.isNotEmpty(customParamsExt)) {
-				if (Tools.isNotEmpty(customParams)) {
-					customParams += " " + customParamsExt;
-				}
-				else {
-					customParams = customParamsExt;
-				}
+				customParams = combineCustomParams(customParams, customParamsExt);
 			}
 		}
 
 		if (Tools.isNotEmpty(customParams)) {
-			String[] customParamsArray = Tools.getTokens(customParams, " ", true);
+			//split into before-operation (inputParams) and after-operation (outputParams) by newline
+			String inputParams;
+			String outputParams;
+			int newlineIndex = customParams.indexOf('\n');
+			if (newlineIndex != -1) {
+				inputParams = customParams.substring(0, newlineIndex).trim();
+				outputParams = customParams.substring(newlineIndex + 1).trim();
+			} else {
+				inputParams = customParams.trim();
+				outputParams = "";
+			}
+
+			String allParams = (inputParams + " " + outputParams).trim();
+			String[] allParamsArray = Tools.getTokens(allParams, " ", true);
 
 			//if contains compressionLevel remove -quality xx param
-			for (String customParam : customParamsArray) {
+			for (String customParam : allParamsArray) {
 				if (customParam.contains("compression-level") || customParam.contains("quality")) {
 					//remove -quality xx parameter
 					for (int i = 0; i < args.size(); i++) {
@@ -562,13 +577,62 @@ public class ImageTools
 				}
 			}
 
-			int counter = 0;
-			for (String customParam : customParamsArray) {
-				//we need to add custom params after from file path like: convert file.jpg [custom params] -resize 100x100! file.jpg
-				args.add(2 + counter, customParam);
-				counter++;
+			//inject input params after from file path like: magick file.jpg [input params] -resize 100x100! file.jpg
+			if (Tools.isNotEmpty(inputParams)) {
+				String[] inputParamsArray = Tools.getTokens(inputParams, " ", true);
+				int counter = 0;
+				for (String customParam : inputParamsArray) {
+					args.add(2 + counter, customParam);
+					counter++;
+				}
+			}
+
+			//inject output params before the output file path like: magick file.jpg -resize 100x100! [output params] file.jpg
+			if (Tools.isNotEmpty(outputParams)) {
+				String[] outputParamsArray = Tools.getTokens(outputParams, " ", true);
+				for (String customParam : outputParamsArray) {
+					args.add(args.size() - 1, customParam);
+				}
 			}
 		}
+	}
+
+	/**
+	 * Combines two custom params strings line-by-line. Each string can contain two lines (input params \n output params).
+	 * Line 1 of base is combined with line 1 of ext, line 2 of base with line 2 of ext.
+	 * @param base - base custom params (can be null/empty)
+	 * @param ext - extension-specific custom params (must not be empty)
+	 * @return combined custom params string
+	 */
+	static String combineCustomParams(String base, String ext) {
+		if (Tools.isEmpty(base)) {
+			return ext;
+		}
+
+		String[] baseParts = splitParamLines(base);
+		String[] extParts = splitParamLines(ext);
+
+		String combinedInput = combineLine(baseParts[0], extParts[0]);
+		String combinedOutput = combineLine(baseParts[1], extParts[1]);
+
+		if (Tools.isEmpty(combinedOutput)) {
+			return combinedInput;
+		}
+		return combinedInput + "\n" + combinedOutput;
+	}
+
+	private static String[] splitParamLines(String params) {
+		int newlineIndex = params.indexOf('\n');
+		if (newlineIndex != -1) {
+			return new String[] { params.substring(0, newlineIndex).trim(), params.substring(newlineIndex + 1).trim() };
+		}
+		return new String[] { params.trim(), "" };
+	}
+
+	private static String combineLine(String a, String b) {
+		if (Tools.isEmpty(a)) return Tools.isNotEmpty(b) ? b : "";
+		if (Tools.isEmpty(b)) return a;
+		return a + " " + b;
 	}
 
 	/**
