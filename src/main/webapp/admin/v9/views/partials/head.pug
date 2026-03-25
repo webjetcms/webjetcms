@@ -13,7 +13,7 @@ meta(name='generator' content=`${WPD.generator}`)
 
 link(rel='icon' href=publicPath + 'images/favicon-cms.ico' type='image/x-icon')
 
-//- Synchronous shim: modules are deferred, so window.domReady must exist before inline scripts run
+//- Synchronous shim: modules are deferred, so window.domReady and window.WJ must exist before inline scripts run
 script.
     window.domReady = {
         _queue: [],
@@ -21,6 +21,44 @@ script.
         fire: function() {},
         remove: function() {}
     };
+    // WJ shim: queues method calls (e.g. WJ.headerTabs(...)) until the real WJ object is set by the main module
+    (function() {
+        var _wjQueue = [];
+        window.WJ = new Proxy({_wjQueue: _wjQueue}, {
+            get: function(target, prop) {
+                if (prop === '_wjQueue' || prop === '_isShim') return target[prop];
+                return function() {
+                    _wjQueue.push({method: prop, args: Array.prototype.slice.call(arguments)});
+                };
+            },
+            set: function(target, prop, value) {
+                target[prop] = value;
+                return true;
+            }
+        });
+        window.WJ._isShim = true;
+    })();
+    // jQuery/$ shim: queues $(selector).method() calls until real jQuery loads from ES module
+    (function() {
+        var _jqQueue = [];
+        window._jqQueue = _jqQueue;
+        window.$ = window.jQuery = function() {
+            var args = [].slice.call(arguments);
+            var calls = [];
+            var proxy = new Proxy({length: 0}, {
+                get: function(target, prop) {
+                    if (prop === 'length') return 0;
+                    if (typeof prop === 'symbol') return undefined;
+                    return function() {
+                        calls.push({prop: prop, args: [].slice.call(arguments)});
+                        return proxy;
+                    };
+                }
+            });
+            _jqQueue.push({args: args, calls: calls});
+            return proxy;
+        };
+    })();
 
 
 // Outpul all style files

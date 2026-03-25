@@ -59,6 +59,9 @@ import { Translator } from './libs/translator/translator';
 
 window.moment = moment;
 window.numeral = numeral;
+// Replace the WJ shim Proxy with the real WJ object.
+// Queue replay is deferred to app-init.js (after initSubmenuTabsClick etc. are defined).
+window._wjShimQueue = window.WJ && window.WJ._isShim ? window.WJ._wjQueue : [];
 window.WJ = WJ;
 window.Quill = Quill;
 window.toastr = toastr;
