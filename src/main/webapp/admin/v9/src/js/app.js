@@ -91,7 +91,7 @@ import 'jquery-ui/themes/base/resizable.css';
 import 'jquery-ui/themes/base/slider.css';
 //import 'jquery-ui/themes/base/tooltip.css';
 
-import 'bootstrap';
+import * as bootstrapModule from 'bootstrap';
 import '../scss/ninja.scss';
 
 //extra css file for inline editing
@@ -100,16 +100,16 @@ const createInlineCss = () => {
 };
 window.createInlineCss = createInlineCss;
 
-const bootstrap = (window.bootstrap = require('bootstrap'));
-$.fn.bsTooltip = bootstrap.Tooltip.jQueryInterface;
+window.bootstrap = bootstrapModule;
+$.fn.bsTooltip = bootstrapModule.Tooltip.jQueryInterface;
 //override UI tooltip with bootstrap tooltip
-$.fn.tooltip = bootstrap.Tooltip.jQueryInterface;
+$.fn.tooltip = bootstrapModule.Tooltip.jQueryInterface;
 
 //na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
 //tiez musi ist cez require, inak to padalo ze nepozna bootstrap objekt
 //require('bootstrap-select/js/bootstrap-select');
 //https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
-require('./plugins/bootstrap-select-v1.14.0-gamma1')
+import './plugins/bootstrap-select-v1.14.0-gamma1';
 import 'bootstrap-select/dist/css/bootstrap-select.css';
 
 //not used anymore
