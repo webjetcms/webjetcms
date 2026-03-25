@@ -31,7 +31,7 @@ public class PreviewController {
             return "forward:/404.jsp";
         }
 
-        //set transient columns
+        //set DocDetails @transient columns
         doc.setPublishStart(doc.getPublishStart());
         doc.setPublishEnd(doc.getPublishEnd());
         doc.setEventDate(doc.getEventDate());
