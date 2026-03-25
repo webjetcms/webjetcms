@@ -58,6 +58,13 @@ export default defineConfig(({ mode }) => ({
             scss: {
                 // Resolve bare package imports from node_modules
                 loadPaths: [path.resolve(__dirname, 'node_modules')],
+                // Ignore bootstrap warnings https://getbootstrap.com/docs/5.3/getting-started/vite/
+                silenceDeprecations: [
+                    'import',
+                    'mixed-decls',
+                    'color-functions',
+                    'global-builtin',
+                ],
             }
         }
     },
