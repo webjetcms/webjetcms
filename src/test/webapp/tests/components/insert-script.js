@@ -246,7 +246,7 @@ Scenario('Veci na prerobenie', ({ I }) => {
      I.forceClick('.buttons-select-all.btn.btn-sm.btn-outline-secondary');
 });
 
-Scenario('insert script-import @current', async ({ I, DataTables }) => {
+Scenario('insert script-import', async ({ I, DataTables }) => {
      I.waitForText('Skripty', 5);
      await DataTables.importTest({
           dataTable: 'insertScriptTable',
