@@ -32,6 +32,7 @@ import java.util.List;
 @RequestMapping(value = "/admin/rest/components/insert-script")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_insert_script')")
 public class InsertScriptRestController extends DatatableRestControllerV2<InsertScriptBean, Long> {
+
     @Autowired
     public InsertScriptRestController(InsertScriptRepository insertScriptRepository) {
         super(insertScriptRepository);
