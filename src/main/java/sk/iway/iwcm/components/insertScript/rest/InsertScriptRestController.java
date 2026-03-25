@@ -92,7 +92,7 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
         }
 
         //auto-set sortPriority if not specified
-        if (entity.getSortPriority() == null || entity.getSortPriority() == 0) {
+        if (entity.getSortPriority() == null) {
             Integer maxPriority = ((InsertScriptRepository)getRepo()).findMaxSortPriorityByPositionAndDomainId(entity.getPosition(), domainId);
             if (maxPriority == null) maxPriority = 0;
             entity.setSortPriority(maxPriority + 10);

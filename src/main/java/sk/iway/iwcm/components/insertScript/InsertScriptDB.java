@@ -151,8 +151,8 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 
 		//sort by sortPriority ASC, then by id ASC
 		filteredInEditor.sort((a, b) -> {
-			int pa = a.getSortPriority() != null ? a.getSortPriority() : 0;
-			int pb = b.getSortPriority() != null ? b.getSortPriority() : 0;
+			int pa = a.getSortPriority() != null ? a.getSortPriority() : 10;
+			int pb = b.getSortPriority() != null ? b.getSortPriority() : 10;
 			int cmp = Integer.compare(pa, pb);
 			if (cmp != 0) return cmp;
 			long ia = a.getId() != null ? a.getId() : 0;
