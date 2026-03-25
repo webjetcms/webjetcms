@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Nastavi objekty potrebne pre nahlad stranky, DocDetails objekt pre nahlad ocakava v
@@ -25,6 +29,23 @@ public class PreviewController {
         DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");
         if (doc == null) {
             return "forward:/404.jsp";
+        }
+
+        //set transient columns
+        doc.setPublishStart(doc.getPublishStart());
+        doc.setPublishEnd(doc.getPublishEnd());
+        doc.setEventDate(doc.getEventDate());
+
+        TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+        if (temp != null) {
+            doc.setTempName(temp.getTempName());
+        }
+
+        UserDetails user = UsersDB.getUser(doc.getAuthorId());
+        if (user != null) {
+            doc.setAuthorName(user.getFullName());
+            doc.setAuthorEmail(user.getEmail());
+            doc.setAuthorPhoto(user.getPhoto());
         }
 
         request.setAttribute("isPreview", Boolean.TRUE);
