@@ -257,7 +257,10 @@ Scenario('insert script-import @current', async ({ I, DataTables }) => {
                {
                     name: "Test import"
                }
-          ]
+          ],
+          editSteps: function (row, counter, I, options, DT, DTE) {
+               I.seeInField('#DTE_Field_sortPriority', '10');
+          }
      });
 });
 
