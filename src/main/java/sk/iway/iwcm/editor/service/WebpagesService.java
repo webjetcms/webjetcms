@@ -957,7 +957,11 @@ public class WebpagesService {
 	private static List<LabelValue> getStatusIconOptions(GetAllItemsDocOptions options, Prop prop) {
 		List<LabelValue> icons = new ArrayList<>();
 
-		icons.add(new LabelValue("<i class=\"ti ti-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
+		if(Constants.getInt("systemPagesRecentPages") != options.getGroupId()) {
+			// Cant find searchDefaultPage because pages are not in real folder
+			icons.add(new LabelValue("<i class=\"ti ti-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
+		}
+
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin\"></i> "+prop.getText("webpages.icons.showInMenu"), "showInMenu:true"));
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin-off\"></i> "+prop.getText("webpages.icons.notShowInMenu"), "showInMenu:false"));
 		icons.add(new LabelValue("<i class=\"ti ti-lock\"></i> "+prop.getText("webpages.icons.onlyForLogged"), "passwordProtected:notEmpty"));
