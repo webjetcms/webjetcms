@@ -34,3 +34,22 @@ Scenario('editor - with error messages', async ({ I, DT, DTE, a11y }) => {
     I.pressKey("Escape");
     await a11y.check();
 });
+
+Scenario("toggle buttons", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    await a11y.check();
+});
+
+Scenario("export modal", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    I.click(DT.btn.export_button);
+    I.waitForElement("#datatableExportModal", 5);
+    await a11y.check();
+});
+
+Scenario("import modal", async ({ I, DT, a11y }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    I.click(DT.btn.import_button);
+    I.waitForElement("#datatableImportModal", 5);
+    await a11y.check();
+});

@@ -11,7 +11,7 @@ div.md-large-menu
             a.md-large-menu__item__link(data-th-href="${menuItem.href}" data-th-data-menu-id="${menuItem.group}" data-th-aria-label="${menuItem.text}")
                 i(data-th-class='${menuItem.icon}' aria-hidden="true")
 
-nav.menu-wrapper(data-scrollbar data-th-aria-label="\#{menu.top.navigation}" aria-label="Navigation")
+nav.menu-wrapper(data-scrollbar data-th-aria-label="\#{templates.temps-list.main-navigation}" aria-label="Navigation")
 
     div(data-th-each="menuItem : ${layout.menu}" data-th-data-menu-id="${menuItem.group}" data-th-class="${menuItem.active} ? 'md-main-menu md-main-menu--open' : 'md-main-menu'")
         div.md-main-menu__item(data-th-each="subMenuItem : ${menuItem.childrens}" data-th-class="${subMenuItem.active} ? 'md-main-menu\\_\\_item md-main-menu\\_\\_item--active' : 'md-main-menu\\_\\_item'" data-th-classappend="${!subMenuItem.childrens.empty} ? 'md-main-menu\\_\\_item--has-children'")
