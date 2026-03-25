@@ -44,6 +44,8 @@ export default defineConfig(({ mode }) => ({
         '__VUE_OPTIONS_API__': true,
         '__VUE_PROD_DEVTOOLS__': false,
         '__VUE_PROD_HYDRATION_MISMATCH_DETAILS__': false,
+        // Polyfill Node.js 'global' for browser (used by numeral/lodash)
+        'global': 'globalThis',
     },
 
     plugins: [
@@ -101,7 +103,7 @@ export default defineConfig(({ mode }) => ({
         },
     },
 
-    // Optimize CommonJS dependencies (UMD modules like buttons.colVis.js, jquery.cookie.js)
+    // Optimize CommonJS/AMD dependencies so Vite pre-bundles them with all internal deps resolved
     optimizeDeps: {
         include: [
             'jquery',

@@ -13,6 +13,15 @@ meta(name='generator' content=`${WPD.generator}`)
 
 link(rel='icon' href=publicPath + 'images/favicon-cms.ico' type='image/x-icon')
 
+//- Synchronous shim: modules are deferred, so window.domReady must exist before inline scripts run
+script.
+    window.domReady = {
+        _queue: [],
+        add: function(cb, order, rewrite) { this._queue.push({cb: cb, order: order || 0, rewrite: rewrite || false}); },
+        fire: function() {},
+        remove: function() {}
+    };
+
 
 // Outpul all style files
 each css in WPF.css
@@ -55,7 +64,7 @@ script.
 
 each js in WPF.js
     - if (js.indexOf("pages_")==-1 || js.indexOf("pages_"+filename+".")!=-1)
-        script(type='text/javascript', src=js)
+        script(type='module', src=js)
 
 div(class="head-script" data-th-if="${appIncludePathJs != null}" data-th-remove="tag")
     script(type="module").

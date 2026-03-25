@@ -68,6 +68,14 @@ function readManifest() {
         }
     }
 
+    // Ensure main (app.js) loads before appInit (app-init.js) — main sets up globals
+    const mainIdx = jsFiles.findIndex(f => f.includes('/main.'));
+    const initIdx = jsFiles.findIndex(f => f.includes('/appInit.'));
+    if (mainIdx > 0 && initIdx >= 0 && mainIdx > initIdx) {
+        const [main] = jsFiles.splice(mainIdx, 1);
+        jsFiles.splice(initIdx, 0, main);
+    }
+
     return {
         css: [...cssFiles],
         js: jsFiles,
