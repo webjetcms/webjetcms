@@ -29,6 +29,7 @@ Karta obmedzení skriptov.
 
 - **Začiatok platnosti** – dátum a čas, odkedy je skript platný.
 - **Koniec platnosti** – dátum a čas, dokedy je skript platný.
+- **Vložiť skript v editore stránok** - určuje, či sa má skript vkladať v editore stránok v režime PageBuilder. Väčšinu skriptov nie je potrebné v režime editácie vkladať, aby nekolidovali s editorom stránky.
 - **Vyberte adresár** – skript bude vložený do stránok v zvolených priečinkoch a ich pod-priečinkoch.
 - **Vyberte stránky** – skript bude vložený do vybraných web stránok.
 
