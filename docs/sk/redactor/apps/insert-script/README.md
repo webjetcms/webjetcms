@@ -12,6 +12,7 @@ Karta "Základné" obsahuje základné nastavenia ktoré sú všetky povinné.
 
 - **Názov / popis skriptu** – vaše pomenovanie/identifikácia skriptu.
 - **Umiestnenie skriptu v šablóne** – výberové pole typu ```autocomplete``` so zoznamom už zadaných pozícii skriptov v HTML kóde. Ak hodnota (napr. `after_body`) nie je zobrazená môžete ju zadať.
+- **Poradie vkladania** – číselná hodnota určujúca poradie vkladania skriptov v rámci rovnakej pozície. Skript s nižšou hodnotou sa vloží skôr. Predvolená hodnota pre existujúce skripty je `10`. Pri vytvorení nového skriptu, alebo zadaní prázdnej hodnoty, sa automaticky nastaví na najvyššiu existujúcu hodnotu v danej pozícii + 10 (napr. ak najvyššia existujúca priorita je `20`, nový skript dostane hodnotu `30`). Hodnotu je možné kedykoľvek upraviť.
 - **Cookie klasifikácia** – výberové pole s typmi cookies podľa ktorých je povolené vloženie skriptu do stránky
   - **Vložiť vždy** - skript sa vloží do stránky vždy bez ohľadu na povolené cookies/GDPR súhlas
   - **Nutné** – skript sa vkladá ak sú povolené Nutné cookies
@@ -63,4 +64,4 @@ a pre staršie JSP šablóny kód:
 <iwcm:insertScript position="head"/>
 ```
 
-kde výraz `head` definuje pole **Umiestnenie skriptu v šablóne**. Čiže na uvedené miesto sa vložia všetky skripty, ktoré majú nastavené pole Umiestnenie skriptu v šablóne na hodnotu `head`.
+kde výraz `head` definuje pole **Umiestnenie skriptu v šablóne**. Čiže na uvedené miesto sa vložia všetky skripty, ktoré majú nastavené pole Umiestnenie skriptu v šablóne na hodnotu `head`. Skripty sa vkladajú v poradí podľa hodnoty poľa **Poradie vkladania** (vzostupne), pri rovnakej priorite sa zoradí podľa ID záznamu.
