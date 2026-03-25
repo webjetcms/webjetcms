@@ -23,6 +23,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole.
+- [ ] Migrácia build z `webpack` na `vite`, opraviť varovania, napr. `eval` a staré knižnice/závislosti. Aktualizovať knižnice na novšie verzie (#58417).
 
 ## 2025
 

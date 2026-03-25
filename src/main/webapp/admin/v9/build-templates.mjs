@@ -188,40 +188,81 @@ function buildAll() {
 }
 
 /**
- * Watch mode: rebuild on PUG file changes.
+ * Wait for the Vite manifest file to appear (used in watch mode when
+ * vite build --watch may not have finished its first build yet).
  */
-function watchMode() {
+function waitForManifest(timeoutMs = 60000) {
+    return new Promise((resolve, reject) => {
+        if (fs.existsSync(MANIFEST_PATH)) {
+            resolve();
+            return;
+        }
+        console.log('[build-templates] Waiting for Vite manifest...');
+        const start = Date.now();
+        const interval = setInterval(() => {
+            if (fs.existsSync(MANIFEST_PATH)) {
+                clearInterval(interval);
+                resolve();
+            } else if (Date.now() - start > timeoutMs) {
+                clearInterval(interval);
+                reject(new Error('Timed out waiting for Vite manifest'));
+            }
+        }, 500);
+    });
+}
+
+/**
+ * Watch mode: rebuild on PUG or manifest changes.
+ */
+async function watchMode() {
     console.log('[build-templates] Starting watch mode...');
+
+    // Wait for Vite's first build to produce the manifest
+    await waitForManifest();
     buildAll();
 
     const debounceTimers = new Map();
 
-    fs.watch(VIEWS_DIR, { recursive: true }, (eventType, filename) => {
-        if (!filename || !filename.endsWith('.pug')) return;
-
-        // Debounce rapid changes
-        if (debounceTimers.has(filename)) {
-            clearTimeout(debounceTimers.get(filename));
+    function debouncedRebuild(key, label) {
+        if (debounceTimers.has(key)) {
+            clearTimeout(debounceTimers.get(key));
         }
-
-        debounceTimers.set(filename, setTimeout(() => {
-            debounceTimers.delete(filename);
-            console.log(`[build-templates] Changed: ${filename}, rebuilding all...`);
-            // Rebuild all because includes/extends mean any change can affect any output
+        debounceTimers.set(key, setTimeout(() => {
+            debounceTimers.delete(key);
+            console.log(`[build-templates] ${label}, rebuilding all...`);
             try {
                 buildAll();
             } catch (err) {
                 console.error(`[build-templates] Build error: ${err.message}`);
             }
-        }, 200));
+        }, 300));
+    }
+
+    // Watch PUG templates
+    fs.watch(VIEWS_DIR, { recursive: true }, (eventType, filename) => {
+        if (!filename || !filename.endsWith('.pug')) return;
+        debouncedRebuild('pug:' + filename, `Changed: ${filename}`);
     });
+
+    // Watch Vite manifest — rebuild templates when assets change
+    const manifestDir = path.dirname(MANIFEST_PATH);
+    if (fs.existsSync(manifestDir)) {
+        fs.watch(manifestDir, (eventType, filename) => {
+            if (filename === 'manifest.json') {
+                debouncedRebuild('manifest', 'Vite manifest changed');
+            }
+        });
+    }
 }
 
 // Main
 const isWatch = process.argv.includes('--watch');
 
 if (isWatch) {
-    watchMode();
+    watchMode().catch(err => {
+        console.error(`[build-templates] ${err.message}`);
+        process.exit(1);
+    });
 } else {
     buildAll();
 }

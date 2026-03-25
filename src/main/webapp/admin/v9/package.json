@@ -9,7 +9,7 @@
         "clean": "rm -rf dist/js dist/css dist/fonts dist/images dist/assets dist/.vite",
         "dev": "npm run clean && vite build --mode development && node build-templates.mjs",
         "prod": "npm run clean && vite build && node build-templates.mjs",
-        "watch": "npm run clean && vite build --mode development --watch & node build-templates.mjs --watch",
+        "watch": "npm run clean && (trap 'kill 0' INT TERM; vite build --mode development --watch & node build-templates.mjs --watch & wait)",
         "postinstall": "./postinstall.sh"
     },
     "keywords": [],
