@@ -139,6 +139,14 @@ public class SpecSearch<T> {
 	 */
 	public void addSpecSearchUserFullName(String paramValue, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder) {
 
+		List<Integer> userIds = getUserIdsFromFullName(paramValue, true);
+
+		if (userIds.size()>0) predicates.add(root.get(jpaProperty).in(userIds));
+		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
+	}
+
+	// Useful to have it as a separated method
+	public static List<Integer> getUserIdsFromFullName(String paramValue, boolean searchInEmail) {
 		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);
 
 		String operator = "LIKE";
@@ -155,9 +163,10 @@ public class SpecSearch<T> {
 			append = "";
 		}
 
-		List<Integer> userIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ? OR email "+operator+" ?", prepend+valueClean+append, prepend+valueClean+append);
-		if (userIds.size()>0) predicates.add(root.get(jpaProperty).in(userIds));
-		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
+		if(searchInEmail)
+			return (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ? OR email "+operator+" ?", prepend+valueClean+append, prepend+valueClean+append);
+		else
+			return (new SimpleQuery()).forListInteger("SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) "+operator+" ?", prepend+valueClean+append);
 	}
 
     /**
