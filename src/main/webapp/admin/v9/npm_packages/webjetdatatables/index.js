@@ -395,7 +395,7 @@ export const dataTableInit = options => {
                 for (var i = 0; i < fieldNameArr.length; i++) {
                     var fieldName = fieldNameArr[i];
                     var options = json.options[fieldNameList];
-                    //console.log("Updating options 2, fieldName=", fieldName, " values=", options);
+                    console.log("Updating options 2, fieldName=", fieldName, " values=", options);
 
                     //zmen String true/false hodnoty na realne true/false
                     fixOptionsValueType(options);
@@ -471,15 +471,44 @@ export const dataTableInit = options => {
                     if (typeof dataColumn != "undefined" && dataColumn.name==fieldName) {
                         dataColumn.title = customField.label;
                         dataColumn.sTitle = customField.label;
-                        //console.log("Setting title: ", fieldName, " ", customField.label, "dataColumn=", dataColumn);
+                        console.log("Setting title: ", fieldName, " ", customField.label, "dataColumn=", dataColumn);
                     }
                     for (var editorField of TABLE.DATA.fields) {
                         if (fieldName == editorField.name) {
                             editorField.label = customField.label;
                         }
                     }
+
+                    //handle label-value options
+                    if (typeof customField.typeValues != "undefined" && Array.isArray(customField.typeValues) && customField.typeValues.length>0) {
+                        console.log("Have typeValues for field ", fieldName, " options=", customField.typeValues);
+                        var options = customField.typeValues;
+                        fixOptionsValueType(options);
+
+                        for (var j = 0; j < DATA.columns.length; j++) {
+                            if (DATA.columns[j].data === fieldName) {
+                                DATA.columns[j].editor.options = options;
+                                DATA.columns[j].renderFormatForce = "dt-format-select";
+                                break;
+                            }
+                        }
+                        //aktualizuj DT editor
+                        try {
+                            TABLE.EDITOR.field(fieldName).update(options);
+                        } catch (e) {
+                            //asi dany field v editore neexistuje
+                            //console.log(e);
+                        }
+
+
+                        //aktualizuj select box v hlavicke
+                        dtWJ.updateFilterSelect(DATA, fieldName);
+                    }
                 }
-                if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
+                if (isChange) {
+                    $("#"+DATA.id).trigger("column-reorder.dt");
+                    dtWJ.initializeHeaderFilters("#"+TABLE.DATA.id+"_wrapper div.dt-scroll-head table ", false, TABLE.DATA, TABLE);
+                }
             }
         }
 

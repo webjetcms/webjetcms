@@ -1081,7 +1081,7 @@ export function updateFilterSelect(DATA, fieldName) {
  * @param {*} TABLE - optional, if set we will also call fixDatatableHeaderInputs to adhist datatables header selects
  */
 export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA, TABLE=null) {
-    //console.log("initializeHeaderFilters, dataTableSelector=", dataTableSelector, "extfilterExists=", extfilterExists, "DATA=", DATA, "TABLE=", TABLE);
+    console.log("initializeHeaderFilters, dataTableSelector=", dataTableSelector, "extfilterExists=", extfilterExists, "DATA=", DATA, "TABLE=", TABLE);
     $(dataTableSelector + ' thead tr:eq(1) th').each(function (index) {
 
         //remove colreorder listener - disable drag drop on filter
@@ -1091,6 +1091,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         var i = $(this).attr("data-dt-column");
         if (typeof i === "undefined" || i === null) i = index;
         var fieldName = DATA.columns[i].data;
+        var renderFormat = DATA.columns[i].renderFormatForce;
+        if (typeof renderFormat === "undefined" || renderFormat === null) renderFormat = "dt-format-text";
 
         //console.log("Iterating, i=", i, "fieldName=", fieldName, " col=", DATA.columns[i], "this=", this);
 
@@ -1120,6 +1122,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         html += `
                 </select>
                 <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" />`;
+
+        console.log("fieldName=", fieldName, " this=", this, " classes=", $(this).attr("class"), " renderFormat=", renderFormat);
 
         if ($(this).hasClass("dt-format-selector")) {
             html = `
@@ -1194,7 +1198,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
             html = ``;
         }
 
-        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
+        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio") || "dt-format-select"===renderFormat) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
             html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">`;
             //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu
