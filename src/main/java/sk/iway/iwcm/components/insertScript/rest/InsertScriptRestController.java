@@ -89,6 +89,13 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
                 isg.setDomainId(domainId);
             }
         }
+
+        //auto-set sortPriority if not specified
+        if (entity.getSortPriority() == null || entity.getSortPriority() == 0) {
+            Integer maxPriority = ((InsertScriptRepository)getRepo()).findMaxSortPriorityByPositionAndDomainId(entity.getPosition(), domainId);
+            if (maxPriority == null) maxPriority = 0;
+            entity.setSortPriority(maxPriority + 10);
+        }
     }
 
     public static List<LabelValueDetails> getCookieClassifications(Prop prop) {
