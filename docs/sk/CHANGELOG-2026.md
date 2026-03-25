@@ -93,6 +93,7 @@
 - Webové stránky - Nastavenie bloku - opravené nastavenie pozadí a pokročilých nastavení (#TB2456).
 - Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii (#58317-03).
 - Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
+- Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
 - Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 
 ## 2026.0
