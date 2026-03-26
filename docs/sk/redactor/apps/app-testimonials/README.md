@@ -31,11 +31,11 @@ V tejto časti je pridať, upraviť alebo vymazať položku (odporúčania). Tab
 
 Pre každú položku viete nastaviť:
 
-- **Poradie**, poradie odporúčania v zobrazení
-- **Obrázok**, obrázok zákazníka, ktorý dal odporúčanie
-- **Meno**, meno zákazníka, ktorý dal odporúčanie
-- **Text**, text odporúčania
-- **Po kliknutí zobraziť inú stránku (presmerovať)**, ak je táto možnosť zvolená, zobrazí sa pole na zadanie URL adresy, na ktorú bude užívateľ presmerovaný po kliknutí na položku
+- **Poradie** - poradie odporúčania v zobrazení
+- **Obrázok** - obrázok zákazníka, ktorý dal odporúčanie
+- **Meno** - meno zákazníka, ktorý dal odporúčanie
+- **Text** - text odporúčania
+- **Po kliknutí zobraziť inú stránku (presmerovať)** - ak je táto možnosť zvolená, zobrazí sa pole na zadanie URL adresy, na ktorú bude užívateľ presmerovaný po kliknutí na položku
 
 ## Zobrazenie aplikácie
 

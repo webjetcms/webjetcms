@@ -20,7 +20,7 @@ public class TestimonialItem {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, className="dt-row-edit", title = "editor.app-testimonials.name")
     private String title;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "editor.app-testimonials.text")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.app-testimonials.text")
     private String description;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.news.redirectAfterClick")
