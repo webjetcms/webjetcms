@@ -427,14 +427,14 @@ export const dataTableInit = options => {
         }, 100);
 
         if (DATA.customFieldsUpdateColumns===true && Array.isArray(json.data) && json.data.length>0) {
-            //console.log("Updating columns based on custom fields, json=", json);
             let fieldsDefinition = json.data[0]?.editorFields?.fieldsDefinition;
             if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
 
-                //when have initialJson set there is missing options definition for customFields, we need to run whole function to update filters from text to select with options
+                // when have initialJson set, there is missing options definition for customFields,
+                // we need to run whole function to update filters from text to select with options
                 let isFirstRun = false;
                 if (typeof DATA.customFieldsUpdateColumnsFirstRunDone === "undefined") {
                     DATA.customFieldsUpdateColumnsFirstRunDone = true;
@@ -480,7 +480,7 @@ export const dataTableInit = options => {
                     if (typeof dataColumn != "undefined" && dataColumn.name==fieldName) {
                         dataColumn.title = customField.label;
                         dataColumn.sTitle = customField.label;
-                        console.log("Setting title: ", fieldName, " ", customField.label, "dataColumn=", dataColumn);
+                        //console.log("Setting title: ", fieldName, " ", customField.label, "dataColumn=", dataColumn);
                     }
                     for (var editorField of TABLE.DATA.fields) {
                         if (fieldName == editorField.name) {
@@ -497,7 +497,6 @@ export const dataTableInit = options => {
 
                     //handle label-value options
                     if (typeof customField.typeValues != "undefined" && Array.isArray(customField.typeValues) && customField.typeValues.length>0) {
-                        console.log("Have typeValues for field ", fieldName, " options=", customField.typeValues);
                         var options = customField.typeValues;
                         fixOptionsValueType(options);
 
