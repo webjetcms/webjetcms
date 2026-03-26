@@ -143,25 +143,41 @@ Scenario('custom-fields-list @singlethread', async ({ I, DT, DTE }) => {
 });
 
 Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
+
+    const fields_standard = ["Pole A", "Pole B", "Pole D", "Pole G", "Pole H"];
+    const fields_volitelne = ["text - A", "select - B", "autocomplete - D", "docsIn_67_null - G", "enumeration_2 - H"];
+    const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D", "Pole G", "Pole H"];
+
     //
-    I.say("Test on Volitelne polia folder");
-    const fields_volitelne = ["text - A", "select - B", "autocomplete - D"];
-    await checkOptionalFields(I, DTE, DT, fields_volitelne, '/admin/v9/webpages/web-pages-list/?groupid=7625', true);
+    I.say("Test on Volitelne polia folder - as jstree click");
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+    I.jstreeClick("Voliteľné polia");
+    await checkOptionalFields(I, DTE, DT, fields_volitelne, null, true);
+    //
+    I.say("Test on Volitelne polia folder - as loaded");
+    await checkOptionalFields(I, DTE, DT, fields_volitelne, '/admin/v9/webpages/web-pages-list/?groupid=7625', false);
 
     //
     I.say("Test on yellow folder - as jstree click");
-    const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D"];
     I.jstreeClick("Yellow Folder");
     await checkOptionalFields(I, DTE, DT, fields_yellow, null, false);
-
     //
     I.say("Test on yellow folder - as loaded");
     await checkOptionalFields(I, DTE, DT, fields_yellow, '/admin/v9/webpages/web-pages-list/?groupid=81154', false);
+
+    //
+    I.say("Test on normal folder - as jstree click");
+    I.jstreeClick("Test stavov");
+    await checkOptionalFields(I, DTE, DT, fields_standard, null, false);
+    //
+    I.say("Test on normal folder - as loaded");
+    await checkOptionalFields(I, DTE, DT, fields_standard, '/admin/v9/webpages/web-pages-list/?groupid=67', false);
 });
 
 async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     if (pageUrl != null) I.amOnPage(pageUrl);
-    const columnLabelSelector = "#datatableInit_wrapper tr > th > span.dt-column-title";
+    const columnLabelSelector = "#datatableInit_wrapper tr:nth-child(1) > th > span.dt-column-title";
+    const filterSelector =      "#datatableInit_wrapper tr:nth-child(2) > th";
 
     if (showColumns) {
         for (const field of fields) {
@@ -170,7 +186,21 @@ async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     }
 
     // over v stlpcoch
-    fields.forEach(field => I.see(field, columnLabelSelector));
+    fields.forEach(field => {
+        I.see(field, columnLabelSelector);
+
+        var type = "text";
+        if (field.includes("select") || field.includes("autocomplete") || field.includes("docsIn") || field.includes("enumeration")) type = "select";
+
+        //verify header filter type
+        var fieldName = "field" + field.substring(field.length - 1);
+        if (type == "text") {
+            I.seeElement(locate(filterSelector+".dt-th-"+fieldName).find("input[type='text']"));
+        } else if (type == "select") {
+            I.seeElement(locate(filterSelector+".dt-th-"+fieldName).find("select.filter-input.selectpickerbinded"));
+        }
+
+    });
 
     // over v editore
     I.click(DT.btn.add_button);
