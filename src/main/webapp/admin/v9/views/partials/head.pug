@@ -38,27 +38,9 @@ script.
         });
         window.WJ._isShim = true;
     })();
-    // jQuery/$ shim: queues $(selector).method() calls until real jQuery loads from ES module
-    (function() {
-        var _jqQueue = [];
-        window._jqQueue = _jqQueue;
-        window.$ = window.jQuery = function() {
-            var args = [].slice.call(arguments);
-            var calls = [];
-            var proxy = new Proxy({length: 0}, {
-                get: function(target, prop) {
-                    if (prop === 'length') return 0;
-                    if (typeof prop === 'symbol') return undefined;
-                    return function() {
-                        calls.push({prop: prop, args: [].slice.call(arguments)});
-                        return proxy;
-                    };
-                }
-            });
-            _jqQueue.push({args: args, calls: calls});
-            return proxy;
-        };
-    })();
+
+//- jQuery loaded synchronously so that non-module scripts (elFinder etc.) have it available immediately
+script(src=publicPath + 'js/jquery.min.js')
 
 
 // Outpul all style files

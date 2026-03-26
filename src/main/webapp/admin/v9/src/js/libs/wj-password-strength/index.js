@@ -1,5 +1,5 @@
 import WJ from "../../webjet";
-import $, { type } from 'jquery';
+import $ from 'jquery';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
 
 /**

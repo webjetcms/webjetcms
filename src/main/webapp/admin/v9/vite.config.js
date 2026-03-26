@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
@@ -49,8 +50,37 @@ export default defineConfig(({ mode }) => ({
     },
 
     plugins: [
+        // jQuery is loaded synchronously via <script> tag in head.pug.
+        // This plugin makes all import/require('jquery') use window.jQuery
+        // instead of bundling a separate copy.
+        // The .cjs extension tells Vite's commonjs plugin to treat this as CJS,
+        // so require('jquery') returns window.jQuery directly (not a namespace wrapper).
+        {
+            name: 'jquery-external',
+            enforce: 'pre',
+            resolveId(source) {
+                if (source === 'jquery') {
+                    return { id: '\0jquery-global.cjs', moduleSideEffects: true };
+                }
+            },
+            load(id) {
+                if (id === '\0jquery-global.cjs') {
+                    return 'module.exports = window.jQuery;';
+                }
+            }
+        },
         vue(),
         momentStripLocales(),
+        // Copy jQuery to dist for synchronous <script> loading
+        {
+            name: 'copy-jquery',
+            writeBundle() {
+                const src = path.resolve(__dirname, 'node_modules/jquery/dist/jquery.min.js');
+                const dest = path.resolve(__dirname, 'dist/js/jquery.min.js');
+                fs.mkdirSync(path.dirname(dest), { recursive: true });
+                fs.copyFileSync(src, dest);
+            }
+        },
     ],
 
     css: {
@@ -113,7 +143,6 @@ export default defineConfig(({ mode }) => ({
     // Optimize CommonJS/AMD dependencies so Vite pre-bundles them with all internal deps resolved
     optimizeDeps: {
         include: [
-            'jquery',
             'bootstrap',
             'datatables.net',
             'datatables.net-bs5',
