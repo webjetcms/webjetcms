@@ -425,7 +425,7 @@ export function renderImage(td, type, rowData, row, text=true) {
         return prepareForSearch(td);
     } else {
 
-        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg"))) {
+        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg") || td.endsWith(".webp"))) {
             let link =  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> ";
             if (true === text) link += renderTd(row, td, rowData);
             link += "</a>";

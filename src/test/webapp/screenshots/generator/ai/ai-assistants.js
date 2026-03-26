@@ -245,7 +245,7 @@ Scenario('ai-assistants usage - TEXT - PageBuilder', async ({ I, DTE, Document, 
     I.resizeWindow(1100, 650);
 
     await I.executeScript(() => {
-        $("#DTE_Field_data-pageBuilderIframe").contents().find("span#cke_57").css({"outline": "1px solid #FF4B58", "box-shadow": "0 0 12px #FF4B58"})
+        $("#DTE_Field_data-pageBuilderIframe").contents().find("span#cke_57").css({"outline": "1px solid #E00028", "box-shadow": "0 0 12px #E00028"})
     });
 
     Document.screenshot("/redactor/ai/datatables/page_builder.png");

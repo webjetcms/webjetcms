@@ -412,20 +412,11 @@ public class EditorService {
 
 		if (editedDoc == null) {
 			editedDoc = new DocDetails();
-			editedDoc.setDocId(-1);
-			editedDoc.setGroupId(group.getGroupId());
 			editedDoc.setData("<p>&nbsp;</p>");
-			editedDoc.setTitle(prop.getText("editor.newDocumentName"));
 			editedDoc.setSearchable(true);
 			editedDoc.setAvailable(Constants.getBoolean("editorNewDocDefaultAvailableChecked"));
 			editedDoc.setShowInMenu(true);
-			editedDoc.setSortPriority(10);
 		} else {
-			//nastav grupu na aktualne vybratu
-			editedDoc.setDocId(-1);
-			editedDoc.setGroupId(group.getGroupId());
-			editedDoc.setTitle(prop.getText("editor.newDocumentName"));
-			editedDoc.setNavbar("");
 			editedDoc.setVirtualPath("");
 			editedDoc.setExternalLink("");
 			editedDoc.setEventDateString("");
@@ -433,6 +424,11 @@ public class EditorService {
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
 		}
 
+		editedDoc.setDocId(-1);
+		editedDoc.setTitle(prop.getText("editor.newDocumentName"));
+		editedDoc.setNavbar(editedDoc.getTitle());
+		//nastav grupu na aktualne vybratu
+		editedDoc.setGroupId(group.getGroupId());
 		editedDoc.setTempId(group.getTempId());
 		/*zisti maximalnu prioritu a zvys o 10*/
 		editedDoc.setSortPriority(0);

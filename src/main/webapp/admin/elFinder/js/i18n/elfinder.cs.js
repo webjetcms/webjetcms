@@ -557,8 +557,9 @@
 			'kindPSD'         : 'Obrázek Adobe Photoshop',
 			'kindXBITMAP'     : 'Obrázek X bitmapa',
 			'kindPXM'         : 'Obrázek Pixelmator',
+			'kindWEBP'        : 'WEBP obrázek',
 			// media
-			'kindAudio'       : 'Audio sobory',
+			'kindAudio'       : 'Audio soubory',
 			'kindAudioMPEG'   : 'MPEG audio',
 			'kindAudioMPEG4'  : 'MPEG-4 audio',
 			'kindAudioMIDI'   : 'MIDI audio',

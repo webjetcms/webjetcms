@@ -16,6 +16,7 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import quote, urlparse
 
 # Maximum character length for the generated social media post
 POST_MAX_CHARS = 1220
@@ -278,11 +279,11 @@ def find_screenshots(pr_body: str, pr_files: list[str]) -> list[str]:
     return unique
 
 
-def download_screenshots(screenshots: list[str]) -> list[str]:
+def download_screenshots(screenshots: list[str]) -> list[tuple[str, str]]:
     """Download remote images and copy local files to the screenshots/ directory."""
     output_dir = Path("screenshots")
     output_dir.mkdir(exist_ok=True)
-    downloaded: list[str] = []
+    downloaded: list[tuple[str, str]] = []
 
     for src in screenshots:
         dest_name = Path(src).name
@@ -295,7 +296,6 @@ def download_screenshots(screenshots: list[str]) -> list[str]:
                 "github.com",
                 "user-images.githubusercontent.com",
             )
-            from urllib.parse import urlparse  # noqa: PLC0415 (import inside loop for clarity)
             parsed = urlparse(src)
             if not any(parsed.hostname == h or (parsed.hostname or "").endswith(f".{h}") for h in allowed_hosts):
                 print(f"  Skipping untrusted URL: {src}", file=sys.stderr)
@@ -307,7 +307,7 @@ def download_screenshots(screenshots: list[str]) -> list[str]:
                 with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
                     data = resp.read(max_bytes)
                 dest.write_bytes(data)
-                downloaded.append(str(dest))
+                downloaded.append((str(dest), src))
                 print(f"  Downloaded: {src} -> {dest}")
             except Exception as exc:  # noqa: BLE001
                 print(f"  Failed to download {src}: {exc}", file=sys.stderr)
@@ -315,7 +315,7 @@ def download_screenshots(screenshots: list[str]) -> list[str]:
             local = Path(src)
             if local.exists():
                 shutil.copy2(local, dest)
-                downloaded.append(str(dest))
+                downloaded.append((str(dest), src))
                 print(f"  Copied: {src} -> {dest}")
             else:
                 print(f"  Screenshot not found locally: {src}", file=sys.stderr)
@@ -327,12 +327,21 @@ def download_screenshots(screenshots: list[str]) -> list[str]:
 # Output helpers
 # ---------------------------------------------------------------------------
 
+def _build_repo_raw_url(repo: str, git_ref: str, path: str) -> str:
+    """Build GitHub raw URL for a file path in the repository."""
+    clean_path = path.lstrip("./")
+    encoded_path = quote(clean_path, safe="/")
+    return f"https://raw.githubusercontent.com/{repo}/{git_ref}/{encoded_path}"
+
+
 def write_outputs(
     post: str,
     pr_title: str,
     pr_number: str,
     pr_url: str,
-    downloaded: list[str],
+    downloaded: list[tuple[str, str]],
+    repo: str = "",
+    git_ref: str = "",
     model_used: str = "",
     token_info: dict | None = None,
 ) -> None:
@@ -346,8 +355,21 @@ def write_outputs(
     if downloaded:
         lines.append("")
         lines.append(f"**Priložené screenshoty ({len(downloaded)}):**")
-        for s in downloaded:
-            lines.append(f"- `{s}`")
+        for local_path, source in downloaded:
+            if source.startswith(("http://", "https://")):
+                link = source
+                label = Path(source).name or source
+            elif repo and git_ref:
+                link = _build_repo_raw_url(repo, git_ref, source)
+                label = source
+            else:
+                link = ""
+                label = local_path
+
+            if link:
+                lines.append(f"- [{label}]({link})")
+            else:
+                lines.append(f"- {label}")
     lines.append("")
     model_info = ""
     if model_used:
@@ -365,8 +387,8 @@ def write_outputs(
         fh.write(content)
 
     with open("screenshot_list.txt", "w", encoding="utf-8") as fh:
-        for s in downloaded:
-            fh.write(f"{s}\n")
+        for local_path, _source in downloaded:
+            fh.write(f"{local_path}\n")
 
     # Publish outputs to GitHub Actions environment
     github_output = os.environ.get("GITHUB_OUTPUT", "")
@@ -393,6 +415,12 @@ def main() -> None:
     pr_url = os.environ.get("PR_URL", "")
     repo = os.environ.get("REPO", "")
     token = os.environ.get("GITHUB_TOKEN", "")
+    git_ref = (
+        os.environ.get("GITHUB_SHA")
+        or os.environ.get("GITHUB_HEAD_REF")
+        or os.environ.get("GITHUB_REF_NAME")
+        or "main"
+    )
 
     if not pr_title:
         print("Error: PR_TITLE environment variable is required.", file=sys.stderr)
@@ -456,7 +484,17 @@ def main() -> None:
     print(f"Downloaded/copied {len(downloaded)} screenshot(s)")
 
     # Write all output files
-    write_outputs(post, pr_title, pr_number, pr_url, downloaded, model_used=model_used, token_info=token_info)
+    write_outputs(
+        post,
+        pr_title,
+        pr_number,
+        pr_url,
+        downloaded,
+        repo=repo,
+        git_ref=git_ref,
+        model_used=model_used,
+        token_info=token_info,
+    )
     print("\n::notice::Social media post generation complete.")
 
 

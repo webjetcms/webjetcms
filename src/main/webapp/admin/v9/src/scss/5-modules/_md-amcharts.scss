@@ -68,8 +68,8 @@ div.amcharts {
             height: 64px;
             margin: 8px;
             border-radius: 50%;
-            border: 6px solid #0063FB;
-            border-color: #0063FB transparent #0063FB transparent;
+            border: 6px solid $primary;
+            border-color: $primary transparent $primary transparent;
             animation: lds-dual-ring-animation 1.2s linear infinite;
         }
     }

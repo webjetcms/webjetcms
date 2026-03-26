@@ -8,7 +8,7 @@ var docDataSKupdate = '<p> nový starý najstarší </p>';
 var docDataSKupdate2 = '<p> pes mačka kokos </p>';
 
 // Translated EN vesrion
-var docDataEN = ["Page", "different words", "oday", "omorrow", "he day after tomorrow"];
+var docDataEN = ["Page", "various words", "oday", "omorrow", "he day after tomorrow"];
 var docDataENupdate = ["new", "old", "oldest"];
 var docDataENupdate2 = ["dog", "cat", "coconut"];
 

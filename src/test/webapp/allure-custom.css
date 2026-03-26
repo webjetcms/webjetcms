@@ -1,0 +1,5 @@
+/* Custom CSS overrides for Allure report */
+
+iframe.attachment__iframe {
+    min-height: 65vh;
+}

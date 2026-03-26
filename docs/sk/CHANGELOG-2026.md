@@ -15,21 +15,35 @@
 - Editor stránok - do dialógového okna [Odkaz a Tlačidlo](redactor/webpages/working-in-editor/README.md#tlačidlá) pridaná karta s rozšírenými nastaveniami ako ID, titulok, popis pre čítačky (aria-label) a podobne (#osk115).
 - Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}` (#OSK149).
 - Page Builder - opravené presúvanie okna pre vloženie blokov, opravené prekrývanie výberu režimu editora, zapracované UX pripomienky (#58353).
+- Zjednotené používanie nástroja `ImageMagick` pre zmenu veľkostí obrázkov medzi galériou a `/thumb servlet` (#osk396).
+- Pridaná podpora vkladania obrázkov vo formáte `webp` (#osk396).
+- Pridané konfiguračné premenné `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` operácií podľa typu operácie a formátu obrázka (#osk396).
 
 ### Manažér dokumentov
 
 - Pridané zobrazenie hodnoty **Globálne Id** pre dokumenty (#58357).
 - Pridaná možnosť zvoliť dokumenty k zobrazeniu v aplikácii pomocou ich `globalId` hodnoty vo vnorenej tabuľke, viac v časti [Karta - Vybrané dokumenty](redactor/files/file-archive/file-archive-app.md#karta---vybrané-dokumenty) (#58357).
 
+### Prístupnosť
+
+- Pridané [automatizované testovanie prístupnosti](developer/testing/a11y.md) (a11y / WCAG) pomocou `axe-core` integrovaných do CodeceptJS. Testy pokrývajú úrovne WCAG 2.0/2.1/2.2 AA (#58389).
+- Zlepšená prístupnosť / opravené WCAG chyby na stránkach:
+  - Prihlásenie do administrácie (#58389-2).
+  - Úvod / menu položky / hlavička (#58389-3).
+  - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
+  - Dátové tabuľky, editor (#58389-4).
+
 ### Iné menšie zmeny
 
 - GitHub pipeline - po `merge pull request` sa automaticky vygeneruje príspevok na sociálne siete pomocou LLM (GitHub Copilot / Google Gemini) a pridá sa ako komentár k danému `pull request` spolu s prípadnými fotkami obrazovky z dokumentácie (#177).
 - Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
+- Skripty - pridaný atribút [Poradie vkladania](redactor/apps/insert-script/README.md) pre nastavenie poradia vkladania skriptov v rámci rovnakej pozície. Predvolená hodnota pre existujúce skripty je 10, pri novom skripte sa automaticky nastaví na najvyššiu hodnotu + 10 (#osk387).
 - Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane prípony `-2`, `-3` atď (#58361).
 - Zrkadlenie štruktúry - pridaná možnosť generovať [odkazy na jazykové mutácie](redactor/apps/docmirroring/README.md#nastavenie-atribútu-hreflang) v hlavičke stránky pomocou aplikácie `hreflang.jsp`, odkazy obsahujú atribút `hreflang` pre lepšiu SEO optimalizáciu jazykových verzií (#58357).
 
 ### Bezpečnosť
 
+- Pridaný súbor `.github/SECURITY.md` so [zodpovedným oznamovaním zraniteľností](sysadmin/responsible-disclosure/README.md) (#187).
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
@@ -47,9 +61,11 @@
 
 ### Pre programátora
 
+- AI - nový `AI skill` pre opravu A11Y/WCAG chýb, stačí použiť nástroj `/wj-accessibility`.
 - Aktualizované závislosti na minimálne požiadavky pre Tomcat 11 (Tomcat 10 už nie je podporovaný). `Stripes` validácie - upravené vykonávanie EL výrazov z odstráneného `jakarta.servlet.jsp.el` na `jakarta.el` kvôli kompatibilite s `jakarta.servlet.jsp-api:4.0.0` (#58385).
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
 - Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí serializovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).
+- Galéria - upravené volanie knižnice ImageMagick, zmenené API pre jeho volanie na `ImageTools.executeImageMagick(...)` (#osk396).
 - Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).
 - Odstránená anotácia `@Temporal` na dátumových stĺpcoch v databázových entitách, odporúčané riešenie je pre nové entity používať `java.time.*` typy. Zdá sa, že Eclipselink/JPA správne deteguje typ `Date` ako dátum a čas a anotácia nie je potrebná. Odporúčame po aktualizácii skontrolovať správanie dátumových polí (#57793).
 - Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
@@ -60,18 +76,27 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Administrácia - doplnené presmerovanie po prihlásení ak pôvodná cesta začína na `/components` a obsahuje `/admin` (#58317-4).
 - Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
+- Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
-- Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
+- Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
+- Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
+- Multiweb - opravené používanie doménových aliasov pri použití externých priečinkov - nastavená konfiguračná premenná `cloudStaticFilesDir` (#58317-4).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
 - Prieskumník - opravené nahrávanie viacerých súborov cez drag & drop (#58317-2).
+- Voliteľné polia - opravené zobrazenie hodnôt (namiesto ID) a filtra (výberové pole namiesto textového poľa) pre výberové polia, číselníky a výber web stránky (#58421-0).
 - Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).
 - Webové stránky - Page Builder - pri vytvorení novej stránky sa použije hodnota nastavená v poli HTML kód novej stránky priečinka. Stránka teda nemusí byť prázdna, ale môže obsahovať pripravené bloky (#osk378).
-- Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
+- Webové stránky - Nastavenie bloku - opravené nastavenie pozadí a pokročilých nastavení (#TB2456).
+- Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii (#58317-03).
+- Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
+- Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
+- Webové stránky - opravená chyba získania [šablóny pre mobilné zariadenia](frontend/templates/templates.md#zobrazenie-pre-špecifické-zariadenie) v MultiWEB inštalácii pri zhode mien šablóny v rôznych doménach (#58317-5).
 
 ## 2026.0
 

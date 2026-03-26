@@ -18,6 +18,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
@@ -36,7 +37,9 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
         // /images/gallery -> /images/{domainAlias}/gallery
         String imagesGalleryRoot = Constants.getString("imagesRootDir")+"/"+Constants.getString("galleryDirName");
-        if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled")) {
+
+        //do not use domain alias for when using external dirs
+        if (imagesGalleryRoot.equals(item.getRootFolder()) && Constants.getBoolean("multiDomainEnabled") && FilePathTools.isExternalDirs()==false) {
             String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
             if (Tools.isNotEmpty(domainAlias)) {
                 if (imagesGalleryRoot.equals(item.getId())) item.setId(Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName"));

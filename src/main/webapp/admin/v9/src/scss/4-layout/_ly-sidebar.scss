@@ -84,6 +84,7 @@
 }
 
 .bs-container.dropdown.domain-toggler-select {
+    z-index: 1081;
     .dropdown-menu {
         a.dropdown-item {
             padding-left: 15px;

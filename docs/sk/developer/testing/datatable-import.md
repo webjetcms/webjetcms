@@ -24,17 +24,20 @@ Príklad testu:
 
 ```javascript
 Scenario('insert script-import', async ({ I, DataTables }) => {
-     I.waitForText('Zoznam skriptov', 5);
+     I.waitForText('Skripty', 5);
      await DataTables.importTest({
           dataTable: 'insertScriptTable',
-          requiredFields: ['name', 'position'], //pre tuto tabulku mame fixne definovane, aby sa vyplnili len tieto atributy, pokuste sa nechat prazdne aby sa vyplnili vsetky
+          requiredFields: ['name', 'position'], //For this table we have fixedly defined that only these attributes are filled in, try leaving them empty so that all are filled in
           file: 'tests/components/insert-script.xlsx',
           updateBy: 'Názov / popis skriptu - name',
           rows: [
                {
                     name: "Test import"
                }
-          ]
+          ],
+          editSteps: function (row, counter, I, options, DT, DTE) {
+               I.seeInField('#DTE_Field_sortPriority', '10');
+          }
      });
 });
 ```
@@ -45,5 +48,6 @@ Okrem štandardných parametrov [automatizovaného testu datatabuľky](datatable
 - ```updateBy``` - hodnota použitá pre testovanie Aktualizovať existujúce záznamy
 - ```rows``` - pole obsahujúce meno stĺpca a hodnotu, ktorá sa použije na kontrolu/filtrovanie v tabuľke po importe
 - `preserveColumns` - zoznam stĺpcov, ktoré sa nenachádzajú v Excel súbore. Budú počas zmeny nastavené na náhodnú hodnotu a následne pri aktualizácii importom sa overí, že hodnota sa neprepísala/zachovala. Napr. `preserveColumns: [ 'title', 'deliveryFirstName','deliveryLastName' ]`.
+- `editSteps` - voliteľná callback funkcia `function(row, counter, I, options, DT, DTE)`, ktorá sa zavolá pri úprave naimportovaného záznamu pred uložením. Umožňuje vykonať dodatočné overenia alebo zmeny v editore (napr. skontrolovať predvolené hodnoty polí, ktoré nie sú súčasťou povinných polí). Parametre `row` a `counter` obsahujú aktuálny riadok a jeho poradové číslo.
 
 Dôležitý je parameter ```rows``` v ktorom definujete zoznam stĺpcov, ktoré sa použijú na filtrovanie záznamov po importe. Hodnota sa musí zhodovať s hodnotou v Excel súbore.

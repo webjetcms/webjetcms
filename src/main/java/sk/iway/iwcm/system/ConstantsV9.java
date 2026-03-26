@@ -202,7 +202,7 @@ public class ConstantsV9 {
 		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "Maximal length of AI request/response stored in audit");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
-		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
+		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
 		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
 
@@ -253,6 +253,15 @@ public class ConstantsV9 {
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_SECURITY, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
 		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
 		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
+
+		//image magick custom params - value can have 2 lines: line 1 = params BEFORE operation (after input file), line 2 = params AFTER operation (before output file)
+		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "images", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
+		Constants.setString("imageMagickCustomParams_resize", "", "images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_crop", "", "images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_rotate", "", "images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_jpg", "\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_png", "\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 	}
 
 	/**

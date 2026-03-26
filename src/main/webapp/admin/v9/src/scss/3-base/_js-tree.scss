@@ -3,7 +3,7 @@
 }
 
 .jstree .jstree-icon, .jstree span.jstree-text-icon {
-    color: #63697A;
+    color: $dark-60;
     font-size: 15px;
 }
 .jstree .ti-lock,
@@ -543,7 +543,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
     font-size: 18px;
     &::before {
         content: $ti-icon-caret-down-filled;
-        color: #B3B8C7;
+        color: $nice-gray-200;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -574,7 +574,7 @@ div#vakata-dnd #jstree-dnd.jstree-default {
     font-size: 18px;
     &::before {
         content: $ti-icon-caret-right-filled;
-        color: #b1b6c5;
+        color: $nice-gray-200;
         position: absolute;
         top: 50%;
         left: 50%;

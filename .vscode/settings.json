@@ -88,6 +88,11 @@
         "**/logs/**"
     ],
     "chat.tools.terminal.autoApprove": {
-        "./gradlew": true
+        "./gradlew": true,
+        "git rev-parse": true,
+        "git merge-base": true,
+        "uniq": true,
+        "awk": true,
+        "read": true
     }
 }

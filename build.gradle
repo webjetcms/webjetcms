@@ -17,7 +17,7 @@ plugins {
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
-    id "org.owasp.dependencycheck" version "12.1.6"
+    id "org.owasp.dependencycheck" version "12.2.0"
     id 'maven-publish'
     //https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
@@ -184,8 +184,8 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.13")
     implementation("org.apache.httpcomponents:httpmime:4.5.13")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.20")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
@@ -203,7 +203,7 @@ dependencies {
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
     //implementation("org.mcavallo:opencloud:0.3")
     implementation("com.pd4ml:pd4ml:4.0.21")
-    implementation("org.apache.pdfbox:pdfbox:3.0.1")
+    implementation("org.apache.pdfbox:pdfbox:3.0.7")
     implementation("org.apache.poi:poi-ooxml:5.4.1")
     implementation("org.apache.poi:poi-scratchpad:5.4.1")
     implementation("org.apache.poi:poi:5.4.1")
@@ -283,12 +283,14 @@ dependencies {
     // https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl
     implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
 
-
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     runtimeOnly 'org.postgresql:postgresql:42.7.2'
 
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
+
+    // Source: https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
+    implementation("com.twelvemonkeys.imageio:imageio-webp:3.13.1")
 
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
@@ -315,6 +317,10 @@ dependencies {
     // used in velocity-tools-generic
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
+
+    // CVE-2026-29062
+    // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
+    implementation("tools.jackson.core:jackson-core:3.1.0")
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
@@ -462,13 +468,11 @@ gretty {
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia
         //'-Dwebjet.useSMTPServer=true',
-        '-Dwebjet.smtpServer=localhost',
-        '-Dwebjet.smtpPort=2525',
+        '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
         "-DwebjetDbname=${System.env.webjetDbname}",
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
-        '-Dwebjet.cloudStaticFilesDir=-',
         '-Dwebjet.passwordAdminExpiryDays=0',
         '-Dwebjet.loggerUseAnsiColors=true'
     ]
@@ -628,13 +632,14 @@ task writePom() {
         Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
         //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
         resolvedArtifacts.each {
+            def group = it.getModuleVersion().getId().getGroup();
             def version = it.getModuleVersion().getId().getVersion();
             def currentVersion = resolvedVersionMap.get(it.getName());
             def mostRecent = version;
             if (currentVersion != null) mostRecent = mostRecentVersion([currentVersion, version]);
 
-            println("resolvedVersion: name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
-            resolvedVersionMap.put(it.getName(), mostRecent);
+            println("resolvedVersion: group="+group+" name="+it.getName()+" versionFull="+it.getModuleVersion()+" version="+version+" currentVersion="+currentVersion+" mostRecent="+mostRecent)
+            resolvedVersionMap.put(group + ":" + it.getName(), mostRecent);
         }
 
         // Update dependencies with resolved versions
@@ -648,13 +653,13 @@ task writePom() {
             def version = it.get("version").first().value().first()
             //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
-            def artifactVersion = resolvedVersionMap.get(artifactName)
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
             Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
                 //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
                 if (mostRecent.equals(version)==false) {
-                    println "---> changing version: " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
+                    println "---> changing version: " + groupId + ":" + artifactName + " " + version + "->" + artifactVersion + " mostRecent=" + mostRecent
                     versionNode.value = mostRecent
                 }
             }

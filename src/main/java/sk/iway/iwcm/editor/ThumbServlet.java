@@ -24,6 +24,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.GalleryDBTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.gallery.GalleryBean;
@@ -120,7 +121,7 @@ public class ThumbServlet extends HttpServlet
 		}
 
 		String ext = FileTools.getFileExtension(imagePath).toLowerCase();
-		if (ext.equals("jpg")==false && ext.equals("jpeg")==false && ext.equals("gif")==false && ext.equals("png")==false && ext.equals("bmp")==false)
+		if (ImageTools.isResizableImage(imagePath) == false)
 		{
 			//sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 			response.setStatus(302);
@@ -427,13 +428,13 @@ public class ThumbServlet extends HttpServlet
 
 							Logger.debug(ThumbServlet.class, "vypocitany w="+width);
 
-							ret = GalleryDBTools.cropAndResize(imageFile, cwidth, cheight, cleft, ctop, width, height, null, true, smallImageFile, imageQuality, 2);
+							ret = GalleryDBTools.cropAndResize(imageFile, cwidth, cheight, cleft, ctop, width, height, fillColor, true, smallImageFile, imageQuality, 2);
 						}
 						else if (ip == 3)
 						{
 							//vyrez sa zmesti cely do zvolenej velkosti w a h ale nemusi vyplnat celu velkost (realne je mensi ako zadane w a h)
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&h=200&ip=3
-							ret = GalleryDBTools.cropAndResize(imageFile, cwidth, cheight, cleft, ctop, width, height, null, true, smallImageFile, imageQuality, 3);
+							ret = GalleryDBTools.cropAndResize(imageFile, cwidth, cheight, cleft, ctop, width, height, fillColor, false, smallImageFile, imageQuality, 3);
 						}
 						else if (ip == 4)
 						{

@@ -392,9 +392,6 @@ public class Constants {
 				"oddelovač tisícok pre formátovač meny. Štandardne nastavené na znak \" \" (medzera).");
 		setString("currencyFormatLocale", "GERMANY", MOD_BASKET, "systemovy formater cisel");
 
-		setBoolean("galleryAlwaysUseImageMagick", true, "gallery;performance",
-				"ak je nastavené na true, tak zmena veľkosti obrázkov rozmeru < 500 bodov sa tiež bude vykonávať volaním externého programu ImageMagick.");
-
 		setString("ffmpegPath", "", "video", "ffmpeg sluzi na konverziu videa, tu je nastavena cesta k suboru ffmpeg");
 		setString("yamdiPath", "", "video", "cesta k programu yamdi pre vlozenie meta info do FLV suborov");
 

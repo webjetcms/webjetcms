@@ -78,6 +78,10 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     )
     String position;
 
+    @Column(name="sort_priority")
+    @DataTableColumn(inputType=DataTableColumnType.NUMBER, tab="main", title="components.insert_script.sort_priority")
+    Integer sortPriority;
+
     @Column(name="cookie_class")
     @NotBlank
     @DataTableColumn(inputType=DataTableColumnType.SELECT, tab="main")
@@ -276,6 +280,14 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
 
     public void setCookieClass(String cookieClass) {
         this.cookieClass = cookieClass;
+    }
+
+    public Integer getSortPriority() {
+        return sortPriority;
+    }
+
+    public void setSortPriority(Integer sortPriority) {
+        this.sortPriority = sortPriority;
     }
 
     public List<String> getGroupsAndDocs() {

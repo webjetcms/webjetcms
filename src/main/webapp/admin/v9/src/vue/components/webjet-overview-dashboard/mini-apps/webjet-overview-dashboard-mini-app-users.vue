@@ -2,13 +2,13 @@
   <div :class="'overview-logged users'">
     <div class="overview-logged__head">
       <div class="overview-logged__head__icon">
-        <i class="ti ti-users fs-4"></i>
+        <i class="ti ti-users fs-4" aria-hidden="true"></i>
       </div>
          <span>
             {{this.$WJ.translate('admin.welcome.logins.title.js')}}
          </span>
       <div class="overview-logged__head__more">
-        <i class="aaafar f-a-ellipsis-v"></i>
+        <i class="aaafar f-a-ellipsis-v" aria-hidden="true"></i>
       </div>
     </div>
 
@@ -20,11 +20,14 @@
                   {{ this.$WJ.formatTimeSeconds(session.logonTime) }} ({{ session.browserName }}, {{ session.remoteAddr }})
               </span>
 
-              <span v-if="this.currentSession == session.sessionId" class="float-end">
-                  <i class="ti ti-current-location fs-6" v-tooltip:top="{title: this.$WJ.translate('admin.welcome.active_sessions.current_session.js'), class: 'session-tooltip'}"></i>
+              <span v-if="this.currentSession == session.sessionId" class="float-end"
+                  role="img"
+                  :aria-label="this.$WJ.translate('admin.welcome.active_sessions.current_session.js')">
+                  <i class="ti ti-current-location fs-6" aria-hidden="true" v-tooltip:top="{title: this.$WJ.translate('admin.welcome.active_sessions.current_session.js'), class: 'session-tooltip'}"></i>
               </span>
-              <button v-else class="float-end btn btn-sm" @click="removeSession(session.sessionId)">
-                  <i class="ti ti-logout fs-6" v-tooltip:top="{title: this.$WJ.translate('menu.logout', {domain: session.domainName}), class: 'session-tooltip'}"></i>
+              <button v-else class="float-end btn btn-sm" @click="removeSession(session.sessionId)"
+                  :aria-label="$WJ.translate('menu.logout', {domain: session.domainName})">
+                  <i class="ti ti-logout fs-6" aria-hidden="true" v-tooltip:top="{title: $WJ.translate('menu.logout', {domain: session.domainName}), class: 'session-tooltip'}"></i>
               </button>
           </li>
       </ul>
@@ -38,16 +41,18 @@
             :key="index"
         >
           <span>
-            <img v-if="user.photo" :src="getPhotoUrl(user.photo)" alt="">
-            <span v-else class="no-photo ti ti-user fs-3"></span>
+            <img v-if="user.photo" :src="getPhotoUrl(user.photo)" :alt="user.fullName">
+            <span v-else class="no-photo ti ti-user fs-3" aria-hidden="true"></span>
             <a class="name" v-text="user.fullName" :href="`mailto:${user.email}`"></a>
           </span>
-          <a class="float-end btn btn-sm" :href="`mailto:${user.email}`" style="padding: 0px;" v-tooltip:left="$WJ.translate('admin.welcome.logins.sendEmail.js')">
-              <i class="ti ti-mail fs-6"></i>
+          <a class="float-end btn btn-sm" :href="`mailto:${user.email}`" style="padding: 0px;"
+              :aria-label="$WJ.translate('admin.welcome.logins.sendEmail.js') + ' ' + user.fullName"
+              v-tooltip:left="$WJ.translate('admin.welcome.logins.sendEmail.js')">
+              <i class="ti ti-mail fs-6" aria-hidden="true"></i>
           </a>
         </li>
         <li class="show-more" v-if="!allUsers">
-          <a @click.prevent="showAll">+{{remainingUsersLength}}</a>
+          <button class="btn btn-outline p-0" @click="showAll">+{{remainingUsersLength}}</button>
         </li>
       </ul>
     </div>

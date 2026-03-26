@@ -245,7 +245,7 @@ export const dataTableInit = options => {
         multipleSeparator: " + "
     };
 
-    const DIALOG_BUTTONS = '<div class="dialog-buttons"><span class="show-help" onclick="WJ.showHelpWindow()"><i class="ti ti-help" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"></i></span><span class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i></span><span class="minimize"><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></span></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button class="btn btn-outline-secondary maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button class="btn btn-outline-secondary minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -432,6 +432,15 @@ export const dataTableInit = options => {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
+
+                // when have initialJson set, there is missing options definition for customFields,
+                // we need to run whole function to update filters from text to select with options
+                let isFirstRun = false;
+                if (typeof DATA.customFieldsUpdateColumnsFirstRunDone === "undefined") {
+                    DATA.customFieldsUpdateColumnsFirstRunDone = true;
+                    isFirstRun = true;
+                }
+
                 for (var customField of fieldsDefinition) {
                     //podla null textu filtrujeme aj zoznam dostupnych stlpcov v nastaveni
                     if (customField.label==null) customField.label = "null";
@@ -442,7 +451,7 @@ export const dataTableInit = options => {
 
                     column = TABLE.column(fieldName+":name");
                     var currentText = $(column.header()).text();
-                    if (currentText === customField.label) continue;
+                    if (currentText === customField.label && isFirstRun === false) continue;
 
                     isChange = true;
 
@@ -478,8 +487,43 @@ export const dataTableInit = options => {
                             editorField.label = customField.label;
                         }
                     }
+
+                    for (var j = 0; j < DATA.columns.length; j++) {
+                        if (DATA.columns[j].data === fieldName) {
+                            //reset renderformat
+                            DATA.columns[j].renderFormatForce = null;
+                        }
+                    }
+
+                    //handle label-value options
+                    if (typeof customField.typeValues != "undefined" && Array.isArray(customField.typeValues) && customField.typeValues.length>0) {
+                        var options = customField.typeValues;
+                        fixOptionsValueType(options);
+
+                        for (var j = 0; j < DATA.columns.length; j++) {
+                            if (DATA.columns[j].data === fieldName) {
+                                DATA.columns[j].editor.options = options;
+                                DATA.columns[j].renderFormatForce = "dt-format-select";
+                                break;
+                            }
+                        }
+                        //aktualizuj DT editor
+                        try {
+                            TABLE.EDITOR.field(fieldName).update(options);
+                        } catch (e) {
+                            //asi dany field v editore neexistuje
+                            //console.log(e);
+                        }
+
+
+                        //aktualizuj select box v hlavicke
+                        dtWJ.updateFilterSelect(DATA, fieldName);
+                    }
                 }
-                if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
+                if (isChange) {
+                    $("#"+DATA.id).trigger("column-reorder.dt");
+                    dtWJ.initializeHeaderFilters("#"+TABLE.DATA.id+"_wrapper div.dt-scroll-head table ", false, TABLE.DATA, TABLE);
+                }
             }
         }
 
@@ -1496,7 +1540,7 @@ export const dataTableInit = options => {
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
-                        tabsHtml += '<li class="nav-item' + classNameAppend + '">';
+                        tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
                         tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
@@ -2034,13 +2078,16 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true"/>
+                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true" aria-label="${WJ.translate('datatables.button.celledit.js')}" />
                         <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
                 className: 'custom-control form-switch buttons-select-cel',
                 attr: {
-                    title: WJ.translate('datatables.button.celledit.js'),
+                    title: "", //set to empty because arua is on input checkbox
+                    "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
-                    "data-dtbtn": "celledit"
+                    "data-dtbtn": "celledit",
+                    "aria-label": "",
+                    "aria-controls": ""
                 },
                 action: function (e, node, el) {
                     //console.log("action, el=", el, "disbled=", $(el).hasClass("is-disabled"));
