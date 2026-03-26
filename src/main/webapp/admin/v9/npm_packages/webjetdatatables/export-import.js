@@ -1,5 +1,5 @@
 //potrebuje to import
-var Buffer = require('buffer/').Buffer;
+import { Buffer } from 'buffer';
 
 export function bindExportButton(TABLE, DATA) {
 

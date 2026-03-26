@@ -91,6 +91,20 @@
         "git merge-base": true,
         "uniq": true,
         "awk": true,
-        "read": true
+        "read": true,
+        "mkdir": true,
+        "cp": true,
+        "mv": true,
+        "npm install": true,
+        "npx vite": true,
+        "/^node build-templates\\.mjs 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cat dist/\\.vite/manifest\\.json \\| python3 -c \"import json,sys; m=json\\.load\\(sys\\.stdin\\); \\[print\\(k, '->', v\\.get\\('css',\\[\\]\\)\\) for k,v in m\\.items\\(\\) if v\\.get\\('css'\\)\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm run dev": true
     }
 }

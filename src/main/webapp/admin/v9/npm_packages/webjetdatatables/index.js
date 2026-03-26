@@ -58,7 +58,8 @@ import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
 import {EditorAi} from './editor-ai'
 
-const bootstrap = window.bootstrap = require('bootstrap');
+import * as bootstrapModule from 'bootstrap';
+window.bootstrap = bootstrapModule;
 import $ from 'jquery';
 //console.log("Setting jQuery object to window");
 window.jQuery = $;
@@ -66,26 +67,26 @@ window.$ = $;
 
 window.dtWJ = dtWJ;
 
-require('datatables.net');
-require('datatables.net-bs5');
-require('datatables.net-editor-bs5');
-//require('datatables.net-autofill-bs5');
-require('datatables.net-buttons-bs5');
-require('datatables.net-buttons/js/buttons.colVis.js');
+import 'datatables.net';
+import 'datatables.net-bs5';
+import 'datatables.net-editor-bs5';
+//import 'datatables.net-autofill-bs5';
+import 'datatables.net-buttons-bs5';
+import 'datatables.net-buttons/js/buttons.colVis.js';
 //WebJET fixnuta verzia - problem s prefixButtons a postfixButtons
-require('./buttons.colVis');
-require('datatables.net-buttons/js/buttons.html5.js');
-require('datatables.net-buttons/js/buttons.print.js');
-require('datatables.net-colreorder-bs5');
-//require('datatables.net-fixedcolumns-bs5');
-//require('datatables.net-fixedheader-bs5');
-//require('datatables.net-keytable-bs5');
-//require('datatables.net-responsive-bs5');
-//require('datatables.net-rowgroup-bs5');
-require('datatables.net-rowreorder-bs5');
-//require('datatables.net-scroller-bs5');
-require('datatables.net-select-bs5');
-require('datatables.net-datetime');
+import './buttons.colVis';
+import 'datatables.net-buttons/js/buttons.html5.js';
+import 'datatables.net-buttons/js/buttons.print.js';
+import 'datatables.net-colreorder-bs5';
+//import 'datatables.net-fixedcolumns-bs5';
+//import 'datatables.net-fixedheader-bs5';
+//import 'datatables.net-keytable-bs5';
+//import 'datatables.net-responsive-bs5';
+//import 'datatables.net-rowgroup-bs5';
+import 'datatables.net-rowreorder-bs5';
+//import 'datatables.net-scroller-bs5';
+import 'datatables.net-select-bs5';
+import 'datatables.net-datetime';
 
 export const dataTableInit = options => {
 

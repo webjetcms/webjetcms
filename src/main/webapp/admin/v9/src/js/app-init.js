@@ -5,6 +5,19 @@ import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
 window.domReady.add(initClosure, 1, true);
 
+// Replay WJ shim queue (calls like WJ.headerTabs from inline scripts)
+// Must run after initClosure (order 1) which defines initSubmenuTabsClick etc.
+window.domReady.add(function() {
+    if (window._wjShimQueue && window._wjShimQueue.length) {
+        for (const item of window._wjShimQueue) {
+            if (typeof window.WJ[item.method] === 'function') {
+                window.WJ[item.method].apply(window.WJ, item.args);
+            }
+        }
+        window._wjShimQueue = [];
+    }
+}, 2, true);
+
 window.webjetTranslationService.onAfterLoad(() => {
     $(document).ready(() => {
         window.domReady.fire();

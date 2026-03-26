@@ -1,7 +1,6 @@
+// Must be the FIRST import — sets window.jQuery before any UMD plugin evaluates
+import './jquery-globals.js';
 import $ from 'jquery';
-//console.log("Setting jQuery object to window in app.js");
-//setnute v DT index.js window.jQuery = $;
-//setnute v DT index.js window.$ = $;
 
 $.ajaxSetup({
     headers: {
@@ -26,7 +25,13 @@ import { Tools } from './libs/tools/tools';
 Tools.isDevMode();
 
 import ReadyExtender from './libs/ready-extender/ready-extender';
+// Replace the synchronous shim (from head.pug) with the real ReadyExtender
+// and transfer any callbacks that were queued before this module executed
+const _shimQueue = window.domReady && window.domReady._queue ? window.domReady._queue : [];
 window.domReady = new ReadyExtender();
+for (const item of _shimQueue) {
+    window.domReady.add(item.cb, item.order, item.rewrite);
+}
 
 import WJ from '../js/webjet.js';
 
@@ -54,6 +59,9 @@ import { Translator } from './libs/translator/translator';
 
 window.moment = moment;
 window.numeral = numeral;
+// Replace the WJ shim Proxy with the real WJ object.
+// Queue replay is deferred to app-init.js (after initSubmenuTabsClick etc. are defined).
+window._wjShimQueue = window.WJ && window.WJ._isShim ? window.WJ._wjQueue : [];
 window.WJ = WJ;
 window.Quill = Quill;
 window.toastr = toastr;
@@ -74,16 +82,9 @@ import '../js/datatables-upload.js';
 //set backCompact for elfinder, when you update elfinder check, if it is still needed
 import './ui-config.js';
 
-import 'jquery-ui/ui/widgets/draggable';
-import 'jquery-ui/ui/widgets/droppable';
-import 'jquery-ui/ui/widgets/autocomplete';
-//this is required for elfinder
-import 'jquery-ui/ui/widgets/selectable';
-import 'jquery-ui/ui/widgets/resizable';
-import 'jquery-ui/ui/widgets/controlgroup';
-import 'jquery-ui/ui/widgets/button';
-import 'jquery-ui/ui/widgets/slider';
-//import 'jquery-ui/ui/widgets/tooltip'; - set as bsTooltip later
+// jQuery UI individual AMD modules don't resolve internal deps under Rollup/Vite.
+// Use the pre-built dist which includes all widgets with proper dependency order.
+import 'jquery-ui/dist/jquery-ui.js';
 
 import 'jquery-ui/themes/base/theme.css';
 import 'jquery-ui/themes/base/draggable.css';
@@ -91,7 +92,7 @@ import 'jquery-ui/themes/base/resizable.css';
 import 'jquery-ui/themes/base/slider.css';
 //import 'jquery-ui/themes/base/tooltip.css';
 
-import 'bootstrap';
+import * as bootstrapModule from 'bootstrap';
 import '../scss/ninja.scss';
 
 //extra css file for inline editing
@@ -100,16 +101,17 @@ const createInlineCss = () => {
 };
 window.createInlineCss = createInlineCss;
 
-const bootstrap = (window.bootstrap = require('bootstrap'));
-$.fn.bsTooltip = bootstrap.Tooltip.jQueryInterface;
+// Must be set before bootstrap-select import (import hoisting)
+import './bootstrap-globals.js';
+$.fn.bsTooltip = bootstrapModule.Tooltip.jQueryInterface;
 //override UI tooltip with bootstrap tooltip
-$.fn.tooltip = bootstrap.Tooltip.jQueryInterface;
+$.fn.tooltip = bootstrapModule.Tooltip.jQueryInterface;
 
 //na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
 //tiez musi ist cez require, inak to padalo ze nepozna bootstrap objekt
 //require('bootstrap-select/js/bootstrap-select');
 //https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
-require('./plugins/bootstrap-select-v1.14.0-gamma1')
+import './plugins/bootstrap-select-v1.14.0-gamma1';
 import 'bootstrap-select/dist/css/bootstrap-select.css';
 
 //not used anymore

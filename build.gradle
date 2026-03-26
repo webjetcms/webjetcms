@@ -87,6 +87,8 @@ war {
     exclude('**/admin/v9/views/**')
     exclude('**/*.pug')
     exclude('**/prepros-6.config')
+    exclude('**/.vite/**')
+    exclude('**/manifest.json')
 
     //templates
     exclude('templates/bare/**')

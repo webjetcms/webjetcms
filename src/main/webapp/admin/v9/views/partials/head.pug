@@ -11,7 +11,72 @@ title #{WPD.name}
 meta(name='author' content=`${WPD.author}`)
 meta(name='generator' content=`${WPD.generator}`)
 
-link(rel='icon' href=require('../../../src/images/favicon-cms.ico') type='image/x-icon')
+link(rel='icon' href=publicPath + 'images/favicon-cms.ico' type='image/x-icon')
+
+//- Synchronous shim: modules are deferred, so window.domReady and window.WJ must exist before inline scripts run
+script.
+    window.domReady = {
+        _queue: [],
+        add: function(cb, order, rewrite) { this._queue.push({cb: cb, order: order || 0, rewrite: rewrite || false}); },
+        fire: function() {},
+        remove: function() {}
+    };
+    // WJ shim: queues method calls (e.g. WJ.headerTabs(...)) until the real WJ object is set by the main module
+    (function() {
+        var _wjQueue = [];
+        // Methods that return values and can be implemented using data already available synchronously
+        var _shimMethods = {
+            hasPermission: function(permission) {
+                if (window.nopermsJavascript && window.nopermsJavascript[permission] === true) return false;
+                return true;
+            },
+            translate: function(key) {
+                // Return key as fallback; the real translate will be available after modules load
+                return key;
+            }
+        };
+        // Nested objects with methods that can run before modules load (jQuery is available)
+        var _shimObjects = {
+            DataTable: {
+                mergeColumns: function(columns, obj) {
+                    if (typeof obj.name === 'undefined') return;
+                    var $ = window.jQuery;
+                    $.each(columns, function(i, v) {
+                        if (v.name !== obj.name) return true;
+                        columns[i] = $.extend(true, {}, v, obj);
+                    });
+                },
+                moveColumn: function(columns, name, sortAfter) {
+                    var col = null, newColumns = [], $ = window.jQuery;
+                    $.each(columns, function(i, v) { if (v.name === name) { col = v; return true; } });
+                    $.each(columns, function(i, v) {
+                        if (v.name === name) return true;
+                        newColumns.push(v);
+                        if (v.name === sortAfter && col !== null) { newColumns.push(col); col = null; }
+                    });
+                    return newColumns;
+                }
+            }
+        };
+        window.WJ = new Proxy({_wjQueue: _wjQueue}, {
+            get: function(target, prop) {
+                if (prop === '_wjQueue' || prop === '_isShim') return target[prop];
+                if (_shimMethods[prop]) return _shimMethods[prop];
+                if (_shimObjects[prop]) return _shimObjects[prop];
+                return function() {
+                    _wjQueue.push({method: prop, args: Array.prototype.slice.call(arguments)});
+                };
+            },
+            set: function(target, prop, value) {
+                target[prop] = value;
+                return true;
+            }
+        });
+        window.WJ._isShim = true;
+    })();
+
+//- jQuery loaded synchronously so that non-module scripts (elFinder etc.) have it available immediately
+script(src=publicPath + 'js/jquery.min.js')
 
 
 // Outpul all style files
@@ -55,7 +120,7 @@ script.
 
 each js in WPF.js
     - if (js.indexOf("pages_")==-1 || js.indexOf("pages_"+filename+".")!=-1)
-        script(type='text/javascript', src=js)
+        script(type='module', src=js)
 
 div(class="head-script" data-th-if="${appIncludePathJs != null}" data-th-remove="tag")
     script(type="module").
