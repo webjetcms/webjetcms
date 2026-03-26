@@ -79,5 +79,8 @@
         {
             "text": "Ensure commit messages are relevant to the changes made."
         }
-    ]
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "git rev-parse": true
+    }
 }
