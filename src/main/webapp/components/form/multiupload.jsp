@@ -20,7 +20,7 @@ String allowedExtensions = pp.getValue("allowedExtensions", null);
 //ak mame savedb mozeme skusit nacitat allowedExtensions
 if (Tools.isNotEmpty(formSaveDb))
 {
-    Map<String, String> formAttrs = new FormSettingsService().load(formSaveDb);
+    Map<String, String> formAttrs = FormSettingsService.load(formSaveDb);
     if (formAttrs != null)
     {
        if (Tools.isNotEmpty(formAttrs.get("allowedExtensions"))) allowedExtensions = formAttrs.get("allowedExtensions");

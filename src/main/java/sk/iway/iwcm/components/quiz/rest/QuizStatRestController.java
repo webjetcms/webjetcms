@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +41,7 @@ public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDT
         String stringRange = getRequest().getParameter("dayDate");
         ChartType chartType = StatService.stringToChartTypeEnum(getRequest().getParameter("chartType"));
 
-        return new PageImpl<>(QuizService.statTableData(quizId, stringRange, chartType, quizAnswerRespository));
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(QuizService.statTableData(quizId, stringRange, chartType, quizAnswerRespository));
     }
 
     @Override
@@ -60,7 +60,7 @@ public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDT
             }
         }
 
-        return new PageImpl<>(QuizService.statTableData(quizId, stringRange, StatService.stringToChartTypeEnum( chartType ), quizAnswerRespository));
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(QuizService.statTableData(quizId, stringRange, StatService.stringToChartTypeEnum( chartType ), quizAnswerRespository));
     }
 
     @RequestMapping(value="/lineChartDataRight", params={"quizId", "dayDate"})

@@ -96,7 +96,7 @@ block content
                             if ("0"==actualHeight || 0==actualHeight) actualHeight="";
                         }
                     } catch (e) {}
-                    if (urlPath.indexOf("http")!=0 && (urlPath.indexOf(".jpg")>0 || urlPath.indexOf(".jpeg")>0 || urlPath.indexOf(".png")>0 || urlPath.indexOf(".gif")>0))
+                    if (urlPath.indexOf("http")!=0 && (urlPath.indexOf(".jpg")>0 || urlPath.indexOf(".jpeg")>0 || urlPath.indexOf(".png")>0 || urlPath.indexOf(".gif")>0 || urlPath.indexOf(".webp")>0))
                     {
                         if (urlPath.indexOf("/thu"+"mb")==-1) urlPath = "/thu"+"mb" + urlPath;
                         urlPath = WJ.urlUpdateParam(urlPath, "w", actualWidth);

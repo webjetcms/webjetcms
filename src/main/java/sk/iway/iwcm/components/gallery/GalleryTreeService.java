@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
@@ -21,6 +21,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDetails;
@@ -268,7 +269,7 @@ public class GalleryTreeService {
      */
     private Set<String> getBlacklistedNames() {
         Set<String> blacklistedNames = new HashSet<>();
-        if (Constants.getBoolean("multiDomainEnabled")) {
+        if (Constants.getBoolean("multiDomainEnabled") && FilePathTools.isExternalDirs()==false) {
             String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
             if (Tools.isNotEmpty(domainAlias)) {
                 //blacklistni ostatne aliasy

@@ -110,11 +110,8 @@ Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý
 
 Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
-Všimnite si nastavenie ```@Temporal(TemporalType.TIMESTAMP)``` pre korektnú konverziu poľa do databázového stĺpca (vyžaduje to JPA).
-
 ```java
     @Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -129,7 +126,6 @@ Podobné pole ako ```DATE``` ale naviac umožňuje aj výber času.
 
 ```java
     @Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",

@@ -59,6 +59,8 @@
             background-size: auto $toolbar-content-button-image-size;
             transition: background-color 0.3s ease-in-out;
             color: white;
+            border: 0px;
+            background-color: transparent;
 
             &__style {
                 background-image: $icon-style;

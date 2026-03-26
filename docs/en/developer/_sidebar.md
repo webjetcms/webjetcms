@@ -72,7 +72,9 @@
   - [Security](/developer/backend/security.md)
   - [JPA](/developer/backend/jpa.md)
   - [Mapping of DTO objects](/developer/backend/mapstruct.md)
-  - [Events](/developer/backend/events.md)
+  - Events
+    - [WebJET events](/developer/backend/events.md)
+    - [Datatable events](/developer/backend/events-datatable.md)
 - Applications and modules
   - Web pages
     - [Frontend](/developer/apps/webpages/README.md)

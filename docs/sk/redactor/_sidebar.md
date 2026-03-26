@@ -14,7 +14,7 @@
   - [Export a import](/redactor/datatables/export-import.md)
 - Web stránky
   - [Základná práca](/redactor/webpages/README.md)
-  - [Editácia web stránky](/redactor/webpages/editor.md)
+  - [Editácia web stránky](/redactor/webpages/editor/README.md)
   - [Práca v editore](/redactor/webpages/working-in-editor/README.md)
   - [Priečinok web stránky](/redactor/webpages/group.md)
   - [História](/redactor/webpages/history.md)
@@ -43,8 +43,8 @@
   - [Štatistika](/redactor/ai/stat/README.md)
 - Aplikácie
   - AB testovanie
-    - [Úvod](/redactor/apps/abtesting/README.md)
-    - [AB Testovanie](/redactor/apps/abtesting/abtesting.md)
+    - [AB testovanie](/redactor/apps/abtesting/README.md)
+    - [Správa AB testov](/redactor/apps/abtesting/abtesting.md)
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)

@@ -72,40 +72,40 @@ Scenario("Audit - check menu items", ({ I }) => {
   I.say("Test admin can see everything");
   I.relogin("admin");
   I.amOnPage("/admin/v9/apps/audit-search/");
-  I.see("Vyhľadávanie", "div.menu-wrapper");
-  I.see("Zoznam notifikácií", "div.menu-wrapper");
-  I.see("Zmenené stránky", "div.menu-wrapper");
-  I.see("Čaká na publikovanie", "div.menu-wrapper");
-  I.see("Úrovne logovania", "div.menu-wrapper");
-  I.see("Log súbory", "div.menu-wrapper");
-  I.see("Posledné logy", "div.menu-wrapper");
+  I.see("Vyhľadávanie", "nav.menu-wrapper");
+  I.see("Zoznam notifikácií", "nav.menu-wrapper");
+  I.see("Zmenené stránky", "nav.menu-wrapper");
+  I.see("Čaká na publikovanie", "nav.menu-wrapper");
+  I.see("Úrovne logovania", "nav.menu-wrapper");
+  I.see("Log súbory", "nav.menu-wrapper");
+  I.see("Posledné logy", "nav.menu-wrapper");
 
   I.amOnPage("/admin/v9/apps/audit-search/?removePerm=menuWebpages");
-  I.see("Vyhľadávanie", "div.menu-wrapper");
-  I.see("Zoznam notifikácií", "div.menu-wrapper");
-  I.dontSee("Zmenené stránky", "div.menu-wrapper");
-  I.dontSee("Čaká na publikovanie", "div.menu-wrapper");
-  I.see("Úrovne logovania", "div.menu-wrapper");
-  I.see("Log súbory", "div.menu-wrapper");
-  I.see("Posledné logy", "div.menu-wrapper");
+  I.see("Vyhľadávanie", "nav.menu-wrapper");
+  I.see("Zoznam notifikácií", "nav.menu-wrapper");
+  I.dontSee("Zmenené stránky", "nav.menu-wrapper");
+  I.dontSee("Čaká na publikovanie", "nav.menu-wrapper");
+  I.see("Úrovne logovania", "nav.menu-wrapper");
+  I.see("Log súbory", "nav.menu-wrapper");
+  I.see("Posledné logy", "nav.menu-wrapper");
 
   I.amOnPage("/admin/v9/apps/audit-search/?removePerm=cmp_in-memory-logging");
-  I.see("Vyhľadávanie", "div.menu-wrapper");
-  I.see("Zoznam notifikácií", "div.menu-wrapper");
-  I.see("Úrovne logovania", "div.menu-wrapper");
-  I.dontSee("Log súbory", "div.menu-wrapper");
-  I.dontSee("Posledné logy", "div.menu-wrapper");
+  I.see("Vyhľadávanie", "nav.menu-wrapper");
+  I.see("Zoznam notifikácií", "nav.menu-wrapper");
+  I.see("Úrovne logovania", "nav.menu-wrapper");
+  I.dontSee("Log súbory", "nav.menu-wrapper");
+  I.dontSee("Posledné logy", "nav.menu-wrapper");
 
   I.say("Test NON admin to see only Audit based items");
   I.relogin("permissionTest");
   I.amOnPage("/admin/v9/apps/audit-search/");
-  I.see("Vyhľadávanie", "div.menu-wrapper");
-  I.see("Zoznam notifikácií", "div.menu-wrapper");
-  I.dontSee("Zmenené stránky", "div.menu-wrapper");
-  I.dontSee("Čaká na publikovanie", "div.menu-wrapper");
-  I.dontSee("Úrovne logovania", "div.menu-wrapper");
-  I.see("Log súbory", "div.menu-wrapper");
-  I.see("Posledné logy", "div.menu-wrapper");
+  I.see("Vyhľadávanie", "nav.menu-wrapper");
+  I.see("Zoznam notifikácií", "nav.menu-wrapper");
+  I.dontSee("Zmenené stránky", "nav.menu-wrapper");
+  I.dontSee("Čaká na publikovanie", "nav.menu-wrapper");
+  I.dontSee("Úrovne logovania", "nav.menu-wrapper");
+  I.see("Log súbory", "nav.menu-wrapper");
+  I.see("Posledné logy", "nav.menu-wrapper");
 });
 
 Scenario("Audit - check menu items-logout", ({ I }) => {

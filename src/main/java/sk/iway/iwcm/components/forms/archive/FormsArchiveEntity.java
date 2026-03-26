@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.forms.archive;
 import sk.iway.iwcm.components.forms.FormsEntityBasic;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "forms_archive")

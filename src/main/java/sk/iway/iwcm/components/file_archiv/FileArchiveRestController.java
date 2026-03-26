@@ -1,15 +1,14 @@
 package sk.iway.iwcm.components.file_archiv;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -81,12 +80,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
              * - NOT waiting file (uploaded = -1)
              * - NOT pattern (referenceToMain = null/empty)
              */
-
-            int[] globalIds = Tools.getTokensInt(getRequest().getParameter("globalIds"), "+, ");
-            if(globalIds.length == 0)
-                return new DatatablePageImpl<>( repository.findAllMainFilesUploadedNotPatternIdsIn(Arrays.asList(-1), CloudToolsForCore.getDomainId(), pageable) );
-
-            return new DatatablePageImpl<>( repository.findAllMainFilesUploadedNotPatternIdsIn(Arrays.stream(globalIds).boxed().toList(), CloudToolsForCore.getDomainId(), pageable) );
+            return new DatatablePageImpl<>( repository.findAllMainFilesUploadedNotPattern(CloudToolsForCore.getDomainId(), pageable) );
         }
 
         //Else classic table
@@ -103,20 +97,44 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<FileArchivatorBean> root, CriteriaBuilder builder) {
-        if(params.get("searchEditorFields.statusIcons") == null) {
-            //if not set, show only main files
-            predicates.add( builder.equal(root.get(REFERENCE_ID), -1) );
-        }
 
-        if("waitingFiles".equals(params.get("searchEditorFields.statusIcons"))) {
-            List<Integer> referenceIds = repository.findDistinctReferenceIds(CloudToolsForCore.getDomainId());
+        if(isSelectedFilesApp()) {
+            /*
+             * Call from fileArchiveApp editor, to return list of files by globalIds
+             *
+             * File MUST BE:
+             * - MAIN file (referenceId = -1)
+             * - NOT waiting file (uploaded = -1)
+             * - NOT pattern (referenceToMain = null/empty)
+             */
             predicates.add(
                 builder.and(
                     builder.equal(root.get(REFERENCE_ID), -1),
                     builder.equal(root.get("uploaded"), -1),
-                    root.get("id").in(referenceIds)
+                    builder.or(
+                        builder.isNull(root.get("referenceToMain")),
+                        builder.equal(root.get("referenceToMain"), "")
+                    )
                 )
             );
+        } else {
+
+            if(params.get("searchEditorFields.statusIcons") == null) {
+                //if not set, show only main files
+                predicates.add( builder.equal(root.get(REFERENCE_ID), -1) );
+            }
+
+            if("waitingFiles".equals(params.get("searchEditorFields.statusIcons"))) {
+                List<Integer> referenceIds = repository.findDistinctReferenceIds(CloudToolsForCore.getDomainId());
+                predicates.add(
+                    builder.and(
+                        builder.equal(root.get(REFERENCE_ID), -1),
+                        builder.equal(root.get("uploaded"), -1),
+                        root.get("id").in(referenceIds)
+                    )
+                );
+            }
+
         }
 
         super.addSpecSearch(params, predicates, root, builder);

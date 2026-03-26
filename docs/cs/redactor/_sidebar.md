@@ -14,7 +14,7 @@
   - [Export a import](/redactor/datatables/export-import.md)
 - Web stránky
   - [Základní práce](/redactor/webpages/README.md)
-  - [Editace web stránky](/redactor/webpages/editor.md)
+  - [Editace web stránky](/redactor/webpages/editor/README.md)
   - [Práce v editoru](/redactor/webpages/working-in-editor/README.md)
   - [Složka web stránky](/redactor/webpages/group.md)
   - [Historie](/redactor/webpages/history.md)
@@ -68,6 +68,7 @@
     - [Seznam produktů](/redactor/apps/eshop/product-list/README.md)
     - [Nastavení aplikace](/redactor/apps/basket/README.md)
     - [Způsoby platby](/redactor/apps/eshop/payment-methods/README.md)
+    - [Způsoby doručení](/redactor/apps/eshop/delivery-methods/README.md)
   - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dat](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)
@@ -75,6 +76,7 @@
   - [Formulář snadno](/redactor/apps/formsimple/README.md)
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
+    - [Položky formuláře](/redactor/apps/multistep-form/README.md)
     - [Regulární výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskuse
     - [Nastavení aplikace](/redactor/apps/forum/README.md)

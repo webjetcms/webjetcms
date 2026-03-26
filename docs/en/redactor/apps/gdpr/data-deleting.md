@@ -2,7 +2,7 @@
 
 The GDPR application includes a "Delete Data" node, which is used to remove old data from the database.
 
-Allows you to lubricate:
+Allows you to delete:
 - Accounts **inactive users** (those who have not logged in for the last X days, base set at 730days = 2years)
 - **forms** (records older than X days, base set to 730days = 2years
 - **orders from e-commerce** (records older than X days, base set to 10 years)

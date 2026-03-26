@@ -106,6 +106,7 @@ Options:
 - `editSearchSteps` - a function adding testing steps when searching for a record.
 - `beforeDeleteSteps` - a function that adds testing steps before deleting a record.
 - `perms` - name rights (e.g. `editor_edit_media_all`) to automatically verify the security of the REST service.
+- `extraWait` - if set in some cases it will wait for a set time in seconds, necessary if the page is loading some extra data.
 
 Internally, the following attributes are still set after initialization:
 - `id` - ID of the datatable object in the DOM tree.

@@ -2,25 +2,25 @@ package sk.iway.iwcm.doc.attributes.jpa;
 
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -142,7 +142,7 @@ public class DocAtrDefEntity extends ActiveRecordRepository {
     /**
      * We don't want to send docAtrEntities to frontend, because it's not needed to be there in attrDefinition page
      */
-    @ApiModelProperty(hidden = true) //Ambiguous models equality when conditions is empty
+    @Schema(hidden = true) //Ambiguous models equality when conditions is empty
     @JsonManagedReference(value="atrDef")
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "atrDef")
@@ -152,7 +152,7 @@ public class DocAtrDefEntity extends ActiveRecordRepository {
      * For webPage we need to send DocAtrEntity value, as we have @JsonIgnore on docAtrEntities
      * we need to fill this field with first value from docAtrEntities on backend
      */
-    @ApiModelProperty(hidden = true) //Ambiguous models equality when conditions is empty
+    @Schema(hidden = true) //Ambiguous models equality when conditions is empty
     @Transient
     private DocAtrEntity docAtrEntityFirst;
 }

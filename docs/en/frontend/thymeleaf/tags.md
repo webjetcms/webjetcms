@@ -102,6 +102,8 @@ Note that in the body `combine` are inserted standard `link` a `script` Signs. T
 
 The combination first inserts the scripts and CSS from the body and then adds those defined in `data-iwcm-combine` Attribute. Insert only specific scripts and CSS that are only used when processing via WebJET CMS.
 
+Attribute `basePath` set the root folder for each file so you don't have to write the whole path. For addresses starting with `/templates/` or `/components/` the value in `basePath` he won't.
+
 ## Inserting scripts
 
 There is a special tag for inserting scripts from the scripts application `data-iwcm-script`. It receives the script position as a name (e.g. `header`) as defined in the application. The tag uses the tag `div`, but it is removed when displayed.

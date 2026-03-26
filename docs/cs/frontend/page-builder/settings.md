@@ -16,8 +16,8 @@ Pro správné spuštění Page Builder nastavte:
 - v případě nestandardního `bootstrap gridu`, konfigurační proměnnou `bootstrapColumns`, která určuje počet sloupců `gridu`
 
 Další konf. proměnné, které lze upravit:
-- `inlineEditableObjects` - objekty, na která se kromě doc\_data aplikuje editace (např. doc\_header, doc\_footer, doc\_right\_menu)
-- `inlineEditingEnabledDefaultValue` - po nastavení na `true` se automaticky zapne editační režim při načítání stránky (bez potřeby kliknout na Editovat)
+- `pagebuilderFilterAutoOpenItems` - počet položek, které se při filtrování v seznamu bloků automaticky otevřou, ve výchozím nastavení 10.
+- `pagebuilderLibraryImageWidth` - šířka náhledových obrázků v knihovně bloků, ve výchozím nastavení 310.
 - `inlineEditingDisabledUrls` - seznam URL adres, pro které nebude dostupný inline editor
 - `pageBuilderPrefix` - prefix, který se používá pro CSS třídy Page Builder (výchozí pb), změnit je možné pouze pokud změníte i prefixy v CSS třídách Page Builder
 

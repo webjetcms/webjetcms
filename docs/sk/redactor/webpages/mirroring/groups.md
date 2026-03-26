@@ -20,7 +20,7 @@ Aby sme vedeli v tabuľke čítať, musíme pochopiť štruktúru tabuľky, kde:
 
 Stĺpec **Stav** ponúka pomocou ikon rýchly prehľad o stave previazania. Podporuje nasledujúce stavy:
 
-- <i class="ti ti-exclamation-circle" style="color: #ff4b58;"></i>, ikona zodpovedná stavu **Zlé mapovanie**. Previazanie priečinok nadobudne tento stav v prípade objavenia viacerých previazaných priečinkov v rovnakej jazykovej mutácií.
+- <i class="ti ti-exclamation-circle" style="color: #E00028;"></i>, ikona zodpovedná stavu **Zlé mapovanie**. Previazanie priečinok nadobudne tento stav v prípade objavenia viacerých previazaných priečinkov v rovnakej jazykovej mutácií.
 - <i class="ti ti-alert-triangle" style="color: #fabd00;"></i>, ikona zodpovedná stavu **Nerovnomerné vnorenie**. Previazanie priečinok nadobudne tento stav v prípade rozdielnej hĺbky previazaných priečinok od koreňového priečinka.
 - **nič**, žiadna ikona sa nezobrazuje v prípade ak previazanie je korektné (nespadá do predcházdajúcich stavov)
 

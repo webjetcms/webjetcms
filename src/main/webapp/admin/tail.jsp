@@ -17,13 +17,11 @@
 
 <%@page import="sk.iway.iwcm.Constants"%>
 <%@page import="sk.iway.iwcm.FileTools"%>
-<%@ page import="java.net.URI" %>
-<%
-	System.out.println(System.getProperty("catalina.base"));
 
-	//String tomcatHomePath = new URI(Tools.replace(System.getProperty("catalina.base"), " ", "%20")).normalize().getPath();
-	File tomcatHome = new File(System.getProperty("catalina.base")); //new File(tomcatHomePath);
-	File logDir = new File(System.getProperty("catalina.base"),"logs");
+<%@page import="sk.iway.iwcm.system.audit.rest.LogLevelsService"%>
+<%
+	File logDir = LogLevelsService.getLogDir();
+	File tomcatHome = logDir.getParentFile();
 
 	String filePath = "";
 	if(Tools.isNotEmpty(Tools.getRequestParameter(request, "file"))) {

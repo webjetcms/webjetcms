@@ -396,7 +396,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
       <div class="container_basket">
         <div class="basketTexts">
           <span class="basketPriceText">
-            Celková cena
+            <iwcm:text key="components.basket.total_price"/>
           </span>
           <span class="basketPrice">
              <iway:curr currency="<%=displayCurrency%>">

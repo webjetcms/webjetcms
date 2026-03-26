@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.appcookiebar;
 
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Min;
 
 import lombok.Getter;
 import lombok.Setter;

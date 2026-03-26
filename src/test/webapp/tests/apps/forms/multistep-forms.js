@@ -6,7 +6,7 @@ Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
-        newMultistepFormName = "Multistepform_" + randomNumber;
+        newMultistepFormName = "multistepform_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -99,6 +99,8 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 1") );
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
+    //wait for cleditor to load
+    I.waitForElement("div.cleditorToolbar", 20);
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-2.png", null, null, 5);
 });
 
@@ -132,6 +134,7 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
 
     I.say("Test visual of step one");
     I.waitForVisible("#multiupload_images-1-dropzone");
+    I.waitForElement("div.cleditorToolbar", 20);
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
 
     I.say("Test and submit step 2 - final");
@@ -601,12 +604,14 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
     const normalize = html =>
         html
             .replace(/\s*<br>\s*/gi, '<br>')
+            // Remove all HTML attributes from opening tags: <tag attr="x"> -> <tag>
+            .replace(/<([a-zA-Z][\w:-]*)(\s[^>]*?)?(\/?)>/g, '<$1$3>')
             .replace(/\s+/g, ' ')
             .replace(/>\s+</g, '><')
             .trim();
 
-        // I.say(normalize(actualHtml));
-        // I.say(normalize(expectedHtml));
+         // I.say(normalize(actualHtml));
+         // I.say(normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),

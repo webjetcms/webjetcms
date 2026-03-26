@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
@@ -18,6 +18,7 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.doc.DocDB;
@@ -65,21 +66,31 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 	{
 		//skontrolovat vypis a pridat ku conditions listu cez hash table
 
-		List<Condition> conditions = new ArrayList<>();
-		conditions.add(JpaDB.filterSubstring("name", name));
-		if (position!=null) {
-			if (position.startsWith("^") && position.endsWith("$") && position.length()>2) {
-				conditions.add(JpaDB.filterEquals("position", position.substring(1, position.length()-1)));
-			} else {
-				conditions.add(JpaDB.filterSubstring("position", position));
+		// Cache key based on DB query parameters only (date and doc/group filtering is done in Java, not in DB)
+		String cacheKey = cachePrefix + "filter." + name + "|" + position + "|" + scriptBody + "|" + CloudToolsForCore.getDomainId();
+		@SuppressWarnings("unchecked")
+		List<InsertScriptBean> cachedList = (List<InsertScriptBean>) Cache.getInstance().getObject(cacheKey);
+		if (cachedList == null) {
+			List<Condition> conditions = new ArrayList<>();
+			conditions.add(JpaDB.filterSubstring("name", name));
+			if (position!=null) {
+				if (position.startsWith("^") && position.endsWith("$") && position.length()>2) {
+					conditions.add(JpaDB.filterEquals("position", position.substring(1, position.length()-1)));
+				} else {
+					conditions.add(JpaDB.filterSubstring("position", position));
+				}
 			}
+
+			conditions.add(JpaDB.filterSubstring("script_body", scriptBody));
+//			conditions.add(InsertScriptDB.filterBetween("valid_from", validFrom, null));
+//			conditions.add(InsertScriptDB.filterBetween("valid_to", null, validTo));
+			conditions.add(JpaDB.filterEquals("domain_id", CloudToolsForCore.getDomainId()));
+			cachedList = JpaTools.findBy(InsertScriptBean.class, conditions.toArray(new Condition[]{}));
+			Cache.getInstance().setObject(cacheKey, new ArrayList<>(cachedList), getCacheInMinutes());
 		}
 
-		conditions.add(JpaDB.filterSubstring("script_body", scriptBody));
-//		conditions.add(InsertScriptDB.filterBetween("valid_from", validFrom, null));
-//		conditions.add(InsertScriptDB.filterBetween("valid_to", null, validTo));
-		conditions.add(JpaDB.filterEquals("domain_id", CloudToolsForCore.getDomainId()));
-		List<InsertScriptBean> insertScriptList = JpaTools.findBy(InsertScriptBean.class, conditions.toArray(new Condition[]{}));
+		// Work on a copy to avoid modifying the cached list during Java-side filtering
+		List<InsertScriptBean> insertScriptList = new ArrayList<>(cachedList);
 
 		try {
 
@@ -136,8 +147,43 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 
 		List<InsertScriptBean> insertScriptListFilterdByDocsAndGroups = filterByDocAndGroupId(insertScriptList, docId, groupId);
 
-		return insertScriptListFilterdByDocsAndGroups;
-		//return intersection(insertScriptListFilterdByDocsAndGroups, insertScriptList);
+		List<InsertScriptBean> filteredInEditor = filterInEditor(insertScriptListFilterdByDocsAndGroups);
+
+		//sort by sortPriority ASC, then by id ASC
+		filteredInEditor.sort((a, b) -> {
+			int pa = a.getSortPriority() != null ? a.getSortPriority() : 10;
+			int pb = b.getSortPriority() != null ? b.getSortPriority() : 10;
+			int cmp = Integer.compare(pa, pb);
+			if (cmp != 0) return cmp;
+			long ia = a.getId() != null ? a.getId() : 0;
+			long ib = b.getId() != null ? b.getId() : 0;
+			return Long.compare(ia, ib);
+		});
+
+		return filteredInEditor;
+	}
+
+	/**
+	 * If the current request is an admin inline editor session (isUserAdmin=true and queryString contains inlineEditorAdmin=true),
+	 * only scripts with includeInEditor=true are kept in the list.
+	 * @param insertScriptList
+	 * @return filtered list
+	 */
+	private static List<InsertScriptBean> filterInEditor(List<InsertScriptBean> insertScriptList) {
+		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (requestBean == null || requestBean.isUserAdmin() == false) return insertScriptList;
+
+		String queryString = requestBean.getQueryString();
+		if (queryString == null || queryString.contains("inlineEditorAdmin=true") == false) return insertScriptList;
+
+		// Admin is viewing page in inline editor — keep only scripts allowed in editor
+		List<InsertScriptBean> editorList = new ArrayList<>();
+		for (InsertScriptBean isb : insertScriptList) {
+			if (Boolean.TRUE.equals(isb.getIncludeInEditor())) {
+				editorList.add(isb);
+			}
+		}
+		return editorList;
 	}
 
 	private static List<InsertScriptBean> filterByDocAndGroupId(List<InsertScriptBean> insertScriptList, int docId, int groupId)
@@ -255,6 +301,7 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 				List<Expression> expressions = new ArrayList<>();
 				expressions.add(expr1);
 
+				dbQuery.addAscendingOrdering("sortPriority");
 				dbQuery.addAscendingOrdering("id");
 
 				Query query = em.createQuery(dbQuery);

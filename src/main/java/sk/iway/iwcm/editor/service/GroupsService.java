@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,8 @@ import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
 /**
  * service class for groups operations
@@ -65,6 +67,9 @@ public class GroupsService extends NotifyService {
 			addNotify(info);
 			return false;
 		}
+
+		//publish before recover event
+		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
 
 		int parentGroupId = 0;
 		String parentGroupPath = prop.getText("stat_settings.group_id");
@@ -141,6 +146,12 @@ public class GroupsService extends NotifyService {
 		//Refresh
 		DocDB.getInstance(true);
 		GroupsDB.getInstance(true);
+
+		// Get newly recovered group
+		group = GroupsDB.getInstance().getGroup(group.getGroupId());
+
+		//publish recover event
+		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER)).publishEvent();
 
         return true;
 	}

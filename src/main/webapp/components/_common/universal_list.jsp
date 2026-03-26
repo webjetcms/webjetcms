@@ -5,7 +5,7 @@
 <%@page import="sk.iway.iwcm.components.crud.UniversalCrudAction"%>
 <%@page import="java.lang.reflect.Method"%>
 <%@page import="sk.iway.iwcm.utils.Pair"%>
-<%@page import="javax.persistence.Id"%>
+<%@page import="jakarta.persistence.Id"%>
 <%@page import="java.lang.reflect.Field"%>
 <%@page import="sk.iway.iwcm.database.JpaDB"%>
 <%@page import="net.sourceforge.stripes.action.ActionBean"%>

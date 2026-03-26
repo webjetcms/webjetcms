@@ -16,8 +16,8 @@ To run Page Builder correctly, set:
 - in case of non-standard `bootstrap gridu`, configuration variable `bootstrapColumns` which specifies the number of columns `gridu`
 
 Other conf. variables that can be modified:
-- `inlineEditableObjects` - objects to which editing is applied in addition to doc\_data (e.g. doc\_header, doc\_footer, doc\_right\_menu)
-- `inlineEditingEnabledDefaultValue` - after setting to `true` edit mode is automatically enabled when the page is loaded (no need to click Edit)
+- `pagebuilderFilterAutoOpenItems` - the number of items that are automatically opened when filtering in the block list, by default 10.
+- `pagebuilderLibraryImageWidth` - width of preview images in the block library, 310 by default.
 - `inlineEditingDisabledUrls` - list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - prefix used for CSS Page Builder classes (pb by default), can only be changed if you also change prefixes in CSS Page Builder classes
 

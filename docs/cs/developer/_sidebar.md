@@ -72,7 +72,9 @@
   - [Bezpečnost](/developer/backend/security.md)
   - [JPA](/developer/backend/jpa.md)
   - [Mapování DTO objektů](/developer/backend/mapstruct.md)
-  - [Události](/developer/backend/events.md)
+  - Události
+    - [WebJET události](/developer/backend/events.md)
+    - [Události datatabulek](/developer/backend/events-datatable.md)
 - Aplikace a moduly
   - Web stránky
     - [Frontend](/developer/apps/webpages/README.md)

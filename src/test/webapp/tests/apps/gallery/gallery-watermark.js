@@ -8,6 +8,10 @@ Scenario('Watermark - Visual Test', async ({ I, DT, DTE, Document }) => {
     const watermarkFile = "/images/watermark.svg";
     Document.setConfigValue('galleryWatermarkSvgSizePercent', 40);
 
+    Document.setConfigValue("imageMagickDir", "/usr/bin");
+    //for local development localconf will set correct default values
+    I.amOnPage("/localconf.jsp");
+
     I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
 

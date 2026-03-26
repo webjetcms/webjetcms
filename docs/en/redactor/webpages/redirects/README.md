@@ -12,6 +12,8 @@ Field value [redirection code](https://developer.mozilla.org/en-US/docs/Web/HTTP
 - `301` permanent redirect, search engines should adjust the page address to this new value.
 - `302` temporary redirection.
 
+You can also set the validity of the redirection for specific dates, by entering either the start or end or both dates. Redirects that are no longer temporally valid will appear in red in the table. In the note field, you can enter information about what the redirect is for.
+
 ![](path-editor.png)
 
 ### Redirects via regular expressions

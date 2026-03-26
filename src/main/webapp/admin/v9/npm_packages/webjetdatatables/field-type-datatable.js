@@ -199,7 +199,7 @@ export function typeDatatable() {
             });
 
             function onTabClickInit(evt, conf) {
-                if (!isCurrentTab(evt, conf) || isLoaded(evt, conf)) {
+                if (evt != null && (!isCurrentTab(evt, conf) || isLoaded(evt, conf))) {
                     return;
                 }
                 const url = getUrlWithParams(EDITOR, conf);
@@ -414,6 +414,17 @@ export function typeDatatable() {
             window.addEventListener('WJ.DTE.tabclick', function (evt) {
                 onTabClickInit(evt, conf);
             });
+
+            let autoLoad = conf.attr["data-dt-field-dt-autoload"];
+            if ("true" === autoLoad) {
+                if (typeof  conf.autoLoadTimeout !== "undefined") {
+                    clearTimeout(conf.autoLoadTimeout);
+                }
+                conf.autoLoadTimeout = setTimeout(function() {
+                    //console.log("Auto loading datatable, firing tab click event");
+                    onTabClickInit(null, conf);
+                }, 600);
+            }
         },
 
         enable: function ( conf ) {

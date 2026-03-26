@@ -2,9 +2,6 @@ package sk.iway.iwcm.components.quiz.jpa;
 
 import java.util.Date;
 
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -14,16 +11,16 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Getter
 @Setter
 public class QuizStatDTO {
-    
+
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.quiz.statistics.table.question")
     private String question;
 
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, 
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER,
         title = "components.quiz.result.imageUrl",
 		className = "image",
 		renderFormat = "dt-format-image"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String imageUrl;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.quiz.statistics.table.right_answers")
@@ -33,7 +30,7 @@ public class QuizStatDTO {
 	private Integer numberOfWrongAnswers;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER, 
+        inputType = DataTableColumnType.NUMBER,
         renderFormat = "dt-format-number--decimal",
         title = "components.quiz.stat.percentage_of_right_answers"
     )
@@ -59,7 +56,7 @@ public class QuizStatDTO {
         title="editor.date",
         visible = false
     )
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     private Date dayDate;
 
     //Value used in chart

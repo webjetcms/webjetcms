@@ -18,6 +18,10 @@ V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evid
 
 Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením jeho základných parametrov v karte Základné. Vytvoríte tak nový formulár typu [Viackrokový formulár](../multistep-form/README.md). Následne môžete k formuláru pridať jednotlivé položky formuláru (textové polia, zaškrtávacie polia, výberové polia a podobne) kliknutím na názov vytvoreného formuláru v tabuľke a prechodom do karty [Položky formuláru](../multistep-form/README.md).
 
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Karta Základné
 
 ![](edit-tab-basic.png)
@@ -113,6 +117,8 @@ V položkách formuláru v prvom kroku zadajte polia, ktoré potrebujete pre vyp
 Následne v druhom kroku pridáte položku typu Overovací kód, ktorá zabezpečí zobrazenie vstupného poľa pre zadanie kódu a jeho verifikáciu pri odoslaní formuláru.
 
 ![](form-step-email-verification-2.png)
+
+Ak potrebujete implementovať podobnú funkčnosť, ale s inou logikou, tak v časti Programovanie zákazníckych aplikácií je viac technických informácií o možnosti implementácie [vlastného spracovateľa formuláru](../../../custom-apps/apps/multistep-forms/README.md), ktorý zabezpečí požadovanú funkcionalitu.
 
 ## Udalosť pri odoslaní formuláru
 

@@ -10,6 +10,9 @@
   - [Základní konfigurace](/install/config/README.md)
   - [Externí konfigurace](/install/external-configuration.md)
   - [Spam ochrana](/install/config/spam-protection.md)
+  - Autorizace
+    - [OAuth2](/install/oauth2/oauth2.md)
+    - [Keycloak](/install/oauth2/keycloak.md)
 - Migrace
   - [Migrace mezi prostředími](/install/migrate-dev-prod.md)
 - MultiWeb

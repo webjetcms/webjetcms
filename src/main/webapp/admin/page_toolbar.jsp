@@ -83,14 +83,13 @@ pageContext.setAttribute("doc", doc);
 	<div class="webjetToolbarContent">
 		<table class="webjetToolbarTable">
 		   <tr>
-			   <td colspan="2" class="header">
+			   <td class="header">
 				   <img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.svg" />
 			   		<a href="javascript:closeWebJETToolbar()" class="webjetToolbarClose">&nbsp;</a>
 			   </td>
 			</tr>
 			<tr>
-			   <td><strong>DocID:</strong></td>
-			   <td>
+			   <td><strong>DocID:</strong>
 			      <a href='/admin/v9/webpages/web-pages-list/?docid=<iwcm:beanWrite name="doc" property="docId"/>' target="_blank"><iwcm:beanWrite name="doc" property="docId"/></a>
 				</td>
 			</tr>
@@ -105,8 +104,8 @@ pageContext.setAttribute("doc", doc);
 			if (group != null)
 			{%>
 			<tr>
-				<td><strong><iwcm:text key="admin.temp_group_list.directory"/>:</strong></td>
-				<td><a href='<%=GroupsController.BASE_URL%><%=group.getGroupId()%>' target="_blank"><%=group.getGroupName()%></a></td>
+				<td><strong><iwcm:text key="admin.temp_group_list.directory"/>:</strong>
+					<a href='<%=GroupsController.BASE_URL%><%=group.getGroupId()%>' target="_blank"><%=group.getGroupName()%></a></td>
 			</tr>
 			<%
 			}
@@ -115,18 +114,17 @@ pageContext.setAttribute("doc", doc);
 			TemplateDetails temp = tempDB.getTemplate(doc.getTempId());
 			if(temp != null){%>
 			<tr>
-				<td><strong><iwcm:text key="editor.template"/>:</strong></td>
-				<td><a href='/admin/v9/templates/temps-list/?tempId=<%=temp.getTempId()%>' target="_blank"><%=temp.getTempName()%></a></td>
+				<td><strong><iwcm:text key="editor.template"/>:</strong>
+					<a href='/admin/v9/templates/temps-list/?tempId=<%=temp.getTempId()%>' target="_blank"><%=temp.getTempName()%></a></td>
 			</tr>
 			<%}%>
 
 			<tr>
-				<td><strong><iwcm:text key="history.changedBy"/>:</strong></td>
-				<td><a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a></td>
+				<td><strong><iwcm:text key="history.changedBy"/>:</strong>
+					<a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a></td>
 			</tr>
 			<tr>
-				<td><strong><iwcm:text key="editor.date"/>:</strong></td>
-			   <td>
+				<td><strong><iwcm:text key="editor.date"/>:</strong>
 			      <iwcm:beanWrite name="doc" property="dateCreatedString"/>
 					<iwcm:beanWrite name="doc" property="timeCreatedString"/>
 			   </td>

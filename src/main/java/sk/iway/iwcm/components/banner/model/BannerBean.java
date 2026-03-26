@@ -5,23 +5,21 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -205,7 +203,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			tab = "advanced",
 			visible = false
 		)
-		@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+		@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 		private String htmlCode;
 
 
@@ -261,7 +259,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			className = "banner-type banner-type-4",
 			tab = "advanced"
 		)
-		@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+		@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 		private String descriptionText;
 
 		//Primary link
@@ -391,7 +389,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 
 	/*TAB restrictions*/
 	@Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{components.banner.dateFrom}]]",
@@ -401,7 +399,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 	private Date dateFrom;
 
 	@Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{components.banner.dateTo}]]",
@@ -522,7 +520,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 	private Integer height;
 
 	@Column(name = "stat_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	private Date statDate;
 
 	@Column(name = "width")

@@ -7,7 +7,7 @@ module.exports = {
     BASKET_ADMIN: "/apps/basket/admin/",
     PRODUCTS_ADMIN: "/apps/basket/admin/product-list/",
 
-    red: 'rgb(255, 75, 88)',
+    red: 'rgb(224, 0, 40)',
     black: 'rgb(19, 21, 27)',
 
     DeliveryMethods: {

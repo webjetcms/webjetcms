@@ -109,6 +109,7 @@ Voliteľné možnosti:
 - ```editSearchSteps``` - funkcia pridávajúca kroky testovania pri vyhľadaní záznamu.
 - ```beforeDeleteSteps``` - funkcia pridávajúca kroky testovania pred zmazaním záznamu.
 - ```perms``` - meno práva (napr. ```editor_edit_media_all```) pre automatické overenie zabezpečenia REST služby.
+- ```extraWait``` - ak je nastavené v niektorých prípadoch sa počká nastavený čas v sekundách, potrebné ak stránka načítava nejaké extra údaje.
 
 Interne sa po inicializácii ešte nastavia nasledovné atribúty:
 

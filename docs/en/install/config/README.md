@@ -4,14 +4,17 @@ The most commonly used [configuration variables](../../admin/setup/configuration
 
 ## Logging in
 
+The library is used for logging [Logback](http://logback.qos.ch/), which allows detailed logging settings for individual java packages. It is used [ConsoleAppender](https://logback.qos.ch/manual/appenders.html#ConsoleAppender), but it is also possible to set [FileAppender](https://logback.qos.ch/manual/appenders.html#FileAppender) or [RollingFileAppender](https://logback.qos.ch/manual/appenders.html#RollingFileAppender). The configuration file is in `WEB-INF/classes/logback.xml`, but the following configuration variables can be used for basic setup:
 - `logLevel` - basic logging level, can have a value of `debug` for detailed logging, or `normal` for production deployment.
 - `logLevels` - list of java packages with logging level (each on a new line), e.g:
 
-```
+```txt
 sk.iway=DEBUG
 sk.iway.iwcm=WARN
 org.springframework=WARN
 ```
+
+If necessary, it is possible to set/implement your own [Appender](https://logback.qos.ch/manual/appenders.html). It can send logs to an external log analysis system, for example. Directly `Logback` provides, among others `Appender` For [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) or [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). If necessary, it is possible to create [Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
 ## Sending emails
 
@@ -20,6 +23,7 @@ To send emails you need to set up the SMTP server correctly:
 - `smtpUseSSL` - by setting it to `true` activate the use of SSL.
 - `smtpUseTLS` - `TLS` authentication - if port 587, `smtpUseTLS` must be `true`.
 - `smtpTLSVersion` - version `TLS` for smtp connection.
+- `smtpAuthMechanism` - authorization mechanism for the SMTP server (e.g. `NTLM XOAUTH2`), if empty, the default mechanism of the JavaMail library is used. Sets the value `mail.smtp.auth.mechanisms`. To enforce the use of `NTLM/v2` Before `BASIC` set the value to `NTLM`. For support `OAuth` set the value to `XOAUTH2`.
 - `smtpUser` - login name.
 - `smtpPassword` - password.
 - `smtpPort` - port for connection to the SMTP server.
@@ -39,6 +43,7 @@ the configuration value can be set specifically for modules using a prefix, such
 - `dmail` - the sender of the new bulk email.
 - `formmail` - the sender of the notification to the visitor who filled in the form.
 - `reservation` - the sender of the booking approval/denial.
+- `passwordReset` - the sender of the email to change the user's password.
 
 ### Setting up Amazon SES
 

@@ -556,7 +556,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="all")
     {
-        var url = '/admin/elFinder/dialog.jsp';
+        var url = '/admin/v9/files/dialog/';
 
         if (form != null && elementName != null) {
             url = url + "?form=" + form;
@@ -612,13 +612,33 @@ if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
 
             <div id='wjInlineCkEditorToolbarElement'></div>
         </form>
+        <div class="exit-inline-editor" id="DTE_Field_data-editorTypeSelector">
+            <iwcm:text key="editor.type_select.label.js"/><br>
+            <select onchange="window.parent.switchEditorType(this)">
+                <option value=""><iwcm:text key="editor.type_select.standard.js"/></option>
+                <option value="html"><iwcm:text key="editor.type_select.html.js"/></option>
+                <option value="pageBuilder" selected="selected"><iwcm:text key="editor.type_select.page_builder.js"/></option>
+            </select>
+            <br/>
+            <div>
+                <iwcm:text key="pagebuilder.modal.tab.size"/>:
+                <a href="javascript:window.parent.pbSetWindowSize('phone')" title="<iwcm:text key='pagebuilder.modal.visibility.sm'/>"><img src="/admin/webpages/page-builder/images/device-mobile.svg"/></a>
+                <a href="javascript:window.parent.pbSetWindowSize('tablet')" title="<iwcm:text key='pagebuilder.modal.visibility.md'/>"><img src="/admin/webpages/page-builder/images/device-tablet.svg"/></a>
+                <a href="javascript:window.parent.pbSetWindowSize('desktop')" title="<iwcm:text key='pagebuilder.modal.visibility.xl'/>"><img src="/admin/webpages/page-builder/images/device-desktop.svg"/></a>
+            </div>
+        </div>
     </div>
 </div>
 <div id="inlineEditorToolbarTopPlaceHolder"></div>
 <div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjapptemp="<%=doc.getTempId()%>" data-wjappfield="doc_data">
-    <% if ("true".equals(request.getParameter("inlineEditingNewPage"))) { %>
-        <p><iwcm:text key='editor.newDocumentName'/></p>
     <%
+    if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
+        String newPageDocData = (String)request.getAttribute("doc_data_newpage");
+        if (Tools.isNotEmpty(newPageDocData)) {
+            out.println(newPageDocData);
+        } else {
+            %><p><iwcm:text key='editor.newDocumentName'/></p><%
+        }
     } else {
         out.println(doc.getData());
     }

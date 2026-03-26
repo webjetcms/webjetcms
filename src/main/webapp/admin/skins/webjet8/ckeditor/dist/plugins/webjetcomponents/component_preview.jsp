@@ -197,6 +197,8 @@ else
 		String pageCss = null;
 		for (String cssStyle : cssTokens)
 		{
+			if (FileTools.isFile(cssStyle)==false) continue;
+
 			%><link rel="stylesheet" href="<%=cssStyle %>" type="text/css" /><%
 			if (cssStyle.endsWith("page.css")) pageCss = cssStyle;
 

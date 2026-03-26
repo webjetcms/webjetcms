@@ -8,6 +8,12 @@ E-mail lze posílat návštěvníkům, kteří jsou registrováni v admin část
 
 ![](dataTable.png)
 
+Tabulka obsahuje speciální ikony:
+- <i class="ti ti-eye" ></i> - zobrazit stránku - zobrazí náhled web stránky, která je použita jako obsah emailu
+- <i class="ti ti-player-play" ></i> - spustit odesílání - spustí odesílání emailů kampaně
+- <i class="ti ti-player-stop" ></i> - zastavit odesílání - zastaví odesílání emailů kampaně
+- <i class="ti ti-repeat" ></i> - znovu odeslat všechny emaily - všechny emaily v kampani se označí jako nové a budou znovu odeslány
+
 ## Základní
 
 Při vytváření nového záznamu máme v kartě **Základní** na výběr pouze jednu kartu se základními informacemi, které potřebujeme vyplnit a to **Předmět** a **Web stránka**.

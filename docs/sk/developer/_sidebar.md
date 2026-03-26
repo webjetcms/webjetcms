@@ -56,6 +56,7 @@
 - Testovanie
     - [Testovanie](/developer/testing/README.md)
     - [Preklady textov](/developer/testing/i18n.md)
+    - [Testovanie prístupnosti](/developer/testing/a11y.md)
     - [Automatické testovanie DataTables](/developer/testing/datatable.md)
     - [DataTables - testovanie importu](/developer/testing/datatable-import.md)
     - [Generovanie screenshotov dokumentácie](/developer/testing/screenshots.md)
@@ -72,7 +73,9 @@
     - [Bezpečnosť](/developer/backend/security.md)
     - [JPA](/developer/backend/jpa.md)
     - [Mapovanie DTO objektov](/developer/backend/mapstruct.md)
-    - [Udalosti](/developer/backend/events.md)
+    - Udalosti
+      - [WebJET udalosti](/developer/backend/events.md)
+      - [Udalosti datatabuliek](/developer/backend/events-datatable.md)
 - Aplikácie a moduly
     - Web stránky
       - [Frontend](/developer/apps/webpages/README.md)

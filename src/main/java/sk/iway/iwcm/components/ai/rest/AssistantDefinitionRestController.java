@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.ai.rest;
 import java.util.Date;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,7 +54,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             if(Tools.isEmpty(entity.getAction())) {
-                errors.rejectValue("action", "", getProp().getText("javax.validation.constraints.NotNull.message"));
+                errors.rejectValue("action", "", getProp().getText("jakarta.validation.constraints.NotNull.message"));
             }
 
             if(sameEntities != null && sameEntities.size() > 0) {

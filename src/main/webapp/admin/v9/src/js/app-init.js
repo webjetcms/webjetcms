@@ -728,6 +728,11 @@ function initClosure() {
     // =======================
     window.addEventListener('beforeunload', (event) => {
         try {
+            // Nezobraziť varovanie pre image-editor iFrame
+            if (window.location.pathname.indexOf('/apps/image-editor') >= 0) {
+                return;
+            }
+
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
             if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");

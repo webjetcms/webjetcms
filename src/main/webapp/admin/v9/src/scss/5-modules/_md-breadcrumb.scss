@@ -6,7 +6,6 @@
     margin-right: -15px;
     background-color: $nice-gray;
     border-top: 1px solid $nice-gray-100;
-    border-bottom: 1px solid $nice-gray-100;
     font-family: $secondary-font-family;
     font-size: 15px;
     line-height: 31px;
@@ -103,13 +102,13 @@
 
     .btn-group {
         padding:2px;
-        background-color: #b3b8c7;
+        background-color: $nice-gray-200;
         border-radius: $border-radius !important;
         margin-top: -3px;
         .btn {
             border-width: 0 !important;
             margin-right: 0;
-            background-color: #b3b8c7;
+            background-color: $nice-gray-200;
             border-radius: $border-radius !important;
             padding: 3px 0.5rem;
             min-width: 27px;

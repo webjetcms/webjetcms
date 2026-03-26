@@ -135,7 +135,7 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
                   <td></td>
                   <td></td>
 
-                  <td > Celkov� cena:</td>
+                  <td > <iwcm:text key="components.basket.total_price"/>:</td>
 
                   <td > <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
                       <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>

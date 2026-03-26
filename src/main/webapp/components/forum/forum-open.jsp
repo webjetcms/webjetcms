@@ -296,8 +296,8 @@ if(!isAjaxCall)
 	if (dataSize>0 && pageCount>0 && pageParams.getBooleanValue("noPaging", false)==false && request.getParameter("randomSize")==null && request.getParameter("noPaging")==null)
 	{
 		String originalUrl = PathFilter.getOrigPath(request);
-		originalUrl+="?"+request.getAttribute("javax.servlet.forward.query_string");
-		if (request.getAttribute("javax.servlet.forward.query_string") == null)
+		originalUrl+="?"+request.getAttribute("jakarta.servlet.forward.query_string");
+		if (request.getAttribute("jakarta.servlet.forward.query_string") == null)
 			originalUrl="?";
 %>
 	<div style="float: left;">

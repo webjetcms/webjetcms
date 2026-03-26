@@ -14,7 +14,7 @@
   - [Export and import](/redactor/datatables/export-import.md)
 - Web pages
   - [Basic work](/redactor/webpages/README.md)
-  - [Editing a web page](/redactor/webpages/editor.md)
+  - [Editing a web page](/redactor/webpages/editor/README.md)
   - [Working in the editor](/redactor/webpages/working-in-editor/README.md)
   - [Web page folder](/redactor/webpages/group.md)
   - [History](/redactor/webpages/history.md)
@@ -68,6 +68,7 @@
     - [List of products](/redactor/apps/eshop/product-list/README.md)
     - [Application settings](/redactor/apps/basket/README.md)
     - [Payment methods](/redactor/apps/eshop/payment-methods/README.md)
+    - [Methods of delivery](/redactor/apps/eshop/delivery-methods/README.md)
   - [Emoticons](/redactor/apps/emoticon/README.md)
   - [Export of data](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)
@@ -75,6 +76,7 @@
   - [Form easily](/redactor/apps/formsimple/README.md)
   - Forms
     - [List of forms](/redactor/apps/form/README.md)
+    - [Items on the form](/redactor/apps/multistep-form/README.md)
     - [Regular expressions](/redactor/apps/form/regexps.md)
   - Forum/Discussion
     - [Application settings](/redactor/apps/forum/README.md)

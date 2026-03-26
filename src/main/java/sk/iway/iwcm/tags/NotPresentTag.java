@@ -20,7 +20,7 @@
  */
 package sk.iway.iwcm.tags;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 /**
  * Evalute the nested body content of this tag if the specified value is not

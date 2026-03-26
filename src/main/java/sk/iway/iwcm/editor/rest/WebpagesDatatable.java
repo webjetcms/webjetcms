@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +24,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
@@ -341,6 +342,17 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     }
 
     private int getGroupIdParam() {
-        return Tools.getIntValue(getRequest().getParameter(GROUP_ID_PARAM_NAME), Constants.getInt("rootGroupId"));
+        String groupIdParam = getRequest().getParameter(GROUP_ID_PARAM_NAME);
+        int defaultId = Constants.getInt("rootGroupId");
+
+        if (Tools.isEmpty(groupIdParam)) {
+            //for multidomain use groupid by root group for domain
+            int domainId = CloudToolsForCore.getDomainId();
+            if (domainId > 1) {
+                defaultId = domainId;
+            }
+        }
+
+        return Tools.getIntValue(groupIdParam, defaultId);
     }
 }

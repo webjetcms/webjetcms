@@ -5,7 +5,7 @@
 Aplikace Bannerový systém, umožňuje do stránky vložit banner. Systém podporuje následující typy bannerů:
 - Obrázek - zobrazí statický obrázek, nebo animovaný `gif`. Eviduje kliknutí na banner.
 - Html kód - vloží do stránky zadaný HTML kód dynamického banneru. Neeviduje kliknutí na banner.
-- Obsahový banner - vloží do stránky obrázek v pozadí nad kterým se nachází text a tlačítka pro provedení akce (tzv. click to action tlačítka).
+- Obsahový banner - vloží do stránky obrázek v pozadí nad kterým se nachází text a tlačítka pro provedení akce (tzv. `call to action` tlačítka).
 - Video - vloží do stránky lokální video soubor, nebo video z YouTube.
 
 ![](datatable.png)

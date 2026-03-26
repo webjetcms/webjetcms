@@ -50,14 +50,18 @@ Type values can also be specified for the entity, source and destination fields:
 
 For the target field it is possible to specify not only the name of the attribute in the entity, but also the CSS class and value `renderFormat`. It is therefore possible to enter a value `dt-format-text,dt-format-text-wrap` for application to all types of text fields.
 
-If you don't want to display AI tool options for the field in the entity, just add a CSS class to the annotation `ai-off`. In this case, the button for the AI assistant will appear next to the field only if it is specified exactly for the entity and field.
+Optional fields (i.e. fields whose name is `fieldX`) can change dynamically, for example according to the selected template in the website. When AI assistants are generated, only the main type is detected on the server side, regardless of the page template used. Therefore, the assistant may not be displayed correctly if the pages have different templates. Optional fields are initialized when the web page is refreshed according to the template of the folder you are in, so refreshing the page can retrieve the correct values. However, switching to a different page with a different template does not change the assistants.
+
+At the same time, if a specific assistant is set for an optional field (the field name matches the value in the Target field of the assistant definition), other general assistants defined e.g. by field type and so on are not displayed. Presumably, if you define an assistant for a specific optional field, you don't need the other general assistants (such as Correct Grammar). If you do need such an assistant, just add the name of the optional field to those general assistants as well.
+
+If you don't want to display AI tool options for a field in an entity, just set the attribute in the annotation `ai=false` or add a CSS class `ai-off`. In this case, the button for the AI assistant will appear next to the field only if it is specified exactly for the entity and field.
 
 ```java
 	@Lob
 	@Column(name = "description")
-	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", ai=false, editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {
-					@DataTableColumnEditorAttr(key = "class", value = "textarea-code ai-off") }) })
+					@DataTableColumnEditorAttr(key = "class", value = "textarea-code") }) })
 	private String description;
 ```
 
@@ -147,3 +151,12 @@ Some interfaces are [so far in experimental mode](https://developer.chrome.com/d
 You can check the status of AI models by typing the following address in the browser bar: `chrome://on-device-internals/`.
 
 Some APIs do not yet support working in all languages, so automatic translation may occur after use. However, the translator also needs to be downloaded the first time you use it, so we recommend trying the AI translation tool first to get the translator installed. After that, it will be possible to use it after other AI assistants have been executed to translate the output text.
+
+## Connect
+
+Calling AI services requires an internet connection. Make sure that your server has access to external services and that firewall or other security measures do not block API requests to that provider. The following domain names are used:
+- OpenAI: `api.openai.com`
+- Gemini: `generativelanguage.googleapis.com`
+- OpenRouter: `openrouter.ai`
+
+these need to be enabled in outgoing requests to any proxy server or firewall.

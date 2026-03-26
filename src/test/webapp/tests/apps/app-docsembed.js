@@ -17,12 +17,16 @@ Scenario("Vlozenie dokumentu - test zobrazovania", ({ I }) => {
     I.waitForElement('iframe');
     I.waitForInvisible('.loader', 120);
     I.wait(1);
-    within({ frame: 'iframe[src*="docs.webjetcms.sk"]' }, () => {
-        I.see("Používateľská príručka");
-    });
+    I.waitForElement("#docsembed-1 > iframe", 20);
+    I.wait(1);
+    I.switchTo("#docsembed-1 > iframe");
+    I.wait(1);
+    I.waitForText("Používateľská príručka", 20, "p");
+    I.switchTo();
 });
 
 Scenario('testovanie app - Vlozenie dokumentu', async ({ I, DTE, Apps, Document }) => {
+    I.switchTo();
     Apps.insertApp('Vloženie dokumentu', '#components-app-docsembed-title');
     const defaultParams = {
         url: '',

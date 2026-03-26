@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -142,7 +142,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
             if(stepId != -1) entity.setStepId(stepId);
         } else {
-            entity = formItemsRepository.getById(id);
+            entity = formItemsRepository.getReferenceById(id);
         }
 
         return processFromEntity(entity, ProcessItemAction.GETONE);
@@ -157,8 +157,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         for(Integer regexId : entity.getRegexValidationArr()) sb.append(regexId).append("+");
         entity.setRegexValidation(sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "");
 
-        //Prepare itemFormId - if insert
-        if(entity.getId() == null || entity.getId() < 1) {
+        //Prepare itemFormId - if insert OR always for radio (because you can change the field label)
+        if(entity.getId() == null || entity.getId() < 1 || "radio".equals(entity.getFieldType())) {
             //Set itemFormId
             String itemFormId = multistepFormsService.getValidItemFormId(entity); // generate unique
             entity.setItemFormId(itemFormId);

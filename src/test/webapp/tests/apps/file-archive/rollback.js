@@ -13,8 +13,7 @@ Before(({ I, login, DT }) => {
         DT.showColumn("Poradie usporiadania", "fileArchiveDataTable");
     }
     DT.addContext("archive","#fileArchiveDataTable_wrapper");
-    DT.addContext("waiting","#datatableFieldDTE_Field_editorFields-waitingFiles_wrapper")
-    
+    DT.addContext("waiting","#datatableFieldDTE_Field_editorFields-waitingFiles_wrapper");
 });
 
 Scenario('Import 2', async ({ I, DT, DTE}) => {
@@ -31,10 +30,10 @@ Scenario('Rollback', async ({ I, DT}) => {
 
     DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
     await SL.setAsc();
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", rollbackFileName]);
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
-    DT.checkTableRow("fileArchiveDataTable", 3, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 2)]);
-    DT.checkTableRow("fileArchiveDataTable", 4, ["", virtualFileName, "", "files/archiv/", 'archive_file_test_fourth.pdf']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", rollbackFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
+    DT.checkTableRow("fileArchiveDataTable", 3, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 2)]);
+    DT.checkTableRow("fileArchiveDataTable", 4, ["", "", virtualFileName, "", "files/archiv/", 'archive_file_test_fourth.pdf']);
     SL.checkOrderIds(['-1', '4', '2', '3']);
 
     // 2. Prejdi na elfinder a skontroluj obsah súboru
@@ -47,9 +46,9 @@ Scenario('Rollback', async ({ I, DT}) => {
     I.amOnPage(SL.fileArchive);
     SL.rollback(virtualFileName);
     DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", rollbackFileName]);
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
-    DT.checkTableRow("fileArchiveDataTable", 3, ["", virtualFileName, "", "files/archiv/", 'archive_file_test_fourth.pdf']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", rollbackFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
+    DT.checkTableRow("fileArchiveDataTable", 3, ["", "", virtualFileName, "", "files/archiv/", 'archive_file_test_fourth.pdf']);
     SL.checkOrderIds(['-1', '3', '2']);
 
     // 4. Opätovné skontrolovanie súboru v elfinderi
@@ -62,8 +61,8 @@ Scenario('Rollback', async ({ I, DT}) => {
     I.amOnPage(SL.fileArchive);
     SL.rollback(virtualFileName);
     DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", rollbackFileName]);
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", rollbackFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(rollbackFileName, 1)]);
     SL.checkOrderIds(['-1', '2']);
 
     // 6. Skontroluj subor
@@ -75,7 +74,7 @@ Scenario('Rollback', async ({ I, DT}) => {
     I.say('Phase 7 - Rollback with no available historical versions');
     I.amOnPage(SL.fileArchive);
     SL.rollback(virtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", rollbackFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", rollbackFileName]);
     //Deselect
     I.clickCss('button.buttons-select-all');
     SL.rollback(virtualFileName, false);

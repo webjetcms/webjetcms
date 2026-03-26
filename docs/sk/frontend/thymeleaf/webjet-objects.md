@@ -103,7 +103,7 @@ meta(property='og:locale' content="sk-SK" data-th-content='${ninja.temp.lngIso}'
 link(rel='icon' href="assets/images/favicon.ico" data-th-href='|${ninja.temp.basePathImg}favicon.ico|' sizes='any')
 link(rel='icon' href="assets/images/icon.svg" data-th-href='|${ninja.temp.basePathImg}icon.svg|' type='image/svg+xml')
 
-link(rel='canonical' data-th-href='${ninja.page.url}')
+link(rel='canonical' data-th-href='${ninja.page.canonical}')
 link(data-th-if="${docDetails.tempName == 'Blog template'}" rel='amphtml' data-th-href='|${ninja.page.url}?forceBrowserDetector=amp|')
 
 touchicons(data-th-utext='${ninja.temp.insertTouchIconsHtml}' data-th-remove="tag")
@@ -145,5 +145,5 @@ Príklady použitia:
     <span data-th-text="${docDetails.title}">Titulok stránky</span>
     <body data-th-class="${docDetails.fieldA}">
     <meta name="author" data-th-content="${ninja.temp.group.author}" />
-    <link rel="canonical" data-th-href="${ninja.page.url}" />
+    <link rel="canonical" data-th-href="${ninja.page.canonical}" />
 ```

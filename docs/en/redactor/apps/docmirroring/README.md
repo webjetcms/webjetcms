@@ -50,6 +50,12 @@ The link is in the form `SK | CZ | EN` generated as `ul-li` List. To generate it
 
 The names SK, CZ, EN are generated from the specified directory IDs in the mirroring configuration, the value specified in the field is used **Navigation bar and menu**.
 
+If you need to display flags instead of text links, set the parameter `flagsPath` on the way to the pictures of flags. The images must be named according to the language code, e.g. `sk.png`, `en.png`, `cz.png`:
+
+```html
+!INCLUDE(/components/structuremirroring/language_switcher.jsp, flagsPath=/images/flags/)!
+```
+
 ## Automatic translation
 
 WebJET can automatically translate the name of a directory or page when it is created. The following setting is required:

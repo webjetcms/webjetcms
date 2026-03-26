@@ -1,5 +1,6 @@
 * Verzia
-  * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/latest/" rel="noopener" title="">2025</a>
+  * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/latest/" rel="noopener" title="">2026</a>
+  * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/v2025/" rel="noopener" title="">2025</a>
   * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/v2024/" rel="noopener" title="">2024</a>
   * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/v2023/" rel="noopener" title="">2023</a>
   * <a target="_blank" onclick="handleExternalClick(this, event)" href="https://docs.webjetcms.sk/v2022/" rel="noopener" title="">2022</a>

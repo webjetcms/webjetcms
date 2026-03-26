@@ -25,10 +25,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyContent;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.BodyContent;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -62,7 +62,7 @@ public class CustomTagUtils {
    private static final String STRUTS_KEYS_PREFIX = "struts.";
 
    public static CustomTagUtils getInstance() {
-      javax.servlet.ServletContext servletContext = Constants.getServletContext();
+      jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 
       synchronized (CustomTagUtils.class) {
          CustomTagUtils customTagUtils = (CustomTagUtils) servletContext.getAttribute(CUSTOM_TAG_UTILS);

@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page import="sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails,sk.iway.iwcm.i18n.Prop" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@page import="sk.iway.iwcm.system.UrlRedirectBean"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@page import="sk.iway.iwcm.io.IwcmFile"%><%!
-public void safeForward(javax.servlet.jsp.PageContext pageContext, String forward) throws java.io.IOException, javax.servlet.ServletException {
+public void safeForward(jakarta.servlet.jsp.PageContext pageContext, String forward) throws java.io.IOException, jakarta.servlet.ServletException {
 	try {
 		pageContext.forward(forward);
 	} catch (IllegalStateException ex) {
@@ -67,7 +67,7 @@ if (path == null)
 if (path == null) path = "??? unknown path ???";
 
 
-if (path.endsWith("/undefined") || path.endsWith(".map"))
+if (path.endsWith("/undefined") || path.endsWith(".map") || "/css/page.css".equals(path))
 {
 	response.setStatus(404);
 	out.println("<html><body>"+text+"</body></html>");
@@ -114,6 +114,8 @@ if ("/robots.txt".equals(path))
 %>Disallow: /components
 Disallow: /thumb
 Disallow: /topdf
+Crawl-delay: 1
+
 Sitemap: <%=Tools.getBaseHref(request)%>/sitemap.xml
 <%
 	return;
@@ -256,9 +258,15 @@ if (redirectBean != null)
 
 	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) newUrl = Tools.addParametersToUrlNoAmp(newUrl, queryString);
 
-	if (newUrl.toLowerCase().startsWith("http")==false) newUrl = Tools.getBaseHref(request) + newUrl;
-
-	response.setHeader("Location", newUrl);
+	if (newUrl.startsWith("/admin/") || newUrl.startsWith("/components/"))
+	{
+		response.sendRedirect(newUrl);
+	}
+	else
+	{
+		if (newUrl.toLowerCase().startsWith("http")==false) newUrl = Tools.getBaseHref(request) + newUrl;
+		response.setHeader("Location", newUrl);
+	}
 	%>
 	<html><script>window.location.href='<%=newUrl%>';</script></html>
 	<%

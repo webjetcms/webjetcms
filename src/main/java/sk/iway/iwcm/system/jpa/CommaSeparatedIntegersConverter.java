@@ -3,8 +3,8 @@ package sk.iway.iwcm.system.jpa;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 /**
  * Konverter pre databazovy zaznam kde su ciarkou oddelene cisla na objekt Integer[]

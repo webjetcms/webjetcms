@@ -56,7 +56,7 @@ kromě toho lze použít i [Literal substitutions](https://www.thymeleaf.org/doc
 <span data-th-text="|Welcome to our application, ${docDetails.title}!|">
 ```
 
-!>**Upozornění:** pokud vám vyhodí chybu typu: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. To je speciální značka pro [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba to escapovat jako \\\\\_, příklad:
+!>**Upozornění:** pokud vám vyhodí chybu typu: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. To je speciální značka pro [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba to escapovat jako `\\\\_`, příklad:
 
 ```html
 <div data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'">
@@ -101,4 +101,12 @@ Pokud potřebujete volat statickou metodu můžete použít `T()` funkci:
 ```html
 <p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
 <p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+```
+
+## Vložení aktuální verze
+
+WebJET při startu inicializuje hodnotu v `CombineTag.getVersion()` na aktuální timestamp. Tato hodnota se změní i při smazání všech cache objektů. Lze ji použít v parametru `?v=` pro načtení nových verzí souborů po restartu serveru. Při použití `data-iwcm-combine` je `?v=` parametr přidán automaticky. Můžete jej ale vložit i manuálně:
+
+```html
+<script data-th-src="${'/components/aceintegration/admin/pagesupport-custom.js?v=' + version}"></script>
 ```

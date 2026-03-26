@@ -1,6 +1,6 @@
 # Galéria
 
-Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotografií. Obrázky z digitálneho fotoaparátu stačí nahrať do galérie. WebJET fotografie automaticky zmenší na požadovaný formát. Z každej fotky sa vytvárajú 3 kópie:
+Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotografií. Obrázky z digitálneho fotoaparátu stačí nahrať do galérie. WebJET fotografie automaticky zmenší na požadovaný formát. Podporované sú formáty `JPG`, `JPEG`, `GIF`, `PNG` a `WebP`. Z každej fotky sa vytvárajú 3 kópie:
 
 - Náhľadový obrázok - fotka v malom rozlíšení, cca 160x120 bodov, používa sa v zozname obrázkov
 - Obrázok v bežnom rozlíšení – fotka v rozlíšení pre bežný monitor, teda cca 600x400 bodov – táto fotka sa zobrazí po kliknutí na náhľadový obrázok
@@ -31,28 +31,28 @@ Okrem iných obsahuje nastavenie priečinka tieto polia:
   - Presný rozmer - veľkosť obrázka je nastavená presne podľa priečinka, pričom ak je pomer strán rozdielny dôjde k deformácii obrázka.
   - Presná šírka - veľkosť obrázka použije zadanú šírku a výšku vypočíta podľa pomeru strán. Výška ale môže byť väčšia ako zadaný rozmer.
   - Presná výška - veľkosť obrázka použije zadanú výšku a šírku vypočíta podľa pomeru strán. Šírka ale môže byť väčšia ako zadaný rozmer.
-  - Negenerovať zmenšeniny - galéria použije len originálny obrázok a nebude generovať náhľadové obrázky. Náhľadové obrázky je následne možné generovať podľa potreby s využitím ```/thumb``` prefixu.
+  - Negenerovať zmenšeniny - galéria použije len originálny obrázok a nebude generovať náhľadové obrázky. Náhľadové obrázky je následne možné generovať podľa potreby s využitím `/thumb` prefixu.
 
-V karte vodotlač je možné nastaviť vkladanie značky/loga do obrázku vo forme vodotlače. Je možné použiť aj vektorový SVG obrázok, ktorého rozmer sa prispôsobuje rozmeru generovaného obrázka podľa nastavenia v konf. premennej ```galleryWatermarkSvgSizePercent``` a ```galleryWatermarkSvgMinHeight```.
+V karte vodotlač je možné nastaviť vkladanie značky/loga do obrázku vo forme vodotlače. Je možné použiť aj vektorový SVG obrázok, ktorého rozmer sa prispôsobuje rozmeru generovaného obrázka podľa nastavenia v konf. premennej `galleryWatermarkSvgSizePercent` a `galleryWatermarkSvgMinHeight`.
 
 V stromovej štruktúre sa zobrazia priečinky:
 
-- z ```/images/gallery```.
-- z ```/images/{PRIECINOK}/gallery``` pričom ```{PRIECINOK}``` je ľubovoľný priečinok. Ak z nejakého dôvodu potrebujete oddeliť galériu pre nejaký projekt/mikro-stránku.
-- z databázovej tabuľke ```gallery_dimension``` existuje záznam s nastavením rozmerov galérie pre cestu v stĺpci ```image_path``` (ktorá ale začína na /images).
+- z `/images/gallery`.
+- z `/images/{PRIECINOK}/gallery` pričom `{PRIECINOK}` je ľubovoľný priečinok. Ak z nejakého dôvodu potrebujete oddeliť galériu pre nejaký projekt/mikro-stránku.
+- z databázovej tabuľke `gallery_dimension` existuje záznam s nastavením rozmerov galérie pre cestu v stĺpci `image_path` (ktorá ale začína na /images).
 
-Pri používaní doménových aliasov (nastavená konf. premenná ```multiDomainAlias:www.domena.com=ALIAS```) sa predvolene zobrazí/otvorí priečinok ```/images/ALIAS/gallery```. Kvôli spätnej kompatibilite sa zobrazia aj iné priečinky galérie (napr. ```/images/gallery```), nezobrazia sa ale také, ktoré v mene priečinka obsahujú doménový alias inej domény.
+Pri používaní doménových aliasov (nastavená konf. premenná `multiDomainAlias:www.domena.com=ALIAS`) sa predvolene zobrazí/otvorí priečinok `/images/ALIAS/gallery`. Kvôli spätnej kompatibilite sa zobrazia aj iné priečinky galérie (napr. `/images/gallery`), nezobrazia sa ale také, ktoré v mene priečinka obsahujú doménový alias inej domény.
 
 Priečinky majú nasledovné ikony:
 
 - <i class="ti ti-folder-filled" role="presentation"></i> plná ikonka priečinku = štandardný priečinok, má nastavené rozmery galérie
-- <i class="ti ti-folder" role="presentation"></i> prázdna ikonka priečinku = priečinok nemá nastavené rozmery galérie, typicky sa jedná o ```{PRIECINOK}```, viď vyššie.
+- <i class="ti ti-folder" role="presentation"></i> prázdna ikonka priečinku = priečinok nemá nastavené rozmery galérie, typicky sa jedná o `{PRIECINOK}`, viď vyššie.
 
 ### Správa fotografií
 
 Nové fotografie do galérie nahráte kliknutím na ikonu Pridať v stĺpci Obrázky (viac obrázkov vyberiete podržaním klávesy CTRL) alebo priamo pretiahnutím z vášho počítača.
 
-Nástrojová lišta obsahuje ikony ```SML``` na nastavenie veľkosti zobrazených fotografií (ich veľkosť sa mení len pre zobrazenie v administrácii), prípadne posledná možnosť zobrazí obrázky v štandardnej tabuľke, kde môžete napr. využiť funkciu Editácia bunky.
+Nástrojová lišta obsahuje ikony `SML` na nastavenie veľkosti zobrazených fotografií (ich veľkosť sa mení len pre zobrazenie v administrácii), prípadne posledná možnosť zobrazí obrázky v štandardnej tabuľke, kde môžete napr. využiť funkciu Editácia bunky.
 
 ![](admin-toolbar-photo.png)
 
@@ -103,8 +103,8 @@ Vkladanie galérie do stránky je tiež veľmi jednoduché. Vyberiete si apliká
 
 Máte možnosť vybrať vizuálny štýl galérie:
 
-- ```Photo Swipe``` - responzívna galéria s možnosťou posúvania fotiek prstom, kompatibilná s mobilnými zariadeniami.
-- ```PrettyPhoto``` - staršia verzia zobrazenia, posúvanie fotiek je riešené kliknutím na ikonu šípky vľavo/vpravo.
+- `Photo Swipe` - responzívna galéria s možnosťou posúvania fotiek prstom, kompatibilná s mobilnými zariadeniami.
+- `PrettyPhoto` - staršia verzia zobrazenia, posúvanie fotiek je riešené kliknutím na ikonu šípky vľavo/vpravo.
 
 Karta "Fotografie" slúži na vloženie ďalších fotiek do galérie, alebo vytvorenie nového priečinka.
 
@@ -122,32 +122,69 @@ Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbliž
 
 ## Možné konfiguračné premenné
 
-- ```imageMagickDir``` - Ak je nastavené použije sa na zmenu veľkosti obrázkov príkaz ```convert``` z balíka ```ImageMagick``` (predvolená hodnota: ```/usr/bin```).
-- ```galleryAlwaysUseImageMagick``` - ak je nastavené na ```true```, tak zmena veľkosti obrázkov rozmeru < 500 bodov sa tiež bude vykonávať volaním externého programu ```ImageMagick``` (predvolená hodnota: ```true```).
-- ```galleryWatermarkSaturation``` - Nastavuje transparentnosť vodotlače vo výslednom obrázku. Číslo 0-100, 0 znamená úplnú priesvitnosť, 100 nepriesvitnosť. (predvolená hodnota: 70).
-- ```galleryWatermarkGravity``` - Pozícia vodotlače vo výslednom obrázku. Možnosti podľa svetových strán v angličtine: ```NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast``` (predvolená hodnota: ```Center```).
-- ```galleryEnableWatermarking``` - Vypne / zapne vodotlač pre obrázky. Vodotlač môže výrazne spomaľovať veľké importy obrázkov kvôli rekurzívnemu hľadaniu nastavenia vodotlače. (predvolená hodnota: ```true```).
-- ```galleryEnableExifDate``` - Pri nahratí fotky sa získa ako jej dátum dátum vytvorenia z ```exif``` informácie, pre vypnutie je potrebné nastaviť túto premennú na false (predvolená hodnota: ```true```).
-- ```galleryStripExif``` - Ak je nastavené na ```true``` tak sa z fotky odstraňujú ```exif``` informácie, primárne sa jedná o jej otočenie pre korektné zobrazenie zmenšenín (predvolená hodnota: ```true```).
-- ```galleryImageQuality``` - Parameter kvality obrázkov pre konverziu cez ```ImageMagick```, zapisuje sa vo formáte ```šírka_px:kvalita;šírka_px:kvalita```, teda napr. ```0:30;100:50;400:70```, použije sa najlepší alebo koncový interval (predvolená hodnota:).
-- ```galleryVideoMode``` - Nastavenie režimu konverzie videa pre foto galériu, možné hodnoty: ```all```=vygeneruje sa malé aj veľké video, ```big```=vygeneruje sa len veľké video, ```small```=vygeneruje sa len malé video (predvolená hodnota: ```big```).
-- ```thumbServletCacheDir``` - Cesta k adresáru pre cache ```/thumb``` obrázkov, pre server s vysokým množstvom obrázkov odporúčame presunúť na iné miesto ako /WEB-INF/ kvôli rýchlosti štartu aplikačného servera (predvolená hodnota: ```/WEB-INF/imgcache/```).
-- ```defaultVideoWidth``` - Prednastavená šírka videa (predvolená hodnota: ```854```).
-- ```defaultVideoHeight``` - Prednastavená výška videa (predvolená hodnota: ```480```).
-- ```defaultVideoBitrate``` - Prednastavený ```bitrate``` videa (predvolená hodnota: ```2048```).
-- ```galleryConvertCmykToRgb``` - Ak je nastavené na ```true``` tak sa zisťuje, či je fotka v ```CMYK``` a ak áno, konvertuje sa do RGB (predvolená hodnota: ```false```).
-- ```galleryConvertCmykToRgbInputProfilePath``` - Cesta (RealPath) k vstupnému ```ICC``` profilu na disku (predvolená hodnota:).
-- ```galleryConvertCmykToRgbOutputProfilePath``` - Cesta (RealPath) k výstupnému ```ICC``` profilu na disku (predvolená hodnota:).
-- ```galleryUseFastLoading``` - Ak je nastavené na ```true``` použije sa pre výpis galérie zjednodušený test súborov, zrýchľuje zobrazenie na sieťových file systémoch (predvolená hodnota: ```false```).
-- ```galleryCacheResultMinutes``` - Počet minút počas ktorých sa cachuje zoznam obrázkov v galérii, zmena sa deteguje podľa zmeny dátumu adresára (dostupné len na OS Linux) (predvolená hodnota: 0).
-- ```imageAlwaysCreateGalleryBean``` - Ak je zapnuté na ```true``` bude sa záznam v ```gallery``` DB tabuľke vytvárať aj pre obrázky mimo foto galérie (predvolená hodnota: false).
-- ```galleryUploadDirVirtualPath``` - ak je nastavené na ```true``` použije sa URL adresa web stránky ako adresár pre upload súborov (normálne sa používa len štruktúra adresárov bez názvu web stránky) (predvolená hodnota: false).
-- ```wjImageViewer``` - Konfigurácia typu zobrazenia náhľadu obrázku vloženého do stránky, môže byť ```wjimageviewer``` alebo ```photoswipe``` (predvolená hodnota: photoswipe).
-- ```galleryWatermarkApplyOnUpload``` - Slúži na automatické aplikovanie vodotlače pri nahratí obrázkov do galérie (predvolená hodnota: false).
-- ```galleryWatermarkApplyOnUploadDir``` - Adresár kde sú umiestnené obrázky pre automatickú vodotlač pri nahratí. Názov obrázku musí byť ```default.png```, pri multidomain je možnosť mať pre každú doménu iný, v tváre ```doména.png``` (napr. ```www.interway.sk.png```) (predvolená hodnota: ```/templates/{INSTALL_NAME}/assets/watermark/```).
-- ```galleryWatermarkApplyOnUploadExceptions``` - Zoznam názvov ciest pre ktoré sa nebude aplikovať vodoznak pri nahratí súboru do WebJETu (predvolená hodnota: ```logo,nowatermark,system,funkcionari```).
-- ```galleryWatermarkSvgSizePercent``` - Výška v percentách ktorú bude zaberať SVG vodoznak z výšky obrázku (predvolená hodnota: 5).
-- ```galleryWatermarkSvgMinHeight``` - Minimálna výška SVG vodoznaku v bodoch (predvolená hodnota: 30).
+- `imageMagickDir` - Ak je nastavené použije sa na zmenu veľkosti obrázkov `ImageMagick`. Systém najprv hľadá príkaz `magick` (verzia 7), ak neexistuje použije sa `convert` (verzia 6) (predvolená hodnota: `/usr/bin`).
+- `galleryWatermarkSaturation` - Nastavuje transparentnosť vodotlače vo výslednom obrázku. Číslo 0-100, 0 znamená úplnú priesvitnosť, 100 nepriesvitnosť. (predvolená hodnota: 70).
+- `galleryWatermarkGravity` - Pozícia vodotlače vo výslednom obrázku. Možnosti podľa svetových strán v angličtine: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast` (predvolená hodnota: `Center`).
+- `galleryEnableWatermarking` - Vypne / zapne vodotlač pre obrázky. Vodotlač môže výrazne spomaľovať veľké importy obrázkov kvôli rekurzívnemu hľadaniu nastavenia vodotlače. (predvolená hodnota: `true`).
+- `galleryEnableExifDate` - Pri nahratí fotky sa získa ako jej dátum dátum vytvorenia z `exif` informácie, pre vypnutie je potrebné nastaviť túto premennú na false (predvolená hodnota: `true`).
+- `galleryStripExif` - Ak je nastavené na `true` tak sa z fotky odstraňujú `exif` informácie, primárne sa jedná o jej otočenie pre korektné zobrazenie zmenšenín (predvolená hodnota: `true`).
+- `galleryImageQuality` - Parameter kvality obrázkov pre konverziu cez `ImageMagick`, zapisuje sa vo formáte `šírka_px:kvalita;šírka_px:kvalita`, teda napr. `0:30;100:50;400:70`, použije sa najlepší alebo koncový interval (predvolená hodnota:).
+- `galleryVideoMode` - Nastavenie režimu konverzie videa pre foto galériu, možné hodnoty: `all`=vygeneruje sa malé aj veľké video, `big`=vygeneruje sa len veľké video, `small`=vygeneruje sa len malé video (predvolená hodnota: `big`).
+- `thumbServletCacheDir` - Cesta k adresáru pre cache `/thumb` obrázkov, pre server s vysokým množstvom obrázkov odporúčame presunúť na iné miesto ako /WEB-INF/ kvôli rýchlosti štartu aplikačného servera (predvolená hodnota: `/WEB-INF/imgcache/`).
+- `defaultVideoWidth` - Prednastavená šírka videa (predvolená hodnota: `854`).
+- `defaultVideoHeight` - Prednastavená výška videa (predvolená hodnota: `480`).
+- `defaultVideoBitrate` - Prednastavený `bitrate` videa (predvolená hodnota: `2048`).
+- `galleryConvertCmykToRgb` - Ak je nastavené na `true` tak sa zisťuje, či je fotka v `CMYK` a ak áno, konvertuje sa do RGB (predvolená hodnota: `false`).
+- `galleryConvertCmykToRgbInputProfilePath` - Cesta (RealPath) k vstupnému `ICC` profilu na disku (predvolená hodnota:).
+- `galleryConvertCmykToRgbOutputProfilePath` - Cesta (RealPath) k výstupnému `ICC` profilu na disku (predvolená hodnota:).
+- `galleryUseFastLoading` - Ak je nastavené na `true` použije sa pre výpis galérie zjednodušený test súborov, zrýchľuje zobrazenie na sieťových file systémoch (predvolená hodnota: `false`).
+- `galleryCacheResultMinutes` - Počet minút počas ktorých sa cachuje zoznam obrázkov v galérii, zmena sa deteguje podľa zmeny dátumu adresára (dostupné len na OS Linux) (predvolená hodnota: 0).
+- `imageAlwaysCreateGalleryBean` - Ak je zapnuté na `true` bude sa záznam v `gallery` DB tabuľke vytvárať aj pre obrázky mimo foto galérie (predvolená hodnota: false).
+- `galleryUploadDirVirtualPath` - ak je nastavené na `true` použije sa URL adresa web stránky ako adresár pre upload súborov (normálne sa používa len štruktúra adresárov bez názvu web stránky) (predvolená hodnota: false).
+- `wjImageViewer` - Konfigurácia typu zobrazenia náhľadu obrázku vloženého do stránky, môže byť `wjimageviewer` alebo `photoswipe` (predvolená hodnota: photoswipe).
+- `galleryWatermarkApplyOnUpload` - Slúži na automatické aplikovanie vodotlače pri nahratí obrázkov do galérie (predvolená hodnota: false).
+- `galleryWatermarkApplyOnUploadDir` - Adresár kde sú umiestnené obrázky pre automatickú vodotlač pri nahratí. Názov obrázku musí byť `default.png`, pri multidomain je možnosť mať pre každú doménu iný, v tváre `doména.png` (napr. `www.interway.sk.png`) (predvolená hodnota: `/templates/{INSTALL_NAME}/assets/watermark/`).
+- `galleryWatermarkApplyOnUploadExceptions` - Zoznam názvov ciest pre ktoré sa nebude aplikovať vodoznak pri nahratí súboru do WebJETu (predvolená hodnota: `logo,nowatermark,system,funkcionari`).
+- `galleryWatermarkSvgSizePercent` - Výška v percentách ktorú bude zaberať SVG vodoznak z výšky obrázku (predvolená hodnota: 5).
+- `galleryWatermarkSvgMinHeight` - Minimálna výška SVG vodoznaku v bodoch (predvolená hodnota: 30).
+
+### Vlastné parametre ImageMagick
+
+Pri operáciách s obrázkami cez `ImageMagick` (zmena veľkosti, orezanie, otočenie) je možné nastaviť vlastné parametre pomocou konfiguračných premenných. Parametre sa zapisujú vo formáte príkazového riadku, napr. `-strip -interlace Plane -quality 85`.
+
+Hodnota konfiguračnej premennej môže obsahovať **dva riadky** oddelené novým riadkom:
+
+- **Riadok 1** - parametre vložené **pred operáciu** (za vstupný súbor), napr. `-filter Lanczos`
+- **Riadok 2** - parametre vložené **za operáciu** (pred výstupný súbor), napr. `-define png:compression-level=9`
+
+Ak je zadaný len jeden riadok (bez nového riadku), všetky parametre sa vložia pred operáciu.
+
+Príklad výsledného príkazu pri dvoch riadkoch:
+
+```sh
+magick vstup.png -filter Lanczos -strip -resize 640x427! -interlace Plane -sampling-factor 4:2:0 vystup.png
+            ↑ riadok 1 (pred operáciou)                   ↑ riadok 2 (za operáciou)
+```
+
+- `imageMagickCustomParams` - Základné vlastné parametre pre všetky `ImageMagick` operácie. Použijú sa ak nie je nastavený špecifickejší parameter pre danú operáciu alebo formát (predvolená hodnota: `-filter Lanczos` riadok 1, `-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0` riadok 2).
+- `imageMagickCustomParams_resize` - Vlastné parametre pre operáciu zmeny veľkosti (predvolená hodnota: ).
+- `imageMagickCustomParams_crop` - Vlastné parametre pre operáciu orezania (predvolená hodnota: ).
+- `imageMagickCustomParams_rotate` - Vlastné parametre pre operáciu otočenia (predvolená hodnota: ).
+- `imageMagickCustomParams_jpg` - Vlastné parametre pre formát `JPG` (predvolená hodnota: `-define jpeg:optimize-coding=true` na riadku 2).
+- `imageMagickCustomParams_png` - Vlastné parametre pre formát `PNG` (predvolená hodnota: `-define png:compression-level=9 -define png:compression-strategy=1` na riadku 2).
+- `imageMagickCustomParams_webp` - Vlastné parametre pre formát WebP (predvolená hodnota: `-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50` na riadku 2).
+
+**Poradie vyhľadávania parametrov:**
+
+Systém hľadá nastavenie v nasledovnom poradí podľa špecifickosti (na príklade operácie `resize` pre formát `jpg`):
+
+1. `imageMagickCustomParams_resize_jpg` - najšpecifickejšie, pre konkrétnu operáciu a formát
+2. Ak nie je nastavená, hľadá sa `imageMagickCustomParams_resize` (parametre pre operáciu) + `imageMagickCustomParams_jpg` (parametre pre formát) - tieto sa **skombinujú** (spoja) riadok po riadku
+3. Ak nie je nastavená ani pre operáciu, použije sa `imageMagickCustomParams` (základné parametre) + `imageMagickCustomParams_jpg` (parametre pre formát)
+
+Pri kombinovaní parametrov sa riadky kombinujú samostatne - riadok 1 základných parametrov sa spojí s riadkom 1 formátových parametrov a rovnako riadok 2.
+
+Ak vlastné parametre obsahujú nastavenie `compression-level` alebo `quality`, automaticky sa odstráni prípadný existujúci parameter `-quality` z príkazu, aby nedošlo ku konfliktu.
 
 ### Zmenšenie rozmerov originál obrázku
 
@@ -156,5 +193,6 @@ Ak vám originál obrázok zaberá na disku veľa miesta, je možné nastaviť j
 - `metadataRemoverCommand` - ak je nastavené aktivuje sa odstraňovanie metadát z nahratých súborov, alebo sa použije `imageMagick` na zmenšenie veľkosti - nastavte na `/usr/bin/convert`.
 - `metadataRemoverParams` - parametre, pre zmenšenie obrázka cez `imageMagick` nastavte na `{filePath} -resize 1920x1080 {filePath}`. Rozmer nastavte podľa potreby.
 - `metadataRemoverExtensions` - prípony, pre ktoré sa použije, pre obrázky nastavte na `jpg,jpeg,png,gif`.
+- `metadataRemoveMinFileSize` - minimálna veľkosť súboru v bajtoch, pod ktorú sa odstraňovanie metadát preskočí. Ak je hodnota `0` alebo nie je nastavená, kontrola sa nevykoná a metadáta sa odstraňujú vždy.
 
 Vyžadovaný je nástroj `ImageMagick` na serveri.

@@ -24,7 +24,7 @@ import sk.iway.iwcm.PkeyGenerator;
  * pri volani sekvencie pouzit <code>getGeneratedVector()</code>, toto dosiahneme overridom boolean metod
  * <code>shouldAcquireValueAfterInsert()</code> a <code>shouldUsePreallocation</code>, obidve vracaju <code>false</code>.
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class WJGenSequence extends org.eclipse.persistence.sequencing.TableSequence {
 
     public WJGenSequence() {

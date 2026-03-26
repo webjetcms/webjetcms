@@ -56,7 +56,7 @@ in addition, it is also possible to use [Literal substitutions](https://www.thym
 <span data-th-text="|Welcome to our application, ${docDetails.title}!|">
 ```
 
-!>**Warning:** if it throws an error like: `Could not parse as expression: "aitem--open md-large-menu"`, it's because of `__`. This is a special brand for [pre-processor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) and it needs to be escaped as \\\\\_, example:
+!>**Warning:** if it throws an error like: `Could not parse as expression: "aitem--open md-large-menu"`, it's because of `__`. This is a special brand for [pre-processor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) and it needs to be escaped as `\\\\_`, Example:
 
 ```html
 <div data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'">
@@ -101,4 +101,12 @@ If you need to call a static method you can use `T()` function:
 ```html
 <p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
 <p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+```
+
+## Inserting the current version
+
+WebJET initializes the value in `CombineTag.getVersion()` to the current timestamp. This value is also changed when all cache objects are deleted. It can be used in the parameter `?v=` for loading new versions of files after a server reboot. When using `data-iwcm-combine` Is `?v=` parameter added automatically. But you can also insert it manually:
+
+```html
+<script data-th-src="${'/components/aceintegration/admin/pagesupport-custom.js?v=' + version}"></script>
 ```

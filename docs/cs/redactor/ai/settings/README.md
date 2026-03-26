@@ -50,14 +50,18 @@ Pro entitu, zdrojové a cílové pole lze zadat i hodnoty typu:
 
 Pro cílové pole lze zadat nejen jméno atributu v entitě, ale také CSS třídu a hodnotu `renderFormat`. Je tedy možné zadat hodnotu `dt-format-text,dt-format-text-wrap` pro aplikování na všechny typy textových polí.
 
-Pokud v entitě nechcete, aby se pro pole zobrazovaly možnosti AI nástrojů, stačí do anotace přidat CSS třídu `ai-off`. V takovém případě se u pole zobrazí tlačítko pro AI asistenta jen tehdy, je-li zadán přesně pro danou entitu a pole.
+Volitelná pole (tedy pole jejichž název je `fieldX`) se mohou dynamicky měnit, například podle zvolené šablony ve webových stránkách. Při generování AI asistentů se na serverové straně detekuje pouze hlavní typ bez ohledu na použitou šablonu stránky. Proto nemusí být asistent zobrazen správně pokud mají stránky různé šablony. Volitelná pole se inicializují při obnovení webové stránky podle šablony složky ve které se nacházíte, takže obnovení stránky může načíst správné hodnoty. Přechod na jinou stránku s jinou šablonou ale asistenty nezmění.
+
+Zároveň je-li pro volitelné pole nastaven konkrétní asistent (jméno pole se shoduje s hodnotou v poli Cílové pole definice asistenta), nezobrazí se ostatní všeobecní asistenti definovaní např. podle typu pole a podobně. Předpokládá se, že pokud definujete asistenta pro konkrétní volitelné pole, nepotřebujete ostatní všeobecné asistenty (jako např. Opravit gramatiku). Pokud takového asistenta potřebujete, stačí přidat jméno volitelného pole i do těchto všeobecných asistentů.
+
+Pokud v entitě nechcete, aby se pro pole zobrazovaly možnosti AI nástrojů, stačí do anotace nastavit atribut `ai=false` nebo přidat CSS třídu `ai-off`. V takovém případě se u pole zobrazí tlačítko pro AI asistenta jen tehdy, je-li zadán přesně pro danou entitu a pole.
 
 ```java
 	@Lob
 	@Column(name = "description")
-	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", ai=false, editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {
-					@DataTableColumnEditorAttr(key = "class", value = "textarea-code ai-off") }) })
+					@DataTableColumnEditorAttr(key = "class", value = "textarea-code") }) })
 	private String description;
 ```
 
@@ -147,3 +151,12 @@ Některá rozhraní jsou [zatím v experimentálním režimu](https://developer.
 Ověřit stav AI modelů můžete zadáním následující adresy do řádku prohlížeče: `chrome://on-device-internals/`.
 
 Některé API zatím nepodporují práci ve všech jazycích, proto může po použití dojít k automatickému překladu. Překladač je však při prvním použití třeba také stáhnout, proto doporučujeme jako první vyzkoušet AI nástroj pro překlad, aby se překladač nainstaloval. Následně se už bude dát použít i po provedení jiných AI asistentů k překladu výstupního textu.
+
+## Připojení
+
+Volání AI služeb vyžaduje připojení na internet. Ujistěte se, že váš server má přístup k vnějším službám a že firewall nebo jiná bezpečnostní opatření neblokují požadavky na API daného poskytovatele. Použitá jsou následující doménová jména:
+- OpenAI: `api.openai.com`
+- Gemini: `generativelanguage.googleapis.com`
+- OpenRouter: `openrouter.ai`
+
+tyto je třeba povolit v odchozích požadavcích na případném proxy serveru nebo firewallu.

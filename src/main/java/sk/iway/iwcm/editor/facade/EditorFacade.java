@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -338,9 +338,11 @@ public class EditorFacade {
      */
     public List<NotifyBean> getNotify() {
 		List<NotifyBean> notify = new ArrayList<>();
+
 		if (editorService.getNotify()!=null) notify.addAll(editorService.getNotify());
 		if (groupsService.getNotify()!=null) notify.addAll(groupsService.getNotify());
-        return notify;
+
+		return notify;
     }
 
 	/**

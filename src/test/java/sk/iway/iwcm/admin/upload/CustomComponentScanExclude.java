@@ -1,10 +1,10 @@
 package sk.iway.iwcm.admin.upload;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.type.ClassMetadata;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.TypeFilter;
-import org.springframework.lang.Nullable;
 
 import java.util.Arrays;
 import java.util.List;

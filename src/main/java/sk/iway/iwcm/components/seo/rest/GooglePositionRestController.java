@@ -82,7 +82,7 @@ public class GooglePositionRestController extends DatatableRestControllerV2<Goog
 
         //Series name is combination of name + domain
         String seriesName = "";
-        ManagementKeywordsEntity seoKeyword = managementKeywordsRepository.getById(Long.valueOf(keywordId));
+        ManagementKeywordsEntity seoKeyword = managementKeywordsRepository.getReferenceById(Long.valueOf(keywordId));
         if (seoKeyword != null) {
             seriesName += seoKeyword.getName();
             seriesName += " ( " + seoKeyword.getDomain() + " )";

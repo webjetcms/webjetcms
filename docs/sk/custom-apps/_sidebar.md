@@ -17,6 +17,7 @@
   - [AI - pridanie nového poskytovateľa](/custom-apps/apps/ai/assistants/README.md)
   - Elektronický obchod
     - [Spôsoby platby](/custom-apps/apps/eshop/payment-methods/README.md)
+  - [Formuláre](/custom-apps/apps/multistep-forms/README.md)
 - Spring MVC
   - [Aplikácia vo web stránke](/custom-apps/spring-mvc/)
   - [Admin s nahratím súboru](/custom-apps/spring-mvc/admin-with-upload.md)

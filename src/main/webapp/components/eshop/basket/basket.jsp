@@ -488,7 +488,7 @@ $(".addToBasket").on("click", function(){
       <div class="row">
       <div style="text-align:right"class="col-sm-12 basketListTableTotalVat">
             <h3><span class="basketPriceText">
-              Celková cena
+              <iwcm:text key="components.basket.total_price"/>
             </span>
             <span class="basketPrice">
                <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
@@ -565,7 +565,7 @@ $(".addToBasket").on("click", function(){
       <div class="row">
       <div style="text-align:right"class="col-sm-12 basketListTableTotalVat">
             <h3><span class="basketPriceText">
-              Celková cena
+              <iwcm:text key="components.basket.total_price"/>
             </span>
             <span class="basketPrice">
                <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">

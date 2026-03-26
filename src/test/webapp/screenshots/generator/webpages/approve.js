@@ -13,7 +13,7 @@ Scenario('approving', ({I, DT, Document}) => {
     } else if("cs" === I.getConfLng()) {
         I.amOnPage("/admin/approve.jsp?docid=100207&historyid=164174")
     }
-    
+
     Document.screenshot("/redactor/webpages/approve/approve-form.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");

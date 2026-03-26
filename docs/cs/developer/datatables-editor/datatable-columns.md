@@ -63,7 +63,6 @@ private String oldValue;
 })
 private Date updateDate;
 
-
 //GalleryEntity
 @Size(max = 255)
 @Column(name = "image_name")
@@ -104,6 +103,30 @@ private String imagePath;
 private Integer[] passwordProtected;
 ```
 
+Příklad vlastní [render](https://datatables.net/reference/option/columns.render) funkce:
+
+```javascript
+//@Column(name = "step_name")
+//@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.banner.primaryHeader", renderFunction = "renderStepName")
+//private String stepName;
+
+window.renderStepName = function(data, type, row, meta) {
+        if(type === "display" || type === "filter") {
+                //combine row number with prefix Step X and stepName (if not empty) and stepSubName (if not empty)
+                let displayName = `<span class="text-muted small">[[#{components.form_items.step_title}]] ${meta.row + 1}</span>`;
+                let secondRow = "";
+                if(row.stepName && row.stepName.trim() !== "") {
+                        secondRow += `${row.stepName}`;
+                }
+                if (row.stepSubName && row.stepSubName.trim() !== "") {
+                        secondRow += ` (${row.stepSubName})`;
+                }
+                return displayName + (secondRow ? `<br>${secondRow}` : "");
+        }
+        return data;
+};
+```
+
 ## Vlastnosti @DataTableColumn
 
 Původní dokumentace na stránce [datatables.net](https://datatables.net/reference/option/columns:)
@@ -131,6 +154,7 @@ Volitelná pole:
 - `renderFormat` - https://datatables.net/reference/option/columns.renderFormat
 - `renderFormatLinkTemplate` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - `renderFormatPrefix` - https://datatables.net/reference/option/columns.renderFormatPrefix
+- `renderFunction` - jméno funkce v JavaScriptu, která se použije pro vlastní vykreslení hodnoty sloupce. Více na [stránce DataTables](https://datatables.net/reference/option/columns.render).
 - `sortAfter` - jméno pole za které se přidá toto pole v pořadí
 - `editor` - objekt `DataTableColumnEditor`
 - `hidden` - pole se nezobrazí v datatabulce a uživatel si jej na rozdíl od `visible` nemůže zobrazit, pole může být použito v editoru
@@ -144,6 +168,9 @@ Volitelná pole:
   - `{currentDateTimeSeconds}` - nahradí se za aktuální datum a čas včetně sekund
   - `{currentTime}` - nahradí se za aktuální čas
 - `alwaysCopyProperties` - při editaci záznamu se prázdné `null` hodnoty zachovají a zkopírují ze stávajícího objektu v databázi. Pro pole typu datum/čas to neplatí, ty se přepíší automaticky. Pokud potřebujete toto použít i pro jiný typ pole a přenést i `null` hodnotu nastavte atribut na `true`, případně na `false` pokud nechcete automatický přepis pro datová pole.
+- `ai` - nastavením na hodnotu `false` lze vypnout zobrazení AI ikony pro všeobecné možnosti (přeložit, opravit gramatiku...). AI ikona se zobrazí pouze pokud je asistent nastaven pro toto konkrétní pole.
+- `disabled` - nastavením na `false` se vstupnímu poli v editoru nastaví atribut `disabled="disabled"`.
+- `export` - nastavením na hodnotu `false` se pole nebude exportovat.
 
 ## Vlastnosti @DataTableColumnEditor
 
@@ -200,23 +227,36 @@ Polu typu `DataTableColumnType.SELECT` můžete nastavovat `option` hodnoty pře
 - [REST službu](../datatables/restcontroller.md#Číselníky-pro-select-boxy) a nastavování číselníků pro select boxy. Toto je preferované řešení pro standardní datatabulky.
 - Nastavením options atributů přímo pomocí anotace `@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")`.
 - Voláním statické metody pomocí anotace `@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")`. V `key` atributu je zadaná prefixem `method:` třídě a metoda, která musí vrátit `List` objektů. V atributu `value = "label:value"` anotace je zadáno jméno atributu pro popis a jméno atributu pro hodnotu výběrového pole (v příkladu se tedy jmenuje `objekt.getLabel() a objekt.getValue()`).
+- Přidáním anotace `@DataTableColumnEditor.optionMethods` se zadanou metodou k provedení (jedná se o krásnější zápis oproti předchozímu způsobu). Hodnota labelProperty a valueProperty se použije k získání textu a hodnoty option prvku, není-li zadána získá se z `label` a `value` atributu.
 - Napojením na aplikaci číselníky zadáním `@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")`. V `key` atributu je zadaný prefix `enumeration:` jméno nebo ID číselníku. V atributu `value = "string1:string2"` anotace je zadáno jméno atributu pro popis a jméno atributu pro hodnotu výběrového pole - v příkladu se tedy jmenuje `objekt.getString1() a objekt.getString2()`.
 
 ```java
 @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", editor = {
         @DataTableColumnEditor(
                 options = {
-                //klasicky option tag
-                @DataTableColumnEditorAttr(key = "Slovensky", value = "sk"),
-                @DataTableColumnEditorAttr(key = "Česky", value = "cz"),
+                        //klasicky option tag
+                        @DataTableColumnEditorAttr(key = "Slovensky", value = "sk"),
+                        @DataTableColumnEditorAttr(key = "Česky", value = "cz"),
 
-                //ukazka ziskania zoznamu krajin volanim statickej metody, vo value su mena property pre text a hodnotu option pola
-                @DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value"),
+                        //ukazka ziskania zoznamu krajin volanim statickej metody, vo value su mena property pre text a hodnotu option pola
+                        @DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value"),
 
-                //ukazka napojenia na ciselnik, mozne je zadat meno alebo ID ciselnika, vo value su mena property pre text a hodnotu option pola
-                @DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")
+                        //ukazka napojenia na ciselnik, mozne je zadat meno alebo ID ciselnika, vo value su mena property pre text a hodnotu option pola
+                        @DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")
                 }
         )
+        @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", editor = {
+        @DataTableColumnEditor(
+                optionMethods = {
+                        @DataTableOptionMethod(
+                                className = "sk.iway.iwcm.components.formsimple.FormSimpleApp",
+                                methodName = "getFieldTypes",
+                                labelProperty = "label",
+                                valueProperty = "value"
+                        )
+                })
+        })
+        private String fieldType;
 })
 private String country;
 ```
@@ -274,19 +314,25 @@ columns.push({
 });
 ```
 
+Pokud potřebujete změnit pořadí sloupců, můžete to provést pomocí funkce `WJ.DataTable.moveColumn`. V příkladu se sloupec s názvem `formSettings.recipients` přesune za sloupec s názvem `formName`:
+
+```javascript
+filteredColumns = window.WJ.DataTable.moveColumn(filteredColumns, "formSettings.recipients", "formName");
+```
+
 ## Vnořené atributy
 
-Často je nutné k entitě přidat pro editor doplňkové atributy (např. `checkbox` pro aplikování změny i na podřazené entity, doplňkové pole s informací atd.). Pro tento účel lze entitu rozšířit o nový atribut (který se neukládá do databáze) obsahující doplňkové údaje. Typicky ho voláme `editorFields` a pro entitu implementujeme potřebnou třídu. Příklady jsou v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) nebo [GroupEditorFields](../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). Ve třídách je následně jen editorField atribut. `private DocEditorFields editorFields = null;`.
+Často je nutné k entitě přidat pro editor doplňkové atributy (např. `checkbox` pro aplikování změny i na podřazené entity, doplňkové pole s informací atd.). Pro tento účel lze entitu rozšířit o nový atribut (který se neukládá do databáze) obsahující doplňkové údaje. Typicky ho voláme `editorFields` a pro entitu implementujeme potřebnou třídu. Příklady jsou v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) nebo [GroupEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). Ve třídách je následně jen editorField atribut. `private DocEditorFields editorFields = null;`.
 
-Implementovaná třída `EditorFields` Např. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typicky obsahuje metody `fromDocDetails` pro nastavení atributů v `editorFields` třídě před editací a `toDocDetails` pro zpětné nastavení atributů v `DocDetails` před uložení. Tyto metody je třeba implicitně volat ve vašem Java kódu.
+Implementovaná třída `EditorFields` Např. [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typicky obsahuje metody `fromDocDetails` pro nastavení atributů v `editorFields` třídě před editací a `toDocDetails` pro zpětné nastavení atributů v `DocDetails` před uložení. Tyto metody je třeba implicitně volat ve vašem Java kódu.
 
-!>**Upozornění:** pokud je entita ukládána v cache (např. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane iv cache a může zbytečně zabírat paměť a vytvářet při JSON serializaci zbytečně velká data. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
+!>**Upozornění:** pokud je entita ukládána v cache (např. [GroupDetails](../../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane iv cache a může zbytečně zabírat paměť a vytvářet při JSON serializaci zbytečně velká data. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
 
 Při standardním postupu se postupně na každém `GroupDetails` objektu nastavil `editorFields` objekt. Při serializaci hluboce vnořeného adresáře se následně vnořovaly objekty editorFields.parentGroupDetails.editorFields.parentGroupDetails atp. Objekt GroupDetails neměl jen potřebný první editorFields. Řešením je nejprve objekt `GroupDetails` naklonovat a až tak do něj nastavit `editorFields`. Příklad je v `GroupEditorField.fromGroupDetails` který naklonuje objekt a následně jej vrátí. Použití v kódu je pak jako `group = gef.fromGroupDetails(group);`.
 
-Společné metody pro datatabulku jsou ve třídě [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), kterou může vaše třída rozšířit. Obsahuje metody pro přidání CSS třídy řádku a přidání ikony k titulku. Více v dokumentaci k [stylování datatabulky](../datatables/README.md#stylování-řádku).
+Společné metody pro datatabulku jsou ve třídě [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), kterou může vaše třída rozšířit. Obsahuje metody pro přidání CSS třídy řádku a přidání ikony k titulku. Více v dokumentaci k [stylování datatabulky](../datatables/README.md#stylování-řádku).
 
-Pro vložení anotace vnořených atributů lze použít anotaci `@DatatableColumnNested` jako je např. v [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na atributu `editorFields`:
+Pro vložení anotace vnořených atributů lze použít anotaci `@DatatableColumnNested` jako je např. v [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na atributu `editorFields`:
 
 ```java
 @DataTableColumnNested
@@ -320,7 +366,7 @@ takto anotovaný atribut bude prohledán k anotaci `@DatatableColumn` rekurzivn�
 
 Anotace `@Transient` říká JPA entitám, že daný atribut není ukládán do databáze.
 
-Pro nastavení údajů mezi entitou a `editorFields` v REST controlleru lze implementovat metody `processFromEntity` pro nastavení `editorFields` atributů nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Příklad je vidět v [UserDetailsController](../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Metody se automaticky volají při čtení všech záznamů, při získání jednoho záznamu, vyhledávání nebo při ukládání dat.
+Pro nastavení údajů mezi entitou a `editorFields` v REST controlleru lze implementovat metody `processFromEntity` pro nastavení `editorFields` atributů nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Příklad je vidět v [UserDetailsController](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Metody se automaticky volají při čtení všech záznamů, při získání jednoho záznamu, vyhledávání nebo při ukládání dat.
 
 ```java
     /**
@@ -361,11 +407,30 @@ Pro nastavení údajů mezi entitou a `editorFields` v REST controlleru lze impl
     }
 ```
 
+Pokud jako vnořený atribut máme jinou entitu je vhodné nastavit i atribut `sortPrefix` na hodnotu jména atributu. Automaticky se na atributech vnořené entity přidá tento prefix do pole `sortAfter`, jinak by se vám smísily názvy polí z různých entit.
+
+```java
+public class FormsEntityBasic {
+
+    // Numeric value of the same column (user_id)
+    @Column(name = "user_id")
+    private Long userId;
+
+    // Relation to users table; load lazily, only readable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @DataTableColumnNested(sortPrefix = "userDetails.")
+    private UserDetailsEntity userDetails;
+
+}
+```
+
 ## Sortování pořadí polí
 
 Pole jsou ve výchozím nastavení uspořádána v pořadí, jak jsou zapsána ve zdrojovém kódu (i když specifikace anotace to negarantuje, funguje to tak). Pokud ale používáte vnořené atributy pořadí neumíte nastavit pořadím v kódu.
 
-Proto je možné využít atribut `sortAfter` do kterého zadáte data atribut předchozího pole. Anotované pole se následně do JSON výstupu přidá za uvedené pole. Logika je implementována v metodě [DataTableColumnsFactory.sortColumns](../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
+Proto je možné využít atribut `sortAfter` do kterého zadáte data atribut předchozího pole. Anotované pole se následně do JSON výstupu přidá za uvedené pole. Logika je implementována v metodě [DataTableColumnsFactory.sortColumns](../../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
 
 V případě potřeby lze zadat speciální hodnotu `sortAfter = "FIRST"` pro přesun pole na začátek seznamu. Je třeba to použít v případě rozšířených entit přes `@MappedSuperclass` i první `id` atribut je v této entitě.
 
@@ -392,7 +457,7 @@ Jinou možností je zobrazit původní stránku s URL parametrem `?showTextKeys=
 
 Například:
 
-```
+```txt
 http://iwcm.interway.sk/components/server_monitoring/admin_monitoring_all.jsp?showTextKeys=true
 ```
 
@@ -404,6 +469,6 @@ window.location.href=window.location.href+"&showTextKeys=true";
 
 to korektně projde ochranou WebJETu a klíče se vám zobrazí.
 
-**Pokud jste vytvořili novou aplikaci, nebo jste nenašli vhodný překladový klíč** je třeba jej přidat do souboru [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
+**Pokud jste vytvořili novou aplikaci, nebo jste nenašli vhodný překladový klíč** je třeba jej přidat do souboru [text-webjet9.properties](../../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
 
 Po přidání překladu je třeba znovu načíst soubor `text-webjet9.properties` WebJETem. To provedete voláním [úvodní stránky s parametrem ?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true) nebo restartem aplikačního serveru.

@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2026.0",
+            "perex": "**WebJET CMS 2026.0** prináša vylepšenú verziu nástroja **Page Builder** pre tvorbu **komplexných web stránok**. V blokoch je možné **vyhľadávať a filtrovať** na základe značiek, ľahko tak nájdete vhodný blok pre vloženie do stránky. Pridané boli nové funkcie ako **rozdelenie stĺpca**, **vkladanie viacerých sekcií naraz** a **stále zobrazené tlačidlo na pridanie novej sekcie** pre rýchle rozšírenie obsahu stránky.\\n\\nPodpora **PICTURE elementu** umožňuje zobrazovať **rôzne obrázky podľa rozlíšenia obrazovky** návštevníka, čím sa zlepšuje vizuálny zážitok na rôznych zariadeniach. Navyše je možné vkladať **vlastné ikony** definované v spoločnom SVG súbore, čo prináša väčšiu flexibilitu v dizajne.\\n\\nNový nástroj pre **tvorbu formulárov** umožňuje ľahko vytvárať **viackrokové formuláre** s možnosťou programovej validácie jednotlivých krokov a možnosťou **potvrdenia platnosti emailovej adresy** pomocou zaslaného kódu. Vyhnete sa tak vyplneniu formulárov rôznymi robotmi.",
+            "link": "https://docs.webjetcms.sk/latest/sk/CHANGELOG-2026?id=_202600"
+        },
+        {
             "title": "Verzia 2025.40",
             "perex": "**WebJET CMS 2025.40** prináša integrovaného **AI Asistenta**, ktorý zásadne zjednodušuje prácu s obsahom. Umožňuje automaticky **opravovať gramatiku**, **prekladať** texty, navrhovať titulky, sumarizovať články a generovať **ilustračné obrázky** priamo v editore. Vďaka tomu je tvorba obsahu **rýchlejšia, presnejšia a kreatívnejšia** než kedykoľvek predtým.\\n\\nVýznamné zmeny sa týkajú aj **značiek** a **šablón noviniek**, ktoré boli prepracované do **samostatných databázových tabuliek** s podporou oddelenia podľa domén. To prináša vyššiu **prehľadnosť, jednoduchšiu správu** a možnosť efektívneho prispôsobenia obsahu pre viacero webov. Používateľské prostredie bolo **optimalizované pre menšie obrazovky** – systém automaticky prispôsobí zobrazenie okien a maximalizuje využiteľný priestor.\\n\\nNa technickej úrovni bol odstránený zastaraný Struts Framework. Vďaka tomu je WebJET CMS výkonnejší, stabilnejší, **bezpečnejší** a pripravený na ďalší rozvoj moderných webových riešení.",
             "link": "https://docs.webjetcms.sk/latest/sk/CHANGELOG-2025?id=_202540"
@@ -19,11 +24,6 @@
             "title": "Verzia 2024.52",
             "perex": "Vo verzii 2024.52 Web stránky pridávajú možnosť nastaviť **spôsob usporiadania** a **vyhľadávať v stromovej štruktúre**, import ZIP umožňuje nastaviť spôsob porovnania existujúcej verzie stránky. **Elektronický obchod** dostal nový dizajn zoznamu objednávok a produktov. Pridaná **štatistika ankiet**, lepší editor obrázkov v prieskumníku a vylepšené vyhľadávanie v administrácii. V **hromadných e-mailoch** pribudla možnosť **nastaviť potvrdenie odhlásenia**. Galéria obsahuje nové pole pre **URL adresu zdroja obrázku**, ktoré je vyplnené automaticky pri použití fotobanky, **Značky** pridávajú **jazykové mutácie** a voliteľné polia.",
             "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202452"
-        },
-        {
-            "title": "Verzia 2024.40",
-            "perex": "Vo verzii 2024.40 Prieskumník prináša **potvrdenie pri presune súborov drag&drop**, čím sa znižuje riziko chýb. Editor obrázkov umožňuje nastavenie **veľkosti a orezanie podľa šablón**, čo uľahčuje úpravy. Nastavenia viacerých **aplikácií** boli prepracované do **nového dizajnu**. Autor stránky dostáva **notifikácie pri časovom publikovaní a pridaní príspevku** do fóra. Nová aplikácia pre rezervácie umožňuje **jednoduché rezervovanie objektov** a ponúka štatistiky pre lepšiu správu. Vylepšili sme PageBuilder a opravili chyby v Archíve súborov pre lepšiu stabilitu.",
-            "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202440"
         }
     ]
 }

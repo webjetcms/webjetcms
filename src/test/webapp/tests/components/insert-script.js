@@ -181,6 +181,49 @@ Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) =>
      });
 });
 
+function setIncludeInEditor(checked, I, DT, DTE) {
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     DT.waitForLoader();
+     DT.filterContains('name', 'Skript bez obmedzeni');
+     I.click(locate('td.dt-row-edit a').withText('Skript bez obmedzeni'));
+     DTE.waitForEditor('insertScriptTable');
+
+     // Switch to scriptPerms tab and check includeInEditor checkbox
+     I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
+     if (checked) I.checkOption('#DTE_Field_includeInEditor_0');
+     else I.uncheckOption('#DTE_Field_includeInEditor_0');
+     DTE.save();
+}
+
+Scenario('testovanie includeInEditor a inlineEditorAdmin parametra', async ({ I, DT, DTE }) => {
+     setIncludeInEditor(false, I, DT, DTE);
+
+     // Without inlineEditorAdmin=true - script is included normally
+     I.amOnPage("/uvodna-stranka-thymeleaf.html");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // With inlineEditorAdmin=true - script is NOT included (includeInEditor defaults to false)
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.waitForText("!INCLUDE(/components/adresar/main.jsp", 10, "div.row");
+     I.dontSeeInSource("//Skript bez obmedzeni demo domena");
+
+     // In admin datatable, set includeInEditor=true on the script
+     setIncludeInEditor(true, I, DT, DTE);
+
+     // Now with inlineEditorAdmin=true - script IS included (includeInEditor=true)
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+
+     // Cleanup - uncheck includeInEditor back to false
+     setIncludeInEditor(false, I, DT, DTE);
+
+     //logout and verify that script is included for normal users
+     I.logout();
+     await I.amOnPageAsync("/uvodna-stranka-thymeleaf.html?inlineEditorAdmin=true");
+     I.dontSee("!INCLUDE(/components/adresar/main.jsp", "div.row");
+     I.seeInSource("//Skript bez obmedzeni demo domena");
+});
+
 Scenario('Veci na prerobenie', ({ I }) => {
      // 1.oznacenie zaznamov - kontrola zmenenej anglictiny na slovencinu
      // kontrola 2 vybranych zaznamov
@@ -214,10 +257,12 @@ Scenario('insert script-import', async ({ I, DataTables }) => {
                {
                     name: "Test import"
                }
-          ]
+          ],
+          editSteps: function (row, counter, I, options, DT, DTE) {
+               I.seeInField('#DTE_Field_sortPriority', '10');
+          }
      });
 });
-
 
 function testAlwaysIncluded(I, page) {
      I.seeInSource("//Skript bez obmedzeni demo domena");
@@ -287,4 +332,101 @@ Scenario('vkladanie skriptov', ({ I, DTE }) => {
 
 Scenario('odhlasenie', ({ I }) => {
      I.logout();
+});
+
+Scenario('nastavenie sortPriority v editore', async ({ I, DT, DTE }) => {
+     // open existing script and verify sortPriority field is present with default value
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     DT.waitForLoader();
+     DT.filterContains('name', 'Skript bez obmedzeni');
+     I.click(locate('td.dt-row-edit a').withText('Skript bez obmedzeni'));
+     DTE.waitForEditor('insertScriptTable');
+
+     // verify sortPriority field exists and has value 10 (default)
+     I.seeElement('#DTE_Field_sortPriority');
+     I.seeInField('#DTE_Field_sortPriority', '10');
+
+     // change sortPriority to 5
+     I.fillField('#DTE_Field_sortPriority', '5');
+     DTE.save();
+     DT.waitForLoader();
+
+     // reopen and verify the value was saved
+     DT.filterContains('name', 'Skript bez obmedzeni');
+     I.click(locate('td.dt-row-edit a').withText('Skript bez obmedzeni'));
+     DTE.waitForEditor('insertScriptTable');
+     I.seeInField('#DTE_Field_sortPriority', '5');
+
+     // reset back to 10
+     I.fillField('#DTE_Field_sortPriority', '10');
+     DTE.save();
+     DT.waitForLoader();
+});
+
+Scenario('sortPriority auto-calculation and page order', async ({ I, DT, DTE }) => {
+     // create first test script with position "head" and sortPriority 50
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     DT.waitForLoader();
+     I.clickCss('#insertScriptTable_wrapper button.buttons-create');
+     DTE.waitForEditor('insertScriptTable');
+     DTE.fillField('name', 'autotest-sort-B');
+     DTE.fillField('position', 'head');
+     I.fillField('#DTE_Field_sortPriority', '50');
+     I.clickCss('#pills-dt-insertScriptTable-scriptBody-tab');
+     I.fillField('#DTE_Field_scriptBody', '<!-- autotest-sort-B -->');
+     I.clickCss('#pills-dt-insertScriptTable-main-tab');
+     DTE.save();
+     DT.waitForLoader();
+
+     // create second test script with position "head" and sortPriority 30 (lower = should appear first)
+     I.clickCss('#insertScriptTable_wrapper button.buttons-create');
+     DTE.waitForEditor('insertScriptTable');
+     DTE.fillField('name', 'autotest-sort-A');
+     DTE.fillField('position', 'head');
+     I.fillField('#DTE_Field_sortPriority', '30');
+     I.clickCss('#pills-dt-insertScriptTable-scriptBody-tab');
+     I.fillField('#DTE_Field_scriptBody', '<!-- autotest-sort-A -->');
+     I.clickCss('#pills-dt-insertScriptTable-main-tab');
+     DTE.save();
+     DT.waitForLoader();
+
+     // create third test script with empty sortPriority - should auto-calculate to max+10 (50+10=60)
+     I.clickCss('#insertScriptTable_wrapper button.buttons-create');
+     DTE.waitForEditor('insertScriptTable');
+     DTE.fillField('name', 'autotest-sort-C');
+     DTE.fillField('position', 'head');
+     // leave sortPriority empty to test auto-calculation
+     I.clickCss('#pills-dt-insertScriptTable-scriptBody-tab');
+     I.fillField('#DTE_Field_scriptBody', '<!-- autotest-sort-C -->');
+     I.clickCss('#pills-dt-insertScriptTable-main-tab');
+     DTE.save();
+     DT.waitForLoader();
+
+     // verify auto-calculated sortPriority = 60 (max was 50, so 50+10=60)
+     DT.filterContains('name', 'autotest-sort-C');
+     I.click(locate('td.dt-row-edit a').withText('autotest-sort-C'));
+     DTE.waitForEditor('insertScriptTable');
+     I.seeInField('#DTE_Field_sortPriority', '60');
+     DTE.cancel('insertScriptTable');
+
+     // verify scripts are inserted in correct order on the page (A=30, B=50, C=60)
+     I.amOnPage("/uvodna-stranka-thymeleaf.html?NO_WJTOOLBAR=true");
+     I.seeInSource("<!-- autotest-sort-A -->");
+     I.seeInSource("<!-- autotest-sort-B -->");
+     I.seeInSource("<!-- autotest-sort-C -->");
+
+     // verify order: A (30) should appear before B (50) which should appear before C (60)
+     let source = await I.grabSource();
+     let posA = source.indexOf("<!-- autotest-sort-A -->");
+     let posB = source.indexOf("<!-- autotest-sort-B -->");
+     let posC = source.indexOf("<!-- autotest-sort-C -->");
+     I.assertTrue(posA < posB, "Script A (sortPriority=30) should appear before B (sortPriority=50), posA=" + posA + " posB=" + posB);
+     I.assertTrue(posB < posC, "Script B (sortPriority=50) should appear before C (sortPriority=60), posB=" + posB + " posC=" + posC);
+
+     // cleanup - delete test scripts
+     I.amOnPage("/admin/v9/apps/insert-script/");
+     DT.waitForLoader();
+     DT.filterContains('name', 'autotest-sort-');
+     DT.deleteAll('insertScriptTable');
+     DT.waitForLoader();
 });

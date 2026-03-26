@@ -2,7 +2,7 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,14 +29,14 @@ public class GroupSchedulerDto {
     private String groupName;
 
     @Column(name = "save_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "editor.group_schedule.save_date")
     private Date saveDate;
 
     @Column(name = "when_to_publish")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "editor.group_schedule.when_to_publish")
@@ -168,7 +168,7 @@ public class GroupSchedulerDto {
 	}
 
     @Column(name = "date_published")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title = "groupedit.publish.realPublishDate")

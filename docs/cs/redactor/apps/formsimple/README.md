@@ -6,13 +6,13 @@ Aplikace formulář snadno slouží ke snadné tvorbě formulářů. Výhoda je 
 
 Formuláři je třeba nastavit následující hodnoty.
 
-- Unikátní jméno formuláře – zadané jméno formuláře by mělo být unikátní pro celý web, pod tímto jménem se formulář uloží do aplikace Formuláře.
-- Email adresa příjemce - seznam email adres oddělených čárkami na které má být zaslán vyplněný formulář.
-- Řádkové zobrazení - pole formuláře se zobrazí v řádku vedle sebe (jinak je každé pole na novém řádku). Pro vytvoření nového řádku vložte do formuláře pole Nový řádek.
-- Text na začátku e-mailu - text, který se přidá do emailu před pole formuláře.
-- Text na konci e-mailu - text, který se přidá do emailu za pole formuláře.
-- Odeslat email jako text bez formátování - pokud zaškrtnete je email odeslán jako neformátovaná text verze (ve formátu jméno pole: hodnota), jinak je odeslán jako formátovaný HTML text v podobě jak je zobrazen na web stránce.
-- Přidat technické informace - pokud zaškrtnete přidají se do emailu i technické informace (název stránky, adresa stránky, datum a čas odeslání, informace o prohlížeči).
+- **Unikátní jméno formuláře** - zadané jméno formuláře by mělo být unikátní pro celý web, pod tímto jménem se formulář uloží do aplikace Formuláře.
+- **Email adresa příjemce** - seznam email adres oddělených čárkami na které má být zaslán vyplněný formulář.
+- **Řádkové zobrazení** - pole formuláře se zobrazí v řádku vedle sebe (jinak je každé pole na novém řádku). Pro vytvoření nového řádku vložte do formuláře pole Nový řádek.
+- **Text na začátku e-mailu** - text, který se přidá do emailu před pole formuláře.
+- **Text na konci e-mailu** - text, který se přidá do emailu za pole formuláře.
+- **Odeslat email jako text bez formátování** - pokud zaškrtnete je email odeslán jako neformátovaná text verze (ve formátu jméno pole: hodnota), jinak je odeslán jako formátovaný HTML text v podobě jak je zobrazen na web stránce.
+- **Přidat technické informace** - pokud zaškrtnete přidají se do emailu i technické informace (název stránky, adresa stránky, datum a čas odeslání, informace o prohlížeči).
 
 ![](editor-dialog-basic.png)
 
@@ -28,34 +28,37 @@ Po zvolení možnosti Řádkové zobrazení se pole mohou zobrazovat v řádku v
 
 Záložka pokročilé obsahuje pokročilá nastavení nastavení, která nejsou povinná.
 
-- Šifrovací klíč - pokud chcete hodnoty formuláře zašifrovat, můžete zadat šifrovací klíč.
-- Příjemce kopie emailu - seznam email adres oddělených čárkami na které má být zaslána kopie emailu.
-- Neviditelní příjemci - seznam email adres oddělených čárkami na které má být zaslána skrytá kopie emailu.
-- Předmět emailu - předmět emailu. Není-li vyplněno automaticky se použije podle web stránky.
-- Přesměrování po vyplnění - url adresa, na kterou se má provést přesměrování po uložení formuláře. Není-li zadáno, přesměruje se na původní stránku.
-- Přesměrování po chybě - url adresa, na kterou se má provést přesměrování, pokud se formulář nepodaří odeslat. Pokud není zadáno, použije se stejná hodnota jako má **Přesměrování po vyplnění**.
-- Způsob přesměrování - typ přesměrování po zpracování formuláře.
-  - Pokud není hodnota zadaná tak se formulář zpracuje a následně se provede přesměrování na zadanou stránku s nastaveným parametrem stavu odeslání (např. formSend=true).
+- **Šifrovací klíč** - pokud chcete hodnoty formuláře zašifrovat, můžete zadat [šifrovací klíč](../../admin/README.md#hlavička).
+- **Příjemce kopie emailu** - seznam email adres oddělených čárkami na které má být zaslána kopie emailu.
+- **Neviditelní příjemci** - seznam email adres oddělených čárkami na které má být zaslána skrytá kopie emailu.
+- **Předmět emailu** - předmět emailu. Není-li vyplněno automaticky se použije podle web stránky.
+- **Přesměrování po vyplnění** - url adresa, na kterou se má provést přesměrování po uložení formuláře. Není-li zadáno, přesměruje se na původní stránku.
+- **Přesměrování po chybě** - url adresa, na kterou se má provést přesměrování, pokud se formulář nepodaří odeslat. Pokud není zadáno, použije se stejná hodnota jako má **Přesměrování po vyplnění**.
+- **Způsob přesměrování** - typ přesměrování po zpracování formuláře.
+  - Pokud není hodnota zadaná tak se formulář zpracuje a následně se provede přesměrování na zadanou stránku s nastaveným parametrem stavu odeslání (např. `formSend=true`).
   - Hodnota `forward` znamená, že na cílovou stránku se provede interní přesměrování. Cílová stránka má tak přístup k identickým parametrům jako formulář a může provést dodatečnou akci. Jelikož se jedná o interní přesměrování v adresním řádku prohlížeče zůstane hodnota `/formmail.do`.
   - Hodnota `addParams` provede přesměrování na cílovou stránku s přidáním jednotlivých parametrů do URL. V takovém případě přesměrování provede prohlížeč a v adresním řádku zůstane adresa cílové stránky. Jelikož ale parametry jsou přidány do URL adresy je limitován jejich počet délkou URL což je standardně 2048 znaků.
-- Doc id stránky s verzí pro email - doc ID stránky s verzí pro email. Stránku systém potřebuje k tomu, aby uměl vygenerovat emailovou podobu. Pokud je zadaná hodnota none nepoužije se určení web stránky pro email. Pokud hodnota není zadaná vůbec použije se hodnota zadaná parametrem `useFormDocId`. Hodnota je užitečná v tom případě, pokud na všech stránkách máte jeden kontaktní formulář vkládaný např. v patičce. Při generování emailu se jako kód použije kód samotné stránky, ve které se ale formulář nenachází. Takto lze říci, aby pro email použil jinou stránku.
-- Doc id notifikace pro uživatele - je-li nastaveno na hodnotu docId některé web stránky, tak po úspěšném uložení formuláře je na email návštěvníka (z pole s názvem `email / e-mail`) zaslaný email s textem dané web stránky. Může se jednat například o poděkování za vyplnění formuláře, nebo další instrukce postupu. Hodnotu z formuláře do stránky vložíte jako výraz `!field-name!`, což je hodnota v `name` atribute formulářového pole.
-- Interceptor před odesláním emailu - hodnota je název třídy, která **musí implementovat interface `AfterSendInterceptor`**. Po odeslání emailu se provede kód z této třídy.
+- **Doc id notifikace pro uživatele** - je-li nastaveno na hodnotu docId některé web stránky, tak po úspěšném uložení formuláře je na email návštěvníka (z pole s názvem `email / e-mail`) zaslaný email s textem dané web stránky. Může se jednat například o poděkování za vyplnění formuláře, nebo další instrukce postupu. Hodnotu z formuláře do stránky vložíte jako výraz `!field-name!`, což je hodnota v `name` atribute formulářového pole.
+- **Doc id stránky s verzí pro email** - doc ID stránky s verzí pro email. Stránku systém potřebuje k tomu, aby uměl vygenerovat emailovou podobu. Je-li zadaná hodnota `none` nepoužije se určení web stránky pro email. Pokud hodnota není zadaná vůbec použije se hodnota zadaná parametrem `useFormDocId`. Hodnota je užitečná v tom případě, pokud na všech stránkách máte jeden kontaktní formulář vkládaný např. v patičce. Při generování emailu se jako kód použije kód samotné stránky, ve které se ale formulář nenachází. Takto lze říci, aby pro email použil jinou stránku.
+- **Doc id stránky, na které se formulář nachází** - stránka, na které se formulář nachází. Je třeba vyplnit, pokud je formulář vložen například v patičce stránky a systém potřebuje vědět z jaké stránky má načítat údaje formuláře při jeho odeslání.
+- **Interceptor před odesláním emailu** - hodnota je název třídy, která **musí implementovat interface `AfterSendInterceptor`**. Po odeslání emailu se provede kód z této třídy.
 
 ![](editor-dialog-advanced.png)
 
 ## Položky
 
-V kartě položky můžete přidat nové pole formuláře, přesouvat pořadí polí (pomocí drag & drop) a mazat pole formuláře kliknutím na ikonu mazání.
+V kartě položky můžete přidat/upravit/duplikovat pole formuláře, přesouvat pořadí polí (pomocí drag & drop) nebo mazat pole formuláře.
 
 ![](editor-dialog-items.png)
 
-Pole (položku) formuláře přidáte kliknutím na tlačítko Nová položka, která je zobrazena pod seznamem existujících polí. Ve výběrovém poli Typ pole si můžete vybrat z definovaných polí formuláře. Většina polí umožňuje zadat následující pole:
-- Název - představuje jméno pole formuláře (zobrazený název), pokud ponecháte prázdné použije se název z výběrového menu Typ pole. Pro informační pole (popisky) zadejte text, který chcete zobrazit.
-- Hodnota - před vyplněná hodnota, která se zobrazí v poli při jeho načtení.
-- Zástupný text - pro standardní textová pole reprezentuje hodnotu zástupného textu (`placeholder`), který se zobrazí, když je pole prázdné.
-- Povinné pole - zaškrtnutím se pole označí jako povinné pro odeslání formuláře.
-- Tooltip - pokud zadáte hodnotu zobrazí se při názvu pole informační bublina (vysvětlivka) s textem zadaným v tomto poli. Způsob zobrazení záleží na designu web stránky (typicky vyžaduje podporu [FontAwesome](https://fontawesome.com) pro zobrazení ikony).
+Při vytváření nebo úpravě položek ve formuláři si můžete v rozbalovacím poli Typ pole vybrat jeden z předdefinovaných typů polí. Na základě zvoleného typu se následně zobrazí další možnosti, pomocí kterých můžete upravit jeho vlastnosti:
+- **Název** - představuje jméno pole formuláře (zobrazený název), pokud ponecháte prázdné použije se název z výběrového menu Typ pole. Pro informační pole (popisky) zadejte text, který chcete zobrazit.
+- **Hodnota** - před vyplněná hodnota, která se zobrazí v poli při jeho načtení.
+- **Zástupný text** - pro standardní textová pole reprezentuje hodnotu zástupného textu (`placeholder`), který se zobrazí, když je pole prázdné.
+- **Povinné pole** - zaškrtnutím se pole označí jako povinné pro odeslání formuláře.
+- **Tooltip** - pokud zadáte hodnotu zobrazí se při názvu pole informační bublina (vysvětlivka) s textem zadaným v tomto poli. Způsob zobrazení záleží na designu web stránky (typicky vyžaduje podporu [FontAwesome](https://fontawesome.com) pro zobrazení ikony).
+
+![](editor-dialog-items_edit_1.png)
 
 **Poznámka:** pokud je v poli **Hodnota** prázdný text a je zadán text v poli **Zástupný text**, tak se při zobrazení formuláře na web stránce nezobrazí název pole samostatně ale jen jako zástupný text. Umožňuje to vytvořit menší formulář z pohledu jeho prostoru na webové stránce.
 
@@ -86,7 +89,7 @@ Jednotlivé položky definujete přes klíče:
 
 Příklad:
 
-```
+```properties
 //najjednoduchsi typ pola
 components.formsimple.label.meno=Meno
 components.formsimple.input.meno=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>
@@ -137,3 +140,27 @@ V kódu lze použít následující značky, které se při zobrazení formulá�
 - `{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}` - napojení získání seznamu `option` hodnot z aplikace číselník. Zadáno je ID číselníku, název sloupce pro hodnotu a název sloupce pro text.
 
 V zobrazení do emailu se hodnota pole tooltip nahrazuje za prázdný znak (aby v emailu nebyl zbytečně nefunkční tooltip).
+
+### Napojení na číselník
+
+Výběrové pole (`select`) můžete snadno napojit na číselník:
+
+```html
+<div class="govuk-form-group">
+  <label for="${id}" class="govuk-label govuk-heading-m">${label}</label>
+  ${tooltip} ${cs-error}
+  <select name="${id}" id="${id}" class="form-control form-select govuk-select">{enumeration-options|${value}|value|label_sk}</select>
+</div>
+```
+
+pomocí výrazu `{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}` jsou vytvořeny `<option>` elementy, přičemž při vkládání pole uživatel do hodnoty v dialogovém okně pole formuláře zadá ID typu číselníku (např. 4). To se ve výrazu nahradí za `${value}` a systém načte z daného číselníku hodnoty pro `<option value="value">label_sk</option>`. Číselník musí mít definovaná pole `value` s hodnotou a `label_sk` s textem. Používáte-li formulář ve více jazycích, můžete mít také pole `label_en,label_cs` a v překladovém klíči v jednotlivých jazycích použít správné hodnoty místo `label_sk`.
+
+Samozřejmě můžete vytvořit i přímo pole napojená na konkrétní typ číselník (v příkladu 4), tehdy nepoužijete hodnotu `${value}` ale přímo zadané ID v překladovém klíči. Uživatel pak nemusí při přidání pole nic zadávat:
+
+```html
+<div class="govuk-form-group">
+  <label for="${id}" class="govuk-label govuk-heading-m">${label}</label>
+  ${tooltip} ${cs-error}
+  <select name="${id}" id="${id}" class="form-control form-select govuk-select">{enumeration-options|4|value|label_sk}</select>
+</div>
+```

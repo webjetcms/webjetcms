@@ -381,3 +381,72 @@ function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) 
 
     DTE.save();
 }
+
+Scenario('File archive app - only selected files', async ({ I, DT, Apps, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=62096");
+
+    I.say("Open app in new page");
+    Apps.insertApp('Manažér dokumentov', '#components-file_archiv-name', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.checkOption("#DTE_Field_showOnlySelected_0");
+    I.fillField("#DTE_Field_globalIds", "1496,1423");
+
+    I.say("Check that files are marked selected in table - the rest is not selected");
+    I.clickCss("#pills-dt-component-datatable-filesToShow-tab");
+    await checkSelectedFiles(I, ["1496", "1423"]);
+
+    I.say("Check, that I cant see files that are not specific for this table");
+    DT.filterContains('virtualFileName', 'ScreenshotFile');
+    I.see("ScreenshotFile_C");
+    I.dontSee("ScreenshotFile_Pattern"); // Don't see because it's pattern
+    I.dontSee("ScreenshotFile_A"); // don't see becuse it's in history version, not main
+    I.dontSee("ScreenshotFile_B"); // don't see becuse it's in history version, not main
+    I.dontSee("ScreenshotFile_Future"); // don't see because it's Future version, not active
+
+    I.say("Cancel filter and check that files are still selected");
+    DT.filterContains('virtualFileName', '');
+    await checkSelectedFiles(I, ["1496", "1423"]);
+
+    I.say("try add files from table, then check duplicity");
+    selectRowsByGlobalId(I, ["1496", "1423", "1422"]);
+    I.clickCss("#datatableFieldDTE_Field_filesToSelect_wrapper button.btn-success");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+    I.seeInField("#DTE_Field_globalIds", "1496,1423,1422");
+
+    I.say("Go back, do check and try removing files");
+    I.clickCss("#pills-dt-component-datatable-filesToShow-tab");
+    await checkSelectedFiles(I, ["1496", "1423", "1422"]);
+    // plus one that was never selected
+    selectRowsByGlobalId(I, ["1496", "422"]);
+    I.clickCss("#datatableFieldDTE_Field_filesToSelect_wrapper button.btn-danger");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+    I.seeInField("#DTE_Field_globalIds", "1423,1422");
+
+    I.say("OK app and check page preview");
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    const shownFilesCount = await I.grabNumberOfVisibleElements("table.tabulkaStandard tr.collapsible");
+    I.assertEqual(shownFilesCount, 2, "Number of shown files in preview is different than expected");
+});
+
+async function checkSelectedFiles(I, selectedGlobalIds) {
+    for (const globalId of selectedGlobalIds) {
+        I.seeElement( locate("tr.highlighted-file-row").withChild( locate("td.dt-type-numeric").withTextEquals(globalId) ) );
+    }
+
+    const selectedCount = await I.grabNumberOfVisibleElements("tr.highlighted-file-row")
+    I.assertEqual(selectedCount, selectedGlobalIds.length, "Number of selected files is different than expected");
+}
+
+function selectRowsByGlobalId(I, globalIds) {
+    for (const globalId of globalIds) {
+        I.click( locate("tr").withChild( locate("td.dt-type-numeric").withTextEquals(globalId) ).find("td.dt-select-td") );
+    }
+}

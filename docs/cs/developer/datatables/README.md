@@ -96,7 +96,7 @@ script.
 
 ```javascript
     WJ.DataTable( {
-        Options
+        options
     });
 ```
 
@@ -142,6 +142,9 @@ Minimální konfigurace:
 - `autoHeight {boolean}` - ve výchozím nastavení tabulka počítá svou výšku aby maximálně využila prostor okna. Nastavením na hodnotu `false` bude mít tabulka výšku podle obsahu (počtu řádků).
 - `editorLocking {boolean}` - ve výchozím nastavení tabulka volá službu notifikace při editaci stejného záznamu více uživateli, pokud je toto nechtěné nastavte na hodnotu `false`.
 - `updateEditorAfterSave {boolean}` - nastavením na `true` se aktualizuje obsah editoru po uložení dat (pokud editor zůstává otevřený).
+- `onClose(TABLE, EDITOR, e)` - funkce, volaná při kliknutí na tlačítko Zrušit nebo zavření editoru. Parametry: `TABLE` - instance datatabulky, `EDITOR` - instance editoru, `e` - event objekt. Pokud vrátí `false` okno se nezavře. Používá se například ve `web-pages-datatable.js` pro kontrolu změn v editoru před zavřením.
+- `toggleSelector` – CSS selektor určující, který element spouští výběr řádku v tabulce. Výchozí hodnota je `td.dt-select-td`, což znamená, že výběr řádku se provede pouze klepnutím na buňku s touto třídou (typicky sloupec s ID). Toto nastavení můžete přepsat (např. na hodnotu `tr`), aby bylo možné vybrat řádek kliknutím kdekoli na řádek.
+- `toggleStyle` – režim výběru řádků. Výchozí hodnota je `multi` (lze vybrat více řádků najednou). Nastavením na hodnotu `single` omezíte výběr pouze na jeden řádek (vhodné, má-li být najednou editovatelný pouze jeden řádek).
 
 ```javascript
 let columns = [
@@ -797,3 +800,19 @@ Logika pro obsluhu koncového bodu `/sumAll` je ve třídě [DatatableRestContro
 Nakolik `footer` využívá data tabulky (až na jeden případ), výsledná hodnota sloupce závisí na vy-filtrovaných datech. Takto umíte snadno zjistit celkovou hodnotu sloupců pro specifické parametry.
 
 !>**Upozornění:** Pokud tabulka je nastavena jako `serverSide: true` a mód patičky je `all`, spočítané hodnoty se **nemění** v závislosti na filtrování v tabulce.
+
+### Pořadí uspořádání řádků
+
+Funkce pořadí uspořádání řádků umožňuje uživateli měnit pořadí záznamů v tabulce pomocí drag & drop. Funkčnost je implementována pomocí rozšíření `RowReorder` z DataTables.
+
+**Použití:**
+
+Pro aktivaci je třeba v `@DataTableColumn` anotaci mít nastavený atribut `inputType` na hodnotu `DataTableColumnType.ROW_REORDER`. Například:
+
+```java
+@Column(name = "sort_priority")
+@DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false)
+private Integer sortPriority;
+```
+
+Při změně pořadí řádků se automaticky vyvolá backend endpoint `/row-reorder` ze třídy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), který aktualizuje hodnoty pro daný sloupec označený jako `ROW_REORDER` a uloží změny do databáze. Pokud uložení bylo úspěšné, tabulka se obnoví a zobrazí nové pořadí řádků, plus se zobrazí oznámení o úspěšném uložení změn. V případě chyby se zobrazí chybová notifikace.

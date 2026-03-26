@@ -1,14 +1,14 @@
 package sk.iway.iwcm.components.form_settings.jpa;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -157,9 +157,23 @@ public class FormSettingsEntity {
 
     /* We are re-using this in multistep forms (just using old value, but functionality is different) */
     @Column(name = "after_send_interceptor")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title= "editor.form.afterSendInterceptor", className = "ai-off")
     @Size(max = 255)
     private String afterSendInterceptor;
+
+    @Transient
+        @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.processor", className = "ai-off not-formsimple",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/form-settings/autocomplete-formProcessor"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+				}
+			)
+		}
+    )
+    private String formProcessor;
 
     @Column(name = "encryption_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.form.encryptionKey")

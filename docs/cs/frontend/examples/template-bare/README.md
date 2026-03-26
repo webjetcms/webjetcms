@@ -132,7 +132,7 @@ npm run build
 npm run start
 ```
 
-jednotlivé `npm` skripty jsou definovány v [package.json](package.json) v elementu `scripts` a provedeno z `node_scripts/*.js` adresáře:
+jednotlivé `npm` skripty jsou definovány v [package.json](https://github.com/webjetcms/templates-bare/blob/master/package.json) v elementu `scripts` a provedeno z `node_scripts/*.js` adresáře:
 - `npm run build` - vygeneruje kompletní `dist` adresář.
 - `npm run build:assets` - nově vygeneruje soubory z adresáře `assets` (obrázky, ikony písma).
 - `npm run build:pug` - nově vygeneruje HTML soubory ze zdrojových pug souborů.
@@ -142,11 +142,11 @@ jednotlivé `npm` skripty jsou definovány v [package.json](package.json) v elem
 - `npm run start` - spustí režim prototypování - vygeneruje `dist` adresář, sleduje změny v souborech a otevře prohlížeč s prototyp verzí.
 - `npm run start:debug` - spustí režim prototypování s `debug` režimem prohlížeče.
 
-Konfigurace pro režim prototypování `browser-sync` se nachází v souboru [node-scripts/bs-config.js](node_scripts/bs-config.js). Tam je případně třeba upravit cestu pro nahrazování adres písem/obrázků, které jsou linkovány s plnou URL adresou v CSS souborech (jelikož během prototypování se URL adresa stránek odlišuje vůči adrese ve finální verzi přes WebJET CMS).
+Konfigurace pro režim prototypování `browser-sync` se nachází v souboru [node-scripts/bs-config.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/bs-config.js). Tam je případně třeba upravit cestu pro nahrazování adres písem/obrázků, které jsou linkovány s plnou URL adresou v CSS souborech (jelikož během prototypování se URL adresa stránek odlišuje vůči adrese ve finální verzi přes WebJET CMS).
 
 ### Zpracování JavaScript souborů
 
-Aby bylo možné používat přímo npm moduly v souboru [ninja.js](src/js/ninja.js) je použit [browserify](https://www.npmjs.com/package/browserify) s rozšířením [esmify](https://www.npmjs.com/package/esmify). Zpracování je v souboru [render-scripts.js](node_scripts/render-scripts.js).
+Aby bylo možné používat přímo npm moduly v souboru [ninja.js](https://github.com/webjetcms/templates-bare/blob/master/src/js/ninja.js) je použit [browserify](https://www.npmjs.com/package/browserify) s rozšířením [esmify](https://www.npmjs.com/package/esmify). Zpracování je v souboru [render-scripts.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/render-scripts.js).
 
 Důvod je, aby se všechny použité JavaScript knihovny ve web stránce daly spravovat přes npm (čili snadno aktualizovat).
 
@@ -230,6 +230,56 @@ span.more-info {
 
 následně lze označit text a aplikovat tento styl pouze na označený text. Pokud by neměl HTML značku `span` aplikoval by se na rodičovský element, čili typicky na celý odstavec - `p`.
 
+Pokud vám nevyhovuje výchozí název stylu ve výběrovém poli, můžete jej změnit přidáním komentáře:
+
+```css
+span.more-info {
+    /* editor title: Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+případně ve zkrácené formě přímo s komentářem na konci řádku definice stylu:
+
+```css
+span.more-info { /* Nice Editor Title */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+```
+
+Podporováno je i aplikování více stylů najednou. Použije se, pokud je v CSS definován i element:
+
+```css
+p.paragraph-green {
+    color: green;
+}
+p.paragraph-red-border {
+    border: 1px solid red;
+}
+p.paragraph-yellow-background {
+    background-color: yellow;
+}
+```
+
+uživatel si může zvolit libovolnou kombinaci těchto stylů na element `p`. Pokud je již styl na elementu aplikován, opětovným zvolením se styl odstraní. Můžete tak snadno aplikovat několik stylů najednou.
+
+Chcete-li aby se ve výběrovém menu zobrazovaly názvy ve vašem stylu, můžete v režimu Page Builder přidat do hlavičky stránky definici CSS souborů stylů pro editor:
+
+```html
+<script>
+    webjetContentsCss = [
+       '/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css',
+       '/templates/jet/assets/css/editor.css'
+    ];
+</script>
+```
+
+Doporučujeme přidat jen minimální styl potřebný pro stylování názvů.
+
 ## Tvorba PageBuilder bloků
 
 Pokud potřebujete vytvořit nový blok pro PageBuilder postupujte podle tohoto návodu.
@@ -253,7 +303,7 @@ Například soubor `src/pagebuilder/column/card/card.pug`:
 
 soubor `src/pug/pagebuilder/container/cards/cards.pug`
 
-```
+```pugjs
 .container
     .row
         include ../../column/card/card
@@ -263,7 +313,7 @@ soubor `src/pug/pagebuilder/container/cards/cards.pug`
 
 soubor `src/pug/pagebuilder/section/cards/cards.pug`
 
-```
+```pugjs
 section
     include ../../container/cards/cards
 ```

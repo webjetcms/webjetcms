@@ -49,7 +49,7 @@
         return response;
     }
 
-    private static Object createConnection(Boolean isPost, String url, String output, javax.servlet.http.Cookie cookies[])
+    private static Object createConnection(Boolean isPost, String url, String output, jakarta.servlet.http.Cookie cookies[])
     {
         try
         {

@@ -38,11 +38,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.jsp.JspWriter;
+import jakarta.servlet.jsp.PageContext;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -449,7 +449,7 @@ public class Tools
 	 * @param url
 	 * @return
 	 */
-	public static String downloadUrl(String url, javax.servlet.http.Cookie [] cookies)
+	public static String downloadUrl(String url, jakarta.servlet.http.Cookie [] cookies)
 	{
 		return(downloadUrl(url, SetCharacterEncodingFilter.getEncoding(), cookies));
 	}
@@ -461,7 +461,7 @@ public class Tools
 	 * @param cookies cookies ktore sa maju pouzit pri requeste
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies)
 	{
 		return downloadUrl( url,  defaultEncoding,  cookies,0);
 	}
@@ -474,7 +474,7 @@ public class Tools
 	 * @param timeOutSeconds cas v sekundach po uplynuti ktorych sa spojenie prerusi.
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies,int timeOutSeconds)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies,int timeOutSeconds)
 	{
 		return downloadUrl( url,  defaultEncoding,  cookies, timeOutSeconds, null);
 	}
@@ -488,7 +488,7 @@ public class Tools
 	 * @param headers dodatocne hlavicky ktore chceme requestu pridat
 	 * @return
 	 */
-	public static String downloadUrl(String url, String defaultEncoding, javax.servlet.http.Cookie[] cookies,int timeOutSeconds, Map<String, String> headers)
+	public static String downloadUrl(String url, String defaultEncoding, jakarta.servlet.http.Cookie[] cookies,int timeOutSeconds, Map<String, String> headers)
 	{
 		String body = null;
 		if (url.startsWith("http://") || url.startsWith("https://"))
@@ -523,7 +523,7 @@ public class Tools
 				}*/
 				if(cookies != null)
 				{
-					for (javax.servlet.http.Cookie cookie : cookies) {
+					for (jakarta.servlet.http.Cookie cookie : cookies) {
 					    conn.addRequestProperty("Cookie", cookie.getName() + "=" + cookie.getValue());
 					}
 				}
@@ -1009,6 +1009,12 @@ public class Tools
 		return getBigDecimalValue(value, "0");
 	}
 
+	/**
+	 * Returns long value from String, or defaultValue if value is null or not a valid long representation
+	 * @param value
+	 * @param defaultValue
+	 * @return
+	 */
 	public static long getLongValue(String value, long defaultValue)
 	{
 		long ret = defaultValue;
@@ -1024,6 +1030,21 @@ public class Tools
 
 		}
 		return(ret);
+	}
+
+	/**
+	 * Returns long value from Long object, or defaultValue if value is null
+	 * @param value
+	 * @param defaultValue
+	 * @return
+	 */
+	public static long getLongValue(Long value, long defaultValue)
+	{
+		if (value==null)
+		{
+			return(defaultValue);
+		}
+		return(value.longValue());
 	}
 
 	/**
@@ -1297,6 +1318,7 @@ public class Tools
 		if (host == null)
 		{
 			host = ip;
+			if (host == null) return null; //probably junit test
 
 			//ip z privatnych rozsahov nepouzijem
 			if (ip.startsWith("192.168.") || ip.startsWith("10.")) return host;
@@ -1362,13 +1384,25 @@ public class Tools
 	}
 
 	/**
+	 * Vrati scheme (http alebo https) na zaklade requestu, pouziva Tools.isSecure
+	 * @param request
+	 * @return
+	 */
+	public static String getScheme(HttpServletRequest request)
+	{
+		String scheme = "http";
+		if (Tools.isSecure(request)) scheme = "https";
+		return scheme;
+	}
+
+	/**
 	 * Ziska hodnotu cookie daneho mena
 	 * @param cookies
 	 * @param name
 	 * @param defaultValue
 	 * @return
 	 */
-	public static String getCookieValue(javax.servlet.http.Cookie[] cookies, String name, String defaultValue)
+	public static String getCookieValue(jakarta.servlet.http.Cookie[] cookies, String name, String defaultValue)
 	{
 		if (cookies == null) return defaultValue;
 
@@ -2264,6 +2298,8 @@ public class Tools
 			}
         }
 
+		if (serverName == null) return null; //probably junit test
+
 		//sometimes serverName is send with :port at the end by some k8s proxy, remove it
 		int index = serverName.indexOf(':');
 		if (index > 0) serverName = serverName.substring(0, index);
@@ -2589,7 +2625,7 @@ public class Tools
 	}
 
 
-	public static boolean addCookie(javax.servlet.http.Cookie cookie, HttpServletResponse response, HttpServletRequest request)
+	public static boolean addCookie(jakarta.servlet.http.Cookie cookie, HttpServletResponse response, HttpServletRequest request)
 	{
 
 		if (response == null || cookie == null || request == null)
@@ -2625,7 +2661,7 @@ public class Tools
 		}
 	}
 
-	public static boolean canSetCookie(String classification, javax.servlet.http.Cookie[] cookies)
+	public static boolean canSetCookie(String classification, jakarta.servlet.http.Cookie[] cookies)
 	{
 		if (Constants.getBoolean("gdprAllowAllCookies")) return true;
 
@@ -2657,7 +2693,7 @@ public class Tools
 	 * @param actualCookies
 	 * @return
 	 */
-	private static boolean canSetAnyCookie(javax.servlet.http.Cookie[] actualCookies)
+	private static boolean canSetAnyCookie(jakarta.servlet.http.Cookie[] actualCookies)
 	{
 		if(actualCookies == null || Tools.isEmpty(Constants.getString("disableCookiesCookieName")) || Tools.isEmpty(Constants.getString("disableCookiesCookieValue")) )
 			return true;

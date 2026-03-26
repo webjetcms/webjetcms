@@ -719,6 +719,7 @@ block content
                         } else if ("pills-folders-tab"==id && e.shiftKey === true) {
                             //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
                             click = "dt-tree-group";
+                            e.preventDefault();
                         }
 
                         if ("pills-folders-tab"==id) reloadWebpagesAfterJstree = true;

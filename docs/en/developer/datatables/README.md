@@ -96,7 +96,7 @@ script.
 
 ```javascript
     WJ.DataTable( {
-        Options
+        options
     });
 ```
 
@@ -142,6 +142,9 @@ Minimum configuration:
 - `autoHeight {boolean}` - by default, the table calculates its height to make the most of the window space. By setting it to `false` the table will have the height according to the content (number of rows).
 - `editorLocking {boolean}` - by default the table calls the notification service when multiple users edit the same record, if this is unwanted set to `false`.
 - `updateEditorAfterSave {boolean}` - by setting it to `true` the editor content is updated after saving the data (if the editor remains open).
+- `onClose(TABLE, EDITOR, e)` - function, called when you click the Cancel button or close the editor. Parameters: `TABLE` - datatable instance, `EDITOR` - instance editor, `e` - event object. If it returns `false` the window will not close. It is used, for example, in `web-pages-datatable.js` to check changes in the editor before closing it.
+- `toggleSelector` - CSS selector that determines which element triggers the selection of a row in the table. The default value is `td.dt-select-td` which means that row selection is done only by clicking on the cell with this class (typically the column with the ID). You can override this setting (e.g. to the value `tr`) to select a row by clicking anywhere on the row.
+- `toggleStyle` - line selection mode. The default value is `multi` (multiple rows can be selected at once). By setting to `single` limit the selection to only one row (useful if only one row is editable at a time).
 
 ```javascript
 let columns = [
@@ -797,3 +800,19 @@ Logic for endpoint handling `/sumAll` is in the class [DatatableRestControllerV2
 Since `footer` uses the table data (except for one case), the resulting column value depends on the filtered data. This way you can easily find out the total value of the columns for specific parameters.
 
 !>**Warning:** If the table is set as `serverSide: true` and the mode of the footer is `all`, the summed values are **do not change** depending on the filtering in the table.
+
+### Order of arrangement of rows
+
+The row ordering feature allows the user to change the order of records in the table using drag & drop. The functionality is implemented using the extension `RowReorder` from DataTables.
+
+**Application:**
+
+To activate, you must be in `@DataTableColumn` annotation to have the attribute set `inputType` to the value of `DataTableColumnType.ROW_REORDER`. For example:
+
+```java
+@Column(name = "sort_priority")
+@DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false)
+private Integer sortPriority;
+```
+
+When the order of rows is changed, the backend endpoint is automatically invoked `/row-reorder` from the class [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) which updates the values for the column marked as `ROW_REORDER` and saves the changes to the database. If the save was successful, the table is refreshed and the new row order is displayed, plus a notification that the changes were successfully saved. In case of an error, an error notification is displayed.

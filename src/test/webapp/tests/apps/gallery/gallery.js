@@ -126,7 +126,7 @@ Scenario('galeria v stranke', ({ I }) => {
     I.dontSee("loading=\"lazy\"");
     I.see("Tesla Supercharger Bratislava");
     I.forceClick("Tesla Supercharger Bratislava");
-    I.waitForElement("div.pswp--open");
+    I.waitForElement("div.pswp--open", 10);
     I.see("v Bratislave");
     I.see("Auparku", "span.photoswipeLongDesc a")
     I.see("autora fotky", "small p a");
@@ -1063,4 +1063,61 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
         I.click('Zmazať', "div.DTE_Action_Remove .DTE_Form_Buttons");
 
     I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genParentPath));
+});
+
+Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.jstreeWaitForLoader();
+
+    //set required values and save image to refresh thumb servlet cache
+    var name = "dsc04068.jpeg";
+    I.waitForText(name, 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText(name));
+    DTE.waitForEditor("galleryTable");
+
+    I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.waitForElement("#zoom");
+    I.fillField("#zoom", "65");
+    I.wait(2);
+    I.fillField("#x", "276");
+    I.wait(2);
+    I.fillField("#y", "123");
+    I.wait(2);
+    I.fillField("#w", "438");
+    I.wait(2);
+    I.fillField("#h", "590");
+    I.wait(5);
+    Document.compareScreenshotElement('thumb-servlet/editor-original-image.png');
+    DTE.save();
+
+    I.amOnPage('/images/gallery/test-vela-foto/dsc04068.jpeg');
+    Document.compareScreenshotElement('img', 'thumb-servlet/original-image.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200');
+    Document.compareScreenshotElement('img', 'thumb-servlet/thumb-image.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&ip=1');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-1.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?h=200&ip=2');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-2.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=3');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-3.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&c=ffff00');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-4.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=5');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-5.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=6');
+    Document.compareScreenshotElement('img', 'thumb-servlet/ip-6.png');
+
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
+    Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png');
+
 });

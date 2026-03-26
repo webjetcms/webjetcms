@@ -10,12 +10,13 @@ $admin-font-family: "Asap", sans-serif;
 $input-btn-focus-width: 0;
 
 $white: #fff;
-$primary: #0063FB;
+$primary: #0063fb;
 $primary-hover: #0054d5;
 $nice-primary: #0090FC;
 $secondary: #13151B;
 $success: #00BE9F;
-$danger: #FF4B58;
+$danger: #E00028;
+$danger-btn-bg: #FF4B58; //red-50
 $warning: #FABD00;
 //https://developer.apple.com/design/human-interface-guidelines/macos/visual-design/color/ purple z dark stlpca
 $purple: rgb(191, 90, 242);
@@ -66,7 +67,6 @@ $input-color: #23262E;
 $input-border-color: $nice-gray-300;
 
 $input-disabled-bg: $nice-gray;
-$input-disabled-border-color: #ffffff;
 
 $input-focus-border-color: #62697C;
 $input-focus-bg: transparent;
@@ -75,12 +75,12 @@ $modal-lg: 900px;
 $modal-xl: 1210px;
 // $modal-inner-padding: 15px;
 
-$state-warning-text:red;
-$state-warning-bg:red;
+$state-warning-text: $danger;
+$state-warning-bg: $danger;
 
 $alert-padding: 100px;
-$alert-warning-bg:green;
-$alert-warning-text: green;
+$alert-warning-bg: $warning;
+$alert-warning-text: $warning;
 
 //bootstrap nastavenia
 $link-decoration: none;

@@ -8,8 +8,8 @@ V JSON dátach zo servera je toto mapovanie vrátené ako:
 
 - [private GroupDetails groupDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pre adresár v ktorom je web stránka
 - [private List&lt;GroupDetails&gt; groupCopyDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pre kópiu stránky v adresároch
-- [List&lt;InsertScriptGroupBean&gt; groupIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pre aplikáciu Skripty mapovanie na adresáre
-- [List&lt;InsertScriptDocBean&gt; docIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pre aplikáciu Skripty mapovanie na web stránky
+- [List&lt;InsertScriptGroupBean&gt; groupIds](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pre aplikáciu Skripty mapovanie na adresáre
+- [List&lt;InsertScriptDocBean&gt; docIds](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pre aplikáciu Skripty mapovanie na web stránky
 - [List&lt;DirTreeItem&gt; writableFolders](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsEditorFields.java) pre výber zoznamu adresárov v súborovom systéme
 
 Uvedené atribúty používajú anotáciu ```@DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-group"```, čiže typ poľa JSON. Pomocou atribútu className sa určuje správanie vráteného objektu.
@@ -115,7 +115,7 @@ Napríklad je potrebné, aby výstupný JSON objekt vyzeral nasledovne:
 }
 ```
 
-Ukážková Java implementácia je v [InsertScriptBean](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) kde sú použité nasledovné anotácie:
+Ukážková Java implementácia je v [InsertScriptBean](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) kde sú použité nasledovné anotácie:
 
 ```java
 @JsonManagedReference(value="insertScriptBeanGr")

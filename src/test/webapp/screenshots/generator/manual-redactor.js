@@ -19,7 +19,8 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.clickCss("#pills-system-tab");
     DT.waitForLoader();
-    Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1360, 300);
+    I.jstreeClick("Hlavičky");
+    Document.screenshot("/redactor/webpages/system-folder.png", 1360, 450);
 
     I.say("listy naposledy upravene a cakajuce na schvalenie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
@@ -482,7 +483,7 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshotElement("div.ly-header", "/redactor/admin/header-logoff.png");
 
     Document.screenshotElement("div.md-large-menu", "/redactor/admin/menu-main-sections.png");
-    Document.screenshotElement("div.menu-wrapper", "/redactor/admin/menu-items.png");
+    Document.screenshotElement("nav.menu-wrapper", "/redactor/admin/menu-items.png");
 
     Document.screenshotElement("div.js-domain-toggler", "/redactor/admin/domain-selector.png");
 

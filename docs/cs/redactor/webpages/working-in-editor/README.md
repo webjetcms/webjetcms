@@ -44,7 +44,7 @@ Předdefinované nadpisy se aplikují vždy na celý odstavec. Nadpis vytvořít
 
 Na každé webové stránce by měl být vždy pouze jeden hlavní Nadpis 1, kterým by se měl text začínat. Jelikož je tento nadpis na standardní stránce automaticky vygenerován z názvu stránky (pokud to tak šablona definuje), není třeba jej vkládat do těla stránky. Sekce v rámci stránky se oddělují Nadpisem 2, jejich pod-sekce Nadpisem 3, atp.
 
-V této nabídce jsou i další předdefinované styly, jejich použití však vychází z jejich pojmenování, například styly obsahující text "tabulka" se používají pouze pro tabulky a podobně. Klepnutím do libovolného textu stránky v editoru se vám do pole Styl automaticky nastaví styl použitý na dané pozici kurzoru. Aktuálně použitý styl je označen šipkou v levé části rozbalovací nabídky.
+V této nabídce jsou i další předdefinované styly, jejich použití však vychází z jejich pojmenování, například styly obsahující text "tabulka" se používají pouze pro tabulky a podobně. Klepnutím do libovolného textu stránky v editoru se vám do pole Styl automaticky nastaví styl použitý na dané pozici kurzoru. Aktuálně použitý styl je zvýrazněn podbarvením jeho názvu. Opakovaným zvolením již nastaveného stylu se tento styl odstraní. Více informací je v [manuálu pro Web Designéra](../../../frontend/examples/template-bare/README.md#seznam-stylů-pro-editor).
 
 Pokud chcete změnit styl takového textu v rámci odstavce, nesmíte text označovat. Stačí kliknout do daného textu ve stránce, styl barvy se automaticky přednastaví v rozbalovací nabídce **Styl** a následně jej můžete změnit na jiný styl.
 
@@ -280,3 +280,9 @@ Mohou nastat případy, kdy budete potřebovat při psaní napsat i znaky, kter�
 Po kliknutí na požadovaný znak se vám daný znak napíše na pozici kurzoru. Speciální znaky se vkládají jako text, takže nemají žádná další nastavení.
 
 !> Upozornění: ikona pro vkládání speciálních znaků může být v některých případech změněna na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pro vkládání [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázků.
+
+## Detekce změny obsahu stránky
+
+Editor stránek obsahuje mechanismus, který detekuje změny obsahu stránky. Když klepnete na tlačítko Storno pro zavření okna a zároveň byly provedeny změny v obsahu stránky, zobrazí se vám dialogové okno s upozorněním, že nebyly uloženy změny. Klepnutím na OK okno zavřete bez uložení změn, kliknutím na Storno se vrátíte zpět do editoru stránky.
+
+Po otevření stránky v editoru se po 5 sekundách získá aktuální obsah stránky (aby se stihly načíst všechny skripty a náhledy aplikací) a tento se následně porovnává s aktuálním obsahem při klepnutí na tlačítko Storno. Čili správná detekce funguje po 5 sekundách od otevření stránky v editoru.

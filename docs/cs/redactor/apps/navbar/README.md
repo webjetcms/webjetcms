@@ -62,9 +62,9 @@ public class CustomNavbar implements NavbarInterface {
 
 ### Nastavení
 
-Po vytvoření vlastní implementace je nutné nastavit konfigurační proměnnou `navbarDefaultType` na plný název třídy (včetně package):
+Po vytvoření vlastní implementace je třeba nastavit konfigurační proměnnou `navbarDefaultType` na plný název třídy (včetně package):
 
-```
+```txt
 navbarDefaultType=com.example.custom.CustomNavbar
 ```
 
@@ -73,14 +73,12 @@ Tato konfigurace se nastavuje v **Nastavení > Konfigurace** v administraci WebJ
 ### Standardní implementace
 
 WebJET obsahuje tři standardní implementace:
-
-- **NavbarStandard** - standardní textová navigace (hodnota `normal` nebo prázdná)
-- **NavbarRDF** - navigace ve formátu RDF (hodnota `rdf`)
-- **NavbarSchemaOrg** - navigace ve formátu Schema.org (hodnota `schema.org`)
+- [NavbarStandard](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarStandard.java) - standardní textová navigace (hodnota `normal` nebo prázdná)
+- [NavbarRDF](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarRDF.java) - navigace ve formátu `RDF` (hodnota `rdf`)
+- [NavbarSchemaOrg](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarSchemaOrg.java) - navigace ve formátu `Schema.org` (hodnota `schema.org`)
 
 ### Poznámky
 
 - Pokud konfigurační proměnná `navbarDefaultType` obsahuje název třídy (ne standardní hodnoty `normal`, `rdf`, `schema.org`), WebJET se pokusí načíst tuto třídu a použít ji.
 - Pokud třída neexistuje nebo neimplementuje `NavbarInterface`, použije se standardní implementace.
 - Vlastní třída musí mít veřejný konstruktor bez parametrů.
-

@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
@@ -560,7 +560,7 @@ public class UserDetailsService {
                 errors.rejectValue("errorField.password", "403", errorText);
             }
         } else if (Tools.isEmpty(entity.getPassword())) {
-            errors.rejectValue("errorField.password", "403", prop.getText("javax.validation.constraints.NotBlank.message"));
+            errors.rejectValue("errorField.password", "403", prop.getText("jakarta.validation.constraints.NotBlank.message"));
         }
     }
 

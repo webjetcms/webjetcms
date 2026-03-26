@@ -17,6 +17,7 @@
   - [AI - adding a new provider](/custom-apps/apps/ai/assistants/README.md)
   - Ecommerce
     - [Payment methods](/custom-apps/apps/eshop/payment-methods/README.md)
+  - [Forms](/custom-apps/apps/multistep-forms/README.md)
 - Spring MVC
   - [Application in the web page](/custom-apps/spring-mvc/)
   - [Admin with file upload](/custom-apps/spring-mvc/admin-with-upload.md)

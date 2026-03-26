@@ -1,2 +1,2 @@
 ﻿CKEDITOR.plugins.setLang("webjetsvgicon","cs",{title:"Vlastnosti SVG ikony",buttonLabel:"Vložit SVG ikonu",icons:"Ikony",advanced:"Pokročilé",iconGroup:"Skupina ikon",iconSearch:"Hledat ikony",showAll:"Zobrazit vše",iconSize:"Velikost ikony",iconColor:"Barva ikony",withTextEnd:"Přidat rozestup pro text",customClass:"Vlastní CSS třídy",defaultSize:"Výchozí velikost",defaultColor:"Výchozí barva",loadingIcons:"Načítám ikony...",loadError:"Chyba při načítání ikon",noIconsFound:"Nenalezeny žádné ikony odpovídající aktuálním filtrům.",
-noIconSelected:"Před pokračováním prosím vyberte ikonu."});
+noIconSelected:"Před pokračováním prosím vyberte ikonu.",deleteConfirm:"Opravdu chcete smazat tuto ikonu?"});

@@ -6,7 +6,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('overenie zobrazenia podla sablony', ({I, DTE, Document}) => {
+Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings
     Document.resetPageBuilderMode();
@@ -17,23 +17,25 @@ Scenario('overenie zobrazenia podla sablony', ({I, DTE, Document}) => {
 
     I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
     I.waitForElement("div.exit-inline-editor", 10);
-    I.seeElement("div.exit-inline-editor");
-    I.waitForText("Page Builder", 10, "div.exit-inline-editor button .filter-option-inner-inner");
-    I.seeElement("#trEditor div.wysiwyg");
-    I.dontSeeElement("#trEditor div.wysiwyg_textarea");
+    I.waitForElement("#trEditor div.wysiwyg", 30);
+    I.waitForInvisible("#trEditor div.wysiwyg_textarea", 30);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForElement("div.exit-inline-editor", 10);
+    var value = await I.grabValueFrom({css: "div.exit-inline-editor select"});
+    I.assertEqual(value, "pageBuilder", "Expected editor type selector to have value 'pageBuilder'");
 
     I.seeElement("div.cke_inner");
     I.see("Odstavec a zarovnanie");
     I.waitForElement("#wjInline-docdata.pb-wrapper", 10);
 
+    //over moznost prepnutia editora
+    I.selectOption({css: "div.exit-inline-editor select"}, "");
+    I.wait(2);
+
     I.switchTo();
 
-    //over moznost prepnutia editora
-    I.selectOption("#DTE_Field_data-editorTypeSelector select", "");
-    I.wait(2);
-    I.dontSeeElement("#trEditor div.wysiwyg");
+    I.waitForInvisible("#trEditor div.wysiwyg", 10);
     I.seeElement("#trEditor div.wysiwyg_textarea");
 
     //otvor stranku kde nie je PB
@@ -73,7 +75,9 @@ Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
     DTE.waitForEditor();
     I.wait(5);
 
-    I.selectOption("#DTE_Field_data-editorTypeSelector select", "");
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.selectOption({css: "div.exit-inline-editor select"}, "");
+    I.switchTo();
     I.wait(2);
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
@@ -100,7 +104,7 @@ Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
     Document.resetPageBuilderMode();
 });
 
-Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', ({I, DTE, Document}) => {
+Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, DTE, Document}) => {
     //bug: ked prepnem z PB na standardny, zatvorim okno, otvorim, tak sa prepinac nezobrazi
     //overit aj to, ze sa nezobrazi na stranke, kde nie je PB zapnute
 
@@ -112,7 +116,10 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', ({I, DTE, D
 
     I.waitForElement("#DTE_Field_data-pageBuilderIframe", 10);
     I.waitForElement("#DTE_Field_data-editorTypeSelector select", 10);
-    I.selectOption("#DTE_Field_data-editorTypeSelector select", "");
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForElement("div.exit-inline-editor", 10);
+    I.selectOption({css: "div.exit-inline-editor select"}, "");
+    I.switchTo();
     I.wait(2);
 
     DTE.cancel();
@@ -123,7 +130,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', ({I, DTE, D
 
     DTE.cancel();
 
-    //stranka bez pagebuildera
+    //
+    I.say("stranka bez pagebuildera");
     I.click("Produktová stránka - B verzia");
     DTE.waitForEditor();
     I.wait(2);
@@ -133,7 +141,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', ({I, DTE, D
 
     DTE.cancel();
 
-    //otvor znova PB a over, ze mame selector
+    //
+    I.say("otvor znova PB a over, ze mame selector aj s moznostou PageBuilder");
     I.click("Produktová stránka - PageBuilder");
     DTE.waitForEditor();
     I.waitForElement("div.exit-inline-editor", 10);
@@ -145,7 +154,7 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', ({I, DTE, D
     Document.resetPageBuilderMode();
 });
 
-Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
+Scenario('bug - nova stranka sablona podla priecinka', async ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "Page Builder"]);
@@ -161,25 +170,25 @@ Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
     I.pressKey(['Escape']);
     DTE.cancel();
 
-    //skusim novu stranku, ta musi mat PB
+    //
+    I.say("skusim novu stranku, ta musi mat PB option v selecte");
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
     I.clickCss("#pills-dt-datatableInit-content-tab");
     I.waitForVisible("#DTE_Field_data-pageBuilderIframe", 5);
+
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.waitForElement("div.exit-inline-editor", 10);
-    I.waitForText("Page Builder", 10, "div.exit-inline-editor button .filter-option-inner-inner");
-    I.clickCss("div.exit-inline-editor button");
-    I.see("Page Builder", "ul.dropdown-menu.inner.show li a span");
-    I.pressKey(['Escape']);
+    var value = await I.grabValueFrom({css: "div.exit-inline-editor select"});
+    I.assertEqual(value, "pageBuilder", "Expected editor type selector to have value 'pageBuilder'");
+    I.switchTo();
 
     DTE.cancel();
 });
 
 function openStyleModal(I, colSelector=".col-3") {
-    I.waitForElement("div.exit-inline-editor", 10);
-    I.seeElement("div.exit-inline-editor");
-    I.seeElement("#trEditor div.wysiwyg");
+    I.waitForElement("#trEditor div.wysiwyg", 10);
     I.waitForInvisible("#trEditor > div.wysiwyg_textarea", 10);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
@@ -198,7 +207,7 @@ function openStyleModal(I, colSelector=".col-3") {
 
     //
     I.say("Open style modal");
-    I.forceClick({css: "aside.pb-is-toolbar-active span.pb-toolbar-button__style"});
+    I.forceClick({css: "aside.pb-is-toolbar-active button.pb-toolbar-button__style"});
     I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
 }
 
@@ -214,7 +223,7 @@ function saveStyleModal(I) {
 
 Scenario('check toolbar elements', ({I, DTE, Document}) => {
     //reset PB settings
-    //Document.resetPageBuilderMode();
+    Document.resetPageBuilderMode();
 
     //stranka s PB
     I.resizeWindow(1280, 960);
@@ -423,7 +432,10 @@ function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
 
     //
     I.say("Check mode switching");
-    Apps.switchEditor('html');
+    I.switchTo();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.selectOption({css: "div.exit-inline-editor select"}, "html");
+    I.switchTo();
 
     I.seeElement(locate(".CodeMirror span.cm-qualifier").withText(columnSelector));
     I.seeElement(locate(".CodeMirror span.cm-property").withText("background-color"));
@@ -578,11 +590,53 @@ Scenario("insert blocks into page", ({I, DTE, Apps, Document}) => {
     I.switchTo();
     I.resizeWindow(1280, 1200);
 
-    Apps.switchEditor('html');
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.selectOption({css: "div.exit-inline-editor select"}, "html");
+    I.switchTo();
+
     I.seeElement(locate(".CodeMirror-line").withText("!INCLUDE(/components/formsimple/form.jsp"));
     I.seeElement(locate(".CodeMirror-line").withText('Text'));
     I.seeElement(locate(".CodeMirror-line .cm-string").withText('col-2'));
     I.seeElement(locate(".CodeMirror-line .cm-string").withText('c2VjdGlvbi9Db250YWN0L2NvbnRhY3RfMDY'));
 
     I.wjSetDefaultWindowSize();
+});
+
+function checkNewPageTemplate(groupId, hasTemplate, I, DT, DTE) {
+    I.switchTo();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + groupId);
+    DT.waitForLoader();
+
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+
+    //verify title and navbar
+    DTE.seeInField("title", "Nová web stránka");
+    DTE.seeInField("navbar", "Nová web stránka");
+
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+    DTE.waitForCkeditor();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    if (hasTemplate === true) {
+        I.waitForText("Toto je stlpec 1", 10, "div.column-content p");
+        I.see("Toto je nadpis stránky", "div.column-content h1");
+        I.dontSee("Nová web stránka", "div.column-content p");
+    } else {
+        I.waitForText("Nová web stránka", 10, "div.column-content p");
+        I.dontSee("Toto je stlpec 1", "div.column-content");
+        I.dontSee("Toto je nadpis stránky", "div.column-content");
+    }
+}
+
+Scenario("NewPageDocIdTemplate is used for new page", ({I, DT, DTE}) => {
+
+    //negative scenario - blank page
+    checkNewPageTemplate(34495, false, I, DT, DTE);
+
+    //positive scenario - template with 2 columns
+    checkNewPageTemplate(112952, true, I, DT, DTE);
+
 });

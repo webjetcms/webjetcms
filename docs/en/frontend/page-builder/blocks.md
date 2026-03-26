@@ -5,7 +5,8 @@ Page Builder also includes inserting prepared blocks. Their list is automaticall
 You can have the following subdirectories in the root directory for blocks:
 - `section` - for section blocks (blue marking in Page Builder)
 - `container` - for containers (red marking in Page Builder)
-- `column` - for columns (green marking in Page Builder)
+- `column` - for columns (green label in Page Builder)
+- `content` - for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
 
 In each of these subdirectories you still need to create **block groups as additional subdirectories**, e.g. `Contact, Features`. Only in these subdirectories you create individual HTML blocks. An example is the directory structure:
 
@@ -33,6 +34,34 @@ In each of these subdirectories you still need to create **block groups as addit
     - left.jpg
     - right.html
     - right.jpg
+- content
+  - Buttons
+    - standard.html
+    - big.jpg
+    - contactus.html
+```
+
+## Block name and marks
+
+If you want to have a nice block name in the block list, you can create a file `pagebuilder.properties` in encoding `utf-8` in the appropriate subdirectory of the block group (e.g. in `section/Contact/pagebuilder.properties`). In it, you can define the block group name, icon, and tags (tags) for searching:
+
+```properties
+title=Základné prvky
+icon=fa fa-cubes
+tags=Základné prvky
+title.Citat_v1=Citát v1
+title.Citat_v2=Citát v2
+```
+
+You can also create language versions of the file, e.g. `pagebuilder_en.properties`.
+
+If you use `pug` format, so in the file `build-pug.js` check/complete the condition so that it is also transferred `.properties` file for blocks:
+
+```javascript
+  } else if (
+    (filePath.match(/\.png$/) || filePath.match(/\.properties$/))
+    && filePath.match(/pagebuilder/)
+  )
 ```
 
 ## Setting the width of the columns
@@ -134,6 +163,8 @@ For convenient editing of cards (`tabs`) is supported to generate them automatic
 Element `UL` should be marked with CSS class `pb-autotabs`. JavaScript code in the file `/admin/webpages/page-builder/scripts/pagesupport.js` ensure card generation after adding an element / every 5 seconds. Takes the card name from `title` container attribute, or from an element with CSS class `pb-tab-title` (which is more convenient for editing).
 
 The tabs themselves are therefore not editable, they are generated automatically. Only the content is editable `tab` container. Note that in the sample code the UL element does not contain any `LI taby`, these will be generated automatically. They will remain in the HTML code afterwards and will also be saved correctly. The page will remain displaying the tab as it was displayed during editing (this is something to keep in mind).
+
+The ID attributes of each card are generated automatically according to the card name. If you need to use a specific name it is possible to set a value in the HTML code `data-title` at `.tab-pane` element.
 
 Note the use of the CSS class `pb-not-container` on the main container elements. This will ensure that this element will not be marked as a container and only the individual tabs will be considered containers. Each tab uses a CSS class `pb-custom-container`, which will ensure that the red frame/toolbar of the container is displayed.
 
@@ -248,7 +279,7 @@ Sample code:
 
 ## Cards in accordion
 
-When the requirement of inserting objects of the card type into the `accordion-u` it is possible to use the Page Builder property - it also indicates **nested containers**. It is necessary to consider what will be editable, how to duplicate individual items and so on. Practically, inserting cards into `accordion-ov` (which is a container) as the insertion of another `columnu` into the container (whereby the inserted `column` further contains nested containers of individual tabs).
+When the requirement of inserting objects of the card type into the `accordion-u` it is possible to use the Page Builder property - it also indicates **nested containers**. It is necessary to consider what will be editable, how to duplicate individual items and so on. Practically, inserting cards into `accordion-ov` (which is a container) as the insertion of another `columnu` into the container (whereby the inserted `column` further contains nested containers of individual cards).
 
 In the example, note that the main `column` has CSS style `pb-not-editable` not to be automatically editable by CK editor and at the same time CSS class `pb-always-mark`. A non-editable column is not marked with a green border by default, but without this option it would not be possible to add another column after the tabs, or to delete entire tabs (the column tools would not be available).
 
@@ -453,3 +484,77 @@ Complete HTML code sample web page with sample sections:
     </div>
 </section>
 ```
+
+## Support JavaScript code
+
+If you need a custom JavaScript support file (see above mentioned `pagesupport.js`), you can create a file `/components/INSTALL_NAME/admin/pagesupport-custom.js` which, if it exists, is loaded after the file `pagesupport.js`. You can add your own functions or modify standard existing functions from [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
+
+You can also adjust some settings such as color list, adjust CSS selectors, adjust width for different devices and so on. The following code is just a sample, paste it into a file `pagesupport-custom.js`:
+
+```JavaScript
+window.pbCustomOptions = function(options) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        //custom code to modify options on page builder init
+        console.log("pbCustomOptions called, options=", options, "href=", window.location.href);
+        options.color_swatches = [
+            "#ff0000",
+            "#00ff00",
+            "#0000ff",
+            "#ffff00",
+            "#00ffff",
+        ];
+        //disable any color picker, only swatches will be available
+        options.color_picker = false;
+    }
+};
+
+window.pbCustomSettings = function(me) {
+    //redefine grid column content selector
+    me.grid.section_default_class = 'section';
+    me.grid.row = 'div.grid, div[class*="pb-grid"]';
+    me.grid.row_default_class = 'grid';
+    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
+    me.grid.column_default_class = 'grid__col grid__col--12';
+
+    me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
+};
+
+window.pbScreenSizePrefix = function(me) {
+    var screenSize =  $(window).width();
+    var colPrefix = me.column.valid_prefixes[0];
+    if (screenSize >= 1240) colPrefix = me.column.valid_prefixes[4];
+    else if (screenSize >= 992) colPrefix = me.column.valid_prefixes[3];
+    else if (screenSize >= 768) colPrefix = me.column.valid_prefixes[2];
+    else if (screenSize >= 480) colPrefix = me.column.valid_prefixes[1];
+
+    //console.log("pbScreenSizePrefix, screenSize=", screenSize, "colPrefix=", colPrefix);
+
+    return colPrefix;
+}
+
+window.pbGetWindowSize = function(name) {
+    var maxWidth = "";
+    if ('tablet'==name) {
+        maxWidth = "768px";
+    } else if ('phone'==name) {
+        maxWidth = "479px";
+    }
+    //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
+    return maxWidth;
+}
+```
+
+## Block ID
+
+After the block is inserted into the page, it is set in the attribute `data-pb-id` path to the HTML file block encoded via `Base64`. Using the value, you can find all the pages that contain the given block via the search in the administration. You can thus easily find out where a certain block is used in case of its modification.
+
+You can get the path to the HTML file from the attribute via JavaScript function `atob()`, for example:
+
+```JavaScript
+atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
+'section/00-Zakladne-prvky/Citat_v1'
+```
+
+For blocks from the Basic tab, an expression of type `pb-basic-2.1` where the first number is the block type (0=column, 1=container, 2=section, 4=content) and the second number is the sequence number of the block in the list.
+
+The block ID is set to the inserted element, for example to `section`, `div` container and so on according to the type of block. It is not set to the entire embedded structure, but only to the embedded element.

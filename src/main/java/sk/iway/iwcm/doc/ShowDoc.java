@@ -11,14 +11,14 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import net.sourceforge.stripes.controller.StripesConstants;
 import net.sourceforge.stripes.util.CryptoUtil;
@@ -68,9 +68,7 @@ public class ShowDoc extends HttpServlet {
      * sem sa uklada hash o aktualnom userovi, kontroluje to ShowDocAction
      * (ak sa v url nachadza id pouzivatela pre jeho prihlasenie)
      */
-    public static String ACTUAL_USER_HASH = null;
-
-    private NavbarService navbarService = new NavbarService();
+    public static String ACTUAL_USER_HASH = null; //NOSONAR
 
     /**
      * Skontroluje, ci parametre neobsahuju naznaky XSS, ak ano,
@@ -121,7 +119,7 @@ public class ShowDoc extends HttpServlet {
                 if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && "docid".equals(name)) continue;
 
                 //pridaj parameter do URL
-                if (redirectUrl.length() != 0) redirectUrl.append('&');
+                if (redirectUrl.isEmpty() == false) redirectUrl.append('&');
                 if (valueHasXss) {
                     //hodnotu parametra vyhodime
                     redirectUrl.append(name).append('=');
@@ -356,14 +354,14 @@ private static String combineCss(String cssStyle)
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Logger.debug(ShowDoc.class,"ShowDoc SERVLET CALLED - GET");
-        execute(request,response);
+        execute(request,response); //NOSONAR
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Logger.debug(ShowDoc.class,"ShowDoc SERVLET CALLED - POST");
-        execute(request,response);
+        execute(request,response); //NOSONAR
     }
 
 
@@ -474,7 +472,7 @@ private static String combineCss(String cssStyle)
 
                     //ziskaj usera z DB
                     db_conn = DBPool.getConnection(request);
-                    ps = db_conn.prepareStatement("SELECT * FROM  users WHERE user_id=?");
+                    ps = db_conn.prepareStatement("SELECT * FROM  users WHERE user_id=?"); //NOSONAR
                     ps.setInt(1, userId);
                     db_result = ps.executeQuery();
                     if (db_result.next())
@@ -1329,7 +1327,7 @@ private static String combineCss(String cssStyle)
         }
 
         //Set navbar
-        request.setAttribute("navbar", navbarService.getNavbar(doc, request));
+        request.setAttribute("navbar", NavbarService.getNavbar(doc, request));
 
         //firni event
         showDocBean.setDoc(doc);
@@ -1358,7 +1356,7 @@ private static String combineCss(String cssStyle)
         if (request.getParameter("forwarddoccompare") != null)
         {
             forward = "/admin/tmp_compare_blank.jsp";
-            allowAdminForward = true;
+            allowAdminForward = true; //NOSONAR
         }
 
         if (request.getParameter("forward") != null && request.getParameter("forward").endsWith(".jsp"))
@@ -1386,7 +1384,7 @@ private static String combineCss(String cssStyle)
             amp.replaceInRequest();
         }
 
-        if (inlineEditorAdmin) fixDataForInlineEditingAdmin(request, prop);
+        if (inlineEditorAdmin) fixDataForInlineEditingAdmin(request, doc, group, prop);
 
         //forward na JSP s designom
         if (forward.toLowerCase().endsWith(".jsp") || forward.toLowerCase().endsWith(".html"))
@@ -1403,8 +1401,8 @@ private static String combineCss(String cssStyle)
                 {
                     //skontroluj, ci sablona skutocne existuje
 
-                forward = getForward(request, prop, temp, tempBrowserDetector, bd, forward);
-                if (forward == null) return;
+                    forward = getForward(request, prop, temp, tempBrowserDetector, bd, forward);
+                    if (forward == null) return;
 
                     Logger.debug(this,"forward="+forward);
                 }
@@ -1434,12 +1432,19 @@ private static String combineCss(String cssStyle)
      * Modifikuje existujuce request objekty pre inline editaciu v administracii
      * @param request
      */
-    private void fixDataForInlineEditingAdmin(HttpServletRequest request, Prop prop) {
+    private void fixDataForInlineEditingAdmin(HttpServletRequest request, DocDetails doc, GroupDetails group, Prop prop) {
         if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
             //jedna sa o novu stranku, ale fejkujeme to hlavnou strankou adresara
             //zmazeme povodne doc_data
-            request.setAttribute("doc_data", "");
             request.setAttribute("title", prop.getText("editor.newDocumentName"));
+
+            //test group newPageDocIdTemplate value and replace docDetails object in request
+            if (group.getNewPageDocIdTemplate() > 0) {
+                DocDetails newPageDoc = DocDB.getInstance().getDoc(group.getNewPageDocIdTemplate());
+                if (newPageDoc != null) {
+                    request.setAttribute("doc_data_newpage", newPageDoc.getData());
+                }
+            }
         }
         //toto nepotrebujeme posielat, injectuje sa to v inline_page_toolbar.jsp
         request.setAttribute("doc_data", "");

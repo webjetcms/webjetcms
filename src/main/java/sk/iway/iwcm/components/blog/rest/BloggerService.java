@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 
@@ -127,7 +127,7 @@ public class BloggerService {
      * @return
      */
     public static boolean editBlogger(BloggerBean bloggerToEdit, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
-        UserDetailsEntity userBlogger = userDetailsRepository.getById(bloggerToEdit.getId());
+        UserDetailsEntity userBlogger = userDetailsRepository.getReferenceById(bloggerToEdit.getId());
 
         //Field's login AND editableGroups CANT BE CHANGE
         //Copy ONLY remain fields

@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.ai.providers.gemini;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.methods.HttpRequestBase;
 

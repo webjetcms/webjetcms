@@ -74,3 +74,7 @@ Scenario('custom-fields', async({ I, Document }) => {
 ```
 
 where both field A and field B in the editor are set to be offset from top and bottom. For field B, a larger bottom offset is set, as we want to have the selection field and its values displayed on the image.
+
+## Comparison of images
+
+Often the GIT will mark an image as altered, even if it looks the same on the surface. You can run the script [rm-same-images.sh](../../../../src/test/webapp/rm-same-images.sh), which compares the new and original image using ImageMagick. If the difference is less than 1%, the image is returned to its original state. In the folder `/build/images-diff` images are created highlighting the changes.

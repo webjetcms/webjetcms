@@ -1,6 +1,6 @@
 # Assumptions and versions
 
-WebJET 2024 requires `Java 17` a `Tomcat 9`.
+The current version of WebJET CMS requires `Java 17` a `Tomcat 11`.
 
 The basic project in gradle format can be found at [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -8,16 +8,21 @@ In gradle projects, just specify the version in build.gradle:
 
 ```gradle
 ext {
-    webjetVersion = "2024.18";
+    webjetVersion = "2026.0";
 }
 ```
 
 Currently there are the following versions of WebJET:
-- `2025.0-jakarta-SNAPSHOT` - regularly updated version from the main repository version 2025 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
-- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2026.0-jakarta-SNAPSHOT` - regularly updated version from the main repository using `Jakarta namespace`. Requires Tomcat 11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
+- `2026.0-jakarta` - stabilized version 2026.0 for Tomcat 11 application server using `Jakarta namespace`, no daily shifts are added to it.
+- `2026.0` - Stabilized version 2026.0, no daily changes are added.
+- `2025.0-jakarta-SNAPSHOT` - stabilized version 2025.52 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
+- `2025.0-SNAPSHOT` - stabilized version 2025.52, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.0.52` - Stabilized version 2025.0.52 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
+- `2025.0.50` - Stabilized version 2025.0.50 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.40-jakarta` - stabilized version 2025.40 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
 - `2025.40` - Stabilized version 2025.40, no daily changes are added.
-- `2025.0.40` - Stabilized version 2025.0.49 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
+- `2025.0.40` - Stabilized version 2025.0.40 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.18` - Stabilized version 2025.18, no daily changes are added.
 - `2025.0.23` - Stabilized version 2025.0.23 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.0` - Stabilized version 2025.0, no daily changes are added.
@@ -79,7 +84,7 @@ V [Tomcat from version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/
 
 ## Changes when switching to Jakarta version
 
-Version for `jakarta namespace`, requires Tomcat 10/11 application server, uses Spring version 7. Breakthrough changes:
+Version for `jakarta namespace`, requires Tomcat 11 application server, uses Spring version 7. Breakthrough changes:
 - URLs - Spring has introduced exact matches for URLs, if a REST service defines a URL with a slash at the end, it must be used as such. There is a difference in the URL `/admin/rest/service` a `/admin/rest/service/`.
 - In Spring DATA repositories for `IN/NOTIN query` it is necessary to add `@Query`, otherwise the SQL will not be created correctly, example:
 
@@ -102,23 +107,19 @@ V `build.gradle` need to be updated `gretty` configuration and add compilation s
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring
@@ -308,7 +309,7 @@ Then we recommend to restart your development environment, in case of VS Code pe
 
 If you are running multiple installations of WebJET on a single Tomcat server, it is possible that older versions may not be fully compatible with Java 17:
 
-```
+```txt
 [ERROR] ContextLoader - Context initialization failed <java.lang.IllegalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf>java.lang.Ill
 egalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf
 ...
@@ -317,7 +318,7 @@ Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protect
 
 set the following for Tomcat `JAVA_OPTS`:
 
-```
+```txt
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
 ```
 
@@ -325,7 +326,7 @@ JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --
 
 If you were still running Tomcat with Java version 8 you may have problems with missing libraries (these are also needed for Java 11). If you get an error in the log `java.lang.NoClassDefFoundError: javax/activation/DataSource`:
 
-```
+```txt
 java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[...].StandardContext[]]
     ...
     Caused by: java.lang.NoClassDefFoundError: javax/activation/DataSource
@@ -333,14 +334,14 @@ java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException:
 
 it is necessary to add to each installation of WebJET CMS to the folder `WEB-INF/lib` copied libraries from [of this ZIP archive](lib-java11.zip) and delete files (if any):
 
-```
+```txt
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
 
 If you have been using the WebJET version `8.0-8.6` - older than `08/2019`, or you get the following error on startup:
 
-```
+```txt
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.iwcm.io.FileHistoryBean
 [10.09 13:48:16 {vubintra} {WebJETJavaSECMPInitializer}] initPersistenceUnits[iwcm], beans=82

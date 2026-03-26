@@ -12,8 +12,9 @@ Annotation is used as `DataTableColumnType.DATATABLE`, and the following editor 
 - `data-dt-field-dt-url` - URL of the REST service, can contain macros for inserting values from the parent editor, e.g.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
 - `data-dt-field-dt-columns` - the name of the class (including packages) from which it is to be used [definition of datatable columns](datatable-columns.md), e.g. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
 - `data-dt-field-dt-columns-customize` - the name of the JavaScript function that can be used to modify `columns` object, e.g. `removeEditorFields`. The function must be available directly in `windows` object, as the parameter gets `columns` object and is expected to return it modified. Example `function removeEditorFields(columns) { return columsn; }`.
-- `data-dt-field-dt-tabs` - list of tabs for the editor in JSON format. All names and values of the JSON object need to be wrapped in `'`, translations are replaced automatically. Example: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
-- `data-dt-field-dt-localJson` - activates the mode that works with the local JSON object. It is primarily used for applications in a web page to keep track of application items (e.g. slide show items), which are additionally automatically encoded into a string suitable for `PageParams` object and are encoded in `Base64`.
+- `data-dt-field-dt-tabs` - list of tabs for the editor in JSON format. All names and values of the JSON object need to be wrapped in `'`, translations are replaced automatically. Example: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`. If not specified, it is automatically retrieved according to the annotation `@DataTableTabs` of the specified class.
+- `data-dt-field-dt-localJson` - activates the mode that works with the local JSON object. It is primarily used for applications in a web page to keep track of application items (e.g. slide show items), which are additionally automatically encoded into a string suitable for `PageParams` object and are encoded in `Base64`. If there is a function `window.datatableLocalJsonUpdate = function(val, conf)` will be called for optional data editing.
+- `data-dt-field-dt-autoload` - if you have a table in the first tab set to `true` to load it automatically when the window is opened, otherwise the table is initialized only when you click on the tab in which it is located.
 
 Full annotation example:
 
@@ -96,7 +97,7 @@ public class ImpressSlideshowItem {
 
 ## Notes on implementation
 
-The implementation is in the file [field-type-datatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) and in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
+The implementation is in the file [field-type-datatable.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) and in [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
 
 Feature `resizeDatatable` is used to calculate the size of the datatable (to scroll only rows), the recalculation is called when initializing the array, at intervals of every 20 seconds (to be sure), when resizing the window and when clicking on a tab in the editor. The recalculation is performed only when the field is visible.
 

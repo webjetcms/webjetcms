@@ -4,7 +4,7 @@
     const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];
     const basicSettingColumns = ["forward", "forwardFail", "isPdf", "allowOnlyOneSubmit", "overwriteOldForms", "doubleOptIn", "messageAsAttach", "messageAsAttachFileName", "encryptKey", "encrypKeyInfo", "useFormDoc", "formmailSendUserInfoDoc", "useFormMailDoc"];
     const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
-    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
+    const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 
     var tabs = [
         { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
@@ -105,14 +105,6 @@
 
                 let formType = formsDataTable.EDITOR.field('formType').get();
 
-                if("multistep" === formType) {
-                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor label").html('[[#{components.mustistep.processor}]] <div data-dte-e="msg-label" class="DTE_Label_Info"></div>');
-                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor div button.btn-tooltip").attr('data-bs-original-title', '[[#{components.mustistep.processor.tooltip}]]');
-                } else {
-                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor label").html('[[#{editor.form.afterSendInterceptor}]] <div data-dte-e="msg-label" class="DTE_Label_Info"></div>');
-                    $(".DTE_Field_Name_formSettings\\.afterSendInterceptor div button.btn-tooltip").attr('data-bs-original-title', '[[#{editor.form.afterSendInterceptor.tooltip}]]');
-                }
-
                 if("simple" === formType) {
                     let headlines = $("#panel-body-dt-formsDataTable-settings-advanced .row-headline");
                     if(headlines && headlines.length > 0) { $(headlines[headlines.length - 1]).hide(); }
@@ -146,6 +138,14 @@
                         }
                     }
                 });
+
+                if("multistep" === formType) {
+                    formsDataTable.EDITOR.field('formSettings.formProcessor').show();
+                    formsDataTable.EDITOR.field('formSettings.afterSendInterceptor').hide();
+                } else {
+                    formsDataTable.EDITOR.field('formSettings.formProcessor').hide();
+                    formsDataTable.EDITOR.field('formSettings.afterSendInterceptor').show();
+                }
 
                 if("create" === action) {
                     formsDataTable.EDITOR.field("formName").enable();

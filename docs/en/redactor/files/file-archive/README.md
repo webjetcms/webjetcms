@@ -91,7 +91,9 @@ To automatically upload a document, use the created [Automated task](../../../ad
 
 ## Editing the historical version of a document in the manager
 
-!>**Warning:** Manager **not allowed** editing of the historical version of the document. You can open the editor, view the saved values, but you won't be able to save your changes.
+To edit the historical version of a document in the manager, you need to have the Edit historical version metadata right (`cmp_fileArchiv_history_metadata_edit`). Historical versions can only be edited in terms of metadata, i.e. the physical file representing the document, its name, etc. cannot be changed. These changes can only be made in the nested table tab **Versions of** of the main document.
+
+!>**Warning:** if you don't have the Edit Historical Version Metadata right, you can open the editor, see the saved values, but you won't be able to save your changes.
 
 ## Edit the current version of the document in the manager
 

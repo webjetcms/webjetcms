@@ -16,6 +16,7 @@ The following fields are available:
 - **Template name** - mandatory field with **Unique** name of the news template
 - **Template image** - field for selecting the illustration image of the displayed news (for better orientation when selecting the template in the news application)
 - **Templating tool** - choice of templating tool (only supported so far `Velocity`)
+- **Insert classes into Velocity template** - field for inserting the name of the class that will be available in the template, e.g. to display the discussion it is necessary to add the class `sk.iway.iwcm.forum.ForumDB`. You can separate classes with a comma or a new line. In the code you can then use e.g. `$ForumDB.isActive($doc.getDocId())` to access the methods of the class.
 - **HTML code** - template code
 - **Pagination location** - place where pagination is inserted
 - **HTML pagination code** - paging code
@@ -95,6 +96,19 @@ $pagesAll
 //celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
 $totalPages
 
+//custom paging
+<ul class="pagination justify-content-center">
+     #foreach($page in $pages)
+     <li class="pagination__item">
+         <a href="$page.url"
+            class="pagination__link btn btn--square#if($page.actual) pagination__link--active#end"
+            aria-label="Strana $page.label">
+            $page.label
+         </a>
+     </li>
+     #end
+</ul>
+
 //podmienene zobrazenie ak je zadany perex obrazok
 #if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
 ```
@@ -108,3 +122,22 @@ $doc.lastUpdateDate $doc.lastUpdateTime
 //datum a cas vytvorenia
 $doc.publishStartString
 ```
+
+The following objects are available by default:
+
+```java
+vc.put("docDetails", doc);
+vc.put("currentUser", user);
+vc.put("news", newsList);
+vc.put("actionBean", this);
+vc.put("context", this);
+vc.put("prop", prop);
+vc.put("Tools", Tools.class);
+vc.put("DocDB", sk.iway.iwcm.doc.DocDB.class);
+vc.put("GroupsDB", sk.iway.iwcm.doc.GroupsDB.class);
+vc.put("MediaDB", sk.iway.spirit.MediaDB.class);
+vc.put("pageParams", new PageParams(getRequest()));
+vc.put("dateTool", new DateTool());
+```
+
+If you need, you can add additional classes to the template using the field **Insert classes into Velocity template** in the newsletter template editor.

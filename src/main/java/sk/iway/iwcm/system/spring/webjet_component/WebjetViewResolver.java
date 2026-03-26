@@ -1,12 +1,12 @@
 package sk.iway.iwcm.system.spring.webjet_component;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
-import org.springframework.lang.NonNull;
 import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.view.RedirectView;
-import org.thymeleaf.spring5.view.ThymeleafViewResolver;
+import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;

@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.tags.CombineTag;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * ThymeleafShowdocController.java

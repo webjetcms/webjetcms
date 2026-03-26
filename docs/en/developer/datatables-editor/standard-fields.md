@@ -484,6 +484,15 @@ Note the use of the converter `@javax.persistence.Convert(converter = AllowSafeH
 
 ![](../../redactor/apps/tooltip/tooltip-editor.png)
 
+If you set the CSS class `quill-oneline` a simplified editor without the ability to create paragraphs is displayed:
+
+```java
+    @Column(name = "tooltip")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
+    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String tooltip;
+```
+
 ## WYSIWYG
 
 Displays the full-featured HTML editor as used for editing web pages.

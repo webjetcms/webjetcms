@@ -3,7 +3,7 @@ package sk.iway.iwcm.xls;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.i18n.Prop;

@@ -8,6 +8,12 @@ Email can be sent to visitors who are registered in the admin part of the Web JE
 
 ![](dataTable.png)
 
+The table contains special icons:
+- <i class="ti ti-eye" ></i> - view page - shows a preview of the web page that is used as the content of the email
+- <i class="ti ti-player-play" ></i> - start sending - starts sending campaign emails
+- <i class="ti ti-player-stop" ></i> - stop sending - stops sending campaign emails
+- <i class="ti ti-repeat" ></i> - resend all emails - all emails in the campaign will be marked as new and will be resent
+
 ## Basic
 
 When creating a new record, we have in the tab **Basic** to choose only one card with the basic information we need to fill in, namely **Subject** a **Web page**.

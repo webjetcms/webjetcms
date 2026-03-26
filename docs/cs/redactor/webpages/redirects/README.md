@@ -12,6 +12,8 @@ Hodnota pole [přesměrovací kód](https://developer.mozilla.org/en-US/docs/Web
 - `301` trvalé přesměrování, vyhledávače by si měly upravit adresu stránky na tuto novou hodnotu.
 - `302` dočasné přesměrování.
 
+Můžete také nastavit platnost přesměrování pro určitá data, zadáním buď začátku, nebo konce, nebo obou dat. Přesměrování, která již nejsou časově platná, se zobrazí červeně v tabulce. Do pole poznámka můžete zadat informaci, k čemu přesměrování slouží.
+
 ![](path-editor.png)
 
 ### Přesměrování přes regulární výrazy

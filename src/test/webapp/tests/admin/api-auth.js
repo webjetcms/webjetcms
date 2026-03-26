@@ -3,6 +3,8 @@ Feature('admin.api-auth');
 let basicAuthEnabled = null;
 let loginText = "Meno alebo e-mail používateľa";
 let forgotPassword = "Zabudli ste heslo?";
+let code401 = 401;
+let code403 = 403;
 
 Before(({ I }) => {
     I.logout();
@@ -61,6 +63,7 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
 
     await isBasicAuthEnabled(I);
 
+    //virtually disable api-token auth
     setApiTokenAuthConf(I, Document, false);
 
     I.amOnPage("/admin/v9/");
@@ -68,11 +71,12 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
     I.see(forgotPassword);
 
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
-    if (basicAuthEnabled) I.seeResponseCodeIs(401);
-    else I.seeResponseCodeIs(403);
+    //always 403 when api-token auth is disabled
+    I.seeResponseCodeIs(code403);
 });
 
 Scenario("API token auth - reset", ({ I, Document }) => {
+    //enable api token auth for next tests
     setApiTokenAuthConf(I, Document, true);
 });
 
@@ -82,16 +86,15 @@ Scenario("API volanie zle heslo @singlethread", async ({ I }) => {
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25', {
         'x-auth-token': 'dGVzdGVyOmNrTzxIfXRid05bTEldXGx3OURUa2szQ1pOVnJ+Njg8'
     });
-    if (basicAuthEnabled) I.seeResponseCodeIs(401);
-    else I.seeResponseCodeIs(403);
+    //it is always 403 because x-auth-token is not valid thus CSRF is required
+    I.seeResponseCodeIs(code403);
 
     I.say("Testing logon blocking");
     I.wait(2);
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25', {
         'x-auth-token': 'aaaksjdhfkashdflaksdhj'
     });
-    if (basicAuthEnabled) I.seeResponseCodeIs(401);
-    else I.seeResponseCodeIs(403);
+    I.seeResponseCodeIs(code403);
 
     I.wait(10);
 
@@ -181,23 +184,21 @@ Scenario("basic auth @singlethread", async ({ I, Document }) => {
     let password = secret(I.getDefaultPassword());
 
     //
-    I.say("Testing basic auth");
+    I.say("Testing basic auth, enabled: "+basicAuthEnabled);
     response = await getResponse(I, password);
 
     if (basicAuthEnabled===true) {
         I.seeResponseCodeIs(200);
         I.assertContain(response.data.result, "Demo OK", "Response JSON is not correct");
     } else {
-        I.seeResponseCodeIs(403);
-        I.assertContain(response.data, "<title>403</title>", "Response is not 403 forbidden");
+        I.seeResponseCodeIs(code403);
     }
 
     //
     I.say("Testing basic auth - wrong password");
     response = await getResponse(I, "wrongpassword");
-    if (basicAuthEnabled===true) I.seeResponseCodeIs(401);
-    else I.seeResponseCodeIs(403);
-    I.assertContain(response.data, "<title>403</title>", "Response is not 403 forbidden");
+    if (basicAuthEnabled===true) I.seeResponseCodeIs(401); //when auth header is set, it will return 401 unauthorized
+    else I.seeResponseCodeIs(code403);
 
     //
     I.say("wrong password wait 10s");

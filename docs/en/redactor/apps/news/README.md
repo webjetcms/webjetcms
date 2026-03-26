@@ -28,17 +28,17 @@ The application parameters tab is where you set the basic behaviour of the appli
 
 ![](editor-dialog.png)
 
-- Directory - ID of the directories (folders of web pages) from which the news (pages) will be selected. With the Add button, you can select multiple directory IDs.
-- Include subdirectories - selecting this option also loads news from the subdirectories of the selected directories from the Directory field.
-- Depth of subfolders - when displaying news from subfolders, you can set the maximum search depth of the subfolders. A value less than 1 sets the search without restrictions.
-- Page types - selection of pages by date validity
+- **Directory** - Selection of directories (web page folders) from which news (pages) will be selected.
+- **Include subdirectories** - Selecting this option also loads news from the subdirectories of the selected directories from the Directory field.
+- **Depth of subfolders** - when displaying news from subfolders, it is possible to set the maximum search depth of the subfolders. A value less than 1 sets the search without restrictions.
+- **Types of pages** - selection of pages by date validity
   - Current - is a valid start and end date - only news items whose validity date (start and end of the pulication) is within the range of the current date will be displayed.
   - Old - news items that have an end date in the past (archive) will be displayed.
   - All - news items will be displayed regardless of the start and end date of their publication.
   - Next - only news items that have a future publication start date will be displayed.
   - Currently valid - only news with a filled in start date (the end date does not have to be filled in) and end date whose range is valid on the current date and time will be displayed.
-- Main Page Display Mode - sets the display of the main pages under folders. Often you have a News structure and within it the years 2025, 2026 and so on. You don't want to display the main pages of these folders in the News list, as it's typically a list page. Or conversely, you only need to show the main pages of the sub folders.
-- Organize by - specifies how the list of news items is arranged
+- **Main page view mode** - sets the display of the main pages under folders. Often you have a News structure and within it the years 2025, 2026 and so on. You don't want to show the main pages of those folders in the News list, since it's typically a list page. Or conversely, you only need to show the main pages of the sub folders.
+- **Arrange by** - determines how the list of news items shall be arranged
   - Priority
   - Date of start of publication
   - Date of the event
@@ -47,16 +47,15 @@ The application parameters tab is where you set the basic behaviour of the appli
   - Places
   - Page ID
   - Rating - the rating of the page (e.g. when using an e-shop) - the rating is set using the page rating application.
-- Ascending - by default the list is ordered descending (e.g. from the newest news to the oldest), by checking this box the order will be reversed - from the oldest to the newest
-- Pagination - if checked, the pagination of the list of news items will also be displayed (if the number of news items is greater than the value in the Number of items on the page field)
-- Number of items on the page - number of displayed news on one page, if pagination is unchecked according to this value the number of news is retrieved from the database, suitable for example for the home page where you want to have displayed for example 3 news and a link to the list of all news, but you do not want to display pagination.
-- Skip first - the number of records you want to skip when loading the list (e.g. if you have two apps underneath each other in the page with a different design, and you want to skip the number of records from the first app in the second app)
-- The annotation (perex) does not have to be filled in - by default, only news items that have the annotation (perex) filled in will be displayed, if you tick this box, the news items that do not have the annotation (perex) filled in will be loaded as well.
-- Load with page text (less optimal) - by default the page text is not loaded from the database, if you need it for display, check this box. However, loading will be slower and more demanding on database and server performance.
-- Duplication check - if a page contains multiple news applications in one page, the list of already displayed news is recorded. The already existing ones are excluded from the list. However, the number of displayed records may not be matched afterwards, but at the same time it does not happen that the same news item is displayed multiple times on one page.
-- Exclude main folder pages - if selected, the main folder pages are excluded (for Include subdirectories). Subfolders are assumed to contain the main page with the list of news items in that folder. Such pages are excluded and are not used in the news list.
-- Insert classes into `Velocity` templates - a special field for the programmer to define a Java class (program) that can then be used in a template. If you don't have exact instructions what to put in this field leave it empty.
-- Buffer time (minutes) - the number of minutes the news list is remembered. Loading the news list can be demanding on the database performance, we recommend to set the buffer time to at least 10 minutes. This will speed up the page display (especially if the news list is on the home page, for example).
+- **Ascending** - by default the list is ordered in descending order (e.g. from the newest news to the oldest), by checking this box the order will be reversed - from the oldest to the newest
+- **Pagination** - if checked, the pagination of the list of news items will also be displayed (if the number of news items is greater than the value in the Number of items on the page field)
+- **Number of items on the page** - number of news displayed on one page, if pagination is unchecked according to this value the number of news will be retrieved from the database, suitable for example for the home page where you want to display e.g. 3 news and a link to the list of all news, but you do not want to display pagination.
+- **Skip the first** - the number of records you want to skip when loading the list (e.g. if you have two apps in a page with different designs and you want to skip the number of records from the first app in the second app)
+- **It is not necessary to fill in the perex (annotation)** - by default, only news that have an annotation (perex) filled in will be displayed, if you check this box, those that do not have an annotation (perex) filled in will also be loaded
+- **Loading with page text (less optimal)** - by default the page text is not loaded from the database, if you need it for display, check this field. However, loading will be slower and more demanding on database and server performance.
+- **Check for duplication** - if the page contains multiple news applications in one page, the list of already displayed news is recorded. Existing ones are removed from the list. However, the number of records displayed may not be matched afterwards, but at the same time it does not happen that the same news item is displayed multiple times on the same page.
+- **Exclude main folder pages** - If selected, excludes the main folder pages (for Include subfolders). Subfolders are assumed to contain the main page with the list of news items in that folder. Such pages are excluded and are not used in the news list.
+- **Insert classes into `Velocity` Templates** - a special field for the programmer to define a Java class (program) that can then be used in the template. If you don't have exact instructions what to put in this field leave it empty.
 
 ### Template
 

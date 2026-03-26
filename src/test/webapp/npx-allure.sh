@@ -89,8 +89,15 @@ RET_CODE=$?
 #skopiruj konfiguracne subory pre allure z gitu do test adresara
 cp -r allure/ ../../../build/test/allure-results
 
+echo "Setting categories"
+cp allure/categories.json ../../../build/test/allure-results
+
 #vygeneruj report do test-results adresara
 npx allure generate --clean ../../../build/test/allure-results -o ../../../build/test-results
+
+echo "Injecting custom CSS"
+cp allure-custom.css ../../../build/test-results/allure-custom.css
+sed -i '' 's|</head>|   <link rel="stylesheet" href="allure-custom.css">\n</head>|' ../../../build/test-results/index.html
 
 #uloz na docs server vysledok
 rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-results/ $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER

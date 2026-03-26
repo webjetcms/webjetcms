@@ -170,8 +170,23 @@ Pro výběr existující stránky (její `docId`) lze použít typ `docsIn_GROUP
 
 ![](webpages-enumeration.png)
 
-Propojení na číselník je přes typ `enumeration_X` kde X je ID typu číselníku. Jako hodnota se nastaví ID záznamu z číselníku:
-- `editor.field_x.type=enumeration_2` - zobrazí jako výběrové pole možnosti z typu číselníku 2
+Propojení na číselník je přes typ `enumeration_X` kde X je ID typu číselníku. Jako hodnota a label se ve výchozím nastavení nastaví `string1` hodnota z číselníku:
+- `editor.field_x.type=enumeration_2` - zobrazí jako výběrové pole možnosti z typu číselníku 2, hodnota i label budou z `string1`
+- `editor.field_x.type=enumeration_2_null` - přidáním `_null` na konec typu lze vybrat i prázdnou možnost
+
+#### Vlastní sloupce pro label a hodnotu
+
+Je možné specifikovat, které vlastnosti z číselníku se použijí pro label a hodnotu výběrového pole:
+- `editor.field_x.type=enumeration_2_string1_id` - label bude z `string1`, hodnota z `id`
+- `editor.field_x.type=enumeration_2_string2_string3` - label bude z `string2`, hodnota z `string3`
+- `editor.field_x.type=enumeration_2_string1_id_null` - label bude z `string1`, hodnota z `id`, s možností prázdné hodnoty
+
+Můžete použít kteroukoli vlastnost z číselníku:
+- `string1` až `string12` - textová pole
+- `decimal1` až `decimal4` - číselná pole
+- `boolean1` až `boolean4` - boolovská pole
+- `date1` až `date4` - datumová pole
+- `id` - identifikátor záznamu v číselníku
 
 ### Unikátní identifikátor
 

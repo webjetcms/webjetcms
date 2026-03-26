@@ -87,7 +87,7 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		statusIcons.add(new LabelValue("<i class=\"ti ti-map-pin\" style=\"color: #000000;\"></i> " + prop.getText("components.file_archiv.statusIcon.show_file"), "showFile:true"));
 		statusIcons.add(new LabelValue("<i class=\"ti ti-map-pin-off\" style=\"color: #000000;\"></i> " + prop.getText("components.file_archiv.statusIcon.not_show_file"), "showFile:false"));
 		statusIcons.add(new LabelValue("<i class=\"ti ti-texture\" style=\"color: #000000;\"></i> " + prop.getText("components.file_archiv.pattern"), "referenceToMain:notEmpty"));
-		statusIcons.add(new LabelValue("<i class=\"ti ti-calendar-time\" style=\"color: #FF4B58;\"></i> " + prop.getText("components.file_archiv.statusIcon.waiting_for_upload"), "uploaded:0"));
+		statusIcons.add(new LabelValue("<i class=\"ti ti-calendar-time\" style=\"color: #E00028;\"></i> " + prop.getText("components.file_archiv.statusIcon.waiting_for_upload"), "uploaded:0"));
 		statusIcons.add(new LabelValue("<i class=\"ti ti-calendar-plus\" style=\"color: #000000;\"></i> " + prop.getText("components.file_archiv.statusIcon.waiting_new_version"), "waitingFiles"));
 		return statusIcons;
 	}

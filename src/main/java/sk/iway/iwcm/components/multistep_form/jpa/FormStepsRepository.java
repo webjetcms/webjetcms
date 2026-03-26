@@ -32,4 +32,7 @@ public interface FormStepsRepository extends DomainIdRepository<FormStepEntity, 
 
     @Query("SELECT fse FROM FormStepEntity fse WHERE fse.formName = :formName AND fse.currentPosition = :currentPosition AND fse.domainId = :domainId")
     Optional<FormStepEntity> getStepByPosition(@Param("formName") String formName, @Param("currentPosition") Integer currentPosition, @Param("domainId") Integer domainId);
+
+    @Query("SELECT fse.formName FROM FormStepEntity fse WHERE fse.id = :stepId AND fse.domainId = :domainId")
+    Optional<String> getFormNameByStepId(@Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 }

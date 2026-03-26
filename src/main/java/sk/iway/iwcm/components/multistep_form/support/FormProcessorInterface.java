@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.multistep_form.support;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 

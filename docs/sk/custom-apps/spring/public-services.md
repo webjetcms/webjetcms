@@ -10,7 +10,7 @@ Volanie týchto služieb musí byť povolené, inak sú služby nedostupné. Pov
 
 Zadaním znaku `*` sa povolia všetky IP adresy, môžete zadať viaceré začiatky IP adries oddelené čiarkou, napríklad: `192.168.,62.65.161.4,10.10.0.`.
 
-Ak máte vlastnú REST službu, ktorá rozširuje triedu [RestController](../../../../src/webjet8/java/sk/iway/iwcm/rest/RestController.java) použije sa meno triedy pre získanie špeciálneho kľúča pre kontrolu povolenia IP adresy.
+Ak máte vlastnú REST službu, ktorá rozširuje triedu [RestController](../../../../src/main/java/sk/iway/iwcm/rest/RestController.java) použije sa meno triedy pre získanie špeciálneho kľúča pre kontrolu povolenia IP adresy.
 
 ## Text web stránky
 

@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.basket.support;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.validation.Errors;
 
@@ -54,7 +54,7 @@ public class SupportService {
             if(fieldMapAttr.isRequired() == true) {
                 String fieldValue = getFieldValue(methodEntity, fieldMapAttr.fieldAlphabet());
                 if(Tools.isAnyEmpty(fieldValue) == true) {
-                    errors.rejectValue("errorField.field" + fieldMapAttr.fieldAlphabet(), null, prop.getText("javax.validation.constraints.NotBlank.message"));
+                    errors.rejectValue("errorField.field" + fieldMapAttr.fieldAlphabet(), null, prop.getText("jakarta.validation.constraints.NotBlank.message"));
                 }
             }
         }

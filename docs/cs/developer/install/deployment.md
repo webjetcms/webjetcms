@@ -6,7 +6,7 @@ Deployment jaro archivů pro použití v klientských projektech je založeno na
 
 Před vytvořením buildu je třeba manuálně provést/zkontrolovat následující kroky:
 - připravit popis změn v souboru `docs/CHANGELOG.md`
-- upravit soubor `docs/README.md` - přidat na vrch nejnovější verzi z changelogu a dole smazat poslední (v README.md se zobrazuje 5 posledních verzí)
+- upravit soubor `docs/README.md` - přidat na vrch nejnovější verzi z changelogu
 - upravit překladový klíč `admin.overview.changelog` se sumářem změn aktuální verze zobrazený pod uvítacím textem na úvodní obrazovce
 - upravit `src/main/webapp/admin/v9/json/wjnews.LANG.json` - doplnit sumář a odkaz na changelog nejnovější verze
 
@@ -27,7 +27,8 @@ odtud se přenese i do `build.properties` pro zobrazení verze v administraci.
 - `makepom` - vygenerování `POM` souboru, ten se generuje gradle úkolem `writePom` na základě definovaných závislostí v `build.gradle`. Úloha zajišťuje získání správné verze iz definic verze typu `5.3.+` a odstranění závislostí na WebJETu samotném (který pochází ze závislostí na v8).
 - `finalwar` - vytvoří ve složce `build/updatezip/finalwar` novou strukturu se zkompilovanými třídami včetně `AspectJ`. Vytvoří JAR archivy `WEB-INF/lib/webjet-VERZIA.jar` s Java třídami, JSP soubory admin části a aplikacemi ve formě `JarPackaging`.
 - `prepareAllJars` - připraví všechny JAR soubory pro publikování do repozitářů.
-- `deployStaging` - deploy verze na https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, před spuštěním je třeba volat úlohu `prepareAllJars`, provést v projektu z `github`.
+- `deployGithub` - deploy SNAPSHOT verze na [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions).
+- `deployMavenCentral` - deploy verze na https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, před spuštěním je třeba volat úlohu `prepareAllJars`, provést v projektu z `github`.
 
 Postup vygenerování nové verze:
 

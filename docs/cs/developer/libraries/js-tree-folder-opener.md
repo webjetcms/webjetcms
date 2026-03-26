@@ -114,11 +114,13 @@ jstfo.id = 4;
 **(Kliknutím zobrazíš detail pro funkci)**
 
 | Metody | Gettery | Settery |
+
  | --------------------------------- | --------------------- | ----------------------- |
  | [init()](#init)                   | [notFound](#notfound) | [id](#id)               |
  | [next()](#next)                   | | [apiUrl](#apiurl)       |
  | [loaded()](#loaded)               | | [idKeyName](#idkeyname) |
 | [inputDataFrom()](#inputdatafrom) | | |
+
  | [setInputValue()](#setinputvalue) | | |
 
 ***

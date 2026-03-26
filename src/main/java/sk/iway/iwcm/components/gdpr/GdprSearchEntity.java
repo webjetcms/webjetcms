@@ -3,9 +3,9 @@ package sk.iway.iwcm.components.gdpr;
 
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
 
 import lombok.Getter;
 import lombok.Setter;

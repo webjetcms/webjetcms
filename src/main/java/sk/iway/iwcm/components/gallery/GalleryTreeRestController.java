@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 
 import java.util.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * GalleryTreeRestController

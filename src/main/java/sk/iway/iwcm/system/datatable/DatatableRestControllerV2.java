@@ -21,18 +21,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validator;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
@@ -83,6 +83,8 @@ import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.events.DatatableEvent;
+import sk.iway.iwcm.system.datatable.events.DatatableEventType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
@@ -99,6 +101,7 @@ import sk.iway.iwcm.users.UsersDB;
  *  Abstraktny univerzalny RestController na pracu s DataTables Editor-om
  *
  */
+@SuppressWarnings({"java:S6813", "java:S119", "java:S3776"})
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
@@ -137,7 +140,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo !=null && repo instanceof DomainIdRepository) checkDomainId = true;
+			if (repo instanceof DomainIdRepository) checkDomainId = true;
 		}
 
 		this.entityClass = entityClass;
@@ -256,6 +259,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	private List<T> editItemByColumn(T entity, String updateByColumn) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
 		beforeSave(entity);
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// ziskame list entit, ktore obsahuju v stlpci updateByColumn rovnaku hodnotu ako entita
 		String idColumnName = getIdColumnName(entity);
@@ -275,6 +279,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 			T processed = insertItem(entity);
 			afterSave(entity, processed);
+			if (processed != null) new DatatableEvent<>(processed, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return Arrays.asList(processed);
 		}
 
@@ -285,8 +290,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			try {
 				BeanWrapperImpl bw = new BeanWrapperImpl(itemBy);
 				Object value = bw.getPropertyValue(idColumnName != null ? idColumnName : "id");
-				if (value instanceof Number) {
-					id = ((Number)value).longValue();
+				if (value instanceof Number number) {
+					id = number.longValue();
 				}
 			} catch (Exception ex) {
 				//failsafe
@@ -308,11 +313,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 
 			beforeSave(entity);
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 			checkItemPermsThrows(entity, id);
 
 			T saved = editItem(entity, id);
 
 			afterSave(entity, saved);
+			if (saved != null) new DatatableEvent<>(saved, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 
 			savedList.add(saved);
 		}
@@ -327,7 +334,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @return
 	 */
 	public boolean deleteItem(T entity, long id) {
-		if (beforeDelete(repo.getById(id))) {
+		if (beforeDelete(repo.getReferenceById(id))) {
 			try {
 				if (checkDomainId) {
 					//zmazanie pri pouziti domain_id riesime ziskanim zaznamu cez getOneItem ktore overi aj domain_id stlpec a naslednym zmazanim entity
@@ -613,7 +620,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if(pageable != null) {
 			Sort sort = pageable.getSort();
 			//remove all sort for fields starting with editorFields.
-			if(sort != null && sort.isSorted()) {
+			if(sort != null && sort.isSorted()) { //NOSONAR
 				Iterator<Order> iter = sort.iterator();
 				while(iter.hasNext()) {
 					Sort.Order order = iter.next();
@@ -865,7 +872,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	private static String firstToLower(String value) {
-		if (value == null || value.length() == 0) {
+		if (Tools.isEmpty(value)) {
 			return "";
 		}
 
@@ -1256,9 +1263,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isImporting) {
 			setImporting(true);
 			setSkipWrongData(skipWrongData);
-			//pri importe moze vykonat converter nastavenie nejakych notifikacii, pre istotu takto zachovame
-			if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
 		}
+		//InitBinder/validateEditor can set notification object, we must preserve it
+		if (notifyListBeforeClear!=null && notifyListBeforeClear.isEmpty()==false) addNotify(notifyListBeforeClear);
+
 		boolean isDuplicate = false;
 		setDuplicate(false);
 
@@ -1294,8 +1302,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 			T entity = datatableRequest.getData().get(id);
 
-			if (entity instanceof ActiveRecordBase) {
-				Integer rowNum = ((ActiveRecordBase)entity).get__rowNum__();
+			if (entity instanceof ActiveRecordBase activeRecordBase) {
+				Integer rowNum = activeRecordBase.getRowNum();
 				setLastImportedRow(rowNum);
 			} else {
 				if (isImporting()) setLastImportedRow(rowCounter);
@@ -1376,6 +1384,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						isDuplicate = true;
 						setDuplicate(true);
 						beforeDuplicate(entity);
+						if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_DUPLICATE).publishEvent();
 					}
 
 				} catch (Exception ex) {
@@ -1410,7 +1419,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					ResponseEntity<T> re = add(entity); //This method throws ConstraintViolationException
 					response.add(re.getBody());
 
-					if (isDuplicate) afterDuplicate(entity, id);
+					if (isDuplicate) {
+						afterDuplicate(entity, id);
+						if (entity != null) new DatatableEvent<>(entity, DatatableEventType.AFTER_DUPLICATE, null, id).publishEvent();
+					}
 				} catch (ConstraintViolationException ex) {
 					//Ignore error if skipWrongData is true
 					if(skipWrongData == true) {
@@ -1568,6 +1580,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
 		beforeSave(entity);
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
@@ -1585,6 +1598,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
 			afterSave(entity, newT);
+			if (newT != null) new DatatableEvent<>(newT, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return ResponseEntity.status(HttpStatus.CREATED).body(newT);
 		}
 	}
@@ -1593,6 +1607,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PostMapping("/edit/{id}")
 	public ResponseEntity<T> edit(@PathVariable("id") long id, @Valid @RequestBody T entity) {
 		beforeSave(entity);
+		if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_SAVE).publishEvent();
 
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
@@ -1602,6 +1617,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, id);
 			T one = this.editItem(entity, id);
 			afterSave(entity, one);
+			if (one != null) new DatatableEvent<>(one, DatatableEventType.AFTER_SAVE, entity).publishEvent();
 			return ResponseEntity.ok(one);
 		}
 	}
@@ -1615,11 +1631,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		boolean deleted = false;
 		if (beforeDelete(entity)) {
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.BEFORE_DELETE).publishEvent();
 			deleted = this.deleteItem(entity, id);
 		}
 		result.put("result", deleted);
 		if (deleted) {
 			afterDelete(entity, id);
+			if (entity != null) new DatatableEvent<>(entity, DatatableEventType.AFTER_DELETE, Long.valueOf(id)).publishEvent();
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
@@ -1658,7 +1676,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
 		boolean allGood = true;
 
-		List<T> entities = this.repo.findAllById( rowReorderDto.getIds() );
+		List<T> entities = new ArrayList<>();
+		try {
+			entities = this.repo.findAllById( rowReorderDto.getIds() );
+		} catch (Exception e) {
+			Logger.error(DatatableRestControllerV2.class, "Error fetching entities for row reorder", e);
+			return ResponseEntity.ok(false);
+		}
 
 		// Loop through entities and set new value to the column specified by dataSrc
 		for (T entity : entities) {
@@ -1667,7 +1691,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				String idColumnName = getIdColumnName(entity);
 
 				// Get entity ID using id column name
-				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName);
+				Long entityId = (Long) beanWrapper.getPropertyValue(idColumnName); //NOSONAR
 
 				// Get new value for this entity
 				Integer newValue = rowReorderDto.getNewValueById(entityId);
@@ -1975,9 +1999,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public static boolean jpaToBoolean(Object value) {
 		if (value == null) return false;
-		if (value instanceof Boolean) return (Boolean)value;
-		if (value instanceof Number) {
-			return ((Number)value).intValue() == 1 ? true : false;
+		if (value instanceof Boolean booleanValue) return booleanValue;
+		if (value instanceof Number number) {
+			return number.intValue() == 1 ? true : false;
 		}
 		return false;
 	}
@@ -2065,7 +2089,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		String errCause = firstViolation.getMessageTemplate();
 		if(Tools.isNotEmpty(errCause) && errCause.startsWith("{") && errCause.endsWith("}")) {
-			//For example {javax.validation.constraints.NotBlank.message}
+			//For example {jakarta.validation.constraints.NotBlank.message}
 			errCause = errCause.substring(1, errCause.length() - 1);
 			errCause = Prop.getInstance().getText( errCause );
 		} else {
@@ -2111,7 +2135,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		StringBuilder errExplanation = new StringBuilder();
 		errExplanation.append(propertyName);
-		errExplanation.append(" - ").append( err.getRejectedValue() == null ? "EMPTY" : err.getRejectedValue().toString() );
+		errExplanation.append(" - ").append( err.getRejectedValue() == null ? "EMPTY" : err.getRejectedValue().toString() ); //NOSONAR
 		errExplanation.append(" - ").append( err.getDefaultMessage() );
 
 		int lastImportedRow = getLastImportedRow() == null ? 0 : getLastImportedRow().intValue();
@@ -2146,10 +2170,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 
 				//also skip if editor.attr.disabled=disabled
-				DataTableColumnEditor editor[] = annotation.editor();
+				DataTableColumnEditor[] editor = annotation.editor();
 				if (editor.length > 0) {
 					boolean isDisabled = false;
-					DataTableColumnEditorAttr attrs[] = editor[0].attr();
+					DataTableColumnEditorAttr[] attrs = editor[0].attr();
 					if (attrs.length > 0) {
 						for (DataTableColumnEditorAttr attr : attrs) {
 							if ("disabled".equals(attr.key())) {

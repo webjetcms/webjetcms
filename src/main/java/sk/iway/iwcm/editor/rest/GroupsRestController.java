@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -150,7 +150,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     public static void addOptions(DatatablePageImpl<GroupDetails> page, WebpagesService ws, Identity user, GroupDetails group, HttpServletRequest request) {
         page.addOptions("lng", ws.getOptionsLanguages(request), "label", "value", false);
         page.addOptions("internal", ws.getOptionsInternal(), "label", "value", false);
-        page.addOptions("tempId", ws.getOptionsTemplates(user, group), "label", "value", false);
+        page.addOptions("tempId", ws.getTemplates(false), "tempName", "tempId", false);
         page.addOptions("newPageDocIdTemplate", ws.getOptionsNewPageHTMLCode(), "label", "value", false);
         page.addOptions("showInNavbar", ws.getOptionsNavbar(false), "label", "value", false);
         page.addOptions("loggedShowInNavbar", ws.getOptionsNavbar(true), "label", "value", false);

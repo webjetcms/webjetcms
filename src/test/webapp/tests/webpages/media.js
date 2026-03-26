@@ -199,10 +199,10 @@ Scenario('kontrola menu poloziek', ({I}) => {
     I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     I.amOnPage("/admin/v9/webpages/media/");
-    I.see("Média", "div.menu-wrapper");
+    I.see("Média", "nav.menu-wrapper");
 
     I.amOnPage("/admin/v9/webpages/media/#/");
-    I.see("Média", "div.menu-wrapper");
+    I.see("Média", "nav.menu-wrapper");
 });
 
 Scenario('Test media - all permissions media', ({ I, DT, DTE}) => {

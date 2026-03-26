@@ -31,13 +31,13 @@ or it can be inserted directly into the web page as an expression:
 
 ![](editor-dialog.png)
 
-## Custom Navigation Bar Implementation
+## Custom navigation bar implementation
 
 For some projects, it may be necessary to create a custom navigation bar implementation with different formatting or structure. WebJET allows you to define a custom class for generating the navigation bar.
 
-### Creating a Custom Implementation
+### Creating your own implementation
 
-A custom implementation must implement the `sk.iway.iwcm.doc.NavbarInterface` interface:
+The actual implementation must implement the interface `sk.iway.iwcm.doc.NavbarInterface`:
 
 ```java
 package com.example.custom;
@@ -60,27 +60,25 @@ public class CustomNavbar implements NavbarInterface {
 }
 ```
 
-### Configuration
+### Settings
 
-After creating a custom implementation, you need to set the `navbarDefaultType` configuration variable to the full class name (including package):
+After creating a custom implementation, it is necessary to set the configuration variable `navbarDefaultType` to the full class name (including package):
 
-```
+```txt
 navbarDefaultType=com.example.custom.CustomNavbar
 ```
 
 This configuration is set in **Settings > Configuration** in the WebJET administration.
 
-### Standard Implementations
+### Standard implementations
 
 WebJET includes three standard implementations:
-
-- **NavbarStandard** - standard text navigation (value `normal` or empty)
-- **NavbarRDF** - navigation in RDF format (value `rdf`)
-- **NavbarSchemaOrg** - navigation in Schema.org format (value `schema.org`)
+- [NavbarStandard](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarStandard.java) - standard text navigation (value `normal` or empty)
+- [NavbarRDF](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarRDF.java) - navigation format `RDF` (value `rdf`)
+- [NavbarSchemaOrg](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarSchemaOrg.java) - navigation format `Schema.org` (value `schema.org`)
 
 ### Notes
 
-- If the `navbarDefaultType` configuration variable contains a class name (not standard values `normal`, `rdf`, `schema.org`), WebJET will attempt to load this class and use it.
-- If the class does not exist or does not implement `NavbarInterface`, the standard implementation will be used.
+- If the configuration variable `navbarDefaultType` contains the class name (not the default values `normal`, `rdf`, `schema.org`), WebJET will try to load this class and use it.
+- If the class does not exist or does not implement `NavbarInterface`, the standard implementation is used.
 - The custom class must have a public constructor without parameters.
-

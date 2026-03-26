@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.web.filter.GenericFilterBean;
@@ -21,6 +21,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.logon.AdminLogonController;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -85,6 +86,9 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 					user.setValid(true);
 					LogonTools.setUserToSession(request.getSession(), user);
 					request.setAttribute("csrfDisabled", "1");
+
+					//set domain by webpages group permissions
+					AdminLogonController.determineRootWebPageDirectory(request.getSession(), user);
 
 					return true;
 				}

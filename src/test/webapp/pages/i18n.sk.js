@@ -73,7 +73,8 @@ module.exports = {
             "Confirm": "Potvrdiť",
             "Logon form": "Prihlasovací formulár",
             "Registration form": "Registračný formulár",
-            "An error occurred while calling AI assistant": "Nastala chyba pri volaní AI asistenta"
+            "An error occurred while calling AI assistant": "Nastala chyba pri volaní AI asistenta",
+            "PassKey": "Prístupový kľúč"
         }
     }
 }

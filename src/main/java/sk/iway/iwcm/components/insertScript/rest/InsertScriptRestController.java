@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
@@ -31,6 +32,7 @@ import java.util.List;
 @RequestMapping(value = "/admin/rest/components/insert-script")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_insert_script')")
 public class InsertScriptRestController extends DatatableRestControllerV2<InsertScriptBean, Long> {
+
     @Autowired
     public InsertScriptRestController(InsertScriptRepository insertScriptRepository) {
         super(insertScriptRepository);
@@ -63,6 +65,18 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
     }
 
     @Override
+    public void afterSave(InsertScriptBean entity, InsertScriptBean saved) {
+        //clear cache
+        Cache.getInstance().removeObjectStartsWithName(InsertScriptDB.getCachePrefix(), true);
+    }
+
+    @Override
+    public void afterDelete(InsertScriptBean entity, long id) {
+        //clear cache
+        afterSave(entity, entity);
+    }
+
+    @Override
     public void beforeSave(InsertScriptBean entity) {
         //nastav datum ulozenia
         entity.setSaveDate(new Date());
@@ -75,6 +89,13 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
             for (InsertScriptGroupBean isg : entity.getGroupIds()) {
                 isg.setDomainId(domainId);
             }
+        }
+
+        //auto-set sortPriority if not specified
+        if (entity.getSortPriority() == null) {
+            Integer maxPriority = ((InsertScriptRepository)getRepo()).findMaxSortPriorityByPositionAndDomainId(entity.getPosition(), domainId);
+            if (maxPriority == null) maxPriority = 0;
+            entity.setSortPriority(maxPriority + 10);
         }
     }
 

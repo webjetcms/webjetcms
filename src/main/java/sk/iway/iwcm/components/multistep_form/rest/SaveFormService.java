@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -85,10 +85,11 @@ public class SaveFormService {
 
         Prop prop = Prop.getInstance(request);
         String forwardFail = null;
-		if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
+        if (Tools.isNotEmpty(formSettings.getForwardFail())) forwardFail = formSettings.getForwardFail();
 
-        if (!SpamProtection.canPost("form", null, request))
-                throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, forwardFail);
+        if (SpamProtection.canPost("form", null, request) == false) {
+            throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, forwardFail);
+        }
 
         String subject = null;
         //form settings has highest priority
@@ -305,7 +306,7 @@ public class SaveFormService {
 
         String baseDirName = PathFilter.getRealPath(FormMailAction.FORM_FILE_DIR + "/");
 		IwcmFile dir = new IwcmFile(baseDirName);
-		if (!dir.exists()) dir.mkdirs();
+        if (!dir.exists()) dir.mkdirs();
 
         // value containes files keys joined via ";"
         for(String param : Tools.getTokens(keysString, ";")) {

@@ -10,6 +10,9 @@
   - [Basic configuration](/install/config/README.md)
   - [External configuration](/install/external-configuration.md)
   - [Spam protection](/install/config/spam-protection.md)
+  - Authorization
+    - [OAuth2](/install/oauth2/oauth2.md)
+    - [Keycloak](/install/oauth2/keycloak.md)
 - Migration
   - [Migration between environments](/install/migrate-dev-prod.md)
 - MultiWeb

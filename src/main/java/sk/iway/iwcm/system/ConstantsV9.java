@@ -126,6 +126,45 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
+		// OAuth2 konfiguračné premenné
+		Constants.setString("oauth2_clients", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
+		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
+		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_SECURITY, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
+		Constants.setString("oauth2_clientsIncludeAdmin", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky administrácie (napr. keycloak,okta). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
+		Constants.setString("oauth2_clientsIncludeUser", "*", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí sa majú zahrnúť do prihlasovacej stránky pre používateľov (napr. google,facebook). Alebo znak * pre zahrnutie všetkých nakonfigurovaných poskytovateľov.");
+
+		// Google OAuth2
+		Constants.setString("oauth2_googleClientId", "", Constants.MOD_SECURITY, "Google OAuth2 Client ID");
+		Constants.setString("oauth2_googleClientSecret", "", Constants.MOD_SECURITY, "Google OAuth2 Client Secret");
+		Constants.setString("oauth2_googleDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+
+		// Facebook OAuth2
+		Constants.setString("oauth2_facebookClientId", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client ID");
+		Constants.setString("oauth2_facebookClientSecret", "", Constants.MOD_SECURITY, "Facebook OAuth2 Client Secret");
+		Constants.setString("oauth2_facebookDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+
+		// GitHub OAuth2
+		Constants.setString("oauth2_githubClientId", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client ID");
+		Constants.setString("oauth2_githubClientSecret", "", Constants.MOD_SECURITY, "GitHub OAuth2 Client Secret");
+		Constants.setString("oauth2_githubDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+
+		// Okta OAuth2
+		Constants.setString("oauth2_oktaClientId", "", Constants.MOD_SECURITY, "Okta OAuth2 Client ID");
+		Constants.setString("oauth2_oktaClientSecret", "", Constants.MOD_SECURITY, "Okta OAuth2 Client Secret");
+		Constants.setString("oauth2_oktaDefaultGroups", "", Constants.MOD_SECURITY, "Čiarkou oddelený zoznam ID skupin, ktoré sa pridelia novovytvorenému používateľovi.");
+
+		// Keycloak OAuth2 (custom provider)
+		Constants.setString("oauth2_keycloakClientId", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client ID");
+		Constants.setString("oauth2_keycloakClientSecret", "", Constants.MOD_SECURITY, "Keycloak OAuth2 Client Secret");
+		Constants.setString("oauth2_keycloakAuthorizationUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/auth", Constants.MOD_SECURITY, "Keycloak Authorization URI");
+		Constants.setString("oauth2_keycloakTokenUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/token", Constants.MOD_SECURITY, "Keycloak Token URI");
+		Constants.setString("oauth2_keycloakUserInfoUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/userinfo", Constants.MOD_SECURITY, "Keycloak User Info URI");
+		Constants.setString("oauth2_keycloakJwkSetUri", "http://keycloak.local:18080/realms/webjetcms/protocol/openid-connect/certs", Constants.MOD_SECURITY, "Keycloak JWK Set URI");
+		Constants.setString("oauth2_keycloakIssuerUri", "http://keycloak.local:18080/realms/webjetcms", Constants.MOD_SECURITY, "Keycloak Issuer URI");
+		Constants.setString("oauth2_keycloakUserNameAttributeName", "email", Constants.MOD_SECURITY, "Keycloak User Name Attribute Name");
+		Constants.setString("oauth2_keycloakScopes", "openid,profile,email", Constants.MOD_SECURITY, "Keycloak OAuth2 Scopes");
+		Constants.setString("oauth2_keycloakClientName", "Keycloak", Constants.MOD_SECURITY, "Keycloak Client Display Name");
+
 		Constants.setString("reservationAllDayStartTime", "14:00", "reservations", "Hodina, od ktorej sa začína celodenná rezervácia");
 		Constants.setString("reservationAllDayEndTime", "10:30", "reservations", "Hodina, do ktorej sa končí celodenná rezervácia");
 
@@ -163,7 +202,7 @@ public class ConstantsV9 {
 		Constants.setInt("ai_auditMaxLength", 1000, Constants.MOD_AI_ASSISTANTS, "Maximal length of AI request/response stored in audit");
 
 		Constants.setString("basketAdminGroupIds", "", Constants.MOD_BASKET, "Zoznam ID adresárov, ktore obsahju produkty pre elektronicky obchod. Možné zadať v tvare 17,23*,72, kde * znamená vrátane podpriečinkov. Ak je prázdne, tak sa automaticky vyhľadá podľa vloženej aplikácie zoznam produktov.");
-		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
+		Constants.setString("xhrFileUploadAllowedExtensions", "doc docx xls xlsx ppt pptx pdf xml txt json jpeg jpg bmp tiff psd png zip rar mp4 webp", Constants.mods("forms", Constants.MOD_SECURITY), "Povolené prípony súborov pre XHR upload (viac prípon oddelených medzerou).");
 
 		Constants.setString("clientAbortMessages", "response already,connection reset by peer,broken pipe,socket write error", Constants.MOD_PERFORMANCE, "Zoznam textu výnimiek spôsobujúcich prerušenie HTTP spojenia klientom (oddelené čiarkou, malými písmenami). Takéto chyby sa nezaznamenávajú do logov.");
 
@@ -201,11 +240,28 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_attrs", "data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label", Constants.MOD_EDITOR, "Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou.");
 
 		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
+		Constants.setString("moduleDisableList", "", Constants.MOD_CONFIG, "Čiarkov oddelený zoznam modulov, ktoré sa majú zakázať. Napríklad cmp_blog,cmp_forum,make_zip_archive,modRestart,editor_unlimited_upload");
 
 		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
+
+		Constants.setInt("insertScriptCacheMinutes", 60, Constants.MOD_PERFORMANCE, "Pocet minut cachovania zoznamu scriptov aplikacie Skripty, predpoklad je, ze sa pouzivaju na kazdej stranke, preto sa musia cachovat");
+
+		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_SECURITY, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
+		Constants.setString("password_passKeyRpId", "", Constants.MOD_SECURITY, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
+		Constants.setString("password_passKeyRpName", "WebJET CMS", Constants.MOD_SECURITY, "Relying Party Name pre PassKey/WebAuthN. Jedná sa o názov vašej aplikácie, ktorý sa zobrazí používateľom pri registrácii a prihlasovaní pomocou PassKey.");
+		Constants.setString("password_passKeyAllowedOrigins", "", Constants.MOD_SECURITY, "Comma-separated list of allowed origins for PassKey/WebAuthN requests. If empty, all origins are allowed. This is used to restrict which domains can make authentication requests to your server when using PassKey/WebAuthN.");
+
+		//image magick custom params - value can have 2 lines: line 1 = params BEFORE operation (after input file), line 2 = params AFTER operation (before output file)
+		Constants.setString("imageMagickCustomParams", "-filter Lanczos\n-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0", "images", "Custom parameters for ImageMagick operations. Value can have 2 lines: line 1 = params before operation (e.g. -filter), line 2 = params after operation (e.g. -define). Single line = all params before operation.");
+		Constants.setString("imageMagickCustomParams_resize", "", "images", "Custom parameters for ImageMagick resize operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_crop", "", "images", "Custom parameters for ImageMagick crop operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_rotate", "", "images", "Custom parameters for ImageMagick rotate operation. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_jpg", "\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_png", "\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 	}
 
 	/**
@@ -214,7 +270,7 @@ public class ConstantsV9 {
 	 * @return
 	 * @deprecated use Constants.getArray(name)
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public static String[] getArray(String name) {
 		return Constants.getArray(name);
 	}
