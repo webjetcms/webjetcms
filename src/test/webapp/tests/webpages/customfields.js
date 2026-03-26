@@ -144,9 +144,9 @@ Scenario('custom-fields-list @singlethread', async ({ I, DT, DTE }) => {
 
 Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
 
-    const fields_standard = ["Pole A", "Pole B", "Pole D", "Pole G", "Pole H"];
-    const fields_volitelne = ["text - A", "select - B", "autocomplete - D", "docsIn_67_null - G", "enumeration_2 - H"];
-    const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D", "Pole G", "Pole H"];
+    const fields_standard = ["Pole A", "Pole B", "Pole D", "Pole G", "Pole H", "Pole J"];
+    const fields_volitelne = ["text - A", "select - B", "autocomplete - D", "docsIn_67_null - G", "enumeration_2 - H", "Multi select - J"];
+    const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D", "Pole G", "Pole H", "Pole J"];
 
     //
     I.say("Test on Volitelne polia folder - as jstree click");
