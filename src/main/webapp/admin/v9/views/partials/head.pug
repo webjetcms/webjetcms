@@ -24,9 +24,17 @@ script.
     // WJ shim: queues method calls (e.g. WJ.headerTabs(...)) until the real WJ object is set by the main module
     (function() {
         var _wjQueue = [];
+        // Methods that return values and can be implemented using data already available synchronously
+        var _shimMethods = {
+            hasPermission: function(permission) {
+                if (window.nopermsJavascript && window.nopermsJavascript[permission] === true) return false;
+                return true;
+            }
+        };
         window.WJ = new Proxy({_wjQueue: _wjQueue}, {
             get: function(target, prop) {
                 if (prop === '_wjQueue' || prop === '_isShim') return target[prop];
+                if (_shimMethods[prop]) return _shimMethods[prop];
                 return function() {
                     _wjQueue.push({method: prop, args: Array.prototype.slice.call(arguments)});
                 };
