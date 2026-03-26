@@ -264,8 +264,9 @@ public class TemplatesDB extends DB
    		if (original==null || bd == null) return null;
 		String device = bd.getBrowserDeviceType();
 		if (Tools.isEmpty(device) || "normal".equals(device)) return null;
-
       	if (Tools.isEmpty(original.getTempName())) return(null);
+
+		device = device.toLowerCase();
 
 		for (TemplateDetails details : temps)
 		{
@@ -334,7 +335,7 @@ public class TemplatesDB extends DB
 		String tempName = original.getTempName().trim();
 		if (details.getTempName() != null
 			&& details.getTempName().startsWith(tempName+" device=")
-			&& details.getTempName().contains("device="+device)
+			&& details.getTempName().toLowerCase().contains("device="+device)
 			&& Tools.areSame(details.getAvailableGroups(), original.getAvailableGroups())
 			&& Tools.getLongValue(details.getTemplatesGroupId(), -1) == Tools.getLongValue(original.getTemplatesGroupId(), -1)
 			&& Tools.areSame(details.getTemplateInstallName(), original.getTemplateInstallName())
