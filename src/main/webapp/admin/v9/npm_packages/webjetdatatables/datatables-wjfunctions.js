@@ -1111,6 +1111,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         if (typeof i === "undefined" || i === null) i = index;
         var fieldName = DATA.columns[i].data;
         var columnTitle = WJ.htmlToText(DATA.columns[i].title || '');
+        var renderFormatForce = DATA.columns[i].renderFormatForce;
+        if (typeof renderFormatForce === "undefined" || renderFormatForce === null) renderFormatForce = "dt-format-text";
 
         //console.log("Iterating, i=", i, "fieldName=", fieldName, " col=", DATA.columns[i], "this=", this);
 
@@ -1214,7 +1216,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
             html = ``;
         }
 
-        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
+        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio") || "dt-format-select"===renderFormatForce) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
             html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}" aria-label="${columnTitle}">`;
             //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu

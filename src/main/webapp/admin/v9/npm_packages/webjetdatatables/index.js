@@ -432,6 +432,15 @@ export const dataTableInit = options => {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
+
+                // when have initialJson set, there is missing options definition for customFields,
+                // we need to run whole function to update filters from text to select with options
+                let isFirstRun = false;
+                if (typeof DATA.customFieldsUpdateColumnsFirstRunDone === "undefined") {
+                    DATA.customFieldsUpdateColumnsFirstRunDone = true;
+                    isFirstRun = true;
+                }
+
                 for (var customField of fieldsDefinition) {
                     //podla null textu filtrujeme aj zoznam dostupnych stlpcov v nastaveni
                     if (customField.label==null) customField.label = "null";
@@ -442,7 +451,7 @@ export const dataTableInit = options => {
 
                     column = TABLE.column(fieldName+":name");
                     var currentText = $(column.header()).text();
-                    if (currentText === customField.label) continue;
+                    if (currentText === customField.label && isFirstRun === false) continue;
 
                     isChange = true;
 
@@ -478,8 +487,43 @@ export const dataTableInit = options => {
                             editorField.label = customField.label;
                         }
                     }
+
+                    for (var j = 0; j < DATA.columns.length; j++) {
+                        if (DATA.columns[j].data === fieldName) {
+                            //reset renderformat
+                            DATA.columns[j].renderFormatForce = null;
+                        }
+                    }
+
+                    //handle label-value options
+                    if (typeof customField.typeValues != "undefined" && Array.isArray(customField.typeValues) && customField.typeValues.length>0) {
+                        var options = customField.typeValues;
+                        fixOptionsValueType(options);
+
+                        for (var j = 0; j < DATA.columns.length; j++) {
+                            if (DATA.columns[j].data === fieldName) {
+                                DATA.columns[j].editor.options = options;
+                                DATA.columns[j].renderFormatForce = "dt-format-select";
+                                break;
+                            }
+                        }
+                        //aktualizuj DT editor
+                        try {
+                            TABLE.EDITOR.field(fieldName).update(options);
+                        } catch (e) {
+                            //asi dany field v editore neexistuje
+                            //console.log(e);
+                        }
+
+
+                        //aktualizuj select box v hlavicke
+                        dtWJ.updateFilterSelect(DATA, fieldName);
+                    }
                 }
-                if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
+                if (isChange) {
+                    $("#"+DATA.id).trigger("column-reorder.dt");
+                    dtWJ.initializeHeaderFilters("#"+TABLE.DATA.id+"_wrapper div.dt-scroll-head table ", false, TABLE.DATA, TABLE);
+                }
             }
         }
 
