@@ -1123,7 +1123,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
                 </select>
                 <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" />`;
 
-        console.log("fieldName=", fieldName, " this=", this, " classes=", $(this).attr("class"), " renderFormat=", renderFormat);
+        //console.log("fieldName=", fieldName, " this=", this, " classes=", $(this).attr("class"), " renderFormat=", renderFormat);
 
         if ($(this).hasClass("dt-format-selector")) {
             html = `

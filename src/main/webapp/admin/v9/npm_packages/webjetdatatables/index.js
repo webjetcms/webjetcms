@@ -395,7 +395,7 @@ export const dataTableInit = options => {
                 for (var i = 0; i < fieldNameArr.length; i++) {
                     var fieldName = fieldNameArr[i];
                     var options = json.options[fieldNameList];
-                    console.log("Updating options 2, fieldName=", fieldName, " values=", options);
+                    //console.log("Updating options 2, fieldName=", fieldName, " values=", options);
 
                     //zmen String true/false hodnoty na realne true/false
                     fixOptionsValueType(options);
@@ -427,11 +427,20 @@ export const dataTableInit = options => {
         }, 100);
 
         if (DATA.customFieldsUpdateColumns===true && Array.isArray(json.data) && json.data.length>0) {
+            //console.log("Updating columns based on custom fields, json=", json);
             let fieldsDefinition = json.data[0]?.editorFields?.fieldsDefinition;
             if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
+
+                //when have initialJson set there is missing options definition for customFields, we need to run whole function to update filters from text to select with options
+                let isFirstRun = false;
+                if (typeof DATA.customFieldsUpdateColumnsFirstRunDone === "undefined") {
+                    DATA.customFieldsUpdateColumnsFirstRunDone = true;
+                    isFirstRun = true;
+                }
+
                 for (var customField of fieldsDefinition) {
                     //podla null textu filtrujeme aj zoznam dostupnych stlpcov v nastaveni
                     if (customField.label==null) customField.label = "null";
@@ -442,7 +451,7 @@ export const dataTableInit = options => {
 
                     column = TABLE.column(fieldName+":name");
                     var currentText = $(column.header()).text();
-                    if (currentText === customField.label) continue;
+                    if (currentText === customField.label && isFirstRun === false) continue;
 
                     isChange = true;
 
@@ -476,6 +485,13 @@ export const dataTableInit = options => {
                     for (var editorField of TABLE.DATA.fields) {
                         if (fieldName == editorField.name) {
                             editorField.label = customField.label;
+                        }
+                    }
+
+                    for (var j = 0; j < DATA.columns.length; j++) {
+                        if (DATA.columns[j].data === fieldName) {
+                            //reset renderformat
+                            DATA.columns[j].renderFormatForce = null;
                         }
                     }
 
