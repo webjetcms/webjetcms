@@ -255,71 +255,94 @@ public class TemplatesDB extends DB
    /**
     * Vrati sablonu na zaklade nazvu a typu zariadenia (browserDeviceType)
     * Sablona musi v nazve obsahovat "device="+bd.getBrowserDeviceType()
-    * @param temp
+    * @param original
     * @param bd
     * @return
     */
-   public TemplateDetails getTemplate(TemplateDetails temp, BrowserDetector bd)
-   {
-   	if (temp==null) return null;
-   	String tempName = temp.getTempName();
-      if (tempName==null || tempName.trim().length()<1 || bd == null || bd.getBrowserDeviceType()==null) return(null);
+	public TemplateDetails getTemplate(TemplateDetails original, BrowserDetector bd)
+	{
+   		if (original==null || bd == null) return null;
+		String device = bd.getBrowserDeviceType();
+		if (Tools.isEmpty(device) || "normal".equals(device)) return null;
 
-      tempName = tempName.trim();
-      for (TemplateDetails details : temps)
-      {
-         if (details.getTempName().startsWith(tempName+" device=") && details.getTempName().indexOf("device="+bd.getBrowserDeviceType())!=-1)
-         {
-            return (details);
-         }
-      }
+      	if (Tools.isEmpty(original.getTempName())) return(null);
 
-      if (Tools.isNotEmpty(bd.getBrowserDeviceType()) && "normal".equals(bd.getBrowserDeviceType())==false)
-      {
-      	synchronized (temps)
+		for (TemplateDetails details : temps)
+		{
+			if (isDeviceTemplateMatch(details, original, device))
 			{
-      		//double check
-      		for (TemplateDetails details : temps)
-            {
-               if (details.getTempName().startsWith(tempName+" device=") && details.getTempName().toLowerCase().indexOf("device="+bd.getBrowserDeviceType())!=-1)
-               {
-                  return (details);
-               }
-            }
-
-	      	try
-	      	{
-	      		Logger.debug(TemplatesDB.class, "Creating device template, name="+temp.getTempName()+" device="+bd.getBrowserDeviceType());
-
-		      	//vytvor pseudo sablonu pre dane device
-		      	TemplateDetails deviceTemp = new TemplateDetails();
-		      	BeanUtils.copyProperties(deviceTemp, temp);
-		      	deviceTemp.setTempId(-1);
-		      	deviceTemp.setTempName(temp.getTempName()+" device="+bd.getBrowserDeviceType());
-
-		      	deviceTemp.setHeaderDocData(getDeviceHeaderFooterMenu(temp.getHeaderDocId(), bd));
-		      	deviceTemp.setMenuDocData(getDeviceHeaderFooterMenu(temp.getMenuDocId(), bd));
-		      	deviceTemp.setRightMenuDocData(getDeviceHeaderFooterMenu(temp.getRightMenuDocId(), bd));
-		      	deviceTemp.setFooterDocData(getDeviceHeaderFooterMenu(temp.getFooterDocId(), bd));
-
-		      	deviceTemp.setObjectADocData(getDeviceHeaderFooterMenu(temp.getObjectADocId(), bd));
-		      	deviceTemp.setObjectBDocData(getDeviceHeaderFooterMenu(temp.getObjectBDocId(), bd));
-		      	deviceTemp.setObjectCDocData(getDeviceHeaderFooterMenu(temp.getObjectCDocId(), bd));
-		      	deviceTemp.setObjectDDocData(getDeviceHeaderFooterMenu(temp.getObjectDDocId(), bd));
-
-		      	//uloz do listu
-		      	temps.add(deviceTemp);
-		      	return deviceTemp;
-	      	}
-	      	catch (Exception ex)
-	      	{
-	      		Logger.error(TemplatesDB.class, ex);
-	      	}
+				return (details);
 			}
-      }
+		}
 
-      return (null);
-   }
+		synchronized (temps)
+		{
+			//double check
+			for (TemplateDetails details : temps)
+			{
+				if (isDeviceTemplateMatch(details, original, device))
+				{
+					return (details);
+				}
+			}
+
+			try
+			{
+				Logger.debug(TemplatesDB.class, "Creating device template, name="+original.getTempName()+" device="+device);
+
+				//vytvor pseudo sablonu pre dane device
+				TemplateDetails deviceTemp = new TemplateDetails();
+				BeanUtils.copyProperties(deviceTemp, original);
+				deviceTemp.setTempId(-1);
+				deviceTemp.setTempName(original.getTempName()+" device="+device);
+
+				deviceTemp.setHeaderDocData(getDeviceHeaderFooterMenu(original.getHeaderDocId(), bd));
+				deviceTemp.setMenuDocData(getDeviceHeaderFooterMenu(original.getMenuDocId(), bd));
+				deviceTemp.setRightMenuDocData(getDeviceHeaderFooterMenu(original.getRightMenuDocId(), bd));
+				deviceTemp.setFooterDocData(getDeviceHeaderFooterMenu(original.getFooterDocId(), bd));
+
+				deviceTemp.setObjectADocData(getDeviceHeaderFooterMenu(original.getObjectADocId(), bd));
+				deviceTemp.setObjectBDocData(getDeviceHeaderFooterMenu(original.getObjectBDocId(), bd));
+				deviceTemp.setObjectCDocData(getDeviceHeaderFooterMenu(original.getObjectCDocId(), bd));
+				deviceTemp.setObjectDDocData(getDeviceHeaderFooterMenu(original.getObjectDDocId(), bd));
+
+				//uloz do listu
+				temps.add(deviceTemp);
+				return deviceTemp;
+			}
+			catch (Exception ex)
+			{
+				Logger.error(TemplatesDB.class, ex);
+			}
+		}
+
+		return (null);
+	}
+
+	/**
+	 * Check device template match, comparing template name, available groups, templates group id and template install name
+	 * The template name must start with the original name and contain "device="+device, so that it is considered a template for a given device
+	 * This is necessary so that templates that contain "device="+device in the name, but are intended for a different original template (i.e. have a different original name) are not considered
+	 * This mainly concerns header, footer and menu templates, which are automatically generated for a given device and have "device="+device in the name,
+	 * but are generated from different original templates, i.e. have a different original name in the name
+	 * @param details
+	 * @param original
+	 * @param device
+	 * @return
+	 */
+	private boolean isDeviceTemplateMatch(TemplateDetails details, TemplateDetails original, String device) {
+		String tempName = original.getTempName().trim();
+		if (details.getTempName() != null
+			&& details.getTempName().startsWith(tempName+" device=")
+			&& details.getTempName().contains("device="+device)
+			&& Tools.areSame(details.getAvailableGroups(), original.getAvailableGroups())
+			&& Tools.getLongValue(details.getTemplatesGroupId(), -1) == Tools.getLongValue(original.getTemplatesGroupId(), -1)
+			&& Tools.areSame(details.getTemplateInstallName(), original.getTemplateInstallName())
+		) {
+			return true;
+		}
+		return false;
+	}
 
    private String getDeviceHeaderFooterMenu(int origDocId, BrowserDetector bd)
    {

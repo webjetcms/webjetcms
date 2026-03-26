@@ -24,6 +24,7 @@
 - Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii (#58317-03).
 - Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
 - Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
+- Webové stránky - opravená chyba získania [šablóny pre mobilné zariadenia](frontend/templates/templates.md#zobrazenie-pre-špecifické-zariadenie) v MultiWEB inštalácií pri zhode mien šablóny pre rôzne domény (#58317-5).
 
 ## 2026.0
 

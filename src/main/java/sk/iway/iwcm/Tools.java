@@ -1026,6 +1026,15 @@ public class Tools
 		return(ret);
 	}
 
+	public static long getLongValue(Long value, long defaultValue)
+	{
+		if (value==null)
+		{
+			return(defaultValue);
+		}
+		return(value.longValue());
+	}
+
 	/**
 	 * Vrati hodnotu parametra z requestu, v Tomcate je bug, ak je URL ...?docid=3#kotva, tak to vrati
 	 * vratane tej kotvy.
