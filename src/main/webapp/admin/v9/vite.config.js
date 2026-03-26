@@ -6,17 +6,16 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Inline plugin to strip moment.js locale imports (replaces moment-locales-webpack-plugin)
-// We explicitly import sk, cs, de locales in app.js, so we only need to prevent
-// moment from dynamically requiring ALL locales via require('./locale/' + name)
-function momentStripLocales() {
+// Inline plugin to fix moment.js locale handling:
+// 1. Strips unused locale imports (replaces moment-locales-webpack-plugin)
+// 2. Transforms locale CJS files to ESM so they use the same moment instance
+//    as the main import (avoids CJS require creating a duplicate moment copy)
+function momentLocalePlugin() {
     return {
-        name: 'moment-strip-locales',
+        name: 'moment-locale-plugin',
+        enforce: 'pre',
         resolveId(source) {
-            // moment tries to require('./locale/' + name) dynamically
-            // Rollup/Vite will resolve known static imports but ignore the dynamic ones
-            // This is handled automatically by Vite's tree-shaking, but we add
-            // an explicit empty module for the dynamic context to be safe
+            // moment tries to require('./locale/' + name) dynamically — return empty module
             if (source === 'moment/locale') {
                 return '\0moment-locale-empty';
             }
@@ -27,6 +26,20 @@ function momentStripLocales() {
                 return 'export default {};';
             }
             return null;
+        },
+        transform(code, id) {
+            // Transform moment locale CJS files to ESM.
+            // Locale files have a UMD wrapper with require('../moment') that creates
+            // a separate moment instance via getAugmentedNamespace. We extract the
+            // factory function and call it with the ESM moment default export.
+            if (id.includes('node_modules/moment/locale/') && id.endsWith('.js')) {
+                const factoryStart = code.indexOf('(function (moment) {');
+                const factoryEnd = code.lastIndexOf('})));');
+                if (factoryStart === -1 || factoryEnd === -1) return null;
+                // Extract the factory: (function (moment) { ... })
+                const factory = code.substring(factoryStart, factoryEnd + 2);
+                return `import moment from 'moment';\n${factory}(moment);`;
+            }
         }
     };
 }
@@ -38,7 +51,7 @@ export default defineConfig(({ mode }) => ({
         extensions: ['.js', '.vue'],
         alias: {
             'vue': 'vue/dist/vue.esm-bundler.js',
-        }
+        },
     },
 
     define: {
@@ -70,7 +83,7 @@ export default defineConfig(({ mode }) => ({
             }
         },
         vue(),
-        momentStripLocales(),
+        momentLocalePlugin(),
         // Copy jQuery to dist for synchronous <script> loading
         {
             name: 'copy-jquery',
