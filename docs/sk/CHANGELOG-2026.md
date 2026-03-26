@@ -47,6 +47,7 @@
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
+- Pridaný `pre-commit` hook pre detekciu tajomstiev (hesiel, API kľúčov) v kóde pomocou nástroja `detect-secrets`. Aktivácia: spustite `sh scripts/setup-hooks.sh` (#174).
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
