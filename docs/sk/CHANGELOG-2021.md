@@ -39,7 +39,7 @@ Kliknutím na ikonu "Prepnúť na verziu 8" v hlavičke, môžete stále prepnú
 
 ![](_media/changelog/2021q4/editor-fielda-d.png)
 
-- Pridané nové možnosti [automatického generovania URL adresy stránky](redactor/webpages/editor.md#url-adresa) podľa Názov položky v menu (pri presune do iného priečinku sa URL adresa automaticky zmení), alebo možnosť automaticky zdediť začiatok URL adresy z priečinku (pri presune do iného priečinku sa začiatočná časť URL adresy automaticky zmení) (#54237).
+- Pridané nové možnosti [automatického generovania URL adresy stránky](redactor/webpages/editor/README.md#url-adresa) podľa Názov položky v menu (pri presune do iného priečinku sa URL adresa automaticky zmení), alebo možnosť automaticky zdediť začiatok URL adresy z priečinku (pri presune do iného priečinku sa začiatočná časť URL adresy automaticky zmení) (#54237).
 
 ![](redactor/webpages/virtual-path-title.png)
 
@@ -81,7 +81,7 @@ Pridaná možnosť [výberového poľa viacerých možností](frontend/webpages/
 
 - Pridaná možnosť vkladať ```tooltip``` k poliam v editore s formátovaním pomocou [Markdown formátu](developer/frameworks/webjetjs.md#markdown-parser). Kvôli bezpečnosti nie je možné vkladať odkazy a iné ako základné Markdown značky.
 - Prekladový kľúč pre tooltip sa automaticky hľadá podľa prekladového kľúča ```title``` so suffixom ```.tooltip```. Ak teda máte anotáciu ```@DataTableColumn(title = "group.superior_directory"``` automaticky sa hľadá prekladový text s kľúčom ```group.superior_directory.tooltip```. Ak existuje, použije sa.
-- Opravené vyhľadávanie podľa dátumov v tabuľkách s klientským stránkovaním a nezobrazenými niektorýmii stĺpcami (zle určený index stĺpca).
+- Opravené vyhľadávanie podľa dátumov v tabuľkách s klientským stránkovaním a nezobrazenými niektorými stĺpcami (zle určený index stĺpca).
 - Doplnená možnosť nastavenia [stavových ikon](developer/datatables/README.md#stavové-ikony), zrušená pôvodná možnosť doplnenia ikon k odkazu na otvorenie editora pomocou funkcie ```addTextIcon``` (to bolo nevhodné z UX pohľadu).
 
 **Deployment**
@@ -106,8 +106,8 @@ Upozornenie: z dôvodu veľkého počtu zmien v jar knižniciach bude počas akt
 - Doplnená dokumentácia pre funkciu [WJ.hasPermission(permission)](developer/frameworks/webjetjs.md?id=kontrola-práv) pre kontrolu práv používateľa.
 - Doplnená dokumentácia pre funkciu [WJ.parseMarkdown(markdownText, options)](developer/frameworks/webjetjs.md#markdown-parser) na konverziu Markdown formátu do HTML kódu.
 - Prerobená dokumentácia nastavenia ikon na použitie [stavových ikon](developer/datatables/README.md#stavové-ikony).
-- Doplnený manál pre redaktora o aplikácie [Menu](redactor/apps/menu/README.md), [Navigačná lišta](redactor/apps/navbar/README.md) a [Mapa stránok](redactor/apps/sitemap/README.md).
-- Vytvorená dokumentácia o možnostiach generovania URL adresy stránok [automatického generovania URL adresy stránky](redactor/webpages/editor.md#url-adresa).
+- Doplnený manuál pre redaktora o aplikácie [Menu](redactor/apps/menu/README.md), [Navigačná lišta](redactor/apps/navbar/README.md) a [Mapa stránok](redactor/apps/sitemap/README.md).
+- Vytvorená dokumentácia o možnostiach generovania URL adresy stránok [automatického generovania URL adresy stránky](redactor/webpages/editor/README.md#url-adresa).
 
 **Testy**
 
@@ -280,8 +280,7 @@ Upravili sme proces zostavenia artifaktov novej verzie. V tejto verzii sa všetk
 - Vytvorený základ dokumentácie k bezpečnosti. Obsahuje zatiaľ informáciu k [nebezpečnému HTML kódu](developer/backend/security.md).
 - Vytvorená dokumentácia pre [oddelenie údajov domén](developer/datatables/domainid.md).
 - Vylepšený príklad použitia [voliteľných polí](developer/datatables-editor/customfields.md) v editore s využitím triedy ```BaseEditorFields```.
-- Vytvorená dokumentácia k možnosti použitia [dedenia v entitách](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
-- Vytvorená dokumentácia k použitiu [dedenia v JPA entitách](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
+- Vytvorená dokumentácia k možnosti použitia [dedenia v entitách](developer/backend/jpa.md#dedenie-v-jpa-entitách).
 
 ![meme](_media/meme/2021-45.jpg ":no-zoom")
 
@@ -315,8 +314,8 @@ Upravili sme proces zostavenia artifaktov novej verzie. V tejto verzii sa všetk
 
 **Zákazkové aplikácie**
 
-- Vytvorený základ pre [tvorbu zákazníckych aplikácií](custom-apps/admin-menu-item.md). Tie sa vytvárajú v adresári ```/apps/``` na rozdiel od starej verzie z adresára ```/components/``` (#54045).
-- Aplikácie sú vkladané do dizajnu [priamo z html kódu](custom-apps/admin-menu-item.md#frontend), nie je potrebné vytvárať a kompilovať pug súbory.
+- Vytvorený základ pre [tvorbu zákazníckych aplikácií](custom-apps/admin-menu-item/README.md). Tie sa vytvárajú v adresári ```/apps/``` na rozdiel od starej verzie z adresára ```/components/``` (#54045).
+- Aplikácie sú vkladané do dizajnu [priamo z html kódu](custom-apps/admin-menu-item/README.md#frontend), nie je potrebné vytvárať a kompilovať pug súbory.
 - Vytvorená funkcia [WJ.breadcrumb](developer/frameworks/webjetjs.md#navigačná-lišta) pre generovanie navigačnej lišty.
 - Do navigačnej lišty je možné pomocou makra ```{LANGUAGE-SELECT}``` vložiť výberové pole pre jazyk.
 
@@ -428,7 +427,7 @@ REST rozhrania datatabuliek upravené na použitie ```ThreadLocal``` objektu, kt
 
 **Data tabuľky**
 
-- Pridaná voľba ```onRowCallback``` pre možnosť [štýlovania riadku](developer/datatables/README.md#štýlovanie-riadku-a-ikony) na klientskej strane (napr. označenie riadku ako neaktívneho).
+- Pridaná voľba ```onRowCallback``` pre možnosť [štýlovania riadku](developer/datatables/README.md#štýlovanie-riadku) na klientskej strane (napr. označenie riadku ako neaktívneho).
 - Pridaná možnosť nastaviť [predvolenú hodnotu](developer/datatables-editor/datatable-columns.md#vlastnosti-datatablecolumn) pri vytvorení nového záznamu pomocou atribútu ```defaultValue``` anotácie ```@DatatableColumn```. Podporované sú aj makrá pre nastavenie aktuálne zvolenej domény alebo dátumu a času.
 
 **Testy**
@@ -764,10 +763,10 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Do automatizovaného testu datatabuľky pridaná možnosť [kontroly práva](developer/testing/datatable.md#testovanie-práv).
 - Do automatizovaného testy datatabuľky doplnená možnosť testovať vnorenú datatabuľku (dátové pole datatable) pomocou možnosti ```options.container```.
 - Upravené testy na nové nastavenie databázy - multi domény, pridané typy auditových záznamov, zlepšené časovanie.
-- Pridaný test použitia [CSRF tokenu](../src/test/webapp/tests/admin/security.js).
+- Pridaný test použitia [CSRF tokenu](../../src/test/webapp/tests/admin/security.js).
 - Pridaná funkcia ```DT.checkPerms(perms, url)``` pre [kontrolu práv](developer/testing/README.md#odobratie-práva) volania REST služieb.
 - Pridaná funkcia ```I.jstreeNavigate(pathArray)``` pre [postupné kliknutie](developer/testing/README.md#webjet-doplnkové-funkcie) na zadané názvy.
-- Pridané testy pre [média](../src/test/webapp/tests/webpages/media-groups.js) a [média skupiny](../src/test/webapp/tests/webpages/media-groups.js).
+- Pridané testy pre [média](../../src/test/webapp/tests/webpages/media-groups.js) a [média skupiny](../../src/test/webapp/tests/webpages/media-groups.js).
 
 **Dokumentácia**
 
@@ -930,13 +929,13 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 
 **Dátové pole elfinder**
 
-#52609 - Pridali sme dátové pole pre [Datatables Editor - Elfinder](developer/datatables-editor/field-elfinder.md) - výber súboru. Integruje do editora datatabuľky výber odkazu na súbor pomocou aplikácie elfinder/súbory. Pole sa zobrazuje ako textové pole, na konci má ikonu ceruzky. Kliknutím na ikonu sa otvorí dialógové okno s elfinderom/výberom súboru.
+Pridali sme dátové pole pre [Datatables Editor - Elfinder](developer/datatables-editor/field-elfinder.md) - výber súboru. Integruje do editora datatabuľky výber odkazu na súbor pomocou aplikácie elfinder/súbory. Pole sa zobrazuje ako textové pole, na konci má ikonu ceruzky. Kliknutím na ikonu sa otvorí dialógové okno s elfinderom/výberom súboru (#52609).
 
 **Dátové pole datatable**
 
-#52351 - Pridali sme nové dátové pole pre Datatable Editor - [vnorená datatabuľka](developer/datatables-editor/field-datatable.md). Umožňuje vrámci editora datatabuľky zobraziť ďalšiu datatabuľku. Napr. v editore stránok zobraziť datatabuľku pripojených médií.
+Pridali sme nové dátové pole pre Datatable Editor - [vnorená datatabuľka](developer/datatables-editor/field-datatable.md). Umožňuje vrámci editora datatabuľky zobraziť ďalšiu datatabuľku. Napr. v editore stránok zobraziť datatabuľku pripojených médií (#52351).
 
-Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a datatable do samostatných súborov [field-type-json.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a [field-type-datatable.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js)
+Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a datatable do samostatných súborov [field-type-json.js](../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a [field-type-datatable.js](../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js)
 
 **Web stránky**
 
@@ -946,7 +945,7 @@ Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a
 
 **Datatable**
 
-- #52351 - pridaná možnosť ```nestedModal``` (boolean): ak je nastavené na true, jedná sa o datatabuľku vloženú ako pole v editore - [vnorená datatabuľka](../datatables-editor/field-datatable.md), vnorená tabuľka má pridanú CSS triedu ```DTE_nested_modal```.
+- #52351 - pridaná možnosť ```nestedModal``` (boolean): ak je nastavené na true, jedná sa o datatabuľku vloženú ako pole v editore - [vnorená datatabuľka](developer/datatables-editor/field-datatable.md), vnorená tabuľka má pridanú CSS triedu ```DTE_nested_modal```.
 - #52351 - upravený import pre možnosť vkladania vnorených vlastností (napr. ```editorField.groupDetails```)
 - #52351 - generovaný JSON z anotácii objektu obsahuje atribút ```array```, ktorý definuje, že sa jedná o objekt typu pole. Využíva sa pri importe dát pre nastavenie korektnej hodnoty.
 - upravené nastavenie CSS štýlov riadku z možnosti ```createdRow``` na ```rowCallback```, ktoré sa volá aj po zmene dát (aby sa CSS triedy riadku aplikovali po zmene stavu, napr. po vypnutí zobrazovania web stránky sa zmenila farba na červenú) (#52609)
@@ -958,7 +957,7 @@ Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a
 - dokumentácia k [použitiu Gitlabu](developer/guidelines/gitlab.md) presunutá do novej sekcie Požiadavky na vývoj
 - vytvorená dokumentácia k [Datatable pole - vnorená datatabuľka v editore](developer/datatables-editor/field-datatable.md)
 - vytvorená dokumentácia k [Datatable pole - elfinder/výber súboru](developer/datatables-editor/field-elfinder.md)
-- doplnená dokumentácia k otvoreniu [dialógového okna typu iframe](developer/frameworks/webjetjs.md#iframe-dialog)
+- doplnená dokumentácia k otvoreniu [dialógového okna typu iframe](developer/frameworks/webjetjs.md#iframe-dialóg)
 
 **Oprava chýb**
 
@@ -975,7 +974,7 @@ Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a
 
 Doplnený dialóg editácie adresára o TODO položky (okrem histórie a plánovanie, ktoré čakajú na integráciu datatable do editora a nových nastavení menu, ktoré čakajú na dátové zmeny v ```documents``` tabuľke a následnú implementáciu v komponentoch mapa stránky a navigačná lišta). Jedná sa o veľkú zmenu: 42 komitov, 27 zmenených súborov.
 
-- upravené načítanie dát pre Datatable Editor až po kliknutí na ikonu editácie - ušetrí sa tak jedno volanie REST služby pri každom kliknutí na adresár. Využíva sa ```GroupDetails``` objekt z jstree, ktorý sa umelo nastaví do datatabuľky cez API. Príklad je v [web-pages-list.pug](../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) vo funkcii ```loadTablesForGroup```.
+- upravené načítanie dát pre Datatable Editor až po kliknutí na ikonu editácie - ušetrí sa tak jedno volanie REST služby pri každom kliknutí na adresár. Využíva sa ```GroupDetails``` objekt z jstree, ktorý sa umelo nastaví do datatabuľky cez API. Príklad je v [web-pages-list.pug](../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) vo funkcii ```loadTablesForGroup```.
 - pri kliknutí na ikonu editácie sa aktualizujú dáta zo servera a až následne sa zobrazí editor, doplnená aj animácia ukazateľa postupu v ikone editácie
 - opravená chyba, kedy pri kliknutí na ikonu editácie adresára sa nič nestalo a bolo potrebné kliknúť znova (starý kód menil stav zaškrtávacieho poľa namiesto jeho nastavenia, takže sa pri prvom kliknutí zaškrtol a pri druhom od škrtol a preto bolo potrebné znova kliknúť).
 - pridaná kontrola ```multiDomain``` pre zobrazenie poľa domény v editore
@@ -991,8 +990,8 @@ Doplnený dialóg editácie adresára o TODO položky (okrem histórie a plánov
 
 **Všeobecné**
 
-- do ```DocDetails``` doplnené ```doc.getFullPath()``` pre použitie vo VueJS výbere a zobrazení cesty v datatabuľke, upravené v [InsertScriptDocBean](../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptDocBean.java)
-- zmazaný starý kód v [TemplateDetailService](../src/main/java/sk/iway/iwcm/components/templates/TemplateDetailsService.java) generujúci cestu k adresáru (už sa používa štandardné JSON pole)
+- do ```DocDetails``` doplnené ```doc.getFullPath()``` pre použitie vo VueJS výbere a zobrazení cesty v datatabuľke, upravené v [InsertScriptDocBean](../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptDocBean.java)
+- zmazaný starý kód v [TemplateDetailService](../../src/main/java/sk/iway/iwcm/components/templates/TemplateDetailsService.java) generujúci cestu k adresáru (už sa používa štandardné JSON pole)
 - pridané nastavenie atribútov (```data-dt-field-hr```, ```data-dt-field-headline```) na JSON pole (umožňuje korektne zobraziť čiaru pred/za a nadpis pred polom)
 - pridané zobrazenie hlásenia pri volaní Ajax požiadaviek a chybe 401 (odhlásenie) alebo 403 (nesprávny CSRF token)
 
@@ -1003,7 +1002,7 @@ Doplnený dialóg editácie adresára o TODO položky (okrem histórie a plánov
 **Dokumentácia**
 
 - doplnená dokumentácia k [použitiu editorField](developer/datatables-editor/datatable-columns.md#vnorené-atribúty)
-- doplnená dokumentácia k [štýlovaniu riadku a ikony](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
+- doplnená dokumentácia k [štýlovaniu riadku a ikony](developer/datatables/README.md#štýlovanie-riadku)
 - doplnená dokumentácia k možnosti [vyvolania chybovej správy](developer/datatables/restcontroller.md#validácia--povinné-polia) pri editovaní položky (metóda ```throwError```)
 - doplnená dokumentácia k
 
@@ -1027,13 +1026,13 @@ Doplnený prvý návrh úvodnej obrazovky. Obsahuje zatiaľ zoznam prihlásenýc
 
 **Datatables**
 
-- #52396 - Pridaná možnosť štýlovania riadkov a pridania doplnkových ikon, [dokumentácia](developer/datatables/README.md#štýlovanie-riadku-a-ikony).
+- #52396 - Pridaná možnosť štýlovania riadkov a pridania doplnkových ikon, [dokumentácia](developer/datatables/README.md#štýlovanie-riadku).
 - #52396 - Stĺpce s prázdnym ```title``` (alebo obsahujúce tvrdú medzeru) sa v tabuľke nezobrazia (zvyčajne sa jedná o nejaké doplnkové zaškrtávacie pole)
 
 **Dokumentácia**
 
 - #52384 - dokumentácia spustená aj na doméne http://docs.webjetcms.sk/ a rozdelená na dokumentáciu pre WebJET 8 a WebJET 2021, upravené linky, nastavený ```docsify```
-- #52396 - doplnená dokumentácia k použitiu ikon v [jstree](developer/jstree/README.md#spôsob-použitia-ikon) a [datatabuľke](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
+- #52396 - doplnená dokumentácia k použitiu ikon v [jstree](developer/jstree/README.md#spôsob-použitia-ikon) a [datatabuľke](developer/datatables/README.md#štýlovanie-riadku)
 - #52444 - doplnená dokumentácia k použitiu [npm](developer/frameworks/README.md#npm)
 
 ![meme](_media/meme/2021-00.jpg ":no-zoom")

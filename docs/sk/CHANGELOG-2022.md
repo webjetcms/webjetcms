@@ -210,7 +210,7 @@ Významné zmeny v tejto verzii:
   - Pridaná [klávesová skratka](redactor/datatables/README.md#klávesové-skratky), ```CTRL+S/CMD+S``` pre uloženie záznamu do databázy bez zatvorenia okna editora pre pokračovanie v práci.
 - Web stránky
   - Page Builder - doplnené [prepínanie veľkosti obrazovky](redactor/webpages/pagebuilder.md#nastavenie-šírky-stĺpcov) pre nastavenie šírky stĺpca pre desktop, tablet a mobilný telefón.
-  - Pridaná možnosť zobraziť [náhľad kompletnej web stránky](redactor/webpages/editor.md#náhľad-stránky) bez jej uloženia.
+  - Pridaná možnosť zobraziť [náhľad kompletnej web stránky](redactor/webpages/editor/README.md#náhľad-stránky) bez jej uloženia.
   - Zoznam web stránok si vrámci jedného prihlásenia pamätá naposledy zobrazený priečinok (stromovú štruktúru), pri návrate sa priečinok znova rozbalí.
 - Aplikácie
   - Prerobené do nového dizajnu: Hromadný e-mail, Kalendár udalostí/Zoznam a typy.
@@ -240,7 +240,7 @@ Nižšie nájdete kompletný zoznam zmien v tejto verzii.
 - Pri vytvorení priečinka sa prázdne pole URL adresa automaticky nastaví na dvoj písmenový kód jazyka (napr. ```sk```) pre názvy ```Slovensky, English, Deutsch a Česky```.
 - Ak existuje lokálny (pre doménu) aj globálny (s nenastavenou doménou) priečinok Systém v zozname web stránok sa zobrazí len lokálny (aby sa nezobrazovali dva priečinky s rovnakým názvom, ktoré nejde na prvý pohľad odlíšiť).
 - Vo vlastnostiach priečinka sú rozdelené skupiny na obmedzenie prístupu a hromadný e-mail rovnako ako vo web stránkach (#54493).
-- Pridaná možnosť zobraziť [náhľad kompletnej web stránky](redactor/webpages/editor.md#náhľad-stránky) bez jej uloženia (#54513).
+- Pridaná možnosť zobraziť [náhľad kompletnej web stránky](redactor/webpages/editor/README.md#náhľad-stránky) bez jej uloženia (#54513).
 
 ![](redactor/webpages/save-work-version.png)
 
@@ -407,7 +407,7 @@ Aplikácia prerobená do nového vizuálu. Pridaná možnosť nastavenia začiat
 - Vytvorená dokumentácia pre redaktora - [Hromadný email kampane](redactor/apps/dmail/campaings/README.MD) a [Formulár pre prihlásenie](redactor/apps/dmail/form/README.md).
 - Vytvorená dokumentácia s opisom fungovania [odosielania hromadných emailov](redactor/apps/dmail/campaings/how-sender-works.md).
 - Vytvorená dokumentácia pre redaktora pre aplikáciu [zoznam formulárov](redactor/apps/form/README.md).
-- Vytvorená dokumentácia k [náhľadu kompletnej web stránky](redactor/webpages/editor.md#náhľad-stránky) bez jej uloženia pre redaktora a aj pre [programátora](developer/apps/webpages/README.md#náhľad-stránky).
+- Vytvorená dokumentácia k [náhľadu kompletnej web stránky](redactor/webpages/editor/README.md#náhľad-stránky) bez jej uloženia pre redaktora a aj pre [programátora](developer/apps/webpages/README.md#náhľad-stránky).
 - Vytvorená dokumentácia k použitiu [špecifického JavaScript](developer/frameworks/README.md#webpack) súboru pre vkladanie do pug súboru.
 - Doplnená dokumentácia pre možnosť pridania tlačidla do [editora datatabuľky](developer/datatables-editor/README.md#Špeciálne-tlačidlá).
 - Vytvorená dokumentácia pre redaktora pre aplikáciu [AB testovanie](redactor/apps/abtesting/README.md).
@@ -657,7 +657,7 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 - Opravené zobrazenie grafov v dokumentácii.
 - Vytvorená dokumentácia pre možnosť nastavenia [hodnôt výberového poľa](developer/datatables-editor/datatable-columns.md#možnosti-výberového-poľa) editora datatabuľky pomocou volania API funkcie alebo pomocou vloženia údajov z aplikácie číselník.
 - Vytvorená dokumentácia pre [vloženie aplikácie do zoznamu aplikácií](custom-apps/appstore/README.md) pre programátora zákazkových aplikácií.
-- Vytvorená sekcia Šablóna v dokumentácii pre redaktora - [Editácia web stránky](redactor/webpages/editor.md).
+- Vytvorená sekcia Šablóna v dokumentácii pre redaktora - [Editácia web stránky](redactor/webpages/editor/README.md).
 - Doplnená dokumentácia pre nastavenie voliteľného poľa [typu výber adresára súborového systému](frontend/webpages/customfields/README.md#výber-adresára-súborového-systému).
 - Vytvorená dokumentácia [Monitorovanie servera](sysadmin/monitoring/README.md) pre prevádzku (#54453).
 - Vytvorená dokumentácia k aplikácii [Formulár ľahko](redactor/apps/formsimple/README.md) (#54831).

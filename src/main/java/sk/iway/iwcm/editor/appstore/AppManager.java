@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -88,6 +89,11 @@ public class AppManager
 		return ret;
 	}
 
+	@SuppressWarnings("java:S1075")
+	public static List<AppBean> getAppsList(HttpServletRequest request) {
+		return getAppsList(request, false);
+	}
+
 	/**
 	 * Vrati zoznam dostupnych aplikacii pre admin_appstore.jsp
 	 *
@@ -95,15 +101,17 @@ public class AppManager
 	 * @return
 	 */
 	@SuppressWarnings("java:S1075")
-	public static List<AppBean> getAppsList(HttpServletRequest request)
+	public static List<AppBean> getAppsList(HttpServletRequest request, boolean filterOutHidden)
 	{
 
 		String lng = Prop.getLngForJavascript(request);
 		String CACHE_KEY = "cloud.AppManager.appsList." + lng;
 		@SuppressWarnings("unchecked")
 		List<AppBean> appsList = (List<AppBean>) c.getObject(CACHE_KEY);
-		if (appsList != null)
-			return filterUserAppList(appsList, request);
+		if (appsList != null) {
+			appsList = filterUserAppList(appsList, request);
+			return filterOutHidden == false ? appsList : appsList.stream().filter(a -> !a.isDontShow()).collect(Collectors.toList());
+		}
 
 		appsList = new ArrayList<>();
 
@@ -125,7 +133,6 @@ public class AppManager
 			{
 				mi = modules.get(i);
 				if (mi.isApp() == false) continue;
-
 				if ("cmp_htmlbox_cloud".equals(mi.getItemKey()))
 				{
 					// Logger.debug(AppManager.class, "Som HTMLBOX");
@@ -200,6 +207,10 @@ public class AppManager
 
 		c.setObjectSeconds(CACHE_KEY, appsList, 120 * 60, true);
 
+		if (filterOutHidden) {
+			appsList = appsList.stream().filter(a -> !a.isDontShow()).collect(Collectors.toList());
+		}
+
 		return filterUserAppList(appsList, request);
 	}
 
@@ -260,6 +271,7 @@ public class AppManager
 					app.setGalleryImages(appStore.galleryImages());
 					app.setComponentPath(appStore.componentPath());
 					app.setVariant(appStore.variant());
+					app.setDontShow(appStore.dontShow());
 
 					if (fqdn.startsWith("sk.iway.iwcm")) {
 						if (appStore.custom().length>1) app.setCustom(appStore.custom()[0]);

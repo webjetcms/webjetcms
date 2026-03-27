@@ -233,7 +233,12 @@ body { overflow: hidden; }
             //"/components/gallery/editor_component.jsp?pageParams="+encodeURIComponent(pageParams));
             //FCKDialog.OpenDialog( 'WJDialog_Components', 'Components', '/components/'+componentName+'/editor_component.jsp?pageParams='+pageParams+'&jspFileName='+jspFileName, 400, 330 ) ;
 
+            if("htmlbox" === componentName) {
+                componentName = "sk.iway.iwcm.components.apphtmlbox.HtmlBoxApp";
+            }
+
             $("#componentForm").attr("action", "/components/" + componentName + "/editor_component.jsp?docId=" + docId + "&groupId=" + groupId);
+
             $("#pageParams").val(pageParams);
             $("#jspFileName").val(jspFileName);
             $("#title").val(title);

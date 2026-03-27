@@ -170,7 +170,7 @@
 - Page Builder - opravené nastavenie [šírky stĺpcov](frontend/page-builder/blocks.md#nastavenie-šírky-stĺpcov) - do úvahy sa berie šírka okna nie šírka elementu (#57037).
 - Zoznam promo aplikácii pri vkladaní novej aplikácie sa nastavuje cez konf. premennú `appstorePromo`, je možné tam okrem názvu priečinka zadať priamo aj `itemKey` hodnotu, napr. `cmp_news` pre podporu Spring aplikácií. Predvolená hodnota je `cmp_news,menuGallery,menuBanner,cmp_video` (#57157).
 - Export do HTML - vytvorená [dokumentácia](redactor/webpages/export-to-html/README.md), testy, vypnutá kontrola SSL certifikátov pre možnosť použitia `SelfSigned` certifikátov počas vývoja alebo testovania (#57141).
-- Publikovanie web stránky - pridané auditovanie úspešného časového publikovania web stránky a pridaná možnosť [poslať notifikáciu autorovi](redactor/webpages/editor.md#publikovanie-web-stránky) web stránky pri úspešnom publikovaní (#57173).
+- Publikovanie web stránky - pridané auditovanie úspešného časového publikovania web stránky a pridaná možnosť [poslať notifikáciu autorovi](redactor/webpages/editor/README.md#publikovanie-web-stránky) web stránky pri úspešnom publikovaní (#57173).
 
 ![](redactor/webpages/export-to-html/export-to-html.png)
 
