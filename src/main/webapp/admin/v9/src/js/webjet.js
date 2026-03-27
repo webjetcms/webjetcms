@@ -994,6 +994,40 @@ const WJ = (() => {
         if (config.noBorderBottom===true) breadcrumb.addClass("no-border-bottom");
     }
 
+    function _createTabItem(data, urlPrefix) {
+        let li = $(`<li class="nav-item" role="presentation"></li>`);
+
+        let idNoHash = urlPrefix ? (data.url ? urlPrefix + "-" + data.url : urlPrefix) : data.url;
+        if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
+        let href = "#pills-"+idNoHash;
+        //ak je to URL nepridavaj #pills-
+        if (idNoHash.indexOf("/")==0) {
+            href = idNoHash;
+        }
+        if (typeof data.id != "undefined") {
+            idNoHash = data.id;
+        }
+
+        let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
+        if (urlPrefix) anchor.data("sub-url", data.url);
+        if (data.url.indexOf("javascript:")==0) {
+            anchor.attr("href", data.url);
+        } else {
+            anchor.attr("href", href);
+        }
+        if (href.indexOf("#")==0) {
+            //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
+            anchor.attr("data-wj-toggle", "tab");
+            anchor.attr("role", "presentation");
+        }
+
+        if (typeof data.active != "undefined" && data.active===true) {
+            anchor.addClass("active");
+        }
+        li.append(anchor);
+        return li;
+    }
+
     function headerTabs(config) {
         //console.log("headerTabs, config=", config);
 
@@ -1002,36 +1036,8 @@ const WJ = (() => {
         let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
 
         config.tabs.forEach(function(data, index) {
-            let li = $(`<li class="nav-item" role="presentation"></li>`);
-
-            let idNoHash = data.url;
-            if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
-            let href = "#pills-"+idNoHash;
-            //ak je to URL nepridavaj #pills-
-            if (idNoHash.indexOf("/")==0) {
-                href = idNoHash;
-            }
-            if (typeof data.id != "undefined") {
-                idNoHash = data.id;
-            }
-
-            let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
-            if (data.url.indexOf("javascript:")==0) {
-                anchor.attr("href", data.url);
-            } else {
-                anchor.attr("href", href);
-            }
-            if (href.indexOf("#")==0) {
-                //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
-                anchor.attr("data-wj-toggle", "tab");
-                anchor.attr("role", "presentation");
-            }
-
-            if (typeof data.active != "undefined" && data.active===true) {
-                anchor.addClass("active");
-            }
-            li.append(anchor);
-            ul.append(li);
+            const tabItem = _createTabItem(data);
+            ul.append(tabItem);
         });
 
         //wrap UL with md-tabs div
@@ -1041,6 +1047,81 @@ const WJ = (() => {
         tabs.append(ul);
         $("body").addClass("ly-submenu-active");
         window.initSubmenuTabsClick();
+    }
+
+    function headerSubTabs(config) {
+        let tabs = $("div.ly-header div.ly-submenu");
+
+        let parentId = tabs.find("ul.nav").first().attr("id");
+        let subId = parentId ? parentId + "_sub" : "pills-sub";
+
+        //store original URLs on parent tabs so we can use them for sub-tab URL construction
+        tabs.find("ul.nav").first().find("a.nav-link").each(function() {
+            if (typeof $(this).data("original-url") === "undefined") {
+                $(this).data("original-url", $(this).attr("href"));
+            }
+        });
+
+        function _getParentActiveUrl() {
+            let activeParent = tabs.find("ul.nav").first().find("a.nav-link.active");
+            let parentActiveUrl = activeParent.data("original-url") || activeParent.attr("href") || "";
+            if (parentActiveUrl.indexOf("#pills-")==0) parentActiveUrl = parentActiveUrl.substring(7);
+            else if (parentActiveUrl.indexOf("#")==0) parentActiveUrl = parentActiveUrl.substring(1);
+            return parentActiveUrl;
+        }
+
+        function _updateSubTabUrls() {
+            let parentActiveUrl = _getParentActiveUrl();
+            ul.find("a.nav-link").each(function() {
+                let subUrl = $(this).data("sub-url");
+                let combinedId = subUrl ? parentActiveUrl + "-" + subUrl : parentActiveUrl;
+                let href = "#pills-" + combinedId;
+                $(this).attr("href", href);
+                $(this).attr("id", "pills-" + combinedId + "-tab");
+            });
+        }
+
+        let ul = $(`<ul class="nav" id="${subId}" role="tablist"></ul>`);
+
+        let parentActiveUrl = _getParentActiveUrl();
+
+        config.tabs.forEach(function(data, index) {
+            ul.append(_createTabItem(data, parentActiveUrl));
+        });
+
+        //wrap UL with md-tabs div
+        ul = $("<div class='md-tabs md-tabs-dropdown md-sub-tabs'></div>").append(ul);
+
+        if (config.defaultVisibility === false) {
+            ul.css("display", "none");
+        }
+
+        tabs.append(ul);
+        window.initSubmenuTabsClick();
+
+        //toggle body class for layout offset when sub-tabs are shown/hidden
+        function _updateSubTabsBodyClass() {
+            if (ul.css("display") !== "none") {
+                $("body").addClass("ly-sub-tabs-active");
+            } else {
+                $("body").removeClass("ly-sub-tabs-active");
+            }
+        }
+        new MutationObserver(_updateSubTabsBodyClass).observe(ul[0], { attributes: true, attributeFilter: ['style'] });
+        _updateSubTabsBodyClass();
+
+        //update sub tab URLs when parent tab changes
+        tabs.find("ul.nav").first().on("click", "a.nav-link", function() {
+            setTimeout(function() {
+                //skip if sub tabs are hidden
+                if (ul.closest(".md-sub-tabs").is(":hidden")) return;
+                _updateSubTabUrls();
+                //click on active or first sub tab
+                let activeSubTab = ul.find("a.nav-link.active");
+                if (activeSubTab.length === 0) activeSubTab = ul.find("a.nav-link").first();
+                if (activeSubTab.length > 0) activeSubTab.trigger("click");
+            }, 0);
+        });
     }
 
     const htmlToTextRegex = /(<([^>]+)>)/ig;
@@ -1504,6 +1585,9 @@ const WJ = (() => {
         },
         headerTabs: (config) => {
             return headerTabs(config);
+        },
+        headerSubTabs: (config) => {
+            return headerSubTabs(config);
         },
         htmlToText: (html) => {
             return htmlToText(html);

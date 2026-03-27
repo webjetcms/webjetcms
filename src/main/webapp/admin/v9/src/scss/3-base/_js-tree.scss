@@ -49,6 +49,12 @@ body.ly-submenu-active {
   }
 }
 
+body.ly-submenu-active.ly-sub-tabs-active {
+  .jstree {
+    height: calc(100vh - 253px);
+  }
+}
+
 @media (max-width: ($bp-laptop - 1)) {
   .jstree {
     height: calc(100vh - 110px);
