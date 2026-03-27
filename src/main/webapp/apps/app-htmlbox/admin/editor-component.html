@@ -100,7 +100,7 @@
             const codeTypeSelectValue = document.getElementById("DTE_Field_codeType")?.value;
             const templateGroupId = codeTypeSelectValue.substring(templetGroupPrefix.length);
             if("static" === docStyleValue) {
-                const bodyHtml = document.querySelector('#previewIframe')?.contentDocument.getElementById("WJTempPreview")?.contentDocument?.getElementById("_iframeHtmlData")?.value;
+                const bodyHtml = document.querySelector('#previewIframe')?.contentDocument?.getElementById("WJTempPreview")?.contentDocument?.getElementById("_iframeHtmlData")?.value;
                 return sanitazeHtml(bodyHtml);
             } else if("dynamic" === docStyleValue) {
                 var selectedObjectDocId = document.querySelector('#previewIframe')?.contentDocument?.querySelector(".selected")?.getAttribute("data-docid");

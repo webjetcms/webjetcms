@@ -151,7 +151,7 @@ Scenario('Test app visual and logic 3', ({ I, Apps }) => {
 
     I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
 
-    I.say("Chekc templates and choose one - as DYNAMIC link");
+    I.say("Check templates and choose one - as DYNAMIC link");
     I.clickCss("#DTE_Field_docStyle_1");
     I.switchTo('#previewIframe');
     I.forceClick(`.thumbImage[data-name="Normálna stránka"]`);

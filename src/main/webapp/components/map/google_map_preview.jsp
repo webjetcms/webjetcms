@@ -145,7 +145,7 @@ function setMarker(address, position){
 		});
 
 		<%if(!closeLabel){%>
-			console.log("Removing close button from InfoWindow");
+			//console.log("Removing close button from InfoWindow");
 			google.maps.event.addListener(infowindow, "domready", function() {
 				document.querySelectorAll("button.gm-ui-hover-effect").forEach(function(el) { el.remove(); });
 			});
@@ -155,7 +155,7 @@ function setMarker(address, position){
 		infowindow.open(map, marker);
 
 		google.maps.event.addListener(marker, 'click', function() {
-				console.log("Marker clicked");
+				//console.log("Marker clicked");
 				infowindow.open(map,marker);	//pridam otvorenie informacneho okna po kliknuti na marker
 			});
 

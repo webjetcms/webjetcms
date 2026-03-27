@@ -69,7 +69,7 @@ Scenario('Test new inquiry simple @screenshot', async ({I, DT, DTE, Apps, Docume
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_ok");
 
-    I.say("Test new opytion was added and test that old option vote is still there");
+    I.say("Test new option was added and test that old option vote is still there");
     I.clickCss('button.btn.btn-warning.btn-preview');
     await Document.waitForTab();
     I.switchToNextTab();

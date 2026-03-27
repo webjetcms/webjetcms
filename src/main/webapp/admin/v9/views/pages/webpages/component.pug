@@ -264,7 +264,7 @@ block content
 
                     if (typeof window.prepareJsonEditorDataCustom === "function") {
                         // CUSTOM
-                        window.prepareJsonEditorDataCustom(decoded);
+                        decoded = window.prepareJsonEditorDataCustom(decoded);
                     } else {
                     // DEFAULT - add ID and rowOrder to each item in the JSON array
                         decoded = prepareJsonEditorData(decoded);

@@ -34,6 +34,7 @@
             const iframeDocument = this.contentWindow.document;
             iframeDocument.addEventListener('click', function() {
                 var coords = localStorage.getItem('coords');
+                if (coords == null) return;
 			    coords = JSON.parse(coords);
 
                 coordinates = true;
@@ -93,8 +94,23 @@
             label = "";
         }
 
-        str = "/components/map/"+mapType+"_map_preview.jsp?object="+object+"&width="+width+"&height="+height+"&zoom="+zoom+"&scrollwheel="+scrollwheel+"&sizeInPercent="+sizeInPercent+"&showContentString="+showLabel;
-        str += "&offsetX="+offsetX+"&offsetY="+offsetY+"&label="+label+"&latitude="+latitude+"&longitude="+longitude+"&closeLabel="+closeLabel+"&showControls="+showControls;
+        var params = new URLSearchParams();
+        params.set("object", object);
+        params.set("width", width);
+        params.set("height", height);
+        params.set("zoom", zoom);
+        params.set("scrollwheel", scrollwheel);
+        params.set("sizeInPercent", sizeInPercent);
+        params.set("showContentString", showLabel);
+        params.set("offsetX", offsetX);
+        params.set("offsetY", offsetY);
+        params.set("label", label);
+        params.set("latitude", latitude);
+        params.set("longitude", longitude);
+        params.set("closeLabel", closeLabel);
+        params.set("showControls", showControls);
+
+        str = "/components/map/"+mapType+"_map_preview.jsp?" + params.toString();
 
         $("#previewIframe").attr("src", str);
         $("#previewIframe").show();
@@ -224,7 +240,7 @@
         const showContentString = params["labelAddress"] || params["labelComment"];
 
         // Determine size parameters
-        const sizeParams = params["sizeInPercent"] === false
+        const sizeParams = params["sizeInPercent"] === true
             ? `widthPercent=${params["widthPercent"]}, heightPercent=${params["heightPercent"]}`
             : `width=${params["widthPx"]}, height=${params["heightPx"]}`;
 

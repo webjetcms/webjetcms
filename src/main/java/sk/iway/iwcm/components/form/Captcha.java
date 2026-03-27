@@ -32,7 +32,7 @@ public class Captcha extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.captcha.site_key", tab = "basic")
     String siteKey;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.captcha.secret", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.PASSWORD, title = "components.captcha.secret", tab = "basic")
     String secret;
 
     @Override
