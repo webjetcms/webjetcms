@@ -2,8 +2,8 @@ package sk.iway.iwcm.components.appinquirysimple;
 
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
