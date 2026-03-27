@@ -13,7 +13,7 @@ div.amcharts {
 
     > div:before {
         content: '';
-        background: #2b303b;
+        background: #F3F3F6;
         width: calc(100% - 0px);
         height: calc(100% + 16px);
         display: block;
@@ -22,15 +22,24 @@ div.amcharts {
         right: 0;
         border-radius: 10px;
         top: -8px;
+        border: 1px solid #DDDFE6;
     }
 }
 .amchart-header {
     font-family: $secondary-font-family;
     font-weight: 700;
     padding-left: 38px;
-    min-height: 20px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    padding-top: 13px;
+    min-height: 47px;
+
+    border-radius: 10px 10px 0 0;
+    background: #F3F3F6;
+    top: 21px;
+    border: 1px solid #DDDFE6;
+    position: relative;
+
+    font-size: 18px !important;
+
     .additional-data {
         font-family: $secondary-font-family;
         font-weight: 400;
@@ -49,6 +58,21 @@ div.amcharts {
             margin-top: -5px;
             background-color: var(--amchart-series-color-var);
         }
+    }
+}
+.amcharts {
+    table.table {
+        margin-top: 30px;
+    }
+
+    table.table tbody tr:hover {
+        background-color: #0063FB;
+        font-weight: bold;
+    }
+
+    table.table tbody tr td.chart-table-td {
+        background: none;
+        color: black;
     }
 }
 

@@ -568,6 +568,33 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
+Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/form/admin/form-steps/");
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor("formItemsDataTable");
+
+    I.clickCss("#pills-dt-formItemsDataTable-stat-tab");
+    within("#panel-body-dt-formItemsDataTable-stat", () => {
+        I.say("Check fields are hidden");
+        I.seeElement(".DTE_Field_Name_showStat");
+        I.dontSeeElement(".DTE_Field_Name_chartType");
+        I.dontSeeElement(".DTE_Field_Name_topCount");
+        I.dontSeeElement(".DTE_Field_Name_colorScheme");
+
+        I.say('Now check that fields are showed');
+        I.checkOption("#DTE_Field_showStat_0");
+        I.seeElement(".DTE_Field_Name_showStat");
+        I.seeElement(".DTE_Field_Name_chartType");
+        I.seeElement(".DTE_Field_Name_topCount");
+        I.seeElement(".DTE_Field_Name_colorScheme");
+
+        I.say("Check color scheme disability/enabling");
+        I.seeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
+        I.checkOption("#DTE_Field_useColorScheme_0");
+        I.dontSeeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
+    });
+});
+
 async function getSubmitedFormPreview(I) {
     I.click( locate("a").withChild("i.ti-eye") );
     I.waitForVisible("#modalIframeIframeElement");

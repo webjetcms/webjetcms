@@ -79,12 +79,32 @@
             window.initAmcharts().then(module => {
 
                 $.ajax({url: getGraphUrl("pieVisits"), success: function(result) {
-                    pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{stat.top.pieChart}]]', "top-pieVisits", result['content']);
+
+                    const pieConfig = {
+                        yAxeName: "visits",
+                        xAxeName: "name",
+                        chartTitle: '[[#{stat.top.pieChart}]]',
+                        chartDivId: "top-pieVisits",
+                        chartData: result['content']
+                    };
+
+                    pieChartVisits = new ChartTools.PieChartForm(pieConfig);
+
                     ChartTools.createAmchart(pieChartVisits);
                 }});
 
                 $.ajax({url: getGraphUrl("lineVisits"), success: function(result) {
-                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.top.lineChart}]]', "top-lineVisits", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+
+                    const lineConfig = {
+                        yAxeNames: ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]),
+                        xAxeName: "dayDate",
+                        chartTitle: '[[#{stat.top.lineChart}]]',
+                        chartDivId: "top-lineVisits",
+                        chartData: ChartTools.convertDataForLineChart(result),
+                        dateType: ChartTools.DateType.Days
+                    };
+
+                    lineChartVisits = new ChartTools.LineChartForm(lineConfig);
                     ChartTools.createAmchart(lineChartVisits);
 
                     //After last load data
@@ -129,7 +149,7 @@
                 tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
                 tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
             } else if(chartDivId == "pieVisits") {
-                tmpDefURL += url + "/search/findByColumns?chartType=" + ChartTools.ChartType.Pie;
+                tmpDefURL += url + "/search/findByColumns?chartType=" + ChartTools.ChartType.Pie_Donut;
                 tmpDefURL += "&searchDayDate=" + searchDateValue;
                 tmpDefURL += "&searchRootDir=" + rootDir + "&searchFilterBotsOut=" + filterBotsOut;
             }

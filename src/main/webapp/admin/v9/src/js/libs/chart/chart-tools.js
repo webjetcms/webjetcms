@@ -1,9 +1,14 @@
 //Use to identified in URL what type of data we want
 export const ChartType = {
-    Not_Chart: "notChart",
     Line: "line",
-    Pie: "pie",
-    Bar: "bar"
+    Bar_Vertical: "bar_vertical",
+    Bar_Horizontal: "bar_horizontal",
+    Pie_Classic: "pie_classic",
+    Pie_Donut: "pie_donut",
+    Double_Pie: "double_pie",
+    Word_Cloud: "word_cloud",
+    Table: "table",
+    Not_Chart: "not_chart"
 }
 
 //! string must stay as they are, because they are used as day format type
@@ -18,20 +23,53 @@ export const DateType = {
     Auto: "auto"
 }
 
+function throwConstructorError(className, paramName) {
+    throw new Error(`${className}: ${paramName} is required`);
+}
+
 /**
  * Object (chart form) representing LINE type chart
  */
 export class LineChartForm {
-    constructor(yAxeNames, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
-        this.yAxeNames = yAxeNames;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.dateType = dateType;
-        this.legendTransformationFn = legendTransformationFn;
-        this.hideEmpty = hideEmpty;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, dateType, legendTransformationFn = null, hideEmpty = true) {
+
+        //console.log(typeof yAxeName_or_config === "object", yAxeName_or_config.yAxeName));
+
+        if(typeof yAxeName_or_config === "object" && Array.isArray(yAxeName_or_config) === false) {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeNames: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                dateType: dateType,
+                legendTransformationFn: legendTransformationFn,
+                hideEmpty: hideEmpty
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (config.yAxeNames == null || config.yAxeNames === undefined) throwConstructorError("LineChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("LineChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("LineChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("LineChartForm", "chartData");
+
+         Object.assign(this, {
+            yAxeNames: config.yAxeNames,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            dateType: config.dateType == null ? DateType.Auto : config.dateType,
+            legendTransformationFn: config.legendTransformationFn,
+            hideEmpty: config.hideEmpty == null ? true : config.hideEmpty,
+            colorScheme: config.colorScheme
+        });
     }
 }
 
@@ -39,14 +77,38 @@ export class LineChartForm {
  * Object (chart form) representing BAR type chart
  */
 export class BarChartForm {
-    constructor(yAxeName, xAxeName, chartTitle,
-        chartDivId, chartData) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.chart = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, horizontal = true) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                horizontal: horizontal
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("BarChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("BarChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("BarChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("BarChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            horizontal: config.horizontal == null ? true : config.horizontal,
+            colorScheme: config.colorScheme
+        });
     }
 }
 
@@ -54,16 +116,45 @@ export class BarChartForm {
  * Object (chart form) representing PIE type chart
  */
 export class PieChartForm {
-    constructor(yAxeName, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null) {
-        this.yAxeName = yAxeName;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
-        this.labelKey = labelKey;
-        this.labelTransformationFn = labelTransformationFn;
-        this.chart = undefined;
-        this.chartLegend = undefined;
+
+    constructor(yAxeName_or_config, xAxeName, chartTitle, chartDivId, chartData, labelKey, labelTransformationFn = null, innerRadius = 50, leftLegendPosition = false) {
+        if(typeof yAxeName_or_config === "object") {
+            this.initFromConfig(yAxeName_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName: yAxeName_or_config,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelKey: labelKey,
+                labelTransformationFn: labelTransformationFn,
+                innerRadius: innerRadius,
+                leftLegendPosition: leftLegendPosition
+            });
+        }
+    }
+
+    initFromConfig(config) {
+        if (!config.yAxeName) throwConstructorError("PieChartForm", "yAxeName");
+        if (!config.xAxeName) throwConstructorError("PieChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("PieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("PieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName: config.yAxeName,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelKey: config.labelKey,
+            labelTransformationFn: config.labelTransformationFn,
+            innerRadius: config.innerRadius == null ? 50 : config.innerRadius,
+            leftLegendPosition: config.leftLegendPosition == null ? false : config.leftLegendPosition,
+            legendValueText: config.legendValueText,
+            colorScheme: config.colorScheme
+        });
     }
 }
 
@@ -71,22 +162,146 @@ export class PieChartForm {
  * Object (chart form) representing PIE type chart BUT with two series (inner and outer)
  */
 export class DoublePieChartForm {
-    constructor(yAxeName_inner, yAxeName_outer, xAxeName, chartTitle,
-        chartDivId, chartData, labelSeries = null, labelKey = null) {
-        this.yAxeName_inner = yAxeName_inner;
-        this.yAxeName_outer = yAxeName_outer;
-        this.xAxeName = xAxeName;
-        this.chartTitle = chartTitle;
-        this.chartDivId = chartDivId;
-        this.chartData = chartData;
 
-        this.labelSeries = labelSeries;
-        this.labelKey = labelKey;
+    constructor(yAxeName_inner_or_config, yAxeName_outer, xAxeName, chartTitle, chartDivId, chartData, labelSeries = null, labelKey = null) {
+        if(typeof yAxeName_inner_or_config === "object") {
+            this.initFromConfig(yAxeName_inner_or_config);
+        } else {
+            console.warn("Deprecated constructor signature. Use config object instead.");
+            this.initFromConfig({
+                yAxeName_inner: yAxeName_inner_or_config,
+                yAxeName_outer: yAxeName_outer,
+                xAxeName: xAxeName,
+                chartTitle: chartTitle,
+                chartDivId: chartDivId,
+                chartData: chartData,
+                labelSeries: labelSeries,
+                labelKey: labelKey
+            });
+        }
+    }
 
-        this.chart = undefined;
-        this.chartLegend = undefined;
+    initFromConfig(config) {
+        if (!config.yAxeName_inner) throwConstructorError("DoublePieChartForm", "yAxeName_inner");
+        if (!config.yAxeName_outer) throwConstructorError("DoublePieChartForm", "yAxeName_outer");
+        if (!config.xAxeName) throwConstructorError("DoublePieChartForm", "xAxeName");
+        if (!config.chartDivId) throwConstructorError("DoublePieChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("DoublePieChartForm", "chartData");
+
+        Object.assign(this, {
+            yAxeName_inner: config.yAxeName_inner,
+            yAxeName_outer: config.yAxeName_outer,
+            xAxeName: config.xAxeName,
+            chartTitle: config.chartTitle,
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            labelSeries: config.labelSeries,
+            labelKey: config.labelKey,
+            colorScheme: config.colorScheme
+        });
     }
 }
+
+export class WordCloudChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (!config.chartDivId) throwConstructorError("WordCloudChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("WordCloudChartForm", "chartData");
+
+        Object.assign(this, {
+            chartDivId: config.chartDivId,
+            chartData: config.chartData,
+            chartTitle: config.chartTitle,
+            xAxeName: config.xAxeName,
+            yAxeName: config.yAxeName,
+            mode: config.mode == null ? "word" : config.mode,
+        });
+    }
+}
+
+export class TableChartForm {
+    constructor(config) {
+        this.initFromConfig(config);
+    }
+
+    initFromConfig(config) {
+        if (config.paramsNames == null || config.paramsNames === undefined || Array.isArray(config.paramsNames) == false) throwConstructorError("TableChartForm", "paramsNames");
+        if (!config.chartDivId) throwConstructorError("TableChartForm", "chartDivId");
+        if (config.chartData == null || config.chartData === undefined) throwConstructorError("TableChartForm", "chartData");
+
+        Object.assign(this, {
+            paramsNames: config.paramsNames,
+            chartDivId: config.chartDivId,
+            chartTitle: config.chartTitle,
+            chartData: config.chartData,
+            colorScheme: config.colorScheme,
+
+            // PERMANENT
+            isCustomChart: true
+        });
+    }
+}
+
+// Recomennded is white all the time (do not depends on light/dark theme) because colors in charts are pretty dark
+const tooltipLabelColor = "#ffffff";
+
+// All charts
+const lightTheme_labelColor = "#000000";
+const darkTheme_labelColor = "#ffffff";
+
+// Pie chart
+const lightTheme_pieChart_tickColor = "#000000";
+const darkTheme_pieChart_tickColor = "#ffffff";
+
+// Bar chart
+const barChart_strokeColor = "#DDDFE6";
+
+// Line chart
+const lineChart_strokeColor = "#DDDFE6";
+const lineChart_legendMaxTextLength = 30;
+
+const blue40 = "#8FA3FF";
+const green30 = "#51DCBD";
+const yellow30 = "#F6BE3F";
+const red40 = "#FF8389";
+const ocen30 = "#76D4EB";
+const set1 = [blue40, green30, yellow30, red40, ocen30];
+
+const blue50 = "#6486FF";
+const green40 = "#00BE9F";
+const yellow40 = "#D5A000";
+const red50 = "#FF4B58";
+const ocen40 = "#3AB7D0";
+const set2 = [blue50, green40, yellow40, red50, ocen40];
+
+const blue60 = "#0063FB";
+const green50 = "#00A186";
+const yellow50 = "#B48700";
+const red60 = "#E00028";
+const ocen50 = "#009CB4";
+const set3 = [blue60, green50, yellow50, red60, ocen50];
+
+const blue70 = "#0049BE";
+const green60 = "#007E69";
+const yellow60 = "#8E6A00";
+const red70 = "#A9001C";
+const ocen60 = "#007B8E";
+const set4 = [blue70, green60, yellow60, red70, ocen60];
+
+const blue80 = "#003289";
+const green70 = "#005E4D";
+const yellow70 = "#6A4E00";
+const red80 = "#790011";
+const ocen70 = "#005B6A";
+const set5 = [blue80, green70, yellow70, red80, ocen70];
+
+const setBlue = [blue40, blue50, blue60, blue70, blue80];
+const setGreen = [green30, green40, green50, green60, green70];
+const setRed = [red40, red50, red60, red70, red80];
+const setYellow = [yellow30, yellow40, yellow50, yellow60, yellow70];
 
 /**
  * Object to store chart date axe configuration values 'timeUnit' & 'count'
@@ -96,6 +311,15 @@ class DateAxisInterval {
         this.timeUnit = timeUnit;
         this.count = count;
     }
+}
+
+function trimLegendText(text, maxLength = lineChart_legendMaxTextLength) {
+    if (text == null) return "";
+
+    const normalized = String(text).trim();
+    if (normalized.length <= maxLength) return normalized;
+
+    return normalized.slice(0, maxLength) + "...";
 }
 
 //Set component visibility based on selected option
@@ -467,6 +691,11 @@ async function computeAxeInterval(chartData, dateValueName) {
  * @param {Bolean} update only in the case of True - the header wont be added to chart div
  */
 export async function createAmchart(chartForm, update) {
+    if(chartForm.isCustomChart === true) {
+        await _createCustomChart(chartForm, update);
+        return;
+    }
+
     //Create chart root
     var root = am5.Root.new(chartForm.chartDivId);
 
@@ -486,7 +715,6 @@ export async function createAmchart(chartForm, update) {
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
-        am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
 
@@ -512,6 +740,18 @@ export async function createAmchart(chartForm, update) {
         createLineChart(root, chartForm);
     } else if(chartForm instanceof DoublePieChartForm) {
         createDoublePieChart(root, chartForm);
+    } else if(chartForm instanceof WordCloudChartForm) {
+        crateWordCloudChart(root, chartForm);
+    }
+}
+
+async function _createCustomChart(chartForm, update) {
+    //Add title to chart div
+    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
+    $('#' + chartForm.chartDivId).before(htmlCode);
+
+    if(chartForm instanceof TableChartForm) {
+        createTableChart(chartForm);
     }
 }
 
@@ -532,6 +772,8 @@ async function createLineChart(root, chartForm) {
             height: chartForm.chartData.size > 8 ? am5.percent(90) : am5.percent(95)
         })
     );
+
+    chart.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
 
     //!! set created chart into LineChartForm.chart
     chartForm.chart = chart;
@@ -582,6 +824,16 @@ async function createLineChart(root, chartForm) {
         })
     );
 
+    xAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(lineChart_strokeColor),
+        strokeOpacity: 1
+    });
+
+    yAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(lineChart_strokeColor),
+        strokeOpacity: 1
+    });
+
     //Loop through map of data. Every item in map is representing a different dataset
     //Maybe want show visits stat's on different pages, key param visit is same, but every page stat's are represented by different dataset
     for (const [dataSetName, dataSetData] of chartForm.chartData.entries()) {
@@ -627,7 +879,7 @@ async function createLineChart(root, chartForm) {
                 tooltipIntervalOffset: 0
             });
             tooltip.label.setAll({
-                fill: am5.color("#FFFFFF"),
+                fill: am5.color(tooltipLabelColor),
                 textAlign: "center",
                 textValign: "middle"
             });
@@ -653,11 +905,15 @@ async function createLineChart(root, chartForm) {
                 });
             }
 
-            if(chartForm.legendTransformationFn != null) {
-                series.adapters.add("legendLabelText", (text, target) => {
-                    return chartForm.legendTransformationFn(seriesName);
-                });
-            }
+            series.adapters.add("legendLabelText", (text, target) => {
+                let legendText = seriesName;
+
+                if(chartForm.legendTransformationFn != null) {
+                    legendText = chartForm.legendTransformationFn(seriesName);
+                }
+
+                return trimLegendText(legendText);
+            });
 
             //Add data to series
             series.data.setAll(dataSetData);
@@ -756,7 +1012,146 @@ async function createLineChart(root, chartForm) {
 
 
 /**
+ * Create axes and series for a HORIZONTAL bar chart (categories on Y axe, values on X axe).
+ * Returns object with { xAxis, yAxis, series }.
+ *
+ * @param {am5.Root} root
+ * @param {am5xy.XYChart} chart
+ * @param {BarChartForm} chartForm
+ * @returns {{ xAxis, yAxis, series }}
+ */
+function createBarChartHorizontal(root, chart, chartForm) {
+    //Define render specification (we need reverse render type)
+    var yRenderer = am5xy.AxisRendererY.new(root, {
+        minGridDistance: 30,
+        inversed: true
+    });
+    yRenderer.grid.template.set("location", 1);
+
+    //Create Y axe (categories)
+    var yAxis = chart.yAxes.push(
+        am5xy.CategoryAxis.new(root, {
+            maxDeviation: 0,
+            categoryField: chartForm.yAxeName,
+            renderer: yRenderer
+        })
+    );
+
+    //Create X axe (values)
+    var xAxis = chart.xAxes.push(
+        am5xy.ValueAxis.new(root, {
+            maxDeviation: 0,
+            min: 0,
+            extraMax: 0.1,
+            renderer: am5xy.AxisRendererX.new(root, {
+                strokeOpacity: 0.1
+            })
+        })
+    );
+
+    //Create series
+    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueXField: chartForm.xAxeName,
+        categoryYField: chartForm.yAxeName
+    }));
+
+    //Apply horizontal column styling (rounded right side)
+    series.columns.template.setAll({
+        cornerRadiusTR: 5,
+        cornerRadiusBR: 5,
+        strokeOpacity: 0
+    });
+
+    //Trim long category labels on Y axe
+    yRenderer.labels.template.adapters.add("text", function(text, target) {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let originalCategory = dataItem?.dataContext[chartForm.yAxeName];
+            let newCategory = trimLegendText(originalCategory);
+            return newCategory;
+        }
+
+        return text;
+    });
+    //Set data in category axe (required for BAR charts)
+    yAxis.data.setAll(chartForm.chartData);
+
+    return { xAxis, yAxis, series };
+}
+
+/**
+ * Create axes and series for a VERTICAL bar chart (categories on X axe, values on Y axe).
+ * Returns object with { xAxis, yAxis, series }.
+ *
+ * @param {am5.Root} root
+ * @param {am5xy.XYChart} chart
+ * @param {BarChartForm} chartForm
+ * @returns {{ xAxis, yAxis, series }}
+ */
+function createBarChartVertical(root, chart, chartForm) {
+    var xRenderer = am5xy.AxisRendererX.new(root, {
+        minGridDistance: 30
+    });
+
+    //Create X axe (categories)
+    var xAxis = chart.xAxes.push(
+        am5xy.CategoryAxis.new(root, {
+            maxDeviation: 0,
+            categoryField: chartForm.yAxeName,
+            renderer: xRenderer
+        })
+    );
+
+    //Create Y axe (values)
+    var yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+            maxDeviation: 0,
+            min: 0,
+            extraMax: 0.1,
+            renderer: am5xy.AxisRendererY.new(root, {
+                strokeOpacity: 0.1
+            })
+        })
+    );
+
+    //Create series
+    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: chartForm.xAxeName,
+        categoryXField: chartForm.yAxeName
+    }));
+
+    //Apply vertical column styling (rounded top side)
+    series.columns.template.setAll({
+        cornerRadiusTL: 5,
+        cornerRadiusTR: 5,
+        strokeOpacity: 0
+    });
+
+    //Trim long category labels on X axe
+    xRenderer.labels.template.adapters.add("text", function(text, target) {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let originalCategory = dataItem?.dataContext[chartForm.yAxeName];
+            let newCategory = trimLegendText(originalCategory);
+            return newCategory;
+        }
+
+        return text;
+    });
+
+    //Set data in category axe (required for BAR charts)
+    xAxis.data.setAll(chartForm.chartData);
+
+    return { xAxis, yAxis, series };
+}
+
+/**
  * Create BAR type chart and set all setting around chart. The created chart is set in BarChartForm.chart param.
+ * Supports horizontal (default) and vertical bar orientations via chartForm.horizontal flag.
  *
  * @param {am5.Root} root
  * @param {BarChartForm} chartForm
@@ -772,44 +1167,39 @@ async function createBarChart(root, chartForm) {
         }
     ));
 
+    // SET COLORS
+    chart.set("colors",
+        window.am5.ColorSet.new(root, {
+            colors: getColorScheme(chartForm.colorScheme)
+        })
+    );
+
     //!! set created chart into BarChartForm.chart
     chartForm.chart = chart;
 
-    //Define render specification (we need reverse render type)
-    var yRenderer = am5xy.AxisRendererY.new(root, {
-        minGridDistance: 30,
-        inversed: true
+    //Normalize orientation flag (default is horizontal)
+    var isHorizontal = chartForm.horizontal !== false;
+
+    //Create axes and series based on orientation
+    var barConfig;
+    if (isHorizontal) {
+        barConfig = createBarChartHorizontal(root, chart, chartForm);
+    } else {
+        barConfig = createBarChartVertical(root, chart, chartForm);
+    }
+
+    // Change grid line color
+    barConfig.xAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(barChart_strokeColor),
+        strokeOpacity: 1
     });
-    yRenderer.grid.template.set("location", 1);
 
-    //Create Y axe
-    var yAxis = chart.yAxes.push(
-        am5xy.CategoryAxis.new(root, {
-            maxDeviation: 0,
-            categoryField: chartForm.yAxeName,
-            renderer: yRenderer
-        })
-    );
+    barConfig.yAxis.get("renderer").grid.template.setAll({
+        stroke: am5.color(barChart_strokeColor),
+        strokeOpacity: 1
+    });
 
-    //Create X axe
-    var xAxis = chart.xAxes.push(
-        am5xy.ValueAxis.new(root, {
-            maxDeviation: 0,
-            min: 0,
-            extraMax: 0.1,
-            renderer: am5xy.AxisRendererX.new(root, {
-                strokeOpacity: 0.1
-            })
-        })
-    );
-
-    //Cretate series
-    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueXField: chartForm.xAxeName,
-        categoryYField: chartForm.yAxeName
-    }));
+    var series = barConfig.series;
 
     //Create tooltip
     var tooltip = am5.Tooltip.new(root, {
@@ -817,18 +1207,11 @@ async function createBarChart(root, chartForm) {
         autoTextColor: false
     })
     tooltip.label.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(tooltipLabelColor),
         textAlign: "center",
         textValign: "middle"
     });
     series.set("tooltip", tooltip);
-
-    // Rounded corners for columns
-    series.columns.template.setAll({
-        cornerRadiusTR: 5,
-        cornerRadiusBR: 5,
-        strokeOpacity: 0
-    });
 
     // Make each column to be of a different color
     series.columns.template.adapters.add("fill", function(fill, target) {
@@ -838,8 +1221,6 @@ async function createBarChart(root, chartForm) {
         return chart.get("colors").getIndex(series.columns.indexOf(target));
     });
 
-    //Set data (for BAR is pecific to set data in series and in Y axe at same time)
-    yAxis.data.setAll(chartForm.chartData);
     series.data.setAll(chartForm.chartData);
 
     //Add cursor
@@ -861,15 +1242,20 @@ async function createBarChart(root, chartForm) {
  */
 async function createPieChart(root, chartForm) {
     //Create chart instance
-    var chart = root.container.children.push(
+    var chart = null;
+
+    chart = root.container.children.push(
         am5percent.PieChart.new(root, {
-            innerRadius: am5.percent(50),
-            layout: root.verticalLayout
+            innerRadius: chartForm.innerRadius > 0 ? am5.percent(chartForm.innerRadius) : null,
+            layout: chartForm.leftLegendPosition === true ? root.horizontalLayout : root.verticalLayout
         })
     );
 
     //!! set created chart into PieChartForm.chart
     chartForm.chart = chart;
+
+    let legendValueText = "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]";
+    if(chartForm.legendValueText !== null && chartForm.legendValueText !== undefined) legendValueText = chartForm.legendValueText;
 
     //Create series
     var series = chart.series.push(
@@ -877,43 +1263,73 @@ async function createPieChart(root, chartForm) {
             valueField: chartForm.yAxeName,
             categoryField: chartForm.xAxeName,
             legendLabelText: "{category}",
-            legendValueText: "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]" //Format legend
+            legendValueText: legendValueText //Format legend
         })
     );
+
+    series.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
 
     //Format labels
     series.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
 
-    if(chartForm.labelTransformationFn != null) {
-        series.labels.template.adapters.add("text", (text, target) => {
-            const dataItem = target.dataItem;
-            if (dataItem) {
-                let newCategory = chartForm.labelTransformationFn(dataItem.dataContext.label);
-                return text.replace("{category}", newCategory);
-            }
-            return text;
-        });
-    }
+    series.labels.template.adapters.add("text", (text, target) => {
+        const dataItem = target._dataItem;
+        if (dataItem) {
+            let newCategory = dataItem?.dataContext[chartForm.xAxeName];
+            if(chartForm.labelTransformationFn != null && chartForm.labelTransformationFn != undefined) { newCategory = chartForm.labelTransformationFn(newCategory); }
+            return text.replace("{category}", trimLegendText(newCategory));
+        }
+        return text;
+    });
 
     //We are setting data in series only if data length is more than 0, or error occur
     if(chartForm.chartData != undefined && chartForm.chartData.length > 0)
         series.data.setAll(chartForm.chartData);
 
     //Create legend
-    var legend = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50),
-        layout: root.gridLayout
-    }));
+    var legend;
+    if(chartForm.leftLegendPosition === true) {
+        legend = chart.children.unshift(am5.Legend.new(root, {
+            centerY: am5.percent(50),
+            y: am5.percent(50),
+            x: 15,
+            layout: root.verticalLayout
+        }));
+
+        // set width and max width of labels
+        legend.labels.template.setAll({
+            maxWidth: 140,
+            width: 140,
+            oversizedBehavior: "wrap"
+        });
+    } else {
+        legend = chart.children.push(am5.Legend.new(root, {
+            centerX: am5.percent(50),
+            x: am5.percent(50),
+            layout: root.gridLayout
+        }));
+    }
+
+    legend.labels.template.adapters.add("text", (text, target) => {
+        const dataItem = target._dataItem;
+        if(dataItem) {
+            let newCategory = dataItem?.dataContext[chartForm.xAxeName];
+            return text.replace("{category}", trimLegendText(newCategory));
+        }
+
+        return text
+    });
+
     legend.data.setAll(series.dataItems);
+
 
     //!! Set ticks color
     //If you dont know (like me), TICKS are that stupid lines that connect pie slices with label
     series.ticks.template.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(lightTheme_pieChart_tickColor),
         fillOpacity: 1,
         opacity: 1,
-        stroke: am5.color("#FFFFFF"),
+        stroke: am5.color(lightTheme_pieChart_tickColor),
         strokeOpacity: 1,
         //strokeWidth: 1.5
     });
@@ -927,7 +1343,7 @@ async function createPieChart(root, chartForm) {
         autoTextColor: false
     });
     tooltip.label.setAll({
-        fill: am5.color("#FFFFFF")
+        fill: am5.color(tooltipLabelColor)
     });
     series.set("tooltip", tooltip);
 
@@ -965,6 +1381,8 @@ async function createDoublePieChart(root, chartForm) {
         })
     );
 
+    series_inner.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
+
     var series_outer = chart.series.push(
         am5percent.PieSeries.new(root, {
             valueField: chartForm.yAxeName_outer,
@@ -974,15 +1392,17 @@ async function createDoublePieChart(root, chartForm) {
         })
     );
 
+    series_outer.set("colors", am5.ColorSet.new(root, { colors: getColorScheme(chartForm.colorScheme) }));
+
     //set chart slices (parts)
     series_inner.slices.template.setAll({
         strokeWidth: 3,
-        stroke: am5.color("#2b303b")
+        stroke: am5.color("#ffffff")
     });
 
     series_outer.slices.template.setAll({
         strokeWidth: 3,
-        stroke: am5.color("#2b303b")
+        stroke: am5.color("#ffffff")
     });
 
     //
@@ -1001,10 +1421,10 @@ async function createDoublePieChart(root, chartForm) {
     //!! Set ticks color
     //If you dont know (like me), TICKS are that stupid lines that connect pie slice with label
     series_outer.ticks.template.setAll({
-        fill: am5.color("#FFFFFF"),
+        fill: am5.color(lightTheme_pieChart_tickColor),
         fillOpacity: 1,
         opacity: 1,
-        stroke: am5.color("#FFFFFF"),
+        stroke: am5.color(lightTheme_pieChart_tickColor),
         strokeOpacity: 1
     })
 
@@ -1016,14 +1436,14 @@ async function createDoublePieChart(root, chartForm) {
         labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_inner + "})",
         autoTextColor: false
     })
-    tooltip_inner.label.setAll({ fill: am5.color("#FFFFFF") });
+    tooltip_inner.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_inner.set("tooltip", tooltip_inner);
 
     var tooltip_outer = am5.Tooltip.new(root, {
         labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_outer + "})",
         autoTextColor: false
     })
-    tooltip_outer.label.setAll({ fill: am5.color("#FFFFFF") });
+    tooltip_outer.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_outer.set("tooltip", tooltip_outer);
 }
 
@@ -1072,7 +1492,7 @@ function setPieSumLabel(chartForm) {
         fontSize: 40,
         fontWeight: "500",
         populateText: true,
-        fill: am5.color(0x555555),
+        fill: am5.color(lightTheme_labelColor),
         oversizedBehavior: "fit"
     }));
 
@@ -1106,6 +1526,31 @@ function updatePieSumLabels(chartForm) {
             }
         });
     });
+}
+
+/**
+ * Destroy chart in entered chart div.
+ * @param {*} chartForm
+ */
+export async function destroyChart(chartForm) {
+    if(chartForm.isCustomChart === true) {
+        // This is not amchart
+        await _destroyCustomChart(chartForm);
+    } else {
+        // Remove amchart root
+        am5.array.each(am5.registry.rootElements, function(root) {
+            if (root && root.dom && root.dom.id == chartForm.chartDivId) {
+                root.dispose();
+            }
+        });
+    }
+}
+
+async function _destroyCustomChart(chartForm) {
+    if(chartForm instanceof TableChartForm) {
+        const tableDiv = document.getElementById(chartForm.chartDivId);
+        tableDiv.innerHTML = "";
+    }
 }
 
 /**
@@ -1148,6 +1593,16 @@ export async function updateChart(chartForm) {
         //this type of charts MUST have exactly 2 series
         chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
         chartForm.chart.series.values[1].data.setAll(chartForm.chartData);
+    } else if(chartForm instanceof WordCloudChartForm) {
+        // WordCloud chart dont need remove series, just set new data to series
+        const wordCloudSeries = chartForm.chart.contents.children.getIndex(0);
+        if (wordCloudSeries) {
+            if (chartForm.mode === "word") {
+                wordCloudSeries.set("text", chartForm.chartData);
+            } else if (chartForm.mode === "line") {
+                wordCloudSeries.data.setAll(chartForm.chartData);
+            }
+        }
     }
 }
 
@@ -1332,7 +1787,6 @@ export async function createServerMonitoringChart(rootName, type) {
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
-        am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
 
@@ -1716,4 +2170,132 @@ function isNumberParamValid(value, cantBeNegative = true) {
     if(!cantBeNegative && value < 0) return false;
     //Number is valid
     return true;
+}
+
+/* TABLE CHART SECTION has nothing with amchart */
+
+async function createTableChart(chartForm) {
+
+
+    const table = document.createElement("table");
+    table.classList.add("table", "tabulkaStandard");
+
+    const tbody = document.createElement("tbody");
+    chartForm.chartData.forEach(row => {
+        const tr = document.createElement("tr");
+
+        chartForm.paramsNames.forEach(async paramName => {
+            tr.appendChild(await insertTableColumn(row, paramName));
+        });
+
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    const wrapper2 = document.createElement("div");
+    wrapper2.appendChild(table);
+    wrapper2.style.position = "relative";
+    wrapper2.style.width = "100%";
+    wrapper2.style.height = "100%";
+    wrapper2.style.padding = "15px";
+
+    const chartContainer = document.getElementById(chartForm.chartDivId);
+    if(chartContainer) {
+        chartContainer.appendChild(wrapper2);
+    }
+}
+
+async function insertTableColumn(rowData, paramName) {
+    const td = document.createElement("td");
+    td.textContent = rowData[paramName];
+    td.classList.add("chart-table-td");
+    return td;
+}
+
+function getColorScheme(selectedColorScheme) {
+    let useColorScheme = [];
+
+    if(selectedColorScheme === null || selectedColorScheme === undefined || selectedColorScheme.length === 0) {
+        useColorScheme = [...set1, ...set3, ...set5];
+    } else if("set1" === selectedColorScheme) {
+        useColorScheme = set1;
+    } else if("set2" === selectedColorScheme) {
+        useColorScheme = set2;
+    } else if("set3" === selectedColorScheme) {
+        useColorScheme = set3;
+    } else if("set4" === selectedColorScheme) {
+        useColorScheme = set4;
+    } else if("set5" === selectedColorScheme) {
+        useColorScheme = set5;
+    } else if("set_blue" === selectedColorScheme) {
+        useColorScheme = setBlue;
+    } else if("set_green" === selectedColorScheme) {
+        useColorScheme = setGreen;
+    } else if("set_red" === selectedColorScheme) {
+        useColorScheme = setRed;
+    } else if("set_yellow" === selectedColorScheme) {
+        useColorScheme = setYellow;
+    } else {
+        console.warn("Selected color scheme is not valid, using default one.");
+        useColorScheme = [...set1, ...set3, ...set5];
+    }
+
+    return useColorScheme.map(function(color) { return window.am5.color(color); });
+}
+
+function crateWordCloudChart(root, chartForm) {
+    if(chartForm.mode === "line" && (!chartForm.xAxeName || !chartForm.yAxeName)) {
+        console.warn("WordCloud chart cannot be generated, because xAxeName or yAxeName is missing.");
+        return;
+    } else if(chartForm.mode === "word" && typeof chartForm.chartData !== "string") {
+        console.warn("WordCloud chart cannot be generated, because chartData is not a string.");
+        return;
+    }
+
+    // Create chart instance
+    var chart = root.container.children.push(
+        am5.ZoomableContainer.new(root, {
+            width: am5.p100,
+            height: am5.p100,
+            wheelable: false,
+            pinchZoom: true
+        })
+    );
+
+    // Set created chart into WordCloudChartForm.chart
+    chartForm.chart = chart;
+
+    // Add zoom tools for line mode - for now, zoom tools are not required
+    // Leaving code here for future useage
+    //     chart.children.push(am5.ZoomTools.new(root, {
+    //         target: chart
+    //     }));
+
+    // Configure word cloud series based on mode
+    var series = chart.contents.children.push(am5wc.WordCloud.new(root, {
+        maxCount: 100,
+        minWordLength: chartForm.mode === "line" ? 1 : 2,
+        maxFontSize: am5.percent(35)
+    }));
+
+    // Set data based on mode
+    if(chartForm.mode === "word") {
+        series.set("text", chartForm.chartData);
+    } else if(chartForm.mode === "line") {
+        series.set("categoryField", chartForm.xAxeName);
+        series.set("valueField", chartForm.yAxeName);
+        series.data.setAll(chartForm.chartData);
+    } else {
+        console.warn("WordCloud chart cannot be generated, because mode is invalid:", chartForm.mode);
+        return;
+    }
+
+    // Configure labels
+    series.labels.template.setAll({
+        paddingTop: 5,
+        paddingBottom: 5,
+        paddingLeft: 5,
+        paddingRight: 5,
+        fontFamily: "Courier New"
+    });
 }

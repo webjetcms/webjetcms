@@ -1,0 +1,211 @@
+<script data-th-inline="javascript">
+    let stepTabs = [
+        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
+        { id: 'advanced', title: /*[[\#{datatable.tab.advanced}]]*/ '', selected: false },
+        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
+    ];
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+
+    WJ.breadcrumb({
+        id: "form-stats",
+        tabs: [
+            {
+                url: "/apps/form/admin/detail/?formName=" + urlFormName,
+                title: urlFormName,
+                active: true
+            }
+        ],
+        backlink: {
+            url: "/apps/form/admin/",
+            title: WJ.translate("forms.formsList.js"),
+        }
+    });
+</script>
+
+<script type="module" th:inline="javascript">
+
+    window.domReady.add(function () {
+        WJ.headerTabs({
+            id: 'tabsFilter',
+            tabs: [
+                { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: false },
+                { url: '/apps/form/admin/form-steps/?formName=' + urlFormName, title: WJ.translate('components.form_items.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/form-stats/?formName=' + urlFormName, title: WJ.translate('components.form_stat.navbar_title.js'), active: true },
+                { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: false },
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
+            ]
+        });
+    });
+
+    import { StatsByCharts } from '/apps/_common/charts/stats-by-charts.js';
+
+    fetch("/rest/multistep-form-stat/get-stat-data?form-name=" + urlFormName)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("responsesCount").textContent = data.totalResponses;
+            document.getElementById("averageDuration").textContent = data.averageDuration;
+            document.getElementById("durationDays").textContent = data.durationDays;
+            document.getElementById("lastResponseDateTime").textContent = data.lastResponseDateTime;
+
+            let instance = new StatsByCharts(
+                {
+                    targetSelector: "#chartContainer",
+                    id: "form-stats",
+                    chartSettingBtnFn: (chartDef) => {
+                        WJ.openIframeModalDatatable({
+                            url: "/apps/form/admin/form-stats-table/?id=-1&formName=" + urlFormName + "&itemFormId=" + chartDef.id + "&showOnlyEditor=true",
+                            width: 850,
+                            height: 500,
+                            buttonTitleKey: "button.save"
+                        });
+                    }
+                }
+            );
+
+            instance.createCharts(data.chartData);
+
+            window.addEventListener("stat-chart-update", async (e) => {
+                const chartId = e?.detail?.id;
+                if(chartId) {
+                    fetch("/rest/multistep-form-stat/get-chart-data?form-name=" + urlFormName + "&item-form-id=" + chartId)
+                        .then(response => response.json())
+                        .then(data => {
+                            instance.updateChart(data);
+                        })
+                        .catch(error => {
+                            console.error("Error fetching chart new data:", error);
+                        });
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching stats:", error);
+        });
+
+</script>
+
+<div class="row header-container g-3">
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--green">
+            <div class="stat-card__icon">
+                <i class="ti ti-users"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.responses_count}">RESPONSES</span>
+                <span id="responsesCount" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--blue">
+            <div class="stat-card__icon">
+                <i class="ti ti-alarm"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.average_duration}">AVERAGE_DURATION</span>
+                <span id="averageDuration" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--orange">
+            <div class="stat-card__icon">
+                <i class="ti ti-calendar"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.duration_days}">DURATION</span>
+                <span id="durationDays" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher">
+        <div class="stat-card h-100 stat-card--red">
+            <div class="stat-card__icon">
+                <i class="ti ti-calendar-pause"></i>
+            </div>
+            <div class="stat-card__content">
+                <span class="stat-card__title" data-th-text="#{components.form_stat.last_response}">LAST RESPONSE</span>
+                <span id="lastResponseDateTime" class="stat-card__value">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="chartContainer"></div>
+
+<style>
+    .header-container {
+        margin: 0 5px 20px;
+    }
+
+    .header-wrapper-outher {
+        padding: 0;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 10px;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #DDDFE6;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        overflow: hidden;
+    }
+
+    /* Color themes */
+    .stat-card--green  { background: #A3EED9; color: #004235; }
+    .stat-card--blue   { background: #D9DEFF; color: #003289; }
+    .stat-card--orange { background: #FFDAA3; color: #4A3600; }
+    .stat-card--red    { background: #FFD6D7; color: #790011; }
+
+    .stat-card--green  .stat-card__icon { color: #51DCBD; }
+    .stat-card--blue   .stat-card__icon { color: #B8C3FF; }
+    .stat-card--orange .stat-card__icon { color: #F6BE3F; }
+    .stat-card--red    .stat-card__icon { color: #FFB3B5; }
+
+    .stat-card__icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-card__icon i {
+        font-size: 4rem;
+        line-height: 1;
+    }
+
+    .stat-card__content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .stat-card__title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .stat-card__value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.1;
+        word-break: break-word;
+    }
+</style>

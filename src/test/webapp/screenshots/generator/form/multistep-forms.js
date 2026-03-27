@@ -27,7 +27,7 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_1");
     Document.screenshot("/redactor/apps/multistep-form/default-form.png");
 
-    I.resizeWindow(1360, 720)
+    I.resizeWindow(1360, 720);
     I.amOnPage("/apps/form/admin/form-steps/?formName=Registracia-na-online-kurz");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/multistep-form/real-form.png");
@@ -66,4 +66,22 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
 Scenario('App screenshots', ({ I, Apps, Document }) => {
     Apps.openAppEditor(156109);
     Document.screenshot("/redactor/apps/multistep-form/app-editor.png");
+});
+
+Scenario('Stat tab screen', ({ I, DT, DTE, Document }) => {
+    I.resizeWindow(1360, 1000);
+
+    I.amOnPage("/apps/form/admin/form-steps/?formName=stattestform");
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor("formItemsDataTable");
+
+    I.clickCss("#pills-dt-formItemsDataTable-stat-tab");
+    I.checkOption("#DTE_Field_showStat_0");
+
+    I.waitForVisible("#DTE_Field_useColorScheme_0");
+    I.wait(1);
+    I.checkOption("#DTE_Field_useColorScheme_0");
+    Document.screenshotElement("#formItemsDataTable_modal > .modal-dialog > div.DTE_Action_Create", "/redactor/apps/multistep-form/form-item-editor-stat.png");
+    DTE.cancel();
 });

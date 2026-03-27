@@ -38,4 +38,9 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
     List<FormItemEntity> findItemsToDuplicate(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
 
     List<FormItemEntity> findAllByFormNameAndDomainId(String formName, Integer domainId);
+
+    // Basically, we need find first only because joined radio buttons that have same itemFormId but are separate items
+    FormItemEntity findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(String formName, String itemFormId);
+
+    Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
 }

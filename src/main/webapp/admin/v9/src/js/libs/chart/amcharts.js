@@ -1,8 +1,8 @@
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import * as am5percent from "@amcharts/amcharts5/percent";
+import * as am5wc from "@amcharts/amcharts5/wc";
 import * as am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import * as dark from "@amcharts/amcharts5/themes/Dark";
 import { Color } from "@amcharts/amcharts5/.internal/core/util/Color";
 
 import am5locales_sk_SK from "@amcharts/amcharts5/locales/sk_SK";
@@ -34,26 +34,19 @@ export class WebjetTheme extends am5.Theme {
       secondaryButtonDown: Color.fromHex(0x0054d5)
     });
 
-    this.rule("ColorSet").setAll({
-        colors : [
-          am5.color("#0061f5"),
-          am5.color("#00a186"),
-          am5.color("#b48700"),
-          am5.color("#e00028"),
-          am5.color("#009cb4"),
-          am5.color("#003288"),
-          am5.color("#005e4d"),
-          am5.color("#6a4e00"),
-          am5.color("#a9001c"),
-          am5.color("#005b6a")
-        ]
-    });
     this.rule("Label").setAll({
       fontSize: "12px",
-      fontFamily: "Asap, sans-serif"
+      fontFamily: "Asap, sans-serif",
+      fill: am5.color(0x000000)
     });
     this.rule("Legend").setAll({
       paddingTop: 4
+    });
+    this.rule("PointedRectangle", ["tooltip", "background"]).setAll({
+      fill: am5.color(0xFFFFFF),
+      fillOpacity: 0.95,
+      stroke: am5.color(0xCCCCCC),
+      strokeOpacity: 1
     });
     this.rule("Container", ["legend", "marker"]).setAll({
       width: 11,
@@ -63,7 +56,6 @@ export class WebjetTheme extends am5.Theme {
     //scrollbar width
     this.rule("Scrollbar", ["horizontal"]).setAll({
       minHeight: 6,
-      fillOpacity: 1,
     });
     this.rule("Scrollbar", ["vertical"]).setAll({
       minWidth: 6
@@ -90,14 +82,26 @@ export class WebjetTheme extends am5.Theme {
         display.lineTo(4, 6.5);
       }
     });
+
+    // Scrollbar thumb
+    this.rule("RoundedRectangle", ["scrollbar", "thumb"]).setAll({
+      fill: am5.color(0xb3b8c7),
+      fillOpacity: 1
+    });
+
+    // Scrollbar background (track)
+    this.rule("Graphics", ["scrollbar", "background"]).setAll({
+      fill: am5.color(0xb3b8c7),
+      fillOpacity: 1
+    });
   }
 }
 
 window.am5 = am5
 window.am5xy = am5xy;
 window.am5percent = am5percent;
+window.am5wc = am5wc;
 window.am5themes_Animated = am5themes_Animated.default;
-window.am5_dark = dark.default;
 window.am5locales_sk_SK = am5locales_sk_SK;
 window.am5locales_cs_CZ = am5locales_cs_CZ;
 window.am5locales_en_US = am5locales_en_US;

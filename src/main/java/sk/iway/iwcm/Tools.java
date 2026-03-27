@@ -3404,4 +3404,20 @@ public class Tools
 			return null;
 		}
 	}
+
+	/**
+	 * Normalize string by removing accents and converting to lower case, eg. "Štěpán" -> "stepan"
+	 * @param input
+	 * @return
+	 */
+    public static String normalize(String input) {
+        // split letters and accents (š -> s + ˇ)
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+
+        // remove accent characters
+        normalized = normalized.replaceAll("\\p{M}", "");
+
+        // ignore case
+        return normalized.toLowerCase();
+    }
 }

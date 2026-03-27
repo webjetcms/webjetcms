@@ -34,11 +34,14 @@ import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.forms.RegExpRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.stat.ChartType;
+import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.utils.Pair;
 
 @RestController
 @RequestMapping("/admin/rest/form-items")
@@ -82,6 +85,8 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         page.addOptions("hiddenFieldsByType", MultistepFormsService.getFiledTypeVisibility(getRequest()), "label", "value", false);
         page.addOptions("stepId", multistepFormsService.getFormStepsOptions(MultistepFormsService.getFormName(getRequest()), getProp()), "label", "value", false);
         page.addOptions("regexValidationArr", MultistepFormsService.getRegExOptions(regExpRepository, getRequest()), "label", "value", false);
+        page.addOptions("chartType", ChartType.getOptions(getProp()), "label", "value", false);
+        page.addOptions("colorScheme", StatService.getColorSchemeOptions(), "label", "value", true);
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -122,6 +127,9 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormItemEntity> target, Identity user, Errors errors, Long id, FormItemEntity entity) {
         super.validateEditor(request, target, user, errors, id, entity);
 
+        // Do not check
+        if(MultistepFormsService.getChartStatInfo(request) != null) return;
+
         //
         if(Tools.isEmpty(entity.getFormName()) || entity.getStepId() == null || entity.getStepId() < 1)
             throw new IllegalStateException(getProp().getText("datatable.error.unknown"));
@@ -135,6 +143,13 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     @Override
     public FormItemEntity getOneItem(long id) {
         FormItemEntity entity;
+
+        Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
+        if(chartStatInfo != null) {
+            entity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            return processFromEntity(entity, ProcessItemAction.GETONE);
+        }
+
         if(id == -1) {
             entity = new FormItemEntity();
             entity.setFormName(MultistepFormsService.getFormName(getRequest()));
@@ -149,7 +164,35 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     @Override
+    public FormItemEntity insertItem(FormItemEntity entity) {
+        Pair<String, String> chartStatInfo = MultistepFormsService.getChartStatInfo(getRequest());
+        if(chartStatInfo != null) {
+            FormItemEntity originalEntity = formItemsRepository.findFirstByFormNameAndItemFormIdOrderBySortPriorityAsc(chartStatInfo.getFirst(), chartStatInfo.getSecond());
+            if(entity != null) {
+                entity = processToEntity(entity, null);
+
+                // copy only allowed params
+                originalEntity.setShowStat( entity.getShowStat() );
+                originalEntity.setChartType( entity.getChartType() );
+                originalEntity.setTopCount( entity.getTopCount() );
+                originalEntity.setShowOtherCount( entity.getShowOtherCount() );
+                originalEntity.setShowUnanswered( entity.getShowUnanswered() );
+                originalEntity.setCompareInsensitive( entity.getCompareInsensitive() );
+                originalEntity.setColorScheme( entity.getColorScheme() );
+                return formItemsRepository.save( originalEntity );
+            }
+
+            return entity;
+        }
+
+        return super.insertItem(entity);
+    }
+
+    @Override
     public void beforeSave(FormItemEntity entity) {
+        //
+        if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
+
         if("captcha".equalsIgnoreCase(entity.getFieldType()))
             entity.setRequired(true); //captcha is allways required
 
@@ -163,10 +206,30 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             String itemFormId = multistepFormsService.getValidItemFormId(entity); // generate unique
             entity.setItemFormId(itemFormId);
         }
+
+        // sort_priority bugfix - when new item have same sort_priority as existing one, get max sort_priority for step and add 10
+        int samePriorityCount = formItemsRepository.countByFormNameAndStepIdAndSortPriorityAndIdNot(entity.getFormName(), entity.getStepId().longValue(), entity.getSortPriority(), entity.getId() != null ? entity.getId().intValue() : -1);
+        if(samePriorityCount > 0) {
+            int maxSortPriority = formItemsRepository.findAll((root, query, builder) ->
+                    builder.and(
+                        builder.equal(root.get("formName"), entity.getFormName()),
+                        builder.equal(root.get("stepId"), entity.getStepId().longValue())
+                    ),
+                    PageRequest.of(0, 1, Sort.by(Sort.Order.desc("sortPriority")))
+                ).getContent().stream()
+                .findFirst()
+                .map(FormItemEntity::getSortPriority)
+                .orElse(0);
+
+            entity.setSortPriority(maxSortPriority + 10);
+        }
     }
 
     @Override
     public void afterSave(FormItemEntity entity, FormItemEntity saved) {
+        //
+        if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
+
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
@@ -208,9 +271,25 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         generatedTitle = Tools.html2text(generatedTitle);
         entity.setGeneratedTitle(generatedTitle);
 
-        if(ProcessItemAction.GETONE.equals(action))
+        if(ProcessItemAction.GETONE.equals(action)) {
             entity.setRegexValidationArr( Tools.getTokensInteger(entity.getRegexValidation(), "+") );
 
+            // IF colorScheme is set, useColorScheme is true and vice versa
+            entity.setUseColorScheme( Tools.isNotEmpty( entity.getColorScheme() ) );
+
+            if(Tools.isEmpty(entity.getChartType())) entity.setChartType( ChartType.BAR_HORIZONTAL.getKey() );
+            if(Tools.isEmpty(entity.getColorScheme())) entity.setColorScheme( StatService.DEFAULT_COLORSET_NAME );
+            if(entity.getTopCount() == null) entity.setTopCount(5);
+        }
+
+        return entity;
+    }
+
+    @Override
+    public FormItemEntity processToEntity(FormItemEntity entity, ProcessItemAction action) {
+        // When usage of colorScheme is not allowed, remove value
+        if(Tools.isTrue(entity.getShowStat()) && Tools.isTrue(entity.getUseColorScheme())) return entity;
+        entity.setColorScheme("");
         return entity;
     }
 
@@ -240,4 +319,5 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(inputClasses == null || inputClasses.size() < 1) return regexIds;
         else return regExpRepository.findRegexIdsByTypeIn(inputClasses);
     }
+
 }
