@@ -8,10 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +16,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -35,6 +34,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
@@ -176,7 +176,32 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
 	}
 
     @Override
+    public Page<DocHistory> searchItem(Map<String, String> params, Pageable pageable, DocHistory search) {
+        int docId = Tools.getIntValue(params.get("searchId"), -1);
+        if (docId > 0) {
+            params.remove("searchId");
+            params.put("searchDocId", String.valueOf(docId));
+        }
+
+        return super.searchItem(params, pageable, search);
+    }
+
+    @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocHistory> root, CriteriaBuilder builder) {
+        // It filter using ID but in reality its doc_id
+        String searchId = params.get("searchId");
+        if(Tools.isNotEmpty(searchId)) {
+            params.remove("searchId");
+            int docId = Tools.getIntValue(searchId, -1);
+            if(docId > 0) predicates.add(builder.equal(root.get("docId"), docId));
+        }
+
+        String searchAuthorName = params.get("searchAuthorName");
+        if(Tools.isNotEmpty(searchAuthorName)) {
+            SpecSearch<DocHistory> specSearch = new SpecSearch<>();
+            specSearch.addSpecSearchUserFullName(searchAuthorName, "authorId", predicates, root, builder);
+        }
+
         predicates.addAll(getPredicates(getUser().getUserId(), root, builder));
     }
 
@@ -191,6 +216,4 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
 
         return entity;
     }
-
-
 }

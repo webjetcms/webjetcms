@@ -80,7 +80,12 @@ public class BeanDiffPrinter
 							if (field.isAnnotationPresent(DataTableColumn.class)) {
 								DataTableColumn dtcAnn = field.getAnnotation(DataTableColumn.class);
 								if (dtcAnn == null) continue;
-								translated.put(field.getName(), prop.getText( dtcAnn.title()) );
+
+								String titleKey = dtcAnn.title();
+								if(titleKey == null) titleKey = field.getName();
+								if(titleKey.startsWith("[[#{") && titleKey.endsWith("}]]")) titleKey = titleKey.substring(4, titleKey.length() - 3);
+
+								translated.put(field.getName(), prop.getText(titleKey) );
 								isDatatable = true;
 							} else {
 								String fieldName = field.getName();

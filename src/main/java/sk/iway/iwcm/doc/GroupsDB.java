@@ -933,7 +933,11 @@ public class GroupsDB extends DB
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @return
 	 */
-	public boolean setGroup(GroupDetails group, boolean publishEvents)
+	public boolean setGroup(GroupDetails group, boolean publishEvents) {
+		return setGroup(group, publishEvents, true);
+	}
+
+	public boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord)
 	{
 		if (publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_START)).publishEvent();
 
@@ -1090,12 +1094,15 @@ public class GroupsDB extends DB
 			}
 
 			//groups_scheduler(history)
-			int userId = -1;
-			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-			if(rb != null)
-				userId = rb.getUserId();
 
-			GroupPublisher.addRecord(newGroup, null, userId);
+			if(addGroupSchedulerRecord) {
+				int userId = -1;
+				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+				if(rb != null)
+					userId = rb.getUserId();
+
+				GroupPublisher.addRecord(newGroup, null, userId);
+			}
 			//GroupPublisher.addRecord(newGroup, null);
 
 			StringBuilder logMessage = new StringBuilder();
