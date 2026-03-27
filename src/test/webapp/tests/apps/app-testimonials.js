@@ -24,6 +24,7 @@ Scenario("Editor test", ({ I, login, Apps }) => {
     Apps.openAppEditor(77773);
 
     I.say("Change style");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
     I.click( locate("div.image_radio_item") );
 
     I.say("Turn off images and names");

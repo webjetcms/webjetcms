@@ -33,9 +33,9 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @Getter
 @Setter
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.app-testimonials.visualStyle", selected = true),
-        @DataTableTab(id = "advanced", title = "components.app-testimonials.styleAndSettings"),
-        @DataTableTab(id = "items", title = "components.app-testimonials.items"),
+    @DataTableTab(id = "items", title = "components.app-testimonials.items", selected = true),
+    @DataTableTab(id = "basic", title = "components.app-testimonials.visualStyle"),
+    @DataTableTab(id = "advanced", title = "components.app-testimonials.styleAndSettings"),
 })
 public class TestimonialsApp extends WebjetComponentAbstract {
 
@@ -60,7 +60,8 @@ public class TestimonialsApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "items", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
         attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.apptestimonials.TestimonialItem"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-autoload", value = "true")
             }
         )})
     private String editorData = null;

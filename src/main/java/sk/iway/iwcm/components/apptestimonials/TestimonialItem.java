@@ -9,6 +9,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class TestimonialItem {
 
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, className="dt-row-edit", title = "editor.app-testimonials.name")
+    private String title;
+
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.app-testimonials.text")
+    private String description;
+
     @DataTableColumn(
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
@@ -16,12 +22,6 @@ public class TestimonialItem {
         renderFormat = "dt-format-image-notext"
     )
     private String image;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, className="dt-row-edit", title = "editor.app-testimonials.name")
-    private String title;
-
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.app-testimonials.text")
-    private String description;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.news.redirectAfterClick")
     private Boolean doRedirectUrl;
