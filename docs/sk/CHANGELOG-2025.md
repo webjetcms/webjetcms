@@ -16,7 +16,6 @@
 - Zmenené správanie ikony Bloky v režime Page Builder - [textové bloky integrované](frontend/page-builder/blocks.md) do priečinka `content` podobne ako sú bloky pre `section, container, column` (#58165).
 - Upravené spracovanie **nahrávania súborov** `multipart/form-data`, viac v [sekcii pre programátora](#pre-programátora) (#57793-3).
 - Odporúčame **skontrolovať funkčnosť všetkých formulárov** z dôvodu úprav ich spracovania, viac informácií v sekcii [pre programátora](#pre-programátora) (#58161).
-- Odstránené historické aplikácie `/components/adresar/editor_component.jsp` a `/components/sharing_icons/editor_component.jsp`, ktoré sa už nepoužívali. Ak ich chcete naďalej používať, stiahnite si z platformy `GitHub` (#57409).
 
 ### Webové stránky
 
@@ -61,31 +60,7 @@
 
 ![](redactor/webpages/approve/approve-form.png)
 
-- Vkladanie aplikácií - doplnená možnosť maximalizovať a minimalizovať okno pre vkladanie aplikácií do stránky (#57409).
-
 ### Aplikácie
-
-Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
-
-- [Predpripravené bloky (HTMLBox)](redactor/apps/htmlbox/README.md)
-
-![](redactor/apps/htmlbox/editor-block.png)
-
-- [Anketa ľahko](redactor/apps/inquiry/inquiry-simple.md)
-
-![](redactor/apps/inquiry/inquiry-simple-tab-basic.png)
-
-- [Mapa](redactor/apps/map/README.md)
-
-![](redactor/apps/map/map-editor.png)
-
-- [Odporúčania](redactor/apps/app-testimonials/README.md)
-
-![](redactor/apps/app-testimonials/editor-style.png)
-
-- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
-
-![](redactor/apps/htmlbox/editor-block.png)
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#58073).
 
