@@ -65,6 +65,9 @@ public class DocHistory extends DocBasic {
 	@Column(name = "approve_date")
 	private Date approveDate;
 
+	@Column(name = "is_delete")
+	private Boolean isDelete;
+
 	@Transient
 	private String historyApprovedByName;
 

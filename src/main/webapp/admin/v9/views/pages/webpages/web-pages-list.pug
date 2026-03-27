@@ -160,7 +160,8 @@ block content
                                 //POZOR: tu je otocene docId a historyId v objekte, kedze docId sa moze opakovat a vznikal problem s jednoznacnym ID
                                 TABLE.row("#"+row[0].id).data(dataBeforeFetch);
 
-                                if(dataBeforeFetch.title != undefined && dataBeforeFetch.title.startsWith("[DELETE]"))
+                                // dataBeforeFetch.isDelete is enough, leaving [delete] check just in case (maybe someone imported into DB old records without isDelete field)
+                                if(dataBeforeFetch.title != undefined && (dataBeforeFetch.isDelete || dataBeforeFetch.title.startsWith("[DELETE]") ))
                                     window.open("/admin/approve_delete.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);
                                 else
                                     window.open("/admin/approve.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);

@@ -350,6 +350,8 @@ public class EditorService {
 			else
 				editedHistory.setAwaitingApprove(null);
 
+			// This is not delete action, so set isDelete to false
+			editedHistory.setIsDelete(false);
 
 			//Save edited history
 			historyRepo.save(editedHistory);
@@ -1442,16 +1444,16 @@ public class EditorService {
 	 * Perform insert/update webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveAction method
 	 * @return
 	 */
-	public boolean approveAction() {
-		return approveService.approveAction(historyRepo, docRepo, this);
+	public boolean approveDocAction() {
+		return approveService.approveDocAction(historyRepo, docRepo, this);
 	}
 
 	/**
 	 * Perform delete webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveDelAction method
 	 * @return
 	 */
-	public boolean approveDelAction() {
-		return approveService.approveDelAction(historyRepo, docRepo, this);
+	public boolean approveDocDelAction() {
+		return approveService.approveDocDelAction(historyRepo, docRepo, this);
 	}
 
 	/**
@@ -1648,7 +1650,7 @@ public class EditorService {
 		//Convert DocDetail to DocHistory entity (this new entity will be inserted)
 		DocHistory docHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(docDetails);
 
-		//General setting - !! there MUST be set "[DELETE]" as delete prefix, that indicates delete intend
+		//General setting -  "[DELETE]" prefix in no more required BUT its good to have it for better orientation in history records
 		docHistory.setTitle("[DELETE] " + docHistory.getTitle());
 		docHistory.setData(prop.getText("approve.delete.doctext"));
 		docHistory.setDataAsc("[DELETE]");
@@ -1667,6 +1669,9 @@ public class EditorService {
 		//Mark docHistory as waiting for approve (need's approve by approver)
 		docHistory.setApprovedBy(-1);
 		docHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+
+		// This is delete action so set
+		docHistory.setIsDelete(true);
 
 		return docHistory;
 	}

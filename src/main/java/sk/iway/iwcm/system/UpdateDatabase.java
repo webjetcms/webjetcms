@@ -139,6 +139,8 @@ public class UpdateDatabase
 
 		updateInvoiceContacts();
 
+		setIsDeleteDocHistory();
+
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
 
@@ -2741,5 +2743,18 @@ public class UpdateDatabase
 			}
 		});
 		return values;
+	}
+
+	public static void setIsDeleteDocHistory() {
+		String note = "26.03.2026 [sivan] nastavenie is_delete v documents_history pre zaznamy oznacene [DELETE]";
+		if (isAllreadyUpdated(note)) return;
+
+		try {
+			DB.execute("UPDATE documents_history SET is_delete = 1 WHERE title LIKE '[DELETE]%' AND data_asc = '[DELETE]'");
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+
+		saveSuccessUpdate(note);
 	}
 }

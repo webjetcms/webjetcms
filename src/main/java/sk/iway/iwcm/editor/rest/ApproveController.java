@@ -24,7 +24,7 @@ public class ApproveController {
         final String error = "/admin/approve_form";
 		final String success = "/admin/approve_success";
 
-        boolean ok = editorService.approveAction();
+        boolean ok = editorService.approveDocAction();
         if (ok) return success;
         return error;
     }
@@ -35,7 +35,7 @@ public class ApproveController {
         final String error = "/admin/approve_form_delete";
 		final String success = "/admin/approve_success_del";
 
-        boolean ok = editorService.approveDelAction();
+        boolean ok = editorService.approveDocDelAction();
         if (ok) return success;
         return error;
     }
