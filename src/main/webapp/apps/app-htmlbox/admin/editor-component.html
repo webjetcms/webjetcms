@@ -24,6 +24,7 @@
                 if("#component-datatable_modal #DTE_Field_docDetails" === e.detail.textInputId) {
                     currentDocId = e.detail.item.docId;
                     setIframeSrcForDoc();
+
                 }
             });
 
@@ -36,8 +37,7 @@
             });
 
             codeTypeSelect.addEventListener("change", function() {
-                const selectedValue = this.value;
-
+                let selectedValue = this.value;
                 if("block" === selectedValue) {
                     blockType.style.display = "flex";
                     docStyle.style.display = "none";
@@ -66,7 +66,11 @@
                         console.error("Unknown code type selected:", selectedValue);
                         setIframeSrc("");
                     }
+
+                    selectedValue = templetGroupPrefix;
                 }
+
+                document.getElementById("previewIframe").setAttribute("data-selected-block-type", selectedValue);
             });
             // If doc is set, select doc code type and style
             if(response.data.docDetails != null) {
@@ -126,15 +130,7 @@
             // set attributes
             iframe.id = "previewIframe";
             iframe.name = "previewIframe";
-            iframe.dataset.marginTop = "85";
             iframe.src = "";
-
-            // set styles
-            iframe.style.width = "100%";
-            iframe.style.height = "860px";
-            iframe.style.background = "white";
-            iframe.style.border = "0px";
-            iframe.style.maxHeight = "860px";
 
             // append to body (or another container)
             basicTab.appendChild(iframe);
@@ -168,3 +164,22 @@
     }
 
 </script>
+<style type="text/css">
+    #previewIframe {
+        margin-top: 16px;
+        width: 100%;
+        height: 394px;
+        background: white;
+        border: 0px;
+        border-top: 1px solid #ccc;
+    }
+    #previewIframe[data-selected-block-type="doc"] {
+        height: 320px;
+    }
+    #previewIframe[data-selected-block-type="templateGroupId_"] {
+        height: 370px;
+    }
+    #pills-dt-component-datatable-basic {
+        padding-bottom: 0px;
+    }
+</style>

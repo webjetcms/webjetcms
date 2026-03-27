@@ -9,7 +9,7 @@
 ### Prelomové zmeny
 
 - Vyžadovaný je aplikačný server Tomcat 11, verzia 10 už nie je podporovaná (#58385).
-- Odstránené historické aplikácie `/components/adresar/editor_component.jsp` a `/components/sharing_icons/editor_component.jsp`, ktoré sa už nepoužívali. Ak ich chcete naďalej používať, stiahnite si z platformy `GitHub` (#57409).
+- Odstránené historické aplikácie `/components/adresar/editor_component.jsp` a `/components/sharing_icons/editor_component.jsp`, ktoré sa už nepoužívali. Ak ich chcete naďalej používať, stiahnite si z platformy [GitHub](https://github.com/webjetcms/webjetcms/tree/hotfix/2026.0-main/src/main/webapp/components) (#57409).
 
 ### Webové stránky
 
