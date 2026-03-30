@@ -1065,7 +1065,8 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
     I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genParentPath));
 });
 
-Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
+Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
+    var tolerance = 4; //tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
 
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
     DT.waitForLoader();
@@ -1090,34 +1091,34 @@ Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
     I.wait(2);
     I.fillField("#h", "590");
     I.wait(5);
-    Document.compareScreenshotElement('thumb-servlet/editor-original-image.png');
+    await Document.compareScreenshotElement(null, 'thumb-servlet/editor-original-image.png', null, null, tolerance);
     DTE.save();
 
     I.amOnPage('/images/gallery/test-vela-foto/dsc04068.jpeg');
-    Document.compareScreenshotElement('img', 'thumb-servlet/original-image.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/original-image.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200');
-    Document.compareScreenshotElement('img', 'thumb-servlet/thumb-image.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/thumb-image.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&ip=1');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-1.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-1.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?h=200&ip=2');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-2.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-2.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=3');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-3.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-3.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&c=ffff00');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-4.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-4.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=5');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-5.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-5.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=6');
-    Document.compareScreenshotElement('img', 'thumb-servlet/ip-6.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-6.png', null, null, tolerance);
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
-    Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
 
 });
