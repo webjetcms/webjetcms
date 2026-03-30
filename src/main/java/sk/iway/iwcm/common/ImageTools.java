@@ -20,6 +20,9 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
+import com.luciad.imageio.webp.CompressionType;
+import com.luciad.imageio.webp.WebPWriteParam;
+
 import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
@@ -46,6 +49,111 @@ public class ImageTools
 {
 	private ImageTools() {
 
+	}
+
+	/**
+	 * Returns true if the image format supports transparency (eg. PNG, WEBP, GIF).
+	 * @param fileName - file name with extension
+	 * @return true if file format supports transparency
+	 */
+	public static boolean supportsTransparency(String fileName)
+	{
+		String ext = FileTools.getFileExtension(fileName);
+		return "png".equals(ext) || "webp".equals(ext) || "gif".equals(ext);
+	}
+
+	/**
+	 * Returns BufferedImage type based on file format.
+	 * For transparent images returns TYPE_INT_ARGB to preserve transparency, for others TYPE_INT_RGB.
+	 * @param fileName - file name with extension
+	 * @return BufferedImage.TYPE_INT_ARGB or BufferedImage.TYPE_INT_RGB
+	 */
+	public static int getBufferedImageType(String fileName)
+	{
+		return supportsTransparency(fileName) ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+	}
+
+	/**
+	 * Writes BufferedImage to file in correct format based on file extension.
+	 * For transparent images preserves transparency.
+	 * For JPG uses JPEG compression with 0.85 quality.
+	 * @param image - BufferedImage to write
+	 * @param fileName - original file name to detect format (e.g. "photo.png")
+	 * @param outputFile - output IwcmFile to write to
+	 * @return 0 on success, 2 on error
+	 */
+	public static int writeImage(BufferedImage image, String fileName, int imageQuality, IwcmFile outputFile)
+	{
+		String ext = FileTools.getFileExtension(fileName);
+		if (imageQuality < 0 || imageQuality > 100) {
+			imageQuality = GalleryDB.getImageQuality(null, image.getWidth());
+		}
+		if (imageQuality < 0 || imageQuality > 100) {
+			imageQuality = 85;
+		}
+
+		String format = ext;
+		ImageWriteParam iwparam = null;
+		if ("png".equals(ext) || "gif".equals(ext))
+		{
+			format = ext;
+		}
+		else if ("webp".equals(ext))
+		{
+			format = ext;
+		}
+		else
+		{
+			format = "jpg";
+			iwparam = new JPEGImageWriteParam(null);
+			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			iwparam.setCompressionQuality(imageQuality / 100.0F);
+		}
+
+
+
+		ImageWriter writer = null;
+		Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
+		if (iter.hasNext())
+		{
+			writer = iter.next();
+		}
+		if (writer == null)
+		{
+			Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
+			return 2;
+		}
+
+		//for WebP set compression quality using writer's default param (WebPWriteParam)
+		if ("webp".equals(ext))
+		{
+			WebPWriteParam writeParam = ((WebPWriteParam) writer.getDefaultWriteParam());
+			if (imageQuality == 100) {
+				writeParam.setCompressionType(CompressionType.Lossless);
+			} else {
+				writeParam.setCompressionType(CompressionType.Lossy);
+			}
+			writeParam.setUseSharpYUV(true);
+			writeParam.setCompressionQuality(imageQuality / 100.0F);
+		}
+
+		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
+			 ImageOutputStream ios = ImageIO.createImageOutputStream(out))
+		{
+			writer.setOutput(ios);
+			writer.write(null, new IIOImage(image, null, null), iwparam);
+			ios.flush();
+			return 0;
+		}
+		catch (Exception ex)
+		{
+			Logger.error(ex);
+			return 2;
+		}
+		finally
+		{
+			writer.dispose();
+		}
 	}
 
 	/**
@@ -125,6 +233,9 @@ public class ImageTools
 		//imp = opener.openImage(realPath);
 		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));
 
+		//detect format and transparency support based on file extension
+		int imageType = getBufferedImageType(imageFile.getName());
+
 		double scaleFactor = (width * 1.0) / (originalImage.getWidth() * 1.0);
 		double scaleFactor2 = (height * 1.0) / (originalImage.getHeight() * 1.0);
 
@@ -132,55 +243,23 @@ public class ImageTools
 		int h = (int) (originalImage.getHeight() * scaleFactor2);
 
 		Image resizedImage = originalImage.getScaledInstance(w, h, Image.SCALE_AREA_AVERAGING);
-		BufferedImage bufSmall = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-		bufSmall.getGraphics().drawImage(resizedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
-
-
+		BufferedImage bufSmall = new BufferedImage(w, h, imageType);
+		Graphics2D graphics2D = bufSmall.createGraphics();
 		try
 		{
-			ImageWriteParam iwparam = new JPEGImageWriteParam(null);
-			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
-			iwparam.setCompressionQuality(0.85F);
-
-			//ImageIO.write(bufSmall, format, iwparam, fSmallImg);
-			//Jimi.putImage("image/" + type, image, realPathSmall);
-
-			ImageWriter writer = null;
-			@SuppressWarnings("rawtypes")
-			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
-			if (iter.hasNext()) {
-				 writer = (ImageWriter)iter.next();
-			}
-
-			if (writer != null) {
-				if (imageFile.exists())
-				{
-					imageFile.delete();
-				}
-
-				// Prepare output file
-				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);
-				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);
-				writer.setOutput(ios);
-
-				// Write the image
-				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);
-
-				// Cleanup
-				ios.flush();
-				writer.dispose();
-				ios.close();
-				iwos.close();
-			}
-
-			return(0);
+			graphics2D.drawImage(resizedImage, 0, 0, null);
 		}
-		catch (Exception ex)
+		finally
 		{
-			sk.iway.iwcm.Logger.error(ex);
-			return(2);
+			graphics2D.dispose();
 		}
+
+		if (imageFile.exists())
+		{
+			imageFile.delete();
+		}
+
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 
 	/**
@@ -264,47 +343,23 @@ public class ImageTools
 
 		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));
 
+		//detect format and transparency support based on file extension
+		int imageType = getBufferedImageType(imageFile.getName());
+
 		Image cropedImage = originalImage.getSubimage(startX, startY, width, height);
 
-		BufferedImage bufSmall = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		bufSmall.getGraphics().drawImage(cropedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
+		BufferedImage bufSmall = new BufferedImage(width, height, imageType);
+		Graphics2D g2d = bufSmall.createGraphics();
+        try
+        {
+            g2d.drawImage(cropedImage, 0, 0, null);
+        }
+        finally
+        {
+            g2d.dispose();
+        }
 
-		try
-		{
-			ImageWriteParam iwparam = new JPEGImageWriteParam(null);
-			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
-			iwparam.setCompressionQuality(0.85F);
-
-			ImageWriter writer = null;
-			@SuppressWarnings("rawtypes")
-			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
-			if (iter.hasNext()) {
-				 writer = (ImageWriter)iter.next();
-			}
-			if (writer != null) {
-				// Prepare output file
-				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);
-				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);
-				writer.setOutput(ios);
-
-				// Write the image
-				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);
-
-				// Cleanup
-				ios.flush();
-				writer.dispose();
-				ios.close();
-				iwos.close();
-			}
-
-			return(0);
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-			return(2);
-		}
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 	public static int cropImage(String srcUrl, int width, int height, int startX, int startY)
 	{
@@ -703,6 +758,9 @@ public class ImageTools
 	{
 		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));
 
+		//detect format and transparency support based on file extension
+		int imageType = getBufferedImageType(imageFile.getName());
+
 		int w = originalImage.getWidth();
 		int h = originalImage.getHeight();
 
@@ -735,7 +793,7 @@ public class ImageTools
 		BufferedImage result = gc.createCompatibleImage(neww, newh); //, transparency);*/
 
 		//BufferedImage result = originalImage.getScaledInstance(neww, newh, )
-		BufferedImage result = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);
+		BufferedImage result = new BufferedImage(neww, newh, imageType);
 
 		Graphics2D g = result.createGraphics();
 		g.translate((neww-w)/(double)2, (newh-h)/(double)2);
@@ -744,48 +802,18 @@ public class ImageTools
 
 		Image rotatedImage = result.getSubimage(0, 0, result.getWidth(), result.getHeight());
 
-		BufferedImage bufSmall = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);
-		bufSmall.getGraphics().drawImage(rotatedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
+		BufferedImage bufSmall = new BufferedImage(neww, newh, imageType);
+		Graphics2D g2d = bufSmall.createGraphics();
+        try
+        {
+            g2d.drawImage(rotatedImage, 0, 0, null);
+        }
+        finally
+        {
+            g2d.dispose();
+        }
 
-		try
-		{
-			ImageWriteParam iwparam = new JPEGImageWriteParam(null);
-			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
-			iwparam.setCompressionQuality(0.85F);
-
-			//ImageIO.write(bufSmall, format, iwparam, fSmallImg);
-			//Jimi.putImage("image/" + type, image, realPathSmall);
-
-			ImageWriter writer = null;
-			@SuppressWarnings("rawtypes")
-			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
-			if (iter.hasNext()) {
-				 writer = (ImageWriter)iter.next();
-			}
-			if (writer != null) {
-				// Prepare output file
-				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);
-				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);
-				writer.setOutput(ios);
-
-				// Write the image
-				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);
-
-				// Cleanup
-				ios.flush();
-				writer.dispose();
-				ios.close();
-				iwos.close();
-			}
-
-			return(0);
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-			return(2);
-		}
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 
 	public static int rotateImage(String srcUrl, double angle)

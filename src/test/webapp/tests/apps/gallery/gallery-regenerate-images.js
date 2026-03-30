@@ -106,7 +106,11 @@ async function regenerateWatermark(I, watermark) {
      I.waitForVisible('#SomStromcek', 10);
 }
 
-Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I, DT }) => {
+Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I, DT, Document }) => {
+     Document.setConfigValue("imageMagickDir", "/usr/bin");
+     //for local development localconf will set correct default values
+     I.amOnPage("/localconf.jsp");
+
      I.amOnPage("/admin/v9/apps/gallery/");
      DT.waitForLoader();
 

@@ -289,8 +289,8 @@ dependencies {
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
-    // Source: https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
-    implementation("com.twelvemonkeys.imageio:imageio-webp:3.13.1")
+    // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
+    implementation("com.github.usefulness:webp-imageio:0.10.2")
 
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"

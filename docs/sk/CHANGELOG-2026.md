@@ -16,7 +16,7 @@
 - Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}` (#OSK149).
 - Page Builder - opravené presúvanie okna pre vloženie blokov, opravené prekrývanie výberu režimu editora, zapracované UX pripomienky (#58353).
 - Zjednotené používanie nástroja `ImageMagick` pre zmenu veľkostí obrázkov medzi galériou a `/thumb servlet` (#osk396).
-- Pridaná podpora vkladania obrázkov vo formáte `webp` (#osk396).
+- Pridaná podpora vkladania obrázkov vo formáte `webp` vrátane zápisu pri zmene veľkosti pomocou natívnej knižnice `libwebp` cez `ImageIO` (#osk396).
 - Pridané konfiguračné premenné `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` operácií podľa typu operácie a formátu obrázka (#osk396).
 
 ### Manažér dokumentov
@@ -35,6 +35,7 @@
 
 ### Iné menšie zmeny
 
+- Galéria - pridaná podpora priesvitnosti v `png/webp/gif` obrázkoch pri zmene ich veľkosti, ak sa nepoužíva [ImageMagick](redactor/apps/gallery/README.md#možné-konfiguračné-premenné) (#osk396).
 - GitHub pipeline - po `merge pull request` sa automaticky vygeneruje príspevok na sociálne siete pomocou LLM (GitHub Copilot / Google Gemini) a pridá sa ako komentár k danému `pull request` spolu s prípadnými fotkami obrazovky z dokumentácie (#177).
 - Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
 - Skripty - pridaný atribút [Poradie vkladania](redactor/apps/insert-script/README.md) pre nastavenie poradia vkladania skriptov v rámci rovnakej pozície. Predvolená hodnota pre existujúce skripty je 10, pri novom skripte sa automaticky nastaví na najvyššiu hodnotu + 10 (#osk387).
