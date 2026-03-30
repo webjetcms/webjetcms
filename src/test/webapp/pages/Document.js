@@ -143,7 +143,7 @@ module.exports = {
         tolerance: tolerance
       });
 
-      I.say("Visual diff is: "+result.difference+"%");
+      I.say("-----> Visual diff is: "+result.difference+"%");
   },
 
   switchDomain(domain) {
