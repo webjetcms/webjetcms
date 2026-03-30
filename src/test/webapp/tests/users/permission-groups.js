@@ -13,6 +13,39 @@ Scenario('permission-groups @baseTest', async ({I, DataTables }) => {
     });
 });
 
+Scenario('test allEditableGroups and allWritableFolders checkboxes', ({I, DTE, DT}) => {
+    I.amOnPage("/admin/v9/users/permission-groups/");
+    DT.waitForLoader();
+
+    I.say("Create new permission group");
+    DT.clickAddButton("permissionGroupsDataTable");
+    DTE.waitForEditor("permissionGroupsDataTable");
+
+    I.say("Switch to dirs tab and verify checkboxes exist");
+    I.clickCss("#pills-dt-permissionGroupsDataTable-dirs-tab");
+    I.waitForElement(".DTE_Field_Name_allEditableGroups", 5);
+    I.seeElement(".DTE_Field_Name_allWritableFolders");
+
+    I.say("Verify tree selectors are visible initially");
+    I.seeElement(".DTE_Field_Name_editorFields\\.editableGroups");
+    I.seeElement(".DTE_Field_Name_editorFields\\.writableFolders");
+
+    I.say("Check allEditableGroups and verify tree selectors are hidden");
+    DTE.clickSwitch("allEditableGroups");
+    I.dontSeeElement(".DTE_Field_Name_editorFields\\.editableGroups:visible");
+    I.dontSeeElement(".DTE_Field_Name_editorFields\\.editablePages:visible");
+
+    I.say("Check allWritableFolders and verify writable folders tree is hidden");
+    DTE.clickSwitch("allWritableFolders");
+    I.dontSeeElement(".DTE_Field_Name_editorFields\\.writableFolders:visible");
+
+    I.say("Uncheck allEditableGroups and verify tree selectors are visible again");
+    DTE.clickSwitch("allEditableGroups");
+    I.seeElement(".DTE_Field_Name_editorFields\\.editableGroups");
+
+    DTE.cancel("permissionGroupsDataTable");
+});
+
 Scenario('test user perms', ({I, DT}) => {
     I.relogin("tester2");
     I.amOnPage("/admin/v9/settings/update/");

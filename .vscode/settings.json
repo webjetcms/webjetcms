@@ -92,5 +92,6 @@
         "uniq": true,
         "awk": true,
         "read": true
-    }
+    },
+    "chat.agent.maxRequests": 150
 }
