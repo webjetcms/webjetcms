@@ -11,7 +11,7 @@ Before(({ I, login }) => {
     }
 });
 
-async function uploadWebpImage(name, I) {
+async function uploadImage(name, I) {
     I.say('Uploading webp image');
     I.click('.elfinder-button-icon.elfinder-button-icon-upload');
     //from: https://developers.google.com/speed/webp/gallery1 / https://commons.wikimedia.org/wiki/File:Frühling_blühender_Kirschenbaum.jpg
@@ -23,7 +23,14 @@ async function uploadWebpImage(name, I) {
     I.seeElement('.elfinder-cwd-filename[title="' + name + '"]');
 }
 
-Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
+async function compareTransparentImage(fileName, compareName, I, Document, tolerance) {
+    I.say('Comparing transparent image ' + fileName);
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/' + fileName + '?w=400&h=400&ip=4&c=ffff00');
+    I.waitForElement('img', 10);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/' + compareName, null, null, tolerance);
+}
+
+Scenario('webp/gif/png upload and thumbnail test', async ({ I, Document }) => {
     var tolerance = 5; //tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
 
     Document.setConfigValue("imageMagickDir", "/usr/bin");
@@ -47,8 +54,11 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.doubleClick(locate('.elfinder-cwd-filename').withText(folderName));
     I.waitForElement(locate('.elfinder-navbar-dir.ui-state-active').withText(folderName), 10);
 
-    await uploadWebpImage('tree.webp', I);
-    await uploadWebpImage('rose-transparent.webp', I);
+    await uploadImage('tree.webp', I);
+    await uploadImage('rose-transparent.webp', I);
+    //https://pixabay.com/gifs/watermelon-fruit-slice-wavy-wiggle-23023/
+    await uploadImage('mxjfiles-watermelon-23023.gif', I);
+    await uploadImage('mxjfiles-watermelon-23023.png', I);
 
     //
     I.say('Displaying webp image via /thumb prefix and comparing screenshot');
@@ -56,9 +66,9 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.waitForElement('img', 10);
     await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb.png', null, null, tolerance);
 
-    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/rose-transparent.webp?w=400&h=400&ip=4&c=ffff00');
-    I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-rose-transparent-thumb.png', null, null, tolerance);
+    await compareTransparentImage('rose-transparent.webp', 'webp-rose-transparent-thumb.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.gif', 'mxjfiles-watermelon-23023-gif-thumb.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.png', 'mxjfiles-watermelon-23023-png-thumb.png', I, Document, tolerance);
 
     //
     I.say('Displaying webp image via /thumb prefix with no IP');
@@ -73,9 +83,9 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.waitForElement('img', 10);
     await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java.png', null, null, tolerance);
 
-    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/rose-transparent.webp?w=400&h=400&ip=4&c=ffff00');
-    I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-rose-transparent-java.png', null, null, tolerance);
+    await compareTransparentImage('rose-transparent.webp', 'webp-rose-transparent-java.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.gif', 'mxjfiles-watermelon-23023-gif-java.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.png', 'mxjfiles-watermelon-23023-png-java.png', I, Document, tolerance);
 
     //noip
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=480');

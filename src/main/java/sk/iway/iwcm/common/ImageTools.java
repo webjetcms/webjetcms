@@ -56,7 +56,7 @@ public class ImageTools
 	public static boolean supportsTransparency(String fileName)
 	{
 		String ext = FileTools.getFileExtension(fileName);
-		return "png".equals(ext) || "webp".equals(ext);
+		return "png".equals(ext) || "webp".equals(ext) || "gif".equals(ext);
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class ImageTools
 
 		String format = ext;
 		ImageWriteParam iwparam = null;
-		if ("png".equals(ext) || "webp".equals(ext))
+		if ("png".equals(ext) || "webp".equals(ext) || "gif".equals(ext))
 		{
 			format = ext;
 		}
@@ -97,36 +97,34 @@ public class ImageTools
 			iwparam.setCompressionQuality(0.85F);
 		}
 
-		try
+		ImageWriter writer = null;
+		Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
+		if (iter.hasNext())
 		{
-			ImageWriter writer = null;
-			Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
-			if (iter.hasNext())
-			{
-				writer = iter.next();
-			}
-			if (writer != null)
-			{
-				IwcmOutputStream out = new IwcmOutputStream(outputFile);
-				ImageOutputStream ios = ImageIO.createImageOutputStream(out);
-				writer.setOutput(ios);
-				writer.write(null, new IIOImage(image, null, null), iwparam);
-				ios.flush();
-				writer.dispose();
-				ios.close();
-				out.close();
-				return 0;
-			}
-			else
-			{
-				Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
-				return 2;
-			}
+			writer = iter.next();
+		}
+		if (writer == null)
+		{
+			Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
+			return 2;
+		}
+
+		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
+			 ImageOutputStream ios = ImageIO.createImageOutputStream(out))
+		{
+			writer.setOutput(ios);
+			writer.write(null, new IIOImage(image, null, null), iwparam);
+			ios.flush();
+			return 0;
 		}
 		catch (Exception ex)
 		{
 			Logger.error(ex);
 			return 2;
+		}
+		finally
+		{
+			writer.dispose();
 		}
 	}
 
