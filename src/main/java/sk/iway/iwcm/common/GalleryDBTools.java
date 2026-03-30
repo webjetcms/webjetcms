@@ -5,17 +5,11 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -25,7 +19,6 @@ import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.io.IwcmOutputStream;
 
 public class GalleryDBTools {
     //hash mapa pre ukladanie rozmerov obrazkov do cache
@@ -162,6 +155,11 @@ public class GalleryDBTools {
             IwcmInputStream iwStream = new IwcmInputStream(from.getPath(), false);
             BufferedImage originalBufferedImage = ImageIO.read(iwStream);
             iwStream.close();
+
+            //detect format and transparency support based on file extension
+            boolean supportsTransparency = ImageTools.supportsTransparency(from.getName());
+            int imageType = ImageTools.getBufferedImageType(from.getName());
+
             // Logger.println(GalleryDB.class,"w="+w+" h="+h);
             int scaleType = Image.SCALE_AREA_AVERAGING;
             if (originalBufferedImage.getWidth() > 1000)
@@ -202,7 +200,7 @@ public class GalleryDBTools {
                 }
             }
 
-            DebugTimer timer = new DebugTimer("ImageResize");
+            DebugTimer timer = new DebugTimer("GalleryDBTools.cropAndResizeJava");
             timer.diff("starting: " + scaleType + " cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
             Image smallImage = null;
 
@@ -210,7 +208,7 @@ public class GalleryDBTools {
             BufferedImage bi;
             if (cwidth > 0 && cheight > 0) {
                 smallImage = originalBufferedImage.getSubimage(cleft, ctop, cwidth, cheight);
-                bi = new BufferedImage(cwidth, cheight, BufferedImage.TYPE_INT_RGB);
+                bi = new BufferedImage(cwidth, cheight, imageType);
                 Graphics2D g = bi.createGraphics();
                 g.drawImage(smallImage, 0, 0, null);
                 timer.diff("croped");
@@ -221,7 +219,7 @@ public class GalleryDBTools {
             /*** Zmena velkosti obrazku ***/
             smallImage = bi.getScaledInstance(resizeWidth, resizeHeight, scaleType);
             timer.diff("scaled");
-            BufferedImage bufSmall = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_RGB);
+            BufferedImage bufSmall = new BufferedImage(finalWidth, finalHeight, imageType);
             timer.diff("buf created");
             // bufSmall.getGraphics().drawImage(smallImage, 0, 0, null);
             Graphics2D graphics = bufSmall.createGraphics();
@@ -230,7 +228,7 @@ public class GalleryDBTools {
                 graphics.setPaint ( Color.decode("#"+fillColor) );
                 graphics.fillRect ( 0, 0, finalWidth, finalHeight );
             }
-            else
+            else if (supportsTransparency == false)
             {
                 graphics.setPaint ( Color.white );
                 graphics.fillRect ( 0, 0, finalWidth, finalHeight );
@@ -240,43 +238,11 @@ public class GalleryDBTools {
             bufSmall.getGraphics().dispose();
             timer.diff("disposed");
 
-            ImageWriteParam iwparam = null;
-            // ImageIO.write(bufSmall, format,iwparam, fSmallImg);
-            // Jimi.putImage("image/" + type, image, realPathSmall);
-            ImageWriter writer = null;
+            timer.diff("write start");
+            int writeResult = ImageTools.writeImage(bufSmall, from.getName(), to);
+            timer.diff("writed to file");
+            if (writeResult != 0) return writeResult;
 
-            String format = "jpg";
-            if (from.getAbsolutePath().endsWith(".png"))
-            {
-                format = "png";
-            }
-            else
-            {
-                iwparam = new JPEGImageWriteParam(null);
-                iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                iwparam.setCompressionQuality(0.85F);
-            }
-
-            Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
-            if (iter.hasNext())
-            {
-                writer = iter.next();
-            }
-            if (writer != null) {
-                // Prepare output file
-                IwcmOutputStream out = new IwcmOutputStream(to.getPath());
-                ImageOutputStream ios = ImageIO.createImageOutputStream(out);
-                writer.setOutput(ios);
-                timer.diff("write start");
-                // Write the image
-                writer.write(null, new IIOImage(bufSmall, null, null), iwparam);
-                timer.diff("writed to file");
-                // Cleanup
-                ios.flush();
-                writer.dispose();
-                ios.close();
-                out.close();
-            }
             return (0);
         }
         catch (javax.imageio.IIOException ex)
