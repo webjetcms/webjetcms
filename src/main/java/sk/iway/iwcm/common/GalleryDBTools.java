@@ -240,7 +240,7 @@ public class GalleryDBTools {
             timer.diff("disposed");
 
             timer.diff("write start");
-            int writeResult = ImageTools.writeImage(bufSmall, from.getName(), to);
+            int writeResult = ImageTools.writeImage(bufSmall, from.getName(), imageQuality, to);
             timer.diff("writed to file");
             if (writeResult != 0) return writeResult;
 

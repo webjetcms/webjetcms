@@ -20,6 +20,9 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
+import com.luciad.imageio.webp.CompressionType;
+import com.luciad.imageio.webp.WebPWriteParam;
+
 import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
@@ -49,7 +52,7 @@ public class ImageTools
 	}
 
 	/**
-	 * Returns true if the image format supports transparency (PNG, WEBP).
+	 * Returns true if the image format supports transparency (eg. PNG, WEBP, GIF).
 	 * @param fileName - file name with extension
 	 * @return true if file format supports transparency
 	 */
@@ -61,7 +64,7 @@ public class ImageTools
 
 	/**
 	 * Returns BufferedImage type based on file format.
-	 * For PNG/WEBP returns TYPE_INT_ARGB to preserve transparency, for others TYPE_INT_RGB.
+	 * For transparent images returns TYPE_INT_ARGB to preserve transparency, for others TYPE_INT_RGB.
 	 * @param fileName - file name with extension
 	 * @return BufferedImage.TYPE_INT_ARGB or BufferedImage.TYPE_INT_RGB
 	 */
@@ -72,20 +75,30 @@ public class ImageTools
 
 	/**
 	 * Writes BufferedImage to file in correct format based on file extension.
-	 * For PNG/WEBP images preserves transparency.
+	 * For transparent images preserves transparency.
 	 * For JPG uses JPEG compression with 0.85 quality.
 	 * @param image - BufferedImage to write
 	 * @param fileName - original file name to detect format (e.g. "photo.png")
 	 * @param outputFile - output IwcmFile to write to
 	 * @return 0 on success, 2 on error
 	 */
-	public static int writeImage(BufferedImage image, String fileName, IwcmFile outputFile)
+	public static int writeImage(BufferedImage image, String fileName, int imageQuality, IwcmFile outputFile)
 	{
 		String ext = FileTools.getFileExtension(fileName);
+		if (imageQuality < 0 || imageQuality > 100) {
+			imageQuality = GalleryDB.getImageQuality(null, image.getWidth());
+		}
+		if (imageQuality < 0 || imageQuality > 100) {
+			imageQuality = 85;
+		}
 
 		String format = ext;
 		ImageWriteParam iwparam = null;
-		if ("png".equals(ext) || "webp".equals(ext) || "gif".equals(ext))
+		if ("png".equals(ext) || "gif".equals(ext))
+		{
+			format = ext;
+		}
+		else if ("webp".equals(ext))
 		{
 			format = ext;
 		}
@@ -94,8 +107,10 @@ public class ImageTools
 			format = "jpg";
 			iwparam = new JPEGImageWriteParam(null);
 			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-			iwparam.setCompressionQuality(0.85F);
+			iwparam.setCompressionQuality(imageQuality / 100.0F);
 		}
+
+
 
 		ImageWriter writer = null;
 		Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
@@ -107,6 +122,19 @@ public class ImageTools
 		{
 			Logger.error(ImageTools.class, "No suitable ImageWriter found for format: " + format);
 			return 2;
+		}
+
+		//for WebP set compression quality using writer's default param (WebPWriteParam)
+		if ("webp".equals(ext))
+		{
+			WebPWriteParam writeParam = ((WebPWriteParam) writer.getDefaultWriteParam());
+			if (imageQuality == 100) {
+				writeParam.setCompressionType(CompressionType.Lossless);
+			} else {
+				writeParam.setCompressionType(CompressionType.Lossy);
+			}
+			writeParam.setUseSharpYUV(true);
+			writeParam.setCompressionQuality(imageQuality / 100.0F);
 		}
 
 		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
@@ -216,15 +244,22 @@ public class ImageTools
 
 		Image resizedImage = originalImage.getScaledInstance(w, h, Image.SCALE_AREA_AVERAGING);
 		BufferedImage bufSmall = new BufferedImage(w, h, imageType);
-		bufSmall.getGraphics().drawImage(resizedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
+		Graphics2D graphics2D = bufSmall.createGraphics();
+		try
+		{
+			graphics2D.drawImage(resizedImage, 0, 0, null);
+		}
+		finally
+		{
+			graphics2D.dispose();
+		}
 
 		if (imageFile.exists())
 		{
 			imageFile.delete();
 		}
 
-		return writeImage(bufSmall, imageFile.getName(), imageFile);
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 
 	/**
@@ -314,10 +349,17 @@ public class ImageTools
 		Image cropedImage = originalImage.getSubimage(startX, startY, width, height);
 
 		BufferedImage bufSmall = new BufferedImage(width, height, imageType);
-		bufSmall.getGraphics().drawImage(cropedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
+		Graphics2D g2d = bufSmall.createGraphics();
+        try
+        {
+            g2d.drawImage(cropedImage, 0, 0, null);
+        }
+        finally
+        {
+            g2d.dispose();
+        }
 
-		return writeImage(bufSmall, imageFile.getName(), imageFile);
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 	public static int cropImage(String srcUrl, int width, int height, int startX, int startY)
 	{
@@ -761,10 +803,17 @@ public class ImageTools
 		Image rotatedImage = result.getSubimage(0, 0, result.getWidth(), result.getHeight());
 
 		BufferedImage bufSmall = new BufferedImage(neww, newh, imageType);
-		bufSmall.getGraphics().drawImage(rotatedImage, 0, 0, null);
-		bufSmall.getGraphics().dispose();
+		Graphics2D g2d = bufSmall.createGraphics();
+        try
+        {
+            g2d.drawImage(rotatedImage, 0, 0, null);
+        }
+        finally
+        {
+            g2d.dispose();
+        }
 
-		return writeImage(bufSmall, imageFile.getName(), imageFile);
+		return writeImage(bufSmall, imageFile.getName(), -1, imageFile);
 	}
 
 	public static int rotateImage(String srcUrl, double angle)
