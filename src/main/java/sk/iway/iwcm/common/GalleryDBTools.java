@@ -211,6 +211,7 @@ public class GalleryDBTools {
                 bi = new BufferedImage(cwidth, cheight, imageType);
                 Graphics2D g = bi.createGraphics();
                 g.drawImage(smallImage, 0, 0, null);
+                g.dispose();
                 timer.diff("croped");
             } else {
                 bi = originalBufferedImage;
@@ -235,7 +236,7 @@ public class GalleryDBTools {
             }
             graphics.drawImage(smallImage, offsetW, offsetH, null);
             timer.diff("image drawed");
-            bufSmall.getGraphics().dispose();
+            graphics.dispose();
             timer.diff("disposed");
 
             timer.diff("write start");
