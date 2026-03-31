@@ -396,8 +396,8 @@ dependencyCheck {
     scanConfigurations=["runtimeClasspath"]
     //format see https://gist.github.com/milo-minderbinder/1e1ed911c5b2264dc659578f1baaef16
     suppressionFiles=[
-        file(new File(project.rootDir, 'dependency-check-suppressions.xml')),
-        file(new File(project.rootDir, 'dependency-check-suppressions-project.xml'))
+        "${project.rootDir}/dependency-check-suppressions.xml",
+        "${project.rootDir}/dependency-check-suppressions-project.xml"
     ]
     analyzers {
         assemblyEnabled=false
