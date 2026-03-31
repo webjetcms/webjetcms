@@ -167,6 +167,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/linkcheck")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/attributes")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/mirroring")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/approve-group")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/gallery")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/image-editor")),

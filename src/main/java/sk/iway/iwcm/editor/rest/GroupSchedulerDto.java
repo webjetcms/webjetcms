@@ -140,6 +140,32 @@ public class GroupSchedulerDto {
     @Column(name = "logged_show_in_sitemap")
     private Integer loggedShowInSitemap;
 
+    // Approval fields for folder/group change approval flow
+
+    @Column(name = "awaiting_approve")
+    private String awaitingApprove;
+
+    @Column(name = "approved_by")
+    private Integer approvedBy;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "history.approvedBy")
+    private String approvedByName;
+
+    @Column(name = "disapproved_by")
+    private Integer disapprovedBy;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "history.disapprovedBy")
+    private String disapprovedByName;
+
+    @Column(name = "approve_date")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "history.approveDate")
+    private Date approveDate;
+
+    @Column(name = "is_delete")
+    private Boolean isDelete;
+
     public boolean getInternal() {
         return internal;
     }

@@ -39,6 +39,7 @@ import sk.iway.iwcm.doc.GroupEditorField;
 import sk.iway.iwcm.doc.GroupPublisher;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.ApproveService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -48,8 +49,10 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -66,12 +69,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     private final GroupSchedulerDtoRepository groupSchedulerDtoRepository;
     private TranslationKeyRepository translationKeyRepository;
     private EditorFacade editorFacade;
+    private final ApproveService approveService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
+        this.approveService = approveService;
     }
 
     @Override
@@ -189,7 +194,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         } else {
             if(schedulerId > 0) {
                 Optional<GroupSchedulerDto> dto = groupSchedulerDtoRepository.findById((long) schedulerId);
-                if (dto.isPresent()) group = fromGroupSchedulerDtoToGroupDetail(dto.get());
+                if (dto.isPresent()) group = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup( dto.get() );
             } else {
                 // Edit exist group
                 group = groupsDB.getGroup((int) id);
@@ -203,44 +208,6 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         return group;
-    }
-
-    public GroupDetails fromGroupSchedulerDtoToGroupDetail(GroupSchedulerDto dto) {
-        GroupDetails oldGroupRecord = new GroupDetails();
-
-        oldGroupRecord.setGroupId(dto.getGroupId());
-        oldGroupRecord.setGroupName(dto.getGroupName());
-        oldGroupRecord.setNavbar(dto.getNavbar());
-        oldGroupRecord.setUrlDirName(dto.getUrlDirName());
-        oldGroupRecord.setDomainName(dto.getDomainName());
-        oldGroupRecord.setDefaultDocId(dto.getDefaultDocId());
-        oldGroupRecord.setInternal(dto.getInternal());
-        oldGroupRecord.setSortPriority(dto.getSortPriority());
-        oldGroupRecord.setTempId(dto.getTempId());
-        oldGroupRecord.setForceTheUseOfGroupTemplate(dto.getForceGroupTemplate());
-        oldGroupRecord.setLng(dto.getLng());
-        oldGroupRecord.setNewPageDocIdTemplate(dto.getNewPageDocidTemplate());
-        oldGroupRecord.setHtmlHead(dto.getHtmlHead());
-        oldGroupRecord.setFieldA(dto.getFieldA());
-        oldGroupRecord.setFieldB(dto.getFieldB());
-        oldGroupRecord.setFieldC(dto.getFieldC());
-        oldGroupRecord.setFieldD(dto.getFieldD());
-        oldGroupRecord.setMenuType(dto.getMenuType());
-        //oldGroupRecord.setNotLoggedNavbar(dto.);
-        oldGroupRecord.setLoggedMenuType(dto.getLoggedMenuType());
-        //oldGroupRecord.setLoggedNavbar(dto.);
-        //oldGroupRecord.setLoggedSitemap(dto.);
-        oldGroupRecord.setPasswordProtected(dto.getPasswordProtected());
-        oldGroupRecord.setParentGroupId(dto.getParentGroupId());
-        //oldGroupRecord.setFullPath(dto.);
-
-        //Pridane atributy - ticket 54205
-        oldGroupRecord.setShowInNavbar(dto.getShowInNavbar());
-        oldGroupRecord.setShowInSitemap(dto.getShowInSitemap());
-        oldGroupRecord.setLoggedShowInNavbar(dto.getLoggedShowInNavbar());
-        oldGroupRecord.setLoggedShowInSitemap(dto.getLoggedShowInSitemap());
-
-        return oldGroupRecord;
     }
 
     @Override
@@ -306,11 +273,30 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
         }
 
-        boolean isScheduledForPublication = false;
         boolean isEdit = entity.getGroupId() > 0;
+        boolean needApproval = false;
+
+        // If its create, we need use parent group id
+        approveService.loadApproveTables( isEdit ? groupDetails.getGroupId() : entity.getParentGroupId() );
+
+        // Check if folder change needs approval
+        if (approveService.needApprove() && approveService.isSelfApproved() == false) {
+            needApproval = true;
+            try {
+                //groupDetails musime naklonovat lebo je z cache a pre futureSchedule ho nemozeme zmenit
+                groupDetails = (GroupDetails) groupDetails.clone();
+            } catch (CloneNotSupportedException e) {
+                Logger.error(GroupsRestController.class, e);
+            }
+        }
+
+        boolean isScheduledForPublication = false;
         if (entity.getEditorFields().isPublishPlan() && isEdit && entity.getEditorFields().getPublishDate() != null
                 && entity.getEditorFields().getPublishDate().getTime() > Tools.getNow()) {
             isScheduledForPublication = true;
+
+            if(needApproval) throw new IllegalStateException("Cant schedule for publication when approval is needed.");
+
             try {
                 //groupDetails musime naklonovat lebo je z cache a pre futureSchedule ho nemozeme zmenit
                 groupDetails = (GroupDetails) groupDetails.clone();
@@ -328,6 +314,29 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             // musime spravit kopiu GroupDetails aby sme si neprepisali cachovany/aktualny zaznam
             scheduleFutureUpdate(groupDetails, user);
             return entity;
+        }
+
+        if (needApproval) {
+            // Create a pending approval record in groups_scheduler
+            GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(groupDetails, user);
+            pendingDto.setIsDelete(false);
+            pendingDto.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+            pendingDto = groupSchedulerDtoRepository.save(pendingDto);
+
+            approveService.sendGroupApproveRequestEmail(pendingDto, oldGroupDetails, null);
+
+            StringBuilder notificationText = new StringBuilder();
+            notificationText.append(getProp().getText("approve.group.notification.text")).append(": ");
+            for(int approverId : Tools.getTokensInt(approveService.getApproveUserIds(), ",")) {
+                UserDetails approver = UsersDB.getUser(approverId);
+                if(approver != null) notificationText.append(approver.getFullName()).append(", ");
+            }
+            notificationText.setLength(notificationText.length() - 2); // remove last comma and space
+
+            addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), notificationText.toString(), NotifyBean.NotifyType.INFO, 5000));
+
+            // Retun original groups until approval is done
+            return oldGroupDetails;
         }
 
         boolean saved = groupsDB.save(groupDetails);
@@ -659,6 +668,23 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
         if (entity==null) return false;
 
+        // Check if folder delete needs approval (approvers configured on the parent group)
+        GroupDetails currentGroup = GroupsDB.getInstance().getGroup(entity.getGroupId());
+        if (currentGroup != null) {
+            approveService.loadApproveTables(currentGroup.getParentGroupId());
+            if (approveService.needApprove() && approveService.isSelfApproved() == false) {
+                // Create a pending approval record for delete
+                GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(currentGroup, getUser());
+                pendingDto.setIsDelete(true);
+                pendingDto.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+                groupSchedulerDtoRepository.save(pendingDto);
+
+                approveService.sendGroupApproveDelRequestEmail(pendingDto, pendingDto.getId());
+                addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), getProp().getText("approve.group.notification.text"), NotifyBean.NotifyType.INFO, 5000));
+                return true;
+            }
+        }
+
         return GroupsDB.deleteGroup(entity.getGroupId(), getRequest());
     }
 
@@ -753,15 +779,17 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         if (saved==false) throwError("datatables.error.system.js");
     }
 
-    /*@Override
-    public boolean checkAccessAllowed(HttpServletRequest request) {
-        Identity user = UsersDB.getCurrentUser(request.getSession());
-        if (user.isDisabledItem("addSubdir")) {
-            return false;
-        }
-
-        return super.checkAccessAllowed(request);
-    }*/
+    /**
+     * Builds a GroupSchedulerDto snapshot from the given GroupDetails for use as a pending approval record.
+     * The caller is responsible for setting awaitingApprove and pendingDelete before saving.
+     */
+    private GroupSchedulerDto buildPendingGroupSchedulerDto(GroupDetails group, Identity user) {
+        GroupSchedulerDto dto = GroupSchedulerDtoMapper.INSTANCE.groupToGroupSchedulerDto(group);
+        dto.setSaveDate(new Date());
+        dto.setApprovedBy(-1);
+        if (user != null) dto.setUserId(user.getUserId());
+        return dto;
+    }
 
     /**
      * Vrati zoznam parent ID pre zadane ID adresara pre ich otvorenie v stromovej strukture

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,9 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoMapper;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
@@ -116,7 +120,16 @@ public class ApproveService {
 		"historyDisapprovedBy",
 		"publishStartTimeString",
 		"logonPageDocId",
-		"eventTimeString"
+		"eventTimeString",
+		"navbarName",
+		"navbarNameNoAparam",
+		"parentFullPath",
+		"groupIdName",
+		"groupNameJS",
+		"groupNameShortNoJS",
+		"navbar",
+		"groupNameShort",
+		"fullPath"
 	};
 
     @Autowired
@@ -132,6 +145,8 @@ public class ApproveService {
 		this.approveByTable = new HashMap<>();
         this.notifyTable = new HashMap<>();
     }
+
+	/******************** MAIN LOGIC ********************************/
 
     /**
      * Initializes hash tables approveByTable and notifyTable (also set selfApproved)
@@ -269,6 +284,129 @@ public class ApproveService {
 		}
 	}
 
+	/******************** SUPPORT METHODS ********************************/
+
+	/**
+	 * Return true, if webpage need's approve (approveByTable isn't empty).
+	 * @return
+	 */
+    public boolean needApprove() {
+        return approveByTable != null && approveByTable.isEmpty() == false;
+    }
+
+	public boolean needApproveLevel2() {
+        return approveByTableLevel2 != null && approveByTableLevel2.isEmpty() == false;
+    }
+
+	/**
+	 *
+	 * @return
+	 */
+	public boolean needNotification() {
+		return notifyTable != null && notifyTable.isEmpty() == false;
+	}
+
+	/**
+	 * If approving is needed, return list of approvers.
+	 * !! If action is selfApproved, there are no set approvers.
+	 * @return
+	*/
+	public List<UserDetails> getApprovers() {
+		return new ArrayList<>(approveByTable.values());
+	}
+
+	/**
+	 * Vrati ciarkou oddeleny zoznam ID pouzivatelov, ktory schvaluju web stranku
+	 * @return
+	 */
+    public String getApproveUserIds() {
+        StringBuilder approveByUsersId = new StringBuilder(",");
+        for (UserDetails approveUser : approveByTable.values())
+            approveByUsersId.append(approveUser.getUserId()).append(',');
+
+        return approveByUsersId.toString();
+    }
+
+	/**
+	 *
+	 * @return
+	 */
+	private String getApproveUserEmails() {
+		StringBuilder approveEmails = new StringBuilder();
+		for (UserDetails approveUser : approveByTable.values()) {
+			if(Tools.isEmail(approveUser.getEmail())) {
+				if(approveEmails.length() > 0) approveEmails.append(",");
+				approveEmails.append(approveUser.getEmail());
+			}
+		}
+
+		return approveEmails.toString();
+	}
+
+	public String getApproveUserNames() {
+		StringBuilder approveEmails = new StringBuilder();
+		for (UserDetails approveUser : approveByTable.values()) {
+			if(approveEmails.length() > 0) approveEmails.append(",");
+			approveEmails.append(approveUser.getFullName());
+		}
+
+		return approveEmails.toString();
+	}
+
+
+	public String getEmailsToNotify(String authorEmail) {
+		StringBuilder notifyEmails = new StringBuilder();
+
+		for (UserDetails approveUser : notifyTable.values()) {
+			if(Tools.isEmail(approveUser.getEmail())) {
+				//There is no need send notify to approver, who approve action (hi did it)
+				if(currentUser.getUserId() == approveUser.getUserId()) continue;
+				if(notifyEmails.length() > 0) notifyEmails.append(",");
+				notifyEmails.append(approveUser.getEmail());
+			}
+		}
+
+		//Add author email
+		if (Tools.isEmail(authorEmail)) {
+			if(notifyEmails.length() > 0) notifyEmails.append(",");
+			notifyEmails.append(authorEmail);
+		}
+
+		return notifyEmails.toString();
+	}
+
+	/**
+	 * Vytvori diff medzi originalom a editovanym dokumentom, tento diff sa pouzije v emaily schvalovatelom, aby videli co sa zmenilo
+	 * @param editedDoc
+	 * @param docDetailsRepository
+	 * @return
+	 */
+	public static StringBuilder getDiff(DocBasic editedDoc, DocBasic historyDoc, Prop prop) {
+		StringBuilder message = new StringBuilder();
+		if(editedDoc != null) {
+			BeanDiff diff = new BeanDiff().skipEmpty().setNew(editedDoc).setOriginal(historyDoc);
+			diff.blacklist(diffBlacklistedProperties);
+
+			if(diff.diff().size() > 0) {
+				// Add to message compare with changed values
+				message.append("<br>\n<br>\n");
+
+				if (historyDoc == null) message.append(prop.getText("doc.approve.new_params"));
+				else message.append(prop.getText("doc.approve.changed_params"));
+
+				message.append(": ");
+
+				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
+				adminlogChanges = ResponseUtils.filter(adminlogChanges);
+				adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+				message.append( adminlogChanges );
+			}
+		}
+		return message;
+	}
+
+	/******************** DOC APPROVE LOGIC ********************************/
+
 	/**
 	 * Approve action, in other word's approve/reject webpage change (aka waiting docHistory).
 	 * !! request param "zamietni" indicates, if we approve action (webpage will be change like in docHistory) or reject action (no change to webpage)
@@ -277,7 +415,7 @@ public class ApproveService {
 	 * @param editorService
 	 * @return return true if approve was success
 	 */
-	public boolean approveAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepository, EditorService editorService) {
+	public boolean approveDocAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepository, EditorService editorService) {
 
 		//Get and check historyId
 		int historyId = Tools.getIntValue(request.getParameter("historyid"), -1);
@@ -374,7 +512,7 @@ public class ApproveService {
 	 * @param editorService
 	 * @return retunr link to error or success page
 	 */
-	public boolean approveDelAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepo, EditorService editorService) {
+	public boolean approveDocDelAction(DocHistoryRepository docHistoryRepo, DocDetailsRepository docDetailsRepo, EditorService editorService) {
 
 
 		//Get and check historyId, MUST by set
@@ -479,97 +617,6 @@ public class ApproveService {
 		}
 	}
 
-	/* SUPPORT METHODS */
-
-	/**
-	 * Return true, if webpage need's approve (approveByTable isn't empty).
-	 * @return
-	 */
-    public boolean needApprove() {
-        return approveByTable != null && approveByTable.isEmpty() == false;
-    }
-
-	public boolean needApproveLevel2() {
-        return approveByTableLevel2 != null && approveByTableLevel2.isEmpty() == false;
-    }
-
-	/**
-	 *
-	 * @return
-	 */
-	public boolean needNotification() {
-		return notifyTable != null && notifyTable.isEmpty() == false;
-	}
-
-	/**
-	 * If approving is needed, return list of approvers.
-	 * !! If action is selfApproved, there are no set approvers.
-	 * @return
-	*/
-	public List<UserDetails> getApprovers() {
-		return new ArrayList<>(approveByTable.values());
-	}
-
-	/**
-	 * Vrati ciarkou oddeleny zoznam ID pouzivatelov, ktory schvaluju web stranku
-	 * @return
-	 */
-    public String getApproveUserIds() {
-        StringBuilder approveByUsersId = new StringBuilder(",");
-        for (UserDetails approveUser : approveByTable.values())
-            approveByUsersId.append(approveUser.getUserId()).append(',');
-
-        return approveByUsersId.toString();
-    }
-
-	/**
-	 *
-	 * @return
-	 */
-	private String getApproveUserEmails() {
-		StringBuilder approveEmails = new StringBuilder();
-		for (UserDetails approveUser : approveByTable.values()) {
-			if(Tools.isEmail(approveUser.getEmail())) {
-				if(approveEmails.length() > 0) approveEmails.append(",");
-				approveEmails.append(approveUser.getEmail());
-			}
-		}
-
-		return approveEmails.toString();
-	}
-
-	public String getApproveUserNames() {
-		StringBuilder approveEmails = new StringBuilder();
-		for (UserDetails approveUser : approveByTable.values()) {
-			if(approveEmails.length() > 0) approveEmails.append(",");
-			approveEmails.append(approveUser.getFullName());
-		}
-
-		return approveEmails.toString();
-	}
-
-
-	public String getEmailsToNotify(String authorEmail) {
-		StringBuilder notifyEmails = new StringBuilder();
-
-		for (UserDetails approveUser : notifyTable.values()) {
-			if(Tools.isEmail(approveUser.getEmail())) {
-				//There is no need send notify to approver, who approve action (hi did it)
-				if(currentUser.getUserId() == approveUser.getUserId()) continue;
-				if(notifyEmails.length() > 0) notifyEmails.append(",");
-				notifyEmails.append(approveUser.getEmail());
-			}
-		}
-
-		//Add author email
-		if (Tools.isEmail(authorEmail)) {
-			if(notifyEmails.length() > 0) notifyEmails.append(",");
-			notifyEmails.append(authorEmail);
-		}
-
-		return notifyEmails.toString();
-	}
-
 	/**
 	 * Odoslanie emailov o schvalovani alebo notifikacii o zmene (ak je zoznam schvalovani prazdny)
 	 * @param editedDoc
@@ -641,36 +688,6 @@ public class ApproveService {
 		SendMail.send(senderUser.getFullName(), senderUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
 
 		auditApproveRequestEmail(editedDoc, historyId);
-	}
-
-	/**
-	 * Vytvori diff medzi originalom a editovanym dokumentom, tento diff sa pouzije v emaily schvalovatelom, aby videli co sa zmenilo
-	 * @param editedDoc
-	 * @param docDetailsRepository
-	 * @return
-	 */
-	public static StringBuilder getDiff(DocBasic editedDoc, DocBasic historyDoc, Prop prop) {
-		StringBuilder message = new StringBuilder();
-		if(editedDoc != null) {
-			BeanDiff diff = new BeanDiff().skipEmpty().setNew(editedDoc).setOriginal(historyDoc);
-			diff.blacklist(diffBlacklistedProperties);
-
-			if(diff.diff().size() > 0) {
-				// Add to message compare with changed values
-				message.append("<br>\n<br>\n");
-
-				if (historyDoc == null) message.append(prop.getText("doc.approve.new_params"));
-				else message.append(prop.getText("doc.approve.changed_params"));
-
-				message.append(": ");
-
-				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
-				adminlogChanges = ResponseUtils.filter(adminlogChanges);
-				adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
-				message.append( adminlogChanges );
-			}
-		}
-		return message;
 	}
 
 	/**
@@ -809,5 +826,304 @@ public class ApproveService {
 		message.append("<b>").append(prop.getText("approve.reject.notes") ).append( ":</b><br>\n");
 		message.append( Tools.getStringValue(request.getParameter("notes"), "") );
 		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);
+	}
+
+	/******************** GROUP / FOLDER APPROVE LOGIC ********************************/
+
+	/**
+	 * Approve or reject a pending folder edit change stored as a GroupSchedulerDto record.
+	 * Request param "zamietni" presence indicates rejection (no change to folder), absence indicates approval (folder is updated).
+	 * @param groupSchedulerDtoRepository
+	 * @param groupsDB
+	 * @return true if action was successful
+	 */
+	public String approveGroupAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
+
+		// Load approve tables based on the parent group of the folder being changed
+		loadApproveTables(dto.getGroupId());
+
+		if (needApprove() == false || selfApproved) {
+			// Current user IS self-approver (or no approval needed) — can approve or reject
+
+			String approveAction = Tools.getStringValue(request.getParameter("approveAction"), null);
+			if("approve".equals(approveAction)) {
+				// APPROVE the folder change
+				GroupDetails groupToSave = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto);
+
+				//addGroupSchedulerRecord MUST be false, we are handlikng scheduler record here
+				groupsDB.setGroup(groupToSave, true, false);
+
+				dto.setApprovedBy(currentUser.getUserId());
+				dto.setDisapprovedBy(null);
+				dto.setApproveDate(new Date());
+				dto.setAwaitingApprove(null);
+				groupSchedulerDtoRepository.save(dto);
+
+				sendGroupApproveNotification(true, dto);
+
+				// Group was chnaged, do refresh
+				GroupsDB.getInstance(true);
+				//mohla sa zmenit URL linka adresara
+				DocDB.getInstance(true);
+
+			} else if("reject".equals(approveAction)) {
+				// REJECT the folder change
+				dto.setApprovedBy(null);
+				dto.setDisapprovedBy(currentUser.getUserId());
+				dto.setApproveDate(new Date());
+				dto.setAwaitingApprove(null);
+				groupSchedulerDtoRepository.save(dto);
+
+				sendGroupApproveNotification(false, dto);
+			} else { return prop.getText("approve.group.failed"); }
+		} else if (approveByTableLevel2.isEmpty() == false) {
+			// Route to level-2 approvers
+			String level2approvers = "," + getApproveUserIds() + ",";
+			if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
+				dto.setAwaitingApprove(level2approvers);
+				groupSchedulerDtoRepository.save(dto);
+
+				Identity user = UsersDB.getCurrentUser(request);
+				String notes = request.getParameter("notes");
+				if (Tools.isEmpty(notes)) notes = prop.getText("components.reservation.reservation_list.accept");
+				notes = prop.getText("approve.page.approvedToNextLevel.comment", user.getFullName(), notes);
+				String approverNames = getApproveUserNames();
+
+				sendGroupApproveRequestEmail(dto, null, notes);
+				request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
+
+				// Notify author that request moved to next level
+				String subject = prop.getText("approve.page.approvedToNextLevel.editorSubject", dto.getGroupName());
+				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
+				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br>\n");
+				message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
+				message.append(prop.getText("approve.url")).append(":<br>\n");
+				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
+				message.append(notes).append("<br>\n");
+				UserDetails author = UsersDB.getUserCached(dto.getUserId());
+				if (author != null && Tools.isEmail(author.getEmail())) {
+					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
+				}
+			}
+		} else {
+			// Current user cannot approve this
+			return prop.getText("approve.group.cant_approve");
+		}
+
+		return null; // Indicate success
+	}
+
+	/**
+	 * Approve or reject a pending folder DELETE stored as a GroupSchedulerDto record (pendingDelete=true).
+	 * Request param "zamietni" presence = reject deletion, absence = approve deletion.
+	 * @param groupSchedulerDtoRepository
+	 * @param groupsDB
+	 * @return true if action was successful
+	 */
+	public boolean approveGroupDelAction(GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
+		long scheduleId = Tools.getLongValue(request.getParameter("scheduleid"), -1);
+		if (scheduleId == -1) {
+			request.setAttribute("message", "Schedule ID cant be empty");
+			return false;
+		}
+
+		Optional<GroupSchedulerDto> dtoOpt = groupSchedulerDtoRepository.findByIdAndAwaitingApproveIsNotNull(scheduleId);
+		if (dtoOpt.isPresent() == false) {
+			request.setAttribute("message", "Pending approval record not found for given scheduleId");
+			return false;
+		}
+		GroupSchedulerDto dto = dtoOpt.get();
+
+		// Load approve tables based on the parent group
+		loadApproveTables(dto.getParentGroupId());
+
+		if (request.getParameter("zamietni") != null) {
+			// REJECT the delete
+			if (needApprove() == false || selfApproved) {
+				dto.setDisapprovedBy(currentUser.getUserId());
+				dto.setApproveDate(new Date());
+				dto.setAwaitingApprove(null);
+				groupSchedulerDtoRepository.save(dto);
+
+				sendGroupApproveNotification(false, dto);
+				request.setAttribute("rejected", "true");
+				return true;
+			} else {
+				request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
+				return false;
+			}
+		} else {
+			// APPROVE the delete
+			if (needApproveLevel2()) {
+				String level2approvers = "," + getApproveUserIds() + ",";
+				if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
+					dto.setAwaitingApprove(level2approvers);
+					groupSchedulerDtoRepository.save(dto);
+
+					Identity user = UsersDB.getCurrentUser(request);
+					String notes = request.getParameter("notes");
+					if (Tools.isEmpty(notes)) notes = prop.getText("components.reservation.reservation_list.accept");
+					notes = prop.getText("approve.page.approvedToNextLevel.comment", user.getFullName(), notes);
+					String approverNames = getApproveUserNames();
+
+					sendGroupApproveDelRequestEmail(dto, scheduleId);
+					request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
+
+					// Notify author
+					String subject = prop.getText("approve.delete.subject") + " " + dto.getGroupName();
+					String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + scheduleId;
+					StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br>\n");
+					message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
+					message.append(prop.getText("approve.url")).append(":<br>\n");
+					message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
+					message.append(notes).append("<br>\n");
+					UserDetails author = UsersDB.getUserCached(dto.getUserId());
+					if (author != null && Tools.isEmail(author.getEmail())) {
+						SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
+					}
+					return true;
+				}
+			}
+
+			if (needApprove() == false || selfApproved) {
+				boolean deleted = GroupsDB.deleteGroup(dto.getGroupId(), request);
+				if (deleted) {
+					dto.setApprovedBy(currentUser.getUserId());
+					dto.setApproveDate(new Date());
+					dto.setAwaitingApprove(null);
+					groupSchedulerDtoRepository.save(dto);
+
+					sendGroupApproveNotification(true, dto);
+					request.setAttribute("approved", "approved");
+				} else {
+					request.setAttribute("approveFail", "approveFail");
+				}
+				return true;
+			} else {
+				request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
+				return false;
+			}
+		}
+	}
+
+	/**
+	 * Sends an approval request email to the configured approvers for a folder change.
+	 * @param dto the pending GroupSchedulerDto record
+	 * @param scheduleId the schedule ID (for URL construction)
+	 * @param comment optional comment to include
+	 */
+	public void sendGroupApproveRequestEmail(GroupSchedulerDto dto, GroupDetails originalGroup, String comment) {
+		if (approveByTable == null || approveByTable.isEmpty()) return;
+
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-group/?scheduleId=" + dto.getId();
+
+		StringBuilder message = new StringBuilder("<strong>").append(prop.getText("approve.group.ask")).append(":</strong><br>\n");
+		message.append("<strong>").append(originalGroup.getGroupName()).append("</strong><br>\n");
+		message.append(prop.getText("approve.dir")).append(":<br>\n");
+		message.append(groupsDB.getGroupNamePath(originalGroup.getParentGroupId())).append("<br><br>\n\n");
+		message.append(prop.getText("approve.url")).append(":<br>\n");
+		message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n\n");
+		if (Tools.isNotEmpty(comment)) { message.append(comment).append("<br><br>\n\n"); }
+		message.append(currentUser.getFullName()).append(" &lt;").append(currentUser.getEmail()).append("&gt;");
+
+		message.append(getDiffForEmail(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto), originalGroup, prop));
+
+		String subject = prop.getText("approve.group.subject") + ": " + originalGroup.getGroupName();
+		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getApproveUserEmails(), subject, message.toString());
+
+		Adminlog.add(Adminlog.TYPE_SAVEDOC, "Poziadane o schvalenie adresara " + originalGroup.getGroupName() + " / " + originalGroup.getGroupId() + " / " + dto.getId() + ", ziadost zaslana na: " + getApproveUserEmails(), originalGroup.getGroupId(), dto.getId().intValue());
+	}
+
+	public static StringBuilder getDiffForEmail(GroupDetails editedGroup, GroupDetails historyGroup, Prop prop) {
+		return getDiff(editedGroup, historyGroup, prop, true, true);
+	}
+
+	public static StringBuilder getDiff(GroupDetails editedGroup, GroupDetails historyGroup, Prop prop, boolean addHeader, boolean addNewLines) {
+		StringBuilder message = new StringBuilder();
+		if(editedGroup != null) {
+			BeanDiff diff = new BeanDiff().skipEmpty().setNew(editedGroup).setOriginal(historyGroup);
+			diff.blacklist(diffBlacklistedProperties);
+
+			if(diff.diff().size() > 0) {
+				if(addHeader) {
+					// Add to message compare with changed values
+					message.append("<br>\n<br>\n");
+
+					if (historyGroup == null) message.append(prop.getText("approve.group.new_params"));
+					else message.append(prop.getText("approve.group.changed_params"));
+
+					message.append(": ");
+				}
+
+				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
+				adminlogChanges = ResponseUtils.filter(adminlogChanges);
+				if(addNewLines) adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+				message.append( adminlogChanges );
+			}
+		}
+		return message;
+	}
+
+	/**
+	 * Sends an approval request email for a folder DELETE action.
+	 * @param dto the pending GroupSchedulerDto record (pendingDelete=true)
+	 * @param scheduleId the schedule ID
+	 */
+	public void sendGroupApproveDelRequestEmail(GroupSchedulerDto dto, long scheduleId) {
+		if (approveByTable == null || approveByTable.isEmpty()) return;
+
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-group/?scheduleId=" + scheduleId;
+
+		StringBuilder message = new StringBuilder("<b>").append(prop.getText("approve.group.delete.ask")).append(":</b><br>\n");
+		message.append(dto.getGroupName()).append("<br>\n");
+		message.append(prop.getText("approve.dir")).append(":<br>\n");
+		message.append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n\n");
+		message.append(prop.getText("approve.url")).append(":<br>\n");
+		message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n\n");
+		message.append(currentUser.getFullName()).append(" &lt;").append(currentUser.getEmail()).append("&gt;");
+
+		String subject = prop.getText("approve.group.delete.subject") + ": " + dto.getGroupName();
+		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
+	}
+
+	/**
+	 * Sends a notification email about folder change approval/rejection result.
+	 * @param isApproved true = approved, false = rejected
+	 * @param dto the GroupSchedulerDto record
+	 */
+	private void sendGroupApproveNotification(boolean isApproved, GroupSchedulerDto dto) {
+		String subject;
+		StringBuilder message;
+
+		if (isApproved) {
+			if (Boolean.TRUE.equals(dto.getIsDelete())) {
+				// Delete APPROVED
+				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.del.approved")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.delete.subject") + ": " + dto.getGroupName();
+			} else {
+				// Edit APPROVED
+				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.ok")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.ok.subject") + ": " + dto.getGroupName();
+			}
+		} else {
+			if (Boolean.TRUE.equals(dto.getIsDelete())) {
+				// Delete REJECTED
+				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.del.reject")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
+			} else {
+				// Edit REJECTED
+				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.reject")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
+			}
+		}
+
+		message.append(dto.getGroupName()).append("<br>");
+		message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
+		message.append("<b>").append(prop.getText("approve.reject.notes")).append(":</b><br>\n");
+		message.append(Tools.getStringValue(request.getParameter("notes"), ""));
+
+		UserDetails author = UsersDB.getUserCached(dto.getUserId());
+		String authorEmail = author != null ? author.getEmail() : null;
+		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(authorEmail), subject, message.toString(), request);
 	}
 }

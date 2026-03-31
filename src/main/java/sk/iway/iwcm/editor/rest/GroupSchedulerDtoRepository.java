@@ -15,4 +15,10 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
 
     //get latest scheduler/history for group
     GroupSchedulerDto findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long groupId);
+
+    //find all pending approval records for a group (awaiting_approve IS NOT NULL)
+    java.util.List<GroupSchedulerDto> findByGroupIdAndAwaitingApproveIsNotNull(Integer groupId);
+
+    //secure lookup during approve action - only records that are actually pending approval
+    java.util.Optional<GroupSchedulerDto> findByIdAndAwaitingApproveIsNotNull(Long id);
 }
