@@ -305,10 +305,22 @@ public class DocMirroringServiceV9 {
       return autoTranslatorId;
    }
 
+   /**
+    * Ziska zoznam DocDetails podla zadaneho syncId
+    * @param syncId
+    * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
+    * @return
+    */
    public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId) {
       return getDocBySyncId(syncId, skipDocId, false);
    }
 
+   /**
+    * Ziska zoznam DocDetails podla zadaneho syncId ALE iba tých, ktoré sú v koši (soft deleted mazané)
+    * @param syncId
+    * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
+    * @return
+    */
    public static List<DocDetails> getDeletedDocBySyncId(int syncId, int skipDocId) {
       return getDocBySyncId(syncId, skipDocId, true);
    }

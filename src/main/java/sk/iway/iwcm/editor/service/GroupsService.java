@@ -151,7 +151,7 @@ public class GroupsService extends NotifyService {
 		group = GroupsDB.getInstance().getGroup(group.getGroupId());
 
 		//publish recover event
-		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER)).publishEvent();
+		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER, currentUser)).publishEvent();
 
         return true;
 	}
