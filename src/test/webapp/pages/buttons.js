@@ -84,7 +84,11 @@ function _addContext(newContextKey, newContextSelector) {
 
 module.exports = {
   btn: buttons,
+  actions: actions,
   addContext(newContextKey, newContextSelector) {
     _addContext(newContextKey, newContextSelector);
+  },
+  getButtonSelector(context, action) {
+    return getButtonSelector("#"+context+"_wrapper", action);
   }
 };

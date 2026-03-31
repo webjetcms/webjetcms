@@ -3694,8 +3694,28 @@ export const dataTableInit = options => {
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
-        new bootstrap.Tooltip($(".btn-export-dialog"));
-        new bootstrap.Tooltip($(".btn-import-dialog"));
+        var $exportButtons = $(".btn-export-dialog");
+        if ($exportButtons.length > 0) {
+            $exportButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for export buttons
+                    console.error("Failed to initialize tooltip for .btn-export-dialog:", e);
+                }
+            });
+        }
+        var $importButtons = $(".btn-import-dialog");
+        if ($importButtons.length > 0) {
+            $importButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for import buttons
+                    console.error("Failed to initialize tooltip for .btn-import-dialog:", e);
+                }
+            });
+        }
     }, 500);
 
     //bindni upozornenie o konflikte editacie zaznamu viacerymi pouzivatelmi
