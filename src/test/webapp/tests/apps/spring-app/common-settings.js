@@ -70,7 +70,7 @@ Scenario('Hiding/showing spring based app based on device', ({I}) => {
     I.amOnPage("/apps/podmienene-zobrazenie/?forceBrowserDetector=pc");
 });
 
-Scenario("Device type checkbox save ", ({I, DTE, Document}) => {
+Scenario("Device type checkbox save", ({I, DTE, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=80009");
     DTE.waitForEditor();
 
@@ -154,3 +154,105 @@ Scenario("Cache", async ({I}) => {
     I.waitForElement("p.currentDate", 10);
     I.dontSee(date, "p.currentDate");
 });
+
+Scenario("Wrapper container settings save @current", async ({I, DTE, Document}) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=80009");
+    DTE.waitForEditor();
+
+    // Verify no wrapper info initially in preview
+    I.waitForElement(".cke_wysiwyg_frame.cke_reset", 10);
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.waitForElement("iframe.wj_component", 10);
+    I.switchTo("iframe.wj_component");
+    I.waitForText("Demo component view, params", 10);
+
+    I.switchTo();
+
+    //
+    I.say("Setting wrapper fields");
+    Document.editorComponentOpen();
+
+    I.waitForElement("#pills-dt-component-datatable-commonSettings-tab", 10);
+    I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
+    I.waitForElement("#pills-dt-component-datatable-commonSettings", 10);
+
+    // Select first wrapperClass checkbox (container)
+    await DTE.selectOptionMulti("wrapperClass", ["mt-3","mb-3"]);
+    // Fill wrapper text fields
+    I.fillField("#DTE_Field_wrapperId", "autotest-wrapper-id");
+    I.fillField("#DTE_Field_wrapperTitle", "autotest-wrapper-title");
+    I.fillField("#DTE_Field_wrapperAriaLabel", "autotest-wrapper-aria");
+
+    I.switchTo();
+    I.clickCss("table.cke_dialog table.cke_dialog_contents td.cke_dialog_footer a.cke_dialog_ui_button_ok");
+    I.wait(2);
+
+    //
+    I.say("Checking wrapper CSS class and attributes on iframe element in preview");
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.waitForElement("iframe.wj_component", 10);
+    I.seeElement('iframe.wj_component[data-wrapper-id="autotest-wrapper-id"]');
+    I.seeElement('iframe.wj_component[title="autotest-wrapper-title"]');
+    I.seeElement('iframe.wj_component[aria-label="autotest-wrapper-aria"]');
+
+    //
+    I.say("Checking wrapper info block inside preview iframe");
+    I.switchTo("iframe.wj_component");
+    I.waitForText("Wrapper:", 10);
+    I.see("mt-3 mb-3", ".deviceInfoTypes");
+    I.see("autotest-wrapper-id", ".deviceInfoTypes");
+    I.see("autotest-wrapper-title", ".deviceInfoTypes");
+    I.see("autotest-wrapper-aria", ".deviceInfoTypes");
+    I.switchTo();
+
+    //
+    I.say("previewing page and checking wrapper info there");
+    I.switchTo();
+
+    I.clickCss("button.btn-preview");
+    I.wait(3);
+    I.switchToNextTab();
+
+    I.waitForText("Demo component view, params", 10);
+    I.waitForElement("#autotest-wrapper-id", 10);
+    I.seeElement("#autotest-wrapper-id.mt-3.mb-3");
+    I.seeElement("div[title='autotest-wrapper-title']");
+    I.seeElement("div[aria-label='autotest-wrapper-aria']");
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    //
+    I.say("Verifying wrapper fields persist after editor reopen");
+    Document.editorComponentOpen();
+
+    I.waitForElement("#pills-dt-component-datatable-commonSettings-tab", 10);
+    I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
+    I.waitForElement("#pills-dt-component-datatable-commonSettings", 10);
+
+    I.seeInField("#DTE_Field_wrapperId", "autotest-wrapper-id");
+    I.seeInField("#DTE_Field_wrapperTitle", "autotest-wrapper-title");
+    I.seeInField("#DTE_Field_wrapperAriaLabel", "autotest-wrapper-aria");
+
+    //
+    I.say("Clearing wrapper fields");
+    await DTE.selectOptionMulti("wrapperClass", []);
+    I.fillField("#DTE_Field_wrapperId", "");
+    I.fillField("#DTE_Field_wrapperTitle", "");
+    I.fillField("#DTE_Field_wrapperAriaLabel", "");
+
+    I.switchTo();
+    I.clickCss("table.cke_dialog table.cke_dialog_contents td.cke_dialog_footer a.cke_dialog_ui_button_ok");
+    I.wait(2);
+
+    // Verify wrapper info is gone
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.waitForElement("iframe.wj_component", 10);
+    I.switchTo("iframe.wj_component");
+    I.waitForText("Demo component view, params", 10);
+    I.dontSee("Wrapper:");
+    I.switchTo();
+
+    DTE.cancel();
+});
+
