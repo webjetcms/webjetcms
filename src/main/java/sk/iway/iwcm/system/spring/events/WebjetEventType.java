@@ -11,5 +11,4 @@ public enum WebjetEventType {
    ON_PUBLISH,
    ON_RECOVER,
    AFTER_RECOVER
-
 }

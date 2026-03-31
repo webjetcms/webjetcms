@@ -184,3 +184,79 @@ function checkAvailable(I, DTE, pageName, available) {
     }
     DTE.cancel();
 }
+
+const skDocRecoverGroupId = 113666;
+const enDocRecoverGroupId = 113667;
+Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    Document.switchDomain("mirroring.tau27.iway.sk");
+
+    // Set needed configurations
+    I.amOnPage("/admin/v9/settings/configuration/");
+
+    I.say("Set structureMirroringConfig");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("configurationDatatable");
+    I.fillField("#DTE_Field_name", "structureMirroringConfig");
+    I.fillField("#DTE_Field_value", skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
+    DTE.save();
+    //Check it
+    DT.filterContains("name", "structureMirroringConfig");
+    I.see(skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
+
+    I.say("I remove one page, both pages are removed");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see("sk_doc_recover", "#datatableInit_wrapper");
+    I.clickCss("#datatableInit_wrapper td.dt-select-td");
+    I.click(DT.btn.delete_button);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForLoader();
+
+    I.say('Check that both pages are removed');
+    I.clickCss("#pills-trash-tab");
+    DT.waitForLoader();
+    DT.filterContains("title", "_doc_recover");
+    I.see("sk_doc_recover", "#datatableInit_wrapper");
+    I.see("en_doc_recover", "#datatableInit_wrapper");
+
+    I.say("Choose EN version and do recover");
+    DT.filterContains("title", "en_doc_recover");
+    I.clickCss("#datatableInit_wrapper td.dt-select-td");
+    I.click(DT.btn.recovery_button);
+    DT.waitForLoader();
+
+    I.say("Check that there are 2 notification about reovery - SK and EN page");
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(1)", () => {
+        I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
+        I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
+        I.see("/en_doc_recover/en_doc_recover", "div.toast-message");
+    });
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(2)", () => {
+        I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
+        I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
+        I.see("/sk_doc_recover/sk_doc_recover", "div.toast-message");
+    });
+
+    I.say('Check that they are not in trash anymore');
+    DT.filterContains("title", "_doc_recover");
+    I.dontSee("sk_doc_recover", "#datatableInit_wrapper");
+    I.dontSee("en_doc_recover", "#datatableInit_wrapper");
+
+    I.say("Now check that both were recovered");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see("sk_doc_recover", "#datatableInit_wrapper");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + enDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see("en_doc_recover", "#datatableInit_wrapper");
+});
+
+Scenario('Logout', ({ I }) => {
+    //Logout to refresh set domain
+    I.logout();
+});
