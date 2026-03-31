@@ -279,6 +279,15 @@ Karta obsahuje parametre:
 - Prihlásený používateľ - umožňuje nastaviť zobrazenie aplikácie podľa stavu prihlásenia návštevníka web sídla - zobrazenie vždy, len ak je používateľ prihlásený, alebo ak nie je prihlásený. V editore stránok sa aplikácia zobrazí vždy, ale v náhľade, alebo zobrazení stránky sa zobrazí podľa nastavenej hodnoty.
 - Čas vyrovnávacej pamäte (minúty) - slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti pre jej rýchlejšie zobrazenie. Napríklad zoznam noviniek sa nemení často a ich načítanie je náročné na databázový server, je teda vhodné nastaviť napríklad hodnotu 30. Ak je prihlásený administrátor, vyrovnávacia pamäť sa nepoužije a vždy sa zobrazia aktuálne údaje.
 
+**Štýl** - sekcia obsahuje nastavenia pre obalenie výstupu aplikácie do `div` kontajnera. Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov:
+
+- CSS trieda - výber CSS tried z preddefinovaného zoznamu (napr. `container`, `mt-2`, `w-100`). Zoznam dostupných tried je nastaviteľný cez konfiguračnú premennú `appWrapperClasses` (čiarkou oddelený zoznam). Výstup aplikácie sa obalí do `div` elementu so zadanými CSS triedami.
+- ID - nastavenie HTML `id` atribútu pre obaľovací `div` element.
+- Titulok - nastavenie HTML `title` atribútu pre obaľovací `div` element.
+- `Aria Label` - nastavenie `aria-label` atribútu pre obaľovací `div` element, ktorý slúži na zlepšenie prístupnosti pre čítačky obrazovky.
+
+Ak je nastavená niektorá z týchto hodnôt, výstup aplikácie sa automaticky obalí do `div` elementu so zadanými atribútmi. V náhľade aplikácie v editore sa zobrazia informácie o nastavených atribútoch.
+
 ## Pred pripravené bloky
 
 Editor stránky ponúka možnosť vkladania prednastavených blokov (```HTML``` objektov) na stránku. Napr. tabuľka, text, kontaktný formulár atď. Viete vložiť aj obsah inej stránky do aktuálnej stránky (napr. opakujúci sa formulár).
