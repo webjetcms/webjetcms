@@ -262,6 +262,8 @@ public class ConstantsV9 {
 		Constants.setString("imageMagickCustomParams_jpg", "\n-define jpeg:optimize-coding=true", "images", "Custom parameters for ImageMagick JPG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_png", "\n-define png:compression-level=9 -define png:compression-strategy=1", "images", "Custom parameters for ImageMagick PNG format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
+
+		Constants.setString("appWrapperClasses", "container,container-fluid,mt-1,mt-2,mt-3,mt-4,mb-1,mb-2,mb-3,mb-4,w-100,w-75,w-50", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried dostupných v nastaveniach aplikácie pre obalenie výstupu do wrapper kontajnera (Bootstrap 5 triedy).");
 	}
 
 	/**
