@@ -183,6 +183,7 @@ public class PermissionGroupEditorFields extends BaseEditorFields {
         //if allEditableGroups is checked, clear the editableGroups field
         if (Tools.isTrue(permissionGroupOriginal.getAllEditableGroups())) {
             permissionGroupOriginal.setEditableGroups("");
+            permissionGroupOriginal.setEditablePages("");
         } else if (permissionGroupOriginal.getEditorFields().getEditableGroups() != null) {
             //Get editable group ids and add them to string
             List<GroupDetails> seletedEditableGroups = permissionGroupOriginal.getEditorFields().getEditableGroups();

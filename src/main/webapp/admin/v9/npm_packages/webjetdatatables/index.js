@@ -3694,15 +3694,27 @@ export const dataTableInit = options => {
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
-        try {
-            new bootstrap.Tooltip($(".btn-export-dialog"));
-        } catch (e) {
-            //maybe buttons are hidden
+        var $exportButtons = $(".btn-export-dialog");
+        if ($exportButtons.length > 0) {
+            $exportButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for export buttons
+                    console.error("Failed to initialize tooltip for .btn-export-dialog:", e);
+                }
+            });
         }
-        try {
-            new bootstrap.Tooltip($(".btn-import-dialog"));
-        } catch (e) {
-            //maybe buttons are hidden
+        var $importButtons = $(".btn-import-dialog");
+        if ($importButtons.length > 0) {
+            $importButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for import buttons
+                    console.error("Failed to initialize tooltip for .btn-import-dialog:", e);
+                }
+            });
         }
     }, 500);
 

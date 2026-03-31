@@ -442,6 +442,8 @@ public class LogonTools {
             //override accumulated values if any permission group has "all" flags
             if (hasAllEditableGroups) {
                 user.setEditableGroups("");
+                // clear also editablePages to avoid residual restrictions when all groups are editable
+                user.setEditablePages("");
             }
             if (hasAllWritableFolders) {
                 user.setWritableFolders("*");
