@@ -31,11 +31,13 @@ block content
             function toggleAllFields() {
                 var allEditableGroups = permissionGroupsDataTable.EDITOR.field('allEditableGroups');
                 var allWritableFolders = permissionGroupsDataTable.EDITOR.field('allWritableFolders');
+
                 var editableGroupsField = permissionGroupsDataTable.EDITOR.field('editorFields.editableGroups');
                 var editablePagesField = permissionGroupsDataTable.EDITOR.field('editorFields.editablePages');
+
                 var writableFoldersField = permissionGroupsDataTable.EDITOR.field('editorFields.writableFolders');
 
-                if (allEditableGroups.val() == "1" || allEditableGroups.val() == true) {
+                if (allEditableGroups.val()[0] === true) {
                     editableGroupsField.hide();
                     editablePagesField.hide();
                 } else {
@@ -43,7 +45,7 @@ block content
                     editablePagesField.show();
                 }
 
-                if (allWritableFolders.val() == "1" || allWritableFolders.val() == true) {
+                if (allWritableFolders.val()[0] === true) {
                     writableFoldersField.hide();
                 } else {
                     writableFoldersField.show();

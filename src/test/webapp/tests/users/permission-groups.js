@@ -31,16 +31,16 @@ Scenario('test allEditableGroups and allWritableFolders checkboxes', ({I, DTE, D
     I.seeElement(".DTE_Field_Name_editorFields\\.writableFolders");
 
     I.say("Check allEditableGroups and verify tree selectors are hidden");
-    DTE.clickSwitch("allEditableGroups");
+    DTE.clickSwitch("allEditableGroups_0");
     I.dontSeeElement(".DTE_Field_Name_editorFields\\.editableGroups:visible");
     I.dontSeeElement(".DTE_Field_Name_editorFields\\.editablePages:visible");
 
     I.say("Check allWritableFolders and verify writable folders tree is hidden");
-    DTE.clickSwitch("allWritableFolders");
+    DTE.clickSwitch("allWritableFolders_0");
     I.dontSeeElement(".DTE_Field_Name_editorFields\\.writableFolders:visible");
 
     I.say("Uncheck allEditableGroups and verify tree selectors are visible again");
-    DTE.clickSwitch("allEditableGroups");
+    DTE.clickSwitch("allEditableGroups_0");
     I.seeElement(".DTE_Field_Name_editorFields\\.editableGroups");
 
     DTE.cancel("permissionGroupsDataTable");

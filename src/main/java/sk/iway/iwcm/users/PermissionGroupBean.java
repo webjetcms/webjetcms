@@ -85,7 +85,7 @@ public class PermissionGroupBean extends ActiveRecordRepository implements Seria
 		inputType = DataTableColumnType.BOOLEAN_TEXT,
 		title = "users.permission_group.allEditableGroups",
 		tab = "dirs",
-		sortAfter = "title"
+		sortAfter = "editorFields.editablePages"
 	)
 	Boolean allEditableGroups;
 
@@ -94,7 +94,7 @@ public class PermissionGroupBean extends ActiveRecordRepository implements Seria
 		inputType = DataTableColumnType.BOOLEAN_TEXT,
 		title = "users.permission_group.allWritableFolders",
 		tab = "dirs",
-		sortAfter = "allEditableGroups"
+		sortAfter = "editorFields.writableFolders"
 	)
 	Boolean allWritableFolders;
 
