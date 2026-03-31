@@ -18,6 +18,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -107,6 +108,7 @@ public class GalleryTreeService {
 
             //Loop until we find root (id == dir)
             GalleryJsTreeItem parent = child;
+            int failsafe = 0;
             while(true) {
                 //Check if it's root
                 if(dir.equals(parent.getId())) break;
@@ -118,6 +120,12 @@ public class GalleryTreeService {
                         parent = potencialParent;
                         break;
                     }
+                }
+
+                failsafe++;
+                if(failsafe > 100) {
+                    Logger.debug(GalleryTreeService.class, "Failsafe triggered, breaking loop to prevent infinite loop method addParents, GalleryJsTreeItem id: " + child.getId());
+                    break; // Prevent infinite loop
                 }
             }
         }
