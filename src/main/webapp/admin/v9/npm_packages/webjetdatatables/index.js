@@ -3694,8 +3694,16 @@ export const dataTableInit = options => {
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
-        new bootstrap.Tooltip($(".btn-export-dialog"));
-        new bootstrap.Tooltip($(".btn-import-dialog"));
+        try {
+            new bootstrap.Tooltip($(".btn-export-dialog"));
+        } catch (e) {
+            //maybe buttons are hidden
+        }
+        try {
+            new bootstrap.Tooltip($(".btn-import-dialog"));
+        } catch (e) {
+            //maybe buttons are hidden
+        }
     }, 500);
 
     //bindni upozornenie o konflikte editacie zaznamu viacerymi pouzivatelmi
