@@ -664,6 +664,33 @@ function initClosure() {
     window.jstree.on('loaded.jstree', function () {
         window.jsTreeDocumentOpener.next();
         window.jsTreeFolderOpener.next();
+
+        //scroll to selected item
+        setTimeout(function() {
+            var $selected = somStromcek.find('.jstree-clicked');
+            if ($selected.length === 0) return;
+
+            var el = $selected[0];
+            var $scrollContainer = somStromcek.closest('.tree-col');
+            var scrollbar = $scrollContainer.length > 0 ? Scrollbar.get($scrollContainer.find('.scroll-content')[0]) : null;
+
+            if (scrollbar) {
+                var selectedTop = $selected.offset().top - $scrollContainer.offset().top + scrollbar.scrollTop;
+                var containerHeight = $scrollContainer.height();
+                if (selectedTop > containerHeight - 50) {
+                    scrollbar.scrollTop = selectedTop - containerHeight / 2;
+                }
+            } else {
+                el.scrollIntoView({block: 'nearest'});
+                var scrollParent = el.parentElement;
+                while (scrollParent && scrollParent !== document.body) {
+                    var style = getComputedStyle(scrollParent);
+                    if (/(auto|scroll)/.test(style.overflow + style.overflowY)) break;
+                    scrollParent = scrollParent.parentElement;
+                }
+                if (scrollParent) scrollParent.scrollTop += 100;
+            }
+        }, 200);
     });
 
     window.jstree.on('after_open.jstree', function () {
