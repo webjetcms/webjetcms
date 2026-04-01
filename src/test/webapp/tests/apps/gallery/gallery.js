@@ -1120,5 +1120,43 @@ Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
+});
 
+Scenario('Test filter bug', async ({ I, DT, DTE, Apps}) =>  {
+    // tetsing on new page (not saved) there this bug has occured
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=39007");
+    DT.waitForLoader();
+
+    Apps.insertApp('Fotogaléria', '#components-gallery-title' , null, false);
+
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.say("Check i see field dir and tab componentIframe");
+    I.seeElement("div.DTE_Field_Name_dir");
+    I.seeElement("a#pills-dt-component-datatable-componentIframe-tab");
+
+    I.say("Check that appHideFields is not visible");
+    I.clickCss("a#pills-dt-component-datatable-commonSettings-tab");
+    I.dontSeeElement("div.DTE_Field_Name_appHideFields");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    I.say("Now set appHideFields")
+    Apps.switchEditor('html');
+    const body = "!INCLUDE(/components/gallery/gallery.jsp, style=photoSwipe, dir=&quot;/images/gallery&quot;, recursive=false, itemsOnPage=10, orderBy=title, orderDirection=asc, thumbsShortDescription=true, shortDescription=true, longDescription=true, author=true, perexGroup=, appHideFields=dir+tab_componentIframe)!";
+    await DTE.fillCkeditor(body);
+    Apps.switchEditor('standard');
+
+    I.say("Open app and check that field and tab are hidden");
+    Apps.openAppEditor();
+
+    I.dontSeeElement("div.DTE_Field_Name_dir");
+    I.dontSeeElement("a#pills-dt-component-datatable-componentIframe-tab");
+
+    I.say('Check that appHideFields is still hidden after saving');
+    I.clickCss("a#pills-dt-component-datatable-commonSettings-tab");
+    I.dontSeeElement("div.DTE_Field_Name_appHideFields");
 });

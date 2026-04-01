@@ -163,6 +163,7 @@ block content
 
                 // Get prepared object with fields and tabs to hide
                 let hiddenFieldsAndTabs = getHiddenFieldsAndTabs(response.data);
+                // console.log("hiddenFieldsAndTabs=", hiddenFieldsAndTabs);
                 // Hide fields
                 hiddenFieldsAndTabs.fields.forEach(function(field) {
                     componentDatatable.EDITOR.field(field).hide();
@@ -251,7 +252,7 @@ block content
                 return result;
             }
 
-            let appHideFieldsArr = Array.isArray(appHideFields) ? appHideFields : appHideFields.split(",");
+            let appHideFieldsArr = Array.isArray(appHideFields) ? appHideFields : appHideFields.split("+");
 
             for (let field of appHideFieldsArr) {
                 let fieldName = String(field).trim();
