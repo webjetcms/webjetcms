@@ -12,6 +12,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+import sk.iway.iwcm.system.datatable.events.DatatablesJsonEvent;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
 import sk.iway.iwcm.tags.support.ResponseUtils;
@@ -129,6 +130,12 @@ public class DataTableColumnsFactory {
         ObjectMapper mapper = new ObjectMapper();
         List<DataTableColumn> columns = getColumns(null);
         List<DataTableColumn> columnsSorted = sortColumns(columns);
+
+        if (dto != null) {
+            DatatablesJsonEvent event = new DatatablesJsonEvent(columnsSorted, dto);
+            event.publishEvent();
+        }
+
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(columnsSorted);
     }
 
