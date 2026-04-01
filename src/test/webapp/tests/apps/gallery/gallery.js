@@ -799,8 +799,8 @@ const isMatchingRatio = (I, width, height, ratio) => {
     const [w, h] = ratio.split(':').map(Number);
     const calculatedRatio = width / height;
     const targetRatio = w / h;
-    const toleranceRadios = 0.01;
-    I.assertBelow(Math.abs(calculatedRatio - targetRatio), toleranceRadios, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
+    const toleranceRatio = 0.01;
+    I.assertBelow(Math.abs(calculatedRatio - targetRatio), toleranceRatio, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
 };
 
 const arraysAreEqual = (I, arr1, arr2) => {

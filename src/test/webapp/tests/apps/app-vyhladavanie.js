@@ -23,6 +23,7 @@ Scenario("Google vyhľadávanie - test zobrazovania", ({ I }) => {
     I.pressKey('Enter');
 
     I.see(searchText, '.gs-snippet');
+    //result text not work properly
     I.waitForElement( locate(".gsc-expansionArea > div a.gs-title").withText("WebJET CMS"), 10);
 
     I.say("Change order");
