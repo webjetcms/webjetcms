@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.editor.rest.ComponentsService;
 import sk.iway.iwcm.i18n.Prop;
@@ -68,7 +69,17 @@ public class WebjetComponentResolver {
             }
 
             // ziska content responsu
-            return mockResponse.getContentAsString();
+            String content = mockResponse.getContentAsString();
+
+            // wrap component output with wrapper div if wrapper attributes are set
+            if (component instanceof WebjetComponentAbstract wca) {
+                String[] wrapperDiv = WebjetComponentAbstract.buildWrapperDiv(wca.getWrapperClass(), wca.getWrapperId(), wca.getWrapperTitle(), wca.getWrapperAriaLabel());
+                if (wrapperDiv != null) {
+                    content = wrapperDiv[0] + content + wrapperDiv[1];
+                }
+            }
+
+            return content;
         } catch (IOException e) {
             sk.iway.iwcm.Logger.error(e);
         }
