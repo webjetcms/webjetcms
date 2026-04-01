@@ -13,7 +13,7 @@ Scenario('Screen', async ({I, DTE, Document, Apps}) => {
 
     I.clickCss("label[for=DTE_Field_device_1]")
 
-    await DTE.selectOptionMulti("wrapperClass", ["mt-3","w-50"]);
+    await DTE.selectOptionMulti("wrapperClass", ["Odsadenie zhora 3 (mt-3)","Šírka 50% (w-50)"]);
     // Fill wrapper text fields
     I.fillField("#DTE_Field_wrapperId", "banner-wrapper-id");
 

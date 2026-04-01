@@ -553,19 +553,19 @@ else
 				Prop prop = Prop.getInstance(origLng);
 				StringBuilder wrapperInfo = new StringBuilder();
 				if (Tools.isNotEmpty(wrapperClassPreview)) {
-					wrapperInfo.append(prop.getText("apps.wrapperClass.title")).append(": ").append(ResponseUtils.filter(wrapperClassPreview.replace('+', ' ')));
+					wrapperInfo.append(prop.getText("apps.wrapper.class.title")).append(": ").append(ResponseUtils.filter(wrapperClassPreview.replace('+', ' ')));
 				}
 				if (Tools.isNotEmpty(wrapperIdPreview)) {
 					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
-					wrapperInfo.append(prop.getText("apps.wrapperId.title")).append(": ").append(ResponseUtils.filter(wrapperIdPreview));
+					wrapperInfo.append(prop.getText("apps.wrapper.id.title")).append(": ").append(ResponseUtils.filter(wrapperIdPreview));
 				}
 				if (Tools.isNotEmpty(wrapperTitlePreview)) {
 					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
-					wrapperInfo.append(prop.getText("apps.wrapperTitle.title")).append(": ").append(ResponseUtils.filter(wrapperTitlePreview));
+					wrapperInfo.append(prop.getText("apps.wrapper.title.title")).append(": ").append(ResponseUtils.filter(wrapperTitlePreview));
 				}
 				if (Tools.isNotEmpty(wrapperAriaLabelPreview)) {
 					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
-					wrapperInfo.append(prop.getText("apps.wrapperAriaLabel.title")).append(": ").append(ResponseUtils.filter(wrapperAriaLabelPreview));
+					wrapperInfo.append(prop.getText("apps.wrapper.ariaLabel.title")).append(": ").append(ResponseUtils.filter(wrapperAriaLabelPreview));
 				}
 				%>
 				<div class="deviceInfo">

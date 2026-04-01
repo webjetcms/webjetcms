@@ -155,7 +155,7 @@ Scenario("Cache", async ({I}) => {
     I.dontSee(date, "p.currentDate");
 });
 
-Scenario("Wrapper container settings save @current", async ({I, DTE, Document}) => {
+Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=80009");
     DTE.waitForEditor();
 
@@ -177,7 +177,7 @@ Scenario("Wrapper container settings save @current", async ({I, DTE, Document}) 
     I.waitForElement("#pills-dt-component-datatable-commonSettings", 10);
 
     // Select first wrapperClass checkbox (container)
-    await DTE.selectOptionMulti("wrapperClass", ["mt-3","mb-3"]);
+    await DTE.selectOptionMulti("wrapperClass", ["Odsadenie zhora 3 (mt-3)","Odsadenie zdola 3 (mb-3)"]);
     // Fill wrapper text fields
     I.fillField("#DTE_Field_wrapperId", "autotest-wrapper-id");
     I.fillField("#DTE_Field_wrapperTitle", "autotest-wrapper-title");

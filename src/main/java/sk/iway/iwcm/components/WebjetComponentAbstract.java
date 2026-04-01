@@ -13,6 +13,7 @@ import org.springframework.beans.BeanWrapperImpl;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -65,7 +66,7 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
 
     @DataTableColumn(
         inputType = DataTableColumnType.MULTISELECT,
-        title="apps.wrapperClass.title",
+        title="apps.wrapper.class.title",
         tab = "commonSettings",
         editor = {
             @DataTableColumnEditor(
@@ -78,13 +79,13 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
     )
     public String wrapperClass;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapperId.title", tab = "commonSettings")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapper.id.title", tab = "commonSettings")
     public String wrapperId;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapperTitle.title", tab = "commonSettings")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapper.title.title", tab = "commonSettings")
     public String wrapperTitle;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapperAriaLabel.title", tab = "commonSettings")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "apps.wrapper.ariaLabel.title", tab = "commonSettings")
     public String wrapperAriaLabel;
 
     /**
@@ -118,17 +119,27 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
     /**
      * Returns base options for common fields (e.g. wrapperClass) from configuration.
      * These are merged with subclass-specific options in ComponentsService.
+     * Supports format: "label:value" or just "value". Label can be a translation key.
      */
     public Map<String, List<OptionDto>> getBaseAppOptions(HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
         String wrapperClasses = Constants.getString("appWrapperClasses", "");
         if (Tools.isNotEmpty(wrapperClasses)) {
+            Prop prop = Prop.getInstance(request);
             List<OptionDto> wrapperOptions = new ArrayList<>();
             String[] tokens = Tools.getTokens(wrapperClasses, ",");
             for (String token : tokens) {
                 String trimmed = token.trim();
                 if (Tools.isNotEmpty(trimmed)) {
-                    wrapperOptions.add(new OptionDto(trimmed, trimmed, null));
+                    int colonIndex = trimmed.indexOf(':');
+                    if (colonIndex > 0) {
+                        String label = trimmed.substring(0, colonIndex).trim();
+                        String value = trimmed.substring(colonIndex + 1).trim();
+                        label = prop.getText(label);
+                        wrapperOptions.add(new OptionDto(label, value, null));
+                    } else {
+                        wrapperOptions.add(new OptionDto(trimmed, trimmed, null));
+                    }
                 }
             }
             if (wrapperClass != null) {

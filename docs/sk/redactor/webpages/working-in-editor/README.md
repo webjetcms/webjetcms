@@ -281,7 +281,10 @@ Karta obsahuje parametre:
 
 **Štýl** - sekcia obsahuje nastavenia pre obalenie výstupu aplikácie do `div` kontajnera. Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov:
 
-- CSS trieda - výber CSS tried z preddefinovaného zoznamu (napr. `container`, `mt-2`, `w-100`). Zoznam dostupných tried je nastaviteľný cez konfiguračnú premennú `appWrapperClasses` (čiarkou oddelený zoznam). Výstup aplikácie sa obalí do `div` elementu so zadanými CSS triedami.
+- CSS trieda - výber CSS tried z preddefinovaného zoznamu (napr. `container`, `mt-2`, `w-100`). Zoznam dostupných tried je nastaviteľný cez konfiguračnú premennú `appWrapperClasses` (čiarkou oddelený zoznam). Konfiguračná premenná podporuje dva formáty zápisu:
+  - jednoduchý formát - len názov CSS triedy, napr. `container,mt-2,w-100` - názov triedy sa zobrazí priamo v editore.
+  - formát s prekladovým kľúčom - `prekladový_kľúč:css_trieda`, napr. `apps.wrapper.container:container` - v editore sa zobrazí preložený text podľa jazyka administrácie (napr. "Kontajner (container)"), ale do HTML sa vloží len hodnota CSS triedy. Prekladový kľúč sa vyhľadá v prekladových textoch.
+  - oba formáty je možné kombinovať v jednom zozname, napr. `apps.wrapper.container:container,mt-2,apps.wrapper.w-75:w-75`.
 - ID - nastavenie HTML `id` atribútu pre obaľovací `div` element.
 - Titulok - nastavenie HTML `title` atribútu pre obaľovací `div` element.
 - `Aria Label` - nastavenie `aria-label` atribútu pre obaľovací `div` element, ktorý slúži na zlepšenie prístupnosti pre čítačky obrazovky.
