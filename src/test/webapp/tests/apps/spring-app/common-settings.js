@@ -155,8 +155,8 @@ Scenario("Cache", async ({I}) => {
     I.dontSee(date, "p.currentDate");
 });
 
-Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=80009");
+async function checkWrapperSettings(I, DTE, Document, docId, text) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
     DTE.waitForEditor();
 
     // Verify no wrapper info initially in preview
@@ -164,7 +164,7 @@ Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.waitForElement("iframe.wj_component", 10);
     I.switchTo("iframe.wj_component");
-    I.waitForText("Demo component view, params", 10);
+    I.waitForText(text, 10);
 
     I.switchTo();
 
@@ -213,7 +213,7 @@ Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
     I.wait(3);
     I.switchToNextTab();
 
-    I.waitForText("Demo component view, params", 10);
+    I.waitForText(text, 10);
     I.waitForElement("#autotest-wrapper-id", 10);
     I.seeElement("#autotest-wrapper-id.mt-3.mb-3");
     I.seeElement("div[title='autotest-wrapper-title']");
@@ -249,10 +249,21 @@ Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.waitForElement("iframe.wj_component", 10);
     I.switchTo("iframe.wj_component");
-    I.waitForText("Demo component view, params", 10);
+    I.waitForText(text, 10);
     I.dontSee("Wrapper:");
     I.switchTo();
 
     DTE.cancel();
+}
+
+Scenario("Wrapper container settings save", async ({I, DTE, Document}) => {
+    I.say("Checking wrapper settings for JSP app - gallery");
+    await checkWrapperSettings(I, DTE, Document, 45926, "Tesla Supercharger");
+
+    I.say("Checking wrapper settings for Spring app - DemoComponent");
+    await checkWrapperSettings(I, DTE, Document, 80009, "Demo component view, params");
+
+    I.say("Checking wrapper settings for Thymeleaf app - TimeBookApp");
+    await checkWrapperSettings(I, DTE, Document, 95273, "Dátum rezervácie");
 });
 
