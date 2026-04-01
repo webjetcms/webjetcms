@@ -72,8 +72,7 @@ public class WebjetComponentResolver {
             String content = mockResponse.getContentAsString();
 
             // wrap component output with wrapper div if wrapper attributes are set
-            if (component instanceof WebjetComponentAbstract) {
-                WebjetComponentAbstract wca = (WebjetComponentAbstract) component;
+            if (component instanceof WebjetComponentAbstract wca) {
                 String[] wrapperDiv = WebjetComponentAbstract.buildWrapperDiv(wca.getWrapperClass(), wca.getWrapperId(), wca.getWrapperTitle(), wca.getWrapperAriaLabel());
                 if (wrapperDiv != null) {
                     content = wrapperDiv[0] + content + wrapperDiv[1];
