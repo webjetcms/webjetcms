@@ -40,6 +40,7 @@ Anotácia má nasledovné parametre:
 - ```custom``` - nastavte na `true` pre vaše zákaznícke aplikácie. Automaticky sa nastaví podľa toho, či sa nachádza v package `sk.iway.iwcm`. Zákaznícke aplikácie sú v zozname aplikácií na začiatku zoznamu.
 - ```componentPath``` - ak prepisujete staršiu aplikáciu v JSP kóde nastavte na cestu k tomuto JSP súboru, napríklad ```componentPath = "/components/calendar/calendar.jsp"```.
 - ```customHtml``` - ak potrebujete vykonať [doplnkový kód](#doplnkový-html-kód), upraviť CSS štýly a podobne nastavte na cestu k HTML súboru, ktorý sa doplní k editácii aplikácie v editore web stránok. Napríklad ```customHtml = "/apps/calendar/admin/editor-component.html"```.
+- `hideInAppstore` - ak nastavíte na `true` aplikácia sa nezobrazí v zozname aplikácií (App Store), ale ak je inak vložená do stránky (napr. cez Page Builder blok) je možné nastaviť jej parametre.
 
 ![](democomponent-desc.png)
 

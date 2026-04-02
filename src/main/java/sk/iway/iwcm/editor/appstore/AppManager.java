@@ -110,7 +110,7 @@ public class AppManager
 		List<AppBean> appsList = (List<AppBean>) c.getObject(CACHE_KEY);
 		if (appsList != null) {
 			appsList = filterUserAppList(appsList, request);
-			return filterOutHidden == false ? appsList : appsList.stream().filter(a -> !a.isDontShow()).collect(Collectors.toList());
+			return filterOutHidden == false ? appsList : appsList.stream().filter(a -> !a.isHideInAppstore()).collect(Collectors.toList());
 		}
 
 		appsList = new ArrayList<>();
@@ -208,7 +208,7 @@ public class AppManager
 		c.setObjectSeconds(CACHE_KEY, appsList, 120 * 60, true);
 
 		if (filterOutHidden) {
-			appsList = appsList.stream().filter(a -> !a.isDontShow()).collect(Collectors.toList());
+			appsList = appsList.stream().filter(a -> !a.isHideInAppstore()).collect(Collectors.toList());
 		}
 
 		return filterUserAppList(appsList, request);
@@ -271,7 +271,7 @@ public class AppManager
 					app.setGalleryImages(appStore.galleryImages());
 					app.setComponentPath(appStore.componentPath());
 					app.setVariant(appStore.variant());
-					app.setDontShow(appStore.dontShow());
+					app.setHideInAppstore(appStore.hideInAppstore());
 
 					if (fqdn.startsWith("sk.iway.iwcm")) {
 						if (appStore.custom().length>1) app.setCustom(appStore.custom()[0]);

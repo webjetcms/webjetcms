@@ -31,7 +31,8 @@ public class AppBean
 	private String variant = "";
     private String descKey;
 	private boolean custom = false;
-	private boolean dontShow = false;
+	//hide app in appstore, but you can still edit params if app is inserted another way (eg. via PageBuilder block)
+	private boolean hideInAppstore = false;
 	private String componentPath;
 
 	private String lng;
@@ -215,12 +216,12 @@ public class AppBean
 		this.custom = custom;
 	}
 
-	public boolean isDontShow() {
-		return dontShow;
+	public boolean isHideInAppstore() {
+		return hideInAppstore;
 	}
 
-	public void setDontShow(boolean dontShow) {
-		this.dontShow = dontShow;
+	public void setHideInAppstore(boolean hideInAppstore) {
+		this.hideInAppstore = hideInAppstore;
 	}
 
 	public String getComponentPath() {

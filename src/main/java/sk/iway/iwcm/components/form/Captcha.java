@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     imagePath = "ti ti-shield-lock",
     componentPath = "/components/form/captcha.jsp",
     customHtml = "/apps/form/admin/captcha.html",
-    dontShow = true
+    hideInAppstore = true
 )
 @Getter
 @Setter
