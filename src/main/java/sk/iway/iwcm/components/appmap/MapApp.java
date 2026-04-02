@@ -11,6 +11,8 @@ import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
@@ -37,7 +39,9 @@ public class MapApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title="components.map.base_title")
     private String infoText;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.map.address")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.map.address", editor = {
+        @DataTableColumnEditor(message = "components.map.pin_info")
+    })
     private String object; // aka address
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title="components.map.lat")
@@ -48,16 +52,28 @@ public class MapApp extends WebjetComponentAbstract {
 
     /* TAB MAP SETTINGS */
 
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "mapSettings", title="components.map.own.size", editor = {
+        @DataTableColumnEditor(
+                attr = {
+                        @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.map.size")
+                }
+        )
+    })
+    private Boolean sizeInPercent;
+
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.width.short")
     private Integer widthPercent = 100;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.height.short")
     private Integer heightPercent = 100;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "mapSettings", title="components.map.own.size")
-    private Boolean sizeInPercent;
-
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.width")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.width", editor = {
+        @DataTableColumnEditor(
+                attr = {
+                        @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
+                }
+        )
+    })
     private Integer widthPx = 400;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.height")
@@ -65,7 +81,13 @@ public class MapApp extends WebjetComponentAbstract {
 
     @Min(0)
     @Max(21)
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.zoom")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "mapSettings", title="components.map.zoom", editor = {
+        @DataTableColumnEditor(
+                attr = {
+                        @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
+                }
+        )
+    })
     private Integer zoom = 13;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "mapSettings", title="components.map.enable_scrollwheel")

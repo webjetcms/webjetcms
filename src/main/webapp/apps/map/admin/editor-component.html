@@ -46,12 +46,6 @@
 
         iframeDiv.appendChild(iframe);
         document.getElementById("panel-body-dt-component-datatable-basic").appendChild(iframeDiv);
-
-        const infoDiv = document.createElement("div");
-        infoDiv.classList.add("col-sm-12");
-        infoDiv.style.textAlign = "center";
-        infoDiv.innerHTML = '<p>Kliknutím na mapu môžete upresniť bod, na ktorom sa zobrazí pin.</p><p></p>';
-        document.getElementById("panel-body-dt-component-datatable-basic").appendChild(infoDiv);
     }
 
     function showLookup()
@@ -96,11 +90,12 @@
 
         var params = new URLSearchParams();
         params.set("object", object);
-        params.set("width", width);
-        params.set("height", height);
+        //we dont want to set size in preview window, because % values are wrong
+        //params.set("width", width);
+        //params.set("height", height);
         params.set("zoom", zoom);
         params.set("scrollwheel", scrollwheel);
-        params.set("sizeInPercent", sizeInPercent);
+        //params.set("sizeInPercent", sizeInPercent);
         params.set("showContentString", showLabel);
         params.set("offsetX", offsetX);
         params.set("offsetY", offsetY);
@@ -176,7 +171,7 @@
             callCkEditorMethod('maximalizeWindow');
 
             // Add buttons to show map preview
-            addShowMapButtons("panel-body-dt-component-datatable-basic", "components.map.show.js");
+            addShowMapButtons("panel-body-dt-component-datatable-basic");
             addShowMapButtons("panel-body-dt-component-datatable-mapSettings");
             addShowMapButtons("panel-body-dt-component-datatable-pinSettings");
 

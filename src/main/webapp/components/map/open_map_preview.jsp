@@ -18,8 +18,8 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     String latitude = Tools.isEmpty(Tools.getRequestParameter(request, "latitude")) ? null :Tools.getRequestParameter(request, "latitude");
 
     boolean sizeInPercent = "true".equals(Tools.getRequestParameter(request, "sizeInPercent"));
-    String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "400" :Tools.getRequestParameter(request, "width");
-    String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400" :Tools.getRequestParameter(request, "height");
+    String width = Tools.isEmpty(Tools.getRequestParameter(request, "width")) ? "100%; aa: " :Tools.getRequestParameter(request, "width");
+    String height = Tools.isEmpty(Tools.getRequestParameter(request, "height")) ? "400px; aa: " :Tools.getRequestParameter(request, "height");
 
     int zoom = Tools.getIntValue(Tools.getRequestParameter(request, "zoom"), 13);
 	// Show controls by default true, so it wont turn off the controll buttons
