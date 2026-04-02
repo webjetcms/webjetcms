@@ -1,16 +1,15 @@
 
-# Predpripravené bloky (HTMLBox)
+# Predpripravené bloky
 
-Modul HTMLBox umožňuje jednoducho vložiť na stránku predpripravené bloky (HTML objekty), ako sú tabuľky, texty, kontaktné formuláre a ďalšie. Môžete tiež vložiť obsah inej stránky do aktuálnej stránky (napríklad opakujúci sa formulár).
+Editor stránky ponúka možnosť vkladania prednastavených blokov (```HTML``` objektov) na stránku. Napr. tabuľka, text, kontaktný formulár atď. Viete vložiť aj obsah inej stránky do aktuálnej stránky (napr. opakujúci sa formulár).
 
-Bloky zobrazíte kliknutím na ikonu ![](htmlbox_icon.png ":no-zoom") v editore stránky, čím otvoríte dialóg s kategóriami blokov, alebo pridaním aplikácie **Predpripravené bloky**.
+Dostupné bloky zobrazíte kliknutím na ikonu ![](htmlbox_icon.png ":no-zoom") v editore stránky, čím otvoríte dialóg s kategóriami blokov, alebo pridaním aplikácie **Predpripravené bloky**.
 
-Typy blokov (HTML objektov), ktoré môžete vložiť skrz **Typ kódu na vloženie**:
+Typy blokov (HTML objektov), ktoré môžete vložiť cez **Typ kódu na vloženie**:
 
 - **Predpripravený blok**
 - **Web stránka**
-- **Hlavná šablóna**
-- **Pod-šablóna**
+- **Šablóny**
 
 ## Predpripravený blok
 
@@ -41,9 +40,9 @@ Obsah aktuálne zvolenej web stránky sa zobrazuje v náhľade v dolnej časti o
 
 ![](editor-doc.png)
 
-## Hlavná šablóna
+## Šablóna
 
-Táto možnosť obsahuje stránky generované z adresára **Systém → Šablóny**. Pre rozlíšenie majú hlavné šablóny prefix **Hlavná šablóna** a podpriečinky (do úrovne 1) prefix **Pod-šablóna**. Každý adresár v **Šablónach** predstavuje jeden zoznam vo výberovom poli modulu.
+Táto možnosť obsahuje stránky generované z priečinka **Systém/Šablóny** a podpriečinkov prvej úrovne
 
 **Spôsob vloženia:**
 
@@ -51,7 +50,6 @@ Táto možnosť obsahuje stránky generované z adresára **Systém → Šablón
 - **Dynamickým odkazom:** HTML kód bloku sa vloží ako dynamický odkaz. Ak sa obsah bloku upraví, zmena sa automaticky prejaví vo všetkých vložených častiach.
 
 ![](editor-template.png)
-
 
 ## Statické vs dynamické vloženie
 

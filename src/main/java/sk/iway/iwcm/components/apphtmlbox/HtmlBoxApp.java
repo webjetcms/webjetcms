@@ -120,19 +120,28 @@ public class HtmlBoxApp extends WebjetComponentAbstract {
 
         // Main template
         GroupsDB groupsDB = GroupsDB.getInstance();
-        GroupDetails templateGroup = groupsDB.getGroup(Constants.getInt("tempGroupId"));
-        String mainPrefix = prop.getText("components.htmlbox.main_template") + ": ";
-        if (templateGroup != null) insertCodeTypeOptions.add( new OptionDto(mainPrefix + templateGroup.getGroupName(), "templateGroupId_" + templateGroup.getGroupId(), null) );
-        else insertCodeTypeOptions.add( new OptionDto(mainPrefix, "templateGroupId_-1", null) );
+        GroupDetails templateGroup = groupsDB.getTemplatesGroup();
 
         // Sub templates if main exist
         if (templateGroup != null) {
-            String prefix = prop.getText("components.htmlbox.child_template") + ": ";
-            for(GroupDetails templatesGroup : groupsDB.getGroups(templateGroup.getGroupId()) )
-                insertCodeTypeOptions.add( new OptionDto(prefix + templatesGroup.getGroupName(), "templateGroupId_" + templatesGroup.getGroupId(), null) );
+            String path = getGroupPath(templateGroup.getGroupId(), groupsDB);
+            insertCodeTypeOptions.add( new OptionDto(path, "templateGroupId_" + templateGroup.getGroupId(), null) );
+            for(GroupDetails templatesGroup : groupsDB.getGroups(templateGroup.getGroupId()) ) {
+                path = getGroupPath(templatesGroup.getGroupId(), groupsDB);
+                insertCodeTypeOptions.add( new OptionDto(path, "templateGroupId_" + templatesGroup.getGroupId(), null) );
+            }
         }
 
         return insertCodeTypeOptions;
+    }
+
+    private String getGroupPath(int groupId, GroupsDB groupsDB) {
+        String path = groupsDB.getPath(groupId);
+        //remove first /System prefix
+        if (path.startsWith("/System/")) {
+            path = path.substring(path.indexOf("/", 2) + 1);
+        }
+        return path;
     }
 
     @Override

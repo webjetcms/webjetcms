@@ -20,6 +20,7 @@
   - [História](/redactor/webpages/history.md)
   - [Obnovenie z koša](/redactor/webpages/recover.md)
   - [Page Builder](/redactor/webpages/pagebuilder.md)
+  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Kontrola odkazov a prázdnych stránok](/redactor/webpages/linkcheck.md)
   - [Import a export web stránok](/redactor/webpages/import-export.md)
   - [Schvaľovanie zmien](/redactor/webpages/approve/README.md)
@@ -123,7 +124,6 @@
   - [Poslať stránku emailom](/redactor/apps/send_link/README.md)
   - [Pôsobivá prezentácia](/redactor/apps/app-impress_slideshow/README.md)
   - [Používatelia](/redactor/apps/user/README.md)
-  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Príbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervácie
