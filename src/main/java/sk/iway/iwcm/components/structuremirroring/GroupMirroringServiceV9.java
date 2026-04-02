@@ -234,7 +234,7 @@ public class GroupMirroringServiceV9 {
             List<GroupDetails> syncedGroups = getDeletedGroupsBySyncId(group.getSyncId(), group.getGroupId());
             for (GroupDetails syncedGroup : syncedGroups) {
                Logger.debug(GroupMirroringServiceV9.class, "OBNOVUJEM, syncedGroup="+syncedGroup.toString()+" group="+group.toString());
-               groupsService.recoverGroupFromTrash(syncedGroup, currentUser);
+               groupsService.recoverGroupFromTrash(syncedGroup, currentUser, false);
                MirroringService.forceReloadTree();
             }
          }

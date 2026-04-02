@@ -234,12 +234,13 @@ public class DocMirroringServiceV9 {
       } else if (type == WebjetEventType.ON_DELETE) {
          //musi byt ON_DELETE, pretoze AFTER je uz v kosi
          if (doc.getSyncId()>1) {
+            EditorService editorService = Tools.getSpringBean("editorService", EditorService.class);
+
             //najdi k tomu mirror verzie
             List<DocDetails> syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());
             for (DocDetails syncedDoc : syncedDocs) {
                Logger.debug(DocMirroringServiceV9.class, "MAZEM, syncedDoc="+syncedDoc.getTitle()+" "+syncedDoc.getDocId()+" doc="+doc.getTitle()+" "+doc.getDocId());
 
-               EditorService editorService = Tools.getSpringBean("editorService", EditorService.class);
                editorService.deleteWebpage(syncedDoc, false);
 
                //DeleteServlet.deleteDoc(null, syncedDoc.getDocId(), false);
@@ -255,7 +256,7 @@ public class DocMirroringServiceV9 {
             for (DocDetails syncedDoc : syncedDocs) {
                Logger.debug(DocMirroringServiceV9.class, "OBNOVUJEM, syncedDoc="+syncedDoc.getTitle()+" "+syncedDoc.getDocId()+" doc="+doc.getTitle()+" "+doc.getDocId());
 
-               editorService.recoverWebpageFromTrash(syncedDoc.getDocId());
+               editorService.recoverWebpageFromTrash(syncedDoc.getDocId(), false);
 
                MirroringService.forceReloadTree();
             }
