@@ -27,6 +27,42 @@ block content
                 fetchOnEdit: true,
                 fetchOnCreate: true
             });
+
+            function toggleAllFields() {
+                var allEditableGroups = permissionGroupsDataTable.EDITOR.field('allEditableGroups');
+                var allWritableFolders = permissionGroupsDataTable.EDITOR.field('allWritableFolders');
+
+                var editableGroupsField = permissionGroupsDataTable.EDITOR.field('editorFields.editableGroups');
+                var editablePagesField = permissionGroupsDataTable.EDITOR.field('editorFields.editablePages');
+
+                var writableFoldersField = permissionGroupsDataTable.EDITOR.field('editorFields.writableFolders');
+
+                if (allEditableGroups.val()[0] === true) {
+                    editableGroupsField.hide();
+                    editablePagesField.hide();
+                } else {
+                    editableGroupsField.show();
+                    editablePagesField.show();
+                }
+
+                if (allWritableFolders.val()[0] === true) {
+                    writableFoldersField.hide();
+                } else {
+                    writableFoldersField.show();
+                }
+            }
+
+            permissionGroupsDataTable.EDITOR.on('opened', function (e, type, action) {
+                toggleAllFields();
+
+                //bind change event on checkboxes
+                $(".DTE_Field_Name_allEditableGroups input").off("change.toggleAll").on("change.toggleAll", function() {
+                    toggleAllFields();
+                });
+                $(".DTE_Field_Name_allWritableFolders input").off("change.toggleAll").on("change.toggleAll", function() {
+                    toggleAllFields();
+                });
+            });
         })
 
     <table id="permissionGroupsDataTable" class="datatableInit table"></table>

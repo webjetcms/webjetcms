@@ -3292,5 +3292,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>copilot</string></void>
+                <void property="date"><string>25.06.2026</string></void>
+                <void property="desc"><string>user_perm_groups - add columns all_editable_groups, all_writable_folders</string></void>
+                <void property="mysql"><string>ALTER TABLE user_perm_groups ADD COLUMN all_editable_groups TINYINT(1) DEFAULT 0; ALTER TABLE user_perm_groups ADD COLUMN all_writable_folders TINYINT(1) DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE user_perm_groups ADD all_editable_groups BIT DEFAULT 0; ALTER TABLE user_perm_groups ADD all_writable_folders BIT DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE user_perm_groups ADD (all_editable_groups SMALLINT DEFAULT 0); ALTER TABLE user_perm_groups ADD (all_writable_folders SMALLINT DEFAULT 0);</string></void>
+                <void property="pgsql"><string>ALTER TABLE user_perm_groups ADD COLUMN all_editable_groups BOOLEAN DEFAULT FALSE; ALTER TABLE user_perm_groups ADD COLUMN all_writable_folders BOOLEAN DEFAULT FALSE;</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

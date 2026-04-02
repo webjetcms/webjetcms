@@ -148,6 +148,8 @@ Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
     const fields_volitelne = ["text - A", "select - B", "autocomplete - D", "docsIn_67_null - G", "enumeration_2 - H", "Multi select - J"];
     const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D", "Pole G", "Pole H", "Pole J"];
 
+    setEnumerationMapping(I, DT, DTE, "enumeration_2");
+
     //
     I.say("Test on Volitelne polia folder - as jstree click");
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
@@ -300,7 +302,6 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
 }
 
 function setCustomFields(I, DTE) {
-    I.wait(10); //wait for prop reload
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
     DTE.waitForEditor();
     I.wait(2);

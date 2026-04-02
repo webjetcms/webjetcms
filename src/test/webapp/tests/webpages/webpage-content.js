@@ -781,7 +781,9 @@ async function testLinkElfinder(DTE, I) {
      await I.waitForElement(".elfinder-stat-selected[title^='jurko.jpg']", 10);
      I.switchTo();
      I.clickCss(".cke_dialog_tab[title='Rozšírené']");
-     I.waitForValue('#cke_270_textInput', 'Súbor JPG, veľkosť 465,15 kB', 10);
+     const locator = locate("div.cke_dialog_ui_text").withText("Pomocný titulok").find("input.cke_dialog_ui_input_text");
+     I.waitForElement(locator, 10);
+     I.waitForValue(locator, 'Súbor JPG, veľkosť 465,15 kB', 10);
 
      I.click(locate('.cke_dialog_ui_button').withText('OK'));
 }
