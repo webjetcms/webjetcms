@@ -16,7 +16,7 @@ Scenario('Blocks - Content should include gallery component not snippet', ({ I, 
     navigateToWebPagesList(I);
     createNewPage(I, DT, DTE);
     openContentEditor(I);
-    selectContent(I, "Text s aplikáciou", "Hlavná šablona: Šablóny");
+    selectContent(I, DTE, "Text s aplikáciou", "Šablóny");
 
     I.switchTo("#cke_1_contents > iframe");
     I.dontSee("!INCLUDE(/components/gallery/gallery.jsp");
@@ -32,7 +32,7 @@ Scenario('Blocks - Editing remote image should show a warning', ({ I, DT, DTE })
     navigateToWebPagesList(I);
     createNewPage(I, DT, DTE);
     openContentEditor(I);
-    selectContent(I, "content15.html ", "Predpripravený blok", "Content");
+    selectContent(I, DTE, "content15.html ", "Predpripravený blok", "Content");
 
     I.say('Clicking on the inserted image');
     I.switchTo("#cke_1_contents > iframe");
@@ -70,15 +70,15 @@ function openContentEditor(I) {
     I.clickCss('.cke_button.cke_button__htmlbox.cke_button_off');
 }
 
-function selectContent(I, contentName, blockType, blockName) {
+function selectContent(I, DTE, contentName, blockType, blockName) {
     I.say(`Selecting content: ${contentName}`);
     I.switchTo('.cke_dialog_ui_iframe');
     I.waitForElement('#editorComponent', 10);
     I.switchTo('#editorComponent');
 
-    I.dtEditorSelectOption("codeType", blockType);
+    DTE.selectOption("codeType", blockType);
 
-    if (blockName) { I.dtEditorSelectOption("blockType", blockName); }
+    if (blockName) { DTE.selectOption("blockType", blockName); }
 
     I.switchTo('#previewIframe');
 
@@ -98,7 +98,7 @@ Scenario('Test app visual and logic', ({ I, Apps }) => {
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
-    var codeTypeOptions = ["Predpripravený blok", "Web stránka", "Hlavná šablona: Šablóny"];
+    var codeTypeOptions = ["Predpripravený blok", "Web stránka", "Šablóny"];
     I.say("Check code type options");
     checkAndSelect(I, "codeType", codeTypeOptions, "Predpripravený blok");
 
@@ -120,14 +120,14 @@ Scenario('Test app visual and logic', ({ I, Apps }) => {
     I.see('url(/images/template/common/ublocks/content1.jpg);');
 });
 
-Scenario('Test app visual and logic 2', ({ I, Apps }) => {
+Scenario('Test app visual and logic 2', ({ I, DTE, Apps }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=64361");
 
     Apps.insertApp("Predpripravené bloky", '#components-htmlbox-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
-    I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
+    DTE.selectOption("codeType", "Šablóny");
 
     I.say("Check templates and choose one - as STATIC");
     I.switchTo('#previewIframe');
@@ -142,14 +142,14 @@ Scenario('Test app visual and logic 2', ({ I, Apps }) => {
     I.see("<p>Lorem ipsum dolor sit amet, consectetuer");
 });
 
-Scenario('Test app visual and logic 3', ({ I, Apps }) => {
+Scenario('Test app visual and logic 3', ({ I, DTE, Apps }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=64361");
 
     Apps.insertApp("Predpripravené bloky", '#components-htmlbox-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
-    I.dtEditorSelectOption("codeType", "Hlavná šablona: Šablóny");
+    DTE.selectOption("codeType", "Šablóny");
 
     I.say("Check templates and choose one - as DYNAMIC link");
     I.clickCss("#DTE_Field_docStyle_1");
