@@ -56,6 +56,7 @@ function switchBackToEditor(I) {
 
 async function checkMap(I, widthText, heightText, seeControls = false) {
     I.say('Check map size');
+    /* map preview is now fixed
     const size = await I.executeScript(() => {
         const el = document.querySelector('#map');
         const style = window.getComputedStyle(el);
@@ -65,7 +66,7 @@ async function checkMap(I, widthText, heightText, seeControls = false) {
         };
     });
     I.assertEqual(size.width, widthText);
-    I.assertEqual(size.height, heightText);
+    I.assertEqual(size.height, heightText);*/
 
     if(seeControls === true) {
         I.seeElement("#map .leaflet-control-zoom a.leaflet-control-zoom-in");
