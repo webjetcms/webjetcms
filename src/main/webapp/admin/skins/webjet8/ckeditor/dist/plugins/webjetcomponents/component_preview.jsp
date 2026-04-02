@@ -8,6 +8,7 @@
 <%@page import="org.apache.commons.codec.binary.Base64"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@page import="sk.iway.iwcm.tags.WriteTag"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
@@ -354,6 +355,26 @@ else
 				//jParentNode.parent().height(height+5);
 				//jParentNode.width("100%");
 
+				// set wrapper attributes on iframe element for preview
+				<%
+				String previewWrapperClass = myPageParams.getValue("wrapperClass", "");
+				String previewWrapperId = myPageParams.getValue("wrapperId", "");
+				String previewWrapperTitle = myPageParams.getValue("wrapperTitle", "");
+				String previewWrapperAriaLabel = myPageParams.getValue("wrapperAriaLabel", "");
+				%>
+				<% if (Tools.isNotEmpty(previewWrapperClass)) { %>
+				jParentNode.addClass("<%=ResponseUtils.filter(previewWrapperClass.replace('+', ' '))%>");
+				<% } %>
+				<% if (Tools.isNotEmpty(previewWrapperId)) { %>
+				jParentNode.attr("data-wrapper-id", "<%=ResponseUtils.filter(previewWrapperId)%>");
+				<% } %>
+				<% if (Tools.isNotEmpty(previewWrapperTitle)) { %>
+				jParentNode.attr("title", "<%=ResponseUtils.filter(previewWrapperTitle)%>");
+				<% } %>
+				<% if (Tools.isNotEmpty(previewWrapperAriaLabel)) { %>
+				jParentNode.attr("aria-label", "<%=ResponseUtils.filter(previewWrapperAriaLabel)%>");
+				<% } %>
+
 				//console.log("Preview setting w="+width+" h="+height);
 				//window.alert(jParentNode.parent().html());
 
@@ -521,6 +542,35 @@ else
 				<div class="deviceInfo">
 					<span class="deviceInfoTitle"><%=prop.getText("apps.showForLoggedUser.title")%>:</span>
 					<span class="deviceInfoTypes"><%=showForLoggedUser%></span>
+				</div>
+				<%
+			}
+			String wrapperClassPreview = myPageParams.getValue("wrapperClass", null);
+			String wrapperIdPreview = myPageParams.getValue("wrapperId", null);
+			String wrapperTitlePreview = myPageParams.getValue("wrapperTitle", null);
+			String wrapperAriaLabelPreview = myPageParams.getValue("wrapperAriaLabel", null);
+			if (Tools.isNotEmpty(wrapperClassPreview) || Tools.isNotEmpty(wrapperIdPreview) || Tools.isNotEmpty(wrapperTitlePreview) || Tools.isNotEmpty(wrapperAriaLabelPreview)) {
+				Prop prop = Prop.getInstance(origLng);
+				StringBuilder wrapperInfo = new StringBuilder();
+				if (Tools.isNotEmpty(wrapperClassPreview)) {
+					wrapperInfo.append(prop.getText("apps.wrapper.class.title")).append(": ").append(ResponseUtils.filter(wrapperClassPreview.replace('+', ' ')));
+				}
+				if (Tools.isNotEmpty(wrapperIdPreview)) {
+					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
+					wrapperInfo.append(prop.getText("apps.wrapper.id.title")).append(": ").append(ResponseUtils.filter(wrapperIdPreview));
+				}
+				if (Tools.isNotEmpty(wrapperTitlePreview)) {
+					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
+					wrapperInfo.append(prop.getText("apps.wrapper.title.title")).append(": ").append(ResponseUtils.filter(wrapperTitlePreview));
+				}
+				if (Tools.isNotEmpty(wrapperAriaLabelPreview)) {
+					if (wrapperInfo.length() > 0) wrapperInfo.append(", ");
+					wrapperInfo.append(prop.getText("apps.wrapper.ariaLabel.title")).append(": ").append(ResponseUtils.filter(wrapperAriaLabelPreview));
+				}
+				%>
+				<div class="deviceInfo">
+					<span class="deviceInfoTitle">Wrapper:</span>
+					<span class="deviceInfoTypes"><%=wrapperInfo.toString()%></span>
 				</div>
 				<%
 			}

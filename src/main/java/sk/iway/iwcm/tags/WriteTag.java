@@ -26,10 +26,12 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.doc.DebugTimer;
@@ -774,6 +776,21 @@ public class WriteTag extends BodyTagSupport
 										content.append("<div class=\"inlineComponentEditButtonsTop\">").append(buttonsTopString).append("</div>");
 
 										request.removeAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);
+									}
+
+									// wrap legacy JSP component output with wrapper div (Spring components are wrapped in WebjetComponentResolver)
+									if (isSpringComponent == false) {
+										PageParams wrapperPageParams = new PageParams(pageParams);
+										String[] wrapperDiv = WebjetComponentAbstract.buildWrapperDiv(
+											wrapperPageParams.getValue("wrapperClass", null),
+											wrapperPageParams.getValue("wrapperId", null),
+											wrapperPageParams.getValue("wrapperTitle", null),
+											wrapperPageParams.getValue("wrapperAriaLabel", null)
+										);
+										if (wrapperDiv != null) {
+											htmlCode.insert(0, wrapperDiv[0]);
+											htmlCode.append(wrapperDiv[1]);
+										}
 									}
 
 									content.append(htmlCode);
