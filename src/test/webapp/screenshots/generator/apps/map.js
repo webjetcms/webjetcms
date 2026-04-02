@@ -22,5 +22,5 @@ Scenario('app map', ({ I, DT, Document }) => {
         I.clickCss("#pills-dt-component-datatable-mapSettings-tab");
         I.fillField("#DTE_Field_heightPercent", "100");
         I.clickCss("#pills-dt-component-datatable-mapSettings button.btn-primary");
-    });
+    }, 1280, 860);
 });
