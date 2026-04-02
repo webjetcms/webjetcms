@@ -17,7 +17,7 @@ Je povinné nastaviť buď adresu alebo zemepisnú šírku a zemepisnú dĺžku.
 
 Karta taktiež obsahuje náhľad mapy, kde je možné vidieť zadané údaje a nastavenia.
 
-!>**Upozornenie:** náhľad mapy sa neaktualizuje automaticky pri zmene adresy alebo súradníc, je nutné kliknúť na tlačidlo **Zobraziť** pre zobrazenie zmien v náhľade.
+!>**Upozornenie:** náhľad mapy sa neaktualizuje automaticky pri zmene adresy alebo súradníc, je nutné kliknúť na tlačidlo **Zobraziť náhľad mapy** pre zobrazenie zmien v náhľade.
 
 ![](map-editor.png)
 
