@@ -1,17 +1,17 @@
 <script type="text/javascript" src="/components/quiz/js/jquery.sha1.js"></script>
 <script>
 
-    function prepareJsonEditorDataCustom(decoded) {
-        if(decoded == undefined || decoded == null || decoded == "" || Array.isArray(decoded) == false) return [];
+function prepareJsonEditorDataCustom(decoded) {
+    if(decoded == undefined || decoded == null || decoded == "" || Array.isArray(decoded) == false) return [];
 
-        decoded.forEach((item, index) => {
-            item.questionId = item.id;
-            item.id = index + 1; // Add 1-based ID
-            item.rowOrder = (index + 1)*10; // Add rowOrder for row reordering
-        });
+    decoded.forEach((item, index) => {
+        item.questionId = item.id;
+        item.id = index + 1; // Add 1-based ID
+        item.rowOrder = (index + 1)*10; // Add rowOrder for row reordering
+    });
 
-        return decoded;
-    }
+    return decoded;
+}
 
 function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
     //console.log('appGetComponentCode', componentPath, params, componentDatatable, isInsert);
@@ -19,8 +19,8 @@ function appGetComponentCode(componentPath, params, componentDatatable, isInsert
     if(params.name == undefined || params.name == null || params.name == '') { return ""; }
 
     let url = "!INCLUDE(/components/inquirysimple/inquiry.jsp";
-    url += ", formId=" + params.formId;
-    url += ", name=" + params.name;
+    url += ", formId=" + window.addQuotes(window.encodeEntities(params.formId));
+    url += ", name=" + window.addQuotes(window.encodeEntities(params.name));
     url += ", active=" + (params.active?.[0] === true);
     url += ", multiAnswer=" + (params.multiAnswer?.[0] === true);
 
@@ -40,7 +40,7 @@ function appGetComponentCode(componentPath, params, componentDatatable, isInsert
     });
 
     // Set editorData
-    if(editorData.length > 0) { url += ", editorData=" + WJ.base64encode(JSON.stringify(editorData)); }
+    if(editorData.length > 0) { url += ", editorData=" + window.encodeJSONData(editorData); }
     else { url += ", editorData=JTVCJTVE"; }
 
     return url += ")!";

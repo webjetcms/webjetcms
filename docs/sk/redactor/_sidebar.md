@@ -49,6 +49,7 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
+    - [Anketa ľahko](/redactor/apps/inquiry/inquiry-simple.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)

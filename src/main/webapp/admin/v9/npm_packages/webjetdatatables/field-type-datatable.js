@@ -174,7 +174,7 @@ export function typeDatatable() {
                     //console.log("Returning json for localJson: ", json);
                     return json;
                 } else {
-                    console.log("Returning original value, datatable is not initialized", conf.originalValue);
+                    //console.log("Returning original value, datatable is not initialized", conf.originalValue);
                     //send original value, DT was not initialized
                     return(conf.originalValue);
                 }
