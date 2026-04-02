@@ -184,3 +184,123 @@ function checkAvailable(I, DTE, pageName, available) {
     }
     DTE.cancel();
 }
+
+const skDocRecoverGroupId = 113666;
+const enDocRecoverGroupId = 113667;
+Scenario('Before - mirrored recovery logic', ({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    Document.switchDomain("mirroring.tau27.iway.sk");
+
+    // Set needed configurations
+    I.amOnPage("/admin/v9/settings/configuration/");
+
+    I.say("Set structureMirroringConfig");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("configurationDatatable");
+    I.fillField("#DTE_Field_name", "structureMirroringConfig");
+    I.fillField("#DTE_Field_value", skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
+    DTE.save();
+    //Check it
+    DT.filterContains("name", "structureMirroringConfig");
+    I.see(skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
+});
+
+const skDocRecoverGroup = "sk_doc_recover";
+const enDocRecoverGroup = "en_doc_recover";
+Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE }) => {
+    I.say("I remove one page, both pages are removed");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
+    I.clickCss("#datatableInit_wrapper td.dt-select-td");
+    I.click(DT.btn.delete_button);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForLoader();
+
+    I.say('Check that both pages are removed');
+    I.clickCss("#pills-trash-tab");
+    DT.waitForLoader();
+    DT.filterContains("title", "_doc_recover");
+    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
+    I.see(enDocRecoverGroup, "#datatableInit_wrapper");
+
+    I.say("Choose EN version and do recover");
+    DT.filterContains("title", enDocRecoverGroup);
+    I.clickCss("#datatableInit_wrapper td.dt-select-td");
+    I.click(DT.btn.recovery_button);
+    DT.waitForLoader();
+
+    I.say("Check that there are 2 notification about recovery - SK and EN page");
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(1)", () => {
+        I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
+        I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
+        I.see("/en_doc_recover/en_doc_recover", "div.toast-message");
+    });
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(2)", () => {
+        I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
+        I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
+        I.see("/" + skDocRecoverGroup + "/" + skDocRecoverGroup, "div.toast-message");
+    });
+
+    I.say('Check that they are not in trash anymore');
+    DT.filterContains("title", "_doc_recover");
+    I.dontSee(skDocRecoverGroup, "#datatableInit_wrapper");
+    I.dontSee(enDocRecoverGroup, "#datatableInit_wrapper");
+
+    I.say("Now check that both were recovered");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + enDocRecoverGroupId);
+    DT.waitForLoader();
+    I.see(enDocRecoverGroup, "#datatableInit_wrapper");
+});
+
+Scenario('Recovery of mirrored groups logic', ({ I, DT, DTE }) => {
+    I.say("I remove one group, both groups are removed");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + enDocRecoverGroupId);
+    DT.waitForLoader();
+    I.click(DT.btn.tree_delete_button);
+    DTE.waitForEditor("groups-datatable");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForLoader();
+    I.dontSeeElement(locate("a.jstree-anchor").withText(enDocRecoverGroup));
+
+    I.say('Check that both groups are removed');
+    I.clickCss("#pills-trash-tab");
+    DT.waitForLoader();
+    I.jstreeFilter(enDocRecoverGroup);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(enDocRecoverGroup));
+    I.jstreeFilter(skDocRecoverGroup);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(skDocRecoverGroup));
+
+    I.say("Choose SK version and do recover");
+    I.click(locate('.jstree-anchor.jstree-search').withText(skDocRecoverGroup));
+    I.click(DT.btn.tree_recovery_button);
+    I.waitForElement("div.toast-info");
+    I.clickCss(".toastr-buttons button.btn-primary");
+    DTE.waitForLoader();
+
+    I.say("Check that there are 2 notification about recovery - SK and EN page");
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(1)", () => {
+        I.waitForText("Priečinok bol úspešne obnovený", 10, "div.toast-title");
+        I.see("Priečinok " + enDocRecoverGroup + " bol úspešne obnovený do", "div.toast-message");
+        I.see("Koreňový priečinok", "div.toast-message");
+    });
+
+    within("#toast-container-webjet div.toast.toast-success:nth-child(2)", () => {
+        I.waitForText("Priečinok bol úspešne obnovený", 10, "div.toast-title");
+        I.see("Priečinok " + skDocRecoverGroup + " bol úspešne obnovený do", "div.toast-message");
+        I.see("Koreňový priečinok", "div.toast-message");
+    });
+});
+
+Scenario('Logout', ({ I }) => {
+    //Logout to refresh set domain
+    I.logout();
+});

@@ -234,15 +234,30 @@ public class DocMirroringServiceV9 {
       } else if (type == WebjetEventType.ON_DELETE) {
          //musi byt ON_DELETE, pretoze AFTER je uz v kosi
          if (doc.getSyncId()>1) {
+            EditorService editorService = Tools.getSpringBean("editorService", EditorService.class);
+
             //najdi k tomu mirror verzie
             List<DocDetails> syncedDocs = getDocBySyncId(doc.getSyncId(), doc.getDocId());
             for (DocDetails syncedDoc : syncedDocs) {
                Logger.debug(DocMirroringServiceV9.class, "MAZEM, syncedDoc="+syncedDoc.getTitle()+" "+syncedDoc.getDocId()+" doc="+doc.getTitle()+" "+doc.getDocId());
 
-               EditorService editorService = Tools.getSpringBean("editorService", EditorService.class);
                editorService.deleteWebpage(syncedDoc, false);
 
                //DeleteServlet.deleteDoc(null, syncedDoc.getDocId(), false);
+               MirroringService.forceReloadTree();
+            }
+         }
+      } else if (type == WebjetEventType.AFTER_RECOVER) {
+         if (doc.getSyncId()>1) {
+            EditorService editorService = Tools.getSpringBean("editorService", EditorService.class);
+
+            //najdi k tomu mirror verzie a obnov ich z kosa
+            List<DocDetails> syncedDocs = getDeletedDocBySyncId(doc.getSyncId(), doc.getDocId());
+            for (DocDetails syncedDoc : syncedDocs) {
+               Logger.debug(DocMirroringServiceV9.class, "OBNOVUJEM, syncedDoc="+syncedDoc.getTitle()+" "+syncedDoc.getDocId()+" doc="+doc.getTitle()+" "+doc.getDocId());
+
+               editorService.recoverWebpageFromTrash(syncedDoc.getDocId(), false);
+
                MirroringService.forceReloadTree();
             }
          }
@@ -297,17 +312,51 @@ public class DocMirroringServiceV9 {
     * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
     * @return
     */
-   public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId)
+   public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId) {
+      return getDocBySyncId(syncId, skipDocId, false);
+   }
+
+   /**
+    * Ziska zoznam DocDetails podla zadaneho syncId ALE iba tých, ktoré sú v koši (soft deleted mazané)
+    * @param syncId
+    * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
+    * @return
+    */
+   public static List<DocDetails> getDeletedDocBySyncId(int syncId, int skipDocId) {
+      return getDocBySyncId(syncId, skipDocId, true);
+   }
+
+   /**
+    * Ziska zoznam DocDetails podla zadaneho syncId
+    * @param syncId
+    * @param skipDocId - ak je zadane docId toto bude v zozname preskocene (napr. ostatne stranky okrem aktualnej)
+    * @return
+    */
+   public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId, boolean onlyDeleted)
 	{
       StringBuilder sql = new StringBuilder();
+      List<Object> params = new ArrayList<>();
+      params.add(syncId);
+
       sql.append("SELECT ").append(DocDB.getDocumentFields()).append(" FROM documents d WHERE d.sync_id=?");
-      if (skipDocId>0) sql.append(" AND d.doc_id!=? ");
+
+      if (skipDocId>0) {
+         sql.append(" AND d.doc_id!=? ");
+         params.add(skipDocId);
+      }
+
+      if(onlyDeleted == true) {
+         GroupDetails trashGroup = GroupsDB.getInstance().getTrashGroup();
+         if (trashGroup == null) return new ArrayList<>();
+         sql.append(" AND d.group_id=? ");
+         params.add(trashGroup.getGroupId());
+      }
+
       sql.append(" ORDER BY d.doc_id ASC");
 
       ComplexQuery cq = new ComplexQuery();
       cq.setSql(sql.toString());
-      if (skipDocId>0) cq.setParams(syncId, skipDocId);
-      else cq.setParams(syncId);
+      cq.setParams(params.toArray());
 
 		List<DocDetails> docs = cq.list(new Mapper<DocDetails>()
 		{
@@ -327,15 +376,20 @@ public class DocMirroringServiceV9 {
 
       //filter groups which is not synced anymore
       List<DocDetails> filtered = new ArrayList<>();
-      for (DocDetails doc : docs) {
-         List<GroupDetails> parents = groupsDB.getParentGroups(doc.getGroupId(), true);
-         for (GroupDetails parent : parents) {
-            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
-            if (rootIds != null) {
-               filtered.add(doc);
-               break;
+      if(onlyDeleted != true) {
+         for (DocDetails doc : docs) {
+            List<GroupDetails> parents = groupsDB.getParentGroups(doc.getGroupId(), true);
+            for (GroupDetails parent : parents) {
+               int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
+               if (rootIds != null) {
+                  filtered.add(doc);
+                  break;
+               }
             }
          }
+      } else {
+         // When calling deleted docs (during recover) we do not do this check
+         return docs;
       }
 
       return filtered;
