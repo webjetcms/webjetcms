@@ -42,7 +42,7 @@ Obsah aktuálne zvolenej web stránky sa zobrazuje v náhľade v dolnej časti o
 
 ## Šablóna
 
-Táto možnosť obsahuje stránky generované z priečinka **Systém/Šablóny** a podpriečinkov prvej úrovne
+Táto možnosť obsahuje stránky generované z priečinka **Systém/Šablóny** a podpriečinkov prvej úrovne. Použije sa buď priečinok s ID definovaným v konfiguračnej premennej `tempGroupId` alebo ak existuje lokálny Systém priečinok tak v ňom sa hľadá priečinok s názvom Šablóny (názov je možné zmeniť v prekladovom kľúči `config.templates_dir`).
 
 **Spôsob vloženia:**
 
