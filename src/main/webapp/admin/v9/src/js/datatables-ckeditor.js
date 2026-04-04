@@ -206,12 +206,18 @@ export class DatatablesCkEditor {
 
 					//add maximize and minimize buttons before close button
 					var closeButton = $dialogDoc.find(".cke_dialog_body > a.cke_dialog_close_button");
-					if (closeButton.length > 0 && closeButton.siblings("a.cke_dialog_maximize_button").length === 0) {
-						var maximizeButton = $('<a class="cke_dialog_maximize_button" href="javascript:void(0)" title="' + that.translate("maximize.button") + '" role="button" tabindex="-1"><span class="cke_label"></span></a>');
-						var minimizeButton = $('<a class="cke_dialog_minimize_button" href="javascript:void(0)" title="' + that.translate("minimize.button") + '" role="button" tabindex="-1" style="display:none;"><span class="cke_label"></span></a>');
+					if (closeButton.length > 0 && closeButton.siblings("button.cke_dialog_maximize_button").length === 0) {
+						var maximizeButton = $('<button class="cke_dialog_maximize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.maximize.js") + '" data-toggle="tooltip" role="button" tabindex="-1"><span class="cke_label"></span></button>');
+						var minimizeButton = $('<button class="cke_dialog_minimize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.minimize.js") + '" data-toggle="tooltip" role="button" tabindex="-1" style="display:none;"><span class="cke_label"></span></button>');
 
 						maximizeButton.insertBefore(closeButton);
 						minimizeButton.insertBefore(closeButton);
+
+						//add bootstrap tooltip
+						closeButton.attr("data-toggle", "tooltip");
+						closeButton.tooltip({ container: '.cke_dialog_body' });
+						maximizeButton.tooltip({ container: '.cke_dialog_body' });
+						minimizeButton.tooltip({ container: '.cke_dialog_body' });
 
 						//helper function to recursively set/remove maximized class on iframe bodies
 						var setMaximizedClassOnIframes = function($container, add) {
@@ -324,6 +330,7 @@ export class DatatablesCkEditor {
 									var newWidth = contentBody.innerWidth() - 5;
 									var newHeight = contentBody.innerHeight() - 5;
 									$dialogElement.find("iframe").each(function() {
+										//console.log("Resizing iframe, newWidth=", newWidth, " newHeight=", newHeight, "src=", $(this).attr("src"));
 										var $iframe = $(this);
 										$iframe.css({"width": newWidth + "px", "height": newHeight + "px"});
 										$iframe.parent("div").css("width", "100%");

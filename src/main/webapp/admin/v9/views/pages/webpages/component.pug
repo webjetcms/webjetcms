@@ -183,6 +183,22 @@ block content
                                 $this.css("height", "521px");
                                 $this.find("iframe").attr("height", "521");
                             });
+                            setInterval(function() {
+                                // calculate iframe height based on content and set it to iframe and parent td
+                                $(".iframeFieldType").each(function(index, element) {
+                                    var $this = $(element);
+                                    var modalBody = $this.parents(".DTE_Body.modal-body.has-content");
+                                    if (modalBody.length > 0) {
+                                        var contentHeight = parseInt(modalBody.height()) + 1;
+                                        //console.log("contentHeight=", contentHeight);
+                                        if (contentHeight >= 520 && $this.height() !== contentHeight) {
+                                            //console.log("contentHeight changed=", contentHeight);
+                                            $this.css("height", contentHeight + "px");
+                                            $this.find("iframe").attr("height", contentHeight + "px");
+                                        }
+                                    }
+                                });
+                            }, 1000);
                         }
                     }
                 });
