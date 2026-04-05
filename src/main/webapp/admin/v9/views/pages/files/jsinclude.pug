@@ -336,6 +336,11 @@ script.
 
     function setElfinderHeight() {
         let elfinder = $('#finder');
+        if (elfinder.is(":visible") == false) {
+            //console.log("Elfinder is not visible, skipping height setting");
+            return;
+        }
+
         let elfinderWorkzone = $('#finder > div.elfinder-workzone');
         let elfinderCwdWrapper = $('#finder > div.elfinder-workzone > div.elfinder-cwd-wrapper');
         let elfinderNavbar = $('#finder > div.elfinder-workzone > div.elfinder-navbar');
@@ -343,7 +348,7 @@ script.
         let availableSpace = computeAvailableSpaceHeight();
         let redundantSpace = computeElfinderRedundantHeight();
 
-        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1));
+        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1), "visible=", elfinder.is(":visible"));
 
         elfinder.css("width", "100%");
         elfinder.css("height", (availableSpace - 1) + "px");
