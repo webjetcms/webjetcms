@@ -36,6 +36,10 @@
                 color: white;
             }
         }
+        &.dte-parent-button-disabled {
+            opacity: 0.2;
+            pointer-events: none;
+        }
     }
     a.cke_dialog_ui_button {
         padding: 4px 4px !important;

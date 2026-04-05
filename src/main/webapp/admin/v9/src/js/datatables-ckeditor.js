@@ -462,7 +462,7 @@ export class DatatablesCkEditor {
 					}
 
 					//remove maximize/minimize buttons so they get recreated fresh on next show
-					$dialogDoc.find(".cke_dialog_body > a.cke_dialog_maximize_button, .cke_dialog_body > a.cke_dialog_minimize_button").remove();
+					$dialogDoc.find(".cke_dialog_body > button.cke_dialog_maximize_button, .cke_dialog_body > button.cke_dialog_minimize_button").remove();
 				});
 
 				//console.log("dialogName: "+dialogName);
@@ -1812,7 +1812,7 @@ export class DatatablesCkEditor {
 					that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
 
 					that.ckEditorInstance.maximalizeWindow = function() {
-						var el = document.querySelector("a.cke_dialog_maximize_button");
+						var el = document.querySelector("button.cke_dialog_maximize_button");
 						if (el) {
 							el.click();
 							return true;
@@ -1821,7 +1821,7 @@ export class DatatablesCkEditor {
 					};
 
 					that.ckEditorInstance.minimalizeWindow = function() {
-						var el = document.querySelector("a.cke_dialog_minimize_button");
+						var el = document.querySelector("button.cke_dialog_minimize_button");
 						if (el) {
 							el.click();
 							return true;
