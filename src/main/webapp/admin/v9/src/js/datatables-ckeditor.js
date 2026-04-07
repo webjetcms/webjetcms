@@ -214,10 +214,15 @@ export class DatatablesCkEditor {
 						minimizeButton.insertBefore(closeButton);
 
 						//add bootstrap tooltip
-						closeButton.attr("data-toggle", "tooltip");
-						closeButton.tooltip({ container: '.cke_dialog_body' });
-						maximizeButton.tooltip({ container: '.cke_dialog_body' });
-						minimizeButton.tooltip({ container: '.cke_dialog_body' });
+						try {
+							var tooltipContainer = $dialogDoc.find(".cke_dialog_container:visible .cke_dialog_body")[0];
+							closeButton.attr("data-toggle", "tooltip");
+							closeButton.tooltip({ container: tooltipContainer });
+							maximizeButton.tooltip({ container: tooltipContainer });
+							minimizeButton.tooltip({ container: tooltipContainer });
+						} catch (e) {
+							//tooltip initialization failed
+						}
 
 						//helper function to recursively set/remove maximized class on iframe bodies
 						var setMaximizedClassOnIframes = function($container, add) {
@@ -508,17 +513,22 @@ export class DatatablesCkEditor {
 							original.call(this);
 
 							if (tableWrapperClass != "") {
-								var table = window.getCkEditorInstance().document.$.getElementById(id);
-								var $table = $(table);
-								var parent = $table.parent("div."+tableWrapperSelector);
+								var table;
+								if (typeof that.ckEditorInstance.document != "undefined") table = that.ckEditorInstance.document.$.getElementById(id);
+								else table = document.getElementById(id);
 
-								//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
-								//console.log("this=", this, "parent=", parent);
+								if (typeof table != "undefined" && table != null) {
+									var $table = $(table);
+									var parent = $table.parent("div."+tableWrapperSelector);
 
-								if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
+									//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
+									//console.log("this=", this, "parent=", parent);
 
-								if (originalId != "") $table.attr("id", originalId);
-								else $table.removeAttr("id");
+									if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
+
+									if (originalId != "") $table.attr("id", originalId);
+									else $table.removeAttr("id");
+								}
 							}
 
 							return;
