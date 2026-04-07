@@ -258,6 +258,15 @@ public class Prop
 		String lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);
 		if (lng == null) lng = PageLng.getUserLng(request);
 
+		return getLngForJavascript(lng);
+	}
+
+	/**
+	 * Vrati jazyk pre JS subory pre ckeditor, elfinder a podobne kde sa napr. pre CZ pouziva hodnota CS
+	 * @param lng
+	 * @return
+	 */
+	public static String getLngForJavascript(String lng) {
 		if ("cz".equals(lng)) lng = "cs";
 		else if (Tools.isEmpty(lng)) lng = "sk";
 

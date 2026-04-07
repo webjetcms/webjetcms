@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 
 public class Page {
@@ -39,7 +40,9 @@ public class Page {
         if(doc!=null){
             canonical = doc.getFieldQ();
             if(Tools.isEmpty(canonical)){
-                canonical = getUrl();
+                DocDB docDB = DocDB.getInstance();
+                String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
+                return docLink;
             }
         }
         return canonical;

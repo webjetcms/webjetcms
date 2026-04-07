@@ -461,13 +461,13 @@ table.datatableInit {
                 padding-left: 6px;
                 padding-right: 6px;
                 font-size: 12px;
-                a { color: #656b7c; }
+                a { color: $dark-60; }
             }
         }
 
         tbody tr:hover td.dt-select-td, tbody tr.selected td.dt-select-td {
             opacity: 1;
-            background-color: rgba(0, 99, 251, 0.6);
+            background-color: rgba($primary, 0.6);
         }
         tbody tr.selected td.dt-select-td {
             opacity: 0;
@@ -625,12 +625,12 @@ table.datatableInit {
 
             .btn-group {
                 padding:2px;
-                background-color: #b3b8c7;
+                background-color: $nice-gray-200;
                 border-radius: $border-radius !important;
                 .btn {
                     border-width: 0 !important;
                     margin-right: 0;
-                    background-color: #b3b8c7;
+                    background-color: $nice-gray-200;
                     border-radius: $border-radius !important;
                     padding: 3px 0.5rem;
                     min-width: 27px;
@@ -672,7 +672,7 @@ table.datatableInit {
 
         .btn-outline-secondary {
             background-color: white;
-            border-color: #b3b8c7;
+            border-color: $nice-gray-200;
             border-width: 1px;
             &:hover {
                 border-color: $secondary;
@@ -730,7 +730,7 @@ table.datatableInit {
             padding-left: 6px;
             padding-right: 6px;
             width: 52px;
-            border: 1px solid #b3b8c7;
+            border: 1px solid $nice-gray-200;
             border-radius: 6px;
             height: 31px;
         }
@@ -774,13 +774,13 @@ div.dt-container {
         padding: 0;
         font-size: 14px;
         line-height: 31px;
-        color: #656b7c;
+        color: $dark-60;
     }
 
     div.col-sum {
         font-size: 14px;
         font-weight: bold;
-        color: #656b7c;
+        color: $dark-60;
         p {
             margin: 0;
         }
@@ -1637,7 +1637,7 @@ table.table.dataTable > tbody > tr.selected a {
     color: white;
 }
 table.table.dataTable > tbody > tr.selected.is-not-public a {
-    color: #FF4B58;
+    color: $danger;
 }
 
 //inner datatable in editor

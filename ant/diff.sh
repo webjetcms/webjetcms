@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #execute as:
-#ant/diff.sh src/main ../webjetcms_hotfix_main/src/main
+#ant/diff.sh src/main ../webjetcms_diff/src/main
 
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <folder1> <folder2>"

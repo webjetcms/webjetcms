@@ -673,6 +673,7 @@ module.exports = {
         I.refreshPage();
         DT.waitForLoader();
         I.wait(0.5);
+        var counter = 0;
         options.rows.forEach(row => {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
@@ -694,11 +695,17 @@ module.exports = {
                 DTE.appendField(field, CHANGE_TEXT);
             });
 
+            if (typeof options.editSteps == "function") {
+                options.editSteps(row, counter, I, options, DT, DTE);
+            }
+
             I.click("Uložiť", containerModal+"div.DTE_Form_Buttons");
             DTE.waitForLoader();
 
             I.see(CHANGE_TEXT, "div.dt-scroll-body");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
+
+            counter++;
         });
 
         if (typeof options.preserveColumns != "undefined") {

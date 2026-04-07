@@ -75,7 +75,7 @@ V stromovej štruktúre priečinkov a stránok sa môžu zobraziť nasledovné t
 - <i class="ti ti-map-pin-off" role="presentation"></i> stránka nie je zobrazená v menu
 - <i class="ti ti-folder-x" role="presentation"></i> nemáte práva na editáciu/zmazanie priečinku, v tomto priečinku nebudete vidieť ani žiaden zoznam web stránok (aj keď priečinok v skutočnosti web stránky obsahuje). Používa sa v prípade, keď máte povolené práva len na niektorý z podpriečinkov.
 - <i class="ti ti-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
-- <span style="color: #FF4B58">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením
+- <span style="color: #E00028">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením
 - <i class="ti ti-star"></i>, **tučné písmo** = hlavná stránka adresára
 - <i class="ti ti-external-link"></i> šípka von = stránka je presmerovaná
 - <i class="ti ti-eye-off"></i> preškrtnuté oko = stránka sa nedá vyhľadať

@@ -6,6 +6,7 @@
   - [Safety tests](/sysadmin/pentests/README.md)
   - [Vulnerability scanning of libraries](/sysadmin/dependency-check/README.md)
   - [WebJET update](/sysadmin/update/README.md)
+  - [Responsible vulnerability disclosure](/sysadmin/responsible-disclosure/README.md)
 - Audit
   - [Audit](/sysadmin/audit/README.md)
   - [List of notifications](/sysadmin/audit/audit-notifications.md)

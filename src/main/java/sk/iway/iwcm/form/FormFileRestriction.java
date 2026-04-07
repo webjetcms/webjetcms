@@ -1,7 +1,7 @@
 package sk.iway.iwcm.form;
 
-import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.upload.UploadedFile;
@@ -20,21 +20,21 @@ import sk.iway.upload.UploadedFile;
 public class FormFileRestriction
 {
 	String formName;
-	
+
 	String allowedExtensions;
-	
+
 	int maxSizeInKilobytes;
-	
+
 	int pictureWidth;
-	
+
 	int pictureHeight;
-	
+
 	public boolean isSentFileValid(UploadedFile file)
 	{
 		boolean isValid = true;
 		isValid &= isBelowMaxSize(file.getFileSize());
 		isValid &= hasAllowedExtension(file.getFileName());
-		if (isItAPicture(file.getFileName()))
+		if (ImageTools.isImage(file.getFileName()))
 		{
 			isValid &= hasNeededWidthAndHeight(file);
 		}
@@ -46,7 +46,7 @@ public class FormFileRestriction
 		boolean isValid = true;
 		isValid &= isBelowMaxSize(file.length());
 		isValid &= hasAllowedExtension(file.getName());
-		if (isItAPicture(file.getName()))
+		if (ImageTools.isImage(file.getName()))
 		{
 			isValid &= hasNeededWidthAndHeight(file);
 		}
@@ -54,7 +54,7 @@ public class FormFileRestriction
 	}
 
 	private boolean isBelowMaxSize(long fileSize)
-	{		
+	{
 		return maxSizeInKilobytes <= 0 || (fileSize/1024) <= maxSizeInKilobytes;
 	}
 
@@ -70,29 +70,16 @@ public class FormFileRestriction
 			if (fileName.endsWith(extension.trim()))
 				return true;
 		}
-		
+
 		return false;
 	}
-
-	private boolean isItAPicture(String fileName)
-	{
-		fileName = fileName.toLowerCase();
-
-		for (String extension : FileTools.pictureExtensions)
-		{
-			if (fileName.endsWith(extension))
-				return true;
-		}
-		return false;
-	}
-	
 
 	private boolean hasNeededWidthAndHeight(UploadedFile file)
 	{
 		try
 		{
 			ImageInfo imageInformation = new ImageInfo(file);
-			return (pictureHeight <= 0 || imageInformation.getHeight() <= pictureHeight) 
+			return (pictureHeight <= 0 || imageInformation.getHeight() <= pictureHeight)
 				&& (pictureWidth <= 0 || imageInformation.getWidth() <= pictureWidth);
 		}
 		catch (Exception e)
@@ -114,8 +101,8 @@ public class FormFileRestriction
 			return false;
 		}
 	}
-	
-	
+
+
 	public String getFormName()
 	{
 		return this.formName;

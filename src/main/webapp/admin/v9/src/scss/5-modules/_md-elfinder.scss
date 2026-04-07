@@ -54,8 +54,8 @@ html.pg-iframe {
 
 /* STATUS BAR */
 .elfinder-statusbar {
-    background-color: #F3F3F6 !important;
-    border-bottom: 1px solid #DDDFE6 !important;
+    background-color: $nice-gray !important;
+    border-bottom: 1px solid $nice-gray-100 !important;
 }
 
 /* TOOL BAR */
@@ -64,8 +64,8 @@ html.pg-iframe {
 }
 
 .elfinder-toolbar {
-    background-color: #F3F3F6 !important;
-    border-bottom: 1px solid #DDDFE6 !important;
+    background-color: $nice-gray !important;
+    border-bottom: 1px solid $nice-gray-100 !important;
     font-family: $admin-font-family;
     font-size: 15px;
     line-height: 31px;
@@ -89,12 +89,12 @@ html.pg-iframe {
     position: relative;
     padding: 6px 8px 7px 7px !important;
     background: white !important;
-    border: 1px solid #b3b8c7 !important;
+    border: 1px solid $nice-gray-200 !important;
 }
 
 .elfinder-button:hover {
-    color: #F3F3F6 !important;
-    background-color: #13151b !important;
+    color: $nice-gray !important;
+    background-color: $secondary !important;
 }
 
 .elfinder-toolbar .elfinder-button-search:hover {
@@ -121,7 +121,7 @@ html.pg-iframe {
 .elfinder-button-search-menu .ui-checkboxradio-radio-label {
     font-size: 14px !important;
     font-family: $admin-font-family !important;
-    border: 1px solid #b3b8c7 !important;
+    border: 1px solid $nice-gray-200 !important;
     border-radius: 6px;
     margin: 0px 4px 0px 0px !important;
 }
@@ -138,7 +138,7 @@ html.pg-iframe {
 }
 
 .elfinder-button-search .text {
-    border: 1px solid #b3b8c7;
+    border: 1px solid $nice-gray-200;
     border-radius: 6px;
     height: 31px;
 }
@@ -175,10 +175,10 @@ html.pg-iframe {
 .div-create { background-color: $success !important; border-color: $success !important; color: $secondary !important; }
 .div-duplicate { background-color: $purple !important; border-color: $purple !important; color: $secondary !important; }
 
-.elfinder-button.div-danger:hover { background-color: #ff6671 !important; color: $secondary !important; }
-.elfinder-button.div-create:hover { background-color: #26c8ad !important; color: $secondary !important; }
-.elfinder-button.div-warning:hover { background-color: #fbc726 !important; color: $secondary !important; }
-.elfinder-button.div-duplicate:hover { background-color: #bf5af2 !important; color: $secondary !important; }
+.elfinder-button.div-danger:hover { background-color: lighten($danger, 25%) !important; color: $secondary !important; }
+.elfinder-button.div-create:hover { background-color: lighten($success, 5%) !important; color: $secondary !important; }
+.elfinder-button.div-warning:hover { background-color: lighten($warning, 5%) !important; color: $secondary !important; }
+.elfinder-button.div-duplicate:hover { background-color: $purple !important; color: $secondary !important; }
 
 /* NAVBAR */
 .elfinder .elfinder-navbar { background: white !important; }
@@ -186,7 +186,7 @@ html.pg-iframe {
 .elfinder-navbar-wrapper {
     font-size: 14px;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
     min-height: 24px;
     line-height: 24px;
     min-width: 30px;
@@ -207,7 +207,7 @@ html.pg-iframe {
     width: 30px !important;
     font-size: 17px !important;
     line-height: 24px !important;
-    color: #63697A;
+    color: $dark-60;
     position: absolute !important;
     top: 8px !important;
     left: 6px !important;
@@ -221,16 +221,16 @@ html.pg-iframe {
 .elfinder-navbar-root .elfinder-navbar-icon::before { content: $ti-icon-home; }
 
 .elfinder-navbar .ui-state-hover {
-    background-color: #F3F3F6 !important;
+    background-color: $nice-gray !important;
     border-radius: 6px !important;
-    border: 1px solid #F3F3F6 !important;
+    border: 1px solid $nice-gray !important;
 }
 
 .elfinder-navbar .ui-state-active {
-    background-color: #F3F3F6 !important;
+    background-color: $nice-gray !important;
     border-radius: 4px !important;
     border: 1px solid #d0d6e9 !important;
-    color: #13151B !important;
+    color: $secondary !important;
 }
 
 .elfinder-button-search input[type=text] {
@@ -248,7 +248,7 @@ html.pg-iframe {
     position: relative !important;
     transform: scale(1) !important;
     display: inline-block !important;
-    color: #63697A;
+    color: $dark-60;
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
 
@@ -271,7 +271,7 @@ html.pg-iframe {
 }
 .elfinder-navbar-dir > .elfinder-navbar-arrow::before {
     font-family: 'tabler-icons-filled';
-    color: #B3B8C7;
+    color: $nice-gray-200;
     content: $ti-icon-caret-right-filled;
     font-size: 18px;
     line-height: 18px;
@@ -284,7 +284,7 @@ html.pg-iframe {
 }
 .elfinder-navbar-expanded > .elfinder-navbar-arrow::before {
     font-family: 'tabler-icons-filled';
-    color: #B3B8C7;
+    color: $nice-gray-200;
     content: $ti-icon-caret-down-filled;
 }
 
@@ -294,7 +294,7 @@ html.pg-iframe {
     //TTF file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -303,7 +303,7 @@ html.pg-iframe {
     //NPMRC file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -312,7 +312,7 @@ html.pg-iframe {
     //SH file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -321,7 +321,7 @@ html.pg-iframe {
     //Config file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -330,7 +330,7 @@ html.pg-iframe {
     //MD file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-js !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -339,7 +339,7 @@ html.pg-iframe {
     //SVG file
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-svg !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -347,7 +347,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-text::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-txt !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -356,7 +356,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-video::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-video !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -364,7 +364,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-pdf::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-pdf !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -372,7 +372,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-css::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-css !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -380,7 +380,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-zip::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-zip !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -388,7 +388,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-xml::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-xml !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -396,7 +396,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-js::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-js !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -404,7 +404,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-html::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-type-html !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -413,7 +413,7 @@ html.pg-iframe {
     font-family: 'tabler-icons-filled' !important;
     background-color: transparent !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 }
 
 .elfinder-cwd-icon-x-jsp { background: none !important; }
@@ -421,14 +421,14 @@ html.pg-iframe {
     font-family: 'tabler-icons-filled' !important;
     background-color: transparent !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 }
 
 .elfinder-cwd-icon-directory { background: none !important; }
 .elfinder-cwd-icon-directory::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-folder-filled !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -436,7 +436,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-application::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -458,7 +458,7 @@ html.pg-iframe {
     .elfinder-cwd-icon-directory::before {
         font-family: 'tabler-icons-filled' !important;
         content: $ti-icon-folder-question !important;
-        color: #63697A !important;
+        color: $dark-60 !important;
         background-color: transparent !important;
     }
 }
@@ -467,7 +467,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-oct-stream::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -475,7 +475,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-audio::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-music !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -483,7 +483,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-gif::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-gif !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -491,7 +491,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-svg-xml::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-svg !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -499,7 +499,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-xcf::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -507,7 +507,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-psd::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -515,7 +515,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-genesis-rom::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-text !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -523,7 +523,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-json::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-json !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -531,7 +531,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-shellscript::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-brand-powershell !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -539,7 +539,7 @@ html.pg-iframe {
 .elfinder-cwd-icon-x-compressed-tar::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-file-zip !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     background-color: transparent !important;
 }
 
@@ -547,7 +547,7 @@ html.pg-iframe {
     line-height: 30px !important;
     font-size: 19px !important;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
 }
 
 .elfinder-cwd-icon::before { font-size: 42px !important; }
@@ -621,7 +621,7 @@ html.pg-iframe {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-jpg !important;
     color: white !important;
-    background-color: #63697A !important;
+    background-color: $dark-60 !important;
     font-size: 23px !important;
 }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-jpeg { display: block !important; }
@@ -631,17 +631,26 @@ html.pg-iframe {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-png !important;
     color: white !important;
-    background-color: #63697A !important;
+    background-color: $dark-60 !important;
     font-size: 23px !important;
 }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png { display: block !important; }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png::before { display: none !important; }
 
+.elfinder-cwd-icon-webp::before {
+    color: white !important;
+    background-color: $dark-60 !important;
+    font-size: 14px !important;
+    height: 20px;
+}
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-webp { display: block !important; }
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-webp::before { display: none !important; }
+
 .elfinder-cwd-icon-x-ico::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-favicon !important;
     color: white !important;
-    background-color: #63697A !important;
+    background-color: $dark-60 !important;
     font-size: 23px !important;
 }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-x-ico { display: block !important; }
@@ -661,7 +670,7 @@ html.pg-iframe {
     padding-bottom: 8px;
     font-size: 1.25rem;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
     border-bottom: 1px solid #dee2e6;
     background-color: #fff;
     .elfinder-titlebar-button:hover {
@@ -687,7 +696,7 @@ html.pg-iframe {
     left: auto !important;
     right: 0px !important;
     top: 8px !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 
     &:hover {
         color: black !important;
@@ -706,7 +715,7 @@ html.pg-iframe {
     padding: 0px !important;
     font-size: 14px;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
     background-color: #fff;
 }
 .ui-dialog.elfinder-dialog.elfinder-dialog-info .ui-dialog-content.ui-widget-content {
@@ -734,7 +743,7 @@ html.pg-iframe {
 .elfinder-notify-search .elfinder-dialog-icon-search::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-search !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
     font-size: 30px !important;
 }
 
@@ -743,7 +752,7 @@ html.pg-iframe {
 .elfinder-notify-search .elfinder-notify-cnt {
     font-size: 16px;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
 }
 
 .elfinder-notify-search .elfinder-notify-progressbar {
@@ -755,13 +764,13 @@ html.pg-iframe {
 .elfinder-notify-button.ui-icon-close::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-circle-x !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 }
 
 .ui-dialog .ui-dialog-buttonpane {
     font-size: 16px !important;
     font-family: $admin-font-family;
-    color: #13151B;
+    color: $secondary;
     background-color: #fff !important;
 }
 
@@ -775,24 +784,24 @@ html.pg-iframe {
 .ui-icon-arrowreturnthick-1-s::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-arrows-minimize !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 }
 
 .ui-dialog-buttonpane .ui-dialog-buttonset .ui-button-text-only {
     padding: 6px 12px !important;
     border: 1px solid #868EA5;
-    color: #13151B;
+    color: $secondary;
     background-color: #fff;
 }
 
 .ui-dialog-buttonpane .ui-dialog-buttonset .ui-button-text-only:hover {
-    border-color: #13151B;
+    border-color: $secondary;
     color: #fff;
-    background-color: #13151B;
+    background-color: $secondary;
 }
 
 div.ui-dialog-content:has(div.CodeMirror) {
-    border-bottom: 1px solid #DDDFE6 !important;
+    border-bottom: 1px solid $nice-gray-100 !important;
     overflow: hidden;
 }
 
@@ -837,7 +846,7 @@ div.ui-dialog-content:has(div.CodeMirror) {
     font-family: 'tabler-icons-filled' !important;
     background-color: transparent !important;
     content: $ti-icon-files !important;
-    color: #63697A !important;
+    color: $dark-60 !important;
 }
 
 .elfinder-cwd {
@@ -887,7 +896,7 @@ div.ui-dialog-content:has(div.CodeMirror) {
     .elfinder-dialog-icon-customError::before {
         font-family: 'tabler-icons-filled' !important;
         content: $ti-icon-exclamation-circle !important;
-        color: #ff6671 !important;
+        color: lighten($danger, 25%) !important;
         background-color: transparent !important;
         font-size: 2rem;
     }
@@ -928,5 +937,15 @@ div.ui-dialog-content:has(div.CodeMirror) {
         float: left !important;
         width: auto !important;
         margin-right: 2px !important;
+    }
+}
+
+.elfinder-quicklook {
+    .elfinder-titlebar-button {
+        background-color: transparent !important;
+    }
+    .ui-icon {
+        display: inline-block !important;
+        border-width: 0px !important;
     }
 }

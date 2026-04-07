@@ -72,7 +72,7 @@
         if(WJ.hasPermission("cmp_fileArchiv_edit_del_rollback") == true) {
             //Add rollback button - if user have permission
             fileArchiveDataTable.button().add(buttonCounter++, {
-                text: '<i style="color: #FF4B58;" class="ti ti-arrow-back-up"></i>',
+                text: '<i style="color: #E00028;" class="ti ti-arrow-back-up"></i>',
                 action: function (e, dt, node) {
                     fileArchiveDataTable.executeAction("rollback", true, /*[[#{components.file_archiv.list.confirm.make_rollback}]]*/ '');
                 },
@@ -342,6 +342,6 @@
     tr.notMainFile td { background-color: #F3F3F6 !important; }
     tr.notMainFile td:nth-child(1)::before { display: none !important; }
 
-    tr.waitingForUpload td { color: #FF4B58 !important; }
-    tr.waitingForUpload a { color: #FF4B58 !important; }
+    tr.waitingForUpload td { color: #E00028 !important; }
+    tr.waitingForUpload a { color: #E00028 !important; }
 </style>

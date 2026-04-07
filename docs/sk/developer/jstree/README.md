@@ -222,7 +222,7 @@ Použitie ikon má nasledovné pravidlá:
 - <i class="ti ti-folder-filled" role="presentation"></i> / <i class="ti ti-map-pin" role="presentation"></i> plná ikonka stránky aj priečinku = zobrazený v menu
 - <i class="ti ti-folder" role="presentation"></i> / <i class="ti ti-map-pin-off" role="presentation"></i> prázdna ikonka stránky aj priečinku = nezobrazený v menu
 - <i class="ti ti-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
-- <span style="color: #FF4B58">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením (v DT je možné použiť CSS triedu is-not-public na riadok)
+- <span style="color: #E00028">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením (v DT je možné použiť CSS triedu is-not-public na riadok)
 - **tučné písmo** = hlavná stránka adresára (v DT je možné použiť CSS triedu ```is-default-page```)
 - <i class="ti ti-external-link"></i> šípka von = stránka je presmerovaná
 - <i class="ti ti-eye-off"></i> preškrtnuté oko = stránka sa nedá vyhľadať

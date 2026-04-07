@@ -22,8 +22,8 @@
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="${ninja.temp.lngIso}" />
 
-<%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.url}" />
+<iwcm:write>!INCLUDE(/components/structuremirroring/hreflang.jsp)!</iwcm:write>
+<link rel="canonical" href="${ninja.page.canonical}" />
 
 <% if (request.getSession().isNew() && PathFilter.getOrigPath(request).startsWith("/files")) { %><script>document.cookie = 'JSESSIONID=<%=session.getId()%>; path=/;';</script><% } %>
 

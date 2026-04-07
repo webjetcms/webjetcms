@@ -1009,6 +1009,12 @@ public class Tools
 		return getBigDecimalValue(value, "0");
 	}
 
+	/**
+	 * Returns long value from String, or defaultValue if value is null or not a valid long representation
+	 * @param value
+	 * @param defaultValue
+	 * @return
+	 */
 	public static long getLongValue(String value, long defaultValue)
 	{
 		long ret = defaultValue;
@@ -1024,6 +1030,21 @@ public class Tools
 
 		}
 		return(ret);
+	}
+
+	/**
+	 * Returns long value from Long object, or defaultValue if value is null
+	 * @param value
+	 * @param defaultValue
+	 * @return
+	 */
+	public static long getLongValue(Long value, long defaultValue)
+	{
+		if (value==null)
+		{
+			return(defaultValue);
+		}
+		return(value.longValue());
 	}
 
 	/**

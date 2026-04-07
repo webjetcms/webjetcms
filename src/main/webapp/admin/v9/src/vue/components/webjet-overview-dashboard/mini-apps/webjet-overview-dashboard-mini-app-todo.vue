@@ -2,11 +2,11 @@
   <div :class="'overview-logged todolist'">
     <div class="overview-logged__head">
       <div class="overview-logged__head__icon">
-        <i class="ti ti-clipboard-list"></i>
+        <i class="ti ti-clipboard-list" aria-hidden="true"></i>
       </div>
       <span> ToDo </span>
       <div class="overview-logged__head__more">
-        <i class="ti ti-dots-vertical"></i>
+        <i class="ti ti-dots-vertical" aria-hidden="true"></i>
       </div>
     </div>
 

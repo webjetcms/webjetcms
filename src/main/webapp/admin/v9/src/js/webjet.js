@@ -1288,9 +1288,9 @@ const WJ = (() => {
     function selectMenuItem (href) {
         //oznaci menu polozku podla zadaneho href atributu
         $(".md-large-menu__wrapper .md-large-menu__item").removeClass("md-large-menu__item--open md-large-menu__item--active");
-        $("div.menu-wrapper div.md-main-menu--open").removeClass("md-main-menu--open");
-        $("div.menu-wrapper div.md-main-menu__item--open").removeClass("md-main-menu__item--open md-main-menu__item--active");
-        $("div.menu-wrapper div.md-main-menu__item__sub-menu__item--active").removeClass("md-main-menu__item__sub-menu__item--active");
+        $(".menu-wrapper div.md-main-menu--open").removeClass("md-main-menu--open");
+        $(".menu-wrapper div.md-main-menu__item--open").removeClass("md-main-menu__item--open md-main-menu__item--active");
+        $(".menu-wrapper div.md-main-menu__item__sub-menu__item--active").removeClass("md-main-menu__item__sub-menu__item--active");
 
         var $this = $("a[href='"+href+"']");
 

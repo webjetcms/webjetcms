@@ -19,7 +19,7 @@ Stav dokumentov zobrazuje stĺpec **Stav**, ktorý obsahuje ikony reprezentujúc
 - <i class="ti ti-map-pin"></i> - **Zobrazuje dokument** čiže **majú** povolené zobrazovanie súborov
 - <i class="ti ti-map-pin-off"></i> - **Nezobrazuje dokument** čiže **nemajú** povolené zobrazovanie súborov
 - <i class="ti ti-texture"></i> - **Vzor** iného hlavného dokumentu (ktorý nie je vzor). Ak referovaný hlavný dokument je formulár, tak vzor môže byť napríklad vzorovo vyplnený formulár.
-- <i class="ti ti-calendar-time" style="color : #ff4b58!important"></i> - **Dokument čaká na nahratie (v budúcnosti)** jedná sa o dokument, ktorý bol nahraný s oneskorením. To znamená, že sa automatický nahrá v budúcnosti vo zvolenom dátume a čase. Až sa dokument úspešne nahrá, tak už **nebude** naďalej mať tento stav. Dokumenty s týmto stavom sú označené červenou farbou, nakoľko sú špeciálne.
+- <i class="ti ti-calendar-time" style="color : #E00028!important"></i> - **Dokument čaká na nahratie (v budúcnosti)** jedná sa o dokument, ktorý bol nahraný s oneskorením. To znamená, že sa automatický nahrá v budúcnosti vo zvolenom dátume a čase. Až sa dokument úspešne nahrá, tak už **nebude** naďalej mať tento stav. Dokumenty s týmto stavom sú označené červenou farbou, nakoľko sú špeciálne.
 - <i class="ti ti-calendar-plus"></i> - **Má novú verziu dokumentu, ktorá čaká na nahratie (v budúcnosti)** dokument má novú verziu, ktorá ho má v budúcnosti nahradiť ako **hlavný dokument**. Dokument bude automatický nahradený následne sa z tejto vezie stane **historická verzia**.
 
 ## Vloženie nového dokumentu do manažéra

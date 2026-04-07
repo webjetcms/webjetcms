@@ -6,6 +6,7 @@ Before(({ I, login }) => {
 
 Scenario('insert-script screeny', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/admin/v9/apps/insert-script/");
+    DT.waitForLoader();
     Document.screenshot("/redactor/apps/insert-script/editor.png", 1500, 800);
 
     I.amOnPage("/admin/v9/apps/insert-script/?id=58");

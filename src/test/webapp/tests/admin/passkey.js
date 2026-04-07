@@ -4,6 +4,9 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+// to test with invalid SSL/TLS certificate run chrome with --ignore-certificate-errors
+// /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors
+
 Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
 
     I.clickCss("#dropdownMenuUser");
@@ -22,10 +25,12 @@ Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
     I.amOnPage('/admin/logon/');
 
-    //switch to http
-    await I.executeScript(() => {
+    //switch to http - HSTS will change to https:
+    /*await I.executeScript(() => {
+        console.log("Current protocol: "+window.location.protocol);
         if(window.location.protocol === "https:"){
             window.location.protocol = "http:";
+            console.log("Switched to protocol: "+window.location.protocol);
         }
     });
 
@@ -37,7 +42,7 @@ Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
         if(window.location.protocol === "http:"){
             window.location.protocol = "https:";
         }
-    });
+    });*/
 
     I.wait(3);
     //we cant test real button because in chromium there is no window.PublicKeyCredential object

@@ -14,7 +14,7 @@
   - [Export and import](/redactor/datatables/export-import.md)
 - Web pages
   - [Basic work](/redactor/webpages/README.md)
-  - [Editing a web page](/redactor/webpages/editor.md)
+  - [Editing a web page](/redactor/webpages/editor/README.md)
   - [Working in the editor](/redactor/webpages/working-in-editor/README.md)
   - [Web page folder](/redactor/webpages/group.md)
   - [History](/redactor/webpages/history.md)

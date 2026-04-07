@@ -143,7 +143,7 @@ module.exports = {
         tolerance: tolerance
       });
 
-      I.say("Visual diff is: "+result.difference+"%");
+      I.say("-----> Visual diff is: "+result.difference+"%");
   },
 
   switchDomain(domain) {
@@ -343,5 +343,14 @@ module.exports = {
    */
   isPdfViewerEnabled() {
     return "false"!==process.env.CODECEPT_SHOW;
+  },
+
+  /**
+   * Get path to webapp folder, used for screenshots generator
+   * @returns
+   */
+  getWebappPath() {
+    var basePath = "/../../src/main/webapp";
+    return basePath;
   }
 }

@@ -412,20 +412,11 @@ public class EditorService {
 
 		if (editedDoc == null) {
 			editedDoc = new DocDetails();
-			editedDoc.setDocId(-1);
-			editedDoc.setGroupId(group.getGroupId());
 			editedDoc.setData("<p>&nbsp;</p>");
-			editedDoc.setTitle(prop.getText("editor.newDocumentName"));
 			editedDoc.setSearchable(true);
 			editedDoc.setAvailable(Constants.getBoolean("editorNewDocDefaultAvailableChecked"));
 			editedDoc.setShowInMenu(true);
-			editedDoc.setSortPriority(10);
 		} else {
-			//nastav grupu na aktualne vybratu
-			editedDoc.setDocId(-1);
-			editedDoc.setGroupId(group.getGroupId());
-			editedDoc.setTitle(prop.getText("editor.newDocumentName"));
-			editedDoc.setNavbar("");
 			editedDoc.setVirtualPath("");
 			editedDoc.setExternalLink("");
 			editedDoc.setEventDateString("");
@@ -433,6 +424,11 @@ public class EditorService {
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
 		}
 
+		editedDoc.setDocId(-1);
+		editedDoc.setTitle(prop.getText("editor.newDocumentName"));
+		editedDoc.setNavbar(editedDoc.getTitle());
+		//nastav grupu na aktualne vybratu
+		editedDoc.setGroupId(group.getGroupId());
 		editedDoc.setTempId(group.getTempId());
 		/*zisti maximalnu prioritu a zvys o 10*/
 		editedDoc.setSortPriority(0);
@@ -1682,6 +1678,17 @@ public class EditorService {
 	 * @param recoverDocId
 	 */
 	public void recoverWebpageFromTrash(int recoverDocId) {
+		recoverWebpageFromTrash(recoverDocId, true);
+	}
+
+	/**
+	 * Recover webpage from trash folder:
+	 * - set groupId from history (latest where actual=1 or latest)
+	 * - set available from history (latest where actual=1 or latest)
+	 * @param recoverDocId
+	 * @param publishEvents - if true, publish ON_RECOVER and AFTER_RECOVER events, if false, do not publish any events
+	 */
+	public void recoverWebpageFromTrash(int recoverDocId, boolean publishEvents) {
 		if(recoverDocId <1) throw new RuntimeException("recoverDocId is not valid");
 
 		//Try get DocDetails object by id, if not present return error message
@@ -1724,13 +1731,17 @@ public class EditorService {
 				//Have right
 
 				//Publish recover event after successful permission check
-				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+				if (publishEvents) {
+					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+				}
 
 				docDetailsToRecover.setGroupId(destGroup.getGroupId());
 				docDetailsToRecover.setAvailable(true);
 				docRepo.save(docDetailsToRecover);
 
-				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
+				if (publishEvents) {
+					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
+				}
 			} else {
 				//No right
 				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);

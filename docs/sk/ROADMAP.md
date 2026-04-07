@@ -17,12 +17,15 @@ Vysvetlenie použitých piktogramov:
 - [ ] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG`.
 - [ ] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde.
 - [ ] Migrácia na `Spring Boot` projekt.
-- [ ] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper).
+- [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 - [ ] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor.
 - [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole.
+- [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
+- [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
+- [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
 
 ## 2025
 

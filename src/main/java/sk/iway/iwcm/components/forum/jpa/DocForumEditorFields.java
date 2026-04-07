@@ -40,17 +40,17 @@ public class DocForumEditorFields extends BaseEditorFields {
         if(entity.getConfirmed()) {
             iconsHtml.append("<i class=\"ti ti-circle-check\" style=\"color: #00be9f;width: 1.25em;\"></i>");
         } else {
-            iconsHtml.append("<i class=\"ti ti-circle-x\" style=\"color: #ff4b58;width: 1.25em;\"></i>");
+            iconsHtml.append("<i class=\"ti ti-circle-x\" style=\"color: #E00028;width: 1.25em;\"></i>");
         }
 
         //Add icon about active status
-        if(!entity.getActive()) 
+        if(!entity.getActive())
             //active = false in document_forum table, this one forum is locked
             iconsHtml.append("<i class=\"ti ti-lock\" style=\"color: #000000;width: 1.25em;\"></i>");
         else if(entity.getForumGroupEntity() != null)
                 if(!entity.getForumGroupEntity().getActive())
                     //active = false in forum tabel, mean all forum's under specific DocId are locked
-                    //!! BEWARE, is whole forum group is locked (active = false), it doesn't necesary mean that forum is set as locked and can have active = true  
+                    //!! BEWARE, is whole forum group is locked (active = false), it doesn't necesary mean that forum is set as locked and can have active = true
                     iconsHtml.append("<i class=\"ti ti-lock\" style=\"color: #000000;width: 1.25em;\"></i>");
 
         //If page is soft deleted, add icon to recover page

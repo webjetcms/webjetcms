@@ -382,25 +382,6 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Vrati ciselnik pre zoznam sablon
-	 */
-	public List<LabelValueDetails> getOptionsTemplates(UserDetails currentUser, GroupDetails group) {
-		TemplatesDB templatesDB = TemplatesDB.getInstance();
-		List<TemplateDetails> allTemps;
-		if (group != null) allTemps = templatesDB.getTemplates(group.getGroupId(), group.getTempId());
-		else allTemps = templatesDB.getTemplatesSaved();
-
-		List<TemplateDetails> templateDetailsList = TemplatesDB.filterTemplatesByUser(currentUser, allTemps);
-		List<LabelValueDetails> templateNames = new ArrayList<>();
-
-		templateDetailsList.forEach(templateDetails ->
-			templateNames.add(new LabelValueDetails(templateDetails.getTempName(), String.valueOf(templateDetails.getTempId())))
-		);
-
-		return templateNames;
-	}
-
-	/**
 	 * Vrati ciselnik pre vyber jazyka
 	 */
 	public List<LabelValueDetails> getOptionsLanguages(HttpServletRequest request) {
@@ -422,9 +403,12 @@ public class WebpagesService {
 		List<LabelValueDetails> list = new ArrayList<>();
 		list.add(new LabelValueDetails(prop.getText("groupedit.new_page_template.empty"), "-1"));
 		DocDB docDB = DocDB.getInstance();
-		List<DocDetails> pageTemps = docDB.getDocByGroup(Constants.getInt("tempGroupId"));
-		for (DocDetails pageTemp : pageTemps) {
-			list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+		GroupDetails templatesGroup = GroupsDB.getInstance().getTemplatesGroup();
+		if (templatesGroup != null) {
+			List<DocDetails> pageTemps = docDB.getDocByGroup(templatesGroup.getGroupId());
+			for (DocDetails pageTemp : pageTemps) {
+				list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+			}
 		}
 		return list;
 	}
@@ -980,7 +964,7 @@ public class WebpagesService {
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin\"></i> "+prop.getText("webpages.icons.showInMenu"), "showInMenu:true"));
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin-off\"></i> "+prop.getText("webpages.icons.notShowInMenu"), "showInMenu:false"));
 		icons.add(new LabelValue("<i class=\"ti ti-lock\"></i> "+prop.getText("webpages.icons.onlyForLogged"), "passwordProtected:notEmpty"));
-		icons.add(new LabelValue("<span style=\"color: #FF4B58\">"+prop.getText("webpages.icons.disabled")+"</span>", "available:false"));
+		icons.add(new LabelValue("<span style=\"color: #E00028\">"+prop.getText("webpages.icons.disabled")+"</span>", "available:false"));
 		icons.add(new LabelValue("<i class=\"ti ti-external-link\"></i> "+prop.getText("webpages.icons.externalLink"), "externalLink:notEmpty"));
 		icons.add(new LabelValue("<i class=\"ti ti-eye-off\"></i> "+prop.getText("webpages.icons.notSearchable"), "searchable:false"));
 

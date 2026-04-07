@@ -149,6 +149,17 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 
 		List<InsertScriptBean> filteredInEditor = filterInEditor(insertScriptListFilterdByDocsAndGroups);
 
+		//sort by sortPriority ASC, then by id ASC
+		filteredInEditor.sort((a, b) -> {
+			int pa = a.getSortPriority() != null ? a.getSortPriority() : 10;
+			int pb = b.getSortPriority() != null ? b.getSortPriority() : 10;
+			int cmp = Integer.compare(pa, pb);
+			if (cmp != 0) return cmp;
+			long ia = a.getId() != null ? a.getId() : 0;
+			long ib = b.getId() != null ? b.getId() : 0;
+			return Long.compare(ia, ib);
+		});
+
 		return filteredInEditor;
 	}
 
@@ -290,6 +301,7 @@ public class InsertScriptDB extends JpaDB<InsertScriptBean>
 				List<Expression> expressions = new ArrayList<>();
 				expressions.add(expr1);
 
+				dbQuery.addAscendingOrdering("sortPriority");
 				dbQuery.addAscendingOrdering("id");
 
 				Query query = em.createQuery(dbQuery);

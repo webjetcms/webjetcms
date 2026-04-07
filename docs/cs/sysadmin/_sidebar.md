@@ -6,6 +6,7 @@
   - [Bezpečnostní testy](/sysadmin/pentests/README.md)
   - [Kontrola zranitelností knihoven](/sysadmin/dependency-check/README.md)
   - [Aktualizace WebJETu](/sysadmin/update/README.md)
+  - [Zodpovědné oznamování zranitelností](/sysadmin/responsible-disclosure/README.md)
 - Audit
   - [Audit](/sysadmin/audit/README.md)
   - [Seznam notifikací](/sysadmin/audit/audit-notifications.md)

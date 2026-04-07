@@ -30,5 +30,9 @@
     {
         "name": "Element To Include",
         "traceRegex": ".*expected element .* to include.*"
+    },
+    {
+        "name": "Accessibility",
+        "traceRegex": ".*accessibility violation.*"
     }
 ]
