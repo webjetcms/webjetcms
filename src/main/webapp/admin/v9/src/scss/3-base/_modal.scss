@@ -666,7 +666,7 @@ body.modal-open {
         right: 16px;
         top: 4px;
         background-color: transparent;
-        z-index: 20;
+        z-index: 20; //in nested modal datatable in impressslideshow when you edit row close button was not clickable
 
         &:hover {
             color: $nice-black;
