@@ -67,7 +67,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * GalleryRestController
@@ -844,7 +844,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
 
 ## Validácia / povinné polia
 
-Do editora je integrovaná štandardná Java validácia [javax.validation](https://www.baeldung.com/javax-validation). Je teda potrebné v ```JPA Beane``` nastaviť požadované validačné anotácie:
+Do editora je integrovaná štandardná Java validácia [jakarta.validation](https://www.baeldung.com/javax-validation). Je teda potrebné v ```JPA Beane``` nastaviť požadované validačné anotácie:
 
 ```java
 @Entity
@@ -872,7 +872,7 @@ Najčastejšie anotácie:
 @Past //zadamy datum musi byt v minulosti, aplikovatelne na Date objekty
 ```
 
-Zachytenie chybového hlásenia je implementované v triede [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde sa konvertuje objekt ```ConstraintViolation``` na text. Pre možnosť úpravy chybového hlásenia cez WebJET je hľadaný prekladový kľúč v metóde ```getErrorMessage```. Ak sa nájde, použije sa, inak sa použije štandardné hlásenie z ```javax.validation```.
+Zachytenie chybového hlásenia je implementované v triede [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde sa konvertuje objekt ```ConstraintViolation``` na text. Pre možnosť úpravy chybového hlásenia cez WebJET je hľadaný prekladový kľúč v metóde ```getErrorMessage```. Ak sa nájde, použije sa, inak sa použije štandardné hlásenie z ```jakarta.validation```.
 
 V prekladovom kľúči je možné použiť atribúty anotácie, napr. ```{min}``` alebo zadanú hodnotu ako ```${validatedValue}```.
 

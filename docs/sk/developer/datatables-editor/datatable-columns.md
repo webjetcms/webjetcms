@@ -279,7 +279,7 @@ Povinné polia je možné označiť anotáciami:
 
 ## Validácie
 
-Podporované sú štandardné anotácie pre validácie polí pomocou [javax.validation.Validator](https://www.baeldung.com/javax-validation). Príklad validácie dĺžky poľa:
+Podporované sú štandardné anotácie pre validácie polí pomocou [jakarta.validation.Validator](https://www.baeldung.com/javax-validation). Príklad validácie dĺžky poľa:
 
 ```java
         @Size(min = 10, max = 20, message = "form.p2.size")
