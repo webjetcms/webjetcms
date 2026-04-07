@@ -184,6 +184,9 @@
                 } else {
                     window.$(textInputId).val(JSON.stringify(that.$root.data, undefined, 4)).change();
                 }
+
+                // console.log("emmiting event WJ.jstree.change, item=", {textInputId: textInputId, item: item});
+                WJ.dispatchEvent("WJ.jstree.change", {textInputId: textInputId, item: item});
             },
             _validateGroupPageClick(that, data) {
                 //If group is marked with this icon (no permitted group) after click on it open node and do not select it
