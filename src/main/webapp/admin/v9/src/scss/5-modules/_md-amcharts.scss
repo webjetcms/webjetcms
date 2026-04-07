@@ -1,44 +1,29 @@
 div.amcharts {
     width: 100%;
     height: 450px;
-    margin-top: 8px;
-    margin-bottom: 24px;
-
-    /*&.aaaaaa-farby {
-        color: #0061f5;
-        color: #00a186;
-        color: #b48700;
-        color: #e00028;
-    }*/
+    margin-top: 0px;
+    margin-bottom: 14px;
 
     > div:before {
         content: '';
-        background: #F3F3F6;
+        background: $nice-gray;
         width: calc(100% - 0px);
-        height: calc(100% + 16px);
+        height: calc(100% + 6px);
         display: block;
         position: absolute;
         z-index: -1;
         right: 0;
-        border-radius: 10px;
-        top: -8px;
-        border: 1px solid #DDDFE6;
+        border-radius: 6px;
+        top: 0px;
     }
 }
 .amchart-header {
     font-family: $secondary-font-family;
     font-weight: 700;
-    padding-left: 38px;
-    padding-top: 13px;
-    min-height: 47px;
-
-    border-radius: 10px 10px 0 0;
-    background: #F3F3F6;
-    top: 21px;
-    border: 1px solid #DDDFE6;
-    position: relative;
-
-    font-size: 18px !important;
+    padding-left: 2px;
+    font-size: 14px !important;
+    margin-top: 18px;
+    margin-bottom: 12px;
 
     .additional-data {
         font-family: $secondary-font-family;
@@ -105,4 +90,10 @@ div.amcharts {
     100% {
         transform: rotate(360deg);
     }
+}
+div div.amcharts:last-child {
+    margin-bottom: 18px;
+}
+div .amchart-header:first-child, section .amchart-header:first-child {
+    margin-top: 12px;
 }

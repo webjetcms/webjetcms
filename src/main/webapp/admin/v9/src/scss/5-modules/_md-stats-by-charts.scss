@@ -2,6 +2,11 @@ div.stat-chart-wrapper {
 
     padding: 0px 15px;
 
+    .amchart-header {
+        margin-top: 24px;
+        margin-bottom: 18px;
+    }
+
     button.chart-more-btn {
         white-space: nowrap;
         padding-top: 6px;
@@ -9,8 +14,8 @@ div.stat-chart-wrapper {
 
         float: right;
         position: relative;
-        top: 29px;
-        right: 9px;
+        top: -7px;
+        right: 0px;
         z-index: 999;
 
         background-color: white;
