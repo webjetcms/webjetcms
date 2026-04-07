@@ -42,6 +42,23 @@ block content
             linkCheckDataTable.hideButton("remove");
             linkCheckDataTable.hideButton("celledit");
             linkCheckDataTable.hideButton("import");
+
+
+            //pills-linkcheck
+            $('#pills-linkcheck a[data-wj-toggle="tab"]').on('click', function (e) {
+                let selectedTab = e.target.id;
+
+                if(selectedTab === "pills-brokenLinks-tab") {
+                    linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+                    linkCheckDataTable.ajax.reload();
+                } else if(selectedTab === "pills-hiddenPages-tab") {
+                    linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+                    linkCheckDataTable.ajax.reload();
+                } else if(selectedTab === "pills-emptyPages-tab") {
+                    linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+                    linkCheckDataTable.ajax.reload();
+                }
+            });
         });
 
         function setTableDefaultUrl() {
@@ -52,21 +69,5 @@ block content
 
             linkCheckUrl = baseUrl + groupIdParam + "&tableType=brokenLinks";
         }
-
-        //pills-linkcheck
-        $('#pills-linkcheck a[data-wj-toggle="tab"]').on('click', function (e) {
-            let selectedTab = e.target.id;
-
-            if(selectedTab === "pills-brokenLinks-tab") {
-                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
-                linkCheckDataTable.ajax.reload();
-            } else if(selectedTab === "pills-hiddenPages-tab") {
-                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
-                linkCheckDataTable.ajax.reload();
-            } else if(selectedTab === "pills-emptyPages-tab") {
-                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
-                linkCheckDataTable.ajax.reload();
-            }
-        });
 
     <table id="links" class="datatableInit table"></table>

@@ -6,10 +6,11 @@ block content
         var logLevelsDataTable;
         let url = "/admin/rest/audit/log-levels";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.LogLevelBean")})];
-        let mainLevelOptions = WJ.translate("audit_log_level.main_log_level.options.js").split("|");
-        let otherLevelOptions = WJ.translate("audit_log_level.other.options.js").split("|");
 
         window.domReady.add(function () {
+
+            let mainLevelOptions = WJ.translate("audit_log_level.main_log_level.options.js").split("|");
+            let otherLevelOptions = WJ.translate("audit_log_level.other.options.js").split("|");
 
             logLevelsDataTable = WJ.DataTable({
                 url: url,

@@ -105,6 +105,10 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "npm run dev": true
+        "npm run dev": true,
+        "/^cd /Users/jeeff/Documents\\.nosync/workspace-visualstudio/github\\.com_webjetcms/webjetcms/src/main/webapp/admin/v9 && node build-templates\\.mjs 2>&1 \\| tail -5$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

@@ -322,13 +322,7 @@
         }
 
         // Initialize after potential dynamic column fetch and when DOM is ready
-        if (window.domReady && typeof window.domReady.add === 'function') {
-            window.domReady.add(function () {
-                Promise.resolve(columnsFetchPromise).finally(() => initFormDetailDataTable());
-            });
-        } else {
-            // Fallback if domReady is not available
-            Promise.resolve(columnsFetchPromise).finally(() => initFormDetailDataTable());
-        }
+
+        Promise.resolve(columnsFetchPromise).finally(() => initFormDetailDataTable());
     };
 })();

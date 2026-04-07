@@ -700,131 +700,133 @@ block content
 
                 showHidePageRecoverButtons();
 
-                $('#pills-pages a[data-wj-toggle="tab"]').on('click', function (e) {
-                    let id = e.target.id;
+                window.domReady.add(function () {
+                    $('#pills-pages a[data-wj-toggle="tab"]').on('click', function (e) {
+                        let id = e.target.id;
 
-                    //only accept pills-system-tab or pills-trash-tab
-                    if (id == "pills-folders-tab" || id == "pills-system-tab" || id == "pills-trash-tab") {
+                        //only accept pills-system-tab or pills-trash-tab
+                        if (id == "pills-folders-tab" || id == "pills-system-tab" || id == "pills-trash-tab") {
 
-                        //console.log("folders tab clicked, e=", e, "shift=", e.shiftKey);
+                            //console.log("folders tab clicked, e=", e, "shift=", e.shiftKey);
 
-                        let click = groupsUrlClickParam;
-                        let urlGroupDetails = null;
-                        if ("pills-system-tab"==id) {
-                            click = "dt-tree-group-system";
-                            urlGroupDetails = "/admin/rest/groups/tree/system";
-                        } else if ("pills-trash-tab"==id) {
-                            click = "dt-tree-group-trash";
-                            urlGroupDetails = "/admin/rest/groups/tree/trash";
-                        } else if ("pills-folders-tab"==id && e.shiftKey === true) {
-                            //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
-                            click = "dt-tree-group";
-                            e.preventDefault();
-                        }
+                            let click = groupsUrlClickParam;
+                            let urlGroupDetails = null;
+                            if ("pills-system-tab"==id) {
+                                click = "dt-tree-group-system";
+                                urlGroupDetails = "/admin/rest/groups/tree/system";
+                            } else if ("pills-trash-tab"==id) {
+                                click = "dt-tree-group-trash";
+                                urlGroupDetails = "/admin/rest/groups/tree/trash";
+                            } else if ("pills-folders-tab"==id && e.shiftKey === true) {
+                                //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
+                                click = "dt-tree-group";
+                                e.preventDefault();
+                            }
 
-                        if ("pills-folders-tab"==id) reloadWebpagesAfterJstree = true;
+                            if ("pills-folders-tab"==id) reloadWebpagesAfterJstree = true;
 
-                        //ak je zvolene zobrazenie aj stranky zrus group vyraz
-                        if (window.jstreeSettings.isPagesShow()) {
-                            click = click.replace(/dt-tree-group/gi, "dt-tree");
-                        }
+                            //ak je zvolene zobrazenie aj stranky zrus group vyraz
+                            if (window.jstreeSettings.isPagesShow()) {
+                                click = click.replace(/dt-tree-group/gi, "dt-tree");
+                            }
 
-                        showHidePageRecoverButtons();
+                            showHidePageRecoverButtons();
 
-                        //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
-                        let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
-                        window.history.pushState({path: url}, '', url);
-                        //$("#SomStromcek").jstree(true).deselect_all(true);
+                            //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
+                            let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+                            window.history.pushState({path: url}, '', url);
+                            //$("#SomStromcek").jstree(true).deselect_all(true);
 
-                        //clear search text
-                        $("#tree-folder-search-input").val("");
+                            //clear search text
+                            $("#tree-folder-search-input").val("");
 
-                        //nacitaj strom
-                        window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
-                        //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
-                        window.jstree.jstree(true).refresh(false, true);
+                            //nacitaj strom
+                            window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
+                            //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
+                            window.jstree.jstree(true).refresh(false, true);
 
-                        //ziskaj GroupDetails a setni DT
-                        if (urlGroupDetails != null) {
-                            $.get({
-                                url: urlGroupDetails,
-                                success: function(response) {
-                                    //console.log("response=", response);
-                                    selectedNode = {
-                                        id: ""+response.groupId,
-                                        original: {
+                            //ziskaj GroupDetails a setni DT
+                            if (urlGroupDetails != null) {
+                                $.get({
+                                    url: urlGroupDetails,
+                                    success: function(response) {
+                                        //console.log("response=", response);
+                                        selectedNode = {
                                             id: ""+response.groupId,
-                                            groupDetails: response
+                                            original: {
+                                                id: ""+response.groupId,
+                                                groupDetails: response
+                                            }
                                         }
+                                        //aby sa vzdy vyvolal reload
+                                        window.lastGroup = null;
+                                        setCurrentGroup(response, true);
+                                        //skus selectnut vrateny nod (ked to je recursiveSystemFolder) - uz sa nepouziva, koliduje s /parents pri zadani ID stranky
+                                        setTimeout(function() {
+                                            //console.log("Selecting ", response.groupId);
+                                            //window.jstree.jstree('select_node', ""+response.groupId);
+                                        }, 2000);
                                     }
-                                    //aby sa vzdy vyvolal reload
-                                    window.lastGroup = null;
-                                    setCurrentGroup(response, true);
-                                    //skus selectnut vrateny nod (ked to je recursiveSystemFolder) - uz sa nepouziva, koliduje s /parents pri zadani ID stranky
-                                    setTimeout(function() {
-                                        //console.log("Selecting ", response.groupId);
-                                        //window.jstree.jstree('select_node', ""+response.groupId);
-                                    }, 2000);
-                                }
-                            });
+                                });
+                            } else {
+                                //nacitali sme Priecinky, schovaj edit a trash button
+                                $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
+                                $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
+                                //reloadni tabulku na prazdnu
+                                webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
+                                //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
+                                webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+
+                                webpagesDatatable.ajax.reload();
+                                groupsDatatable.setAjaxUrl(groupsInitialUrl);
+                                groupsDatatable.ajax.reload();
+                            }
+
+                            //show pages DT if last one is folders
+                            if ($("#groups-datatable_wrapper").is(":visible")) {
+                                $("#datatableInit_wrapper").show();
+                                $("#groups-datatable_wrapper").hide();
+                            }
                         } else {
-                            //nacitali sme Priecinky, schovaj edit a trash button
-                            $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
-                            $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
-                            //reloadni tabulku na prazdnu
-                            webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
-                            //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                            //console.log("PILLS pages CLICK, id=", id);
 
-                            webpagesDatatable.ajax.reload();
-                            groupsDatatable.setAjaxUrl(groupsInitialUrl);
-                            groupsDatatable.ajax.reload();
+                            showHidePageRecoverButtons();
+
+                            if ("pills-folders-dt-tab" == id) {
+                                $("#datatableInit_wrapper").hide();
+                                $("#groups-datatable_wrapper").show();
+                                let selectedNodes = getTreeNodeSelectedGroups();
+                                //console.log("selectedNodes=", selectedNodes);
+                                if (selectedNodes.length<2) groupsDatatable.ajax.reload();
+                            } else {
+                                $("#datatableInit_wrapper").show();
+                                $("#groups-datatable_wrapper").hide();
+                            }
+
+                            if("pills-changes-tab" == id) {
+                                webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
+
+                                //console.log(changesId);
+                                webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                                //webpagesDatatable.ajax.reload();
+                            } else if("pills-waiting-tab" == id) {
+                                //console.log(waitingId);
+                                webpagesDatatable.setAjaxUrl("/admin/rest/webpages/toapprove");
+                                webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                                //webpagesDatatable.ajax.reload();
+                            }
+
+                            //In case of history tab, we dont want to allow delete awaiting requests (they must be approved or rejected)
+                            if ("pills-waiting-tab" == id)
+                                webpagesDatatable.hideButton("remove");
+                            else
+                                webpagesDatatable.showButton("remove");
                         }
 
-                        //show pages DT if last one is folders
-                        if ($("#groups-datatable_wrapper").is(":visible")) {
-                            $("#datatableInit_wrapper").show();
-                            $("#groups-datatable_wrapper").hide();
-                        }
-                    } else {
-                        //console.log("PILLS pages CLICK, id=", id);
-
-                        showHidePageRecoverButtons();
-
-                        if ("pills-folders-dt-tab" == id) {
-                            $("#datatableInit_wrapper").hide();
-                            $("#groups-datatable_wrapper").show();
-                            let selectedNodes = getTreeNodeSelectedGroups();
-                            //console.log("selectedNodes=", selectedNodes);
-                            if (selectedNodes.length<2) groupsDatatable.ajax.reload();
-                        } else {
-                            $("#datatableInit_wrapper").show();
-                            $("#groups-datatable_wrapper").hide();
-                        }
-
-                        if("pills-changes-tab" == id) {
-                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
-
-                            //console.log(changesId);
-                            webpagesDatatable.columns("dateCreated:name").order("desc").draw();
-                            //webpagesDatatable.ajax.reload();
-                        } else if("pills-waiting-tab" == id) {
-                            //console.log(waitingId);
-                            webpagesDatatable.setAjaxUrl("/admin/rest/webpages/toapprove");
-                            webpagesDatatable.columns("dateCreated:name").order("desc").draw();
-                            //webpagesDatatable.ajax.reload();
-                        }
-
-                        //In case of history tab, we dont want to allow delete awaiting requests (they must be approved or rejected)
-                        if ("pills-waiting-tab" == id)
-                            webpagesDatatable.hideButton("remove");
-                        else
-                            webpagesDatatable.showButton("remove");
-                    }
-
-                    showHideTableButtons(id);
-                    showHideTreeCol(id);
-                });
+                        showHideTableButtons(id);
+                        showHideTreeCol(id);
+                    });
+                }, 3);
 
                 function showHideTreeCol(id) {
                     var showTreeCol = true;

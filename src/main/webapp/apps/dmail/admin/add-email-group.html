@@ -1,26 +1,27 @@
 <script type="text/javascript" data-th-inline="javascript">
+    window.domReady.add(function () {
+        //Call BE for data
+        let url = "/admin/rest/dmail/campaings/user-perms";
 
-    //Call BE for data
-    let url = "/admin/rest/dmail/campaings/user-perms";
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
 
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    
-    const campaingId = urlParams.get('campaingId');
-    const emails = urlParams.get('emails');
-    const permisions = urlParams.get('permisions');
+        const campaingId = urlParams.get('campaingId');
+        const emails = urlParams.get('emails');
+        const permisions = urlParams.get('permisions');
 
-    $.ajax({
-        url: url,
-        type: 'GET',
-        success: function (data) {
-            let permissions = JSON.parse(data);
-            addEmails(permissions.emails, emails);
-            addPerms(permissions.perms, permisions);
-        },
-        error: function (error) {
-            console.log(error);
-        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (data) {
+                let permissions = JSON.parse(data);
+                addEmails(permissions.emails, emails);
+                addPerms(permissions.perms, permisions);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
     });
 
     function addEmails(emails, checked) {
