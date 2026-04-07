@@ -89,6 +89,9 @@ table.cke_dialog {
             .cke_label {
                 display: contents;
                 font-size: 0px;
+                line-height: 1;
+                display: inline-flex;
+                vertical-align: middle;
 
                 &::before {
                     font-family: 'tabler-icons-filled';
@@ -133,7 +136,7 @@ table.cke_dialog {
             background: none !important;
             border: 1px solid #868EA5;
             border-radius: 6px;
-            padding: 5px 6px 4px 6px;
+            padding: 5px 6px 5px 6px;
             position: absolute;
             right: 52px;
             top: 8px;
@@ -143,6 +146,9 @@ table.cke_dialog {
             .cke_label {
                 display: contents;
                 font-size: 0px; //hide text, icon shown via ::before
+                line-height: 1;
+                display: inline-flex;
+                vertical-align: middle;
 
                 &::before {
                     font-family: 'tabler-icons-filled';

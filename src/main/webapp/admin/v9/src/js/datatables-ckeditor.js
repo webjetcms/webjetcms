@@ -205,7 +205,7 @@ export class DatatablesCkEditor {
 					$dialogDoc.find(".cke_dialog_body > a.cke_dialog_close_button > span.cke_label").text("");
 
 					//add maximize and minimize buttons before close button
-					var closeButton = $dialogDoc.find(".cke_dialog_body > a.cke_dialog_close_button");
+					var closeButton = $dialogDoc.find(".cke_dialog_container:visible .cke_dialog_body > a.cke_dialog_close_button");
 					if (closeButton.length > 0 && closeButton.siblings("button.cke_dialog_maximize_button").length === 0) {
 						var maximizeButton = $('<button class="cke_dialog_maximize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.maximize.js") + '" data-toggle="tooltip" role="button" tabindex="-1"><span class="cke_label"></span></button>');
 						var minimizeButton = $('<button class="cke_dialog_minimize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.minimize.js") + '" data-toggle="tooltip" role="button" tabindex="-1" style="display:none;"><span class="cke_label"></span></button>');
