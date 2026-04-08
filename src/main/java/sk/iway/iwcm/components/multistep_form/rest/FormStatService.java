@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.forms.FormsEntity;
@@ -28,6 +29,7 @@ import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
 
 @Service
@@ -107,7 +109,7 @@ public class FormStatService {
         Map<String, List<String>> mapData = convertFromListToMap(allFormData, allowed, prop.getText(NOT_ANSWERED));
         Map<String, String> columnNames = getColumnNames(formName, new UserDetails(request), prop);
 
-        return mapDataToJsonArray(mapData, columnNames, allowed);
+        return mapDataToJsonArray(mapData, columnNames, allowed, prop);
     }
 
     private List<String> getAllFormData(String formName) {
@@ -148,13 +150,14 @@ public class FormStatService {
                     else continue;
                 }
 
-                if("checkboxgroup".equals(allowed.get(key).getFieldType())) {
+                String fieldType = allowed.get(key).getFieldType().toLowerCase();
+
+                if(fieldType.contains("checkboxgroup")) {
                     for(String v : parseKKs(value)) {
                         if(Tools.isEmpty(v)) continue;
                         allData.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
                     }
-                }
-                else if("select".equals(allowed.get(key).getFieldType())) {
+                } else if(fieldType.contains("select")) {
                     String options[] = parseKKs(allowed.get(key).getValue());
                     boolean found = false;
                     for(String option : options) {
@@ -166,8 +169,13 @@ public class FormStatService {
                     }
 
                     if(found == false) allData.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
-                }
-                else {
+                } else if (fieldType.contains("wysiwyg")) {
+                    //decode HTML entities from &lt; and then remove HTML tags
+                    String decodedValue = DB.unfilterHtml(value);
+                    String safeValue = AllowSafeHtmlAttributeConverter.sanitize(decodedValue);
+
+                    allData.computeIfAbsent(key, k -> new ArrayList<>()).add(safeValue);
+                } else {
                     allData.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
                 }
             }
@@ -196,7 +204,7 @@ public class FormStatService {
         }
     }
 
-    private JSONArray mapDataToJsonArray(Map<String, List<String>> mapData, Map<String, String> columnNames, Map<String, FormItemEntity> allowed) {
+    private JSONArray mapDataToJsonArray(Map<String, List<String>> mapData, Map<String, String> columnNames, Map<String, FormItemEntity> allowed, Prop prop) {
         JSONArray jsonArray = new JSONArray();
 
         for (Map.Entry<String, List<String>> entry : mapData.entrySet()) {
@@ -209,7 +217,7 @@ public class FormStatService {
             jsonObject.put("chart_colorScheme", allowed.get(key).getColorScheme());
 
             // values must be combination of value and count
-            jsonObject.put("values", prepareDataForChart(entry.getValue(), allowed.get(key).getTopCount(), allowed.get(key).getShowOtherCount(), allowed.get(key).getCompareInsensitive()) );
+            jsonObject.put("values", prepareDataForChart(entry.getValue(), allowed.get(key).getTopCount(), allowed.get(key).getShowOtherCount(), allowed.get(key).getCompareInsensitive(), prop) );
 
             jsonArray.put(jsonObject);
         }
@@ -217,7 +225,7 @@ public class FormStatService {
         return jsonArray;
     }
 
-    private JSONArray prepareDataForChart(List<String> values, int maxCountAllowed, boolean allowOtherCount, boolean compareInsensitive) {
+    private JSONArray prepareDataForChart(List<String> values, int maxCountAllowed, boolean allowOtherCount, boolean compareInsensitive, Prop prop) {
         JSONArray valuesArray = new JSONArray();
 
         HashMap<String, Integer> valueCountMap = new HashMap<>();
@@ -254,7 +262,7 @@ public class FormStatService {
 
         if(allowOtherCount && otherCount > 0) {
             JSONObject otherCountObject = new JSONObject();
-            otherCountObject.put("name", "OTHER");
+            otherCountObject.put("name", prop.getText("components.stat.other"));
             otherCountObject.put("count", otherCount);
             valuesArray.put(otherCountObject);
         }

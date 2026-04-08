@@ -2207,7 +2207,7 @@ async function createTableChart(chartForm) {
 
 async function insertTableColumn(rowData, paramName) {
     const td = document.createElement("td");
-    td.textContent = rowData[paramName];
+    td.innerHTML = rowData[paramName];
     td.classList.add("chart-table-td");
     return td;
 }

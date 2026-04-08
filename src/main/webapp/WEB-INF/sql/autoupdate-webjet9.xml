@@ -3188,48 +3188,52 @@
                 <void property="mysql"><string>
                     ALTER TABLE form_items
                     ADD COLUMN show_stat TINYINT(1) NOT NULL DEFAULT 1,
-                    ADD COLUMN top_count INT NULL,
+                    ADD COLUMN top_count INT NOT NULL DEFAULT 5,
                     ADD COLUMN show_other_count TINYINT(1) NOT NULL DEFAULT 1,
                     ADD COLUMN show_unanswered TINYINT(1) NOT NULL DEFAULT 0,
                     ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT 'bar_horizontal',
-                    ADD COLUMN compare_insensitive TINYINT(1) NOT NULL DEFAULT 1,
-                    ADD COLUMN color_scheme VARCHAR(32) NULL
+                    ADD COLUMN compare_insensitive TINYINT(1) NOT NULL DEFAULT 0,
+                    ADD COLUMN color_scheme VARCHAR(32) NULL;
+                    UPDATE form_items SET show_stat=0 WHERE field_type IN ('novy-riadok', 'prazdny-stlpec', 'verify_code', 'multiupload', 'multiupload_documents', 'multiupload_images');
                 </string></void>
 
                 <void property="mssql"><string>
                     ALTER TABLE form_items
                     ADD
-                        show_stat BIT NOT NULL CONSTRAINT DF_form_items_show_stat DEFAULT 1,
-                        top_count INT NULL,
+                        show_stat BIT NOT NULL DEFAULT 1,
+                        top_count INT NOT NULL DEFAULT 5,
                         show_other_count BIT NOT NULL DEFAULT 1,
                         show_unanswered BIT NOT NULL DEFAULT 0,
                         chart_type VARCHAR(255) NOT NULL DEFAULT 'bar_horizontal',
-                        compare_insensitive BIT NOT NULL DEFAULT 1,
-                        color_scheme VARCHAR(32) NULL
+                        compare_insensitive BIT NOT NULL DEFAULT 0,
+                        color_scheme VARCHAR(32) NULL;
+                    UPDATE form_items SET show_stat=0 WHERE field_type IN ('novy-riadok', 'prazdny-stlpec', 'verify_code', 'multiupload', 'multiupload_documents', 'multiupload_images');
                 </string></void>
 
                 <void property="oracle"><string>
                     ALTER TABLE form_items
                     ADD (
                         show_stat NUMBER(1) DEFAULT 1 NOT NULL,
-                        top_count NUMBER NULL,
+                        top_count NUMBER DEFAULT 5 NOT NULL,
                         show_other_count NUMBER(1) DEFAULT 1 NOT NULL,
                         show_unanswered NUMBER(1) DEFAULT 0 NOT NULL,
                         chart_type VARCHAR2(255) DEFAULT 'bar_horizontal' NOT NULL,
-                        compare_insensitive NUMBER(1) DEFAULT 1 NOT NULL,
+                        compare_insensitive NUMBER(1) DEFAULT 0 NOT NULL,
                         color_scheme VARCHAR(32) NULL
-                    )
+                    );
+                    UPDATE form_items SET show_stat=0 WHERE field_type IN ('novy-riadok', 'prazdny-stlpec', 'verify_code', 'multiupload', 'multiupload_documents', 'multiupload_images');
                 </string></void>
 
                 <void property="pgsql"><string>
                     ALTER TABLE form_items
                     ADD COLUMN show_stat BOOLEAN NOT NULL DEFAULT TRUE,
-                    ADD COLUMN top_count INTEGER NULL,
+                    ADD COLUMN top_count INTEGER NOT NULL DEFAULT 5,
                     ADD COLUMN show_other_count BOOLEAN NOT NULL DEFAULT TRUE,
                     ADD COLUMN show_unanswered BOOLEAN NOT NULL DEFAULT FALSE,
                     ADD COLUMN chart_type VARCHAR(255) NOT NULL DEFAULT 'bar_horizontal',
-                    ADD COLUMN compare_insensitive BOOLEAN NOT NULL DEFAULT TRUE,
-                    ADD COLUMN color_scheme VARCHAR(32) NULL
+                    ADD COLUMN compare_insensitive BOOLEAN NOT NULL DEFAULT FALSE,
+                    ADD COLUMN color_scheme VARCHAR(32) NULL;
+                    UPDATE form_items SET show_stat=FALSE WHERE field_type IN ('novy-riadok', 'prazdny-stlpec', 'verify_code', 'multiupload', 'multiupload_documents', 'multiupload_images');
                 </string></void>
 
             </object>

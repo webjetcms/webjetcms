@@ -1,8 +1,13 @@
 div.stat-chart-wrapper {
 
-    padding: 0px 15px;
+    padding: 0px 0px;
+
+    &:last-child {
+        padding-bottom: 8px;
+    }
 
     .amchart-header {
+        //because of negative margin on graph container
         margin-top: 24px;
         margin-bottom: 18px;
     }
@@ -27,5 +32,11 @@ div.stat-chart-wrapper {
         color: white;
         border-color: #b3b8c7;
         border-width: 1px;
+    }
+}
+
+div.stat-chart-wrapper:first-child {
+    .amchart-header {
+        margin-top: 18px;
     }
 }

@@ -17,6 +17,9 @@ div.amcharts {
         top: 0px;
     }
 }
+div.amcharts:has(table.tabulkaStandard) {
+    height: auto;
+}
 .amchart-header {
     font-family: $secondary-font-family;
     font-weight: 700;
