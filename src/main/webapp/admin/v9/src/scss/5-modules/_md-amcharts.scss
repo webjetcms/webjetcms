@@ -58,8 +58,10 @@ div.amcharts:has(table.table) {
         margin-top: 0px;
         margin-bottom: 0px;
         tbody tr:hover {
-            background-color: #0063FB;
-            font-weight: bold;
+            background-color: $nice-primary;
+            td {
+                color: $white;
+            }
         }
         td, th {
             background: none;
