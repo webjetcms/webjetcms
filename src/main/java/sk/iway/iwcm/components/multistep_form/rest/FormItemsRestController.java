@@ -155,7 +155,6 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             entity.setFormName(MultistepFormsService.getFormName(getRequest()));
             entity.setShowStat(true);
             entity.setShowOtherCount(true);
-            entity.setCompareInsensitive(true);
 
             int stepId = Tools.getIntValue(getRequest().getParameter("stepId"), -1);
             if(stepId != -1) entity.setStepId(stepId);

@@ -3376,5 +3376,42 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>sivan</string></void>
+             <void property="date"><string>08.04.2025</string></void>
+             <void property="desc"><string>form_items label value to text</string></void>
+             <void property="mysql"><string>
+                ALTER TABLE form_items MODIFY label TEXT;
+                ALTER TABLE form_items MODIFY value TEXT;
+                ALTER TABLE form_items MODIFY tooltip TEXT;
+             </string></void>
+             <void property="mssql"><string>
+                ALTER TABLE form_items ALTER COLUMN label NTEXT;
+                ALTER TABLE form_items ALTER COLUMN value NTEXT;
+                ALTER TABLE form_items ALTER COLUMN tooltip NTEXT;
+             </string></void>
+             <void property="oracle"><string>
+                ALTER TABLE form_items ADD (label2 CLOB);
+                UPDATE form_items SET label2=label;
+                ALTER TABLE form_items DROP COLUMN label;
+                ALTER TABLE form_items RENAME COLUMN label2 TO label;
+                ALTER TABLE form_items ADD (value2 CLOB);
+                UPDATE form_items SET value2=value;
+                ALTER TABLE form_items DROP COLUMN value;
+                ALTER TABLE form_items RENAME COLUMN value2 TO value;
+                ALTER TABLE form_items ADD (tooltip2 CLOB);
+                UPDATE form_items SET tooltip2=tooltip;
+                ALTER TABLE form_items DROP COLUMN tooltip;
+                ALTER TABLE form_items RENAME COLUMN tooltip2 TO tooltip;
+             </string></void>
+             <void property="pgsql"><string>
+                ALTER TABLE form_items ALTER COLUMN label TYPE TEXT;
+                ALTER TABLE form_items ALTER COLUMN value TYPE TEXT;
+                ALTER TABLE form_items ALTER COLUMN tooltip TYPE TEXT;
+             </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

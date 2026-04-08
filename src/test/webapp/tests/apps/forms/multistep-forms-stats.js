@@ -159,6 +159,8 @@ Scenario("Generate random data for nice charts", async ({ I }) => {
             }
         }, wysiwyg);
 
+        I.checkOption(weightedRandom(["#radiogroup-2-0", "#radiogroup-2-1", "#radiogroup-2-2", "#radiogroup-2-3"]));
+
         //SPAM PROTECTION: wait for random time between 30 and 34 seconds to simulate real user behavior
         const waitTime = 30000 + Math.random() * 4000;
         I.wait(waitTime / 1000);
