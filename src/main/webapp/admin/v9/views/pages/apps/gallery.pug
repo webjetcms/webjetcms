@@ -85,6 +85,36 @@ block content
                         initialData: dtWJ.getEmptyData(true)
                     });
 
+                    let actualAction = null;
+                    galleryDimensionDatatable.EDITOR.on( 'open', function( e, mode, action ) {
+                        galleryDimensionDatatable.EDITOR.field("updateInDoc").hide();
+                        actualAction = action;
+                    });
+
+                    window.addEventListener("WJ.jstree-simple.change", function(e) {
+                        // Make sense only when editing
+                        if(actualAction !== "edit") return;
+
+                        const detail = e && e.detail;
+                        if (!detail || detail.textInputId !== "#galleryDimensionDatatable_modal #DTE_Field_parent") return;
+                        if (!galleryDimensionDatatable || !galleryDimensionDatatable.EDITOR) return;
+
+                        const pathField = galleryDimensionDatatable.EDITOR.field("path");
+                        if (!pathField) return;
+
+                        const originalValue = pathField.get();
+                        if (typeof originalValue !== "string" || originalValue.length < 1) return;
+
+                        const selectedParent = (detail.value || "").toString().replace(/\/+$/, "");
+                        const fileName = originalValue.substring(originalValue.lastIndexOf("/") + 1);
+                        const updatedPath = selectedParent.length > 0 ? `${selectedParent}/${fileName}` : fileName;
+
+                        pathField.set(updatedPath);
+
+                        // Show option to turn on/off replace of url in all doc's
+                        galleryDimensionDatatable.EDITOR.field("updateInDoc").show();
+                    });
+
                     var url = "/admin/rest/components/gallery";
 
                     var tabs = [
@@ -380,6 +410,11 @@ block content
                             var virtualPath = node.original.virtualPath;
                             setGalleryTablePath(virtualPath);
                         }
+                    });
+
+                    $('#SomStromcek').on("move_node.jstree", function(e, data) {
+                        // Add warning for user
+                        WJ.notifyWarning("[[\#{components.gallery.move_warning.title}]]", "[[\#{components.gallery.move_warning.desc}]]", 10000);
                     });
 
                     //fired for treeInitialJson selected node - set galleyDimension object and upload path
