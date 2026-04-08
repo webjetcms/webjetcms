@@ -1,6 +1,6 @@
 <template>
     <div class="col-md-6">
-        <h6 class="server-monitoring-table-header mt-2"><i :class="displayData.icon" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
+        <h6 class="server-monitoring-table-header mt-2"><i :class="displayData.icon"></i> {{ displayData.tableName }}</h6>
         <table class="monitoring-table">
             <tr v-for="(data, key, index) in sortedData" :key="index" class="table-data" :data-index="index">
                 <td v-text="translate(key)" style="white-space: nowrap"></td>
