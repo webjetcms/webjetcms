@@ -2176,9 +2176,21 @@ function isNumberParamValid(value, cantBeNegative = true) {
 
 async function createTableChart(chartForm) {
 
-
     const table = document.createElement("table");
-    table.classList.add("table", "tabulkaStandard");
+    table.classList.add("table");
+
+    if (typeof chartForm.headerNames != "undefined" && chartForm.headerNames != null) {
+        //create thead section with title and count
+        const thead = document.createElement("thead");
+        const trHead = document.createElement("tr");
+        chartForm.headerNames.forEach(paramName => {
+            const th = document.createElement("th");
+            th.innerHTML = paramName;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+        table.appendChild(thead);
+    }
 
     const tbody = document.createElement("tbody");
     chartForm.chartData.forEach(row => {
@@ -2197,7 +2209,6 @@ async function createTableChart(chartForm) {
     wrapper2.style.position = "relative";
     wrapper2.style.width = "100%";
     wrapper2.style.height = "100%";
-    wrapper2.style.padding = "15px";
 
     const chartContainer = document.getElementById(chartForm.chartDivId);
     if(chartContainer) {
@@ -2208,7 +2219,6 @@ async function createTableChart(chartForm) {
 async function insertTableColumn(rowData, paramName) {
     const td = document.createElement("td");
     td.innerHTML = rowData[paramName];
-    td.classList.add("chart-table-td");
     return td;
 }
 

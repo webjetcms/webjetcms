@@ -17,9 +17,6 @@ div.amcharts {
         top: 0px;
     }
 }
-div.amcharts:has(table.tabulkaStandard) {
-    height: auto;
-}
 .amchart-header {
     font-family: $secondary-font-family;
     font-weight: 700;
@@ -48,19 +45,31 @@ div.amcharts:has(table.tabulkaStandard) {
         }
     }
 }
+
+div.amcharts:has(table.table) {
+    height: auto;
+    > div {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
 .amcharts {
     table.table {
-        margin-top: 30px;
-    }
-
-    table.table tbody tr:hover {
-        background-color: #0063FB;
-        font-weight: bold;
-    }
-
-    table.table tbody tr td.chart-table-td {
-        background: none;
-        color: black;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        tbody tr:hover {
+            background-color: #0063FB;
+            font-weight: bold;
+        }
+        td, th {
+            background: none;
+            color: black;
+        }
+        td {
+            p:last-child {
+                margin-bottom: 0px;
+            }
+        }
     }
 }
 

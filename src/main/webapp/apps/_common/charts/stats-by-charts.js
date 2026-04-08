@@ -207,6 +207,18 @@ export class StatsByCharts {
         }
 
         let tableChart = new ChartTools.TableChartForm(chartConfig);
+
+        let chartTitle = tableChart.chartTitle;
+        //remove step counter like name (step 1)
+        let i = chartTitle.lastIndexOf("(");
+        if(i > -1) {
+            chartTitle = chartTitle.substring(0, i).trim();
+        }
+        tableChart.headerNames = [
+            chartTitle,
+            window.WJ.translate("components.stats_by_charts.table.count.js")
+        ];
+
         ChartTools.createAmchart(tableChart);
         this.chartsInstances[chartDef.id] = tableChart;
     }
