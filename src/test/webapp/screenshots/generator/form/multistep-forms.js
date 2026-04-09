@@ -71,7 +71,7 @@ Scenario('App screenshots', ({ I, Apps, Document }) => {
 Scenario('Stat tab screen', ({ I, DT, DTE, Document }) => {
     I.resizeWindow(1360, 1000);
 
-    I.amOnPage("/apps/form/admin/form-steps/?formName=stattestform");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_screens");
 
     I.click(DT.btn.formItems_add_button);
     DTE.waitForEditor("formItemsDataTable");

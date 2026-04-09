@@ -183,7 +183,7 @@ Scenario('Test form detail and filled data ', async ({ I, DT, DTE }) => {
     columnNames.forEach(({ name }) => { I.seeElement(locate("span.dt-column-title").withText(name)); });
 
     // Check values in table row (with 6 leading utility columns)
-    const expectedRow = Array(5).fill("").concat("penguin.jpg").concat(columnNames.map(c => c.value));
+    const expectedRow = Array(6).fill("").concat("penguin.jpg").concat(columnNames.map(c => c.value));
     DT.checkTableRow("formDetailDataTable", 1, expectedRow);
 
     // Check values in editor
@@ -575,14 +575,11 @@ Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
 
     I.clickCss("#pills-dt-formItemsDataTable-stat-tab");
     within("#panel-body-dt-formItemsDataTable-stat", () => {
-        I.say("Check fields are hidden");
+
         I.seeElement(".DTE_Field_Name_showStat");
-        I.dontSeeElement(".DTE_Field_Name_chartType");
-        I.dontSeeElement(".DTE_Field_Name_topCount");
-        I.dontSeeElement(".DTE_Field_Name_colorScheme");
 
         I.say('Now check that fields are showed');
-        I.checkOption("#DTE_Field_showStat_0");
+
         I.seeElement(".DTE_Field_Name_showStat");
         I.seeElement(".DTE_Field_Name_chartType");
         I.seeElement(".DTE_Field_Name_topCount");
@@ -592,6 +589,13 @@ Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
         I.seeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
         I.checkOption("#DTE_Field_useColorScheme_0");
         I.dontSeeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
+
+        I.say("Check fields are hidden");
+        I.uncheckOption("#DTE_Field_showStat_0");
+        I.dontSeeElement(".DTE_Field_Name_chartType");
+        I.dontSeeElement(".DTE_Field_Name_topCount");
+        I.dontSeeElement(".DTE_Field_Name_colorScheme");
+
     });
 });
 

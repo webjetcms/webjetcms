@@ -5,37 +5,40 @@ Before(({ I, DT, login }) => {
 });
 
 Scenario('Base structure tests', ({ I }) => {
-    I.amOnPage("/apps/form/admin/form-stats/?formName=stattestform");
+    I.amOnPage("/apps/form/admin/form-stats/?formName=Multistepform_screens");
 
     I.say("Check header widgets");
     I.seeElement(".header-container");
-    checkHeaderWidget(I, ".ti.ti-users", "Počet odpovedí");
-    checkHeaderWidget(I, ".ti.ti-alarm", "Priemerný čas vyplnenia");
-    checkHeaderWidget(I, ".ti.ti-calendar", "Počet dní od vytvorenia");
-    checkHeaderWidget(I, ".ti.ti-calendar-pause", "Dátum poslednej odpovede");
+    checkHeaderWidget(I, ".ti.ti-users", "Odpovedí");
+    checkHeaderWidget(I, ".ti.ti-alarm", "Priemerné trvanie vyplnenia");
+    checkHeaderWidget(I, ".ti.ti-calendar", "Dní od vytvorenia");
+    checkHeaderWidget(I, ".ti.ti-calendar-pause", "Posledná odpoveď");
 
     // CHART section is generated using '/apps/_common/charts/stats-by-charts.js' soo we need to check structure throughly
     I.say("Check charts");
-    checkChart(I, "meno-1", "Meno");
+    checkChart(I, "meno-1", "Vaše meno");
     checkChart(I, "radiogroup-1", "Skupina výberových polí");
     checkChart(I, "checkboxgroup-1", "Skupina zaškrtávacích polí");
-    checkChart(I, "suhlaspodmienky-1", "Súhlas s podmienkami");
-    checkChart(I, "select-1", "Výberový zoznam - select");
-    checkChart(I, "select-2", "Ako je na tom Vaša organizácia s implementáciou podmienok kvality? (označte jednu možnosť, ktorá najlepšie zodpovedá Vašej súčasnej situácii)");
+    checkChart(I, "pohlavie-false", "Pohlavie");
+    checkChart(I, "select-1", "Select pole");
+    checkChart(I, "radiogroup-2", "Ako je na tom Vaša organizácia s implementáciou podmienok kvality? Označte jednu možnosť, ktorá najlepšie zodpovedá Vašej súčasnej situácii.");
 });
 
-Scenario('Check setting button and showed dialog', ({ I }) => {
-    I.amOnPage("/apps/form/admin/form-stats/?formName=stattestform");
+Scenario('Check setting button and showed dialog', ({ I, Document }) => {
+    I.amOnPage("/apps/form/admin/form-stats/?formName=Multistepform_screens");
 
-    checkChartSettings(I, "meno-1", "word_cloud");
-    checkChartSettings(I, "radiogroup-1", "pie_donut");
-    checkChartSettings(I, "checkboxgroup-1", "bar_horizontal");
-    checkChartSettings(I, "suhlaspodmienky-1", "pie_classic", true);
+    checkChartSettings(I, Document, "priezvisko-1", "word_cloud");
+    checkChartSettings(I, Document, "radiogroup-1", "pie_donut", true);
+    checkChartSettings(I, Document, "select-1", "bar_horizontal");
+    checkChartSettings(I, Document, "radiogroup-2", "bar_vertical", true);
+    checkChartSettings(I, Document, "pohlavie-false", "pie_classic");
 });
 
-function checkChartSettings(I, chartId, chartType, colorScheme = false) {
+function checkChartSettings(I, Document, chartId, chartType, colorScheme = false) {
     I.say('Checking settings of chart : ' + chartId);
-    I.clickCss("#form-stats_" + chartId + "_container button.chart-more-btn");
+    let button = "#form-stats_" + chartId + "_container button.chart-more-btn";
+    Document.scrollTo(button);
+    I.clickCss(button);
     I.waitForVisible("iframe#modalIframeIframeElement");
     I.switchTo("#modalIframeIframeElement");
 

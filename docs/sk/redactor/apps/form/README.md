@@ -8,7 +8,7 @@ Naviac, všetky formuláre sa ukladajú do databázy, v administračnej časti W
 
 ![](detail.png)
 
-V zozname formulárov sa pre [viac krokové formuláre](../multistep-form/README.md) zobrazuje aj stĺpec Trvanie vyplnenia, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie).
+V zozname formulárov sa pre [viackrokové formuláre](../multistep-form/README.md) zobrazuje aj stĺpec Trvanie vyplnenia, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie).
 
 Kliknutím na ikonu oka môžete formulár zobraziť do podoby, v akej je na web stránke a vytlačiť ho.
 

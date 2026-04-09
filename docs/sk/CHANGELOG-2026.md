@@ -57,6 +57,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/multistep-form/stat-section.png)
 
+- Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+
 ### Manažér dokumentov
 
 - Pridané zobrazenie hodnoty **Globálne Id** pre dokumenty (#58357).

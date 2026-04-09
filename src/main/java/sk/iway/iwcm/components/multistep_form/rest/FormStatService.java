@@ -27,7 +27,6 @@ import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
-import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
@@ -78,10 +77,12 @@ public class FormStatService {
     }
 
     private String computeDurationDays(String formName) {
-        Long formCreationEpoch = new SimpleQuery().forLong("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NULL", formName, CloudToolsForCore.getDomainId());
+        int domainId = CloudToolsForCore.getDomainId();
+        FormsEntity formPattern = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, domainId);
+        Long formCreationEpoch = formPattern != null ? formPattern.getDuration() : null;
         if(formCreationEpoch == null || formCreationEpoch <= 0) {
             //try to use first response as fallback
-            Date minDate = new SimpleQuery().forDate("SELECT min(create_date) FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL", formName, CloudToolsForCore.getDomainId());
+            Date minDate = formsRepository.findMinCreateDate(formName, domainId);
             if(minDate != null) {
                 formCreationEpoch = minDate.getTime() / 1000;
             }
@@ -96,9 +97,9 @@ public class FormStatService {
         Long totalDuration = 0L;
         int validCount = 0;
 
-        for (Number duration : new SimpleQuery().forListNumber("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL", formName, CloudToolsForCore.getDomainId())) {
-            if(duration != null && duration.longValue() > 0) {
-                totalDuration += duration.longValue();
+        for (Long duration : formsRepository.findAllDurations(formName, CloudToolsForCore.getDomainId())) {
+            if(duration != null && duration > 0) {
+                totalDuration += duration;
                 validCount++;
             }
         }
@@ -241,7 +242,7 @@ public class FormStatService {
         //
         if(compareInsensitive) {
             for(String value : values) {
-                String normalizedValue = Tools.normalize(value);
+                String normalizedValue = DB.internationalToEnglish(value).toLowerCase();
                 valueCountMap.put(normalizedValue, valueCountMap.getOrDefault(normalizedValue, 0) + 1);
             }
         } else {
