@@ -45,7 +45,7 @@ export class WebjetTheme extends am5.Theme {
     this.rule("PointedRectangle", ["tooltip", "background"]).setAll({
       fill: am5.color(0xFFFFFF),
       fillOpacity: 0.95,
-      stroke: am5.color(0xCCCCCC),
+      stroke: am5.color(0x13151B),
       strokeOpacity: 1
     });
     this.rule("Container", ["legend", "marker"]).setAll({
@@ -85,13 +85,13 @@ export class WebjetTheme extends am5.Theme {
 
     // Scrollbar thumb
     this.rule("RoundedRectangle", ["scrollbar", "thumb"]).setAll({
-      fill: am5.color(0xb3b8c7),
+      fill: am5.color(0x868EA5),
       fillOpacity: 1
     });
 
     // Scrollbar background (track)
     this.rule("Graphics", ["scrollbar", "background"]).setAll({
-      fill: am5.color(0xb3b8c7),
+      fill: am5.color(0x868EA5),
       fillOpacity: 1
     });
   }

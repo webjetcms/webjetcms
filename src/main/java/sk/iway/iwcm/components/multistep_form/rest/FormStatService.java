@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,6 +79,13 @@ public class FormStatService {
 
     private String computeDurationDays(String formName) {
         Long formCreationEpoch = new SimpleQuery().forLong("SELECT duration FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NULL", formName, CloudToolsForCore.getDomainId());
+        if(formCreationEpoch == null || formCreationEpoch <= 0) {
+            //try to use first response as fallback
+            Date minDate = new SimpleQuery().forDate("SELECT min(create_date) FROM forms WHERE form_name = ? AND domain_id = ? AND create_date IS NOT NULL", formName, CloudToolsForCore.getDomainId());
+            if(minDate != null) {
+                formCreationEpoch = minDate.getTime() / 1000;
+            }
+        }
         if(formCreationEpoch == null || formCreationEpoch <= 0) return "0";
         long currentEpoch = Tools.getNow() / 1000;
         long durationDays = (currentEpoch - formCreationEpoch) / (60 * 60 * 24);

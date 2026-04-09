@@ -10,10 +10,10 @@ V hornej časti stránky sa nachádzajú štyri informačné karty:
 
 | Karta | Popis |
 | --- | --- |
-| **Počet odpovedí** | Celkový počet vyplnených a odoslaných formulárov. |
+| **Odpovedí** | Celkový počet vyplnených a odoslaných formulárov. |
 | **Priemerný čas vyplnenia** | Priemerný čas, ktorý respondenti strávili vypĺňaním formulára, vo formáte `MM:SS`. |
-| **Počet dní od vytvorenia** | Počet dní, ktoré uplynuli od vytvorenia formulára. |
-| **Dátum poslednej odpovede** | Dátum a čas poslednej odoslanej odpovede. |
+| **Dní od vytvorenia** | Počet dní, ktoré uplynuli od vytvorenia formulára. |
+| **Posledná odpoveď** | Dátum a čas poslednej odoslanej odpovede. |
 
 ![](stat-section-header.png)
 

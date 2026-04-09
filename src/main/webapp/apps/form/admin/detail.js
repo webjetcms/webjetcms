@@ -33,8 +33,8 @@
             id: 'tabsFilter',
             tabs: [
                 { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: !isArchived },
-                { url: '/apps/form/admin/form-steps/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false },
-                { url: '/apps/form/admin/form-stats/?formName=' + formName, title: WJ.translate('components.form_stat.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/form-steps/?formName=' + formName, title: WJ.translate('components.form_items.navbar_title.js'), active: false, id: "form-steps" },
+                { url: '/apps/form/admin/form-stats/?formName=' + formName, title: WJ.translate('components.form_stat.navbar_title.js'), active: false, id: "form-stats" },
                 { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: isArchived },
                 { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]
@@ -235,6 +235,12 @@
                         tab: "basic"
                     }
                 });
+            }
+
+            //hide fields and stat tabs for non-multistep forms
+            if (typeof data.formType == "undefined" || data.formType == null || data.formType !== "multistep") {
+                $("#pills-form-steps-tab").parents("li").hide();
+                $("#pills-form-stats-tab").parents("li").hide();
             }
         })
         .catch(err => { console.error(err); });

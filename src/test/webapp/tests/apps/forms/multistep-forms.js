@@ -693,3 +693,15 @@ function checkEditorTabVsibility(I, seeTabs) {
     I.say("Checking Editor tabs visibility");
     seeTabs.forEach(tabTitle => { I.seeElement("#pills-dt-formsDataTable-" + tabTitle + "-tab"); });
 }
+
+Scenario("check that form-steps and form-stat tabs are hidden for non multistep form", ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/form/admin/detail/?formName=Form-with-redirection-to-Spring-App");
+    I.waitForText("Janko", 5, "div.datatable-column-width");
+    I.dontSeeElement("#pills-form-steps-tab");
+    I.dontSeeElement("#pills-form-stats-tab");
+
+    I.amOnPage("/apps/form/admin/detail/?formName=Multistepform_screens");
+    I.waitForElement("div.datatable-column-width i.ti.ti-eye");
+    I.seeElement("#pills-form-steps-tab");
+    I.seeElement("#pills-form-stats-tab");
+});

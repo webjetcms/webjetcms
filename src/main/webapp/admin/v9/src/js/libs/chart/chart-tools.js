@@ -245,15 +245,15 @@ export class TableChartForm {
     }
 }
 
-// Recomennded is white all the time (do not depends on light/dark theme) because colors in charts are pretty dark
-const tooltipLabelColor = "#ffffff";
+// Tooltip label color, used in all charts (line, bar, pie)
+const tooltipLabelColor = "#1f2022"; //nice black
 
 // All charts
-const lightTheme_labelColor = "#000000";
+const lightTheme_labelColor = "#1f2022";
 const darkTheme_labelColor = "#ffffff";
 
 // Pie chart
-const lightTheme_pieChart_tickColor = "#000000";
+const lightTheme_pieChart_tickColor = "#1f2022";
 const darkTheme_pieChart_tickColor = "#ffffff";
 
 // Bar chart

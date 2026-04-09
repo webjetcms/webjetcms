@@ -53,7 +53,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ### Formuláre
 
-- Pridaná sekcia [Štatistika](redactor/apps/multistep-form/stat.md) pre zvolené položky viac-krokového formuláru (#58333).
+- Pridaná sekcia [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
 
 ![](redactor/apps/multistep-form/stat-section.png)
 
@@ -80,7 +80,9 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane prípony `-2`, `-3` atď (#58361).
 - Zrkadlenie štruktúry - pridaná možnosť generovať [odkazy na jazykové mutácie](redactor/apps/docmirroring/README.md#nastavenie-atribútu-hreflang) v hlavičke stránky pomocou aplikácie `hreflang.jsp`, odkazy obsahujú atribút `hreflang` pre lepšiu SEO optimalizáciu jazykových verzií (#58357).
 - `imageradio` - pridaná možnosť nastaviť pole typu `imageradio` ako `disabled` (#58333).
-- Dizajn všetkých grafov v celom projekte bol prerobený z `dark` režimu na `light` (#58333).
+- Dizajn všetkých grafov v celom projekte bol prerobený z tmavého na svetlý režim pre lepšie zladenie dizajnu (#58333).
+
+![](developer/frameworks/charts/frontend/line-chart.png)
 
 ### Oprava chýb
 

@@ -12,7 +12,7 @@ Okrem objektu so samotnou knižnicou sú následne dostupné aj objekty ```windo
 
 Okrem nastavenia licencie sa v tomto súbore nastavujú aj témy pre grafy. Tieto témy ovplyvnia vzhľad grafov a animácie. Okrem použitých amcharts tém, využívame aj vlastnú tému pre rôzne grafické úpravy prvkov v grafoch. Táto téma sa nachádza v súbore [amcharts.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) ako trieda `WebjetTheme`.
 
-# Práca s grafmi
+## Práca s grafmi
 
 Pre prácu s grafmi sme vytvorili javascript súbor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), ktorý je dostupný ako ```window.ChartTools``` objekt. Tento súbor obsahuje vlastné funkcie a triedy, ktoré poskytujú zjednodušenú prácu s grafmi, vytvorenými pomocou knižnice ```Amchart5```. Cieľom bolo vytvoriť modulárny kód, ktorý bude vedieť vytvoriť/nastaviť/upravovať grafy podľa určitých špecifikácií.
 
@@ -29,7 +29,7 @@ Tento kód podporuje tvorbu grafov typu:
 
 a stará sa o všetky logické ako aj grafické nastavenia grafov.
 
-!>**Upozornenie:** Grafy typu `TABLE` reálne nevyužívaju `Amchart5` knižnicu, ale využívajú sa skrz rovnaký súbor aby boli pokope.
+!>**Upozornenie:** Grafy typu `TABLE` reálne nevyužívajú `Amchart5` knižnicu, ale využívajú sa skrz rovnaký súbor aby boli pokope.
 
 ## Vytvorenie nového grafu
 
