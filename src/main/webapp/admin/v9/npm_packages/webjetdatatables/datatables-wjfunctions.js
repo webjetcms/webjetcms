@@ -1286,3 +1286,22 @@ export function adjustColumns(TABLE) {
         console.error("Error adjusting columns: ", e);
     }
 }
+
+/**
+ * When in CKEditor is opened app editor-component dialog and there is iframe with datatable (eg. gallery, inquiry...) hide parent footer buttons on DTE.open/close,
+ * so there will be no confusing buttons in multiple dialogs opened
+ * @param {*} TABLE
+ */
+export function iframeHideParentFooterOnEditorOpen(TABLE) {
+    //if parent of our iframe has class .iframeFieldType
+    if (window.parent !== window.self && $(window.frameElement).parents('.iframeFieldType').length > 0) {
+        var selector = "div.cke_dialog_container div.cke_dialog_body table.cke_dialog_contents td.cke_dialog_footer a.cke_dialog_ui_button";
+        var className = "dte-parent-button-disabled";
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            $(window.parent.parent.parent.document).find(selector).addClass(className);
+        });
+        window.addEventListener("WJ.DTE.close", function(e) {
+            $(window.parent.parent.parent.document).find(selector).removeClass(className);
+        });
+    }
+}

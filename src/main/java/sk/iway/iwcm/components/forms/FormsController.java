@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +36,7 @@ import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -274,5 +276,19 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         if(Tools.isEmpty(entity.getFormType()))
              entity.setFormType( FormsService.FORM_TYPE.UNKNOWN.value() );
         return entity;
+    }
+
+    /**
+     * Save captcha config from captcha "app" editor Captcha.java
+     * @param secret
+     * @param siteKey
+     */
+    @PostMapping("/saveCaptchaConfig")
+    public void saveCaptchaConfig(@RequestParam String secret, @RequestParam String siteKey) {
+        if(Tools.isEmpty(secret)) secret = "";
+        if(Tools.isEmpty(siteKey)) siteKey = "";
+
+        ConfDB.setName("reCaptchaSecret", secret);
+        ConfDB.setName("reCaptchaSiteKey", siteKey);
     }
 }

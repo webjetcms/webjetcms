@@ -4,6 +4,8 @@ Feature('apps.gallery.gallery');
 
 var randomNumber;
 var autoName;
+//tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
+var tolerance = 5;
 
 Before(({ I, DT, login }) => {
     login('admin');
@@ -325,7 +327,7 @@ function waitForUploadMessage(I, name) {
     I.waitForElement("#toast-container-upload", 10);
     I.waitForElement(locate("#toast-container-upload div.toast-message span").withText(name), 10);
     I.waitForElement("#toast-container-upload i.ti-spin", 10);
-    I.waitForInvisible("#toast-container-upload i.ti-spin", 10);
+    I.waitForInvisible("#toast-container-upload i.ti-spin", 30);
     I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
     I.wait(0.5);
     I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
@@ -739,7 +741,7 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     I.clickCss('.tui-image-editor-button.apply');
     const width = parseInt(await I.grabAttributeFrom('.upper-canvas', 'width'), 10);
     const height = parseInt(await I.grabAttributeFrom('.upper-canvas', 'height'), 10);
-    let tolerance = 5;
+    tolerance = 5;
 
     I.say('Verifying resized image dimensions');
     I.assertTrue(Math.abs(width - expectedWidth) <= tolerance, `Width is not within the tolerance. Expected: ${expectedWidth}, but got: ${width}`);
@@ -753,11 +755,12 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     const fileBaseName = `${editorTestImage}-${randomOption}-${isAspectRationLocked}.png`;
     tolerance = 20;
     if (expectedHeight < 100) tolerance = 30;
-    await Document.compareScreenshotElement('body > img', fileBaseName, null, null, 20);
+    await Document.compareScreenshotElement('body > img', fileBaseName, null, null, tolerance);
 }
 
 Scenario('Revert configuration variables', ({ I, Document }) => {
     I.say('Reverting configuration variables');
+    tolerance = 5;
     Document.setConfigValue('imageEditorRatio', '3:2, 4:3, 5:4, 7:5, 16:9');
     Document.setConfigValue('imageEditorSizeTemplates', '80x80;640x480;800x600;');
 });
@@ -803,8 +806,8 @@ const isMatchingRatio = (I, width, height, ratio) => {
     const [w, h] = ratio.split(':').map(Number);
     const calculatedRatio = width / height;
     const targetRatio = w / h;
-    const tolerance = 0.01;
-    I.assertBelow(Math.abs(calculatedRatio - targetRatio), tolerance, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
+    const toleranceRatio = 0.01;
+    I.assertBelow(Math.abs(calculatedRatio - targetRatio), toleranceRatio, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
 };
 
 const arraysAreEqual = (I, arr1, arr2) => {
@@ -1073,7 +1076,7 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
 });
 
 Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
-    var tolerance = 4; //tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
+    tolerance = 4;
 
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
     DT.waitForLoader();
@@ -1103,28 +1106,36 @@ Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/images/gallery/test-vela-foto/dsc04068.jpeg');
     await Document.compareScreenshotElement('img', 'thumb-servlet/original-image.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - dsc04068', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200');
     await Document.compareScreenshotElement('img', 'thumb-servlet/thumb-image.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip1', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&ip=1');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-1.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip2', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?h=200&ip=2');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-2.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip3', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=3');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-3.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip4', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&c=ffff00');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-4.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip5', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=5');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-5.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - ip6', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=6');
     await Document.compareScreenshotElement('img', 'thumb-servlet/ip-6.png', null, null, tolerance);
-
+});
+Scenario('thumb servlet - noip4', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
 });

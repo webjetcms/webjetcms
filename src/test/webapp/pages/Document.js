@@ -343,5 +343,14 @@ module.exports = {
    */
   isPdfViewerEnabled() {
     return "false"!==process.env.CODECEPT_SHOW;
+  },
+
+  /**
+   * Get path to webapp folder, used for screenshots generator
+   * @returns
+   */
+  getWebappPath() {
+    var basePath = "/../../src/main/webapp";
+    return basePath;
   }
 }

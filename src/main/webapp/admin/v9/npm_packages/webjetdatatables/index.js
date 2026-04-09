@@ -3833,6 +3833,7 @@ export const dataTableInit = options => {
     dtWJ.bindOnResize(TABLE, DATA);
     dtWJ.bindDialogDragDrop(TABLE);
     dtWJ.bindColumnReorder(TABLE);
+    dtWJ.iframeHideParentFooterOnEditorOpen(TABLE);
 
     TABLE.setAjaxUrl = function(newUrl) {
         try {

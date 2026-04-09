@@ -79,6 +79,10 @@
             },
             removePage() {
                 //console.log("REMOVE PAGE, this.grp=", this.grp); //= handluje to priamo field-type-json.js.remove method
+
+                //console.log("emmiting event WJ.jstree.item.remove, item=", this.grp);
+                WJ.dispatchEvent("WJ.jstree.item.remove", this.grp);
+
                 if (this.$props.click == "dt-tree-page-null" || this.$props.click == "dt-tree-pageid-null") {
                     //set also ID, because component.pug use id as priority
                     if (this.$props.click == "dt-tree-pageid-null") this.$emit("remove-item", this.grp.docId);

@@ -4,7 +4,6 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-
 Scenario('inquiry screeny', async ({I, DT, DTE, Document}) => {
     let confLng = I.getConfLng();
 
