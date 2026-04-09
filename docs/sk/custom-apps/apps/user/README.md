@@ -11,7 +11,7 @@ Príklad triedy:
 ```java
 package sk.iway.installname.user;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor;
 import sk.iway.iwcm.users.UserDetails;

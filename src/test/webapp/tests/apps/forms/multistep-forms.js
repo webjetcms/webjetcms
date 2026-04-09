@@ -183,7 +183,7 @@ Scenario('Test form detail and filled data ', async ({ I, DT, DTE }) => {
     columnNames.forEach(({ name }) => { I.seeElement(locate("span.dt-column-title").withText(name)); });
 
     // Check values in table row (with 6 leading utility columns)
-    const expectedRow = Array(5).fill("").concat("penguin.jpg").concat(columnNames.map(c => c.value));
+    const expectedRow = Array(6).fill("").concat("penguin.jpg").concat(columnNames.map(c => c.value));
     DT.checkTableRow("formDetailDataTable", 1, expectedRow);
 
     // Check values in editor
@@ -568,6 +568,37 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
+Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/form/admin/form-steps/");
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor("formItemsDataTable");
+
+    I.clickCss("#pills-dt-formItemsDataTable-stat-tab");
+    within("#panel-body-dt-formItemsDataTable-stat", () => {
+
+        I.seeElement(".DTE_Field_Name_showStat");
+
+        I.say('Now check that fields are showed');
+
+        I.seeElement(".DTE_Field_Name_showStat");
+        I.seeElement(".DTE_Field_Name_chartType");
+        I.seeElement(".DTE_Field_Name_topCount");
+        I.seeElement(".DTE_Field_Name_colorScheme");
+
+        I.say("Check color scheme disability/enabling");
+        I.seeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
+        I.checkOption("#DTE_Field_useColorScheme_0");
+        I.dontSeeElement(".DTE_Field_Name_colorScheme.image-radio-chart-colorset.disabled");
+
+        I.say("Check fields are hidden");
+        I.uncheckOption("#DTE_Field_showStat_0");
+        I.dontSeeElement(".DTE_Field_Name_chartType");
+        I.dontSeeElement(".DTE_Field_Name_topCount");
+        I.dontSeeElement(".DTE_Field_Name_colorScheme");
+
+    });
+});
+
 async function getSubmitedFormPreview(I) {
     I.click( locate("a").withChild("i.ti-eye") );
     I.waitForVisible("#modalIframeIframeElement");
@@ -666,3 +697,17 @@ function checkEditorTabVsibility(I, seeTabs) {
     I.say("Checking Editor tabs visibility");
     seeTabs.forEach(tabTitle => { I.seeElement("#pills-dt-formsDataTable-" + tabTitle + "-tab"); });
 }
+
+Scenario("check that form-steps and form-stat tabs are hidden for non multistep form", ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/form/admin/detail/?formName=Form-with-redirection-to-Spring-App");
+    I.waitForText("Janko", 5, "div.datatable-column-width");
+    I.dontSeeElement("#pills-form-steps-tab");
+    I.dontSeeElement("#pills-form-stats-tab");
+    I.dontSee("Trvanie vyplnenia", "th .dt-column-title")
+
+    I.amOnPage("/apps/form/admin/detail/?formName=Multistepform_screens");
+    I.waitForElement("div.datatable-column-width i.ti.ti-eye");
+    I.seeElement("#pills-form-steps-tab");
+    I.seeElement("#pills-form-stats-tab");
+    I.waitForText("Trvanie vyplnenia", 5, "th .dt-column-title")
+});

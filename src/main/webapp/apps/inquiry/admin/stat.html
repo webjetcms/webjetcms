@@ -82,7 +82,7 @@
 
         //Create and set amcharts
         window.initAmcharts().then(module => {
-            $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+            $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie_Donut), success: function(result) {
                 pieChart = new ChartTools.PieChartForm("value", "label", '[[#{stat.graph.inquiryPie}]]', "inquiryStat-pieVotes", result);
                 ChartTools.createAmchart(pieChart);
             }});
@@ -112,7 +112,7 @@
         function getGraphUrl(graphType) {
             let graphUrl = url;
 
-            if(graphType === ChartTools.ChartType.Pie) {
+            if(graphType === ChartTools.ChartType.Pie_Donut) {
                 graphUrl += "/pieChartData";
             } else if(graphType === ChartTools.ChartType.Line) {
                 graphUrl += "/lineChartData";
@@ -128,7 +128,7 @@
         async function updateTableAndCharts() {
             WJ.showLoader();
 
-            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie_Donut), success: function(result) {
                 pieChart.chartData = result;
                 ChartTools.updateChart(pieChart);
             }});
