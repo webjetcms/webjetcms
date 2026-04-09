@@ -11,7 +11,7 @@ V hornej časti stránky sa nachádzajú štyri informačné karty:
 | Karta | Popis |
 | --- | --- |
 | **Odpovedí** | Celkový počet vyplnených a odoslaných formulárov. |
-| **Priemerný čas vyplnenia** | Priemerný čas, ktorý respondenti strávili vypĺňaním formulára, vo formáte `MM:SS`. |
+| **Priemerné trvanie vyplnenia** | Priemerný čas, ktorý respondenti strávili vypĺňaním formulára, vo formáte `MM:SS`. |
 | **Dní od vytvorenia** | Počet dní, ktoré uplynuli od vytvorenia formulára. |
 | **Posledná odpoveď** | Dátum a čas poslednej odoslanej odpovede. |
 

@@ -237,6 +237,23 @@
                 });
             }
 
+            if ("multistep" === data.formType) {
+                //add duration column for multistep forms
+                filteredColumns.splice(4, 0, {
+                    data: "duration",
+                    name: "duration",
+                    title: WJ.translate('components.form.duration.js'),
+                    renderFormat: "dt-format-duration",
+                    orderable: true,
+                    className: "cell-not-editable dt-style-date dt-style-time",
+                    editor: {
+                        type: "duration",
+                        attr: { disabled: true },
+                        tab: "basic"
+                    }
+                });
+            }
+
             //hide fields and stat tabs for non-multistep forms
             if (typeof data.formType == "undefined" || data.formType == null || data.formType !== "multistep") {
                 $("#pills-form-steps-tab").parents("li").hide();

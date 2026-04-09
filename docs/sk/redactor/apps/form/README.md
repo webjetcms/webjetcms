@@ -8,6 +8,8 @@ Naviac, všetky formuláre sa ukladajú do databázy, v administračnej časti W
 
 ![](detail.png)
 
+V zozname formulárov sa pre [viac krokové formuláre](../multistep-form/README.md) zobrazuje aj stĺpec Trvanie vyplnenia, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie).
+
 Kliknutím na ikonu oka môžete formulár zobraziť do podoby, v akej je na web stránke a vytlačiť ho.
 
 V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evidovať spracovanie/stav formuláru). Jednotlivé vyplnené polia sú len na čítanie, nie je možné ich po odoslaní meniť. V karte Položky formuláru sú jednotlivé položky vyplneného formuláru, v karte Osobné údaje, Kontaktné údaje a Voliteľné polia sú údaje používateľa, ktorý formulár odoslal (ak bol pri jeho odoslaní prihlásený).
@@ -29,7 +31,7 @@ Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením 
 - **Názov formuláru** - unikátny názov formuláru.
 - **Email adresa príjemcu** - zoznam príjemcov emailu. Môže obsahovať viac príjemcov oddelených čiarkou.
   - **Upozornenie:** z dôvodu zamedzenia odosielania emailov cez systém na cudzie adresy (`mail relay server`) kontroluje systém, či zadaná cieľová email adresa sa nachádza v tele pôvodnej stránky, alebo v nastaveniach formuláru. Ak teda emailovú adresu dynamicky meníte, musí sa nachádzať v tele stránky v ktorej je formulár vložený.
-- **Typ formuláru** - určuje detekovaný typ formuláru, podľa ktorého sa zobrazia dostupné možnosti nastavenia. Pre nové formuláre je vždy nastavený typ Viackrokový formulár.
+- **Typ formuláru** - určuje detegovaný typ formuláru, podľa ktorého sa zobrazia dostupné možnosti nastavenia. Pre nové formuláre je vždy nastavený typ Viackrokový formulár.
 
 Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia jeho spracovanie.
 
@@ -39,7 +41,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 
 - **Presmerovanie po vyplnení** - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
 - **Presmerovanie po chybe** - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má ```forward```.
-- **Ulož kópiu ako PDF** - ak je nastavené na true, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
+- **Ulož kópiu ako PDF** - ak je nastavené na `true`, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Prepíš staršie odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, bude jeho hodnota prepísaná novou verziou. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Vyžadovať potvrdenie súhlasu emailom** - aktivuje režim [potvrdenia emailovej adresy](#nastavenie-potvrdenia-emailovej-adresy).
@@ -48,7 +50,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
-- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota none nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
+- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota `none` nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
 
 ### Karta - Email
 

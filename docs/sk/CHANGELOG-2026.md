@@ -53,7 +53,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ### Formuláre
 
-- Pridaná sekcia [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
+- Pridaná karta [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
 
 ![](redactor/apps/multistep-form/stat-section.png)
 

@@ -156,7 +156,7 @@ Voliteľné polia:
 - ```renderFormat``` - https://datatables.net/reference/option/columns.renderFormat
 - ```renderFormatLinkTemplate``` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - ```renderFormatPrefix``` - https://datatables.net/reference/option/columns.renderFormatPrefix
-- `renderFunction` - meno funkcie v JavaScripte, ktorá sa použije pre vlastné vykreslenie hodnoty stĺpca. Viac na [stránke DataTables](https://datatables.net/reference/option/columns.render).
+- `renderFunction` - meno funkcie v JavaScript, ktorá sa použije pre vlastné vykreslenie hodnoty stĺpca. Viac na [stránke DataTables](https://datatables.net/reference/option/columns.render).
 - `sortAfter` - meno poľa za ktoré sa pridá toto pole v poradí
 - ```editor``` - objekt ```DataTableColumnEditor```
 - ```hidden``` - pole sa nezobrazí v datatabuľke a používateľ si ho na rozdiel od ```visible``` nemôže zobraziť, pole môže byť použité v editore
@@ -216,6 +216,7 @@ Dátumové:
 - ```DATETIME``` - pole pre zadanie dátumu a času, po kliknutí do poľa zobrazí kalendárový výber s možnosťou zadania časového údaju
 - ```TIME_HM``` - pole pre zadanie výhradne času, po kliknutí do poľa sa zobrazí výber s možnosťou zvolenia hodín a minút
 - ```TIME_HMS``` - pole pre zadanie výhradne času, po kliknutí do poľa sa zobrazí výber s možnosťou zvolenia hodín, minút a sekúnd
+- `DURATION` - pole pre zobrazenie trvania vo formáte `mm:ss`, vstupom je `long` hodnota v milisekundách
 
 Špeciálne:
 
@@ -234,7 +235,7 @@ Poľu typu ```DataTableColumnType.SELECT``` môžete nastavovať ```option``` ho
 - [REST službu](../datatables/restcontroller.md#Číselníky-pre-select-boxy) a nastavovanie číselníkov pre select boxy. Toto je preferované riešenie pre štandardné datatabuľky.
 - Nastavením options atribútov priamo pomocou anotácie ```@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")```.
 - Volaním statickej metódy pomocou anotácie ```@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")```. V ```key``` atribúte je zadaná prefixom ```method:``` triede a metóda,ktorá musí vrátiť ```List``` objektov. V atribúte ```value = "label:value"``` anotácie je zadané meno atribútu pre opis a meno atribútu pre hodnotu výberového poľa (v príklade sa teda volá ```objekt.getLabel() a objekt.getValue()```).
-- Pridaním anotácie `@DataTableColumnEditor.optionMethods` so zadanou metódou na vykonanie (jedná sa o krajší zápis oproti predchádzajúcemu spôsobu). Hodnota labelProperty a valueProperty sa použije na získanie textu a hodnoty option prvku, ak nie je zadaná získa sa z `label` a `value` atribútu.
+- Pridaním anotácie `@DataTableColumnEditor.optionMethods` so zadanou metódou na vykonanie (jedná sa o krajší zápis oproti predchádzajúcemu spôsobu). Hodnota `labelProperty` a `valueProperty` sa použije na získanie textu a hodnoty `option` prvku, ak nie je zadaná získa sa z `label` a `value` atribútu.
 - Napojením na aplikáciu číselníky zadaním ```@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")```. V ```key``` atribúte je zadaný prefix ```enumeration:``` meno alebo ID číselníka. V atribúte ```value = "string1:string2"``` anotácie je zadané meno atribútu pre opis a meno atribútu pre hodnotu výberového poľa - v príklade sa teda volá ```objekt.getString1() a objekt.getString2()```.
 
 ```java
