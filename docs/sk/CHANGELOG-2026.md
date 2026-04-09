@@ -79,7 +79,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane prípony `-2`, `-3` atď (#58361).
 - Zrkadlenie štruktúry - pridaná možnosť generovať [odkazy na jazykové mutácie](redactor/apps/docmirroring/README.md#nastavenie-atribútu-hreflang) v hlavičke stránky pomocou aplikácie `hreflang.jsp`, odkazy obsahujú atribút `hreflang` pre lepšiu SEO optimalizáciu jazykových verzií (#58357).
 - Stromová štruktúra - pridané automatické posunutie na aktuálne zvolený prvok v stromové štruktúre (#58433).
-- Aplikácie - pridaná možnosť skryť polia/karty v editore aplikácie pomocou konfiguračnej premennej `appHideFields`. Viac sa dočítate v časti [Skrývanie polí/kariet](custom-apps/appstore/README.md#skrývanie-políkariet) (#58357).
+- Aplikácie - pridaná možnosť skryť polia/karty v editore aplikácie pomocou konfiguračnej premennej `appHideFields`. Viac sa dočítate v časti [Skrývanie polí/kariet](custom-apps/appstore/README.md#skrývanie-políkariet) (#58433).
 
 ### Bezpečnosť
 

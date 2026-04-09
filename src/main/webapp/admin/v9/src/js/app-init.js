@@ -672,7 +672,16 @@ function initClosure() {
 
             var el = $selected[0];
             var $scrollContainer = somStromcek.closest('.tree-col');
-            var scrollbar = $scrollContainer.length > 0 ? Scrollbar.get($scrollContainer.find('.scroll-content')[0]) : null;
+            var scrollbar = null;
+
+            if ($scrollContainer.length > 0) {
+                var scrollContentElement = $scrollContainer.find('.scroll-content')[0];
+
+                // Use custom scrollbar only when the library and target element are available.
+                if (typeof Scrollbar !== 'undefined' && scrollContentElement) {
+                    scrollbar = Scrollbar.get(scrollContentElement);
+                }
+            }
 
             if (scrollbar) {
                 var selectedTop = $selected.offset().top - $scrollContainer.offset().top + scrollbar.scrollTop;

@@ -164,13 +164,22 @@ block content
                 // Get prepared object with fields and tabs to hide
                 let hiddenFieldsAndTabs = getHiddenFieldsAndTabs(response.data);
                 // console.log("hiddenFieldsAndTabs=", hiddenFieldsAndTabs);
+
                 // Hide fields
                 hiddenFieldsAndTabs.fields.forEach(function(field) {
-                    componentDatatable.EDITOR.field(field).hide();
+                    try {
+                        componentDatatable.EDITOR.field(field).hide();
+                    } catch (error) {
+                        // Ignore unknown fields to keep the editor open handler resilient.
+                    }
                 });
+
                 // Hide tabs
                 hiddenFieldsAndTabs.tabs.forEach(function(tab) {
-                    document.querySelector("li.nav-item a.nav-link#pills-dt-component-datatable-" + tab + "-tab").style.display = "none";
+                    var tabElement = document.querySelector("li.nav-item a.nav-link#pills-dt-component-datatable-" + tab + "-tab");
+                    if (tabElement != null) {
+                        tabElement.style.display = "none";
+                    }
                 });
 
                 var foundParentTitle = false;
@@ -249,7 +258,7 @@ block content
 
         /**
          * Get fields and tabs to hide from appHideFields parameter
-         * appHideFields is comma separated string with field names and tab names with "tab_" prefix, for example: "field1, field2, tab_tab1, tab_tab2"
+         * appHideFields is a "+" separated string with field names and tab names with "tab_" prefix, for example: "field1+field2+tab_tab1+tab_tab2"
          * @param data
          * @returns {{fields: [], tabs: []}}
          */

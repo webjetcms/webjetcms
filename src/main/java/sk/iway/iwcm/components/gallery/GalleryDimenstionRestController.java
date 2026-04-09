@@ -225,7 +225,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             // it new entity so parent is current path
             entity.setParent( entity.getPath() );
         } else {
-            // its already existing entity, parent is parth -1 level
+            // its already existing entity, parent is path -1 level
             entity.setParent( entity.getParentPath() );
         }
 
@@ -298,7 +298,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
         String path = entity.getPath();
 
-        // for new entity we are getting path from parent field, MUST be reaplced in entity
+        // for new entity we are getting path from parent field, MUST be replaced in entity
         if((id == null || id < 1) && Tools.isNotEmpty(entity.getParent())) {
             path = entity.getParent();
             entity.setPath(path);

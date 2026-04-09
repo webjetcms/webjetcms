@@ -384,7 +384,7 @@ public class GalleryTreeService {
                     }
                 }
             } catch (Exception e) {
-                Logger.error(GalleryService.class, e);
+                Logger.error(GalleryTreeService.class, e);
                 result.put("result", false);
                 result.put("error", prop.getText("java.GroupsTreeRestController.move.save_failed"));
                 return;

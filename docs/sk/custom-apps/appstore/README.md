@@ -654,7 +654,7 @@ Parameter `appHideFields` je definovaný v triede `WebjetComponentAbstract` a je
 **Formát hodnoty:**
 
 ```text
-appHideFields=pole1,pole2,tab_idKarty1,tab_idKarty2
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
 ```
 
 - **Polia** - zadáte priamo názov poľa (názov atribútu v Java triede), napr. `dir`, `style`.
