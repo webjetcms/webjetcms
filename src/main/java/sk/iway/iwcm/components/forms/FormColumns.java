@@ -15,4 +15,5 @@ public class FormColumns {
     private int count = 0;
     private boolean doubleOptIn;
     private List<LabelValue> columns;
+    private String formType;
 }

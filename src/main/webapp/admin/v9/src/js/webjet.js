@@ -1008,6 +1008,9 @@ const WJ = (() => {
             idNoHash = data.id;
         }
 
+        //if it is URL remove chars as /,?,= and replace with dash for id
+        idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
+
         let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
         if (urlPrefix) anchor.data("sub-url", data.url);
         if (data.url.indexOf("javascript:")==0) {

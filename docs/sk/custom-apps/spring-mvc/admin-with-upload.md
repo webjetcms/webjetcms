@@ -15,7 +15,7 @@ Trieda ```AbstractUploadListener``` zabezpečí spracovanie ```multipart request
 ```java
 package sk.iway.basecms.contact.upload;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,7 @@ public class UploadExampleListener extends AbstractUploadListener<Form> {
 
 Trieda ```Form``` je len jednoduchý bean, nahrávaný súbor je typu ```MultipartFile```. Pre ukážku obsahuje polia ```p1``` a ```p2``` aj s ukážkou validácie povinného poľa a **ukážky validácie dĺžky 10 až 20 znakov**.
 
-Pre validáciu sú podporované štandardné anotácie pre validácie polí pomocou [javax.validation.Validator](https://www.baeldung.com/javax-validation).
+Pre validáciu sú podporované štandardné anotácie pre validácie polí pomocou [jakarta.validation.Validator](https://www.baeldung.com/javax-validation).
 
 ```java
 package sk.iway.basecms.contact.upload;
@@ -80,9 +80,9 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Component
 @Getter

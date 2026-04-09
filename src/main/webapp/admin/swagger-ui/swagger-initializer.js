@@ -48,6 +48,7 @@ async function initializeSwaggerUI() {
       return req;
     }
   });
+  console.log("SwaggerUI version: ", versions.swaggerUI);
 }
 
 window.onload = function() {

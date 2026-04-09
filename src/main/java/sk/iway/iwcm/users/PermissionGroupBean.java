@@ -80,6 +80,24 @@ public class PermissionGroupBean extends ActiveRecordRepository implements Seria
 
 	//***
 
+	@Column(name="all_editable_groups")
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN_TEXT,
+		title = "users.permission_group.allEditableGroups",
+		tab = "dirs",
+		sortAfter = "editorFields.editablePages"
+	)
+	Boolean allEditableGroups;
+
+	@Column(name="all_writable_folders")
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN_TEXT,
+		title = "users.permission_group.allWritableFolders",
+		tab = "dirs",
+		sortAfter = "editorFields.writableFolders"
+	)
+	Boolean allWritableFolders;
+
 	@JsonManagedReference(value="group")
 	@OneToMany(fetch = FetchType.LAZY, cascade=CascadeType.ALL, targetEntity=PermissionInPermissionGroupBean.class, mappedBy="group")
 	private Set<PermissionInPermissionGroupBean> permissions = null;

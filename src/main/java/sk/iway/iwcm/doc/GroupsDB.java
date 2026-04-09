@@ -2695,16 +2695,19 @@ public class GroupsDB extends DB
 				int tempId = actualGroup.getTempId();
 				TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
 				DocDB docDB = DocDB.getInstance();
-				List<DocDetails> temps = docDB.getDocByGroup(Constants.getInt("tempGroupId"));
-				if (temps!=null && temp!=null)
-				{
-					String tempName = DB.internationalToEnglish(temp.getTempName());
-					for (DocDetails doc : temps)
+				GroupDetails templatesGroup = GroupsDB.getInstance().getTemplatesGroup();
+				if (templatesGroup != null) {
+					List<DocDetails> temps = docDB.getDocByGroup(templatesGroup.getGroupId());
+					if (temps!=null && temp!=null)
 					{
-						if (DB.internationalToEnglish(doc.getTitle()).equalsIgnoreCase(tempName))
+						String tempName = DB.internationalToEnglish(temp.getTempName());
+						for (DocDetails doc : temps)
 						{
-							newPageDocIdTemplate = -doc.getDocId();
-							break;
+							if (DB.internationalToEnglish(doc.getTitle()).equalsIgnoreCase(tempName))
+							{
+								newPageDocIdTemplate = -doc.getDocId();
+								break;
+							}
 						}
 					}
 				}
@@ -4239,5 +4242,28 @@ public class GroupsDB extends DB
 			}
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * Returns GroupDetails of /System/Templates folder. For multidomain returns domain specific Templates folder, otherwise returns group with id from config tempGroupId
+	 * @return
+	 */
+	public GroupDetails getTemplatesGroup() {
+		//try to find it in localSystemGroup
+		GroupDetails localSystemGroup = getLocalSystemGroup();
+		if (localSystemGroup != null) {
+			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+			String templatesDirName = propSystem.getText("config.templates_dir");
+
+			List<GroupDetails> groups = getGroups(localSystemGroup.getGroupId());
+			for (GroupDetails group : groups) {
+				if (templatesDirName.equalsIgnoreCase(group.getGroupName())) {
+					return group;
+				}
+			}
+		}
+
+		GroupDetails tempGroup = getGroup(Constants.getInt("tempGroupId"));
+		return tempGroup;
 	}
 }

@@ -20,6 +20,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -33,7 +34,6 @@ import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipOutputStream;
 import sk.iway.iwcm.users.UserGroupDetails;
@@ -103,9 +103,7 @@ public class ExportManager
 			groupIdAppend = rootGroupId+"/";
 		}
 
-		virtualBase = Constants.getBoolean("multiDomainEnabled")
-		? ("/files/" + MultiDomainFilter.getDomainAlias(DocDB.getDomain(_request)) + "/protected/backup/"+groupIdAppend)
-		: "/files/protected/backup/"+groupIdAppend;
+		virtualBase = "/files" + AdminTools.getDomainNameFileAliasAppend() + "/protected/backup/" + groupIdAppend;
 
 		virtualBase = Tools.replace(virtualBase, "//", "/");
 

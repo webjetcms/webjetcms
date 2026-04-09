@@ -144,6 +144,8 @@ Scenario('test inner table-delete', ({I, DT}) => {
 });
 
 function addAnswer(I, answer) {
+    I.waitForElement("#datatableFieldDTE_Field_editorFields-answers_wrapper button.buttons-create", 10);
+    I.wait(1);
     I.clickCss("#datatableFieldDTE_Field_editorFields-answers_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
     I.clickCss("#DTE_Field_answerText");
     I.fillField("#DTE_Field_answerText", answer);

@@ -403,9 +403,12 @@ public class WebpagesService {
 		List<LabelValueDetails> list = new ArrayList<>();
 		list.add(new LabelValueDetails(prop.getText("groupedit.new_page_template.empty"), "-1"));
 		DocDB docDB = DocDB.getInstance();
-		List<DocDetails> pageTemps = docDB.getDocByGroup(Constants.getInt("tempGroupId"));
-		for (DocDetails pageTemp : pageTemps) {
-			list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+		GroupDetails templatesGroup = GroupsDB.getInstance().getTemplatesGroup();
+		if (templatesGroup != null) {
+			List<DocDetails> pageTemps = docDB.getDocByGroup(templatesGroup.getGroupId());
+			for (DocDetails pageTemp : pageTemps) {
+				list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+			}
 		}
 		return list;
 	}

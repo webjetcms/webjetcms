@@ -1683,6 +1683,17 @@ public class EditorService {
 	 * @param recoverDocId
 	 */
 	public void recoverWebpageFromTrash(int recoverDocId) {
+		recoverWebpageFromTrash(recoverDocId, true);
+	}
+
+	/**
+	 * Recover webpage from trash folder:
+	 * - set groupId from history (latest where actual=1 or latest)
+	 * - set available from history (latest where actual=1 or latest)
+	 * @param recoverDocId
+	 * @param publishEvents - if true, publish ON_RECOVER and AFTER_RECOVER events, if false, do not publish any events
+	 */
+	public void recoverWebpageFromTrash(int recoverDocId, boolean publishEvents) {
 		if(recoverDocId <1) throw new RuntimeException("recoverDocId is not valid");
 
 		//Try get DocDetails object by id, if not present return error message
@@ -1725,13 +1736,17 @@ public class EditorService {
 				//Have right
 
 				//Publish recover event after successful permission check
-				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+				if (publishEvents) {
+					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
+				}
 
 				docDetailsToRecover.setGroupId(destGroup.getGroupId());
 				docDetailsToRecover.setAvailable(true);
 				docRepo.save(docDetailsToRecover);
 
-				(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
+				if (publishEvents) {
+					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
+				}
 			} else {
 				//No right
 				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);

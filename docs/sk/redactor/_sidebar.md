@@ -14,12 +14,13 @@
   - [Export a import](/redactor/datatables/export-import.md)
 - Web stránky
   - [Základná práca](/redactor/webpages/README.md)
-  - [Editácia web stránky](/redactor/webpages/editor.md)
+  - [Editácia web stránky](/redactor/webpages/editor/README.md)
   - [Práca v editore](/redactor/webpages/working-in-editor/README.md)
   - [Priečinok web stránky](/redactor/webpages/group.md)
   - [História](/redactor/webpages/history.md)
   - [Obnovenie z koša](/redactor/webpages/recover.md)
   - [Page Builder](/redactor/webpages/pagebuilder.md)
+  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Kontrola odkazov a prázdnych stránok](/redactor/webpages/linkcheck.md)
   - [Import a export web stránok](/redactor/webpages/import-export.md)
   - [Schvaľovanie zmien](/redactor/webpages/approve/README.md)
@@ -48,6 +49,7 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
+    - [Anketa ľahko](/redactor/apps/inquiry/inquiry-simple.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
@@ -77,6 +79,7 @@
   - Formuláre
     - [Zoznam formulárov](/redactor/apps/form/README.md)
     - [Položky formuláru](/redactor/apps/multistep-form/README.md)
+    - [Štatistiky formulára](/redactor/apps/multistep-form/stat.md)
     - [Regulárne výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskusia
     - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
@@ -123,7 +126,6 @@
   - [Poslať stránku emailom](/redactor/apps/send_link/README.md)
   - [Pôsobivá prezentácia](/redactor/apps/app-impress_slideshow/README.md)
   - [Používatelia](/redactor/apps/user/README.md)
-  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Príbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervácie

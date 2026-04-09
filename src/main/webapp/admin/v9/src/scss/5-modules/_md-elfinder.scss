@@ -637,6 +637,15 @@ html.pg-iframe {
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png { display: block !important; }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png::before { display: none !important; }
 
+.elfinder-cwd-icon-webp::before {
+    color: white !important;
+    background-color: $dark-60 !important;
+    font-size: 14px !important;
+    height: 20px;
+}
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-webp { display: block !important; }
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-webp::before { display: none !important; }
+
 .elfinder-cwd-icon-x-ico::before {
     font-family: 'tabler-icons-filled' !important;
     content: $ti-icon-favicon !important;
@@ -928,5 +937,15 @@ div.ui-dialog-content:has(div.CodeMirror) {
         float: left !important;
         width: auto !important;
         margin-right: 2px !important;
+    }
+}
+
+.elfinder-quicklook {
+    .elfinder-titlebar-button {
+        background-color: transparent !important;
+    }
+    .ui-icon {
+        display: inline-block !important;
+        border-width: 0px !important;
     }
 }

@@ -34,9 +34,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.filebrowser.UnusedFile;
+import sk.iway.iwcm.gallery.VideoConvert;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFileFilter;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -63,12 +65,6 @@ public class FileTools
 	protected FileTools() {
 		//utility class
 	}
-
-	public static final List<String> pictureExtensions = Collections.unmodifiableList(Arrays.asList(
-				".jpg", ".jpeg", ".gif", ".bmp", "tiff", ".tif", ".png", ".eps"));
-
-	public static final List<String> videoExtensions = Collections.unmodifiableList(Arrays.asList(
-				".mp4", ".wmv", ".mpeg", ".3gp", "mkv"));
 
 	/**
 	 * Skopiruje subor src do dest
@@ -751,29 +747,11 @@ public class FileTools
 
 	public static boolean isImage(String name)
 	{
-		if (name == null)
-			return false;
-		//.jpg is not equal to .JPG
-		name = name.toLowerCase();
-
-		for (String extension : pictureExtensions)
-			if (name.endsWith(extension))
-				return true;
-
-		return false;
+		return ImageTools.isImage(name);
 	}
 	public static boolean isVideoFile(String name)
 	{
-		if (name == null)
-			return false;
-		//.jpg is not equal to .JPG
-		name = name.toLowerCase();
-
-		for (String extension : videoExtensions)
-			if (name.endsWith(extension))
-				return true;
-
-		return false;
+		return VideoConvert.isVideoFile(name);
 	}
 	/**
 	 * Usortuje subory podla mena

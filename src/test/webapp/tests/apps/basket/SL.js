@@ -7,7 +7,7 @@ module.exports = {
     BASKET_ADMIN: "/apps/basket/admin/",
     PRODUCTS_ADMIN: "/apps/basket/admin/product-list/",
 
-    red: 'rgb(255, 75, 88)',
+    red: 'rgb(224, 0, 40)',
     black: 'rgb(19, 21, 27)',
 
     DeliveryMethods: {
@@ -84,11 +84,12 @@ module.exports = {
 
         I.say("GoPay payment");
 
-        I.waitForText("Platba kartou");
+        I.waitForElement('iframe[data-cy="cardCommIframe"]', 10)
 
         I.say("Entering card details");
         I.switchTo('iframe[data-cy="cardCommIframe"]');
         I.waitForElement("#cardPan", 10);
+        I.wait(2);
         I.fillField("#cardPan", GOPAY_CARD_PAN);
         I.fillField("#cardExp", GOPAY_CARD_EXP);
         I.fillField("#cardCvc", GOPAY_CARD_CVC);

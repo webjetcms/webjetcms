@@ -4,12 +4,18 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('Screen', ({I, DTE, Document, Apps}) => {
+Scenario('Screen', async ({I, DTE, Document, Apps}) => {
 
     Apps.openAppEditor(30226);
 
     I.wait(2);
     I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
+
+    I.clickCss("label[for=DTE_Field_device_1]")
+
+    await DTE.selectOptionMulti("wrapperClass", ["Odsadenie zhora 3 (mt-3)","Šírka 50% (w-50)"]);
+    // Fill wrapper text fields
+    I.fillField("#DTE_Field_wrapperId", "banner-wrapper-id");
 
     I.switchTo();
 

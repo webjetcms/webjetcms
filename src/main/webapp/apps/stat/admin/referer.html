@@ -66,7 +66,16 @@
             window.initAmcharts().then(module => {
 
                     $.ajax({url: getGraphUrl(), success: function(result) {
-                        pieChartVisits = new ChartTools.PieChartForm("visits", "serverName", '[[#{stat.referer.pieChart}]]', "referer-pieReferer", result['content']);
+
+                        const pieConfig = {
+                            yAxeName: "visits",
+                            xAxeName: "serverName",
+                            chartTitle: '[[#{stat.referer.pieChart}]]',
+                            chartDivId: "referer-pieReferer",
+                            chartData: result['content']
+                        }
+
+                        pieChartVisits = new ChartTools.PieChartForm(pieConfig);
                         ChartTools.createAmchart(pieChartVisits);
 
                         //After load data

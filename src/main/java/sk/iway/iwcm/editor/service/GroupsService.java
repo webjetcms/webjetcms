@@ -54,7 +54,21 @@ public class GroupsService extends NotifyService {
 	 * @param currentUser
 	 * @return
 	 */
-    public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
+	public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
+		return recoverGroupFromTrash(group, currentUser, true);
+	}
+
+	/**
+	 * Recover group from trash.
+	 * It will try to find last parent group from history and use it as recover location.
+	 * If no history is found, group will be recovered to root.
+	 * publishEvents parameter is used to control if ON_RECOVER and AFTER_RECOVER events should be published.
+	 * @param group
+	 * @param currentUser
+	 * @param publishEvents
+	 * @return
+	 */
+    public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser, boolean publishEvents) {
 
 		if (isInTrash(group) == false) return false; //Group is not in trash
 
@@ -69,7 +83,9 @@ public class GroupsService extends NotifyService {
 		}
 
 		//publish before recover event
-		(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
+		if (publishEvents) {
+			(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
+		}
 
 		int parentGroupId = 0;
 		String parentGroupPath = prop.getText("stat_settings.group_id");
@@ -151,7 +167,7 @@ public class GroupsService extends NotifyService {
 		group = GroupsDB.getInstance().getGroup(group.getGroupId());
 
 		//publish recover event
-		if(group != null) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER)).publishEvent();
+		if(group != null && publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER, currentUser)).publishEvent();
 
         return true;
 	}

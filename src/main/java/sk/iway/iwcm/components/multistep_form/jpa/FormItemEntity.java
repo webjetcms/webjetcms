@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -29,7 +28,8 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORMMAIL)
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
-    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
 
@@ -90,6 +90,38 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
+
+    @Column(name = "show_stat")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_stat", tab = "stat", hidden = true)
+    private Boolean showStat;
+
+    @Column(name = "chart_type")
+    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.form_items.chart_type", tab = "stat", hidden = true)
+    private String chartType;
+
+    @Column(name = "top_count")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.form_items.top_count", tab = "stat", hidden = true)
+    private Integer topCount;
+
+    @Column(name = "show_other_count")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_other_count", tab = "stat", hidden = true)
+    private Boolean showOtherCount;
+
+    @Column(name = "show_unanswered")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.show_unanswered", tab = "stat", hidden = true)
+    private Boolean showUnanswered;
+
+    @Column(name = "compare_insensitive")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.form_items.compare_insensitive", tab = "stat", hidden = true)
+    private Boolean compareInsensitive;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title =  "components.form_items.useColorScheme", tab = "stat", className = "image-radio-horizontal image-radio-chart-colorset")
+    private Boolean useColorScheme;
+
+    @Column(name = "color_scheme")
+    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "&nbsp;", tab = "stat", className = "image-radio-horizontal image-radio-chart-colorset")
+    private String colorScheme;
 
     @Column(name = "regex_validation")
     private String regexValidation;

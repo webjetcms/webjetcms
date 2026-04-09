@@ -370,7 +370,9 @@ public class AdminLogonController {
 
         String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
         if (Tools.isNotEmpty(adminAfterLogonRedirect)) {
-            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") || (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/"))) {
+            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") ||
+                (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/")) ||
+                (adminAfterLogonRedirect.startsWith("/components/") && adminAfterLogonRedirect.contains("/admin"))) {
                 return "redirect:" + adminAfterLogonRedirect;
             }
         }

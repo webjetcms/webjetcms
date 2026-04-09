@@ -75,6 +75,17 @@
     }
 
     window.domReady.add(function () {
+        WJ.headerTabs({
+            id: 'tabsFilter',
+            tabs: [
+                { url: '/apps/form/admin/', title: WJ.translate('forms.formsList.js'), active: false },
+                { url: '/apps/form/admin/form-steps/?formName=' + urlFormName, title: WJ.translate('components.form_items.navbar_title.js'), active: true },
+                { url: '/apps/form/admin/form-stats/?formName=' + urlFormName, title: WJ.translate('components.form_stat.navbar_title.js'), active: false },
+                { url: '/apps/form/admin/archived/', title: WJ.translate('forms.archiveList.js'), active: false },
+                { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
+            ]
+        });
+
         formStepsDataTable = WJ.DataTable({
             url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
             serverSide: true,
@@ -222,6 +233,37 @@
                             }
                         })
                         .catch(err => console.error(err));
+                    }
+                });
+
+                $("#DTE_Field_showStat_0").on("change", function() {
+                    const statAllowed = formItemsDataTable.EDITOR.field("showStat").val()[0];
+
+                    if(statAllowed === true) {
+                        formItemsDataTable.EDITOR.field("chartType").show();
+                        formItemsDataTable.EDITOR.field("topCount").show();
+                        formItemsDataTable.EDITOR.field("showOtherCount").show();
+                        formItemsDataTable.EDITOR.field("showUnanswered").show();
+                        formItemsDataTable.EDITOR.field("compareInsensitive").show();
+                        formItemsDataTable.EDITOR.field("useColorScheme").show();
+                        formItemsDataTable.EDITOR.field("colorScheme").show();
+                    } else {
+                        formItemsDataTable.EDITOR.field("chartType").hide();
+                        formItemsDataTable.EDITOR.field("topCount").hide();
+                        formItemsDataTable.EDITOR.field("showOtherCount").hide();
+                        formItemsDataTable.EDITOR.field("showUnanswered").hide();
+                        formItemsDataTable.EDITOR.field("compareInsensitive").hide();
+                        formItemsDataTable.EDITOR.field("useColorScheme").hide();
+                        formItemsDataTable.EDITOR.field("colorScheme").hide();
+                    }
+                });
+
+                $("#DTE_Field_useColorScheme_0").on("change", function() {
+                    const useColorScheme = formItemsDataTable.EDITOR.field("useColorScheme").val()[0];
+                    if(useColorScheme) {
+                        formItemsDataTable.EDITOR.field("colorScheme").enable();
+                    } else {
+                        formItemsDataTable.EDITOR.field("colorScheme").disable();
                     }
                 });
             }

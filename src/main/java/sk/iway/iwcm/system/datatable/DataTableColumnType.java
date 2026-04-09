@@ -115,6 +115,10 @@ public enum DataTableColumnType {
      */
     TIME_HMS,
     /**
+     * Duration formated as mm:ss
+     */
+    DURATION,
+    /**
      * Atributy stranky
      */
     ATTRS,
