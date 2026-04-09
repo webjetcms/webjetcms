@@ -45,3 +45,16 @@ include ../pug/mixins
 </div>
 
 +jstreesettings("gallery")
+    .form-group.row.DTE_Field_Type_checkbox
+        label.col-sm-4.col-form-label [[\#{button.view}]]
+        .col-sm-7
+          .DTE_Field_InputControl
+            .custom-control.form-switch
+              input#jstree-settings-showrealname.form-check-input(type='checkbox' name='jstree-settings-showrealname' value='true')
+              label.form-check-label(for='jstree-settings-showrealname') [[\#{gallery.jstree.show_real_name}]]
+        .col-sm-1.form-group-tooltip
+          button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{gallery.jstree.show_real_name.tooltip}')
+            i.ti.ti-info-circle
+    .form-group.row.row-hr
+        .col-sm-7.offset-sm-4
+            hr

@@ -1132,3 +1132,36 @@ Scenario('thumb servlet - noip4', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
 });
+
+const dirOriginalName = "filter-original";
+const dirChangedName = "filter-changed";
+Scenario('test original dir names + filtering', ({ I }) =>  {
+    I.amOnPage("/admin/v9/apps/gallery/");
+
+    I.say("Turn off showing of original names in jstree");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.uncheckOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.say("Try filter using changed name");
+    I.jstreeFilter(dirChangedName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+
+    I.say("Try filter using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor').withText(dirChangedName));
+
+    I.say("Show original names in jstree again");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.checkOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.say("Filter again using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+    I.seeElement(locate('.jstree-anchor.jstree-search span.realName').withText("(" + dirOriginalName + ")"));
+});

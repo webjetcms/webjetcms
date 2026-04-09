@@ -51,6 +51,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/htmlbox/editor-block.png)
 
+### Galéria
+
+- Pridaná podpora pre zobrazenie pôvodného názvu priečinka galérie v stromovej štruktúre, skrz nastavenia stromovej štruktúry (#58445).
+- Pridaná podpora pre filtrovanie priečinkov galérií podľa aktuálneho ale aj pôvodného názvu priečinka galérie v stromovej štruktúre (#58445).
+
 ### Manažér dokumentov
 
 - Pridané zobrazenie hodnoty **Globálne Id** pre dokumenty (#58357).
