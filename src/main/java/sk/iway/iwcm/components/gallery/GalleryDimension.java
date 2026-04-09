@@ -59,7 +59,7 @@ public class GalleryDimension {
     @Column(name = "gallery_perex")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        title = "editor.tab.perex",
+        title = "components.gallery.perex",
         renderFormat = "dt-format-textarea",
         tab = "basic"
     )
