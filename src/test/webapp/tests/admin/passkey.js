@@ -36,13 +36,14 @@ Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
 
     I.wait(3);
     I.dontSeeInSource('id="passkey-login-submit"');
+    */
 
     //switch to httpS
     await I.executeScript(() => {
         if(window.location.protocol === "http:"){
             window.location.protocol = "https:";
         }
-    });*/
+    });
 
     I.wait(3);
     //we cant test real button because in chromium there is no window.PublicKeyCredential object
