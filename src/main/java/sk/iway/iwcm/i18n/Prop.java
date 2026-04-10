@@ -362,7 +362,7 @@ public class Prop
 		value = checkDomainAlias(key, value);
 
 		if (value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
-			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false)
+			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false && key.endsWith(".id")==false)
 		{
 			//chybajuci string, pridaj ho do chybajucich
 			missingTexts.putIfAbsent(language, Collections.synchronizedSet(new HashSet<MissingKeysDto>()));

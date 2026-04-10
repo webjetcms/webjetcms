@@ -53,3 +53,48 @@ Scenario("import modal", async ({ I, DT, a11y }) => {
     I.waitForElement("#datatableImportModal", 5);
     await a11y.check();
 });
+
+Scenario("p27: input with buttons", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/apps/banner/admin/?id=2");
+    DTE.waitForEditor("bannerDataTable");
+    I.clickCss("#pills-dt-bannerDataTable-advanced-tab");
+    await a11y.check();
+});
+
+Scenario("p27: input with buttons-top-filter", async ({ I, a11y }) => {
+    I.amOnPage("/apps/contact/admin/");
+    await a11y.check();
+});
+
+Scenario("p28: select", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/apps/enumeration/admin/enumeration-type/?id=2");
+    DTE.waitForEditor("enumerationTypeDataTable");
+    await a11y.check();
+});
+
+Scenario("p28: select-top-filter", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/apps/news/admin/");
+    await a11y.check();
+});
+
+Scenario("p29: checkbox-access, p30: fieldset/legend", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=92");
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-access-tab")
+    await a11y.check();
+    //TODO: fieldset/legend
+});
+
+Scenario("p29: checkbox-main", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=92");
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-basic-tab")
+    await a11y.check();
+});
+
+Scenario("p31: wysiwyg field", async ({ I, DTE, a11y }) => {
+    I.amOnPage("/apps/inquiry/admin/?id=1");
+    DTE.waitForEditor("inquiryDataTable");
+    await a11y.check();
+    //TODO: tab inside wysiwyg field - it's not possible to get out
+});
