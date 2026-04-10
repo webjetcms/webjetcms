@@ -3,6 +3,8 @@ import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
 import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
+console.log("vite test 01");
+
 window.domReady.add(initClosure, 1, true);
 
 // Replay WJ shim queue (calls like WJ.headerTabs from inline scripts)

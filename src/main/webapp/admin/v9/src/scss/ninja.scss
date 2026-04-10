@@ -112,7 +112,7 @@ $ai-color-hover: #E3DBFF;
 
 
 @import "datatables.net-bs5";
-@import "datatables.net-editor-bs5/css/editor.bootstrap5.min.css";
+@import "datatables.net-editor-bs5/css/editor.bootstrap5.min";
 @import "datatables.net-buttons-bs5";
 @import "datatables.net-colreorder-bs5";
 @import "datatables.net-select-bs5";
@@ -122,6 +122,13 @@ $ai-color-hover: #E3DBFF;
 @import "toastr";
 
 @import "jquery-ui/themes/base/autocomplete";
+
+// jQuery UI theme CSS & Bootstrap Select (moved from JS for independent SCSS compilation)
+@import "jquery-ui/themes/base/theme";
+@import "jquery-ui/themes/base/draggable";
+@import "jquery-ui/themes/base/resizable";
+@import "jquery-ui/themes/base/slider";
+@import "bootstrap-select/dist/css/bootstrap-select";
 
 //TOOLS
 // @import "1-tools/editor.dataTables.min.css";
@@ -221,5 +228,5 @@ $ai-color-hover: #E3DBFF;
 @import "hotfix";
 
 .vite-test {
-    color: orange;
+    color: purple;
 }

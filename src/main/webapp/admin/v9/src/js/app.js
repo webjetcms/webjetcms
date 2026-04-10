@@ -86,14 +86,11 @@ import './ui-config.js';
 // Use the pre-built dist which includes all widgets with proper dependency order.
 import 'jquery-ui/dist/jquery-ui.js';
 
-import 'jquery-ui/themes/base/theme.css';
-import 'jquery-ui/themes/base/draggable.css';
-import 'jquery-ui/themes/base/resizable.css';
-import 'jquery-ui/themes/base/slider.css';
+// Static CSS imports moved to src/scss/app-styles.js (separate Vite entry point)
+// so SCSS changes don't trigger JS rebuilds.
 //import 'jquery-ui/themes/base/tooltip.css';
 
 import * as bootstrapModule from 'bootstrap';
-import '../scss/ninja.scss';
 
 //extra css file for inline editing
 const createInlineCss = () => {
@@ -112,7 +109,6 @@ $.fn.tooltip = bootstrapModule.Tooltip.jQueryInterface;
 //require('bootstrap-select/js/bootstrap-select');
 //https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
 import './plugins/bootstrap-select-v1.14.0-gamma1';
-import 'bootstrap-select/dist/css/bootstrap-select.css';
 
 //not used anymore
 //require('ajax-bootstrap-select');

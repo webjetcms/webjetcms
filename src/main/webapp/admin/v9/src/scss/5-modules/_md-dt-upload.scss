@@ -1,7 +1,5 @@
 @charset "UTF-8";
 
-@import "dropzone/dist/dropzone.css";
-
 #dt-upload
 {
     /* positions to point 0,0 - required for z-index */
@@ -52,10 +50,10 @@
     //         }
     //     }
     // }
-    
+
     #toast-container-upload {
         overflow: hidden !important;
-        
+
         .toast-dzpreview {
             padding: 0px !important;
             border: 0px !important;
@@ -73,8 +71,8 @@
 
             span {max-width: 360px;}
         }
-    } 
-    
+    }
+
     .dropzone {
         min-height: 50px !important;
         height: 75px !important;
