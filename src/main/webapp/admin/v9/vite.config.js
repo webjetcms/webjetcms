@@ -87,6 +87,7 @@ function compilePugTemplates() {
 
     // Compile all PUG page templates
     const pugFiles = findPugFiles(PAGES_DIR);
+    const pugStart = Date.now();
     console.log(`[pug-templates] Compiling ${pugFiles.length} PUG templates...`);
 
     let success = 0;
@@ -127,7 +128,7 @@ function compilePugTemplates() {
         }
     }
 
-    console.log(`[pug-templates] Done: ${success} compiled, ${failed} failed`);
+    console.log(`[pug-templates] Done: ${success} compiled, ${failed} failed in ${Date.now() - pugStart}ms`);
 }
 
 /**
