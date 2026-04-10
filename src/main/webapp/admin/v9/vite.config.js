@@ -296,7 +296,6 @@ export default defineConfig(({ mode }) => ({
                 // Ignore bootstrap warnings https://getbootstrap.com/docs/5.3/getting-started/vite/
                 silenceDeprecations: [
                     'import',
-                    'mixed-decls',
                     'color-functions',
                     'global-builtin',
                     'if-function',
