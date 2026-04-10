@@ -163,7 +163,6 @@ public class SpringAppInitializer implements WebApplicationInitializer
 	 */
 	private void addScanPackagesInit(AnnotationConfigWebApplicationContext ctx) {
 		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.system.spring");
 		packages.add("sk.iway.iwcm.setup");
 		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
 		ctx.scan(packages.toArray(new String[packages.size()]));
