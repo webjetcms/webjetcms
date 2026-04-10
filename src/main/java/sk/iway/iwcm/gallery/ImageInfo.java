@@ -186,6 +186,9 @@ public class ImageInfo {
    /** Return value of {@link #getFormat()} for SWF (Shockwave) streams. */
    public static final int FORMAT_SWF = 11;
 
+   /** Return value of {@link #getFormat()} for WebP streams. */
+   public static final int FORMAT_WEBP = 12;
+
    /**
     * The names of all supported file formats.
     * The FORMAT_xyz int constants can be used as index values for
@@ -194,7 +197,7 @@ public class ImageInfo {
    private static final String[] FORMAT_NAMES =
       {"JPEG", "GIF", "PNG", "BMP", "PCX",
        "IFF", "RAS", "PBM", "PGM", "PPM",
-       "PSD", "SWF"};
+       "PSD", "SWF", "WEBP"};
 
    /**
     * The names of the MIME types for all supported file formats.
@@ -204,7 +207,7 @@ public class ImageInfo {
    private static final String[] MIME_TYPE_STRINGS =
       {"image/jpeg", "image/gif", "image/png", "image/bmp", "image/pcx",
        "image/iff", "image/ras", "image/x-portable-bitmap", "image/x-portable-graymap", "image/x-portable-pixmap",
-       "image/psd", "application/x-shockwave-flash"};
+       "image/psd", "application/x-shockwave-flash", "image/webp"};
 
    private int width;
    private int height;
@@ -355,6 +358,10 @@ public class ImageInfo {
          else
          if (b1 == 0x46 && b2 == 0x57) {
             return checkSwf();
+         }
+         else
+         if (b1 == 0x52 && b2 == 0x49) {
+            return checkWebp();
          }
          else {
             return false;
@@ -794,6 +801,82 @@ public class ImageInfo {
       setPhysicalWidthDpi(72);
       setPhysicalHeightDpi(72);
       return (width > 0 && height > 0);
+   }
+
+   private boolean checkWebp() throws IOException {
+      // Already read 'R' (0x52) and 'I' (0x49) in check().
+      // Read the remaining 2 bytes of "RIFF", 4 bytes file size, and 4 bytes "WEBP" marker.
+      byte[] header = new byte[10];
+      if (read(header, 0, 10) != 10) {
+         return false;
+      }
+      // Verify remaining RIFF bytes: 'F' (0x46), 'F' (0x46)
+      if (header[0] != 0x46 || header[1] != 0x46) {
+         return false;
+      }
+      // Verify "WEBP" marker at bytes 6-9: 'W' (0x57), 'E' (0x45), 'B' (0x42), 'P' (0x50)
+      if (header[6] != 0x57 || header[7] != 0x45 || header[8] != 0x42 || header[9] != 0x50) {
+         return false;
+      }
+      // Read chunk FourCC (4 bytes) and chunk size (4 bytes)
+      byte[] chunk = new byte[8];
+      if (read(chunk, 0, 8) != 8) {
+         return false;
+      }
+      int chunkType = getIntBigEndian(chunk, 0);
+
+      if (chunkType == 0x56503820) {
+         // "VP8 " - lossy format
+         // Read 10 bytes: 3-byte frame tag + 3-byte start code + 2-byte width + 2-byte height
+         byte[] vp8 = new byte[10];
+         if (read(vp8, 0, 10) != 10) {
+            return false;
+         }
+         // Keyframe start code must be 0x9D, 0x01, 0x2A
+         if (vp8[3] != (byte)0x9D || vp8[4] != 0x01 || vp8[5] != 0x2A) {
+            return false;
+         }
+         // Width and height are 14-bit values stored in 16-bit LE words
+         width = getShortLittleEndian(vp8, 6) & 0x3FFF;
+         height = getShortLittleEndian(vp8, 8) & 0x3FFF;
+         bitsPerPixel = 24;
+      } else if (chunkType == 0x5650384C) {
+         // "VP8L" - lossless format
+         // Read 1-byte signature + 4 bytes of packed dimension data
+         byte[] vp8l = new byte[5];
+         if (read(vp8l, 0, 5) != 5) {
+            return false;
+         }
+         // Signature byte must be 0x2F
+         if (vp8l[0] != 0x2F) {
+            return false;
+         }
+         // Width-1 in bits 0-13, height-1 in bits 14-27 (packed LE)
+         int bits = (vp8l[1] & 0xff) | ((vp8l[2] & 0xff) << 8) | ((vp8l[3] & 0xff) << 16) | ((vp8l[4] & 0xff) << 24);
+         width = (bits & 0x3FFF) + 1;
+         height = ((bits >> 14) & 0x3FFF) + 1;
+         bitsPerPixel = 32;
+      } else if (chunkType == 0x56503858) {
+         // "VP8X" - extended format
+         // 4 bytes flags + 3 bytes canvas width minus one + 3 bytes canvas height minus one
+         byte[] vp8x = new byte[10];
+         if (read(vp8x, 0, 10) != 10) {
+            return false;
+         }
+         // Canvas Width Minus One: bytes 4-6 (24-bit LE)
+         width = ((vp8x[4] & 0xff) | ((vp8x[5] & 0xff) << 8) | ((vp8x[6] & 0xff) << 16)) + 1;
+         // Canvas Height Minus One: bytes 7-9 (24-bit LE)
+         height = ((vp8x[7] & 0xff) | ((vp8x[8] & 0xff) << 8) | ((vp8x[9] & 0xff) << 16)) + 1;
+         bitsPerPixel = 32;
+      } else {
+         return false;
+      }
+
+      if (width < 1 || height < 1) {
+         return false;
+      }
+      format = FORMAT_WEBP;
+      return true;
    }
 
    private boolean equals(byte[] a1, int offs1, byte[] a2, int offs2, int num) {

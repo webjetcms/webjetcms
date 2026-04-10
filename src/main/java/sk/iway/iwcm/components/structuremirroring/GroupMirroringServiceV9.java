@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.RequestBean;
@@ -19,13 +20,14 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.system.translation.TranslationService;
 //Riesi vytvaranie/zmeny synchronizovanych adresarov podla sync_id - EUSTREAMNW-84
 public class GroupMirroringServiceV9 {
 
-   public void handleGroupSave(GroupDetails group, WebjetEventType type) {
+   public void handleGroupSave(GroupDetails group, WebjetEventType type, Identity currentUser) {
 
       int testGroupId = group.getGroupId();
       if (testGroupId<1) testGroupId = group.getParentGroupId();
@@ -218,27 +220,78 @@ public class GroupMirroringServiceV9 {
                MirroringService.forceReloadTree();
             }
          }
-      }
+      } else if (type == WebjetEventType.AFTER_RECOVER) {
+         //
+         if (group.getSyncId() > 1) {
+            if(currentUser == null) {
+               Logger.error(GroupMirroringServiceV9.class, "currentUser is null in AFTER_RECOVER event for group=" + group.toString());
+               return;
+            }
 
+            GroupsService groupsService = Tools.getSpringBean("groupsService", GroupsService.class);
+
+            //najdi k tomu mirror verzie
+            List<GroupDetails> syncedGroups = getDeletedGroupsBySyncId(group.getSyncId(), group.getGroupId());
+            for (GroupDetails syncedGroup : syncedGroups) {
+               Logger.debug(GroupMirroringServiceV9.class, "OBNOVUJEM, syncedGroup="+syncedGroup.toString()+" group="+group.toString());
+               groupsService.recoverGroupFromTrash(syncedGroup, currentUser, false);
+               MirroringService.forceReloadTree();
+            }
+         }
+      }
    }
 
    /**
-    * Vrati group details objekty podla zadaneho syncId, ak je zadane nenulove skipGroupId tak v zozname nebude zadany adresar
-    * @param syncId
-    * @param skipGroupId - ak je >0 v zozname sa nebude nachadzat zadany adresar
-    * @return
+    * Returns group detail objects based on the provided syncId.
+    * If a non-zero skipGroupId is specified, the given directory will be excluded from the result list.
+    *
+    * @param syncId - identifier used to retrieve group details
+    * @param skipGroupId - if > 0, the specified directory will not be included in the list
+    * @return list of group detail objects
+   */
+   public static List<GroupDetails> getGroupsBySyncId(int syncId, int skipGroupId) {
+      return getGroupsBySyncId(syncId, skipGroupId, false);
+   }
+
+   /**
+    * Returns group detail objects based on the provided syncId that ARE IN TRASH (so they are soft deleted).
+    * If a non-zero skipGroupId is specified, the given directory will be excluded from the result list.
+    *
+    * @param syncId identifier used to retrieve group details
+    * @param skipGroupId if > 0, the specified directory will be excluded from the result list
+    * @return list of group detail objects
     */
-   public static List<GroupDetails> getGroupsBySyncId(int syncId, int skipGroupId)
+   public static List<GroupDetails> getDeletedGroupsBySyncId(int syncId, int skipGroupId) {
+      return getGroupsBySyncId(syncId, skipGroupId, true);
+   }
+
+   /**
+    * Returns group detail objects based on the provided syncId.
+    * If a non-zero skipGroupId is specified, the given directory will be excluded from the result list.
+    *
+    * @param syncId - identifier used to retrieve group details
+    * @param skipGroupId - if > 0, the specified directory will not be included in the list
+    * @param onlyDeleted - if true, only groups that are in trash (soft deleted) will be returned
+    * @return list of group detail objects
+   */
+   public static List<GroupDetails> getGroupsBySyncId(int syncId, int skipGroupId, boolean onlyDeleted)
 	{
       StringBuilder sql = new StringBuilder();
+      List<Object> params = new ArrayList<>();
+      params.add(syncId);
+
       sql.append("SELECT * FROM groups WHERE sync_id=?");
-      if (skipGroupId>0) sql.append(" AND group_id!=? ");
+
+      if (skipGroupId > 0) {
+         sql.append(" AND group_id!=? ");
+         params.add(skipGroupId);
+      }
+
       sql.append(" ORDER BY group_id ASC");
 
       ComplexQuery cq = new ComplexQuery();
       cq.setSql(sql.toString());
-      if (skipGroupId>0) cq.setParams(syncId, skipGroupId);
-      else cq.setParams(syncId);
+      cq.setParams(params.toArray());
 
       GroupsDB groupsDB = GroupsDB.getInstance();
 
@@ -253,15 +306,29 @@ public class GroupMirroringServiceV9 {
 
 		});
 
-      //filter groups which is not synced anymore
       List<GroupDetails> filtered = new ArrayList<>();
-      for (GroupDetails group : groups) {
-         List<GroupDetails> parents = groupsDB.getParentGroups(group.getGroupId(), true);
-         for (GroupDetails parent : parents) {
-            int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
-            if (rootIds != null) {
+      if(onlyDeleted == false) {
+         //filter groups which is not synced anymore
+
+         for (GroupDetails group : groups) {
+            List<GroupDetails> parents = groupsDB.getParentGroups(group.getGroupId(), true);
+            for (GroupDetails parent : parents) {
+               int[] rootIds = MirroringService.getRootIds(parent.getGroupId());
+               if (rootIds != null) {
+                  filtered.add(group);
+                  break;
+               }
+            }
+         }
+      } else {
+         // filter groups that are in trash
+
+         GroupDetails trashGroup = GroupsService.getTrashGroupDetails();
+         if(trashGroup == null) return new ArrayList<>();
+
+         for (GroupDetails group : groups) {
+            if (GroupsService.isInTrash(group)) {
                filtered.add(group);
-               break;
             }
          }
       }

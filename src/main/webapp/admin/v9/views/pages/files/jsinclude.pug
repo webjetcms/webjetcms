@@ -323,19 +323,21 @@ script.
 
         const search =  window.location.href;
         const urlParams = new URLSearchParams(window.location.search);
-        const stop_resizing = urlParams.get('stop_resizing');
-        if(stop_resizing == undefined || stop_resizing == null || stop_resizing != "true") {
-            setTimeout(()=>{ setElfinderHeight(); }, 100);
-            //override height set by elfinder as soon as posiible
-            setTimeout(()=>{ setElfinderHeight(); }, 1000);
-            setTimeout(()=>{ setElfinderHeight(); }, 1500);
-            setTimeout(()=>{ setElfinderHeight(); }, 2000);
-            const resizingInterval = setInterval(setElfinderHeight, 5000);
-        }
+        setTimeout(()=>{ setElfinderHeight(); }, 100);
+        //override height set by elfinder as soon as posiible
+        setTimeout(()=>{ setElfinderHeight(); }, 1000);
+        setTimeout(()=>{ setElfinderHeight(); }, 1500);
+        setTimeout(()=>{ setElfinderHeight(); }, 2000);
+        const resizingInterval = setInterval(setElfinderHeight, 3000);
     }
 
     function setElfinderHeight() {
         let elfinder = $('#finder');
+        if (elfinder.is(":visible") == false) {
+            //console.log("Elfinder is not visible, skipping height setting");
+            return;
+        }
+
         let elfinderWorkzone = $('#finder > div.elfinder-workzone');
         let elfinderCwdWrapper = $('#finder > div.elfinder-workzone > div.elfinder-cwd-wrapper');
         let elfinderNavbar = $('#finder > div.elfinder-workzone > div.elfinder-navbar');
@@ -343,7 +345,7 @@ script.
         let availableSpace = computeAvailableSpaceHeight();
         let redundantSpace = computeElfinderRedundantHeight();
 
-        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1));
+        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1), "visible=", elfinder.is(":visible"));
 
         elfinder.css("width", "100%");
         elfinder.css("height", (availableSpace - 1) + "px");

@@ -89,23 +89,13 @@ public class CacheObjectsService {
         String dirStr = sk.iway.iwcm.Tools.getRealPath(Constants.getString("thumbServletCacheDir"));
         IwcmFile dir = new IwcmFile(dirStr);
         try {
-            deletePictureCacheCycleClass(dir);
+            FileTools.deleteDirTree(dir);
         } catch (Exception e) {
             Logger.error(CacheObjectsService.class, "Error deleting picture cache. Error message: " + e.getMessage());
             return false;
         }
 
         return true;
-    }
-
-    private void deletePictureCacheCycleClass(IwcmFile iwcmFile) {
-        for (IwcmFile file : iwcmFile.listFiles()) {
-            if (file.isDirectory()) {
-                deletePictureCacheCycleClass(file);
-            } else {
-                file.delete();
-            }
-        }
     }
 
     Page<CacheDto> getFilteredCacheDtos(Map<String, String> searchMap, Pair<String, String> sortPair,

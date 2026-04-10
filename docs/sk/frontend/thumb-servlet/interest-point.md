@@ -1,4 +1,4 @@
-## Použitie bodu záujmu
+# Použitie bodu záujmu
 
 Pre `/thumb` sa použitie [nastavený bod záujmu](../../redactor/apps/gallery/README.md) pridaním URL parametra `ip` (interest point). Oblasť záujmu sa dá nastaviť na ľubovoľný obrázok, nielen ten v galérií kliknutím na editáciu v editore stránok, alebo v prieskumníkovi.
 
@@ -44,7 +44,7 @@ Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zm
 
 Výrez sa zmestí celý do zvolenej veľkosti `w` a `h`, je centrovaný a zvyšok je zafarbený farbou z parametra `c` (predvolene biela)
 
-Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zmestiť, obrázok ale môže byť reálne menší ako zadaná časť. V tomto prípade `300x200` bodov, okolie sa zafarbí zvolenou farbou, takže obrázok má VŽDY zadaný rozmer (nebude poskakovať). Farba sa zadáva ako hex hodnota parametrom `c` (bez znaku `#`).
+Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zmestiť, obrázok ale môže byť reálne menší ako zadaná časť. V tomto prípade `300x200` bodov, okolie sa zafarbí zvolenou farbou, takže obrázok má VŽDY zadaný rozmer (nebude poskakovať). Farba sa zadáva ako `hex` hodnota parametrom `c` (bez znaku `#`).
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=300&h=200&ip=4&c=ffff00`
 

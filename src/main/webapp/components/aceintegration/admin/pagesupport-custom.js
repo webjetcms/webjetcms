@@ -35,7 +35,7 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
         console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
         //hide first tab
-        tabMenu.tabs[0].visible = false;
+        //tabMenu.tabs[0].visible = false;
 
         //move tab id=10 to the first position
         var items = tabMenu.tabs[1].items;
@@ -84,8 +84,8 @@ window.wysiwygGetCallback = function(html, conf) {
 
         const replacements = [
             ['×', '&times;'],
-            ['"', '&quot;'],
-            ["'", '&apos;'],
+            //['"', '&quot;'],
+            //["'", '&apos;'],
             ['„', '&bdquo;'],
             ['“', '&ldquo;'],
             ['”', '&rdquo;'],

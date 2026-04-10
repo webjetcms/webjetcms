@@ -306,5 +306,15 @@ module.exports = {
             }
             I.see(values[i] + "", "#" + tableId + "_wrapper .dt-scroll-footInner > table > tfoot > tr > td:nth-child(" + (i + 1) + ")" + postfix );
         }
+    },
+
+    clickAddButton(tableId = "datatableInit") {
+        var selector = buttons.getButtonSelector(tableId, buttons.actions.add_button);
+        I.click(selector);
+    },
+
+    clickEditButton(tableId = "datatableInit") {
+        var selector = buttons.getButtonSelector(tableId, buttons.actions.edit_button);
+        I.click(selector);
     }
 }

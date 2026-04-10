@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('screenshot line chart from admin', ({I, DTE, Document}) => { 
+Scenario('screenshot line chart from admin', async ({I, DTE, Document}) => {
     I.amOnPage("/apps/stat/admin/");
 
     within("#statsDataTable_extfilter", () => {
@@ -16,6 +16,9 @@ Scenario('screenshot line chart from admin', ({I, DTE, Document}) => {
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
 
-    Document.screenshotElement("#graphsDiv", "/developer/frameworks/charts/frontend/line-chart.png");
+    await I.executeScript(function() {
+        $("#graphsDiv").css("padding", "0px 10px 10px 10px");
+    });
 
+    Document.screenshotElement("#graphsDiv", "/developer/frameworks/charts/frontend/line-chart.png");
 });

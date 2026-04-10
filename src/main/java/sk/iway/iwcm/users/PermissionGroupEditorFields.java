@@ -71,26 +71,30 @@ public class PermissionGroupEditorFields extends BaseEditorFields {
         if(loadSubQueries) {
 
             //writable_folders - kazdy zaznam na novom riadku
-            String folders[] = Tools.getTokens(permissionGroupOriginal.getWritableFolders(), "\n");
-            if (folders.length>0){
-                writableFolders = new ArrayList<>();
-                for (String folder : folders) {
-                    folder = Tools.replace(folder, "*", ""); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost
-                    DirTreeItem item = new DirTreeItem(folder);
-                    writableFolders.add(item);
+            if (permissionGroupOriginal.getAllWritableFolders() == null || permissionGroupOriginal.getAllWritableFolders() == false) {
+                String folders[] = Tools.getTokens(permissionGroupOriginal.getWritableFolders(), "\n");
+                if (folders.length>0){
+                    writableFolders = new ArrayList<>();
+                    for (String folder : folders) {
+                        folder = Tools.replace(folder, "*", ""); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost
+                        DirTreeItem item = new DirTreeItem(folder);
+                        writableFolders.add(item);
+                    }
                 }
             }
 
 
             //Set editable groups Ids into List editableGroups
-            int editableGroupsIds[] = Tools.getTokensInt(permissionGroupOriginal.getEditableGroups(), ",");
-            if(editableGroupsIds.length > 0) {
-                editableGroups = new ArrayList<>();
-                GroupsDB groupsDB = GroupsDB.getInstance();
+            if (permissionGroupOriginal.getAllEditableGroups() == null || permissionGroupOriginal.getAllEditableGroups() == false) {
+                int editableGroupsIds[] = Tools.getTokensInt(permissionGroupOriginal.getEditableGroups(), ",");
+                if(editableGroupsIds.length > 0) {
+                    editableGroups = new ArrayList<>();
+                    GroupsDB groupsDB = GroupsDB.getInstance();
 
-                for(int editableGroupId : editableGroupsIds) {
-                    GroupDetails tmp = groupsDB.getGroup(editableGroupId);
-                    if (tmp != null) editableGroups.add(tmp);
+                    for(int editableGroupId : editableGroupsIds) {
+                        GroupDetails tmp = groupsDB.getGroup(editableGroupId);
+                        if (tmp != null) editableGroups.add(tmp);
+                    }
                 }
             }
 
@@ -155,7 +159,10 @@ public class PermissionGroupEditorFields extends BaseEditorFields {
 
     public void toPermissionGroupBean(PermissionGroupBean permissionGroupOriginal) {
 
-        if (permissionGroupOriginal.getEditorFields().getWritableFolders() != null) {
+        //if allWritableFolders is checked, clear the writableFolders field
+        if (Tools.isTrue(permissionGroupOriginal.getAllWritableFolders())) {
+            permissionGroupOriginal.setWritableFolders("");
+        } else if (permissionGroupOriginal.getEditorFields().getWritableFolders() != null) {
             //writableFolders
             StringBuilder writableFoldersStr = new StringBuilder();
             for (DirTreeItem dir : permissionGroupOriginal.getEditorFields().getWritableFolders()) {
@@ -173,7 +180,11 @@ public class PermissionGroupEditorFields extends BaseEditorFields {
             permissionGroupOriginal.setWritableFolders(writableFoldersStr.toString());
         }
 
-        if (permissionGroupOriginal.getEditorFields().getEditableGroups() != null) {
+        //if allEditableGroups is checked, clear the editableGroups field
+        if (Tools.isTrue(permissionGroupOriginal.getAllEditableGroups())) {
+            permissionGroupOriginal.setEditableGroups("");
+            permissionGroupOriginal.setEditablePages("");
+        } else if (permissionGroupOriginal.getEditorFields().getEditableGroups() != null) {
             //Get editable group ids and add them to string
             List<GroupDetails> seletedEditableGroups = permissionGroupOriginal.getEditorFields().getEditableGroups();
             String editableGroupIdsString = "";

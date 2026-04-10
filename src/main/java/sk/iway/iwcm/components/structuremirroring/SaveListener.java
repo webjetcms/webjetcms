@@ -25,7 +25,7 @@ public class SaveListener {
       try {
          //Logger.debug(SaveListener.class, "================================================= handleGroupSave type=" + event.getEventType() + ", source=" + event.getSource().getClass()+" thread="+Thread.currentThread().getName());
          GroupMirroringServiceV9 service = new GroupMirroringServiceV9();
-         service.handleGroupSave(event.getSource(), event.getEventType());
+         service.handleGroupSave(event.getSource(), event.getEventType(), event.getUser());
       } catch (Exception ex) {
           Logger.error(SaveListener.class, ex);
       }

@@ -47,9 +47,17 @@ Scenario('zoznam fotografii', ({ I, DT, DTE, Document }) => {
 Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
-    I.click('dsc04068.jpeg');
-    DTE.waitForEditor('galleryTable');
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.jstreeWaitForLoader();
+
+    var name = "dsc04068.jpeg";
+    I.waitForText(name, 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText(name));
+    DTE.waitForEditor("galleryTable");
+
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.waitForElement("#zoom");
     I.fillField("#zoom", "65");
     I.wait(2);
     I.fillField("#x", "276");

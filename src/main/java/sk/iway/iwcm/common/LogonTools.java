@@ -352,9 +352,20 @@ public class LogonTools {
             //#23245
             StringBuilder permWritableFolders = new StringBuilder();
             List<PermissionGroupBean> permissionGroups = UserGroupsDB.getPermissionGroupsFor(user.getUserId());
+
+            boolean hasAllEditableGroups = false;
+            boolean hasAllWritableFolders = false;
+
             // pre kazdu skupinu prav pridame prava
             for (PermissionGroupBean permGroup : permissionGroups)
             {
+                if (Tools.isTrue(permGroup.getAllEditableGroups())) {
+                    hasAllEditableGroups = true;
+                }
+                if (Tools.isTrue(permGroup.getAllWritableFolders())) {
+                    hasAllWritableFolders = true;
+                }
+
                 if(Tools.isNotEmpty(permGroup.getWritableFolders()))
                 {
                     if(!permGroup.getWritableFolders().startsWith(" "))
@@ -426,6 +437,16 @@ public class LogonTools {
                     else
                         user.setEditablePages(user.getEditablePages() + "," + permGroup.getEditablePages());
                 }
+            }
+
+            //override accumulated values if any permission group has "all" flags
+            if (hasAllEditableGroups) {
+                user.setEditableGroups("");
+                // clear also editablePages to avoid residual restrictions when all groups are editable
+                user.setEditablePages("");
+            }
+            if (hasAllWritableFolders) {
+                user.setWritableFolders("*");
             }
         } catch (Exception ex) {
 

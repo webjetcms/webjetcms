@@ -32,6 +32,7 @@ import java.util.List;
 @RequestMapping(value = "/admin/rest/components/insert-script")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_insert_script')")
 public class InsertScriptRestController extends DatatableRestControllerV2<InsertScriptBean, Long> {
+
     @Autowired
     public InsertScriptRestController(InsertScriptRepository insertScriptRepository) {
         super(insertScriptRepository);
@@ -88,6 +89,13 @@ public class InsertScriptRestController extends DatatableRestControllerV2<Insert
             for (InsertScriptGroupBean isg : entity.getGroupIds()) {
                 isg.setDomainId(domainId);
             }
+        }
+
+        //auto-set sortPriority if not specified
+        if (entity.getSortPriority() == null) {
+            Integer maxPriority = ((InsertScriptRepository)getRepo()).findMaxSortPriorityByPositionAndDomainId(entity.getPosition(), domainId);
+            if (maxPriority == null) maxPriority = 0;
+            entity.setSortPriority(maxPriority + 10);
         }
     }
 

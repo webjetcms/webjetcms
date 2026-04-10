@@ -258,9 +258,15 @@ if (redirectBean != null)
 
 	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) newUrl = Tools.addParametersToUrlNoAmp(newUrl, queryString);
 
-	if (newUrl.toLowerCase().startsWith("http")==false) newUrl = Tools.getBaseHref(request) + newUrl;
-
-	response.setHeader("Location", newUrl);
+	if (newUrl.startsWith("/admin/") || newUrl.startsWith("/components/"))
+	{
+		response.sendRedirect(newUrl);
+	}
+	else
+	{
+		if (newUrl.toLowerCase().startsWith("http")==false) newUrl = Tools.getBaseHref(request) + newUrl;
+		response.setHeader("Location", newUrl);
+	}
 	%>
 	<html><script>window.location.href='<%=newUrl%>';</script></html>
 	<%

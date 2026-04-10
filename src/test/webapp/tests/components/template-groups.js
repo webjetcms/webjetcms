@@ -107,11 +107,12 @@ function checkMetadataAuthor(author, I, DTE) {
 
     DTE.save();
 
-    I.amOnPage("/?NO_WJTOOLBAR=true");
+    let v = (new Date()).getTime();
+    I.amOnPage("/?v="+v);
     I.seeInSource('<meta name="author" content="'+author+'"');
 
     //check thymeleaf version
-    I.amOnPage("/uvodna-stranka-thymeleaf.html");
+    I.amOnPage("/uvodna-stranka-thymeleaf.html?v="+v);
     if (author=="") {
         //in thymeleaf we use data-th-id to hide empty values
         I.dontSeeInSource('<meta name="author"');

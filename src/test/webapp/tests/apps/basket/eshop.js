@@ -327,6 +327,7 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
     I.waitForText("Ponožky", 10);
     I.switchToPreviousTab();
     I.closeOtherTabs();
+    I.switchTo();
 
     DT.filterContains("itemTitle", SL.DeliveryMethods.byMailDelivery);
     I.clickCss("#datatableFieldDTE_Field_editorFields-items_wrapper button.buttons-select-all");

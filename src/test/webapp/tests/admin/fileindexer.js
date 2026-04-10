@@ -41,16 +41,24 @@ Scenario('access protected full text index', ({I}) => {
     I.see("Zadajte vaše prihlasovacie údaje");
 });
 
-function accessProtectedFile(I) {
-    I.say("I'm logged, file should be ACCESSIBLE");
+function accessProtectedFile(I, isCloudStaticFilesDirSet=false) {
+    let suffix = " with cloudStaticFilesDir set";
+    let suffixDontSee = suffix;
+    if (isCloudStaticFilesDirSet === false) {
+        suffix = "";
+    }
+
+    I.say("I'm logged, file should be ACCESSIBLE, isCloudStaticFilesDirSet="+isCloudStaticFilesDirSet+suffix);
     I.amOnPage("/files/protected/bankari/test-forward.txt?v=3"+randomNumber);
-    I.waitForText("This is test file for fileforward after logon", 10);
+    I.waitForText("This is test file for fileforward after logon"+suffix, 10);
+    if (isCloudStaticFilesDirSet === false) I.dontSee(suffixDontSee);
     I.amOnPage("/files/zaheslovane/for-bankers.txt?v=3"+randomNumber);
-    I.waitForText("This file is accessible only for users in Bankari group", 10);
+    I.waitForText("This file is accessible only for users in Bankari group"+suffix, 10);
+    if (isCloudStaticFilesDirSet === false) I.dontSee(suffixDontSee);
 
     I.logout();
 
-    I.say("I'm NOT logged, file should NOT be ACCESSIBLE");
+    I.say("I'm NOT logged, file should NOT be ACCESSIBLE, isCloudStaticFilesDirSet="+isCloudStaticFilesDirSet+suffix);
     I.amOnPage("/files/protected/bankari/test-forward.txt?v=4"+randomNumber);
     I.waitForText("Zadajte vaše prihlasovacie údaje", 10);
     I.amOnPage("/files/zaheslovane/for-bankers.txt?v=4"+randomNumber);
@@ -59,10 +67,10 @@ function accessProtectedFile(I) {
 
 Scenario('access protected file @singlethread', ({I, Document}) => {
     Document.setConfigValue("cloudStaticFilesDir", "")
-    accessProtectedFile(I);
+    accessProtectedFile(I, false);
     I.relogin("admin");
     Document.setConfigValue("cloudStaticFilesDir", "{FILE_ROOT}static-files/");
-    accessProtectedFile(I);
+    accessProtectedFile(I, true);
 });
 
 Scenario('access protected file-reset @singlethread', ({I, Document}) => {

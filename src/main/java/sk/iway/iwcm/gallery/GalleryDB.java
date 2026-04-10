@@ -3,16 +3,10 @@ package sk.iway.iwcm.gallery;
 import static sk.iway.iwcm.Tools.isEmpty;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,18 +23,11 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.StringTokenizer;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -69,6 +56,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.GalleryDBTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -81,7 +69,6 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFileFilter;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
 import sk.iway.iwcm.tags.support.ResponseUtils;
@@ -2699,57 +2686,65 @@ public class GalleryDB
 				int w = (int) width;
 				int h = (int) height;
 				// u crop suradnice laveho horneho rohu
-				int x = 0;
-				int y = 0;
-				int pom_w = 0;
-				int pom_h = 0;
-				double pomer = (double) originalImage.getWidth() / (double) originalImage.getHeight();
-				boolean resizeAndCrop = false;
+				int cropLeft = 0;
+				int cropTop = 0;
+				int cropWidth = 0;
+				int cropHeight = 0;
+				double aspectRatio = (double) originalImage.getWidth() / (double) originalImage.getHeight();
 				if ("A".equals(resizeMode))
-				{// presny rozmer
+				{
+					// presny rozmer
 				}
 				else if ("C".equals(resizeMode))
 				{
-					// crop
+					// cropAndResize does: crop from original, then resize
+					// so crop coordinates must be in original image space
+					int desiredW = w;
+					int desiredH = h;
+					double desiredAspectRatio = (double) desiredW / (double) desiredH;
+
 					if (originalImage.getWidth() > w && originalImage.getHeight() > h)
 					{
-						// zmensit a orezat
-						pom_w = w;
-						pom_h = h;
-						resizeAndCrop = true;
-						h = (int) Math.round(w * 1 / pomer);
-						if (h < pom_h)
+						// crop and resize - find centered crop region in original with desired aspect ratio
+						if (desiredAspectRatio < aspectRatio)
 						{
-							h = pom_h;
-							w = (int) Math.round(h * pomer);
-							// orezeme so sirky
-							y = 0;
-							x = (w - pom_w) / 2;
+							// original is wider - crop from width, keep full height
+							cropHeight = originalImage.getHeight();
+							cropWidth = (int) Math.round(cropHeight * desiredAspectRatio);
+							cropLeft = (originalImage.getWidth() - cropWidth) / 2;
+							cropTop = 0;
 						}
 						else
 						{
-							// orezeme s vysky
-							x = 0;
-							y = (h - pom_h) / 2;
+							// original is taller - crop from height, keep full width
+							cropWidth = originalImage.getWidth();
+							cropHeight = (int) Math.round(cropWidth / desiredAspectRatio);
+							cropTop = (originalImage.getHeight() - cropHeight) / 2;
+							cropLeft = 0;
 						}
+						w = desiredW;
+						h = desiredH;
 					}
 					else if (w > originalImage.getWidth() && h <= originalImage.getHeight())
 					{
-						// orezat z vysky
-						x = 0;
+						// orezat z vysky - original is narrower, crop height only
+						cropWidth = originalImage.getWidth();
+						cropHeight = h;
+						cropTop = (originalImage.getHeight() - h) / 2;
+						cropLeft = 0;
 						w = originalImage.getWidth();
-						y = (originalImage.getHeight() - h) / 2;
 					}
 					else if (w <= originalImage.getWidth() && h > originalImage.getHeight())
 					{
-						// orezat so sirky
-						y = 0;
+						// orezat so sirky - original is shorter, crop width only
+						cropWidth = w;
+						cropHeight = originalImage.getHeight();
+						cropLeft = (originalImage.getWidth() - w) / 2;
+						cropTop = 0;
 						h = originalImage.getHeight();
-						x = (originalImage.getWidth() - w) / 2;
 					}
 					else
 					{
-
 						copyFile(realPath, realPathSmall);
 						//convertCmykToRgb(realPathSmall);
 						stripExif(realPathSmall);
@@ -2764,12 +2759,14 @@ public class GalleryDB
 					 */
 				}
 				else if ("W".equals(resizeMode))
-				{// presna sirka
-					h = (int) Math.round(w * 1 / pomer);
+				{
+					// presna sirka - prepocitaj vysku podla pomeru stran
+					h = (int) Math.round(w * 1 / aspectRatio);
 				}
 				else if ("H".equals(resizeMode))
-				{// presna vyska
-					w = (int) Math.round(h * pomer);
+				{
+					// presna vyska - prepocitaj sirku podla pomeru stran
+					w = (int) Math.round(h * aspectRatio);
 				}
 				else
 				{
@@ -2826,334 +2823,14 @@ public class GalleryDB
 				w = GalleryDBTools.limitMaxSize(w);
 				h = GalleryDBTools.limitMaxSize(h);
 
-				if (fSmallImg.exists())
-				{
-					//netreba, convert subor prepise fSmallImg.delete();
-				}
-				String imageMagickDir = getImageMagicDir();
-				// mame ho aj dostupny
-				boolean convertExists = false;
-				String runtimeFile = getRuntimeFile();
-
-				if (Tools.isNotEmpty(imageMagickDir))
-				{
-					File f = new File(imageMagickDir + File.separatorChar + runtimeFile);
-					if (f.exists() && f.canRead())
-					{
-						convertExists = true;
-					}
-				}
-				if (Tools.isNotEmpty(imageMagickDir)
-							&& (originalImage.getWidth() > 500 || originalImage.getHeight() > 500 || Constants
-										.getBoolean("galleryAlwaysUseImageMagick")) && convertExists)
-				{
-					Logger.debug(GalleryDB.class, "executing image magick: " + imageMagickDir + File.separatorChar + runtimeFile);
-					Runtime rt = Runtime.getRuntime();
-					File resizePomFile = null;
-					List<String> args = null;
-					boolean galleryStripExif = Constants.getBoolean("galleryStripExif");
-
-					String pripona = realPathSmall.substring(realPathSmall.lastIndexOf('.'));
-
-					if ("C".equals(resizeMode))
-					{
-						// crop image
-						if (resizeAndCrop)
-						{
-							// zmensit a orezat
-							// longCmd = imageMagickDir + File.separatorChar +
-							// runtimeFile + " '" + realPath + "' -resize " + w + "x" +
-							// h + "! '" + realPathSmall+"_pomresize'";
-							String pomresize = Tools.replace(realPathSmall, pripona, ".pomresize" + pripona);
-							args = new ArrayList<>();
-
-							if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPath)))
-							{
-								IwcmFsDB.writeFileToDisk(new File(realPath),new File(IwcmFsDB.getTempFilePath(realPath)));
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(IwcmFsDB.getTempFilePath(realPath));
-								args.add("-resize");
-								args.add(w + "x" + h + "!");
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(IwcmFsDB.getTempFilePath(pomresize));
-							}
-							else
-							{
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(realPath);
-								args.add("-resize");
-								args.add(w + "x" + h + "!");
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(pomresize);
-							}
-
-							StringBuilder params = new StringBuilder();
-							if (args != null)
-							{
-								for (int i = 0; i < args.size(); i++)
-								{
-									params.append(' ').append(args.get(i));
-								}
-							}
-							Logger.debug(GalleryDB.class, "LONGCMD:\n" + params);
-							Process proc = rt.exec(args.toArray(new String[0]));
-							InputStream stderr = proc.getErrorStream();
-							BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
-							String line = null;
-							while ((line = br.readLine()) != null)
-							{
-								Logger.debug(GalleryDB.class, line);
-							}
-							br.close();
-							int exitValue = proc.waitFor();
-							Logger.debug(GalleryDB.class, "ExitValue: " + exitValue);
-							// longCmd = imageMagickDir + File.separatorChar +
-							// runtimeFile +" '" + realPathSmall+"_pomresize" + "' '" +
-							// realPath + "' -crop " + w + "x" + h + "+"+ x + "+" + y +
-							// " -crop " + w + "x" + h + "-"+ x + "-" + y +" '"+
-							// realPathSmall+"'";
-
-							args = new ArrayList<>();
-							if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPath)))
-							{
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(IwcmFsDB.getTempFilePath(pomresize));
-								args.add("-crop");
-								args.add((int) width + "x" + (int) height + "+" + x + "+" + y);
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(IwcmFsDB.getTempFilePath(realPathSmall));
-							}
-							else
-							{
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(pomresize);
-								// args[2] = realPath;
-								args.add("-crop");
-								args.add((int) width + "x" + (int) height + "+" + x + "+" + y);
-								// args[5] = "-crop";
-								// args[6] = w + "x" + h + "-"+ x + "-" + y;
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(realPathSmall);
-							}
-							resizePomFile = new File(pomresize);
-						}
-						else
-						{
-							// iba orezat
-							// longCmd = imageMagickDir + File.separatorChar +
-							// runtimeFile + " '" + realPath + "' -crop " +
-							// originalImage.getWidth() + "x" +
-							// originalImage.getHeight() + "+"+ x + "+" + y + " -crop "
-							// + originalImage.getWidth() + "x" +
-							// originalImage.getHeight() + "-"+ x + "-" + y +" '"+
-							// realPathSmall+"'";
-							args = new ArrayList<>();
-							if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPath)))
-							{
-								IwcmFsDB.writeFileToDisk(new File(realPath),new File(IwcmFsDB.getTempFilePath(realPath)));
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(IwcmFsDB.getTempFilePath(realPath));
-								args.add("-crop");
-								args.add((int) width + "x" + (int) height + "+" + x + "+" + y);
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(IwcmFsDB.getTempFilePath(realPathSmall));
-							}
-							else
-							{
-								args.add(imageMagickDir + File.separatorChar + runtimeFile);
-								args.add(realPath);
-								args.add("-crop");
-								args.add((int) width + "x" + (int) height + "+" + x + "+" + y);
-								// args[5] = "-crop";
-								// args[6] = originalImage.getWidth() + "x" +
-								// originalImage.getHeight() + "-"+ x + "-" + y;
-								if (galleryStripExif) args.add("-strip");
-								if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-								args.add(realPathSmall);
-							}
-						}
-					}
-					else
-					{
-						// longCmd = imageMagickDir + File.separatorChar + runtimeFile
-						// + " '" + realPath + "' -resize " + w + "x" + h + "! '" +
-						// realPathSmall+"'";
-						args = new ArrayList<>();
-						if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPath)))
-						{
-							IwcmFsDB.writeFileToDisk(new File(realPath),new File(IwcmFsDB.getTempFilePath(realPath)));
-							args.add(imageMagickDir + File.separatorChar + runtimeFile);
-							args.add(IwcmFsDB.getTempFilePath(realPath));
-							args.add("-resize");
-							args.add(w + "x" + h + "!");
-							if (galleryStripExif) args.add("-strip");
-							if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-							if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPathSmall))) args.add(IwcmFsDB.getTempFilePath(realPathSmall));
-							else args.add(realPathSmall);
-						}
-						else
-						{
-							args.add(imageMagickDir + File.separatorChar + runtimeFile);
-							args.add(realPath);
-							args.add("-resize");
-							args.add(w + "x" + h + "!");
-							if (galleryStripExif) args.add("-strip");
-							if ("gif".equalsIgnoreCase(pripona)) args.add("+repage");
-							args.add(realPathSmall);
-						}
-					}
-					String params = "";
-					if (args != null)
-					{
-						StringBuilder buf = new StringBuilder();
-						for (int i = 0; i < args.size(); i++)
-						{
-							buf.append(' ').append(args.get(i));
-						}
-						params = buf.toString();
-					}
-					Logger.debug(GalleryDB.class, "LONGCMD:\n" + params);
-					Process proc = rt.exec(args.toArray(new String[0]));
-					Logger.debug(GalleryDB.class, "executed");
-					InputStream stderr = proc.getErrorStream();
-					BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
-					String line = null;
-					while ((line = br.readLine()) != null)
-					{
-						Logger.debug(GalleryDB.class, line);
-					}
-					br.close();
-					int exitValue = proc.waitFor();
-					Logger.debug(GalleryDB.class, "ExitValue: " + exitValue);
-
-					if (resizePomFile != null)
-						if(resizePomFile.delete() == false) return 3;
-
-					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(realPathSmall)))
-					{
-						IwcmFsDB.writeFileToDB(new File(IwcmFsDB.getTempFilePath(realPathSmall)), new File(realPathSmall));
-						if(new File(IwcmFsDB.getTempFilePath(realPathSmall)).delete() == false) return 3;
-						if(new File(IwcmFsDB.getTempFilePath(realPath)).delete() == false) return 3;
-					}
-
-					if (exitValue == 0)
-					{
-						performWatermarking(realPathSmall);
-						return (0);
-					}
-					else
-						return (3);
-				}
-				else
-				{
-					IwcmInputStream iwStream =  new IwcmInputStream(fOrigImg.getPath(), false);
-					BufferedImage originalBufferedImage = ImageIO.read(iwStream);
-					iwStream.close();
-					// Logger.println(GalleryDB.class,"w="+w+" h="+h);
-					int scaleType = Image.SCALE_AREA_AVERAGING;
-					if (originalImage.getWidth() > 1000)
-					{
-						Logger.debug(GalleryDB.class, "smooth resize");
-						scaleType = Image.SCALE_SMOOTH;
-					}
-					// toto je pre ThumbServlet
-					if (realPathSmall.indexOf(Constants.getString("thumbServletCacheDir")) != -1)
-						scaleType = Image.SCALE_FAST;
-					if (originalImage.getWidth() > 2000)
-					{
-						// Logger.debug(GalleryDB.class,"smooth fast");
-						// scaleType = Image.SCALE_FAST;
-					}
-					DebugTimer timer = new DebugTimer("ImageResize");
-					timer.diff("starting: " + scaleType);
-					Image smallImage = null;
-					if ("C".equals(resizeMode))
-					{// crop image
-						if (resizeAndCrop)
-						{// zmensit a orezat
-							smallImage = originalBufferedImage.getScaledInstance(w, h, scaleType);
-							BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-							Graphics2D g = bi.createGraphics();
-							g.drawImage(smallImage, 0, 0, null);
-							smallImage = bi.getSubimage(x, y, pom_w, pom_h);
-							w = pom_w;
-							h = pom_h;
-						}
-						else
-						{// iba orezat
-							smallImage = originalBufferedImage.getSubimage(x, y, w, h);
-						}
-					}
-					else
-					{
-						smallImage = originalBufferedImage.getScaledInstance(w, h, scaleType);
-					}
-					timer.diff("scaled");
-					BufferedImage bufSmall = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-					timer.diff("buf created");
-					// bufSmall.getGraphics().drawImage(smallImage, 0, 0, null);
-					bufSmall.createGraphics().drawImage(smallImage, 0, 0, null);
-					timer.diff("image drawed");
-					bufSmall.getGraphics().dispose();
-					timer.diff("disposed");
-					try
-					{
-						ImageWriteParam iwparam = null;
-						// ImageIO.write(bufSmall, format,iwparam, fSmallImg);
-						// Jimi.putImage("image/" + type, image, realPathSmall);
-						ImageWriter writer = null;
-
-						String format = "jpg";
-                        if (realPathLC.endsWith(".png"))
-                        {
-                            format = "png";
-                        }
-                        else
-                        {
-                            iwparam = new JPEGImageWriteParam(null);
-                            iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                            iwparam.setCompressionQuality(0.85F);
-                        }
-
-						Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
-						if (iter.hasNext())
-						{
-							writer = iter.next();
-						}
-						if (writer != null) {
-							// Prepare output file
-							IwcmOutputStream out = new IwcmOutputStream(fSmallImg.getPath());
-							ImageOutputStream ios = ImageIO.createImageOutputStream(out);
-							writer.setOutput(ios);
-							timer.diff("write start");
-							// Write the image
-							writer.write(null, new IIOImage(bufSmall, null, null), iwparam);
-							timer.diff("writed to file");
-							// Cleanup
-							ios.flush();
-							writer.dispose();
-							ios.close();
-							out.close();
-						}
-						return (0);
-					}
-					catch (Exception ex)
-					{
-						sk.iway.iwcm.Logger.error(ex);
-						return (2);
-					}
+				int exitValue = GalleryDBTools.cropAndResize(fOrigImg, cropWidth, cropHeight, cropLeft, cropTop, w, h, null, true, new IwcmFile(realPathSmall), -1, -1);
+				if (exitValue == 0) {
+					performWatermarking(realPathSmall);
+					return (0);
+				} else {
+					return (3);
 				}
 			}
-		}
-		catch (javax.imageio.IIOException ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-			return (4);
 		}
 		catch (Exception ex)
 		{
@@ -3173,24 +2850,6 @@ public class GalleryDB
 			}
 		}
 		return (3);
-	}
-
-	/**
-	 * @return - image magick runtime file by current Operating System
-	 */
-	public static String getRuntimeFile()
-	{
-		String result = "convert";
-		if (System.getProperty("os.name").indexOf("Windows") != -1)
-		{
-			result  = "convert.exe";
-		}
-		return result ;
-	}
-
-	public static String getImageMagicDir()
-	{
-		return Constants.getString("imageMagickDir");
 	}
 
 	/**
@@ -3600,66 +3259,20 @@ public class GalleryDB
 	 * @param to
 	 * @return
 	 */
-	public static int crop(IwcmFile from, int width,int height,int left,int top,IwcmFile to)
+	public static int crop(IwcmFile from, int width,int height,int left,int top, IwcmFile to)
 	{
 		if (!to.getParentFile().exists())
 		{
 			to.getParentFile().mkdirs();
 		}
 
-		String[] args = new String[5];
-		args[1]=from.getAbsolutePath();
-		args[2]="-crop";
-		args[3]=width+"x"+height+"+"+left+"+"+top;
-		args[4]=to.getAbsolutePath();
-		return executeImageMagickCommand(args);
-	}
+		List<String> args = new ArrayList<>();
 
-
-	/**
-	 * Spusti imageMagic s parametrami v args, args[0] sa nastavi automaticky podla cesty k ImageMagic
-	 * @param args
-	 */
-	public static int executeImageMagickCommand(String[] args)
-	{
-		args[0] = getImageMagicDir()+File.separatorChar+getRuntimeFile();
-		Runtime rt = Runtime.getRuntime();
-		Process process = null;
-		try
-		{
-			//odstraneny if nie je potrebny
-			StringBuilder params = new StringBuilder();
-//			if (args != null)
-//			{
-				for (int i = 0; i < args.length; i++)
-				{
-					params.append(' ').append(args[i]);
-				}
-//			}
-			Logger.debug(GalleryDB.class, "LONGCMD:\n" + params);
-
-			process= rt.exec(args);
-
-			InputStream stderr = process.getErrorStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
-			String line = null;
-			while ((line = br.readLine()) != null)
-			{
-				Logger.debug(GalleryDB.class, line);
-			}
-			br.close();
-
-			int ret = process.waitFor();
-			//convert vrati 1 namiesto 0 lebo pri -debug hlasi, ze destination subor neexistuje/nepozna .new priponu
-			if (ret==1) ret = 0;
-
-			return ret;
-		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-		return -1;
+		args.add("from");
+		args.add("-crop");
+		args.add(width+"x"+height+"+"+left+"+"+top);
+		args.add("to");
+		return ImageTools.executeImageMagick(from, to, args);
 	}
 
 	/**
@@ -4057,59 +3670,17 @@ public class GalleryDB
 	{
 		if (Constants.getBoolean("galleryStripExif") == false) return;
 
-		String imageMagickDir = getImageMagicDir();
-		boolean convertExists = false;
-		String runtimeFile = getRuntimeFile();
-
 		try
 		{
-			if (Tools.isNotEmpty(imageMagickDir))
+			if (ImageTools.existsImageMagickConvertCommand())
 			{
-				File f = new File(imageMagickDir + File.separatorChar + runtimeFile);
-				if (f.exists() && f.canRead())
-				{
-					convertExists = true;
-				}
-			}
-			if (Tools.isNotEmpty(imageMagickDir) && convertExists)
-			{
-				Logger.debug(GalleryDB.class, "executing image magick: " + imageMagickDir + File.separatorChar + runtimeFile);
-				Runtime rt = Runtime.getRuntime();
+				List<String> args = new ArrayList<>();
 
-				String[] args = new String[4];
+				args.add("from");
+				args.add("-strip");
+				args.add("to");
 
-				if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))
-				{
-					IwcmFsDB.writeFileToDisk(new File(filePath),new File(IwcmFsDB.getTempFilePath(filePath)));
-					args[0] = imageMagickDir + File.separatorChar + runtimeFile;
-					args[1] = IwcmFsDB.getTempFilePath(filePath);
-					args[2] = "-strip";
-					args[3] = IwcmFsDB.getTempFilePath(filePath);
-				}
-				else
-				{
-					args[0] = imageMagickDir + File.separatorChar + runtimeFile;
-					args[1] = filePath;
-					args[2] = "-strip";
-					args[3] = filePath;
-				}
-
-				StringBuilder params = new StringBuilder();
-				for (int i = 0; i < args.length; i++)
-				{
-					params.append(' ').append(args[i]);
-				}
-				Logger.debug(GalleryDB.class, "LONGCMD:\n" + params);
-				Process proc = rt.exec(args);
-				InputStream stderr = proc.getErrorStream();
-				BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
-				String line = null;
-				while ((line = br.readLine()) != null)
-				{
-					Logger.debug(GalleryDB.class, line);
-				}
-				br.close();
-				int exitValue = proc.waitFor();
+				int exitValue = ImageTools.executeImageMagick(new IwcmFile(filePath), args);
 				Logger.debug(GalleryDB.class, "ExitValue: " + exitValue);
 			}
 
@@ -4236,23 +3807,16 @@ public class GalleryDB
 	 */
 	public static void convertToJPG(IwcmFile f)
 	{
-		String[] args = new String[]{"imagemagick", "from", "to"};
+		List<String> args = new ArrayList<>();
 		String filePath = f.getAbsolutePath();
 		String extension = FileTools.getFileExtension(filePath);
 		try
 		{
-			if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))
-			{
-				IwcmFsDB.writeFileToDisk(new File(filePath), new File(IwcmFsDB.getTempFilePath(filePath)));
-				args[1] = IwcmFsDB.getTempFilePath(filePath);
-				args[2] = IwcmFsDB.getTempFilePath(filePath.replace("." + extension, ".jpg"));
-			}
-			else
-			{
-				args[1] = filePath;
-				args[2] = filePath.replace("." + extension, ".jpg");
-			}
-			executeImageMagickCommand(args);
+			args.add("from");
+			args.add("to");
+
+			IwcmFile jpgFile = new IwcmFile(filePath.replace("." + extension, ".jpg"));
+			ImageTools.executeImageMagick(f, jpgFile, args);
 		}
 		catch (Exception e)
 		{
@@ -4325,23 +3889,6 @@ public class GalleryDB
 		}
 
 		return null;
-	}
-
-	public static boolean existsImageMagickConvertCommand()
-	{
-		String imageMagickDir = getImageMagicDir();
-		boolean convertExists = false;
-		String runtimeFile = getRuntimeFile();
-
-		if (Tools.isNotEmpty(imageMagickDir))
-		{
-			File f = new File(imageMagickDir + File.separatorChar + runtimeFile);
-			if (f.exists() && f.canRead())
-			{
-				convertExists = true;
-			}
-		}
-		return convertExists;
 	}
 
 	/**
@@ -4511,8 +4058,7 @@ public class GalleryDB
 		//ak je vypnute fast otestuj, ci sa nejedna o adresar, ak ano, nemoze to byt obrazok
 		if (Constants.getBoolean("galleryUseFastLoading")==false && file.isFile()==false) return false;
 
-		String suffix = FileTools.getFileExtension(file.getName()).toLowerCase();
-		if ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix) || "gif".equals(suffix))
+		if (FileTools.isImage(file.getName()))
 		{
 			return true;
 		}
@@ -4531,8 +4077,7 @@ public class GalleryDB
 		//ak je vypnute fast vratime rovno ci je to adresar
 		if (Constants.getBoolean("galleryUseFastLoading")==false) return file.isDirectory();
 
-		String suffix = FileTools.getFileExtension(file.getName()).toLowerCase();
-		if ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix) || "gif".equals(suffix) || "bmp".equals(suffix) || "zip".equals(suffix))
+		if (FileTools.isImage(file.getName()))
 		{
 			return false;
 		}
@@ -4723,9 +4268,9 @@ public class GalleryDB
 	public static void applyWatermarkOnUpload(IwcmFile obrazok)
 	{
 		if(obrazok == null || obrazok.exists() == false) return;
-		String suffix = FileTools.getFileExtension(obrazok.getName().toLowerCase());
-		boolean shouldPerformWatermarking = existImageMagickCompositeCommand() && Constants.getBoolean("galleryWatermarkApplyOnUpload")
-														&& ("png".equals(suffix) || "jpg".equals(suffix) || "jpeg".equals(suffix));
+		boolean shouldPerformWatermarking = existImageMagickCompositeCommand()
+				&& Constants.getBoolean("galleryWatermarkApplyOnUpload")
+				&& ImageTools.isResizableImage(obrazok.getName());
 
 		String[] exceptions = Tools.getTokens(Constants.getString("galleryWatermarkApplyOnUploadExceptions"), ",");
 		if (exceptions != null && exceptions.length>0)
@@ -4758,23 +4303,6 @@ public class GalleryDB
 			watermark.setWatermark(wmFile.getVirtualPath());
 			addWatermarkSignature(obrazok.getAbsolutePath(), watermark);
 		}
-	}
-
-	/**
-	 * @deprecated - use GalleryDBTools.getImageSize
-	 */
-	@Deprecated
-	public static int[] getImageSize(IwcmFile imageFile){
-		return GalleryDBTools.getImageSize(imageFile);
-    }
-
-	/**
-	 * @deprecated - use GalleryDBTools.cropAndResize
-	 */
-    @Deprecated
-	public static int cropAndResize(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality, int ip)
-	{
-		return GalleryDBTools.cropAndResize(from,cwidth,cheight,cleft,ctop,finalWidth,finalHeight,fillColor,exactFinalSize,to,imageQuality,ip);
 	}
 
 	/**
