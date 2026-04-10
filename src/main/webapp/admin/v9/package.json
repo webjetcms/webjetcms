@@ -11,6 +11,7 @@
         "dev": "npm run clean && vite build --mode development",
         "prod": "npm run clean && vite build",
         "watch": "npm run clean && vite build --mode development --watch",
+        "watch:fast": "node esbuild-watch.mjs",
         "postinstall": "./postinstall.sh"
     },
     "keywords": [],
@@ -19,6 +20,9 @@
     "devDependencies": {
         "@vitejs/plugin-vue": "^5.2.1",
         "autoprefixer": "^10.4.20",
+        "chokidar": "^5.0.0",
+        "esbuild": "^0.28.0",
+        "esbuild-plugin-vue3": "^0.5.1",
         "pug": "^3.0.3",
         "replace-in-file": "^8.3.0",
         "sass": "^1.99.0",

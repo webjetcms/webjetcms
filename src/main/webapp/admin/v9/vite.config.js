@@ -52,7 +52,29 @@ function compilePugTemplates() {
         return;
     }
 
-    // Read manifest and collect entry CSS/JS files
+    const wpFiles = readManifestFiles();
+    const pugFiles = findPugFiles(PAGES_DIR);
+    const pugStart = Date.now();
+    console.log(`[pug-templates] Compiling ${pugFiles.length} PUG templates...`);
+
+    let success = 0;
+    let failed = 0;
+
+    for (const pugPath of pugFiles) {
+        if (compileSinglePugTemplate(pugPath, wpFiles)) {
+            success++;
+        } else {
+            failed++;
+        }
+    }
+
+    console.log(`[pug-templates] Done: ${success} compiled, ${failed} failed in ${Date.now() - pugStart}ms`);
+}
+
+/**
+ * Reads the Vite manifest and returns the { css, js } file lists for PUG templates.
+ */
+function readManifestFiles() {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
     const cssFiles = new Set();
     const jsFiles = [];
@@ -83,48 +105,192 @@ function compilePugTemplates() {
         jsFiles.splice(initIdx, 0, main);
     }
 
-    const wpFiles = { css: orderedCss, js: jsFiles };
+    return { css: orderedCss, js: jsFiles };
+}
 
-    // Compile all PUG page templates
-    const pugFiles = findPugFiles(PAGES_DIR);
+/**
+ * Compiles a single PUG page template into dist/views/ HTML.
+ * Returns true on success, false on failure.
+ */
+function compileSinglePugTemplate(pugPath, wpFiles) {
+    const relativePath = path.relative(PAGES_DIR, pugPath);
+    const outputRelative = relativePath.replace(/\.pug$/, '.html');
+    const outputPath = path.resolve(DIST_DIR, 'views', outputRelative);
+
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+    // Emulate htmlWebpackPlugin API for PUG templates
+    const htmlWebpackPlugin = {
+        options: {
+            data: WP_DATA,
+            filename: outputPath,
+        },
+        files: wpFiles,
+    };
+
+    try {
+        let html = pug.renderFile(pugPath, {
+            htmlWebpackPlugin,
+            filename: pugPath, // needed for pug includes/extends resolution
+            basedir: VIEWS_DIR,
+        });
+
+        // Remove HTML comments but preserve conditional comments (<!--[if ...)
+        // and Thymeleaf parser-level comments (<!--/* ... */-->)
+        html = html.replace(/<!--(?!\[if\s)(?!\/\*)([\s\S]*?)-->/g, '');
+
+        fs.writeFileSync(outputPath, html, 'utf-8');
+        return true;
+    } catch (err) {
+        console.error(`  ERROR: ${outputRelative}: ${err.message}`);
+        return false;
+    }
+}
+
+/**
+ * Builds a reverse dependency map for PUG files.
+ * Returns a Map: absolutePartialPath → Set of absolutePagePaths that depend on it.
+ * Scans all page files for `extends` and `include` directives, then transitively
+ * resolves dependencies through partials that include other partials.
+ */
+function buildPugDependencyMap() {
+    const allPugFiles = findPugFiles(VIEWS_DIR);
+    // Forward deps: file → Set of files it directly depends on
+    const forwardDeps = new Map();
+
+    for (const pugFile of allPugFiles) {
+        const deps = new Set();
+        try {
+            const content = fs.readFileSync(pugFile, 'utf-8');
+            const dir = path.dirname(pugFile);
+            // Match: extends path, include path (with optional filters like :filter)
+            const regex = /^\s*(?:extends|include)\s+([^\s(]+)/gm;
+            let match;
+            while ((match = regex.exec(content)) !== null) {
+                let depPath = match[1];
+                // Resolve relative to the file's directory, or absolute to basedir
+                let resolved;
+                if (depPath.startsWith('/')) {
+                    resolved = path.resolve(VIEWS_DIR, depPath.slice(1));
+                } else {
+                    resolved = path.resolve(dir, depPath);
+                }
+                // Add .pug extension if missing
+                if (!resolved.endsWith('.pug')) {
+                    resolved += '.pug';
+                }
+                if (fs.existsSync(resolved)) {
+                    deps.add(resolved);
+                }
+            }
+        } catch (err) {
+            // If we can't read a file, skip it
+        }
+        forwardDeps.set(pugFile, deps);
+    }
+
+    // Transitively resolve: for each page file, collect ALL transitive dependencies
+    const pageFiles = findPugFiles(PAGES_DIR);
+    const pageSet = new Set(pageFiles);
+
+    // reverseDeps: partial → Set of page files that (transitively) depend on it
+    const reverseDeps = new Map();
+
+    for (const page of pageFiles) {
+        const visited = new Set();
+        const stack = [page];
+        while (stack.length > 0) {
+            const current = stack.pop();
+            if (visited.has(current)) continue;
+            visited.add(current);
+            const deps = forwardDeps.get(current);
+            if (deps) {
+                for (const dep of deps) {
+                    stack.push(dep);
+                }
+            }
+        }
+        // Every file in visited (except the page itself) is a dependency of this page
+        for (const dep of visited) {
+            if (dep === page) continue;
+            if (!reverseDeps.has(dep)) {
+                reverseDeps.set(dep, new Set());
+            }
+            reverseDeps.get(dep).add(page);
+        }
+    }
+
+    return reverseDeps;
+}
+
+// Cached PUG dependency map (built once, rebuilt when file set changes)
+let pugDependencyMap = null;
+
+/**
+ * Compiles only the PUG templates affected by a change in the given file.
+ * - If the changed file is a page in views/pages/ → compile only that page
+ * - If the changed file is a shared partial → compile all pages that depend on it
+ * - Falls back to full compilation if dependency map is unavailable
+ */
+function compilePugIncremental(changedAbsPath) {
+    if (!fs.existsSync(MANIFEST_PATH)) {
+        console.error('[pug-templates] Vite manifest not found at', MANIFEST_PATH);
+        return;
+    }
+
+    const wpFiles = readManifestFiles();
     const pugStart = Date.now();
-    console.log(`[pug-templates] Compiling ${pugFiles.length} PUG templates...`);
 
+    // Check if the changed file is a page file (under views/pages/)
+    const isPageFile = changedAbsPath.startsWith(PAGES_DIR + path.sep);
+
+    if (isPageFile) {
+        // Compile only the changed page
+        console.log(`[pug-templates] Compiling 1 changed page...`);
+        const ok = compileSinglePugTemplate(changedAbsPath, wpFiles);
+        console.log(`[pug-templates] Done: ${ok ? 1 : 0} compiled, ${ok ? 0 : 1} failed in ${Date.now() - pugStart}ms`);
+        return;
+    }
+
+    // Changed file is a shared partial — find affected pages via dependency map
+    if (!pugDependencyMap) {
+        pugDependencyMap = buildPugDependencyMap();
+    }
+
+    const affectedPages = pugDependencyMap.get(changedAbsPath);
+
+    if (!affectedPages || affectedPages.size === 0) {
+        // Unknown dependency — rebuild the dependency map and try again
+        pugDependencyMap = buildPugDependencyMap();
+        const retryPages = pugDependencyMap.get(changedAbsPath);
+
+        if (!retryPages || retryPages.size === 0) {
+            // Still unknown — full recompilation as fallback
+            console.log(`[pug-templates] Unknown partial, full recompilation...`);
+            compilePugTemplates();
+            return;
+        }
+
+        compilePageSet(retryPages, wpFiles, pugStart);
+        return;
+    }
+
+    compilePageSet(affectedPages, wpFiles, pugStart);
+}
+
+/**
+ * Compiles a specific set of PUG page files.
+ */
+function compilePageSet(pages, wpFiles, pugStart) {
+    console.log(`[pug-templates] Compiling ${pages.size} affected page(s)...`);
     let success = 0;
     let failed = 0;
 
-    for (const pugPath of pugFiles) {
-        const relativePath = path.relative(PAGES_DIR, pugPath);
-        const outputRelative = relativePath.replace(/\.pug$/, '.html');
-        const outputPath = path.resolve(DIST_DIR, 'views', outputRelative);
-
-        fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-
-        // Emulate htmlWebpackPlugin API for PUG templates
-        const htmlWebpackPlugin = {
-            options: {
-                data: WP_DATA,
-                filename: outputPath,
-            },
-            files: wpFiles,
-        };
-
-        try {
-            let html = pug.renderFile(pugPath, {
-                htmlWebpackPlugin,
-                filename: pugPath, // needed for pug includes/extends resolution
-                basedir: VIEWS_DIR,
-            });
-
-            // Remove HTML comments but preserve conditional comments (<!--[if ...)
-            // and Thymeleaf parser-level comments (<!--/* ... */-->)
-            html = html.replace(/<!--(?!\[if\s)(?!\/\*)([\s\S]*?)-->/g, '');
-
-            fs.writeFileSync(outputPath, html, 'utf-8');
+    for (const pagePath of pages) {
+        if (compileSinglePugTemplate(pagePath, wpFiles)) {
             success++;
-        } catch (err) {
+        } else {
             failed++;
-            console.error(`  ERROR: ${outputRelative}: ${err.message}`);
         }
     }
 
@@ -188,13 +354,15 @@ function pugTemplatesPlugin() {
 
 /**
  * Starts an independent file watcher on the views/ directory.
- * When any .pug file changes, recompiles all PUG templates without triggering Vite rebuild.
+ * When any .pug file changes, incrementally compiles only affected PUG templates.
  * Uses Node's built-in fs.watch with recursive option (works on macOS and Windows).
  */
 function startPugWatcher() {
     let debounceTimer = null;
 
-    console.log('[pug-watcher] Watching views/ for PUG changes...');
+    // Build dependency map at watcher startup for incremental compilation
+    pugDependencyMap = buildPugDependencyMap();
+    console.log('[pug-watcher] Watching views/ for PUG changes (incremental mode)...');
 
     fs.watch(VIEWS_DIR, { recursive: true }, (eventType, filename) => {
         if (!filename || !filename.endsWith('.pug')) return;
@@ -203,7 +371,8 @@ function startPugWatcher() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             console.log(`[pug-watcher] PUG change detected: ${filename}`);
-            compilePugTemplates();
+            const changedAbsPath = path.resolve(VIEWS_DIR, filename);
+            compilePugIncremental(changedAbsPath);
         }, 300);
     });
 }
@@ -327,12 +496,21 @@ function compileSassStyles(mode) {
  */
 function scssCompilerPlugin(mode) {
     let scssWatcherStarted = false;
+    let firstBuildDone = false;
 
     return {
         name: 'scss-compiler',
 
         writeBundle() {
+            // In watch mode, skip SCSS recompilation after the first build.
+            // The independent SCSS watcher handles subsequent SCSS changes.
+            // This prevents wasting ~4s on SCSS recompilation during JS-only rebuilds.
+            if (firstBuildDone && this.meta.watchMode) {
+                return;
+            }
+
             compileSassStyles(mode);
+            firstBuildDone = true;
 
             // Start independent SCSS watcher in watch mode
             if (!scssWatcherStarted && this.meta.watchMode) {
@@ -486,6 +664,9 @@ export default defineConfig(({ mode }) => ({
         sourcemap: mode === 'development' ? true : false,
 
         rollupOptions: {
+            // Disable tree shaking in development — unnecessary overhead for Rollup's generate phase
+            treeshake: mode === 'production',
+
             // Suppress known harmless warnings:
             // - MIXED_DYNAMIC_STATIC: vue-server-monitoring.vue imported both ways (intentional)
             onwarn(warning, warn) {

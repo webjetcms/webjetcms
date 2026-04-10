@@ -3,7 +3,7 @@ import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
 import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
-console.log("vite test 02");
+console.log("vite test 07");
 
 window.domReady.add(initClosure, 1, true);
 
