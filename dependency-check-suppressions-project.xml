@@ -207,7 +207,7 @@
    file name: diff:7.0.0
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-24001</vulnerabilityName>
+   <cve>CVE-2026-24001</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -221,7 +221,7 @@
    file name: glob:10.4.5
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-64756</vulnerabilityName>
+   <cve>CVE-2025-64756</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -242,21 +242,21 @@
    file name: js-yaml:4.1.0
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-64718</vulnerabilityName>
+   <cve>CVE-2025-64718</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: markdown-it:14.1.0
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-2327</vulnerabilityName>
+   <cve>CVE-2026-2327</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: mdast-util-to-hast:13.2.0
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-66400</vulnerabilityName>
+   <cve>CVE-2025-66400</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -270,7 +270,7 @@
    file name: bootstrap.min.js
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2024-6485</vulnerabilityName>
+   <cve>CVE-2024-6485</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -319,42 +319,42 @@
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-55184</vulnerabilityName>
+   <cve>CVE-2025-55184</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-59471</vulnerabilityName>
+   <cve>CVE-2025-59471</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-59472</vulnerabilityName>
+   <cve>CVE-2025-59472</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-23864</vulnerabilityName>
+   <cve>CVE-2026-23864</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-27979</vulnerabilityName>
+   <cve>CVE-2026-27979</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-27980</vulnerabilityName>
+   <cve>CVE-2026-27980</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -375,14 +375,14 @@
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2025-55183</vulnerabilityName>
+   <cve>CVE-2025-55183</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-29057</vulnerabilityName>
+   <cve>CVE-2026-29057</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -403,7 +403,7 @@
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-27977</vulnerabilityName>
+   <cve>CVE-2026-27977</cve>
   </suppress>
   <suppress>
    <notes><![CDATA[
@@ -417,7 +417,7 @@
    file name: next:16.0.1
    ]]></notes>
    <filePath regex="true">.*\/templates\/.*</filePath>
-   <vulnerabilityName>CVE-2026-27978</vulnerabilityName>
+   <cve>CVE-2026-27978</cve>
   </suppress>
 
   <!-- zly warning na jquery 3.0.0 ktory je len minimal dependency -->
