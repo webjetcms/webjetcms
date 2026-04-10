@@ -228,7 +228,8 @@ function momentLocalePlugin() {
                 if (factoryStart === -1 || factoryEnd === -1) return null;
                 // Extract the factory: (function (moment) { ... })
                 const factory = code.substring(factoryStart, factoryEnd + 2);
-                return `import moment from 'moment';\n${factory}(moment);`;
+                const transformed = `import moment from 'moment';\n${factory}(moment);`;
+                return { code: transformed, map: null };
             }
         }
     };
@@ -311,6 +312,13 @@ export default defineConfig(({ mode }) => ({
         sourcemap: mode === 'development' ? true : false,
 
         rollupOptions: {
+            // Suppress known harmless warnings:
+            // - MIXED_DYNAMIC_STATIC: vue-server-monitoring.vue imported both ways (intentional)
+            onwarn(warning, warn) {
+                if (warning.code === 'IMPORT_IS_UNDEFINED') return;
+                if (warning.message && warning.message.includes('dynamic import will not move module')) return;
+                warn(warning);
+            },
             input: {
                 main: path.resolve(__dirname, 'src/js/app.js'),
                 appInit: path.resolve(__dirname, 'src/js/app-init.js'),

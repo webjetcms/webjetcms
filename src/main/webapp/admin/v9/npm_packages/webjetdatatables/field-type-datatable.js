@@ -297,7 +297,7 @@ export function typeDatatable() {
                             else if (value=="") value = [];
                         }
                         if ("true" === value || "false" === value) {
-                            value = eval(value);
+                            value = ("true" === value);
                         }
                         //console.log("Setting dtConf: key=", key, "name=", name, " value=", value);
                         dtConf[name] = value;
