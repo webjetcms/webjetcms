@@ -3,8 +3,140 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pug from 'pug';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const VIEWS_DIR = path.resolve(__dirname, 'views');
+const PAGES_DIR = path.resolve(VIEWS_DIR, 'pages');
+const DIST_DIR = path.resolve(__dirname, 'dist');
+const MANIFEST_PATH = path.resolve(DIST_DIR, '.vite/manifest.json');
+const PUBLIC_PATH = '/admin/v9/dist/';
+
+// Build metadata matching webpack's WPD (used by PUG templates via htmlWebpackPlugin emulation)
+const WP_DATA = {
+    name: "WebJET CMS",
+    generator: "WebJET CMS",
+    author: "InterWay, a. s. - www.interway.sk",
+    publicPath: PUBLIC_PATH
+};
+
+/**
+ * Recursively find all .pug files in a directory.
+ */
+function findPugFiles(dir) {
+    const results = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            results.push(...findPugFiles(fullPath));
+        } else if (entry.name.endsWith('.pug')) {
+            results.push(fullPath);
+        }
+    }
+    return results;
+}
+
+/**
+ * Vite plugin that compiles PUG templates from views/pages/ into dist/views/ HTML files.
+ * Replaces the external build-templates.mjs script.
+ *
+ * Emulates the htmlWebpackPlugin API so PUG templates need ZERO changes:
+ *   - htmlWebpackPlugin.options.data  → WP_DATA (name, generator, author, publicPath)
+ *   - htmlWebpackPlugin.files         → { css: string[], js: string[] }
+ *   - htmlWebpackPlugin.options.filename → output file path (used by head.pug for page-specific JS)
+ */
+function pugTemplatesPlugin() {
+    return {
+        name: 'pug-templates',
+
+        // Register all .pug files as watched so vite build --watch triggers rebuild on PUG changes
+        buildStart() {
+            if (!fs.existsSync(VIEWS_DIR)) return;
+            for (const pugFile of findPugFiles(VIEWS_DIR)) {
+                this.addWatchFile(pugFile);
+            }
+        },
+
+        // After Vite writes JS/CSS to dist/, read the manifest and compile PUG→HTML
+        writeBundle() {
+            if (!fs.existsSync(MANIFEST_PATH)) {
+                console.error('[pug-templates] Vite manifest not found at', MANIFEST_PATH);
+                return;
+            }
+
+            // Read manifest and collect entry CSS/JS files
+            const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
+            const cssFiles = new Set();
+            const jsFiles = [];
+
+            for (const [, entry] of Object.entries(manifest)) {
+                if (entry.isEntry) {
+                    jsFiles.push(PUBLIC_PATH + entry.file);
+                    if (entry.css) {
+                        for (const cssFile of entry.css) {
+                            cssFiles.add(PUBLIC_PATH + cssFile);
+                        }
+                    }
+                }
+            }
+
+            // Ensure main (app.js) loads before appInit (app-init.js) — main sets up globals
+            const mainIdx = jsFiles.findIndex(f => f.includes('/main.'));
+            const initIdx = jsFiles.findIndex(f => f.includes('/appInit.'));
+            if (mainIdx > 0 && initIdx >= 0 && mainIdx > initIdx) {
+                const [main] = jsFiles.splice(mainIdx, 1);
+                jsFiles.splice(initIdx, 0, main);
+            }
+
+            const wpFiles = { css: [...cssFiles], js: jsFiles };
+
+            // Compile all PUG page templates
+            const pugFiles = findPugFiles(PAGES_DIR);
+            console.log(`[pug-templates] Compiling ${pugFiles.length} PUG templates...`);
+
+            let success = 0;
+            let failed = 0;
+
+            for (const pugPath of pugFiles) {
+                const relativePath = path.relative(PAGES_DIR, pugPath);
+                const outputRelative = relativePath.replace(/\.pug$/, '.html');
+                const outputPath = path.resolve(DIST_DIR, 'views', outputRelative);
+
+                fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+                // Emulate htmlWebpackPlugin API for PUG templates
+                const htmlWebpackPlugin = {
+                    options: {
+                        data: WP_DATA,
+                        filename: outputPath,
+                    },
+                    files: wpFiles,
+                };
+
+                try {
+                    let html = pug.renderFile(pugPath, {
+                        htmlWebpackPlugin,
+                        filename: pugPath, // needed for pug includes/extends resolution
+                        basedir: VIEWS_DIR,
+                    });
+
+                    // Remove HTML comments but preserve conditional comments (<!--[if ...)
+                    // and Thymeleaf parser-level comments (<!--/* ... */-->)
+                    html = html.replace(/<!--(?!\[if\s)(?!\/\*)([\s\S]*?)-->/g, '');
+
+                    fs.writeFileSync(outputPath, html, 'utf-8');
+                    success++;
+                } catch (err) {
+                    failed++;
+                    console.error(`  ERROR: ${outputRelative}: ${err.message}`);
+                }
+            }
+
+            console.log(`[pug-templates] Done: ${success} compiled, ${failed} failed`);
+        },
+    };
+}
 
 // Inline plugin to fix moment.js locale handling:
 // 1. Strips unused locale imports (replaces moment-locales-webpack-plugin)
@@ -94,6 +226,8 @@ export default defineConfig(({ mode }) => ({
                 fs.copyFileSync(src, dest);
             }
         },
+        // Compile PUG templates from views/pages/ into dist/views/ HTML
+        pugTemplatesPlugin(),
     ],
 
     css: {
@@ -114,7 +248,7 @@ export default defineConfig(({ mode }) => ({
 
     build: {
         outDir: 'dist',
-        emptyOutDir: false, // don't delete dist/views which we generate separately
+        emptyOutDir: false, // writeBundle plugins (copy-jquery, pug-templates) write into dist/
         manifest: true,
         sourcemap: mode === 'development' ? true : false,
 
