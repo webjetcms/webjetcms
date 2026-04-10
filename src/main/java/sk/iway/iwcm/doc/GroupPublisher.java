@@ -132,24 +132,27 @@ public class GroupPublisher
 	 */
 	public static void main(String[] args)
 	{
-		try{
-		@SuppressWarnings("unchecked")
-		List<Number> rowIds = query.forList(
-			"SELECT schedule_id FROM groups_scheduler WHERE when_to_publish IS NOT NULL AND date_published IS NULL AND when_to_publish <= ?", new Timestamp(System.currentTimeMillis())
-		);
+		try {
+			//call DocDB.getInstance to refresh publicableDocs, if on public nodes there is not perms to write to documents table
+			DocDB.getInstance();
 
-		if (rowIds.size() == 0)
-			return;
+			@SuppressWarnings("unchecked")
+			List<Number> rowIds = query.forList(
+				"SELECT schedule_id FROM groups_scheduler WHERE when_to_publish IS NOT NULL AND date_published IS NULL AND when_to_publish <= ?", new Timestamp(System.currentTimeMillis())
+			);
 
-		for (Number id : rowIds)
-		{
-			publish(id.intValue());
-			markAsPublished(id.intValue());
-		}
+			if (rowIds.size() == 0)
+				return;
 
-		GroupsDB.getInstance(true);
-		//mohla sa zmenit URL linka adresara
-		DocDB.getInstance(true);
+			for (Number id : rowIds)
+			{
+				publish(id.intValue());
+				markAsPublished(id.intValue());
+			}
+
+			GroupsDB.getInstance(true);
+			//mohla sa zmenit URL linka adresara
+			DocDB.getInstance(true);
 		}
 		catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
