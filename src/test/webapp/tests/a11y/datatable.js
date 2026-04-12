@@ -103,5 +103,5 @@ Scenario("p34: help text", async ({ I, DTE, Apps, a11y }) => {
     Apps.openAppEditor(77667);
     //I.switchTo('#editorComponent');
     I.waitForText("Povoliť viacero odpovedí", 10, ".col-form-label");
-    await a11y.check("#editorComponent");
+    await a11y.check("iframe.cke_dialog_ui_iframe #editorComponent");
 });
