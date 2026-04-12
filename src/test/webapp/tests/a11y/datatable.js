@@ -105,3 +105,8 @@ Scenario("p34: help text", async ({ I, DTE, Apps, a11y }) => {
     I.waitForText("Povoliť viacero odpovedí", 10, ".col-form-label");
     await a11y.check("iframe.cke_dialog_ui_iframe #editorComponent");
 });
+
+Scenario("p40: is-not-public contrast", async ({ I, DTE, Apps, a11y }) => {
+    I.amOnPage("/apps/forum/admin/");
+    await a11y.check();
+});

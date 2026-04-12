@@ -44,7 +44,8 @@
     "scr:current:prod:en": "CODECEPT_SCREENSHOTS='true' CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "a11y": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' CODECEPT_SHOW=false codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}'",
     "a11y:pause": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps -p pauseOnFail --override '{ \"tests\": \"./tests/a11y/**/*.js\"}'",
-    "a11y:current": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}' --grep '@current'"
+    "a11y:current": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}' --grep '@current'",
+    "a11y:current:prod": "CODECEPT_RESTART='session' CODECEPT_AUTODELAY='true' codeceptjs run --steps --override '{ \"tests\": \"./tests/a11y/**/*.js\"}' --grep '@current'"
   },
   "author": "Lubos Balat, InterWay, a. s.",
   "devDependencies": {

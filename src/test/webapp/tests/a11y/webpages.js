@@ -34,3 +34,9 @@ Scenario('p26: image dialog', async ({ I, DTE, Browser, a11y }) => {
     await a11y.check();
     I.switchTo();
 });
+
+Scenario('p36: tabs navigation', async ({ I, DTE, Browser, a11y }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    //TODO: pills-pages as Obsahová navigácia
+    await a11y.check();
+});
