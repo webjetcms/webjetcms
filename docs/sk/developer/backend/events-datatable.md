@@ -193,7 +193,7 @@ if (dto != null) {
 }
 ```
 
-Udalosť sa vyvolá **synchrónne** pred serializáciou stĺpcov do JSON, takže všetky zmeny vykonané v listeneri sa prejavia v odpovedi.
+Udalosť sa vyvolá **synchrónne** pred serializáciou stĺpcov do JSON, takže všetky zmeny vykonané v `listener` sa prejavia v odpovedi.
 
 ### Príklady použitia
 
@@ -248,6 +248,6 @@ public class RemoveColumnListener {
 ### Poznámky
 
 - Udalosť sa publikuje pri **každom** načítaní konfigurácie stĺpcov datatabuľky (typicky pri otvorení stránky s datatabuľkou)
-- Zmeny v listeneroch sú trvalé len počas spracovania požiadavky - pri ďalšom načítaní sa stĺpce vygenerujú nanovo z anotácií
+- Zmeny v `listener` sú trvalé len počas spracovania požiadavky - pri ďalšom načítaní sa stĺpce vygenerujú nanovo z anotácií
 - Pre filtrovanie udalostí podľa entity použite atribút `condition` s porovnaním `#event.clazz eq 'full.class.Name'`
 - `DatatableColumnsEvent` rozširuje `ApplicationEvent` (nie `DatatableEvent`), preto sa s ním pracuje samostatne

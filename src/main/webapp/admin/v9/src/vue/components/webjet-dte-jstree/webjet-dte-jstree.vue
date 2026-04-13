@@ -155,6 +155,7 @@
                         window.$(textInputId).val(that.$root.data[0].virtualPath).change();
 
                         // Dispatch custom event with new value, so it can be listened on by other components if needed
+                        //its vue component so standard event listener on input will not work
                         WJ.dispatchEvent("WJ.jstree-simple.change", {textInputId: textInputId, value: that.$root.data[0].virtualPath});
                 } else if (that.click.indexOf("dt-tree-groupid-root")!=-1 || that.click.indexOf("dt-tree-groupid")!=-1 || that.click.indexOf("dt-tree-pageid")!=-1) {
                     setTimeout(function() {

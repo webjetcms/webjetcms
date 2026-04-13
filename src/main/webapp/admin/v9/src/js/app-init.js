@@ -675,41 +675,39 @@ function initClosure() {
 
     window.addEventListener('WJ.treeInitialJson.done', (e) => {
         //scroll to selected item
-        setTimeout(function() {
-            var $selected = somStromcek.find('.jstree-clicked');
-            if ($selected.length === 0) return;
+        var $selected = somStromcek.find('.jstree-clicked');
+        if ($selected.length === 0) return;
 
-            var el = $selected[0];
-            var $scrollContainer = somStromcek.closest('.tree-col');
-            var scrollbar = null;
+        var el = $selected[0];
+        var $scrollContainer = somStromcek.closest('.tree-col');
+        var scrollbar = null;
 
-            if ($scrollContainer.length > 0) {
-                var scrollContentElement = $scrollContainer.find('.scroll-content')[0];
+        if ($scrollContainer.length > 0) {
+            var scrollContentElement = $scrollContainer.find('.scroll-content')[0];
 
-                // Use custom scrollbar only when the library and target element are available.
-                if (typeof Scrollbar !== 'undefined' && scrollContentElement) {
-                    scrollbar = Scrollbar.get(scrollContentElement);
-                }
+            // Use custom scrollbar only when the library and target element are available.
+            if (typeof Scrollbar !== 'undefined' && scrollContentElement) {
+                scrollbar = Scrollbar.get(scrollContentElement);
             }
+        }
 
-            if (scrollbar) {
-                var selectedTop = $selected.offset().top - $scrollContainer.offset().top + scrollbar.scrollTop;
-                var containerHeight = $scrollContainer.height();
-                if (selectedTop > containerHeight - 50) {
-                    scrollbar.scrollTop = selectedTop - containerHeight / 2;
-                }
-            } else {
-                //we can use center here, because when the element is on bottom it will scroll whole window
-                el.scrollIntoView({block: 'nearest'});
-                var scrollParent = el.parentElement;
-                while (scrollParent && scrollParent !== document.body) {
-                    var style = getComputedStyle(scrollParent);
-                    if (/(auto|scroll)/.test(style.overflow + style.overflowY)) break;
-                    scrollParent = scrollParent.parentElement;
-                }
-                if (scrollParent) scrollParent.scrollTop += 100;
+        if (scrollbar) {
+            var selectedTop = $selected.offset().top - $scrollContainer.offset().top + scrollbar.scrollTop;
+            var containerHeight = $scrollContainer.height();
+            if (selectedTop > containerHeight - 50) {
+                scrollbar.scrollTop = selectedTop - containerHeight / 2;
             }
-        }, 200);
+        } else {
+            //we can use center here, because when the element is on bottom it will scroll whole window
+            el.scrollIntoView({block: 'nearest'});
+            var scrollParent = el.parentElement;
+            while (scrollParent && scrollParent !== document.body) {
+                var style = getComputedStyle(scrollParent);
+                if (/(auto|scroll)/.test(style.overflow + style.overflowY)) break;
+                scrollParent = scrollParent.parentElement;
+            }
+            if (scrollParent) scrollParent.scrollTop += 100;
+        }
     });
 
     window.jstree.on('after_open.jstree', function () {

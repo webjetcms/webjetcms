@@ -91,6 +91,7 @@ block content
                         actualAction = action;
                     });
 
+                    //listen to change of parent folder (its vue compoment so listener on input will not work)
                     window.addEventListener("WJ.jstree-simple.change", function(e) {
                         // Make sense only when editing
                         if(actualAction !== "edit") return;
@@ -418,8 +419,8 @@ block content
                     });
 
                     //fired for treeInitialJson selected node - set galleyDimension object and upload path
-                    window.addEventListener('WJ.treeInitialJson.selectedNode', (e) => {
-                        //console.log("WJ.treeInitialJson.selectedNode", e);
+                    window.addEventListener('WJ.treeInitialJson.done', (e) => {
+                        //console.log("WJ.treeInitialJson.done", e);
                         var node = e.detail;
                         //console.log("node=", node);
                         setGalleryTablePath(dir);
