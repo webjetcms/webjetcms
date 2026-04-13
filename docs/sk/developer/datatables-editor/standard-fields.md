@@ -465,7 +465,7 @@ Zobrazí textové pole, ktorého hodnotu nie je možné meniť. V príklade si v
 
 Zobrazí jednoduchý HTML editor, ktorý umožňuje základné formátovanie textu ako tučné písmo/kurzíva/podčiarknuté, nadpisy, zoznamy a odkaz.
 
-Všimnite si použitie konvertora ```@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, ktorý povolí odoslať len [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementov a podobne).
+Všimnite si použitie konvertora ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, ktorý povolí odoslať len [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementov a podobne).
 
 ```java
     @Column(name = "l_description_sk")
@@ -474,7 +474,7 @@ Všimnite si použitie konvertora ```@javax.persistence.Convert(converter = Allo
             title = "[[#{gallery.l_description}]] <span class='lang-shortcut'>sk</span>",
             tab = "description"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongSk;
 ```
 
@@ -485,7 +485,7 @@ Ak nastavíte CSS triedu ```quill-oneline``` zobrazí sa zjednodušený editor b
 ```java
     @Column(name = "tooltip")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
 ```
 

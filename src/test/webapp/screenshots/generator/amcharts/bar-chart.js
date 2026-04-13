@@ -4,17 +4,12 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('screenshot bar chart from search engines', ({I, DTE, Document}) => { 
-    I.amOnPage("/apps/stat/admin/search-engines/");
+Scenario('screenshot bar chart', async ({I, DTE, Document}) => {
+    I.amOnPage("/apps/form/admin/form-stats/?formName=Multistepform_screens");
 
-    within("#searchEnginesQueryDataTable_extfilter", () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, "01.01.2022");
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
-    DTE.waitForLoader();
+    Document.scrollTo("#form-stats_select-1_container");
+    Document.screenshotElement("#form-stats_select-1_container", "/developer/frameworks/charts/frontend/bar-chart-horizontal.png");
 
-    //pockaj na loader pre grafy
-    I.waitForInvisible("#loader", 20);
-
-    Document.screenshotElement("#graphsDiv", "/developer/frameworks/charts/frontend/bar-chart.png");
+    Document.scrollTo("#form-stats_radiogroup-2_container");
+    Document.screenshotElement("#form-stats_radiogroup-2_container", "/developer/frameworks/charts/frontend/bar-chart-vertical.png");
 });

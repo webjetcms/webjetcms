@@ -472,7 +472,7 @@ public class DocMirroringServiceV9 {
       for (DocDetails syncedDoc : syncedDocs) {
          if (syncedDoc.isAvailable()==false) continue;
          GroupDetails syncedDocGroup = groupsDB.getGroup(syncedDoc.getGroupId());
-         if (syncedDocGroup != null) {
+         if (syncedDocGroup != null && syncedDocGroup.isInternal()==false && syncedDocGroup.getMenuType(request.getSession())!=GroupDetails.MENU_TYPE_HIDDEN) {
             LabelValueDetails link = new LabelValueDetails();
 
             String lng = syncedDocGroup.getLng().toLowerCase();

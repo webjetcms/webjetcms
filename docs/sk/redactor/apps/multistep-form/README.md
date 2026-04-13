@@ -110,6 +110,24 @@ Dostupné značky sú:
 - ```!LOGGED_USER_FIELDE!``` - voľné pole E
 - `!LOGGED_USER_GROUPS!` - zoznam skupín používateľov
 
+### Štatistika
+
+Karta **Štatistika** umožňuje zapnúť štatistiku odpovedí pre danú položku formulára. Štatistiku aktivujete zvolením možnosti **Zobraziť štatistiku**. Po jej zapnutí sa zobrazia všetky dostupné nastavenia štatistiky pre danú položku.
+
+!>**Upozornenie:** Povolením/zamietnutím možnosti **Zobraziť štatistiku** ovplyvníte iba štatistiku tejto jednej položky formulára, nie ostatných položiek.
+
+Dostupné nastavenia:
+
+- **Zobraziť štatistiku** – po zvolení sa zobrazí graf reprezentujúci odpovede na toto pole v sekcii **Štatistiky formulára**.
+- **Typ grafu** – určuje, akým typom grafu chcete dáta reprezentovať.
+- **Počet hodnôt** – počet najčastejších hodnôt, ktoré sa zobrazia v grafe.
+- **Zobraziť "Ostatné"** – po zvolení sa v grafe zobrazia zvyšné hodnoty (tie, ktoré nepatria medzi top X podľa nastavenia **Počet hodnôt**) ako jedna položka s názvom "Ostatné".
+- **Zobraziť "Nezodpovedané"** – po zvolení sa v grafe zobrazia aj nezodpovedané odpovede ako položka "Nezodpovedané". Užitočné najmä vtedy, ak pole nie je povinné a používateľ mohol nechať pole nevyplnené.
+- **Porovnávať laxne** – po zvolení sa pri zoskupovaní odpovedí ignoruje veľkosť písmen a diakritika (napr. `Áno` a `ano` sa spočítajú dokopy ako rovnaká odpoveď).
+- **Vybrať farebnú schému pre graf** – po zvolení sa sprístupní výber farebnej schémy grafu. Každá farebná schéma obsahuje 5 farieb. Ak graf obsahuje viac ako 5 hodnôt, farby sa začnú opakovať. Pri veľkom počte hodnôt odporúčame schému nenastavovať – použije sa predvolená schéma, ktorá vzniká kombináciou troch 5-farebných schém s rôznymi odtieňmi.
+
+![](form-item-editor-stat.png)
+
 ## Náhľad formuláru
 
 Tretí stĺpec sekcie **Obsah formuláru** je náhľad formuláru. Tento náhľad zobrazuje aktuálny krok formuláru tak, podobne ako ho uvidí používateľ. Náhľad sa aktualizuje vždy, keď nastane nejaká zmena v tabuľke kroky alebo položky formuláru. Týmto spôsobom môžete orientačne vidieť, ako bude formulár vyzerať po vykonaní zmien.

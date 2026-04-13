@@ -492,6 +492,17 @@ public class DataTableColumn {
             editor.setType("timehms");
         }
 
+        if (dataTableColumnType == DataTableColumnType.DURATION) {
+            renderFormat = "dt-format-duration";
+            addClassName("dt-style-date");
+            addClassName("dt-style-time");
+
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("duration");
+        }
+
         if (dataTableColumnType == DataTableColumnType.OPEN_EDITOR) {
             addClassName("dt-row-edit");
             renderFormat = "dt-format-text";

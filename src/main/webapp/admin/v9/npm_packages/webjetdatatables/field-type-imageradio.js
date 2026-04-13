@@ -17,13 +17,19 @@ export function typeImageRadio() {
             }
             if (opts) {
                 $.fn.dataTable.Editor.pairs(opts, conf.optionsPair, function (val, label, i, attr) {
+
+                    let original =  opts[i].original;
+                    if (typeof original === 'object' && original !== null) {
+                        original = original.original || '';
+                    }
+
                     jqInput.append('<div class="image_radio_item">' +
                         '<label for="' + $.fn.dataTable.Editor.safeId(conf.id) + '_' + (i + offset) + '">'
                             + '<div class="image_radio_item_inner">'
                                 + '<input id="' + $.fn.dataTable.Editor.safeId(conf.id) + '_' + (i + offset) + '" type="radio" name="' + conf.name + '" />' +
                                 + label
                             + '</div>'
-                            + '<img src="' + opts[i].original + '"/>' +
+                            + '<img src="' + original + '"/>' +
                         '</label>' +
                         '</div>');
                     $('input:last', jqInput).attr('value', val)[0]._editor_val = val;

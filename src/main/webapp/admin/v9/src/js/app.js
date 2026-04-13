@@ -122,19 +122,6 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
-const createPdfMake = () => {
-    return import(/* webpackChunkName: "pdfMake" */ 'pdfmake/build/pdfmake');
-};
-window.createPdfMake = createPdfMake;
-const createPdfFonts = () => {
-    return import(/* webpackChunkName: "pdfFonts" */ 'pdfmake/build/vfs_fonts');
-};
-window.createPdfFonts = createPdfFonts;
-
-import * as JSZip from 'jszip';
-
-window.JSZip = JSZip;
-
 import { dataTableInit } from '../../npm_packages/webjetdatatables/index';
 window.WJ.DataTable = dataTableInit;
 import { CellVisibilityService } from './libs/data-tables-extends/';

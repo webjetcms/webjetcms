@@ -146,6 +146,23 @@ public class DB
 		return data;
 	}
 
+	/**
+	 * Replaces HTML entities with their corresponding characters, e.g. &amp;lt; is replaced with &lt;
+	 * @param data
+	 * @return
+	 */
+	public static String unfilterHtml(String data) {
+		if (data == null) return null;
+
+		data = Tools.replace(data, "&lt;", "<");
+		data = Tools.replace(data, "&gt;", ">");
+		data = Tools.replace(data, "&amp;", "&");
+		data = Tools.replace(data, "&quot;", "\"");
+		data = Tools.replace(data, "&#39;", "'");
+
+		return data;
+	}
+
 	private static String getDbStringImpl(java.sql.ResultSet db_result, String fieldName) throws SQLException
 	{
 		String data = null;

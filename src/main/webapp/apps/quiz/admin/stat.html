@@ -81,7 +81,7 @@
 
         async function createAmcharts() {
             window.initAmcharts().then(module => {
-                $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar, success: function(result) {
+                $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar_Horizontal, success: function(result) {
                     barChartQuizStat = new ChartTools.BarChartForm("question", "percentageOfRightAnswers", '[[#{components.quiz.stat.percentualGraph}]]', "quizStat-correctAnswers", result['content']);
                     ChartTools.createAmchart(barChartQuizStat);
 
@@ -129,7 +129,7 @@
 
             let dateRangeValue = ChartTools.getDateRange(null);
 
-            await $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar + "&dayDate=" + dateRangeValue, success: function(result) {
+            await $.ajax({url: url + "/all?quizId=" + quizId + "&chartType=" + ChartTools.ChartType.Bar_Horizontal + "&dayDate=" + dateRangeValue, success: function(result) {
                 barChartQuizStat.chartData = result['content'];
                 ChartTools.updateChart(barChartQuizStat);
             }});

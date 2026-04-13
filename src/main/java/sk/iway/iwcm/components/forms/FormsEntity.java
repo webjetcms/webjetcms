@@ -20,6 +20,9 @@ public class FormsEntity extends FormsEntityBasic {
     )
     private String formType;
 
+    @Column(name = "duration")
+    private Long duration;
+
     @Transient
     @DataTableColumnNested
     private transient FormSettingsEntity formSettings;
@@ -38,5 +41,13 @@ public class FormsEntity extends FormsEntityBasic {
 
     public void setFormType(String formType) {
         this.formType = formType;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
     }
 }

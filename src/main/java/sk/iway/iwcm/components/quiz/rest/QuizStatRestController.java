@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +16,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.quiz.jpa.QuizAnswerRespository;
 import sk.iway.iwcm.components.quiz.jpa.QuizStatDTO;
 import sk.iway.iwcm.stat.ChartType;
-import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
@@ -28,7 +26,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDTO, Long> {
 
     private final QuizAnswerRespository quizAnswerRespository;
-    
+
     @Autowired
     public QuizStatRestController(QuizAnswerRespository quizAnswerRespository) {
         super(null);
@@ -39,7 +37,7 @@ public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDT
     public Page<QuizStatDTO> getAllItems(Pageable pageable) {
         Integer quizId = Tools.getIntValue(getRequest().getParameter("quizId"), -1);
         String stringRange = getRequest().getParameter("dayDate");
-        ChartType chartType = StatService.stringToChartTypeEnum(getRequest().getParameter("chartType"));
+        ChartType chartType = ChartType.getType( getRequest().getParameter("chartType") );
 
         return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(QuizService.statTableData(quizId, stringRange, chartType, quizAnswerRespository));
     }
@@ -50,7 +48,7 @@ public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDT
         String stringRange = "";
         String chartType = "";
 
-        for (Map.Entry<String, String> entry : params.entrySet()) { 
+        for (Map.Entry<String, String> entry : params.entrySet()) {
             if(entry.getKey().equalsIgnoreCase("quizId")) {
                 quizId = Tools.getIntValue(entry.getValue(), -1);
             } else if(entry.getKey().equalsIgnoreCase("searchDayDate")) {
@@ -60,7 +58,7 @@ public class QuizStatRestController extends DatatableRestControllerV2<QuizStatDT
             }
         }
 
-        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(QuizService.statTableData(quizId, stringRange, StatService.stringToChartTypeEnum( chartType ), quizAnswerRespository));
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(QuizService.statTableData(quizId, stringRange, ChartType.getType( chartType ), quizAnswerRespository));
     }
 
     @RequestMapping(value="/lineChartDataRight", params={"quizId", "dayDate"})
