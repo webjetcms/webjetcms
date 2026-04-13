@@ -647,7 +647,7 @@ Cache sa nepoužije ak:
 
 ### Skrývanie polí/kariet
 
-Ak chcete aplikáciu využívať na rôznych miestach (napr. cez iframe) a súčasne obmedziť, ktoré polia a karty môže používateľ vidieť, môžete využiť parameter `appHideFields`.
+Ak chcete aplikáciu využívať na rôznych miestach a súčasne obmedziť, ktoré polia a karty môže používateľ vidieť, môžete využiť parameter `appHideFields`. Výhodné je takto pripraviť aplikáciu v blokoch pre Page Builder.
 
 Parameter `appHideFields` je definovaný v triede `WebjetComponentAbstract` a je dostupný pre všetky aplikácie. Ide o textovú hodnotu, kde môžete hodnotou `+` oddeliť názvy polí a kariet, ktoré sa majú v editore aplikácie skryť.
 

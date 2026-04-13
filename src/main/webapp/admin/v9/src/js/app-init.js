@@ -386,6 +386,13 @@ function initClosure() {
                     //na dalsie pouzitie zachovaj remaining
                     window.treeInitialJson = itemsRemaining;
 
+                    if (itemsRemaining.length==0) {
+                        //fire finished event
+                        setTimeout(()=> {
+                            WJ.dispatchEvent("WJ.treeInitialJson.done", {});
+                        }, 100);
+                    }
+
                     if (typeof window.selectedNode != undefined && window.selectedNode != null) {
                         //podla selectedNode nastav tlacidla (prava)
                         if (window.selectedNode.icon.indexOf("ti-folder-x")!=-1) {
@@ -664,7 +671,9 @@ function initClosure() {
     window.jstree.on('loaded.jstree', function () {
         window.jsTreeDocumentOpener.next();
         window.jsTreeFolderOpener.next();
+    });
 
+    window.addEventListener('WJ.treeInitialJson.done', (e) => {
         //scroll to selected item
         setTimeout(function() {
             var $selected = somStromcek.find('.jstree-clicked');
@@ -690,6 +699,7 @@ function initClosure() {
                     scrollbar.scrollTop = selectedTop - containerHeight / 2;
                 }
             } else {
+                //we can use center here, because when the element is on bottom it will scroll whole window
                 el.scrollIntoView({block: 'nearest'});
                 var scrollParent = el.parentElement;
                 while (scrollParent && scrollParent !== document.body) {

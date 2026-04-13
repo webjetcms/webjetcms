@@ -129,22 +129,27 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         }
 
         // Allow change path of folder
-        GalleryDimension original = repository.findById(id).orElseThrow(() -> new RuntimeException("Item not found"));
-        if(original.getPath().equals(entity.getPath()) == false) {
+        String movePathFrom = null;
+        GalleryDimension original = repository.findById(id).orElse(null);
+        if(original != null && original.getPath() != null && original.getPath().equals(entity.getPath()) == false) {
+            movePathFrom = original.getPath();
+        }
+
+        GalleryDimension saved = super.editItem(entity, id);
+
+        if (movePathFrom != null) {
             // Folder was moved
             Map<String, Object> result = new HashMap<>();
 
             boolean isUpdateInDoc = Tools.isTrue(entity.getUpdateInDoc());
             if(isUpdateInDoc) { addNotify( galleryTreeService.updateInDocWarning(getProp()) ); }
-            galleryTreeService.findAndMoveGalleryFolder(original.getPath(), entity.getParentPath(), result, isUpdateInDoc);
+            galleryTreeService.findAndMoveGalleryFolder(movePathFrom, entity.getParentPath(), result, isUpdateInDoc);
 
-            if(result.containsKey("result") == false || result.get("result").equals(false)) {
+            if(result.containsKey("result") == false || Boolean.FALSE.equals(result.get("result"))) {
                 throwError((String) result.get("error"));
                 return null;
             }
         }
-
-        GalleryDimension saved = super.editItem(entity, id);
 
         if (entity.getEditorFields().isForceResizeModeToSubgroups()) {
             GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());

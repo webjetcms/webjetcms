@@ -415,7 +415,7 @@ dependencyCheck {
         }
     }
     nvd {
-        //api key for NVD database for dependency check
+        //api key for NVD database for dependency check: https://nvd.nist.gov/developers/request-an-api-key
         apiKey=System.getenv('NVD_API_KEY') ?: ''
         maxRetryCount=20
         delay=8000
