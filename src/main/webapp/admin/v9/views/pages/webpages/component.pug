@@ -161,6 +161,27 @@ block content
             componentDatatable.EDITOR.on('open', function (e, mode, action) {
                 WJ.debugTimer("open");
 
+                // Get prepared object with fields and tabs to hide
+                let hiddenFieldsAndTabs = getHiddenFieldsAndTabs(response.data);
+                // console.log("hiddenFieldsAndTabs=", hiddenFieldsAndTabs);
+
+                // Hide fields
+                hiddenFieldsAndTabs.fields.forEach(function(field) {
+                    try {
+                        componentDatatable.EDITOR.field(field).hide();
+                    } catch (error) {
+                        // Ignore unknown fields to keep the editor open handler resilient.
+                    }
+                });
+
+                // Hide tabs
+                hiddenFieldsAndTabs.tabs.forEach(function(tab) {
+                    var tabElement = document.querySelector("li.nav-item a.nav-link#pills-dt-component-datatable-" + tab + "-tab");
+                    if (tabElement != null) {
+                        tabElement.style.display = "none";
+                    }
+                });
+
                 var foundParentTitle = false;
                 var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
                 //iterate over if and try to find one with iframe
@@ -233,6 +254,47 @@ block content
             if (typeof window.appAfterInit === "function") {
                 window.appAfterInit(response, componentDatatable, componentPath, isInsert);
             }
+        }
+
+        /**
+         * Get fields and tabs to hide from appHideFields parameter
+         * appHideFields is a "+" separated string with field names and tab names with "tab_" prefix, for example: "field1+field2+tab_tab1+tab_tab2"
+         * @param data
+         * @returns {{fields: [], tabs: []}}
+         */
+        function getHiddenFieldsAndTabs(data) {
+            let result = {
+                fields: [],
+                tabs: []
+            };
+
+            if (typeof data === "undefined" || data == null) {
+                return result;
+            }
+
+            let appHideFields = data.appHideFields;
+            if (typeof appHideFields === "undefined" || appHideFields == null || appHideFields === "") {
+                return result;
+            }
+
+            let appHideFieldsArr = Array.isArray(appHideFields) ? appHideFields : appHideFields.split("+");
+
+            for (let field of appHideFieldsArr) {
+                let fieldName = String(field).trim();
+                if (fieldName !== "") {
+                    if (fieldName.startsWith("tab_") === true) {
+                        result.tabs.push(fieldName.substring(4)); //remove "tab_" prefix
+                    } else {
+                        result.fields.push(fieldName);
+                    }
+                }
+            }
+
+            // Keep lists stable and unique to avoid duplicate hide calls.
+            result.fields = [...new Set(result.fields)];
+            result.tabs = [...new Set(result.tabs)];
+
+            return result;
         }
 
         /**

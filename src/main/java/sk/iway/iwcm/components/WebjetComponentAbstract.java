@@ -64,6 +64,9 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
 	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.news.cacheMinutes", tab = "commonSettings")
 	public Integer cacheMinutes;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "", tab = "commonSettings")
+	public String appHideFields;
+
     @DataTableColumn(
         inputType = DataTableColumnType.MULTISELECT,
         title="apps.wrapper.class.title",
@@ -293,6 +296,14 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
 
     public void setShowForLoggedUser(String showForLoggedUser) {
         this.showForLoggedUser = showForLoggedUser;
+    }
+
+    public String getAppHideFields() {
+        return appHideFields;
+    }
+
+    public void setAppHideFields(String appHideFields) {
+        this.appHideFields = appHideFields;
     }
 
     public String getWrapperClass() {

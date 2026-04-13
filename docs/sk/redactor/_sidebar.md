@@ -86,7 +86,8 @@
     - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)
   - Galéria
     - [Galéria](/redactor/apps/gallery/README.md)
-    - [Nastavenie vodoznaku](/redactor/apps/gallery/watermark.md)
+    - [Správa štruktúry](/redactor/apps/gallery/structure.md)
+    - [Nastavenie vodotlače](/redactor/apps/gallery/watermark.md)
   - GDPR
     - [Cookies súhlas](/redactor/apps/gdpr/README.md)
     - [Cookies manažér](/redactor/apps/gdpr/cookiesmanger.md)

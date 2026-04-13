@@ -97,5 +97,20 @@ Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     Document.screenshotElement('img', '/frontend/thumb-servlet/noip-4.png');
+});
+
+Scenario('gallery structure', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/apps/gallery/");
+    Document.screenshot("/redactor/apps/gallery/structure.png", null, null, "#SomStromcek");
+    I.clickCss(".tree-col button.buttons-edit");
+    DTE.waitForEditor("galleryDimensionDatatable");
+
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-basic-tab.png`);
+
+    I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-sizes-tab.png`);
+
+    I.clickCss("#pills-dt-galleryDimensionDatatable-watermark-tab");
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-watermark-tab.png`);
 
 });

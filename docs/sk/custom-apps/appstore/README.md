@@ -645,6 +645,45 @@ Cache sa nepoužije ak:
 - v URL adrese sa nachádza parameter `page` (neaplikuje sa ak je hodnota 1, teda pre prvú stranu napr. zoznamu noviniek)
 - v URL adrese sa nachádza parameter `_disableCache=true`
 
+### Skrývanie polí/kariet
+
+Ak chcete aplikáciu využívať na rôznych miestach a súčasne obmedziť, ktoré polia a karty môže používateľ vidieť, môžete využiť parameter `appHideFields`. Výhodné je takto pripraviť aplikáciu v blokoch pre Page Builder.
+
+Parameter `appHideFields` je definovaný v triede `WebjetComponentAbstract` a je dostupný pre všetky aplikácie. Ide o textovú hodnotu, kde môžete hodnotou `+` oddeliť názvy polí a kariet, ktoré sa majú v editore aplikácie skryť.
+
+**Formát hodnoty:**
+
+```text
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
+```
+
+- **Polia** - zadáte priamo názov poľa (názov atribútu v Java triede), napr. `dir`, `style`.
+- **Karty** - názov karty musí mať **povinne** prefix `tab_`, za ktorým nasleduje ID karty definované v anotácii `@DataTableTab`, napr. `tab_componentIframe`.
+
+**Príklad:** hodnota `appHideFields=dir+tab_componentIframe` skryje pole `dir` a kartu s ID `componentIframe`.
+
+#### Nastavenie parametra
+
+Parameter `appHideFields` nie je viditeľný v editore aplikácie, je potrebné ho nastaviť jedným z nasledovných spôsobov:
+
+**1. Programovo v metóde `initAppEditor`:**
+
+```java
+@Override
+public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+    //hide the dir field and the componentIframe tab
+    this.appHideFields = "dir+tab_componentIframe";
+}
+```
+
+**2. Priamo v `PageParams` (v `!INCLUDE` značke):**
+
+```html
+!INCLUDE(sk.iway.iwcm.components.gallery.GalleryApp, appHideFields=dir+tab_componentIframe)!
+```
+
+!>**Upozornenie:** parameter `appHideFields` nie je viditeľný v editore aplikácie. Nie je ho možné nastaviť cez používateľské rozhranie, je potrebné ho nastaviť programovo alebo priamo v `PageParams`.
+
 ## Doplnkový HTML kód
 
 V niektorých prípadoch je potrebné vykonať doplnkový HTML/JavaScript kód pri úprave vlastností aplikácie v editore. V anotácii `@WebjetAppStore` je možné nastaviť cestu k doplnkovému HTML súboru v atribúte `customHtml`, napríklad:
