@@ -7,7 +7,7 @@ var autoName;
 //tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
 var tolerance = 5;
 
-Before(({ I, DT, login }) => {
+Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomTextShort();
