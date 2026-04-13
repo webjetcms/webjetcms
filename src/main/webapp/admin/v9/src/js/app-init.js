@@ -386,13 +386,6 @@ function initClosure() {
                     //na dalsie pouzitie zachovaj remaining
                     window.treeInitialJson = itemsRemaining;
 
-                    if (itemsRemaining.length==0) {
-                        //fire finished event
-                        setTimeout(()=> {
-                            WJ.dispatchEvent("WJ.treeInitialJson.done", {});
-                        }, 100);
-                    }
-
                     if (typeof window.selectedNode != undefined && window.selectedNode != null) {
                         //podla selectedNode nastav tlacidla (prava)
                         if (window.selectedNode.icon.indexOf("ti-folder-x")!=-1) {
@@ -411,6 +404,13 @@ function initClosure() {
                                 WJ.dispatchEvent("WJ.treeInitialJson.selectedNode", window.selectedNode);
                             }, 100);
                         }
+                    }
+
+                    if (itemsRemaining.length==0) {
+                        //fire finished event
+                        setTimeout(()=> {
+                            WJ.dispatchEvent("WJ.treeInitialJson.done", window.selectedNode);
+                        }, 200);
                     }
 
                     //console.log("items:", items, "itemsRemaining:", itemsRemaining);

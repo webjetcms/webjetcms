@@ -321,7 +321,7 @@ dependencies {
 
     // CVE-2026-29062
     // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
-    implementation("tools.jackson.core:jackson-core:3.1.0")
+    implementation("tools.jackson.core:jackson-core:3.1.2")
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }

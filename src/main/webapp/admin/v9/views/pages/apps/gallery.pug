@@ -427,7 +427,7 @@ block content
 
                         var isEditable = true;
                         if (typeof node.icon != "undefined" && node.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
-                        setCurrentGalleryDimension(node.galleryDimension, isEditable);
+                        if (typeof node.galleryDimension != "undefined" && node.galleryDimension != null) setCurrentGalleryDimension(node.galleryDimension, isEditable);
                     });
 
                     function setGalleryTablePath(virtualPath) {
