@@ -115,6 +115,7 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
     //all*.exclude group: 'xml-apis', module: 'xml-apis'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
@@ -309,8 +310,8 @@ dependencies {
     //testImplementation "io.qameta.allure:allure-junit5"
 
     //gopay https://mvnrepository.com/artifact/cz.gopay/gp-java-api-v3-common
-    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-common:3.10.0'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.10.0'
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
 
