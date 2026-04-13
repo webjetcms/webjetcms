@@ -136,7 +136,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Grafy - nástroj/knižnica [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na prácu s `amcharts` grafmi bol aktualizovaný, priali sa nové funkcionality, nové grafy a vylepšila sa logika (#58333).
 - Grafy - pridaná nová trieda/knižnica [stats-by-charts.js](../../src/main/webapp/apps/_common/charts/stats-by-charts.js) na rýchle vytváranie celých sekcií štatistík s využitím [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na vytváranie grafov (#58333).
 - `WebjetEvent` – pridaná možnosť nastaviť používateľa typu `Identity` priamo do udalosti. Vhodné pri spracovaní udalostí, kde je potrebný používateľ, ale nie je dostupný `context` alebo `request` (#OSK423).
-- Datatabuľky - pridaný nový typ udalosti `DatatablesJsonEvent`, na ktorý je možné počúvať a dynamicky upraviť definíciu stĺpcov pred inicializáciou tabuľky. Viac sa dozviete v časti [Udalosť DatatablesJsonEvent](developer/backend/events-datatable.md#udalosť-datatablesjsonevent) (#58433).
+- Datatabuľky - pridaný nový typ udalosti `DatatableColumnsEvent`, na ktorý je možné počúvať a dynamicky upraviť definíciu stĺpcov pred inicializáciou tabuľky. Viac sa dozviete v časti [Udalosť DatatableColumnsEvent](developer/backend/events-datatable.md#udalosť-DatatableColumnsEvent) (#58433).
 
 ## 2026.0.x
 

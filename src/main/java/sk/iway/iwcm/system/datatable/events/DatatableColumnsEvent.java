@@ -13,18 +13,18 @@ import java.util.List;
  *
  * Usage:
  * @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.components.MyEntity'")
- * public void onDatatablesJson(DatatablesJsonEvent event) {
+ * public void onDatatablesJson(DatatableColumnsEvent event) {
  *     event.getColumns().removeIf(c -> "someField".equals(c.getData()));
  * }
  */
-public class DatatablesJsonEvent extends ApplicationEvent {
+public class DatatableColumnsEvent extends ApplicationEvent {
 
     private static final long serialVersionUID = 1L;
     private List<DataTableColumn> columns;
     private Class<?> dto;
     private String clazz;
 
-    public DatatablesJsonEvent(List<DataTableColumn> columns, Class<?> dto) {
+    public DatatableColumnsEvent(List<DataTableColumn> columns, Class<?> dto) {
         super(columns);
         this.columns = columns;
         this.dto = dto;

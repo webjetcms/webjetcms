@@ -170,11 +170,11 @@ public void handleUserAfterSave(final DatatableEvent<UserDetailsEntity> event) {
 - `BEFORE_DELETE` sa publikuje len ak metóda `beforeDelete()` vráti `true`
 - Udalosti využívajú univerzálny `WebjetEventPublisher`, ktorý funguje pre všetky typy Spring `ApplicationEvent`
 
-## Udalosť DatatablesJsonEvent
+## Udalosť DatatableColumnsEvent
 
-Udalosť [DatatablesJsonEvent](../../../../src/main/java/sk/iway/iwcm/system/datatable/events/DatatablesJsonEvent.java) sa publikuje pri generovaní JSON odpovede pre datatabuľku, konkrétne v metóde `getColumnsJson()` triedy [DataTableColumnsFactory](../../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java). Táto udalosť umožňuje dynamicky modifikovať definíciu stĺpcov datatabuľky pred odoslaním odpovede klientovi.
+Udalosť [DatatableColumnsEvent](../../../../src/main/java/sk/iway/iwcm/system/datatable/events/DatatableColumnsEvent.java) sa publikuje pri generovaní JSON odpovede pre datatabuľku, konkrétne v metóde `getColumnsJson()` triedy [DataTableColumnsFactory](../../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java). Táto udalosť umožňuje dynamicky modifikovať definíciu stĺpcov datatabuľky pred odoslaním odpovede klientovi.
 
-Na rozdiel od `DatatableEvent`, ktorý sa vyvoláva pri CRUD operáciách s dátami, `DatatablesJsonEvent` sa vyvoláva pri načítaní **konfigurácie stĺpcov** datatabuľky. Vďaka tomu môžete dynamicky meniť vlastnosti stĺpcov (názov, viditeľnosť, formátovanie a pod.) bez nutnosti meniť anotácie na JPA entite.
+Na rozdiel od `DatatableEvent`, ktorý sa vyvoláva pri CRUD operáciách s dátami, `DatatableColumnsEvent` sa vyvoláva pri načítaní **konfigurácie stĺpcov** datatabuľky. Vďaka tomu môžete dynamicky meniť vlastnosti stĺpcov (názov, viditeľnosť, formátovanie a pod.) bez nutnosti meniť anotácie na JPA entite.
 
 ### Atribúty udalosti
 
@@ -188,7 +188,7 @@ Udalosť sa automaticky publikuje v metóde `getColumnsJson()` triedy `DataTable
 
 ```java
 if (dto != null) {
-    DatatablesJsonEvent event = new DatatablesJsonEvent(columnsSorted, dto);
+    DatatableColumnsEvent event = new DatatableColumnsEvent(columnsSorted, dto);
     event.publishEvent();
 }
 ```
@@ -204,7 +204,7 @@ Udalosť sa vyvolá **synchrónne** pred serializáciou stĺpcov do JSON, takže
 public class GalleryColumnsListener {
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.components.gallery.GalleryEntity'")
-    public void onDatatablesJson(DatatablesJsonEvent event) {
+    public void onDatatablesJson(DatatableColumnsEvent event) {
         event.getColumns().forEach((c) -> {
             if ("descriptionLongSk".equals(c.getName())) {
                 c.setTitle("Nový názov stĺpca");
@@ -221,7 +221,7 @@ public class GalleryColumnsListener {
 public class ConditionalColumnsListener {
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.custom.MyEntity'")
-    public void onDatatablesJson(DatatablesJsonEvent event) {
+    public void onDatatablesJson(DatatableColumnsEvent event) {
         Identity user = UsersDB.getCurrentUser(SessionHelper.getRequest());
         if (user == null || user.isAdmin() == false) {
             // non-admin users should not see internal notes column
@@ -238,7 +238,7 @@ public class ConditionalColumnsListener {
 public class RemoveColumnListener {
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.custom.MyEntity'")
-    public void onDatatablesJson(DatatablesJsonEvent event) {
+    public void onDatatablesJson(DatatableColumnsEvent event) {
         // remove column that should not be displayed
         event.getColumns().removeIf(c -> "temporaryField".equals(c.getName()));
     }
@@ -250,4 +250,4 @@ public class RemoveColumnListener {
 - Udalosť sa publikuje pri **každom** načítaní konfigurácie stĺpcov datatabuľky (typicky pri otvorení stránky s datatabuľkou)
 - Zmeny v listeneroch sú trvalé len počas spracovania požiadavky - pri ďalšom načítaní sa stĺpce vygenerujú nanovo z anotácií
 - Pre filtrovanie udalostí podľa entity použite atribút `condition` s porovnaním `#event.clazz eq 'full.class.Name'`
-- `DatatablesJsonEvent` rozširuje `ApplicationEvent` (nie `DatatableEvent`), preto sa s ním pracuje samostatne
+- `DatatableColumnsEvent` rozširuje `ApplicationEvent` (nie `DatatableEvent`), preto sa s ním pracuje samostatne
