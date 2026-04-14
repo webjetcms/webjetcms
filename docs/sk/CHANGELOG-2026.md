@@ -93,6 +93,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](developer/frameworks/charts/frontend/line-chart.png)
 
+- Aplikácia `Tooltip` premenovaná na Nápovedy (#205).
+
 ### Oprava chýb
 
 - `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
@@ -103,7 +105,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
-- Odstránené nepoužívané knižnice `jszip,lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
+- Odstránené nepoužívané knižnice `lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

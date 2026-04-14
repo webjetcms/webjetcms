@@ -361,7 +361,8 @@ Scenario("New select filter using permGroups", async ({I, DT}) => {
 
      DT.filterSelect("editorFields.permGroups", "forTestA");
 
-     I.see("Nenašli sa žiadne vyhovujúce záznamy", "div.dt-scroll-body");
+     I.see("Záznamy 1 až 1 z 1", "div.dt-footer-row");
+     I.see("tester.allgroups", "td.dt-row-edit");
 
      DT.filterContains("login", "testLogin");
 
