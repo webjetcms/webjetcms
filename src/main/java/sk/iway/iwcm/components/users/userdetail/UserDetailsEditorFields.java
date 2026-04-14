@@ -273,9 +273,10 @@ public class UserDetailsEditorFields extends BaseEditorFields {
             Identity user = new Identity(UsersDB.getUser(userId));
             UsersDB.loadDisabledItemsFromDB(user, false);
             String enabledItemsKeysString = "";
-            Set<String> disabledItems = user.getDisabledItemsTable().keySet();
 
             if (user.isAdmin()) {
+                Set<String> disabledItems = user.getDisabledItemsTable().keySet();
+
                 for(ModuleInfo modulItem : allModuleItems) {
                     boolean disabled = false;
 
