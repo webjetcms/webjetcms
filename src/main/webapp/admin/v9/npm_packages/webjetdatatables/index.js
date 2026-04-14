@@ -1793,7 +1793,8 @@ export const dataTableInit = options => {
                     $('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]').tooltip({
                         placement: 'top',
                         trigger: 'hover',
-                        html: true
+                        html: true,
+                        delay: { "show": 300, "hide": 0 }
                     });
 
                     $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
@@ -1812,7 +1813,8 @@ export const dataTableInit = options => {
                 $('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]').tooltip({
                     placement: 'top',
                     trigger: 'hover',
-                    html: true
+                    html: true,
+                    delay: { "show": 300, "hide": 0 }
                 });
 
                 if (editorWasOpened === false) {
@@ -2521,7 +2523,8 @@ export const dataTableInit = options => {
 
                     $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
                         placement: 'top',
-                        trigger: 'hover'
+                        trigger: 'hover',
+                        delay: { "show": 300, "hide": 0 }
                     });
 
                     $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
@@ -3805,7 +3808,8 @@ export const dataTableInit = options => {
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility span[data-toggle*="tooltip"]').tooltip({
                 placement: 'top',
                 trigger: 'hover',
-                html: true
+                html: true,
+                delay: { "show": 300, "hide": 0 }
             });
 
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').wrapAll( "<div class='colvisbtn_wrapper' />");

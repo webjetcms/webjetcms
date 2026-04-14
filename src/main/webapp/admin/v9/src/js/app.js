@@ -122,6 +122,9 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
+import * as JSZip from 'jszip';
+window.JSZip = JSZip;
+
 import { dataTableInit } from '../../npm_packages/webjetdatatables/index';
 window.WJ.DataTable = dataTableInit;
 import { CellVisibilityService } from './libs/data-tables-extends/';

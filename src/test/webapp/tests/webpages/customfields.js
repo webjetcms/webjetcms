@@ -294,9 +294,15 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
     DT.filterEquals("key", "temp-3.editor.field_h.type");
     I.click("temp-3.editor.field_h.type", "#datatableInit_wrapper");
     DTE.waitForEditor();
+    I.wait(1);
     DTE.fillField("fieldA", mapping);
+    DTE.fillField("fieldA", mapping);
+    I.wait(1);
     DTE.save();
     DT.waitForLoader();
+
+    I.waitForText(mapping, 10, ".dt-style-text-wrap .datatable-column-width");
+
     //wait to cluster sync
     I.wait(10);
 }

@@ -1198,7 +1198,8 @@ const WJ = (() => {
 
             var conf = {
                 placement: 'top',
-                trigger: 'hover'
+                trigger: 'hover',
+                delay: { "show": 300, "hide": 0 }
             };
             if (customClass != null) conf.customClass = customClass;
 

@@ -123,7 +123,7 @@ Scenario("Video - test zobrazovania v bannery", ({ I }) => {
     I.amOnPage("/en/apps/banner-system/classic_video_banner_yt.html");
     I.waitForElement('iframe[src*="youtube.com"]');
     within({frame: "#video"}, () => {
-        I.waitForElement(locate(".yt-core-attributed-string").withText('WebJET CMS - verzia 2023.18'), 10);
+        I.waitForElement(locate("a").withText('WebJET CMS - verzia 2023.18'), 10);
         I.dontSeeElement("div.ytp-error-content-wrap-subreason");
     });
 });
