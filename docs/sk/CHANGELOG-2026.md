@@ -93,6 +93,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](developer/frameworks/charts/frontend/line-chart.png)
 
+- Aplikácia `Tooltip` premenovaná na Nápovedy (#205).
+
 ### Oprava chýb
 
 - `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).

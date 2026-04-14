@@ -296,6 +296,7 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
     DTE.waitForEditor();
     I.wait(1);
     DTE.fillField("fieldA", mapping);
+    //sometimes it will be not filled properly, so do it again
     DTE.fillField("fieldA", mapping);
     I.wait(1);
     DTE.save();
