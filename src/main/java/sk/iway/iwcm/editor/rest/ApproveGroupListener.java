@@ -30,7 +30,7 @@ public class ApproveGroupListener {
     @Getter
     @Setter
     public static class Form {
-        private String message;
+        private String note;
         private String approveAction;
         private long scheduleId;
     }
@@ -42,27 +42,17 @@ public class ApproveGroupListener {
     }
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='webpages' && event.source.subpage=='approve-group'")
-    protected void setInitalData(final WebjetEvent<ThymeleafEvent> event) {
+    protected void setInitalApproveData(final WebjetEvent<ThymeleafEvent> event) {
         try {
             ModelMap model = event.getSource().getModel();
             HttpServletRequest request = event.getSource().getRequest();
             Prop prop = Prop.getInstance(request);
 
-            Long scheduleId = Tools.getLongValue(request.getParameter("scheduleId"), -1L);
-            if(scheduleId == -1L) {
-                prepareResponseModel(model, prop.getText("approve.group.failed"), null);
-                return;
-            }
-
-            Optional<GroupSchedulerDto> dtoOpt = groupSchedulerDtoRepository.findByIdAndAwaitingApproveIsNotNull(scheduleId);
-		    if (dtoOpt.isPresent() == false) {
-                prepareResponseModel(model, prop.getText("approve.group.failed"), null);
-                return;
-            }
+            GroupSchedulerDto dto = validateAndGetDto(model, request, prop, false);
+            if (dto == null) return;
 
             if("post".equalsIgnoreCase(request.getMethod())) {
-                // Its post action
-                String response = approveService.approveGroupAction(dtoOpt.get(), groupSchedulerDtoRepository, GroupsDB.getInstance());
+                String response = approveService.approveGroupAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
                 if(response == null) {
                     prepareResponseModel(model, null, prop.getText("approve.group.success"));
                 } else {
@@ -73,13 +63,21 @@ public class ApproveGroupListener {
 
             // ziskanie objektu a vlozenie do modelu
             Form form = new Form();
-            form.setScheduleId(scheduleId);
+            form.setScheduleId(dto.getId());
             model.addAttribute("form", form);
 
             // Set groups diff
-            GroupDetails originalGroup = GroupsDB.getInstance().getGroup( dtoOpt.get().getGroupId() );
+            GroupDetails originalGroup;
+            // Now check, if scheduler dto is main record for group (AKA if it was create action)
+			Integer count = groupSchedulerDtoRepository.countByGroupId(dto.getGroupId());
+			if(count != null && count == 1) {
+                originalGroup = null; // new group, no original data
+            } else {
+                originalGroup = GroupsDB.getInstance().getGroup( dto.getGroupId() );
+            }
 
-            String diff = ApproveService.getDiff(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dtoOpt.get()), originalGroup, prop, false, false).toString();
+            String diff = ApproveService.getDiff(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto), originalGroup, prop, false, false).toString();
+
             diff = Tools.unescapeHtmlEntities(diff);
             model.addAttribute("diff", diff);
 
@@ -89,8 +87,79 @@ public class ApproveGroupListener {
                 model.addAttribute("diffLabel", prop.getText("approve.group.changed_params"));
             }
         } catch (Exception ex) {
-            Logger.error(WebPagesListener.class, ex);
+            Logger.error(ApproveGroupListener.class, ex);
         }
+    }
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='webpages' && event.source.subpage=='approve-del-group'")
+    protected void setInitalApproveDelData(final WebjetEvent<ThymeleafEvent> event) {
+        try {
+            ModelMap model = event.getSource().getModel();
+            HttpServletRequest request = event.getSource().getRequest();
+            Prop prop = Prop.getInstance(request);
+
+            GroupSchedulerDto dto = validateAndGetDto(model, request, prop, true);
+            if (dto == null) return;
+
+            if("post".equalsIgnoreCase(request.getMethod())) {
+                String response = approveService.approveGroupDelAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
+                if(response == null) {
+                    prepareResponseModel(model, null, prop.getText("approve.group.success"));
+                } else {
+                    prepareResponseModel(model, response, null);
+                }
+                return;
+            }
+
+            // ziskanie objektu a vlozenie do modelu
+            Form form = new Form();
+            form.setScheduleId(dto.getId());
+            model.addAttribute("form", form);
+
+        } catch (Exception ex) {
+            Logger.error(ApproveGroupListener.class, ex);
+        }
+    }
+
+    /**
+     * Validate request parameters and return the GroupSchedulerDto if valid, or null if validation failed (model is populated with error).
+     * @param isDelete true for delete approval, false for standard approval
+     */
+    private GroupSchedulerDto validateAndGetDto(ModelMap model, HttpServletRequest request, Prop prop, boolean isDelete) {
+        Long scheduleId = Tools.getLongValue(request.getParameter("scheduleId"), -1L);
+        if(scheduleId == -1L) {
+            prepareResponseModel(model, prop.getText("approve.group.failed"), null);
+            return null;
+        }
+
+        Optional<GroupSchedulerDto> dtoOpt = isDelete
+            ? groupSchedulerDtoRepository.findByIdAndIsDeleteTrue(scheduleId)
+            : groupSchedulerDtoRepository.findByIdAndIsDeleteFalse(scheduleId);
+        if (dtoOpt.isPresent() == false) {
+            prepareResponseModel(model, prop.getText("approve.group.failed"), null);
+            return null;
+        }
+
+        GroupSchedulerDto dto = dtoOpt.get();
+
+        String keyPrefix = isDelete ? "approve.group.delete." : "approve.group.";
+
+        // First check if group needs approve
+        if(dto.getAwaitingApprove() == null) {
+            // It can be ok, if its already approved or disapproved
+            if(dto.getApproveDate() != null && dto.getApprovedBy() != null) {
+                prepareResponseModel(model, null, prop.getText(keyPrefix + "already_approved", GroupSchedulerEditorFields.getApproverName(dto.getApprovedBy())));
+                return null;
+            } else if(dto.getApproveDate() != null && dto.getDisapprovedBy() != null) {
+                prepareResponseModel(model, null, prop.getText(keyPrefix + "already_disapproved", GroupSchedulerEditorFields.getDisapproverName(dto.getDisapprovedBy())));
+                return null;
+            } else {
+                prepareResponseModel(model, prop.getText("approve.group.failed"), null);
+                return null;
+            }
+        }
+
+        return dto;
     }
 
     private void prepareResponseModel(ModelMap model, String errMsg, String succMsg) {

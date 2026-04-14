@@ -49,6 +49,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrRepository;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
@@ -257,9 +258,11 @@ public class EditorService {
 			if(!editedDoc.getEditorFields().isRequestPublish()) editedDoc.setAvailable(false);
 		}
 
+		boolean doNotCheckApproving = EditorFacade.isDoNotCheckApproving(editedDoc.getGroupId());
+
 		// Load approve hash table data
 		// If current user is approver, set selfApprover = true
-		if (editedDoc.getEditorFields().isRequestPublish()) {
+		if (editedDoc.getEditorFields().isRequestPublish() && doNotCheckApproving == false) {
 			approveService.loadApproveTables(editedDoc.getGroupId());
 
 			//If approver is needed BUT it's not selfApprove (currentUser isn't approver),
@@ -323,7 +326,7 @@ public class EditorService {
 			editedHistory.setActual(editedDoc.getEditorFields().isRequestPublish());
 
 			//Set ApprovedBy value, that indicate approve status
-			if (approveService.needApprove()) {
+			if (approveService.needApprove() && doNotCheckApproving == false) {
 				//Need approve
 				editedHistory.setApprovedBy(-1);
 			} else {
@@ -345,7 +348,7 @@ public class EditorService {
 				}
 			}
 
-			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove())
+			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove() && doNotCheckApproving == false)
 				editedHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 			else
 				editedHistory.setAwaitingApprove(null);
@@ -367,8 +370,11 @@ public class EditorService {
 			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
 		}
 
-		/*Odoslanie schvalovani a notifikacii*/
-		approveService.sendEmails(editedDoc, historyId, docRepo);
+		if(doNotCheckApproving == false) {
+			/*Odoslanie schvalovani a notifikacii*/
+			approveService.sendEmails(editedDoc, historyId, docRepo);
+		}
+
 		dt.diff("after sendApproveNotifyEmail");
 
 		if(isNewPage || wasApproved || disableHistory) {
@@ -424,6 +430,10 @@ public class EditorService {
 			editedDoc.setEventDateString("");
 			editedDoc.setEventTimeString("");
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
+		}
+
+		if(EditorFacade.isDoNotCheckApproving(group.getGroupId())) {
+			editedDoc.setAvailable(false);
 		}
 
 		editedDoc.setDocId(-1);
@@ -627,14 +637,7 @@ public class EditorService {
 
 		//Delete needs to be approved
 		if(prop.getText("approveAction.err.cantApprove").equals(result)) {
-			StringBuilder approversString = new StringBuilder();
-			for(UserDetails approver : approveService.getApprovers()) {
-				if(!approversString.isEmpty()) approversString.append(", ");
-				approversString.append(approver.getFullName());
-			}
-			NotifyBean info = new NotifyBean(prop.getText("editor.approve.notifyTitle"), prop.getText("editor.approveDeleteRequestGet")+": "+approversString.toString(), NotifyBean.NotifyType.INFO, 60000);
-            addNotify(info);
-
+            addNotify( new NotifyBean(prop.getText("editor.approve.notifyTitle"), approveService.getApproverNotifBody("editor.approveDeleteRequestGet"), NotifyBean.NotifyType.INFO, 60000) );
 			return true;
 		}
 

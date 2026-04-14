@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SendMail;
@@ -846,6 +845,7 @@ public class ApproveService {
 			// Current user IS self-approver (or no approval needed) — can approve or reject
 
 			String approveAction = Tools.getStringValue(request.getParameter("approveAction"), null);
+			String approveNote = Tools.getStringValue(request.getParameter("note"), "");
 			if("approve".equals(approveAction)) {
 				// APPROVE the folder change
 				GroupDetails groupToSave = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto);
@@ -857,11 +857,29 @@ public class ApproveService {
 				dto.setDisapprovedBy(null);
 				dto.setApproveDate(new Date());
 				dto.setAwaitingApprove(null);
-				groupSchedulerDtoRepository.save(dto);
 
-				sendGroupApproveNotification(true, dto);
+				// Scheduler do not contain defaultDocId, so we need to get it from DB based on groupId
+				GroupDetails groupDetails = groupsDB.getGroup(dto.getGroupId());
+				if(groupDetails != null) {
+					dto.setDefaultDocId(groupDetails.getDefaultDocId());
+				}
 
-				// Group was chnaged, do refresh
+				dto = groupSchedulerDtoRepository.save(dto);
+
+				sendGroupApproveNotification(true, dto, approveNote);
+
+				// Now check, if scheduler dto is main record for group (AKA if it was create action)
+				Integer count = groupSchedulerDtoRepository.countByGroupId(dto.getGroupId());
+				if(count != null && count == 1) {
+					// It was create action - update DOC
+					DocDetails defaultDoc = DocDB.getInstance().getDoc(dto.getDefaultDocId());
+					if(defaultDoc != null) {
+						defaultDoc.setAvailable(true);
+						DocDB.saveDoc(defaultDoc);
+					}
+				}
+
+				// Group was changed, do refresh
 				GroupsDB.getInstance(true);
 				//mohla sa zmenit URL linka adresara
 				DocDB.getInstance(true);
@@ -872,16 +890,16 @@ public class ApproveService {
 				dto.setDisapprovedBy(currentUser.getUserId());
 				dto.setApproveDate(new Date());
 				dto.setAwaitingApprove(null);
-				groupSchedulerDtoRepository.save(dto);
+				dto = groupSchedulerDtoRepository.save(dto);
 
-				sendGroupApproveNotification(false, dto);
+				sendGroupApproveNotification(false, dto, approveNote);
 			} else { return prop.getText("approve.group.failed"); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
 			// Route to level-2 approvers
 			String level2approvers = "," + getApproveUserIds() + ",";
 			if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
 				dto.setAwaitingApprove(level2approvers);
-				groupSchedulerDtoRepository.save(dto);
+				dto = groupSchedulerDtoRepository.save(dto);
 
 				Identity user = UsersDB.getCurrentUser(request);
 				String notes = request.getParameter("notes");
@@ -895,8 +913,7 @@ public class ApproveService {
 				// Notify author that request moved to next level
 				String subject = prop.getText("approve.page.approvedToNextLevel.editorSubject", dto.getGroupName());
 				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
-				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br>\n");
-				message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
+				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
 				message.append(prop.getText("approve.url")).append(":<br>\n");
 				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
 				message.append(notes).append("<br>\n");
@@ -920,90 +937,75 @@ public class ApproveService {
 	 * @param groupsDB
 	 * @return true if action was successful
 	 */
-	public boolean approveGroupDelAction(GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
-		long scheduleId = Tools.getLongValue(request.getParameter("scheduleid"), -1);
-		if (scheduleId == -1) {
-			request.setAttribute("message", "Schedule ID cant be empty");
-			return false;
-		}
-
-		Optional<GroupSchedulerDto> dtoOpt = groupSchedulerDtoRepository.findByIdAndAwaitingApproveIsNotNull(scheduleId);
-		if (dtoOpt.isPresent() == false) {
-			request.setAttribute("message", "Pending approval record not found for given scheduleId");
-			return false;
-		}
-		GroupSchedulerDto dto = dtoOpt.get();
+	public String approveGroupDelAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
 
 		// Load approve tables based on the parent group
-		loadApproveTables(dto.getParentGroupId());
+		loadApproveTables(dto.getGroupId());
 
-		if (request.getParameter("zamietni") != null) {
-			// REJECT the delete
-			if (needApprove() == false || selfApproved) {
-				dto.setDisapprovedBy(currentUser.getUserId());
-				dto.setApproveDate(new Date());
-				dto.setAwaitingApprove(null);
-				groupSchedulerDtoRepository.save(dto);
+		if (needApprove() == false || selfApproved) {
+			// Current user IS self-approver (or no approval needed) — can approve or reject
 
-				sendGroupApproveNotification(false, dto);
-				request.setAttribute("rejected", "true");
-				return true;
-			} else {
-				request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
-				return false;
-			}
-		} else {
-			// APPROVE the delete
-			if (needApproveLevel2()) {
-				String level2approvers = "," + getApproveUserIds() + ",";
-				if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
-					dto.setAwaitingApprove(level2approvers);
-					groupSchedulerDtoRepository.save(dto);
-
-					Identity user = UsersDB.getCurrentUser(request);
-					String notes = request.getParameter("notes");
-					if (Tools.isEmpty(notes)) notes = prop.getText("components.reservation.reservation_list.accept");
-					notes = prop.getText("approve.page.approvedToNextLevel.comment", user.getFullName(), notes);
-					String approverNames = getApproveUserNames();
-
-					sendGroupApproveDelRequestEmail(dto, scheduleId);
-					request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
-
-					// Notify author
-					String subject = prop.getText("approve.delete.subject") + " " + dto.getGroupName();
-					String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + scheduleId;
-					StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br>\n");
-					message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
-					message.append(prop.getText("approve.url")).append(":<br>\n");
-					message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
-					message.append(notes).append("<br>\n");
-					UserDetails author = UsersDB.getUserCached(dto.getUserId());
-					if (author != null && Tools.isEmail(author.getEmail())) {
-						SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
-					}
-					return true;
-				}
-			}
-
-			if (needApprove() == false || selfApproved) {
+			String approveAction = Tools.getStringValue(request.getParameter("approveAction"), null);
+			String approveNote = Tools.getStringValue(request.getParameter("note"), "");
+			if("approve".equals(approveAction)) {
+				// APPROVE the delete
 				boolean deleted = GroupsDB.deleteGroup(dto.getGroupId(), request);
 				if (deleted) {
 					dto.setApprovedBy(currentUser.getUserId());
+					dto.setDisapprovedBy(null);
 					dto.setApproveDate(new Date());
 					dto.setAwaitingApprove(null);
-					groupSchedulerDtoRepository.save(dto);
+					dto = groupSchedulerDtoRepository.save(dto);
 
-					sendGroupApproveNotification(true, dto);
-					request.setAttribute("approved", "approved");
+					sendGroupApproveNotification(true, dto, approveNote);
 				} else {
-					request.setAttribute("approveFail", "approveFail");
+					return prop.getText("approve.group.failed");
 				}
-				return true;
-			} else {
-				request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
-				return false;
+
+			} else if("reject".equals(approveAction)) {
+				// REJECT the delete
+				dto.setApprovedBy(null);
+				dto.setDisapprovedBy(currentUser.getUserId());
+				dto.setApproveDate(new Date());
+				dto.setAwaitingApprove(null);
+				dto = groupSchedulerDtoRepository.save(dto);
+
+				sendGroupApproveNotification(false, dto, approveNote);
+			} else { return prop.getText("approve.group.failed"); }
+		} else if (approveByTableLevel2.isEmpty() == false) {
+			// Route to level-2 approvers
+			String level2approvers = "," + getApproveUserIds() + ",";
+			if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
+				dto.setAwaitingApprove(level2approvers);
+				dto = groupSchedulerDtoRepository.save(dto);
+
+				Identity user = UsersDB.getCurrentUser(request);
+				String notes = request.getParameter("notes");
+				if (Tools.isEmpty(notes)) notes = prop.getText("components.reservation.reservation_list.accept");
+				notes = prop.getText("approve.page.approvedToNextLevel.comment", user.getFullName(), notes);
+				String approverNames = getApproveUserNames();
+
+				sendGroupApproveDelRequestEmail(dto, dto.getId());
+				request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
+
+				// Notify author that request moved to next level
+				String subject = prop.getText("approve.delete.subject") + " " + dto.getGroupName();
+				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
+				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
+				message.append(prop.getText("approve.url")).append(":<br>\n");
+				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
+				message.append(notes).append("<br>\n");
+				UserDetails author = UsersDB.getUserCached(dto.getUserId());
+				if (author != null && Tools.isEmail(author.getEmail())) {
+					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
+				}
 			}
+		} else {
+			// Current user cannot approve this
+			return prop.getText("approve.group.cant_approve");
 		}
+
+		return null; // Indicate success
 	}
 
 	/**
@@ -1016,17 +1018,21 @@ public class ApproveService {
 		if (approveByTable == null || approveByTable.isEmpty()) return;
 
 		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-group/?scheduleId=" + dto.getId();
+		String diff = getDiffForEmail(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto), originalGroup, prop).toString();
+
+		if(originalGroup == null) {
+			// Its insert
+			originalGroup = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto);
+		}
 
 		StringBuilder message = new StringBuilder("<strong>").append(prop.getText("approve.group.ask")).append(":</strong><br>\n");
-		message.append("<strong>").append(originalGroup.getGroupName()).append("</strong><br>\n");
-		message.append(prop.getText("approve.dir")).append(":<br>\n");
-		message.append(groupsDB.getGroupNamePath(originalGroup.getParentGroupId())).append("<br><br>\n\n");
+		message.append("<strong>").append(originalGroup.getGroupName()).append("</strong><br><br>\n\n");
 		message.append(prop.getText("approve.url")).append(":<br>\n");
 		message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n\n");
 		if (Tools.isNotEmpty(comment)) { message.append(comment).append("<br><br>\n\n"); }
 		message.append(currentUser.getFullName()).append(" &lt;").append(currentUser.getEmail()).append("&gt;");
 
-		message.append(getDiffForEmail(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto), originalGroup, prop));
+		message.append(diff);
 
 		String subject = prop.getText("approve.group.subject") + ": " + originalGroup.getGroupName();
 		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getApproveUserEmails(), subject, message.toString());
@@ -1072,17 +1078,16 @@ public class ApproveService {
 	public void sendGroupApproveDelRequestEmail(GroupSchedulerDto dto, long scheduleId) {
 		if (approveByTable == null || approveByTable.isEmpty()) return;
 
-		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-group/?scheduleId=" + scheduleId;
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-del-group/?scheduleId=" + scheduleId;
+		String groupName = Tools.replace(dto.getGroupName(), "[DELETE] ", "");
 
 		StringBuilder message = new StringBuilder("<b>").append(prop.getText("approve.group.delete.ask")).append(":</b><br>\n");
-		message.append(dto.getGroupName()).append("<br>\n");
-		message.append(prop.getText("approve.dir")).append(":<br>\n");
-		message.append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n\n");
+		message.append(groupName).append("<br><br>\n\n");
 		message.append(prop.getText("approve.url")).append(":<br>\n");
 		message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n\n");
 		message.append(currentUser.getFullName()).append(" &lt;").append(currentUser.getEmail()).append("&gt;");
 
-		String subject = prop.getText("approve.group.delete.subject") + ": " + dto.getGroupName();
+		String subject = prop.getText("approve.group.delete.subject") + ": " + groupName;
 		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
 	}
 
@@ -1091,7 +1096,7 @@ public class ApproveService {
 	 * @param isApproved true = approved, false = rejected
 	 * @param dto the GroupSchedulerDto record
 	 */
-	private void sendGroupApproveNotification(boolean isApproved, GroupSchedulerDto dto) {
+	private void sendGroupApproveNotification(boolean isApproved, GroupSchedulerDto dto, String note) {
 		String subject;
 		StringBuilder message;
 
@@ -1102,7 +1107,7 @@ public class ApproveService {
 				subject = prop.getText("approve.group.delete.subject") + ": " + dto.getGroupName();
 			} else {
 				// Edit APPROVED
-				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.ok")).append(":</font><br>\n");
+				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.group.ok")).append(":</font><br>\n");
 				subject = prop.getText("approve.group.ok.subject") + ": " + dto.getGroupName();
 			}
 		} else {
@@ -1112,18 +1117,29 @@ public class ApproveService {
 				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
 			} else {
 				// Edit REJECTED
-				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.reject")).append(":</font><br>\n");
+				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.group.reject")).append(":</font><br>\n");
 				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
 			}
 		}
 
-		message.append(dto.getGroupName()).append("<br>");
-		message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(dto.getParentGroupId())).append("<br><br>\n");
+		message.append(dto.getGroupName()).append("<br><br>\n\n");
 		message.append("<b>").append(prop.getText("approve.reject.notes")).append(":</b><br>\n");
-		message.append(Tools.getStringValue(request.getParameter("notes"), ""));
+		message.append(note).append("<br>\n");
 
 		UserDetails author = UsersDB.getUserCached(dto.getUserId());
 		String authorEmail = author != null ? author.getEmail() : null;
 		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(authorEmail), subject, message.toString(), request);
+	}
+
+	public String getApproverNotifBody(String msgKey) {
+		StringBuilder notificationText = new StringBuilder();
+        notificationText.append( prop.getText(msgKey) ).append(": ");
+        for(int approverId : Tools.getTokensInt(this.getApproveUserIds(), ",")) {
+            UserDetails approver = UsersDB.getUser(approverId);
+            if(approver != null) notificationText.append(approver.getFullName()).append(", ");
+        }
+        if (notificationText.toString().endsWith(", "))  notificationText.setLength(notificationText.length() - 2); // remove last comma and space
+
+		return notificationText.toString();
 	}
 }

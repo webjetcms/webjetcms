@@ -934,7 +934,13 @@ public class GroupsDB extends DB
 	 * @return
 	 */
 	public boolean setGroup(GroupDetails group, boolean publishEvents) {
-		return setGroup(group, publishEvents, true);
+
+		if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate") && group.getGroupId() < 1) {
+			// Do not add scheduler , it will be crated later when adding blank webpage
+			return setGroup(group, publishEvents, false);
+		} else {
+			return setGroup(group, publishEvents, true);
+		}
 	}
 
 	public boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord)

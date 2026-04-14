@@ -1,9 +1,13 @@
 package sk.iway.iwcm.editor.rest;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -20,5 +24,15 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
     java.util.List<GroupSchedulerDto> findByGroupIdAndAwaitingApproveIsNotNull(Integer groupId);
 
     //secure lookup during approve action - only records that are actually pending approval
-    java.util.Optional<GroupSchedulerDto> findByIdAndAwaitingApproveIsNotNull(Long id);
+    Optional<GroupSchedulerDto> findByIdAndAwaitingApproveIsNotNull(Long id);
+
+    //get MAX id where awaitingApprove is null OR (awaitingApprove is not null AND disapprovedBy is not null)
+    @Query("SELECT MAX(g.id) FROM GroupSchedulerDto g WHERE g.groupId = :groupId AND g.awaitingApprove IS NULL AND g.disapprovedBy IS NULL")
+    Long findActualUsedGroupScheduler(@Param("groupId") Integer groupId);
+
+    Optional<GroupSchedulerDto> findByIdAndIsDeleteFalse(Long id);
+    Optional<GroupSchedulerDto> findByIdAndIsDeleteTrue(Long id);
+
+    // Number of scheduler records for group
+    Integer countByGroupId(Integer groupId);
 }

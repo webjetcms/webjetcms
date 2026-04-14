@@ -59,6 +59,9 @@ public class WebPagesListener {
     @Autowired
     private DocAtrDefRepository docAtrDefRepository;
 
+    @Autowired
+    private GroupSchedulerDtoRepository groupSchedulerDtoRepository;
+
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='webpages' && event.source.subpage=='web-pages-list'")
     protected void setInitalData(final WebjetEvent<ThymeleafEvent> event) {
         try {
@@ -70,6 +73,7 @@ public class WebPagesListener {
             String groupsInitialJson = "null";
             String webpagesInitialJson = "null";
             Boolean hasPagesToApprove = Boolean.FALSE;
+            Boolean hasGroupsToApprove = Boolean.FALSE;
             boolean hasSystemTab = true;
             boolean hasTrashTab = true;
 
@@ -190,6 +194,11 @@ public class WebPagesListener {
                 try {
                     List<DocHistory> pagesForApprove = docHistoryRepository.findAll(WebApproveRestController.getToApproveConditions(options.getUserId()));
                     if (pagesForApprove.isEmpty()==false) hasPagesToApprove = Boolean.TRUE;
+
+
+                    // Check if user has groups to approve
+                    if (GroupsApproveRestController.countGroupsToApprove(options.getUserId(), groupSchedulerDtoRepository) > 0) hasGroupsToApprove = Boolean.TRUE;
+
                 } catch (Exception ex) {
                     Logger.error(ex);
                 }
@@ -201,6 +210,7 @@ public class WebPagesListener {
             model.addAttribute("groupsInitialJson", fixJson(groupsInitialJson));
             model.addAttribute("webpagesInitialJson", fixJson(webpagesInitialJson));
             model.addAttribute("hasPagesToApprove", hasPagesToApprove);
+            model.addAttribute("hasGroupsToApprove", hasGroupsToApprove);
             model.addAttribute("showTab", showTab);
 
             //ak ma user specialne prava na priecinky automaticky system a kos vypni,

@@ -69,6 +69,7 @@ block content
                 let groupsInitialJson = [(${groupsInitialJson})];
                 let webpagesInitialJson = [(${webpagesInitialJson})];
                 let hasPagesToApprove = [(${hasPagesToApprove})];
+                let hasGroupsToApprove = [(${hasGroupsToApprove})];
                 let hasSystemTab = [(${hasSystemTab})];
                 let hasTrashTab = [(${hasTrashTab})];
                 let showTab = "[(${showTab})]";
@@ -100,7 +101,7 @@ block content
 
                 window.domReady.add(function () {
 
-                    if (hasPagesToApprove === false) {
+                    if (hasPagesToApprove === false && hasGroupsToApprove === false) {
                         $("#pills-waiting-tab").parent().hide();
                     }
                     if (hasSystemTab === false) {
@@ -856,8 +857,8 @@ block content
                         $("#datatableInit_wrapper").hide();
                         $("#groups-datatable_wrapper").show();
 
+                        groupsDatatable.hideButtons(["create", "edit", "remove", "celledit", "duplicate"]);
                         groupsDatatable.setAjaxUrl("/admin/rest/groups/toapprove");
-                        //groupsDatatable.columns("dateCreated:name").order("desc").draw();
                         groupsDatatable.ajax.reload();
                     }
                 });

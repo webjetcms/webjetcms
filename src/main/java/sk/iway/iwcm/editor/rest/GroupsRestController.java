@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -52,7 +51,6 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
-import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -316,44 +314,55 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             return entity;
         }
 
-        if (needApproval) {
-            // Create a pending approval record in groups_scheduler
-            GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(groupDetails, user);
-            pendingDto.setIsDelete(false);
-            pendingDto.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
-            pendingDto = groupSchedulerDtoRepository.save(pendingDto);
-
-            approveService.sendGroupApproveRequestEmail(pendingDto, oldGroupDetails, null);
-
-            StringBuilder notificationText = new StringBuilder();
-            notificationText.append(getProp().getText("approve.group.notification.text")).append(": ");
-            for(int approverId : Tools.getTokensInt(approveService.getApproveUserIds(), ",")) {
-                UserDetails approver = UsersDB.getUser(approverId);
-                if(approver != null) notificationText.append(approver.getFullName()).append(", ");
+        if (needApproval && isEdit == false) {
+            // Save as hidden until approval
+            groupDetails.setInternal(true);
+            boolean saved = groupsDB.save(groupDetails);
+            if (!saved) {
+                throwError("datatables.error.system.js");
+                return entity;
             }
-            notificationText.setLength(notificationText.length() - 2); // remove last comma and space
 
-            addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), notificationText.toString(), NotifyBean.NotifyType.INFO, 5000));
-
-            // Retun original groups until approval is done
-            return oldGroupDetails;
-        }
-
-        boolean saved = groupsDB.save(groupDetails);
-        if (!saved) {
-            throwError("datatables.error.system.js");
-            return entity;
+            // If we gonna add createEmptyWebPage, we DONT WANT to ask for doc permission - only group permission
+            EditorFacade.setDoNotCheckApproving(groupDetails.getGroupId());
+        } else {
+            // NORMAL SAVE
+            boolean saved = groupsDB.save(groupDetails);
+            if (!saved) {
+                throwError("datatables.error.system.js");
+                return entity;
+            }
         }
         entity.setGroupId(groupDetails.getGroupId());
 
-        if (RequestBean.getAttribute("forceReloadTree")!=null) setForceReload(true);
+        if (RequestBean.getAttribute("forceReloadTree") != null) setForceReload(true);
 
         boolean docsRefresh = false;
         boolean refreshGroupsDB = false;
         // ak editujem musim checknut subpriecinky
+
+        int createdEmptyWebPageDocId = -1;
         if (!isEdit) {
             if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate")) {
-                editorFacade.createEmptyWebPage(groupDetails, null, true);
+                DocDetails docDetails = editorFacade.createEmptyWebPage(groupDetails, null);
+                if(docDetails != null) createdEmptyWebPageDocId = docDetails.getDocId();
+            }
+        }
+
+        if (needApproval) {
+            // Create a pending approval record in groups_scheduler
+            GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(groupDetails, false, user);
+            pendingDto.setGroupId(groupDetails.getGroupId());
+            if(createdEmptyWebPageDocId != -1) pendingDto.setDefaultDocId(createdEmptyWebPageDocId);
+            pendingDto.setInternal( entity.isInternal() ); // copy from entity because in group can chnage it for sake of approval
+            pendingDto = groupSchedulerDtoRepository.save(pendingDto);
+
+            approveService.sendGroupApproveRequestEmail(pendingDto, oldGroupDetails, null);
+            addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), approveService.getApproverNotifBody(isEdit ? "approve.group.notification.text" : "approve.group.new.notification.text"), NotifyBean.NotifyType.INFO, 5000));
+
+            if(isEdit == true) {
+                // Retun original groups until approval is done
+                return oldGroupDetails;
             }
         }
 
@@ -547,7 +556,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 DocDetails ef = null;
                 if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate"))
                 {
-                    ef = editorFacade.createEmptyWebPage(localSystem, null, false);
+                    ef = editorFacade.createEmptyWebPage(localSystem, null);
                 }
 
                 //vytvor podadresare Hlavicky, Paticky, Menu
@@ -575,7 +584,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     groupsDB.save(subgroup);
 
                     if (ef != null) {
-                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"), true);
+                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+".pagetitle"));
                     }
                 }
                 groupsDB = GroupsDB.getInstance(true);
@@ -671,16 +680,15 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         // Check if folder delete needs approval (approvers configured on the parent group)
         GroupDetails currentGroup = GroupsDB.getInstance().getGroup(entity.getGroupId());
         if (currentGroup != null) {
-            approveService.loadApproveTables(currentGroup.getParentGroupId());
+            approveService.loadApproveTables(currentGroup.getGroupId());
             if (approveService.needApprove() && approveService.isSelfApproved() == false) {
                 // Create a pending approval record for delete
-                GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(currentGroup, getUser());
-                pendingDto.setIsDelete(true);
-                pendingDto.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+                GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(currentGroup, true, getUser());
                 groupSchedulerDtoRepository.save(pendingDto);
 
                 approveService.sendGroupApproveDelRequestEmail(pendingDto, pendingDto.getId());
-                addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), getProp().getText("approve.group.notification.text"), NotifyBean.NotifyType.INFO, 5000));
+
+                addNotify(new NotifyBean(getProp().getText("approve.group.notification.title"), approveService.getApproverNotifBody("approve.group.delete.notification.text"), NotifyBean.NotifyType.INFO, 5000));
                 return true;
             }
         }
@@ -783,10 +791,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
      * Builds a GroupSchedulerDto snapshot from the given GroupDetails for use as a pending approval record.
      * The caller is responsible for setting awaitingApprove and pendingDelete before saving.
      */
-    private GroupSchedulerDto buildPendingGroupSchedulerDto(GroupDetails group, Identity user) {
+    private GroupSchedulerDto buildPendingGroupSchedulerDto(GroupDetails group, boolean isDelete, Identity user) {
         GroupSchedulerDto dto = GroupSchedulerDtoMapper.INSTANCE.groupToGroupSchedulerDto(group);
         dto.setSaveDate(new Date());
         dto.setApprovedBy(-1);
+        dto.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+        dto.setIsDelete(isDelete);
+        if(isDelete == true) {
+            dto.setGroupName("[DELETE] " + group.getGroupName());
+            dto.setInternal(true);
+        }
         if (user != null) dto.setUserId(user.getUserId());
         return dto;
     }

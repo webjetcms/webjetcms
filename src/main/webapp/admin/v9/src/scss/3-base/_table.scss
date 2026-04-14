@@ -303,6 +303,9 @@ table.datatableInit {
                 color: $danger;
             }
         }
+        tr.is-actual td {
+            font-weight: bold;
+        }
     }
 
     //sorting icons

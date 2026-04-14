@@ -3,23 +3,20 @@ package sk.iway.iwcm.editor.rest;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
-import sk.iway.iwcm.users.UserDetails;
-import sk.iway.iwcm.users.UsersDB;
 
 @RestController
 @Datatable
@@ -62,28 +59,9 @@ public class GroupSchedulerRestController extends DatatableRestControllerV2<Grou
 
     @Override
     public GroupSchedulerDto processFromEntity(GroupSchedulerDto entity, ProcessItemAction action) {
-       if(Tools.isEmpty(entity.getAwaitingApprove())) {
-
-            if(entity.getApprovedBy() != null) {
-                // change was APPROVED
-                UserDetails approver = UsersDB.getUser( entity.getApprovedBy() );
-                if(approver != null) entity.setApprovedByName( approver.getFullName() );
-            } else if(entity.getDisapprovedBy() != null) {
-                // chagne REJECTED
-                UserDetails approver = UsersDB.getUser( entity.getDisapprovedBy() );
-                if(approver != null) entity.setDisapprovedByName( approver.getFullName() );
-            } else {
-                // This change was saved without approve -> dont need approve
-                entity.setApprovedByName(getProp().getText("editor.history.not_to_approve"));
-                entity.setDisapprovedByName("");
-            }
-
-		} else {
-            //This change require approval
-            // NOT APPROVED YET
-			entity.setApprovedByName(getProp().getText("editor.history.not_approved"));
-		}
-
+        GroupSchedulerEditorFields gsef = new GroupSchedulerEditorFields();
+        Long actual = entity.getGroupId() != null ? repository.findActualUsedGroupScheduler(entity.getGroupId()) : null;
+        gsef.fromGroupScheduler(entity, actual, getProp());
         return entity;
     }
 

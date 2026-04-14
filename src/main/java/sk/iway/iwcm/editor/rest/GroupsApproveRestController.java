@@ -55,6 +55,10 @@ public class GroupsApproveRestController extends DatatableRestControllerV2<Group
         return new DatatablePageImpl<>(groupDetailsList);
     }
 
+    public static int countGroupsToApprove(int userId, GroupSchedulerDtoRepository repository) {
+        return (int) repository.count(getToApproveConditions(userId));
+    }
+
     public static Specification<GroupSchedulerDto> getToApproveConditions(int userId) {
 		return (Specification<GroupSchedulerDto>) (root, query, builder) -> {
 			final List<Predicate> predicates = getPredicates(userId, root, builder);

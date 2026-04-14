@@ -38,11 +38,13 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 public class GroupsService extends NotifyService {
 
     private GroupSchedulerDtoRepository groupSchedulerDtoRepository;
+	private ApproveService approveService;
     private Prop prop;
 
     @Autowired
-    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, HttpServletRequest request) {
+    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, ApproveService approveService, HttpServletRequest request) {
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
+		this.approveService = approveService;
         this.prop = Prop.getInstance(request);
     }
 
@@ -78,6 +80,15 @@ public class GroupsService extends NotifyService {
 		//Check user perms for dest group
 		if(GroupsDB.isGroupEditable(currentUser, group.getGroupId())==false) {
 			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
+			addNotify(info);
+			return false;
+		}
+
+		//Check perms - by parent group
+		approveService.loadApproveTables(group.getParentGroupId());
+		if (approveService.needApprove() && !approveService.isSelfApproved()) {
+			//No right
+			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify_folder.no_right"), NotifyBean.NotifyType.WARNING, 60000);
 			addNotify(info);
 			return false;
 		}

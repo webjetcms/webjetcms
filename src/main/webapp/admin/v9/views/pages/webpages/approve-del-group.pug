@@ -2,10 +2,10 @@ extends ../../partials/layout
 
 block content
 
-    .approve-group-page
+    .approve-del-group-page
 
         div.dt-header-row.clearfix.push-content-down
-            h2(data-th-text="#{approve.group.page.title}") Schvaľování zmien adresára
+            h2(data-th-text="#{approve.del.group.page.title}") Schvaľování zmien adresára
 
         .alert.alert-danger(data-th-if="${errMsg!=null}")
             span(data-th-utext="${errMsg}") After save ERR message
@@ -13,16 +13,8 @@ block content
         .alert.alert-success(data-th-if="${succMsg!=null}")
             span(data-th-utext="${succMsg}") After save SUCC message
 
-        .form-group.mb-3.approve-group-diff(data-th-if="${diff!=null}")
-            label.form-label(data-th-if="${diffLabel!=null}" for="diff" data-th-text="${diffLabel}")
-            textarea.form-control(
-                id="diff"
-                data-th-text="${diff}",
-                readonly
-            )
-
         div(data-th-if="${form!=null}")
-            form.approve-group-footer(method="post", data-th-action="@{/admin/v9/webpages/approve-group/}", data-th-object="${form}", enctype="multipart/form-data")
+            form.approve-del-group-footer(method="post", data-th-action="@{/admin/v9/webpages/approve-del-group/}", data-th-object="${form}", enctype="multipart/form-data")
 
                 .form-group.mb-3
                     label.form-label(for="note" data-th-text="#{approve.reject.notes}")
@@ -49,7 +41,7 @@ block content
                     button.btn.btn-success.me-2(
                         type="button",
                         onclick="submitForm('approve')"
-                        data-th-text="#{approve.page.approve}"
+                        data-th-text="#{approve.page.delete}"
                     ) APPROVE
                     button.btn.btn-danger(
                         type="button",
@@ -61,36 +53,4 @@ block content
         function submitForm(status) {
             document.getElementById('approveAction').value = status;
             document.querySelector("button[type='submit']").click();
-        }
-
-    style.
-
-        .approve-group-page {
-            min-height: calc(100dvh - 160px);
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .approve-group-diff {
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 auto;
-            min-height: 0;
-            margin-bottom: 0 !important;
-        }
-
-        .approve-group-diff textarea {
-            flex: 1 1 auto;
-            min-height: 0;
-            resize: none;
-        }
-
-        .approve-group-footer {
-            position: sticky;
-            bottom: 0;
-            background: #fff;
-            padding: 1rem 0;
-            border-top: 1px solid #dee2e6;
-            z-index: 2;
         }
