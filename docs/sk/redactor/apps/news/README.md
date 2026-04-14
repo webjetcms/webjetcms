@@ -15,7 +15,7 @@ Hodnoty vo výberovom poli sekcie v hlavičke sa generujú:
 - automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`.
 - podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
 
-Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor.md).
+Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor/README.md).
 
 ![](admin-edit.png)
 
@@ -97,7 +97,7 @@ search[fieldName_searchType]=value
 search[title_co]=test
 ```
 
-pričom hodnota searchType môže má nasledovné možnosti:
+pričom hodnota `searchType` môže má nasledovné možnosti:
 
 - `eq` - presná zhoda
 - `gt` - viac ako
@@ -117,7 +117,7 @@ Pri zadávaní URL parametrov môže nastať problém z odmietnutím hodnoty `[]
 /zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
 ```
 
-URL parameter search sa môže vyskytovať viac krát, pre viaceré parametre sa použije spojenie `AND`.
+URL parameter `search` sa môže vyskytovať viac krát, pre viaceré parametre sa použije spojenie `AND`.
 
 ## Možné konfiguračné premenné
 

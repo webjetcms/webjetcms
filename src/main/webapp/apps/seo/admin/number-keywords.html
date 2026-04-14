@@ -71,7 +71,7 @@
 
         async function createAmcharts() {
             window.initAmcharts().then(module => {
-                $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                $.ajax({url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) {
                     barChartKeywordsNumber = new ChartTools.BarChartForm("name", "numberOfKeywords", '[[#{components.seo.keywords.searchengines.graph.title2}]]', "numberKeywords-barKeywords", result);
                     ChartTools.createAmchart(barChartKeywordsNumber);
 
@@ -86,7 +86,7 @@
 
             //Reload bar chart data
             WJ.showLoader();
-            await $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+            await $.ajax({url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) {
                 barChartKeywordsNumber.chartData = result;
                 ChartTools.updateChart(barChartKeywordsNumber);
             }});
@@ -106,7 +106,7 @@
             let selectedPage = $('#webPageSelect').val();
             let rootDir = $('#rootDir').val();
 
-            if(type == ChartTools.ChartType.Bar) {
+            if(type == ChartTools.ChartType.Bar_Horizontal) {
                 let tmpDefURL = url + "/barChartData?rootDir=" + $('#rootDir').val();;
                 tmpDefURL += "&webPage=" + selectedPage;
                 return tmpDefURL;

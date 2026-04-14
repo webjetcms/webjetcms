@@ -24,6 +24,9 @@ Vysvetlenie použitých piktogramov:
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [ ] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole.
 - [ ] Migrácia build z `webpack` na `vite`, opraviť varovania, napr. `eval` a staré knižnice/závislosti. Aktualizovať knižnice na novšie verzie (#58417).
+- [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
+- [ ] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu.
+- [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku.
 
 ## 2025
 
@@ -82,7 +85,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
-- [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
+- [x] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené (#58433).
 - [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
 - [x] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil (#58361).
 - [x] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83, #58129).

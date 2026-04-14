@@ -11,7 +11,28 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
+async function uploadImage(name, I) {
+    I.say('Uploading webp image');
+    I.click('.elfinder-button-icon.elfinder-button-icon-upload');
+    //from: https://developers.google.com/speed/webp/gallery1 / https://commons.wikimedia.org/wiki/File:Frühling_blühender_Kirschenbaum.jpg
+    I.attachFile('input[type=file]', 'tests/webpages/' + name);
+    await I.clickIfVisible('.elfinder-confirm-accept');
+    I.waitForText(name, 10, '.elfinder-cwd-wrapper');
+
+    I.say('Verifying webp file is visible in elfinder');
+    I.seeElement('.elfinder-cwd-filename[title="' + name + '"]');
+}
+
+async function compareTransparentImage(fileName, compareName, I, Document, tolerance) {
+    I.say('Comparing transparent image ' + fileName);
+    I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/' + fileName + '?w=400&h=400&ip=4&c=ffff00');
+    I.waitForElement('img', 10);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/' + compareName, null, null, tolerance);
+}
+
+Scenario('webp/gif/png upload and thumbnail test', async ({ I, Document }) => {
+    var tolerance = 5; //tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
+
     Document.setConfigValue("imageMagickDir", "/usr/bin");
     //for local development localconf will set correct default values
     I.amOnPage("/localconf.jsp");
@@ -33,39 +54,43 @@ Scenario('webp upload and thumbnail test', async ({ I, Document }) => {
     I.doubleClick(locate('.elfinder-cwd-filename').withText(folderName));
     I.waitForElement(locate('.elfinder-navbar-dir.ui-state-active').withText(folderName), 10);
 
-    I.say('Uploading webp image');
-    I.click('.elfinder-button-icon.elfinder-button-icon-upload');
-    //from: https://developers.google.com/speed/webp/gallery1 / https://commons.wikimedia.org/wiki/File:Frühling_blühender_Kirschenbaum.jpg
-    I.attachFile('input[type=file]', 'tests/webpages/tree.webp');
-    await I.clickIfVisible('.elfinder-confirm-accept');
-    I.waitForText('tree.webp', 10, '.elfinder-cwd-wrapper');
-
-    I.say('Verifying webp file is visible in elfinder');
-    I.seeElement('.elfinder-cwd-filename[title="tree.webp"]');
+    await uploadImage('tree.webp', I);
+    await uploadImage('rose-transparent.webp', I);
+    //https://pixabay.com/gifs/watermelon-fruit-slice-wavy-wiggle-23023/
+    await uploadImage('mxjfiles-watermelon-23023.gif', I);
+    await uploadImage('mxjfiles-watermelon-23023.png', I);
 
     //
     I.say('Displaying webp image via /thumb prefix and comparing screenshot');
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=400&h=400&ip=5');
     I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb.png', null, null, 5);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb.png', null, null, tolerance);
+
+    await compareTransparentImage('rose-transparent.webp', 'webp-rose-transparent-thumb.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.gif', 'mxjfiles-watermelon-23023-gif-thumb.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.png', 'mxjfiles-watermelon-23023-png-thumb.png', I, Document, tolerance);
 
     //
     I.say('Displaying webp image via /thumb prefix with no IP');
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=490');
     I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-noip.png', null, null, 5);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-noip.png', null, null, tolerance);
 
     //disable imageMagick, try standard Java resize method
     Document.setConfigValue("imageMagickDir", "/usr/local/XXbin");
 
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=300&h=400&ip=5');
     I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java.png', null, null, 5);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java.png', null, null, tolerance);
+
+    await compareTransparentImage('rose-transparent.webp', 'webp-rose-transparent-java.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.gif', 'mxjfiles-watermelon-23023-gif-java.png', I, Document, tolerance);
+    await compareTransparentImage('mxjfiles-watermelon-23023.png', 'mxjfiles-watermelon-23023-png-java.png', I, Document, tolerance);
 
     //noip
     I.amOnPage('/thumb/images/produktova-stranka/' + folderName + '/tree.webp?w=480');
     I.waitForElement('img', 10);
-    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java-noip.png', null, null, 5);
+    await Document.compareScreenshotElement('img', 'thumb-servlet/webp-tree-thumb-java-noip.png', null, null, tolerance);
 });
 
 Scenario('webp cleanup', async ({ I, Document }) => {

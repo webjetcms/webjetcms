@@ -268,6 +268,30 @@ export function renderDate(td, type, rowData, row, dateFormat) {
     }
 }
 
+export function renderDuration(td, type, rowData, row) {
+    if (td === "" || td === null || typeof td === "undefined") {
+        //console.log("   returning null");
+        return null;
+    }
+    if (type == "sort" || type == "filter" ) {
+        return prepareForSearch(td);
+    } else {
+        td = parseInt(td);
+        if(!isNaN(td)) {
+            let totalSeconds = td / 1000;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = Math.floor(totalSeconds % 60);
+            let value = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            //used for DT editor for duration field
+            if (rowData == null && row == null) return value;
+
+            return renderTd(row, value, rowData);
+        } else {
+            return null;
+        }
+    }
+}
+
 export function renderPercentage(td, type, rowData, row, percentageFormat) {
 
     if (td === "" || td === null || typeof td == "undefined") {

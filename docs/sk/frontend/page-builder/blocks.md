@@ -611,8 +611,6 @@ window.wysiwygGetCallback = function(html, conf) {
 
         const replacements = [
             ['×', '&times;'],
-            ['"', '&quot;'],
-            ["'", '&apos;'],
             ['„', '&bdquo;'],
             ['“', '&ldquo;'],
             ['”', '&rdquo;'],

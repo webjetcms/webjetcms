@@ -19,6 +19,7 @@
       - [Backend](/developer/frameworks/charts/backend/README.md)
       - [Frontend](/developer/frameworks/charts/frontend/README.md)
       - [Spoločné JS funkcie](/developer/frameworks/charts/frontend/statjs.md)
+      - [Štatistiky pomocou grafov](/developer/frameworks/charts/stats-by-charts/README.md)
     - [Preklady v JavaScript súboroch](/developer/frameworks/jstranslate.md)
     - [jsTree](/developer/jstree/README.md)
     - Používané knižnice

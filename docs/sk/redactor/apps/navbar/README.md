@@ -44,7 +44,7 @@ Vlastná implementácia musí implementovať rozhranie `sk.iway.iwcm.doc.NavbarI
 ```java
 package com.example.custom;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.doc.NavbarInterface;
 
 public class CustomNavbar implements NavbarInterface {

@@ -1111,6 +1111,8 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
         if (typeof i === "undefined" || i === null) i = index;
         var fieldName = DATA.columns[i].data;
         var columnTitle = WJ.htmlToText(DATA.columns[i].title || '');
+        var renderFormatForce = DATA.columns[i].renderFormatForce;
+        if (typeof renderFormatForce === "undefined" || renderFormatForce === null) renderFormatForce = "dt-format-text";
 
         //console.log("Iterating, i=", i, "fieldName=", fieldName, " col=", DATA.columns[i], "this=", this);
 
@@ -1214,7 +1216,7 @@ export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA
             html = ``;
         }
 
-        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
+        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio") || "dt-format-select"===renderFormatForce) {
             inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
             html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}" aria-label="${columnTitle}">`;
             //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu
@@ -1282,5 +1284,24 @@ export function adjustColumns(TABLE) {
         TABLE.columns.adjust();
     } catch (e) {
         console.error("Error adjusting columns: ", e);
+    }
+}
+
+/**
+ * When in CKEditor is opened app editor-component dialog and there is iframe with datatable (eg. gallery, inquiry...) hide parent footer buttons on DTE.open/close,
+ * so there will be no confusing buttons in multiple dialogs opened
+ * @param {*} TABLE
+ */
+export function iframeHideParentFooterOnEditorOpen(TABLE) {
+    //if parent of our iframe has class .iframeFieldType
+    if (window.parent !== window.self && $(window.frameElement).parents('.iframeFieldType').length > 0) {
+        var selector = "div.cke_dialog_container div.cke_dialog_body table.cke_dialog_contents td.cke_dialog_footer a.cke_dialog_ui_button";
+        var className = "dte-parent-button-disabled";
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            $(window.parent.parent.parent.document).find(selector).addClass(className);
+        });
+        window.addEventListener("WJ.DTE.close", function(e) {
+            $(window.parent.parent.parent.document).find(selector).removeClass(className);
+        });
     }
 }

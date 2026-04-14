@@ -9,15 +9,60 @@
 ### Prelomové zmeny
 
 - Vyžadovaný je aplikačný server Tomcat 11, verzia 10 už nie je podporovaná (#58385).
+- Odstránené historické aplikácie `/components/adresar/editor_component.jsp` a `/components/sharing_icons/editor_component.jsp`, ktoré sa už nepoužívali. Ak ich chcete naďalej používať, stiahnite si z platformy [GitHub](https://github.com/webjetcms/webjetcms/tree/hotfix/2026.0-main/src/main/webapp/components) (#57409).
 
 ### Webové stránky
+
+- Aplikácie - pridaná možnosť nastaviť [štýly zobrazenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie). Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov (#osk418).
+
+![](custom-apps/appstore/common-settings-tab.png)
 
 - Editor stránok - do dialógového okna [Odkaz a Tlačidlo](redactor/webpages/working-in-editor/README.md#tlačidlá) pridaná karta s rozšírenými nastaveniami ako ID, titulok, popis pre čítačky (aria-label) a podobne (#osk115).
 - Ninja - pridané pole `canonical` ako [voliteľné pole Q](frontend/ninja-starter-kit/ninja-jv/page/README.md#informácie-o-stránke) pre nastavenie kanonickej URL adresy stránky. V prípade, že je pole prázdne, použije sa URL adresa stránky. Hodnotu v šablóne získate ako `${ninja.page.canonical}` (#OSK149).
 - Page Builder - opravené presúvanie okna pre vloženie blokov, opravené prekrývanie výberu režimu editora, zapracované UX pripomienky (#58353).
 - Zjednotené používanie nástroja `ImageMagick` pre zmenu veľkostí obrázkov medzi galériou a `/thumb servlet` (#osk396).
-- Pridaná podpora vkladania obrázkov vo formáte `webp` (#osk396).
+- Pridaná podpora vkladania obrázkov vo formáte `webp` vrátane zápisu pri zmene veľkosti pomocou natívnej knižnice `libwebp` cez `ImageIO` (#osk396).
 - Pridané konfiguračné premenné `imageMagickCustomParams*` pre [nastavenie vlastných parametrov](redactor/apps/gallery/README.md#vlastné-parametre-imagemagick) `ImageMagick` operácií podľa typu operácie a formátu obrázka (#osk396).
+- Aplikácie - doplnená možnosť **maximalizovať a minimalizovať** okno pre **vkladanie aplikácií, obrázku, odkazov** atď. do stránky (#57409).
+- Pridaná podpora pre automatické obnovenie všetkých previazaných (zrkadlených) stránok a priečinkov z koša, keď jedna z nich bola obnovená (#osk423).
+- Priečinok - pridaná možnosť nastaviť HTML kód novej stránky z lokálneho Systém/Šablóny priečinka, pôvodne sa zoznam stránok čítal podľa konfiguračnej premennej `tempGroupId` (#57409).
+
+### Aplikácie
+
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
+
+- [Predpripravené bloky (HTMLBox)](redactor/apps/htmlbox/README.md)
+
+![](redactor/apps/htmlbox/editor-block.png)
+
+- [Anketa ľahko](redactor/apps/inquiry/inquiry-simple.md)
+
+![](redactor/apps/inquiry/inquiry-simple-tab-basic.png)
+
+- [Mapa](redactor/apps/map/README.md)
+
+![](redactor/apps/map/map-editor.png)
+
+- [Odporúčania](redactor/apps/app-testimonials/README.md)
+
+![](redactor/apps/app-testimonials/editor-style.png)
+
+- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
+
+![](redactor/apps/htmlbox/editor-block.png)
+
+### Formuláre
+
+- Pridaná karta [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
+
+![](redactor/apps/multistep-form/stat-section.png)
+
+- Pre viackrokové formuláre pridaný stĺpec **Trvanie vyplnenia**, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie) (#58333).
+
+### Galéria
+
+- Pridaná možnosť presúvať priečinky galérie priamo v editore zmenou nadradeného priečinka. Podrobnosti nájdete v časti [správa štruktúry](redactor/apps/gallery/structure.md) (#58433).
+- Vylepšené spracovanie presunu priečinkov galérie s cieľom zabrániť vzniku neplatných odkazov. Viac informácií v časti [premiestnenie priečinku Galérie](redactor/apps/gallery/structure.md#premiestnenie-priečinku-galérie) (#58433).
 
 ### Manažér dokumentov
 
@@ -35,11 +80,22 @@
 
 ### Iné menšie zmeny
 
+- Galéria - pridaná podpora priesvitnosti v `png/webp/gif` obrázkoch pri zmene ich veľkosti, ak sa nepoužíva [ImageMagick](redactor/apps/gallery/README.md#možné-konfiguračné-premenné) (#osk396).
 - GitHub pipeline - po `merge pull request` sa automaticky vygeneruje príspevok na sociálne siete pomocou LLM (GitHub Copilot / Google Gemini) a pridá sa ako komentár k danému `pull request` spolu s prípadnými fotkami obrazovky z dokumentácie (#177).
 - Skripty - pridaná možnosť nastaviť, či sa má skript vkladať v editore stránok v režime PageBuilder (#58349).
 - Skripty - pridaný atribút [Poradie vkladania](redactor/apps/insert-script/README.md) pre nastavenie poradia vkladania skriptov v rámci rovnakej pozície. Predvolená hodnota pre existujúce skripty je 10, pri novom skripte sa automaticky nastaví na najvyššiu hodnotu + 10 (#osk387).
 - Editor stránok - opravené určenie priečinka pre nahrávanie obrázkov/súborov pri novej/ešte neuloženej web stránke s duplicitným názvom: priečinok teraz zodpovedá skutočnej URL adrese stránky vrátane prípony `-2`, `-3` atď (#58361).
 - Zrkadlenie štruktúry - pridaná možnosť generovať [odkazy na jazykové mutácie](redactor/apps/docmirroring/README.md#nastavenie-atribútu-hreflang) v hlavičke stránky pomocou aplikácie `hreflang.jsp`, odkazy obsahujú atribút `hreflang` pre lepšiu SEO optimalizáciu jazykových verzií (#58357).
+- Stromová štruktúra - pridané automatické posunutie na aktuálne zvolený prvok v stromové štruktúre (#58433).
+- Aplikácie - pridaná možnosť skryť polia/karty v editore aplikácie pomocou konfiguračnej premennej `appHideFields`. Viac sa dočítate v časti [Skrývanie polí/kariet](custom-apps/appstore/README.md#skrývanie-políkariet) (#58433).
+- `imageradio` - pridaná možnosť nastaviť pole typu `imageradio` ako `disabled` (#58333).
+- Dizajn všetkých grafov v celom projekte bol prerobený z tmavého na svetlý režim pre lepšie zladenie dizajnu (#58333).
+
+![](developer/frameworks/charts/frontend/line-chart.png)
+
+### Oprava chýb
+
+- `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
 
 ### Bezpečnosť
 
@@ -47,6 +103,7 @@
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
+- Odstránené nepoužívané knižnice `jszip,lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -58,6 +115,11 @@
 ![](redactor/admin/passkey-logon.png)
 
 - Používatelia - ak vytváraní nového používateľa alebo jeho editácii do poľa heslo zadáte znak `*` vygeneruje sa nové bezpečné heslo a zobrazí sa vám v notifikácii (#58369).
+- [Skupiny práv](admin/users/perm-groups.md) - pridaná možnosť nastaviť príznak **Prístup ku všetkým adresárom web stránok** a **Prístup ku všetkým priečinkom súborového systému**, ktoré pri prihlásení prepíšu sčítané práva z ostatných skupín a poskytnú používateľovi neobmedzený prístup k web stránkam, alebo súborom (#osk422).
+
+### Oprava chýb
+
+- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
 
 ### Pre programátora
 
@@ -71,6 +133,10 @@
 - Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
 - Webové stránky - doplnená možnosť upraviť karty okne [Štýl pri použití PageBuilder](frontend/page-builder/blocks.md#podporný-javascript-kód) volaním funkcie `window.pbBuildTabMenu`. Viete tak pre zákazníka zobraziť len relevantné karty a nastavenia bloku (#58345).
 - Webové stránky - doplnená možnosť volať [vlastnú funkciu pre čistenie HTML kódu](frontend/page-builder/blocks.md#podporný-javascript-kód) po vložení z `Microsoft Office` alebo pri získaní HTML kódu (#OSK49).
+- Grafy - nástroj/knižnica [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na prácu s `amcharts` grafmi bol aktualizovaný, priali sa nové funkcionality, nové grafy a vylepšila sa logika (#58333).
+- Grafy - pridaná nová trieda/knižnica [stats-by-charts.js](../../src/main/webapp/apps/_common/charts/stats-by-charts.js) na rýchle vytváranie celých sekcií štatistík s využitím [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na vytváranie grafov (#58333).
+- `WebjetEvent` – pridaná možnosť nastaviť používateľa typu `Identity` priamo do udalosti. Vhodné pri spracovaní udalostí, kde je potrebný používateľ, ale nie je dostupný `context` alebo `request` (#OSK423).
+- Datatabuľky - pridaný nový typ udalosti `DatatableColumnsEvent`, na ktorý je možné počúvať a dynamicky upraviť definíciu stĺpcov pred inicializáciou tabuľky. Viac sa dozviete v časti [Udalosť DatatableColumnsEvent](developer/backend/events-datatable.md#udalosť-DatatableColumnsEvent) (#58433).
 
 ## 2026.0.x
 
@@ -78,22 +144,25 @@
 
 - Administrácia - doplnené presmerovanie po prihlásení ak pôvodná cesta začína na `/components` a obsahuje `/admin` (#58317-4).
 - Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
+- Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
-- Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
+- Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
 - Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
 - Multiweb - opravené používanie doménových aliasov pri použití externých priečinkov - nastavená konfiguračná premenná `cloudStaticFilesDir` (#58317-4).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
 - Prieskumník - opravené nahrávanie viacerých súborov cez drag & drop (#58317-2).
+- Voliteľné polia - opravené zobrazenie hodnôt (namiesto ID) a filtra (výberové pole namiesto textového poľa) pre výberové polia, číselníky a výber web stránky (#58421-0).
 - Webové stránky - opravené odstránenie diakritiky pri nahratí obrázka do editora cez drag&drop (#58361).
 - Webové stránky - Page Builder - pri vytvorení novej stránky sa použije hodnota nastavená v poli HTML kód novej stránky priečinka. Stránka teda nemusí byť prázdna, ale môže obsahovať pripravené bloky (#osk378).
 - Webové stránky - Nastavenie bloku - opravené nastavenie pozadí a pokročilých nastavení (#TB2456).
 - Webové stránky - opravené zmazanie priečinka z koša pri multiweb inštalácii (#58317-03).
 - Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
-- Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
+- Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
+- Webové stránky - opravená chyba získania [šablóny pre mobilné zariadenia](frontend/templates/templates.md#zobrazenie-pre-špecifické-zariadenie) v MultiWEB inštalácii pri zhode mien šablóny v rôznych doménach (#58317-5).
 
 ## 2026.0
 
@@ -126,7 +195,7 @@
 - Pridané kontextové menu Zmazať element, pomocou ktorého môžete ľahko zmazať tlačidlo, odkaz, odstavec, formulár, sekciu a podobne. Stačí keď na element kliknete pravým tlačidlom pre zobrazenie kontextového menu (#osk233).
 - Page Builder - upravené generovanie štýlov pri použití nástroja ceruzka. Do CSS štýlu sa generujú len zmenené hodnoty, tie sú v dialógovom okne zvýraznené modrým orámovaním vstupného poľa (#58145).
 - Page Builder - pridaná možnosť volania [vlastného JavaScript súboru](frontend/page-builder/blocks.md#podporný-javascript-kód) s podpornými funkciami pre úpravu kódu. Pridaná možnosť upraviť nastavenia ako selektory pre elementy, farby a podobne (#58141).
-- Page Builder - upravené generovanie kotiev pri kartách tak, aby názov kotvy bol generovaný podľa názvu karty - pôvodne bol generovaný ne-sémanticky ako `autotabs-x-y` (#112).
+- Page Builder - upravené generovanie kotiev pri kartách tak, aby názov kotvy bol generovaný podľa názvu karty - pôvodne nebol generovaný sémanticky ako `autotabs-x-y` (#112).
 - Page Builder - doplnená možnosť nastaviť šírku stĺpca na `auto` pre automatické prispôsobenie obsahu (#114).
 - Page Builder - doplnená možnosť pripraviť [textové bloky](frontend/page-builder/blocks.md) priamo do priečinka `content`, vkladajú sa namiesto pôvodných blokov čítaných z web stránok z priečinka Šablóny. Web dizajnér ich pripraví spolu s ostatnými typmi Page Builder blokov. Umožňuje rýchle vloženie často používaných textových častí, tlačidiel a podobne (#58165).
 - Page Builder - pri vkladaní nového bloku je predvolená karta Knižnica namiesto Základné, aby sa zjednodušil výber bloku z pripraveného zoznamu (#58165).

@@ -2,11 +2,19 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.Date;
 
-import jakarta.persistence.*;
-
 import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -51,7 +59,7 @@ public class GalleryDimension {
     @Column(name = "gallery_perex")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        title = "editor.tab.perex",
+        title = "components.gallery.perex",
         renderFormat = "dt-format-textarea",
         tab = "basic"
     )
@@ -225,6 +233,7 @@ public class GalleryDimension {
         inputType = DataTableColumnType.TEXT,
         title = "sync.path",
         tab = "basic",
+        className = "hide-on-create",
         editor = {
             @DataTableColumnEditor(
                 attr = {
@@ -234,6 +243,23 @@ public class GalleryDimension {
         }
     )
     private String path;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.gallery.superior_directory", tab = "basic",  visible=false, filter=false, orderable=false, className = "dt-tree-dir-simple", sortAfter = "path",
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery"),
+					@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")
+				}
+			)
+		}
+	)
+    private String parent;
+
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.gallery.replace_in_doc", sortAfter = "parent")
+    private Boolean updateInDoc = Boolean.TRUE;
 
     @Column(name = "views")
     private int views = 0;
@@ -392,5 +418,21 @@ public class GalleryDimension {
 
     public void setEditorFields(GalleryDimensionEditorFields editorFields) {
         this.editorFields = editorFields;
+    }
+
+    public String getParent() {
+        return parent;
+    }
+
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    public Boolean getUpdateInDoc() {
+        return updateInDoc;
+    }
+
+    public void setUpdateInDoc(Boolean updateInDoc) {
+        this.updateInDoc = updateInDoc;
     }
 }

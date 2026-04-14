@@ -1,41 +1,35 @@
 div.amcharts {
     width: 100%;
     height: 450px;
-    margin-top: 8px;
-    margin-bottom: 24px;
-
-    /*&.aaaaaa-farby {
-        color: #0061f5;
-        color: #00a186;
-        color: #b48700;
-        color: #e00028;
-    }*/
+    margin-top: 0px;
+    margin-bottom: 14px;
 
     > div:before {
         content: '';
-        background: #2b303b;
+        background: $nice-gray;
         width: calc(100% - 0px);
-        height: calc(100% + 16px);
+        height: calc(100% + 6px);
         display: block;
         position: absolute;
         z-index: -1;
         right: 0;
-        border-radius: 10px;
-        top: -8px;
+        border-radius: 6px;
+        top: 0px;
     }
 }
 .amchart-header {
     font-family: $secondary-font-family;
     font-weight: 700;
-    padding-left: 38px;
-    min-height: 20px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    padding-left: 2px;
+    font-size: 16px !important;
+    margin-top: 18px;
+    margin-bottom: 12px;
+
     .additional-data {
         font-family: $secondary-font-family;
         font-weight: 400;
         margin-left: 1rem;
-        font-size: 14px;
+        font-size: 16px;
         white-space: nowrap;
 
         &::before {
@@ -48,6 +42,35 @@ div.amcharts {
             display: inline-block;
             margin-top: -5px;
             background-color: var(--amchart-series-color-var);
+        }
+    }
+}
+
+div.amcharts:has(table.table) {
+    height: auto;
+    > div {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+.amcharts {
+    table.table {
+        margin-top: 0px;
+        margin-bottom: 0px;
+        tbody tr:hover {
+            background-color: $nice-primary;
+            td {
+                color: $white;
+            }
+        }
+        td, th {
+            background: none;
+            color: black;
+        }
+        td {
+            p:last-child {
+                margin-bottom: 0px;
+            }
         }
     }
 }
@@ -81,4 +104,10 @@ div.amcharts {
     100% {
         transform: rotate(360deg);
     }
+}
+div div.amcharts:last-child {
+    margin-bottom: 18px;
+}
+div .amchart-header:first-child, section .amchart-header:first-child {
+    margin-top: 12px;
 }

@@ -433,6 +433,15 @@ export const dataTableInit = options => {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
+
+                // when have initialJson set, there is missing options definition for customFields,
+                // we need to run whole function to update filters from text to select with options
+                let isFirstRun = false;
+                if (typeof DATA.customFieldsUpdateColumnsFirstRunDone === "undefined") {
+                    DATA.customFieldsUpdateColumnsFirstRunDone = true;
+                    isFirstRun = true;
+                }
+
                 for (var customField of fieldsDefinition) {
                     //podla null textu filtrujeme aj zoznam dostupnych stlpcov v nastaveni
                     if (customField.label==null) customField.label = "null";
@@ -443,7 +452,7 @@ export const dataTableInit = options => {
 
                     column = TABLE.column(fieldName+":name");
                     var currentText = $(column.header()).text();
-                    if (currentText === customField.label) continue;
+                    if (currentText === customField.label && isFirstRun === false) continue;
 
                     isChange = true;
 
@@ -479,8 +488,43 @@ export const dataTableInit = options => {
                             editorField.label = customField.label;
                         }
                     }
+
+                    for (var j = 0; j < DATA.columns.length; j++) {
+                        if (DATA.columns[j].data === fieldName) {
+                            //reset renderformat
+                            DATA.columns[j].renderFormatForce = null;
+                        }
+                    }
+
+                    //handle label-value options
+                    if (typeof customField.typeValues != "undefined" && Array.isArray(customField.typeValues) && customField.typeValues.length>0) {
+                        var options = customField.typeValues;
+                        fixOptionsValueType(options);
+
+                        for (var j = 0; j < DATA.columns.length; j++) {
+                            if (DATA.columns[j].data === fieldName) {
+                                DATA.columns[j].editor.options = options;
+                                DATA.columns[j].renderFormatForce = "dt-format-select";
+                                break;
+                            }
+                        }
+                        //aktualizuj DT editor
+                        try {
+                            TABLE.EDITOR.field(fieldName).update(options);
+                        } catch (e) {
+                            //asi dany field v editore neexistuje
+                            //console.log(e);
+                        }
+
+
+                        //aktualizuj select box v hlavicke
+                        dtWJ.updateFilterSelect(DATA, fieldName);
+                    }
                 }
-                if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
+                if (isChange) {
+                    $("#"+DATA.id).trigger("column-reorder.dt");
+                    dtWJ.initializeHeaderFilters("#"+TABLE.DATA.id+"_wrapper div.dt-scroll-head table ", false, TABLE.DATA, TABLE);
+                }
             }
         }
 
@@ -660,11 +704,12 @@ export const dataTableInit = options => {
                 if (typeof col.ai != "undefined") col.editor.ai = col.ai;
                 if (typeof col.entityDecode != "undefined") col.editor.entityDecode = col.entityDecode;
 
-                if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
+                if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type || "duration" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";
                     if ("date" === col.editor.type) defaultFormat = "L";
                     if ("timehm" === col.editor.type) defaultFormat = "HH:mm";
                     if ("timehms" === col.editor.type) defaultFormat = "HH:mm:ss";
+                    if ("duration" === col.editor.type) defaultFormat = "HH:mm:ss";
                     col.editor.type = "datetime"; //musime nastavit takto, aby sa date spravalo rovnako ako datetime len malo iny format
                     col.editor.format = col.editor.format || defaultFormat;
                     col.editor.displayFormat = col.editor.format;
@@ -1073,11 +1118,14 @@ export const dataTableInit = options => {
         let originalDateTimeSetFunction = $.fn.dataTable.Editor.fieldTypes.datetime.set;
         $.fn.dataTable.Editor.fieldTypes.datetime.set = function (conf, val) {
             val = ""+val;
-            //console.log("Fixed typeof val=", typeof val, " val=", val);
+
+            if ("dt-format-duration" === conf.renderFormat) {
+                conf._input.val(dtConfig.renderDuration(val, "editor", null, null));
+                return;
+            }
+
             originalDateTimeSetFunction(conf, val);
         }
-
-
 
         //datovy typ JSON a Datatable
         //console.log("Idem inicializovat JSON, TABLE=", TABLE, " DATA=", DATA);
@@ -2645,6 +2693,13 @@ export const dataTableInit = options => {
                     }
                 },
                 {
+                    targets: "dt-format-duration",
+                    type: "num",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderDuration(td, type, rowData, row);
+                    }
+                },
+                {
                     targets: "dt-format-date--text",
                     className: "dt-style-date",
                     type: "num",
@@ -3651,8 +3706,28 @@ export const dataTableInit = options => {
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
-        new bootstrap.Tooltip($(".btn-export-dialog"));
-        new bootstrap.Tooltip($(".btn-import-dialog"));
+        var $exportButtons = $(".btn-export-dialog");
+        if ($exportButtons.length > 0) {
+            $exportButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for export buttons
+                    console.error("Failed to initialize tooltip for .btn-export-dialog:", e);
+                }
+            });
+        }
+        var $importButtons = $(".btn-import-dialog");
+        if ($importButtons.length > 0) {
+            $importButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for import buttons
+                    console.error("Failed to initialize tooltip for .btn-import-dialog:", e);
+                }
+            });
+        }
     }, 500);
 
     //bindni upozornenie o konflikte editacie zaznamu viacerymi pouzivatelmi
@@ -3770,6 +3845,7 @@ export const dataTableInit = options => {
     dtWJ.bindOnResize(TABLE, DATA);
     dtWJ.bindDialogDragDrop(TABLE);
     dtWJ.bindColumnReorder(TABLE);
+    dtWJ.iframeHideParentFooterOnEditorOpen(TABLE);
 
     TABLE.setAjaxUrl = function(newUrl) {
         try {

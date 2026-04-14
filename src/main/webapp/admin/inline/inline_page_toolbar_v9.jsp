@@ -556,7 +556,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="all")
     {
-        var url = '/admin/elFinder/dialog.jsp';
+        var url = '/admin/v9/files/dialog/';
 
         if (form != null && elementName != null) {
             url = url + "?form=" + form;

@@ -196,8 +196,278 @@ export class DatatablesCkEditor {
 				*/
 
 				dialogDefinition.dialog.on( 'show', function() {
+					//get the document context from the dialog element (works in pageBuilder iframe too)
+					var dialog = this;
+					var dialogDoc = dialog.getElement().getDocument().$;
+					var $dialogDoc = $(dialogDoc);
+
 					//::before contain tabler icon, remove X text
-					$(".cke_dialog_body > a.cke_dialog_close_button > span.cke_label").text("");
+					$dialogDoc.find(".cke_dialog_body > a.cke_dialog_close_button > span.cke_label").text("");
+
+					//add maximize and minimize buttons before close button
+					var closeButton = $dialogDoc.find(".cke_dialog_container:visible .cke_dialog_body > a.cke_dialog_close_button");
+					if (closeButton.length > 0 && closeButton.siblings("button.cke_dialog_maximize_button").length === 0) {
+						var maximizeButton = $('<button class="cke_dialog_maximize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.maximize.js") + '" data-toggle="tooltip" role="button" tabindex="-1"><span class="cke_label"></span></button>');
+						var minimizeButton = $('<button class="cke_dialog_minimize_button" href="javascript:void(0)" title="' + WJ.translate("datatables.modal.minimize.js") + '" data-toggle="tooltip" role="button" tabindex="-1" style="display:none;"><span class="cke_label"></span></button>');
+
+						maximizeButton.insertBefore(closeButton);
+						minimizeButton.insertBefore(closeButton);
+
+						//add bootstrap tooltip
+						try {
+							var tooltipContainer = $dialogDoc.find(".cke_dialog_container:visible .cke_dialog_body")[0];
+							closeButton.attr("data-toggle", "tooltip");
+							closeButton.tooltip({ container: tooltipContainer });
+							maximizeButton.tooltip({ container: tooltipContainer });
+							minimizeButton.tooltip({ container: tooltipContainer });
+						} catch (e) {
+							//tooltip initialization failed
+						}
+
+						//helper function to recursively set/remove maximized class on iframe bodies
+						var setMaximizedClassOnIframes = function($container, add) {
+							$container.find("iframe").each(function() {
+								try {
+									var iframeDoc = this.contentDocument || this.contentWindow.document;
+									var $iframeBody = $(iframeDoc.body);
+									if (add) {
+										$iframeBody.addClass("cke-maximized");
+									} else {
+										$iframeBody.removeClass("cke-maximized");
+									}
+									//recursively handle nested iframes
+									setMaximizedClassOnIframes($iframeBody, add);
+								} catch (e) {
+									//cross-origin iframe, cannot access
+								}
+							});
+						};
+
+						maximizeButton.on("click", function(e) {
+							e.preventDefault();
+							e.stopPropagation();
+
+							var dialogElement = dialog.getElement().$;
+							var $dialogElement = $(dialogElement);
+							var $dialogBody = $dialogElement.find(".cke_dialog_body");
+
+							//store content area size only on first maximize to prevent size accumulation
+							if (dialog._.originalWidth === null || dialog._.originalWidth === undefined) {
+								//use CKEditor's internal contentSize if available, otherwise measure contents
+								if (dialog._.contentSize) {
+									dialog._.originalWidth = dialog._.contentSize.width;
+									dialog._.originalHeight = dialog._.contentSize.height;
+								} else {
+									var $contents = $dialogElement.find(".cke_dialog_contents");
+									dialog._.originalWidth = $contents.width();
+									dialog._.originalHeight = $contents.height();
+								}
+							}
+
+							//store drag state and position for restoration on minimize
+							dialog._.wasMovedBeforeMaximize = dialog._.moved || false;
+							var currentPos = dialog.getPosition();
+							dialog._.positionBeforeMaximize = currentPos ? {x: currentPos.x, y: currentPos.y} : null;
+
+							//store iframe sizes only on first maximize
+							$dialogElement.find("iframe").each(function() {
+								var $iframe = $(this);
+								if ($iframe.data("originalWidth") === undefined) {
+									$iframe.data("originalWidth", $iframe.width());
+									$iframe.data("originalHeight", $iframe.height());
+									$iframe.data("originalParentWidth", $iframe.parent("div").css("width"));
+								}
+							});
+
+							//calculate dialog dimensions accounting for title, tabs and footer
+							var $dialogTitle = $dialogElement.find(".cke_dialog_title");
+							var $dialogTabs = $dialogElement.find(".cke_dialog_tabs");
+							var $dialogFooter = $dialogElement.find(".cke_dialog_footer");
+							var titleHeight = $dialogTitle.length > 0 ? $dialogTitle.outerHeight(true) : 40;
+							var tabsHeight = $dialogTabs.length > 0 ? $dialogTabs.outerHeight(true) : 35;
+							var footerHeight = $dialogFooter.length > 0 ? $dialogFooter.outerHeight(true) : 50;
+
+							//use dialog's window context, but for pageBuilder use top window
+							var dialogWindow = dialog.getElement().getDocument().getWindow().$;
+							var targetWindow = dialogWindow;
+
+							//check if we're inside pageBuilder iframe - if so, expand iframe to full screen
+							try {
+								if (dialogWindow !== dialogWindow.top && dialogWindow.frameElement) {
+									var $pageBuilderIframe = $(dialogWindow.frameElement);
+									//store original iframe styles for restoration
+									dialog._.originalIframeStyles = {
+										position: $pageBuilderIframe.css("position"),
+										top: $pageBuilderIframe.css("top"),
+										left: $pageBuilderIframe.css("left"),
+										width: $pageBuilderIframe.css("width"),
+										height: $pageBuilderIframe.css("height"),
+										zIndex: $pageBuilderIframe.css("z-index")
+									};
+									//expand iframe to full screen
+									$pageBuilderIframe.css({
+										"position": "fixed",
+										"top": "0",
+										"left": "0",
+										"width": "100vw",
+										"height": "100vh",
+										"z-index": "99999"
+									});
+									//use top window dimensions
+									targetWindow = dialogWindow.top;
+								}
+							} catch (e) {
+								//cross-origin, use current window
+							}
+
+							var viewportWidth = $(targetWindow).width() - 40;
+							var viewportHeight = $(targetWindow).height() - 60 - titleHeight - tabsHeight - footerHeight;
+							dialog.resize(viewportWidth, viewportHeight);
+							dialog.move(20, 10);
+
+							//add maximized class to disable drag and resize
+							$dialogBody.addClass("cke_dialog_maximized");
+
+							//resize iframes inside the dialog after dialog resize is complete
+							setTimeout(function() {
+								var contentBody = $dialogElement.find(".cke_dialog_contents_body");
+								if (contentBody.length > 0) {
+									var newWidth = contentBody.innerWidth() - 5;
+									var newHeight = contentBody.innerHeight() - 5;
+									$dialogElement.find("iframe").each(function() {
+										//console.log("Resizing iframe, newWidth=", newWidth, " newHeight=", newHeight, "src=", $(this).attr("src"));
+										var $iframe = $(this);
+										$iframe.css({"width": newWidth + "px", "height": newHeight + "px"});
+										$iframe.parent("div").css("width", "100%");
+									});
+								}
+
+								//add maximized class to iframe bodies (recursive for nested iframes)
+								setMaximizedClassOnIframes($dialogElement, true);
+							}, 150);
+
+							maximizeButton.hide();
+							minimizeButton.show();
+						});
+
+						minimizeButton.on("click", function(e) {
+							e.preventDefault();
+							e.stopPropagation();
+
+							var dialogElement = dialog.getElement().$;
+							var $dialogElement = $(dialogElement);
+							var $dialogBody = $dialogElement.find(".cke_dialog_body");
+							var dialogWindow = dialog.getElement().getDocument().getWindow().$;
+
+							//restore pageBuilder iframe original styles if it was expanded
+							try {
+								if (dialogWindow !== dialogWindow.top && dialogWindow.frameElement && dialog._.originalIframeStyles) {
+									var $pageBuilderIframe = $(dialogWindow.frameElement);
+									$pageBuilderIframe.css(dialog._.originalIframeStyles);
+									delete dialog._.originalIframeStyles;
+								}
+							} catch (e) {
+								//cross-origin, ignore
+							}
+
+							//restore iframe sizes
+							$dialogElement.find("iframe").each(function() {
+								var $iframe = $(this);
+								var originalWidth = $iframe.data("originalWidth");
+								var originalHeight = $iframe.data("originalHeight");
+								var originalParentWidth = $iframe.data("originalParentWidth");
+								if (originalWidth !== undefined && originalHeight !== undefined) {
+									$iframe.css({"width": originalWidth + "px", "height": originalHeight + "px"});
+									if (originalParentWidth !== undefined) {
+										$iframe.parent("div").css("width", originalParentWidth);
+									}
+								}
+							});
+
+							//remove maximized class from iframe bodies (recursive for nested iframes)
+							setMaximizedClassOnIframes($dialogElement, false);
+
+							//restore dialog size
+							dialog.resize(dialog._.originalWidth, dialog._.originalHeight);
+
+							//remove maximized class to re-enable drag and resize
+							$dialogBody.removeClass("cke_dialog_maximized");
+
+							//restore position after resize completes
+							setTimeout(function() {
+								if (!dialog._ || !dialog.getElement()) return;
+
+								if (dialog._.wasMovedBeforeMaximize && dialog._.positionBeforeMaximize) {
+									dialog.move(dialog._.positionBeforeMaximize.x, dialog._.positionBeforeMaximize.y);
+								} else {
+									dialog._.moved = false;
+									delete dialog._.position;
+									dialog.layout();
+								}
+
+								delete dialog._.wasMovedBeforeMaximize;
+								delete dialog._.positionBeforeMaximize;
+							}, 100);
+
+							minimizeButton.hide();
+							maximizeButton.show();
+						});
+					}
+				});
+
+				//reset all settings when dialog is closed
+				dialogDefinition.dialog.on( 'hide', function() {
+					var dialog = this;
+					var dialogDoc = dialog.getElement().getDocument().$;
+					var $dialogDoc = $(dialogDoc);
+					var dialogElement = dialog.getElement().$;
+					var $dialogElement = $(dialogElement);
+					var dialogWindow = dialog.getElement().getDocument().getWindow().$;
+
+					//restore pageBuilder iframe original styles if it was expanded
+					try {
+						if (dialogWindow !== dialogWindow.top && dialogWindow.frameElement && dialog._.originalIframeStyles) {
+							var $pageBuilderIframe = $(dialogWindow.frameElement);
+							$pageBuilderIframe.css(dialog._.originalIframeStyles);
+							delete dialog._.originalIframeStyles;
+						}
+					} catch (e) {
+						//cross-origin, ignore
+					}
+
+					//remove maximized class
+					$dialogElement.find(".cke_dialog_body").removeClass("cke_dialog_maximized");
+
+					//remove maximized class from iframe bodies (recursive for nested iframes)
+					var removeMaximizedFromIframes = function($container) {
+						$container.find("iframe").each(function() {
+							try {
+								var iframeDoc = this.contentDocument || this.contentWindow.document;
+								var $iframeBody = $(iframeDoc.body);
+								$iframeBody.removeClass("cke-maximized");
+								removeMaximizedFromIframes($iframeBody);
+							} catch (e) {
+								//cross-origin iframe, cannot access
+							}
+						});
+					};
+					removeMaximizedFromIframes($dialogElement);
+
+					//remove stored original sizes from iframes
+					$dialogElement.find("iframe").each(function() {
+						$(this).removeData("originalWidth originalHeight originalParentWidth");
+					});
+
+					//clear stored dialog size and reset drag state
+					if (dialog._) {
+						delete dialog._.originalWidth;
+						delete dialog._.originalHeight;
+						dialog._.moved = false;
+						delete dialog._.position;
+					}
+
+					//remove maximize/minimize buttons so they get recreated fresh on next show
+					$dialogDoc.find(".cke_dialog_body > button.cke_dialog_maximize_button, .cke_dialog_body > button.cke_dialog_minimize_button").remove();
 				});
 
 				//console.log("dialogName: "+dialogName);
@@ -243,17 +513,22 @@ export class DatatablesCkEditor {
 							original.call(this);
 
 							if (tableWrapperClass != "") {
-								var table = window.getCkEditorInstance().document.$.getElementById(id);
-								var $table = $(table);
-								var parent = $table.parent("div."+tableWrapperSelector);
+								var table;
+								if (typeof that.ckEditorInstance.document != "undefined") table = that.ckEditorInstance.document.$.getElementById(id);
+								else table = document.getElementById(id);
 
-								//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
-								//console.log("this=", this, "parent=", parent);
+								if (typeof table != "undefined" && table != null) {
+									var $table = $(table);
+									var parent = $table.parent("div."+tableWrapperSelector);
 
-								if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
+									//console.log("table=", table, "$table=", $table, "bootstrapVersion=", that.myWindow.bootstrapVersion);
+									//console.log("this=", this, "parent=", parent);
 
-								if (originalId != "") $table.attr("id", originalId);
-								else $table.removeAttr("id");
+									if (parent.length == 0)	$table.wrap('<div class="'+tableWrapperClass+'"></div>');
+
+									if (originalId != "") $table.attr("id", originalId);
+									else $table.removeAttr("id");
+								}
 							}
 
 							return;
@@ -275,7 +550,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/?stop_resizing=true" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -519,7 +794,7 @@ export class DatatablesCkEditor {
 						{
 							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
-							iframeElement.setAttribute("src", "/admin/v9/files/wj_link/?stop_resizing=true");
+							iframeElement.setAttribute("src", "/admin/v9/files/wj_link/");
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
 							iframeElement.setStyle("width", 800+"px");
@@ -1545,6 +1820,24 @@ export class DatatablesCkEditor {
 					//console.log("Setting resize interval, that=", that);
 					that.myWindow.setTimeout(function() { that.resizeEditor(that); }, 100);
 					that.myWindow.setInterval(function() { that.resizeEditor(that); }, 3000);
+
+					that.ckEditorInstance.maximalizeWindow = function() {
+						var el = document.querySelector("button.cke_dialog_maximize_button");
+						if (el) {
+							el.click();
+							return true;
+						}
+						return false;
+					};
+
+					that.ckEditorInstance.minimalizeWindow = function() {
+						var el = document.querySelector("button.cke_dialog_minimize_button");
+						if (el) {
+							el.click();
+							return true;
+						}
+						return false;
+					};
 				},
 
 				'getData' : function(e)

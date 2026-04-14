@@ -744,6 +744,13 @@ OIDC
 localhost
 lang
 displaytag
+datasetov
+dataset
+datasetu
+granularita
+granularitu
+granularity
+datasete
 autentifikátora
 phishingovým
 serializovať
@@ -764,3 +771,7 @@ PGP
 issues
 nahlasovaní
 ImageMagick
+Predpripravený
+Copilot
+nahrávaného
+serializáciou
