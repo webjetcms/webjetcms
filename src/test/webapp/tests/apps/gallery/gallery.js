@@ -1011,9 +1011,7 @@ Scenario('thumb servlet - noip4', async ({ I, Document }) =>  {
     await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
 });
 
-const dirOriginalName = "filter-original";
-const dirChangedName = "filter-changed";
-Scenario('test original dir names + filtering', ({ I }) =>  {
+function jstreeSetDefault(I) {
     I.amOnPage("/admin/v9/apps/gallery/");
 
     I.say("Turn off showing of original names in jstree");
@@ -1022,6 +1020,12 @@ Scenario('test original dir names + filtering', ({ I }) =>  {
     I.uncheckOption("#jstree-settings-showrealname");
     I.clickCss("button#jstree-settings-submit");
     I.waitForInvisible("#jstreeSettingsModal", 5);
+}
+
+const dirOriginalName = "filter-original";
+const dirChangedName = "filter-changed";
+Scenario('test original dir names + filtering', ({ I }) =>  {
+    jstreeSetDefault(I);
 
     I.say("Try filter using changed name");
     I.jstreeFilter(dirChangedName);
@@ -1042,4 +1046,8 @@ Scenario('test original dir names + filtering', ({ I }) =>  {
     I.jstreeFilter(dirOriginalName);
     I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
     I.seeElement(locate('.jstree-anchor.jstree-search span.realName').withText("(" + dirOriginalName + ")"));
+});
+
+Scenario('test original dir names + filtering - cleanup', ({ I }) =>  {
+    jstreeSetDefault(I);
 });

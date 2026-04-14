@@ -182,7 +182,7 @@ public class GalleryTreeService {
     private List<IwcmFile> getAllTreeFiles(String url, String treeSearchValue) {
         Set<String> paths = new HashSet<>();
 
-        List<GalleryDimension> dirs = repository.findByPathLikeAndPathLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
+        List<GalleryDimension> dirs = repository.findByPathLikeOrNameLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
 
         dirs.forEach(gallery -> {
             if (FileTools.isDirectory(gallery.getPath()) == false) return;
