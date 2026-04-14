@@ -3,19 +3,18 @@ package sk.iway.iwcm.components.gallery;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
@@ -34,11 +33,12 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class GalleryDimenstionRestController extends DatatableRestControllerV2<GalleryDimension, Long> {
 
     private final GalleryDimensionRepository repository;
+    private final GalleryTreeService galleryTreeService;
 
-    @Autowired
-    public GalleryDimenstionRestController(GalleryDimensionRepository repository) {
+    public GalleryDimenstionRestController(GalleryDimensionRepository repository, GalleryTreeService galleryTreeService) {
         super(repository);
         this.repository = repository;
+        this.galleryTreeService = galleryTreeService;
     }
 
     @Override
@@ -78,8 +78,6 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
     @Override
     public GalleryDimension insertItem(GalleryDimension entity) {
-
-        //Get entity path (this path we are setting in getOne) and add entity name to path, get entity from DB by path
         //If DB return entity, path is allready in use throw error, or set new path to entity
         String path = getPathForNewEntity(entity.getPath(), entity.getName());
         Identity user = getUser();
@@ -130,7 +128,28 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             }
         }
 
+        // Allow change path of folder
+        String movePathFrom = null;
+        GalleryDimension original = repository.findById(id).orElse(null);
+        if(original != null && original.getPath() != null && original.getPath().equals(entity.getPath()) == false) {
+            movePathFrom = original.getPath();
+        }
+
         GalleryDimension saved = super.editItem(entity, id);
+
+        if (movePathFrom != null) {
+            // Folder was moved
+            Map<String, Object> result = new HashMap<>();
+
+            boolean isUpdateInDoc = Tools.isTrue(entity.getUpdateInDoc());
+            if(isUpdateInDoc) { addNotify( galleryTreeService.updateInDocWarning(getProp()) ); }
+            galleryTreeService.findAndMoveGalleryFolder(movePathFrom, entity.getParentPath(), result, isUpdateInDoc);
+
+            if(result.containsKey("result") == false || Boolean.FALSE.equals(result.get("result"))) {
+                throwError((String) result.get("error"));
+                return null;
+            }
+        }
 
         if (entity.getEditorFields().isForceResizeModeToSubgroups()) {
             GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());
@@ -207,6 +226,12 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             }
 
             if (forcePath!=null) entity.setPath(forcePath);
+
+            // it new entity so parent is current path
+            entity.setParent( entity.getPath() );
+        } else {
+            // its already existing entity, parent is path -1 level
+            entity.setParent( entity.getParentPath() );
         }
 
         return entity;
@@ -277,6 +302,12 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GalleryDimension> target, Identity user, Errors errors, Long id, GalleryDimension entity) {
 
         String path = entity.getPath();
+
+        // for new entity we are getting path from parent field, MUST be replaced in entity
+        if((id == null || id < 1) && Tools.isNotEmpty(entity.getParent())) {
+            path = entity.getParent();
+            entity.setPath(path);
+        }
 
         if (target.isInsert()) {
             if (Tools.isEmpty(entity.getName())) {

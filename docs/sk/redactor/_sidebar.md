@@ -79,13 +79,15 @@
   - Formuláre
     - [Zoznam formulárov](/redactor/apps/form/README.md)
     - [Položky formuláru](/redactor/apps/multistep-form/README.md)
+    - [Štatistiky formulára](/redactor/apps/multistep-form/stat.md)
     - [Regulárne výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskusia
     - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
     - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)
   - Galéria
     - [Galéria](/redactor/apps/gallery/README.md)
-    - [Nastavenie vodoznaku](/redactor/apps/gallery/watermark.md)
+    - [Správa štruktúry](/redactor/apps/gallery/structure.md)
+    - [Nastavenie vodotlače](/redactor/apps/gallery/watermark.md)
   - GDPR
     - [Cookies súhlas](/redactor/apps/gdpr/README.md)
     - [Cookies manažér](/redactor/apps/gdpr/cookiesmanger.md)
@@ -113,6 +115,7 @@
   - [Mapa stránok](/redactor/apps/sitemap/README.md)
   - [Menu (navigačné)](/redactor/apps/menu/README.md)
   - [Navigačná lišta](/redactor/apps/navbar/README.md)
+  - [Nápovedy](/redactor/apps/tooltip/README.md)
   - [Novinky](/redactor/apps/news/README.md)
   - [Odkazy na sociálne siete](/redactor/apps/app-social_icon/README.md)
   - [Odporúčania](/redactor/apps/app-testimonials/README.md)
@@ -138,7 +141,6 @@
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
   - [Štatistika](/redactor/apps/stat/README.md)
-  - [Tooltip](/redactor/apps/tooltip/README.md)
   - [Video](/redactor/apps/video/README.md)
   - [Vloženie dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vloženie HTML kódu](/redactor/apps/app-htmlembed/README.md)

@@ -262,9 +262,9 @@ Príklad nastavenia [výberového poľa](../../developer/datatables-editor/datat
 ```java
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -644,6 +644,45 @@ Cache sa nepoužije ak:
 - zadaná hodnota parametra `cacheMinutes` < 1
 - v URL adrese sa nachádza parameter `page` (neaplikuje sa ak je hodnota 1, teda pre prvú stranu napr. zoznamu noviniek)
 - v URL adrese sa nachádza parameter `_disableCache=true`
+
+### Skrývanie polí/kariet
+
+Ak chcete aplikáciu využívať na rôznych miestach a súčasne obmedziť, ktoré polia a karty môže používateľ vidieť, môžete využiť parameter `appHideFields`. Výhodné je takto pripraviť aplikáciu v blokoch pre Page Builder.
+
+Parameter `appHideFields` je definovaný v triede `WebjetComponentAbstract` a je dostupný pre všetky aplikácie. Ide o textovú hodnotu, kde môžete hodnotou `+` oddeliť názvy polí a kariet, ktoré sa majú v editore aplikácie skryť.
+
+**Formát hodnoty:**
+
+```text
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
+```
+
+- **Polia** - zadáte priamo názov poľa (názov atribútu v Java triede), napr. `dir`, `style`.
+- **Karty** - názov karty musí mať **povinne** prefix `tab_`, za ktorým nasleduje ID karty definované v anotácii `@DataTableTab`, napr. `tab_componentIframe`.
+
+**Príklad:** hodnota `appHideFields=dir+tab_componentIframe` skryje pole `dir` a kartu s ID `componentIframe`.
+
+#### Nastavenie parametra
+
+Parameter `appHideFields` nie je viditeľný v editore aplikácie, je potrebné ho nastaviť jedným z nasledovných spôsobov:
+
+**1. Programovo v metóde `initAppEditor`:**
+
+```java
+@Override
+public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+    //hide the dir field and the componentIframe tab
+    this.appHideFields = "dir+tab_componentIframe";
+}
+```
+
+**2. Priamo v `PageParams` (v `!INCLUDE` značke):**
+
+```html
+!INCLUDE(sk.iway.iwcm.components.gallery.GalleryApp, appHideFields=dir+tab_componentIframe)!
+```
+
+!>**Upozornenie:** parameter `appHideFields` nie je viditeľný v editore aplikácie. Nie je ho možné nastaviť cez používateľské rozhranie, je potrebné ho nastaviť programovo alebo priamo v `PageParams`.
 
 ## Doplnkový HTML kód
 

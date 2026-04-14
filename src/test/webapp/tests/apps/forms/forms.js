@@ -247,7 +247,7 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
 
 Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
-    I.resizeWindow(1280, 1110);
+    I.resizeWindow(1280, 1510);
     I.amOnPage("/apps/form/admin/");
 
     //tester

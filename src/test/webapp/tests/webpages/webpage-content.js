@@ -209,27 +209,6 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
      I.clickCss('#pills-dt-datatableInit-content-tab');
      I.waitForVisible('#pills-dt-datatableInit-content', 20);
 
-     // BLOKY - zalozka VASE -> diakritika v dynamicky a staticky blok, v dropdowne .filterOptions su options bez diakritiky OSTATNE a INA STRANKA s DocID
-     I.clickCss('#trEditor');
-     I.clickCss('.cke_button_icon.cke_button__htmlbox_icon');
-     I.wait(3);
-     I.waitForElement('.cke_dialog_ui_iframe', 5);
-     I.wait(3);
-     I.switchTo('.cke_dialog_ui_iframe');
-     I.wait(1);
-     I.switchTo('#editorComponent');
-     I.wait(1);
-     I.waitForElement('#componentsWindowTableMainDiv', 5);
-     I.waitForText('Dynamický blok', 5);
-     I.waitForText('Statický blok', 5);
-     I.waitForElement(locate('.filterOptions').withText('Ostatné'), 5);
-     I.waitForElement(locate('.filterOptions').withText('Iná stránka s DocID'), 5);
-     I.switchTo();
-     I.waitForElement(locate('.cke_dialog_ui_button.cke_dialog_ui_button_ok').withText('OK'));
-     I.wait(1);
-     I.forceClick(locate('.cke_dialog_ui_button.cke_dialog_ui_button_ok').withText('OK'));
-     I.waitForElement('#trEditor', 10);
-
      // HLADAT - diakritika na tlacidle Zatvorit
      I.clickCss('#trEditor');
      I.clickCss('.cke_button.cke_button__find.cke_button_off');

@@ -16,6 +16,7 @@ import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.FilterHeaderDto;
 import sk.iway.iwcm.stat.StatTableDB;
 import sk.iway.iwcm.stat.jpa.SearchEnginesDTO;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -159,25 +160,6 @@ public class StatService {
     }
 
     /**
-     * Function is case-insensitive, and if input string value is equal to one of ChartType enum, this enum value
-     * will be returned. If input is null/empty/or does not match any of ChartType values, function will return
-     * NOT_CHART enum value as default value.
-     * @param chartType String value that represent one of ChartTzpe enum values
-     * @return ChartType enum value
-     */
-    public static ChartType stringToChartTypeEnum(String chartType) {
-        if(chartType == null || chartType.equalsIgnoreCase("notChart"))
-            return ChartType.NOT_CHART;
-        else if("pie".equalsIgnoreCase(chartType))
-            return ChartType.PIE;
-        else if("line".equalsIgnoreCase(chartType))
-            return ChartType.LINE;
-        else if("bar".equalsIgnoreCase(chartType))
-            return ChartType.BAR;
-        else return ChartType.NOT_CHART;
-    }
-
-    /**
      * Function handle Map of parameters returned by Overrided searchItem and use them for creating new
      * FilterHeaderDto variable (where this handled params are set). If any param is not found in map, default value will be set.
      *  Default values are defined by FilterHeaderDto itself.
@@ -218,7 +200,7 @@ public class StatService {
                 filter.setFilterBotsOut(Boolean.parseBoolean(filterBotsOutString));
             }  else if("chartType".equalsIgnoreCase(entry.getKey())) {
                 String chartTypString = value;
-                filter.setChartType(stringToChartTypeEnum(chartTypString));
+                filter.setChartType( ChartType.getType(chartTypString) );
             } else if("searchUrl".equalsIgnoreCase(entry.getKey())) {
                 filter.setUrl(value);
             } else if("searchEngine".equalsIgnoreCase(entry.getKey())) {
@@ -288,7 +270,7 @@ public class StatService {
         String chartType = Tools.getStringValue(request.getParameter("searchChartType"), "notChart");
         if("notChart".equals(chartType)) chartType = Tools.getStringValue(request.getParameter("chartType"), "notChart");
 
-        filter.setChartType(stringToChartTypeEnum(chartType));
+        filter.setChartType( ChartType.getType(chartType) );
 
         //Set url
         filter.setUrl(Tools.getStringValue(request.getParameter("searchUrl"), ""));
@@ -324,7 +306,7 @@ public class StatService {
 
         updateFilter(filter);
 
-        if(filter.getChartType() == ChartType.PIE)
+        if(filter.getChartType() == ChartType.PIE_DONUT)
             columns = StatTableDB.getSearchEnginesCount(MAX_ROWS,  filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());
         else
             columns = StatTableDB.getSearchEnginesQuery(MAX_ROWS, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupIdQuery());
@@ -334,7 +316,7 @@ public class StatService {
 
     public static List<SearchEnginesDTO> getSearchEnginesPieChartData(Date from, Date to, String rootGroupIdQuery) {
         List<Column> columns = StatTableDB.getSearchEnginesCount(MAX_ROWS, from, to, rootGroupIdQuery);
-        return columnsToItems(columns, ChartType.PIE);
+        return columnsToItems(columns, ChartType.PIE_DONUT);
     }
 
     private static FilterHeaderDto updateFilter(FilterHeaderDto filter) {
@@ -352,7 +334,7 @@ public class StatService {
         List<SearchEnginesDTO> items = new ArrayList<>();
         int order = 1;
 
-        if(chartType == ChartType.PIE) {
+        if(chartType == ChartType.PIE_DONUT) {
             for(Column column : columns) {
                 SearchEnginesDTO item = new SearchEnginesDTO();
                 item.setOrder(order);
@@ -377,12 +359,27 @@ public class StatService {
                     item.setPercentage((double) item.getQueryCount() * 100 / sum);
                     items.add(item);
 
-                    if(chartType == ChartType.BAR && order >= MAX_BAR_COLUMNS) break;
+                    if(chartType == ChartType.BAR_HORIZONTAL && order >= MAX_BAR_COLUMNS) break;
 
                     order++;
                 }
             }
         }
         return items;
+    }
+
+    public static final String DEFAULT_COLORSET_NAME = "set3";
+    public static final List<OptionDto> getColorSchemeOptions() {
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("set1", "set1", "/apps/_common/charts/images/overlapping_circles_set1.png"));
+        optionsMap.add(new OptionDto("set2", "set2", "/apps/_common/charts/images/overlapping_circles_set2.png"));
+        optionsMap.add(new OptionDto("set3", "set3", "/apps/_common/charts/images/overlapping_circles_set3.png"));
+        optionsMap.add(new OptionDto("set4", "set4", "/apps/_common/charts/images/overlapping_circles_set4.png"));
+        optionsMap.add(new OptionDto("set5", "set5", "/apps/_common/charts/images/overlapping_circles_set5.png"));
+        optionsMap.add(new OptionDto("set_blue", "set_blue", "/apps/_common/charts/images/overlapping_circles_set_blue.png"));
+        optionsMap.add(new OptionDto("set_green", "set_green", "/apps/_common/charts/images/overlapping_circles_set_green.png"));
+        optionsMap.add(new OptionDto("set_red", "set_red", "/apps/_common/charts/images/overlapping_circles_set_red.png"));
+        optionsMap.add(new OptionDto("set_yellow", "set_yellow", "/apps/_common/charts/images/overlapping_circles_set_yellow.png"));
+        return optionsMap;
     }
 }
