@@ -15,7 +15,7 @@ public interface GalleryDimensionRepository extends DomainIdRepository<GalleryDi
     List<GalleryDimension> findByPathLikeAndDomainId(String path, int domainId);
 
     @Query("SELECT gd FROM GalleryDimension gd WHERE gd.path LIKE :baseFolder AND (gd.path LIKE :searchContains OR gd.name LIKE :searchContains) AND gd.domainId = :domainId")
-    List<GalleryDimension> findByPathLikeOrNameLikeAndDomainId(@Param("baseFolder") String baseFolder, @Param("searchContains") String searchContains, @Param("domainId") int domainId);
+    List<GalleryDimension> findByPathLikeAndNameLikeAndDomainId(@Param("baseFolder") String baseFolder, @Param("searchContains") String searchContains, @Param("domainId") int domainId);
 
     Optional<GalleryDimension> findFirstByPathLikeAndDomainId(String path, int domainId);
 }
