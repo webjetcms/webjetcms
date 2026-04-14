@@ -223,16 +223,11 @@ public class Identity extends UserDetails
 	}
 	public void addDisabledItem(String name)
 	{
-		if ("menuFbrowser".equals(name))
-		{
-			Logger.debug(Identity.class, "Som fbrowser");
-		}
-
 		if (disabledItemsTable == null)
 		{
 			disabledItemsTable = new Hashtable<>();
 		}
-		disabledItemsTable.put(name, name);
+		if (Tools.isNotEmpty(name)) disabledItemsTable.put(name, name);
 	}
 
 	public void removeDisabledItem(String name)
