@@ -150,19 +150,23 @@ public class GalleryTreeService {
         //Filter by serach value and search type
         if("contains".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().contains(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().contains(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().contains(wantedValueLC)))
                 .toList();
         } else if("startwith".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().startsWith(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().startsWith(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().startsWith(wantedValueLC)))
                 .toList();
         } else if("endwith".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().endsWith(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().endsWith(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().endsWith(wantedValueLC)))
                 .toList();
         } else if("equals".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).equalsIgnoreCase(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).equalsIgnoreCase(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).equalsIgnoreCase(wantedValueLC)))
                 .toList();
         } else return new ArrayList<>();
     }
@@ -178,7 +182,7 @@ public class GalleryTreeService {
     private List<IwcmFile> getAllTreeFiles(String url, String treeSearchValue) {
         Set<String> paths = new HashSet<>();
 
-        List<GalleryDimension> dirs = repository.findByPathLikeAndPathLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
+        List<GalleryDimension> dirs = repository.findByPathLikeAndNameLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
 
         dirs.forEach(gallery -> {
             if (FileTools.isDirectory(gallery.getPath()) == false) return;
