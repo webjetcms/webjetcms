@@ -113,4 +113,30 @@ Scenario('gallery structure', ({ I, DTE, Document }) => {
     I.clickCss("#pills-dt-galleryDimensionDatatable-watermark-tab");
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-watermark-tab.png`);
 
+    DTE.cancel();
+
+    I.click("button.buttons-jstree-settings");
+    I.waitForElement("#jstree-settings-showrealname", 10);
+    I.checkOption("#jstree-settings-showrealname");
+    I.clickCss("#jstree-settings-submit");
+
+    I.jstreeWaitForLoader();
+    //open tree so on screenshots there will be real names visible below jstreesettings dialog
+    I.jstreeClick("apps");
+    I.jstreeClick("o-spolocnosti");
+    I.jstreeClick("test");
+    I.jstreeClick("watermark");
+    I.jstreeClick("filter-changed");
+    I.click("button.buttons-jstree-settings");
+
+    I.executeScript(() => {
+        //move jstree down so it will be visible on screenshots
+        document.getElementById("SomStromcek").style.marginTop = "80px";
+    });
+
+    Document.screenshot(`/redactor/apps/gallery/jstree-settings.png`);
+
+    //reset settings
+    I.uncheckOption("#jstree-settings-showrealname");
+    I.clickCss("#jstree-settings-submit");
 });

@@ -42,7 +42,7 @@ Karta ponúka možnosti, ktoré sa aplikujú na obrázky galérie:
   - **Presná šírka** - veľkosť obrázka použije zadanú šírku a výšku vypočíta podľa pomeru strán. Výška ale môže byť väčšia ako zadaný rozmer.
   - **Presná výška** - veľkosť obrázka použije zadanú výšku a šírku vypočíta podľa pomeru strán. Šírka ale môže byť väčšia ako zadaný rozmer.
   - **Negenerovať zmenšeniny** - galéria použije len originálny obrázok a nebude generovať náhľadové obrázky. Náhľadové obrázky je následne možné generovať podľa potreby s využitím `/thumb` prefixu.
-- **Pregenerovať obrázky** - ak je možnosť zvolená, pregeneruje veľkosti všetkých obrázkov v galérii podľa aktuálnych nastavení
+- **Pregenerovať obrázky** - ak je možnosť zvolená, nanovo vygeneruje veľkosti všetkých obrázkov v galérii podľa aktuálnych nastavení
 - **Aplikovať na všetky podpriečinky** - ak je možnosť zvolená, nastavenie sa použije aj na všetky podradené priečinky
 - **Veľkosť malého obrázku** - šírka a výška obrázku
 - **Maximálna veľkosť veľkého obrázku (ak nezadáte, ponechá sa originál)** - šírka a výška obrázku
@@ -61,7 +61,7 @@ Viac sa dočítate v samostatnej dokumentácii [Nastavenie vodotlače](watermark
 
 Priečinok je možné premiestniť 2 spôsobmi:
 
-- **editáciou** - v editácií priečinka zmenou hodnoty **Nadradený priečinok**
+- **editáciou** - v editácii priečinka zmenou hodnoty **Nadradený priečinok**
 - `drag and drop` - premiestnenie priečinka v štruktúre
 
 Následky premiestnenia priečinku:
@@ -70,3 +70,17 @@ Následky premiestnenia priečinku:
 - aktualizácia **web stránok** - aktualizovanie cesty priamo v tele webovej stránky. Je to časovo nákladná akcia
   - pri **editácii** sa zobrazí možnosť **Aktualizovať cestu ku galérii vo webových stránkach** a ak je zvolená, aktualizujú sa všetky webové stránky, ktoré obsahujú cestu k tejto galérii
   - pri **drag and drop** sa aktualizujú všetky webové stránky automaticky bez možnosti výberu
+
+## Nastavenie zobrazenia stromovej štruktúry
+
+V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class="ti ti-adjustments-horizontal"></i> Nastavenia zobraziť dialógové okno nastavení:
+
+- **Meno priečinka na disku** - zobrazí meno priečinka na disku, ktoré môže byť odlišné od Názvu galérie zadanej v nastavení galérie.
+- **Pomer šírky stĺpcov strom:tabuľka** - Nastaví pomer šírky stĺpcov zobrazenej stromovej štruktúry a datatabuľky pre lepšie využitie šírky monitora. Štandardný pomer je 4:8. Upozornenie: pri niektorých pomeroch a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
+- **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
+  - **Názov**
+  - **Dátum vytvorenie**
+  - **Naposledy upravené**
+- **Zoradiť strom smerom** - Prepínanie medzi smerom usporiadania stromu priečinkov. Výberom možnosti sa použije smer **Vzostupne** a nezvolením možnosti sa použije smer **Zostupne**.
+
+![](jstree-settings.png)
