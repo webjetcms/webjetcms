@@ -27,6 +27,7 @@
         "pug-loader": "https://github.com/vdh/pug-loader#patch-1",
         "replace-in-file": "^8.4.0",
         "sass": "^1.84.0",
+        "sass-embedded": "^1.99.0",
         "sass-loader": "^16.0.4",
         "vue-loader": "^17.4.2",
         "webpack-bundle-analyzer": "^4.10.2",

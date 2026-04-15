@@ -155,6 +155,10 @@ const config = {
                     {
                         loader: "sass-loader",
                         options: {
+                            //use native Dart Sass binary (sass-embedded) with modern compiler API
+                            //sass-embedded is 2-5x faster than the JS sass package
+                            api: 'modern-compiler',
+                            implementation: require('sass-embedded'),
                             sassOptions: {
                                 quietDeps: true,
                                 silenceDeprecations: ['import', 'global-builtin', 'color-functions']
