@@ -12,7 +12,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.tags.JSEscapeTag;
 import sk.iway.iwcm.users.UsersDB;
-
+import jakarta.persistence.Transient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotBlank;
@@ -368,6 +368,16 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 	@DataTableColumnNested
 	private GroupEditorField editorFields = null;
+
+	// achedulerId and isDelete used only for GroupSchedulerDto mapping
+
+	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private int schedulerId;
+
+	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Boolean isDelete;
 
 	public GroupDetails()
 	{
@@ -1186,4 +1196,21 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 		return loggedShowInSitemap.intValue();
 	}
+
+	public int getSchedulerId() {
+		return schedulerId;
+	}
+
+	public void setSchedulerId(int schedulerId) {
+		this.schedulerId = schedulerId;
+	}
+
+	public Boolean getIsDelete() {
+		return isDelete;
+	}
+
+	public void setIsDelete(Boolean isDelete) {
+		this.isDelete = isDelete;
+	}
+
 }

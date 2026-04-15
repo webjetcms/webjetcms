@@ -5,13 +5,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.i18n.Prop;

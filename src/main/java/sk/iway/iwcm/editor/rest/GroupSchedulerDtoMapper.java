@@ -15,6 +15,7 @@ public interface GroupSchedulerDtoMapper {
 
     GroupSchedulerDtoMapper INSTANCE = Mappers.getMapper(GroupSchedulerDtoMapper.class);
 
+    @Mapping(source = "schedulerId", target = "id")
     @Mapping(source = "groupId", target = "groupId")
     @Mapping(source = "forceTheUseOfGroupTemplate", target = "forceGroupTemplate")
     @Mapping(source = "newPageDocIdTemplate", target = "newPageDocidTemplate")
@@ -22,6 +23,7 @@ public interface GroupSchedulerDtoMapper {
     GroupSchedulerDto groupToGroupSchedulerDto(GroupDetails group);
     List<GroupSchedulerDto> groupDetailsListToGroupSchedulerDtos(List<GroupDetails> groupDetailsList);
 
+    @Mapping(source = "id", target = "schedulerId")
     @Mapping(source = "groupId", target = "groupId")
     @Mapping(source = "forceGroupTemplate", target = "forceTheUseOfGroupTemplate")
     @Mapping(source = "newPageDocidTemplate", target = "newPageDocIdTemplate")

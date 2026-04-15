@@ -1,4 +1,4 @@
-package sk.iway.iwcm.editor.service;
+package sk.iway.iwcm.editor.approve;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,6 +30,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoMapper;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;

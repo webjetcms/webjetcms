@@ -9,13 +9,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.css.CssDto;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -49,6 +48,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrRepository;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.editor.util.EditorUtils;
@@ -1468,7 +1468,7 @@ public class EditorService {
 	 * @param publishEvents
 	 * @return Return "success" or other string taht represend some sort of error taht occured
 	 */
-	protected String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
+	public String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";

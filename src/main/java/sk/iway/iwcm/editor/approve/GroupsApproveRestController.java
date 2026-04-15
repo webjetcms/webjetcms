@@ -1,4 +1,4 @@
-package sk.iway.iwcm.editor.rest;
+package sk.iway.iwcm.editor.approve;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,6 +24,9 @@ import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoMapper;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;

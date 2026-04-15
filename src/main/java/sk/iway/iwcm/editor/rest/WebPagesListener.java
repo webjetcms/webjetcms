@@ -32,6 +32,8 @@ import sk.iway.iwcm.doc.GroupsJsTreeItem;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.approve.GroupsApproveRestController;
+import sk.iway.iwcm.editor.approve.WebApproveRestController;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;

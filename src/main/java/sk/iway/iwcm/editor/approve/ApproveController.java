@@ -1,4 +1,4 @@
-package sk.iway.iwcm.editor.rest;
+package sk.iway.iwcm.editor.approve;
 
 import java.util.Map;
 

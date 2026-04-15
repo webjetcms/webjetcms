@@ -1,4 +1,4 @@
-package sk.iway.iwcm.editor.rest;
+package sk.iway.iwcm.editor.approve;
 
 import java.util.Optional;
 
@@ -15,7 +15,10 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.editor.service.ApproveService;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoMapper;
+import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
+import sk.iway.iwcm.editor.rest.GroupSchedulerEditorFields;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
