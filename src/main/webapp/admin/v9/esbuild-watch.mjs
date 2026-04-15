@@ -580,7 +580,8 @@ async function main() {
         sourcemap: true,
         metafile: true,
         target: ['es2020'],
-        // Stable filenames for development (no hashes for entries, hash for chunks)
+        // Entry points use stable names (no hashes) matching vite dev mode.
+        // Chunks MUST use hashes — esbuild names all shared chunks "chunk" so they'd collide without one.
         entryNames: 'js/[name]',
         chunkNames: 'js/[name]-[hash]',
         assetNames: 'fonts/[name]',

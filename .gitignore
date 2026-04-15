@@ -4,7 +4,7 @@
 # Ignore Gradle build output directory
 build
 bin/
-src/main/webapp/admin/v9/dist
+src/main/webapp/admin/v9/dist*
 src/test/webapp/screenshots/diff/
 ant/mount-license.sh
 src/main/webapp/WEB-INF/fonts
