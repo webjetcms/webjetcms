@@ -10,6 +10,11 @@ module.exports = merge(common, {
         filename: "js/[name].js",
         chunkFilename: 'js/[id].js',
     },
+    cache: true,
+    experiments: {
+        //enable incremental rebuilds - only reprocess changed modules in watch mode
+        incremental: true,
+    },
     plugins: [
         new rspack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify("development"),

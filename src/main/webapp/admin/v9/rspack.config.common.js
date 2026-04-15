@@ -126,7 +126,13 @@ module.exports = {
                         }
                     },
                     {
-                        loader: "sass-loader"
+                        loader: "sass-loader",
+                        options: {
+                            sassOptions: {
+                                quietDeps: true,
+                                silenceDeprecations: ['import', 'global-builtin', 'color-functions']
+                            }
+                        }
                     }
                 ]
             }
