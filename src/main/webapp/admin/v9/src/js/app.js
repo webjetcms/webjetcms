@@ -74,12 +74,28 @@ import '../js/datatables-upload.js';
 //set backCompact for elfinder, when you update elfinder check, if it is still needed
 import './ui-config.js';
 
+//jquery-ui core modules (rspack needs explicit imports, webpack resolved them via AMD internally)
+import 'jquery-ui/ui/version';
+import 'jquery-ui/ui/widget';
+import 'jquery-ui/ui/plugin';
+import 'jquery-ui/ui/data';
+import 'jquery-ui/ui/disable-selection';
+import 'jquery-ui/ui/scroll-parent';
+import 'jquery-ui/ui/keycode';
+import 'jquery-ui/ui/position';
+import 'jquery-ui/ui/unique-id';
+import 'jquery-ui/ui/form-reset-mixin';
+import 'jquery-ui/ui/labels';
+//jquery-ui widgets
+import 'jquery-ui/ui/widgets/mouse';
 import 'jquery-ui/ui/widgets/draggable';
 import 'jquery-ui/ui/widgets/droppable';
+import 'jquery-ui/ui/widgets/menu';
 import 'jquery-ui/ui/widgets/autocomplete';
 //this is required for elfinder
 import 'jquery-ui/ui/widgets/selectable';
 import 'jquery-ui/ui/widgets/resizable';
+import 'jquery-ui/ui/widgets/checkboxradio';
 import 'jquery-ui/ui/widgets/controlgroup';
 import 'jquery-ui/ui/widgets/button';
 import 'jquery-ui/ui/widgets/slider';

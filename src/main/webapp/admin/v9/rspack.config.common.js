@@ -133,6 +133,12 @@ module.exports = {
         ]
     },
     plugins: [
+        new rspack.ProvidePlugin({
+            $: 'jquery',
+            jQuery: 'jquery',
+            'window.jQuery': 'jquery'
+        }),
+
         new rspack.CssExtractRspackPlugin({
             filename: "css/main.style.css",
             chunkFilename: "css/vendor-[id].style.css"
@@ -226,6 +232,8 @@ module.exports = {
         }
     },
     optimization: {
+        //share single runtime across all entries so they use the same module instances (e.g. jQuery, bootstrap)
+        runtimeChunk: 'single',
         splitChunks: {
             cacheGroups: {
                 defaultVendors: false,
