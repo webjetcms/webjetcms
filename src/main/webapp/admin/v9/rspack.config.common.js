@@ -1,4 +1,6 @@
 const path = require("path");
+const fs = require("fs");
+const glob = require("glob");
 const rspack = require("@rspack/core");
 const { VueLoaderPlugin } = require('vue-loader');
 
@@ -22,59 +24,15 @@ const WP_DATA = {
     publicPath: "/admin/v9/dist/"
 };
 
-//all PUG page templates to compile to HTML
-const PAGES = [
-    "/dashboard/overview",
-    "/webpages/web-pages-list",
-    "/webpages/media-groups",
-    "/webpages/media",
-    "/webpages/perex",
-    "/webpages/component",
-    "/webpages/linkcheck",
-    "/webpages/attributes",
-    "/webpages/mirroring",
-    "/apps/gallery",
-    "/apps/image-editor",
-    //"/apps/forms-list",
-    "/apps/audit-search",
-    "/apps/audit-notifications",
-    "/apps/insert-script",
-    "/apps/default",
-    "/apps/audit-changed-webpages",
-    "/apps/audit-awaiting-publish-webpages",
-    "/apps/audit-log-levels",
-    "/apps/audit-log-files",
-    "/templates/temps-list",
-    "/templates/news",
-    "/templates/temps-groups-list",
-    "/settings/configuration",
-    "/settings/translation-keys",
-    "/settings/redirect",
-    "/settings/domain-redirect",
-    "/settings/cronjob",
-    "/settings/missing-keys",
-    //"/settings/backup",
-    "/settings/update",
-    //"/settings/restart",
-    "/settings/ai-assistants",
-    "/settings/ai-stats",
-    "/settings/cache-objects",
-    "/settings/persistent-cache-objects",
-    "/settings/database-delete",
-    "/settings/in-memory-logging",
-    "/users/user-list",
-    "/users/user-groups",
-    "/users/permission-groups",
-    "/users/self",
-    "/users/passkey",
-    "/files/index",
-    "/files/dialog",
-    "/files/wj_image",
-    "/files/wj_link",
-    "/files/folder_prop",
-    "/files/file_prop",
-    "/search/index",
-];
+//Scan views/pages/ for all PUG page templates (only those extending a layout, not fragments)
+const pagesDir = path.resolve(__dirname, "views/pages");
+const PAGES = glob.sync("**/*.pug", { cwd: pagesDir })
+    .filter(file => {
+        const firstLine = fs.readFileSync(path.join(pagesDir, file), 'utf8').split('\n')[0];
+        return firstLine.startsWith('extends');
+    })
+    .map(file => "/" + file.replace(/\.pug$/, ''))
+    .sort();
 
 const config = {
     entry: {
