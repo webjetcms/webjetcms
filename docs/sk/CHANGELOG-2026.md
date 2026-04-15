@@ -152,11 +152,14 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
+- Bezpečnosť - aktualizovaný Swagger UI a výnimky pre `dependencyCheckAnalyze` (#58317-6).
+- Bezpečnosť - aktualizované knižnice `log4j,pdfbox` (#58317-6).
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
+- Média - opravená kontrola oprávnení pri pridávaní médií do neuloženej web stránky používateľom bez práva na všetky médiá (#58317-6).
 - Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
 - Multiweb - opravené používanie doménových aliasov pri použití externých priečinkov - nastavená konfiguračná premenná `cloudStaticFilesDir` (#58317-4).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).

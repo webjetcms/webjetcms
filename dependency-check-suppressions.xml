@@ -109,4 +109,43 @@
    <cve>CVE-2026-2950</cve>
  </suppress>
 
+ <!-- we do not use PDComplexFileSpecification.getFilename() -->
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-io-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
+   <cve>CVE-2026-23907</cve>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+   <cve>CVE-2026-23907</cve>
+ </suppress>
+
+ <!-- used in webpack not frontend -->
+ <suppress>
+   <notes><![CDATA[
+   file name: lodash.js
+   ]]></notes>
+   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
+   <cve>CVE-2026-4800</cve>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: lodash.js
+   ]]></notes>
+   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
+   <cve>CVE-2025-13465</cve>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: lodash.js
+   ]]></notes>
+   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
+   <cve>CVE-2026-2950</cve>
+ </suppress>
+
 </suppressions>
