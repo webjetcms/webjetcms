@@ -4352,6 +4352,11 @@ public class InitServlet extends HttpServlet
         files.add("/components/news/editor_component_velocity.jsp");
         files.add("/components/news/perex_group_not.jsp");
 
+		//15.04.2026 - #58405 - strcuture moving
+		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ApproveController.java");
+		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/WebApproveRestController.java");
+		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/service/ApproveService.java");
+
 		for (String file : files)
 		{
 			File f = new File(sc.getRealPath(file));
