@@ -8,7 +8,7 @@
 - Aktualizácia WebJETu - opravené odkazy na dokumentáciu.
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
-- Bezpečnosť - aktualizovaný Swagger UI a výnimky pre `dependencyCheckAnalyze` (#58317-6).
+- Bezpečnosť - aktualizovaný `Swagger UI` a výnimky pre `dependencyCheckAnalyze` (#58317-6).
 - Bezpečnosť - aktualizované knižnice `log4j,pdfbox` (#58317-6).
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
