@@ -5,27 +5,32 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -107,6 +112,7 @@ public class GalleryTreeService {
 
             //Loop until we find root (id == dir)
             GalleryJsTreeItem parent = child;
+            int failsafe = 0;
             while(true) {
                 //Check if it's root
                 if(dir.equals(parent.getId())) break;
@@ -118,6 +124,12 @@ public class GalleryTreeService {
                         parent = potencialParent;
                         break;
                     }
+                }
+
+                failsafe++;
+                if(failsafe > 100) {
+                    Logger.debug(GalleryTreeService.class, "Failsafe triggered, breaking loop to prevent infinite loop method addParents, GalleryJsTreeItem id: " + child.getId());
+                    break; // Prevent infinite loop
                 }
             }
         }
@@ -138,19 +150,23 @@ public class GalleryTreeService {
         //Filter by serach value and search type
         if("contains".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().contains(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().contains(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().contains(wantedValueLC)))
                 .toList();
         } else if("startwith".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().startsWith(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().startsWith(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().startsWith(wantedValueLC)))
                 .toList();
         } else if("endwith".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().endsWith(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).toLowerCase().endsWith(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).toLowerCase().endsWith(wantedValueLC)))
                 .toList();
         } else if("equals".equals(treeSearchType)) {
             return items.stream()
-                .filter(item -> DB.internationalToEnglish(item.getText()).equalsIgnoreCase(wantedValueLC))
+                .filter(item -> DB.internationalToEnglish(item.getText()).equalsIgnoreCase(wantedValueLC)
+                    || (item.getSecondText() != null && DB.internationalToEnglish(item.getSecondText()).equalsIgnoreCase(wantedValueLC)))
                 .toList();
         } else return new ArrayList<>();
     }
@@ -166,7 +182,7 @@ public class GalleryTreeService {
     private List<IwcmFile> getAllTreeFiles(String url, String treeSearchValue) {
         Set<String> paths = new HashSet<>();
 
-        List<GalleryDimension> dirs = repository.findByPathLikeAndPathLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
+        List<GalleryDimension> dirs = repository.findByPathLikeAndNameLikeAndDomainId(url+"%", "%"+treeSearchValue+"%", CloudToolsForCore.getDomainId());
 
         dirs.forEach(gallery -> {
             if (FileTools.isDirectory(gallery.getPath()) == false) return;
@@ -287,4 +303,102 @@ public class GalleryTreeService {
         return request;
     }
 
+    /**
+     * Checks whether the current user has write access to the given virtual path.
+     * The path must start with {@code /images} and the user must have folder write permission.
+     * If access is denied, the {@code result} and {@code error} keys are set in the provided map.
+     *
+     * @param map         response map where {@code result=false} and an {@code error} message are set on failure
+     * @param virtualPath virtual path to check (e.g. {@code /images/gallery/subfolder})
+     * @return {@code true} if access is allowed, {@code false} otherwise
+     */
+    public boolean checkPathAccess(Map<String, Object> map, String virtualPath) {
+        Prop prop = Prop.getInstance( getRequest() );
+        Identity user = UsersDB.getCurrentUser( getRequest() );
+
+        if (!virtualPath.startsWith("/images")) {
+            map.put("result", false);
+            map.put("error", prop.getText("java.GalleryTreeRestController.directory_id_not_in_images", virtualPath));
+            return false;
+        }
+
+        if (user == null || user.isFolderWritable(virtualPath) == false) {
+            map.put("result", false);
+            map.put("error", prop.getText("components.gallery.folderIsNotEditable", virtualPath));
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Finds a {@link GalleryDimension} by its virtual path and moves it under the specified parent path.
+     * The following operations are performed on a successful move:
+     * <ul>
+     *   <li>Updates the {@link GalleryDimension} path in the database.</li>
+     *   <li>Renames the physical directory on the file system.</li>
+     *   <li>Updates {@code image_path} in the {@code gallery} table.</li>
+     *   <li>Registers a 301 redirect from the old path to the new path.</li>
+     *   <li>Optionally replaces all occurrences of the old path in page content (doc).</li>
+     * </ul>
+     * On any error the {@code result=false} and an {@code error} message are placed into the result map.
+     *
+     * @param virtualPath  current virtual path of the gallery folder (e.g. {@code /images/gallery/old})
+     * @param parentPath   target parent virtual path under which the folder will be moved (e.g. {@code /images/gallery/new-parent})
+     * @param result       response map populated with {@code result} (boolean) and optionally {@code error} (String)
+     * @param updateInDoc  if {@code true}, replaces all occurrences of the old path in page content
+     */
+    public void findAndMoveGalleryFolder(String virtualPath, String parentPath, Map<String, Object> result, boolean updateInDoc) {
+        Prop prop = Prop.getInstance( getRequest() );
+
+        Optional<GalleryDimension> firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());
+        if (firstByPath.isPresent()) {
+            try {
+                GalleryDimension galleryDimension = firstByPath.get();
+                String originalPath = galleryDimension.getPath();
+                String newPath = parentPath + "/" + galleryDimension.getNameFromPath(); //NOSONAR
+
+                if (checkPathAccess(result, newPath) == false) {
+                    return;
+                }
+
+                galleryDimension.setPath(newPath);
+                repository.save(galleryDimension);
+
+                IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));
+                boolean renamed = file.renameTo(new IwcmFile(Tools.getRealPath(newPath)));
+                result.put("result", renamed);
+
+                if (!renamed) {
+                    result.put("error", prop.getText("java.GroupsTreeRestController.move.renamed_failed"));
+                    // Vraciam do povodneho adresaru aj DB entitu
+                    galleryDimension.setPath(originalPath);
+                    repository.save(galleryDimension);
+
+                    return;
+                } else {
+                    //update all gallery items
+                    new SimpleQuery().execute("UPDATE gallery SET image_path=? WHERE image_path=?", newPath, virtualPath);
+
+                    // Add redirect - always
+                    UrlRedirectDB.addRedirect("regexp:^" + Tools.replace(virtualPath, "/", "\\/") + "\\/(.+)", newPath + "/$1", CloudToolsForCore.getDomainName(), 301);
+
+                    //update paths in doc
+                    if(updateInDoc) {
+                        DocDB.getInstance().replaceTextAll(virtualPath, newPath);
+                    }
+                }
+            } catch (Exception e) {
+                Logger.error(GalleryTreeService.class, e);
+                result.put("result", false);
+                result.put("error", prop.getText("java.GroupsTreeRestController.move.save_failed"));
+                return;
+            }
+        }
+
+        result.put("result", true);
+    }
+
+    public NotifyBean updateInDocWarning(Prop prop) {
+        return new NotifyBean(prop.getText("components.gallery.move_warning.title"), prop.getText("components.gallery.move_warning.desc"), NotifyBean.NotifyType.WARNING, 10000);
+    }
 }

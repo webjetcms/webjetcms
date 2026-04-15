@@ -115,7 +115,7 @@ Scenario('test allEditableGroups and allWritableFolders user', ({I, DTE, DT}) =>
     I.dontSeeElement(locate("a.jstree-anchor").withText("Test stavov"));
 
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_");
-    I.waitForElement("#iwcm_2_L2FkbWlu.elfinder-ro", 10); //admin RO
+    I.waitForElement("#iwcm_2_L2FwcHM_E.elfinder-ro", 10); //apps RO
 
     I.relogin("admin");
     setEditableGroups(true, I, DTE);
@@ -127,7 +127,7 @@ Scenario('test allEditableGroups and allWritableFolders user', ({I, DTE, DT}) =>
     I.waitForElement(locate("a.jstree-anchor").withText("Test stavov"), 10);
 
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_");
-    I.waitForElement("#iwcm_2_L2FkbWlu:not(.elfinder-ro)", 10); //admin RW
+    I.waitForElement("#iwcm_2_L2FwcHM_E:not(.elfinder-ro)", 10); //apps RW
 });
 
 Scenario('logout 2', ({ I, DTE }) => {

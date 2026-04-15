@@ -169,3 +169,85 @@ public void handleUserAfterSave(final DatatableEvent<UserDetailsEntity> event) {
 - Pri importe desiatok/stoviek záznamov môžu asynchrónne udalosti zaťažiť systém
 - `BEFORE_DELETE` sa publikuje len ak metóda `beforeDelete()` vráti `true`
 - Udalosti využívajú univerzálny `WebjetEventPublisher`, ktorý funguje pre všetky typy Spring `ApplicationEvent`
+
+## Udalosť DatatableColumnsEvent
+
+Udalosť [DatatableColumnsEvent](../../../../src/main/java/sk/iway/iwcm/system/datatable/events/DatatableColumnsEvent.java) sa publikuje pri generovaní JSON odpovede pre datatabuľku, konkrétne v metóde `getColumnsJson()` triedy [DataTableColumnsFactory](../../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java). Táto udalosť umožňuje dynamicky modifikovať definíciu stĺpcov datatabuľky pred odoslaním odpovede klientovi.
+
+Na rozdiel od `DatatableEvent`, ktorý sa vyvoláva pri CRUD operáciách s dátami, `DatatableColumnsEvent` sa vyvoláva pri načítaní **konfigurácie stĺpcov** datatabuľky. Vďaka tomu môžete dynamicky meniť vlastnosti stĺpcov (názov, viditeľnosť, formátovanie a pod.) bez nutnosti meniť anotácie na JPA entite.
+
+### Atribúty udalosti
+
+- `columns` (`List<DataTableColumn>`) - zoznam stĺpcov datatabuľky, ktoré je možné modifikovať
+- `dto` (`Class<?>`) - trieda entity (DTO), pre ktorú sa generuje JSON
+- `clazz` (`String`) - plný názov triedy entity (napr. `sk.iway.iwcm.components.gallery.GalleryEntity`), používa sa pre filtrovanie v `condition`
+
+### Publikovanie udalosti
+
+Udalosť sa automaticky publikuje v metóde `getColumnsJson()` triedy `DataTableColumnsFactory`:
+
+```java
+if (dto != null) {
+    DatatableColumnsEvent event = new DatatableColumnsEvent(columnsSorted, dto);
+    event.publishEvent();
+}
+```
+
+Udalosť sa vyvolá **synchrónne** pred serializáciou stĺpcov do JSON, takže všetky zmeny vykonané v `listener` sa prejavia v odpovedi.
+
+### Príklady použitia
+
+#### Zmena názvu stĺpca
+
+```java
+@Component
+public class GalleryColumnsListener {
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.components.gallery.GalleryEntity'")
+    public void onDatatablesJson(DatatableColumnsEvent event) {
+        event.getColumns().forEach((c) -> {
+            if ("descriptionLongSk".equals(c.getName())) {
+                c.setTitle("Nový názov stĺpca");
+            }
+        });
+    }
+}
+```
+
+#### Skrytie stĺpca podľa práv používateľa
+
+```java
+@Component
+public class ConditionalColumnsListener {
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.custom.MyEntity'")
+    public void onDatatablesJson(DatatableColumnsEvent event) {
+        Identity user = UsersDB.getCurrentUser(SessionHelper.getRequest());
+        if (user == null || user.isAdmin() == false) {
+            // non-admin users should not see internal notes column
+            event.getColumns().removeIf(c -> "internalNotes".equals(c.getName()));
+        }
+    }
+}
+```
+
+#### Odstránenie stĺpca z tabuľky
+
+```java
+@Component
+public class RemoveColumnListener {
+
+    @EventListener(condition = "#event.clazz eq 'sk.iway.custom.MyEntity'")
+    public void onDatatablesJson(DatatableColumnsEvent event) {
+        // remove column that should not be displayed
+        event.getColumns().removeIf(c -> "temporaryField".equals(c.getName()));
+    }
+}
+```
+
+### Poznámky
+
+- Udalosť sa publikuje pri **každom** načítaní konfigurácie stĺpcov datatabuľky (typicky pri otvorení stránky s datatabuľkou)
+- Zmeny v `listener` sú trvalé len počas spracovania požiadavky - pri ďalšom načítaní sa stĺpce vygenerujú nanovo z anotácií
+- Pre filtrovanie udalostí podľa entity použite atribút `condition` s porovnaním `#event.clazz eq 'full.class.Name'`
+- `DatatableColumnsEvent` rozširuje `ApplicationEvent` (nie `DatatableEvent`), preto sa s ním pracuje samostatne

@@ -19,11 +19,13 @@ Scenario("Google vyhľadávanie - test zobrazovania", ({ I }) => {
     I.dontSeeElement('.gs-snippet');
 
     I.say("Check search");
+    I.wait(2);
     I.fillField('search', searchText);
+    I.wait(1);
     I.pressKey('Enter');
 
-    I.see(searchText, '.gs-snippet');
-    //result text not work properly
+    I.waitForText(searchText, 10, '.gs-snippet');
+    //resultText not work properly
     I.waitForElement( locate(".gsc-expansionArea > div a.gs-title").withText("WebJET CMS"), 10);
 
     I.say("Change order");

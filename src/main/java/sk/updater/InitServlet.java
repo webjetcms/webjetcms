@@ -4337,6 +4337,7 @@ public class InitServlet extends HttpServlet
         files.add("/WEB-INF/classes/sk/iway/iwcm/editor/rest/ComponentsRestController.class");
         files.add("/WEB-INF/classes/sk/iway/iwcm/system/struts/UnknownAction.class");
         files.add("/WEB-INF/classes/sk/iway/iwcm/xls/ImportXLSForm.class");
+		files.add("/components/restaurant_menu/handlebars.min.js");
 
 		//16.2.2026 - diff VS v2025.40
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/basket/payment_methods/jpa/PaymentFieldMapAttr.java");

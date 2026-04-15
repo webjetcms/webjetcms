@@ -4,7 +4,6 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const autoprefixer = require('autoprefixer');
 const CopyPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
-//const WebjetModifyPlugin = require('./plugins/modify-plugin/index.js');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
@@ -220,8 +219,6 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/files/file_prop")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/search/index")),
-
-        //new WebjetModifyPlugin(['imageEditor']),
 
         new CopyPlugin({
             patterns:[

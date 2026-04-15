@@ -49,6 +49,8 @@ export class JstreeSettings {
             $("#jstree-settings-treeWidth").selectpicker("val", "" + self.getTreeWidth());
             $("#jstree-settings-treeSortType").selectpicker("val", self.getTreeSortType());
             $("#jstree-settings-treeSortOrderAsc").prop("checked", self.isTreeSortOrderAsc());
+
+            $("#jstree-settings-showrealname").prop("checked", self.isShowRealName());
             self.settingsModal.show();
         });
 
@@ -70,6 +72,8 @@ export class JstreeSettings {
                 settings.treeSortType = newTreeSortType;
                 settings.treeSortOrderAsc = newTreeSortOrderAsc;
             }
+
+            settings.showRealName = $("#jstree-settings-showrealname").is(":checked");
 
             self.saveSettings(settings);
             self.settingsModal.hide();
@@ -100,6 +104,12 @@ export class JstreeSettings {
     isIdShow() {
         let show = (true === this.getSettings().showId);
         //console.log("isIdShow=", show);
+        return show;
+    }
+
+    isShowRealName() {
+        let show = (true === this.getSettings().showRealName);
+        //console.log("isShowRealName=", show);
         return show;
     }
 
@@ -153,6 +163,7 @@ export class JstreeSettings {
 
         const idShow = window.jstreeSettings.isIdShow();
         const priorityShow = window.jstreeSettings.isPriotityShow();
+        const showRealName = window.jstreeSettings.isShowRealName();
         data.forEach(function(item) {
             //console.log(item);
             if (typeof item.groupDetails != "undefined") {
@@ -161,6 +172,13 @@ export class JstreeSettings {
             } else if (typeof item.docDetails != "undefined") {
                 if (idShow) item.text = `<span class="id">#${item.docDetails.docId}</span> ${item.text}`;
                 if (priorityShow) item.text = `${item.text} <span class="sortPriority">(${item.docDetails.sortPriority})</span>`;
+            } else if(typeof item.galleryDimension != "undefined") {
+                if(showRealName) {
+                    let path = item.galleryDimension.path;
+                    if (path.endsWith("/")) path = path.substring(0, path.length - 1);
+                    const realName = path.substring(path.lastIndexOf("/") + 1);
+                    item.text = `${item.text} <span class="realName">(${realName})</span>`;
+                }
             }
         });
     }
