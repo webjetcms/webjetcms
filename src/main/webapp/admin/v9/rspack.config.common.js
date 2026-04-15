@@ -2,6 +2,19 @@ const path = require("path");
 const rspack = require("@rspack/core");
 const { VueLoaderPlugin } = require('vue-loader');
 
+//Try to use sass-embedded (native Dart binary, 2-5x faster) with fallback to JS sass
+let sassImplementation;
+let sassApi;
+try {
+    sassImplementation = require('sass-embedded');
+    sassApi = 'modern-compiler';
+    console.log("Using sass-embedded (native binary) - fast mode");
+} catch (e) {
+    sassImplementation = require('sass');
+    sassApi = 'modern-compiler';
+    console.log("sass-embedded not available, using sass (JS) - slower mode");
+}
+
 const WP_DATA = {
     name: "WebJET CMS",
     generator: "WebJET CMS",
@@ -155,10 +168,8 @@ const config = {
                     {
                         loader: "sass-loader",
                         options: {
-                            //use native Dart Sass binary (sass-embedded) with modern compiler API
-                            //sass-embedded is 2-5x faster than the JS sass package
-                            api: 'modern-compiler',
-                            implementation: require('sass-embedded'),
+                            api: sassApi,
+                            implementation: sassImplementation,
                             sassOptions: {
                                 quietDeps: true,
                                 silenceDeprecations: ['import', 'global-builtin', 'color-functions']
