@@ -27,6 +27,8 @@ npx replace-in-file exports exportsall $XLSX_PACKAGE_JSON
 log "Removing jQuery UI external files..."
 rm -rf node_modules/jquery-ui/external/jquery*
 
+rm -rf node_modules/bootstrap-select/docs
+
 # Create destination folders for elFinder
 log "Creating destination folders for elFinder..."
 mkdir -p $ELFINDER_DEST/js/i18n $ELFINDER_DEST/js/worker $ELFINDER_DEST/css $ELFINDER_DEST/img $ELFINDER_DEST/sounds
