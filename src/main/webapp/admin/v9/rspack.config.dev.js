@@ -1,4 +1,5 @@
 const fs = require("fs");
+const glob = require("glob");
 const path = require("path");
 const pug = require("pug");
 const common = require("./rspack.config.common");
@@ -9,6 +10,7 @@ const { merge } = require("webpack-merge");
 //This eliminates 47 html-webpack-plugin child compilations that were the main watch-mode bottleneck
 const WP_DATA = common.WP_DATA;
 const publicPath = WP_DATA.publicPath;
+const viewsDir = path.resolve(__dirname, "views");
 
 const devFiles = {
     css: [publicPath + 'css/main.style.css'],
@@ -37,16 +39,84 @@ function compilePugToHtml(templateDir) {
     });
 }
 
-//Write pre-compiled HTML files directly to disk (no HtmlRspackPlugin needed)
-console.log("Pre-compiling " + common.PAGES.length + " PUG templates...");
-const startTime = Date.now();
-common.PAGES.forEach(page => {
+function compileAllPugPages() {
+    const startTime = Date.now();
+    common.PAGES.forEach(page => {
+        const html = compilePugToHtml(page);
+        const outputFile = path.resolve(__dirname, "dist/views" + page + ".html");
+        fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+        fs.writeFileSync(outputFile, html);
+    });
+    return Date.now() - startTime;
+}
+
+function compileSinglePugPage(page) {
     const html = compilePugToHtml(page);
     const outputFile = path.resolve(__dirname, "dist/views" + page + ".html");
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, html);
+}
+
+//Collect all .pug files for watching (pages + partials + modals + mixins)
+const allPugFiles = glob.sync("**/*.pug", { cwd: viewsDir, absolute: true });
+
+//Map page .pug file paths to their PAGES entry for targeted recompilation
+const pugFileToPage = new Map();
+common.PAGES.forEach(page => {
+    const pugPath = path.resolve(__dirname, "views/pages" + page + ".pug");
+    pugFileToPage.set(pugPath, page);
 });
-console.log("PUG pre-compilation done in " + (Date.now() - startTime) + " ms");
+
+/**
+ * Custom rspack plugin that watches .pug files and re-compiles them on change.
+ * - If a page .pug file changes: only that page is re-compiled
+ * - If a shared partial/layout/mixin changes: all pages are re-compiled
+ */
+class PugWatchPlugin {
+    apply(compiler) {
+        //Add all .pug files to watched dependencies so rspack detects changes
+        compiler.hooks.afterCompile.tap("PugWatchPlugin", (compilation) => {
+            allPugFiles.forEach(f => compilation.fileDependencies.add(f));
+        });
+
+        //On watch rebuild, check if any .pug files changed and re-compile
+        compiler.hooks.watchRun.tap("PugWatchPlugin", (compiler) => {
+            const changed = compiler.modifiedFiles;
+            if (!changed) return;
+
+            const changedPugFiles = [];
+            for (const f of changed) {
+                if (f.endsWith(".pug")) changedPugFiles.push(f);
+            }
+            if (changedPugFiles.length === 0) return;
+
+            //Check if any changed file is a shared partial (not in pages/)
+            const hasSharedChange = changedPugFiles.some(f => !pugFileToPage.has(f));
+
+            if (hasSharedChange) {
+                //Shared partial changed - must recompile all pages
+                console.log("PUG shared partial changed, re-compiling all " + common.PAGES.length + " pages...");
+                const ms = compileAllPugPages();
+                console.log("PUG re-compilation done in " + ms + " ms");
+            } else {
+                //Only page-specific files changed - recompile only those
+                changedPugFiles.forEach(f => {
+                    const page = pugFileToPage.get(f);
+                    if (page) {
+                        const startTime = Date.now();
+                        compileSinglePugPage(page);
+                        console.log("PUG re-compiled " + page + " in " + (Date.now() - startTime) + " ms");
+                    }
+                });
+            }
+        });
+    }
+}
+
+//Initial compilation: write all pre-compiled HTML files to disk
+console.log("Pre-compiling " + common.PAGES.length + " PUG templates...");
+const ms = compileAllPugPages();
+console.log("PUG pre-compilation done in " + ms + " ms");
 
 module.exports = merge(common, {
     mode: "development",
@@ -62,6 +132,7 @@ module.exports = merge(common, {
         incremental: true,
     },
     plugins: [
+        new PugWatchPlugin(),
         new rspack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify("development"),
             '__VUE_OPTIONS_API__': true,
