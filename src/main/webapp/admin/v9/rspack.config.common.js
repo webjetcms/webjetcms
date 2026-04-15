@@ -1,6 +1,5 @@
 const path = require("path");
 const rspack = require("@rspack/core");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require('vue-loader');
 
 const WP_DATA = {
@@ -10,26 +9,61 @@ const WP_DATA = {
     publicPath: "/admin/v9/dist/"
 };
 
-function generateHtmlPlugins(templateDir) {
-    return {
-        template: path.resolve(__dirname, "views") + '/pages' + templateDir + '.pug',
-        filename: path.resolve(__dirname, "dist") + '/views' + templateDir + '.html',
-        minify: {
-            //https://github.com/DanielRuf/html-minifier-terser#options-quick-reference
-            removeAttributeQuotes: false, //toto musi byt false inak nam nequotuje atributy kde vidi Thymeleaf premennu a potom to moze padnut
-            removeEmptyAttributes: true,
-            collapseWhitespace: false,
-            removeComments: true,
-            useShortDoctype: true,
-            minifyCSS:true,
-            minifyJS:false
-        },
-        inject: false,
-        data: WP_DATA
-    }
-}
+//all PUG page templates to compile to HTML
+const PAGES = [
+    "/dashboard/overview",
+    "/webpages/web-pages-list",
+    "/webpages/media-groups",
+    "/webpages/media",
+    "/webpages/perex",
+    "/webpages/component",
+    "/webpages/linkcheck",
+    "/webpages/attributes",
+    "/webpages/mirroring",
+    "/apps/gallery",
+    "/apps/image-editor",
+    //"/apps/forms-list",
+    "/apps/audit-search",
+    "/apps/audit-notifications",
+    "/apps/insert-script",
+    "/apps/default",
+    "/apps/audit-changed-webpages",
+    "/apps/audit-awaiting-publish-webpages",
+    "/apps/audit-log-levels",
+    "/apps/audit-log-files",
+    "/templates/temps-list",
+    "/templates/news",
+    "/templates/temps-groups-list",
+    "/settings/configuration",
+    "/settings/translation-keys",
+    "/settings/redirect",
+    "/settings/domain-redirect",
+    "/settings/cronjob",
+    "/settings/missing-keys",
+    //"/settings/backup",
+    "/settings/update",
+    //"/settings/restart",
+    "/settings/ai-assistants",
+    "/settings/ai-stats",
+    "/settings/cache-objects",
+    "/settings/persistent-cache-objects",
+    "/settings/database-delete",
+    "/settings/in-memory-logging",
+    "/users/user-list",
+    "/users/user-groups",
+    "/users/permission-groups",
+    "/users/self",
+    "/users/passkey",
+    "/files/index",
+    "/files/dialog",
+    "/files/wj_image",
+    "/files/wj_link",
+    "/files/folder_prop",
+    "/files/file_prop",
+    "/search/index",
+];
 
-module.exports = {
+const config = {
     entry: {
         main: path.resolve(__dirname, "src") + "/js/app.js",
         appInit: path.resolve(__dirname, "src") + "/js/app-init.js",
@@ -57,15 +91,8 @@ module.exports = {
                     cacheBusting: true
                 }
             },
-            {
-                test: /.pug$/,
-                include: path.resolve(__dirname, 'views'),
-                use: [
-                    {
-                        loader: 'pug-loader'
-                    }
-                ]
-            },
+            //pug-loader is not needed here - dev mode pre-compiles PUG at config time,
+            //prod mode adds pug-loader in its own config
             {
                 test: /\.m?js$/,
                 include: path.resolve(__dirname, 'src/js'),
@@ -150,67 +177,7 @@ module.exports = {
             chunkFilename: "css/vendor-[id].style.css"
         }),
 
-        new HtmlWebpackPlugin(generateHtmlPlugins("/dashboard/overview")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/web-pages-list")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/media-groups")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/media")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/perex")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/component")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/linkcheck")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/attributes")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/mirroring")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/gallery")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/image-editor")),
-        //new HtmlWebpackPlugin(generateHtmlPlugins("/apps/forms-list")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-search")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-notifications")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/insert-script")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/default")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-changed-webpages")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-awaiting-publish-webpages")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-levels")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-files")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-list")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/templates/news")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-groups-list")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/configuration")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/translation-keys")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/redirect")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/domain-redirect")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/cronjob")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/missing-keys")),
-        //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/backup")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/update")),
-        //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/restart")),
-        //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/missing-keys")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/ai-assistants")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/ai-stats")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/cache-objects")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/persistent-cache-objects")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/database-delete")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/in-memory-logging")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-list")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-groups")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/users/permission-groups")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/users/self")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/users/passkey")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/index")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/dialog")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/wj_image")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/wj_link")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/folder_prop")),
-        new HtmlWebpackPlugin(generateHtmlPlugins("/files/file_prop")),
-
-        new HtmlWebpackPlugin(generateHtmlPlugins("/search/index")),
+        //HTML plugins are added in dev/prod configs (dev: pre-compiled PUG + HtmlRspackPlugin, prod: HtmlWebpackPlugin + pug-loader)
 
         new rspack.CopyRspackPlugin({
             patterns:[
@@ -247,3 +214,7 @@ module.exports = {
         },
     }
 };
+
+module.exports = config;
+module.exports.PAGES = PAGES;
+module.exports.WP_DATA = WP_DATA;
