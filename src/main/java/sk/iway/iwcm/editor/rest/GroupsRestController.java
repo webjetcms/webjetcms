@@ -314,17 +314,24 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             return entity;
         }
 
-        if (needApproval && isEdit == false) {
-            // Save as hidden until approval
-            groupDetails.setInternal(true);
-            boolean saved = groupsDB.save(groupDetails);
-            if (!saved) {
-                throwError("datatables.error.system.js");
-                return entity;
-            }
+        if (needApproval) {
 
-            // If we gonna add createEmptyWebPage, we DONT WANT to ask for doc permission - only group permission
-            EditorFacade.setDoNotCheckApproving(groupDetails.getGroupId());
+            if(isEdit == false) {
+                // CREATE
+
+                // Save as hidden until approval
+                groupDetails.setInternal(true);
+                boolean saved = groupsDB.save(groupDetails);
+                if (!saved) {
+                    throwError("datatables.error.system.js");
+                    return entity;
+                }
+
+                // If we gonna add createEmptyWebPage, we DONT WANT to ask for doc permission - only group permission
+                EditorFacade.setDoNotCheckApproving(groupDetails.getGroupId());
+            } else {
+                // NEED approve BUT its edit so do not save entity
+            }
         } else {
             // NORMAL SAVE
             boolean saved = groupsDB.save(groupDetails);
@@ -617,7 +624,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GroupDetails> target, Identity user, Errors errors, Long id, GroupDetails entity) {
 
         if (entity.getGroupId()>0 && GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {
-            errors.rejectValue("errorField.editorFields.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
+            errors.rejectValue("errorField.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
             return;
         }
 
@@ -684,7 +691,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             if (approveService.needApprove() && approveService.isSelfApproved() == false) {
                 // Create a pending approval record for delete
                 GroupSchedulerDto pendingDto = buildPendingGroupSchedulerDto(currentGroup, true, getUser());
-                groupSchedulerDtoRepository.save(pendingDto);
+                pendingDto = groupSchedulerDtoRepository.save(pendingDto);
 
                 approveService.sendGroupApproveDelRequestEmail(pendingDto, pendingDto.getId());
 

@@ -10,6 +10,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
@@ -137,10 +138,19 @@ public class DocPublishService {
 		docDetails.setPublishAfterStart(false);
 
 		//Before save add audit param that signalize that webpage was published
+		//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
+		if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
+			SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
+		}
 		RequestBean.addAuditValue("publishStatus", "Webpage was published");
 
-		//Perform update
-		ddr.save(docDetails);
+		try {
+			//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
+			//while the audit value is still in RequestBean (not deferred to outer transaction commit)
+			ddr.saveAndFlush(docDetails);
+		} finally {
+			RequestBean.removeAuditValue("publishStatus");
+		}
 
 		// vypublikovanie slave clankov z historie (multikategorie)
 		DocDetails masterDocDetails = null;

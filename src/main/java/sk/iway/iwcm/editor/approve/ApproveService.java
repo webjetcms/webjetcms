@@ -129,7 +129,9 @@ public class ApproveService {
 		"groupNameShortNoJS",
 		"navbar",
 		"groupNameShort",
-		"fullPath"
+		"fullPath",
+		"schedulerId",
+		"isDelete"
 	};
 
     @Autowired
@@ -960,7 +962,7 @@ public class ApproveService {
 
 					sendGroupApproveNotification(true, dto, approveNote);
 				} else {
-					return prop.getText("approve.group.failed");
+					return prop.getText("approve.group.delete.failed");
 				}
 
 			} else if("reject".equals(approveAction)) {
@@ -972,7 +974,7 @@ public class ApproveService {
 				dto = groupSchedulerDtoRepository.save(dto);
 
 				sendGroupApproveNotification(false, dto, approveNote);
-			} else { return prop.getText("approve.group.failed"); }
+			} else { return prop.getText("approve.group.delete.failed"); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
 			// Route to level-2 approvers
 			String level2approvers = "," + getApproveUserIds() + ",";
@@ -1003,7 +1005,7 @@ public class ApproveService {
 			}
 		} else {
 			// Current user cannot approve this
-			return prop.getText("approve.group.cant_approve");
+			return prop.getText("approve.group.delete.cant_approve");
 		}
 
 		return null; // Indicate success
@@ -1101,29 +1103,31 @@ public class ApproveService {
 		String subject;
 		StringBuilder message;
 
+		String groupName = Tools.replace(dto.getGroupName(), "[DELETE] ", "");
+
 		if (isApproved) {
 			if (Boolean.TRUE.equals(dto.getIsDelete())) {
 				// Delete APPROVED
-				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.del.approved")).append(":</font><br>\n");
-				subject = prop.getText("approve.group.delete.subject") + ": " + dto.getGroupName();
+				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.group.delete.approved")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.delete.subject") + ": " + groupName;
 			} else {
 				// Edit APPROVED
 				message = new StringBuilder("<font color='green'>").append(prop.getText("approve.group.ok")).append(":</font><br>\n");
-				subject = prop.getText("approve.group.ok.subject") + ": " + dto.getGroupName();
+				subject = prop.getText("approve.group.ok.subject") + ": " + groupName;
 			}
 		} else {
 			if (Boolean.TRUE.equals(dto.getIsDelete())) {
 				// Delete REJECTED
-				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.del.reject")).append(":</font><br>\n");
-				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
+				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.group.delete.reject")).append(":</font><br>\n");
+				subject = prop.getText("approve.group.reject.subject") + ": " + groupName;
 			} else {
 				// Edit REJECTED
 				message = new StringBuilder("<font color='red'>").append(prop.getText("approve.group.reject")).append(":</font><br>\n");
-				subject = prop.getText("approve.group.reject.subject") + ": " + dto.getGroupName();
+				subject = prop.getText("approve.group.reject.subject") + ": " + groupName;
 			}
 		}
 
-		message.append(dto.getGroupName()).append("<br><br>\n\n");
+		message.append(groupName).append("<br><br>\n\n");
 		message.append("<b>").append(prop.getText("approve.reject.notes")).append(":</b><br>\n");
 		message.append(note).append("<br>\n");
 

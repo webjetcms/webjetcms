@@ -107,7 +107,7 @@ public class ApproveGroupListener {
             if("post".equalsIgnoreCase(request.getMethod())) {
                 String response = approveService.approveGroupDelAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
                 if(response == null) {
-                    prepareResponseModel(model, null, prop.getText("approve.group.success"));
+                    prepareResponseModel(model, null, prop.getText("approve.group.delete.success"));
                 } else {
                     prepareResponseModel(model, response, null);
                 }
