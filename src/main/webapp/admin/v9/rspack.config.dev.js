@@ -1,4 +1,6 @@
 const path = require("path");
+const fs = require("fs");
+const http = require("http");
 const common = require("./rspack.config.common");
 const pugRenderer = require("./pug.render");
 const rspack = require("@rspack/core");
@@ -8,6 +10,39 @@ const rspack = require("@rspack/core");
 const WP_DATA = common.WP_DATA;
 const publicPath = WP_DATA.publicPath;
 const distDir = path.resolve(__dirname, "dist");
+const devReloadEnabled = process.env.ADMIN_V9_DEV_RELOAD === "1";
+const devReloadPort = Number(process.env.ADMIN_V9_DEV_RELOAD_PORT || 35729);
+const devReloadClientSource = path.resolve(__dirname, "src/dev/dev-reload-client.js");
+const devReloadClientOutput = path.resolve(distDir, "js/dev-reload-client.js");
+const devReloadClientPublicPath = publicPath + "js/dev-reload-client.js";
+
+function writeDevReloadClient() {
+    if (!devReloadEnabled) return;
+
+    const source = fs.readFileSync(devReloadClientSource, "utf8");
+    const clientCode = source.replace(/__ADMIN_V9_DEV_RELOAD_PORT__/g, String(devReloadPort));
+
+    fs.mkdirSync(path.dirname(devReloadClientOutput), { recursive: true });
+    fs.writeFileSync(devReloadClientOutput, clientCode);
+}
+
+function notifyDevReloadServer() {
+    if (!devReloadEnabled) return;
+
+    const request = http.request({
+        hostname: "127.0.0.1",
+        port: devReloadPort,
+        path: "/reload",
+        method: "POST",
+        timeout: 1000,
+    }, (response) => {
+        response.resume();
+    });
+
+    request.on("error", () => {});
+    request.on("timeout", () => request.destroy());
+    request.end();
+}
 
 const devFiles = {
     css: [publicPath + 'css/main.style.css'],
@@ -19,6 +54,11 @@ const devFiles = {
         publicPath + 'js/pages_gallery.js'
     ]
 };
+
+if (devReloadEnabled) {
+    writeDevReloadClient();
+    devFiles.js.push(devReloadClientPublicPath);
+}
 
 //Collect all .pug files for watching (pages + partials + modals + mixins)
 const allPugFiles = pugRenderer.getAllPugFiles(__dirname);
@@ -84,6 +124,35 @@ class PugWatchPlugin {
     }
 }
 
+class DevReloadPlugin {
+    constructor() {
+        this.isInitialBuild = true;
+    }
+
+    apply(compiler) {
+        if (!devReloadEnabled) return;
+
+        compiler.hooks.beforeRun.tap("DevReloadPlugin", () => {
+            writeDevReloadClient();
+        });
+
+        compiler.hooks.watchRun.tap("DevReloadPlugin", () => {
+            writeDevReloadClient();
+        });
+
+        compiler.hooks.done.tap("DevReloadPlugin", (stats) => {
+            if (stats.hasErrors()) return;
+
+            if (this.isInitialBuild) {
+                this.isInitialBuild = false;
+                return;
+            }
+
+            notifyDevReloadServer();
+        });
+    }
+}
+
 //Initial compilation: write all pre-compiled HTML files to disk
 console.log("Pre-compiling " + common.PAGES.length + " PUG templates...");
 const ms = pugRenderer.compileAllPugPages({
@@ -113,6 +182,7 @@ module.exports = {
     plugins: [
         ...common.plugins,
         new PugWatchPlugin(),
+        new DevReloadPlugin(),
         new rspack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify("development"),
             '__VUE_OPTIONS_API__': true,

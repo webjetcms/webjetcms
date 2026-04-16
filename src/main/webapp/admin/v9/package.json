@@ -8,7 +8,8 @@
     "scripts": {
         "dev": "rspack --config rspack.config.dev.js",
         "prod": "rspack --config rspack.config.prod.js",
-        "watch": "npm run dev -- --watch",
+        "watch": "node src/dev/watch-with-reload.js",
+        "watch:plain": "npm run dev -- --watch",
         "postinstall": "./postinstall.sh"
     },
     "keywords": [],
