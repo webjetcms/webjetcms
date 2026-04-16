@@ -8,7 +8,10 @@ const { VueLoaderPlugin } = require('vue-loader');
 let sassImplementation;
 let sassApi;
 try {
-    sassImplementation = require('sass-embedded');
+    const sassEmbedded = require('sass-embedded');
+    //Verify the native binary actually works (require alone may succeed on unsupported platforms)
+    sassEmbedded.compileString('a { color: red; }');
+    sassImplementation = sassEmbedded;
     sassApi = 'modern-compiler';
     console.log("Using sass-embedded (native binary) - fast mode");
 } catch (e) {
