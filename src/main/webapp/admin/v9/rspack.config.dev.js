@@ -29,19 +29,44 @@ function writeDevReloadClient() {
 function notifyDevReloadServer() {
     if (!devReloadEnabled) return;
 
+    const payload = JSON.stringify({
+        kind: arguments[0] || "full",
+    });
+
     const request = http.request({
         hostname: "127.0.0.1",
         port: devReloadPort,
         path: "/reload",
         method: "POST",
         timeout: 1000,
+        headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(payload),
+        },
     }, (response) => {
         response.resume();
     });
 
     request.on("error", () => {});
     request.on("timeout", () => request.destroy());
-    request.end();
+    request.end(payload);
+}
+
+function isCssOnlyChange(modifiedFiles) {
+    if (!modifiedFiles || modifiedFiles.size === 0) return false;
+
+    let hasCssSource = false;
+
+    for (const filePath of modifiedFiles) {
+        if (filePath.endsWith(".css") || filePath.endsWith(".scss") || filePath.endsWith(".sass")) {
+            hasCssSource = true;
+            continue;
+        }
+
+        return false;
+    }
+
+    return hasCssSource;
 }
 
 const devFiles = {
@@ -127,6 +152,7 @@ class PugWatchPlugin {
 class DevReloadPlugin {
     constructor() {
         this.isInitialBuild = true;
+        this.lastReloadKind = "full";
     }
 
     apply(compiler) {
@@ -136,8 +162,9 @@ class DevReloadPlugin {
             writeDevReloadClient();
         });
 
-        compiler.hooks.watchRun.tap("DevReloadPlugin", () => {
+        compiler.hooks.watchRun.tap("DevReloadPlugin", (watchCompiler) => {
             writeDevReloadClient();
+            this.lastReloadKind = isCssOnlyChange(watchCompiler.modifiedFiles) ? "css" : "full";
         });
 
         compiler.hooks.done.tap("DevReloadPlugin", (stats) => {
@@ -148,7 +175,8 @@ class DevReloadPlugin {
                 return;
             }
 
-            notifyDevReloadServer();
+            notifyDevReloadServer(this.lastReloadKind);
+            this.lastReloadKind = "full";
         });
     }
 }

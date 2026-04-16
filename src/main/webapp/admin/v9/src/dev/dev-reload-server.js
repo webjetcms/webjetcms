@@ -5,6 +5,22 @@ const host = "127.0.0.1";
 const clients = new Set();
 let reloadVersion = 0;
 
+function readRequestBody(request) {
+    return new Promise((resolve, reject) => {
+        let body = "";
+
+        request.on("data", (chunk) => {
+            body += chunk;
+        });
+
+        request.on("end", () => {
+            resolve(body);
+        });
+
+        request.on("error", reject);
+    });
+}
+
 function writeSseEvent(response, eventName, payload) {
     response.write("event: " + eventName + "\n");
     response.write("data: " + JSON.stringify(payload) + "\n\n");
@@ -53,17 +69,35 @@ const server = http.createServer((request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/reload") {
-        reloadVersion += 1;
+        readRequestBody(request).then((body) => {
+            let payload = {};
 
-        clients.forEach((client) => {
-            writeSseEvent(client, "reload", {
-                version: reloadVersion,
-                updatedAt: Date.now(),
+            if (body.length > 0) {
+                try {
+                    payload = JSON.parse(body);
+                } catch (error) {
+                    response.writeHead(400, { "Content-Type": "application/json" });
+                    response.end(JSON.stringify({ error: "Invalid JSON payload" }));
+                    return;
+                }
+            }
+
+            reloadVersion += 1;
+
+            clients.forEach((client) => {
+                writeSseEvent(client, "reload", {
+                    kind: payload.kind === "css" ? "css" : "full",
+                    version: reloadVersion,
+                    updatedAt: Date.now(),
+                });
             });
-        });
 
-        response.writeHead(204);
-        response.end();
+            response.writeHead(204);
+            response.end();
+        }).catch(() => {
+            response.writeHead(500, { "Content-Type": "application/json" });
+            response.end(JSON.stringify({ error: "Failed to read request body" }));
+        });
         return;
     }
 
