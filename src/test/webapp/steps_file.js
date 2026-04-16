@@ -349,9 +349,9 @@ module.exports = function () {
       this.dtWaitForLoader();
       this.click(container+" button.buttons-settings");
       this.click(container+" button.buttons-colvis");
-      this.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      this.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
-      this.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      this.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.dtWaitForLoader();
     },
 

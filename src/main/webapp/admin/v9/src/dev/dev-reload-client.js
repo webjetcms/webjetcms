@@ -70,6 +70,11 @@
     }
 
     function connect() {
+        if (navigator.appVersion.indexOf("Chrome/131.0.0.0") !== -1) {
+            //codecept browser, skip live reload to avoid infinite wait until network idle
+            return;
+        }
+
         eventSource = new window.EventSource(reloadUrl);
 
         eventSource.addEventListener("connected", function () {

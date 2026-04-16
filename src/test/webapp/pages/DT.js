@@ -212,9 +212,9 @@ module.exports = {
       this.waitForLoader();
       I.clickCss(container+" button.buttons-settings");
       I.clickCss(container+" button.buttons-colvis");
-      I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       I.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
-      I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.waitForLoader();
     },
 
@@ -227,7 +227,7 @@ module.exports = {
         var container = "#"+tableId+"_wrapper";
         I.clickCss(container+" button.buttons-settings");
         I.clickCss(container+" button.buttons-colvis");
-        I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+        I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
         //First check, if button is already active
         const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active").withText(columnText));
@@ -238,7 +238,7 @@ module.exports = {
         }
 
         I.clickCss("button.btn.btn-primary.dt-close-modal");
-        I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+        I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     },
 
 

@@ -26,6 +26,7 @@ class PugBuildPlugin {
 module.exports = {
     ...common,
     mode: "production",
+    devtool: false,
     optimization: {
         ...common.optimization,
         minimizer: [
