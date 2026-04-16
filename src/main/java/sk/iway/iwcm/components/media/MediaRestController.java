@@ -130,6 +130,8 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         if(isCallerFromAllMedia()) {
             tableName = DOCUMENTS_TABLE_NAME;
             docId = entity.getEditorFields().getDocDetails().getDocId();
+
+            checkPerms(docId);
         } else {
             //docid zober z request.getDocId(pripad editacie vo web stranke) alebo z entity (ak je zadane v editacii) alebo ako -1 ked nie je nic
             docId = Tools.getIntValue(getRequest().getParameter("docId"), Tools.getIntValue(entity.getMediaFkId(), -1));
@@ -140,13 +142,13 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             tableName = entity.getMediaFkTableName();
             if (Tools.isEmpty(tableName)) tableName = getTableName();
 
+            checkPerms(docId);
+
             if(docId < 1) {
                 Identity user = getUser();
                 docId = user.getUserId();
             }
         }
-
-        checkPerms(docId);
 
         //IMPORTANT - dont use method getMediaFkId here because we need know if it's docId or userId
         //this difference we need to know to call getLastOrder with right param
@@ -225,7 +227,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             }
         }
 
-        if (entity.getMediaFkId()!=null && entity.getMediaFkId() > 0) checkPerms(entity.getMediaFkId());
+        if (entity.getMediaFkId()!=null && entity.getMediaFkId() > 0 && "-1".equals(getRequest().getParameter("docId"))==false) checkPerms(entity.getMediaFkId());
 
         return processFromEntity(entity, ProcessItemAction.GETONE);
     }
