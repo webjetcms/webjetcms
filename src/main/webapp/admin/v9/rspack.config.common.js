@@ -24,6 +24,21 @@ const WP_DATA = {
     publicPath: "/admin/v9/dist/"
 };
 
+class BuildTimestampPlugin {
+    apply(compiler) {
+        compiler.hooks.done.tap("BuildTimestampPlugin", () => {
+            const timestamp = new Date().toLocaleTimeString('sk-SK', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            process.stdout.write("[" + timestamp + "] ");
+        });
+    }
+}
+
 //Scan views/pages/ for all PUG page templates (only those extending a layout, not fragments)
 const pagesDir = path.resolve(__dirname, "views/pages");
 const PAGES = glob.sync("**/*.pug", { cwd: pagesDir })
@@ -163,10 +178,14 @@ const config = {
                 { from: 'src/images/logo-msg.png', to: 'images/' },
                 { from: 'src/images/logo-msg.svg', to: 'images/' },
                 { from: 'src/images/logo-net.png', to: 'images/' },
-                { from: 'src/images/logo-net.svg', to: 'images/' }
+                { from: 'src/images/logo-net.svg', to: 'images/' },
+                { from: 'src/images/favicon-cms.ico', to: 'images/' },
+                { from: 'src/images/throbber.gif', to: 'images/' },
+                { from: 'src/images/40px.png', to: 'images/' }
             ]
         }),
         new VueLoaderPlugin(),
+        new BuildTimestampPlugin(),
 
         //limit moment.js locales to only sk, cs, de
         new rspack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk|cs|de/),
