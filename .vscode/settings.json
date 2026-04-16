@@ -92,7 +92,8 @@
         "uniq": true,
         "awk": true,
         "read": true,
-        "npm install": true
+        "npm install": true,
+        "npm audit": true
     },
     "chat.agent.maxRequests": 150
 }
