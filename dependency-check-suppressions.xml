@@ -3,57 +3,6 @@
 
  <!-- DO NOT MODIFY THIS FILE, here are exceptions for WebJET CMS, write project exceptions to dependency-check-suppressions-project.xml -->
 
- <suppress>
-  <notes><![CDATA[
-  file name: commons-compress-1.21.jar
-  ]]></notes>
-  <packageUrl regex="true">^pkg:maven/org\.apache\.commons/commons\-.*$</packageUrl>
-  <cve>CVE-2021-37533</cve>
- </suppress>
-
- <!-- NOTE: refers to hutool-json v5.8.10 not org.json.json -->
- <suppress>
-  <notes><![CDATA[
-  file name: json-20230227.jar
-  ]]></notes>
-  <packageUrl regex="true">^pkg:maven/org\.json/json@.*$</packageUrl>
-  <cpe>cpe:/a:json-java_project:json-java</cpe>
- </suppress>
- <suppress>
-   <notes><![CDATA[
-   file name: jackson-core-2.15.0.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-core@.*$</packageUrl>
-   <cve>CVE-2022-45688</cve>
- </suppress>
-
- <!-- NOTE: will not be fixed, it's as intended: https://github.com/google/guava/issues/4011 -->
- <suppress>
-   <notes><![CDATA[
-   file name: guava-30.1-jre.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava@.*$</packageUrl>
-   <vulnerabilityName>CVE-2020-8908</vulnerabilityName>
- </suppress>
-
- <!-- NOTE: the vendor's perspective is that the product is not intended for use with untrusted input. -->
- <suppress>
-  <notes><![CDATA[
-  file name: jackson-databind-2.15.2.jar
-  ]]></notes>
-  <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-  <cve>CVE-2023-35116</cve>
- </suppress>
-
- <!-- NOTE: we are not using SafeHtmlValidator in WebJET CMS, also it's deprecated -->
- <suppress>
-  <notes><![CDATA[
-  file name: hibernate-validator-6.0.22.Final.jar
-  ]]></notes>
-  <packageUrl regex="true">^pkg:maven/org\.hibernate\.validator/hibernate-validator@.*$</packageUrl>
-  <vulnerabilityName>CVE-2023-1932</vulnerabilityName>
- </suppress>
-
  <!-- we do not use PDComplexFileSpecification.getFilename() -->
  <suppress>
    <notes><![CDATA[
@@ -84,29 +33,6 @@
    ]]></notes>
    <packageUrl regex="true">^pkg:npm/fabric@.*$</packageUrl>
    <vulnerabilityName>GHSA-hfvx-25r5-qc3w</vulnerabilityName>
- </suppress>
-
- <!-- used in webpack not frontend -->
- <suppress>
-   <notes><![CDATA[
-   file name: lodash.js
-   ]]></notes>
-   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
-   <cve>CVE-2026-4800</cve>
- </suppress>
- <suppress>
-   <notes><![CDATA[
-   file name: lodash.js
-   ]]></notes>
-   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
-   <cve>CVE-2025-13465</cve>
- </suppress>
- <suppress>
-   <notes><![CDATA[
-   file name: lodash.js
-   ]]></notes>
-   <packageUrl regex="true">^pkg:javascript/lodash@.*$</packageUrl>
-   <cve>CVE-2026-2950</cve>
  </suppress>
 
 </suppressions>
