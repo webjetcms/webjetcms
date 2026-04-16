@@ -77,8 +77,7 @@ const config = {
                     cacheBusting: true
                 }
             },
-            //pug-loader is not needed here - dev mode pre-compiles PUG at config time,
-            //prod mode adds pug-loader in its own config
+            //PUG templates are rendered outside module rules by shared dev/prod renderers
             {
                 test: /\.m?js$/,
                 include: path.resolve(__dirname, 'src/js'),
@@ -165,7 +164,7 @@ const config = {
             chunkFilename: "css/vendor-[id].style.css"
         }),
 
-        //HTML plugins are added in dev/prod configs (dev: pre-compiled PUG + HtmlRspackPlugin, prod: HtmlWebpackPlugin + pug-loader)
+        //HTML output is generated in dev/prod configs by a shared PUG renderer
 
         new rspack.CopyRspackPlugin({
             patterns:[

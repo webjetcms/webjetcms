@@ -1,35 +1,33 @@
 const path = require("path");
 const common = require("./rspack.config.common");
+const pugRenderer = require("./pug.render");
 const rspack = require("@rspack/core");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const { merge } = require("webpack-merge");
 
 const WP_DATA = common.WP_DATA;
+const distDir = path.resolve(__dirname, "dist");
 
-function generateHtmlPlugins(templateDir) {
-    return {
-        template: path.resolve(__dirname, "views") + '/pages' + templateDir + '.pug',
-        filename: path.resolve(__dirname, "dist") + '/views' + templateDir + '.html',
-        minify: {
-            //https://github.com/DanielRuf/html-minifier-terser#options-quick-reference
-            removeAttributeQuotes: false, //toto musi byt false inak nam nequotuje atributy kde vidi Thymeleaf premennu a potom to moze padnut
-            removeEmptyAttributes: true,
-            collapseWhitespace: false,
-            removeComments: true,
-            useShortDoctype: true,
-            minifyCSS:true,
-            minifyJS:false
-        },
-        inject: false,
-        data: WP_DATA
+class PugBuildPlugin {
+    apply(compiler) {
+        compiler.hooks.afterEmit.tap("PugBuildPlugin", compilation => {
+            const assetFiles = pugRenderer.getAssetFiles(compilation, WP_DATA.publicPath, Object.keys(common.entry));
+            const ms = pugRenderer.compileAllPugPages({
+                baseDir: __dirname,
+                data: WP_DATA,
+                distDir,
+                files: assetFiles,
+                pages: common.PAGES
+            });
+
+            console.log("PUG production rendering done in " + ms + " ms");
+        });
     }
 }
 
-const htmlPlugins = common.PAGES.map(page => new HtmlWebpackPlugin(generateHtmlPlugins(page)));
-
-module.exports = merge(common, {
+module.exports = {
+    ...common,
     mode: "production",
     optimization: {
+        ...common.optimization,
         minimizer: [
             new rspack.SwcJsMinimizerRspackPlugin({
                 extractComments: true,
@@ -48,17 +46,9 @@ module.exports = merge(common, {
         mergeDuplicateChunks: true,
         chunkIds: "named"
     },
-    module: {
-        rules: [
-            {
-                test: /.pug$/,
-                include: path.resolve(__dirname, 'views'),
-                use: [{ loader: 'pug-loader' }]
-            }
-        ]
-    },
     plugins: [
-        ...htmlPlugins,
+        ...common.plugins,
+        new PugBuildPlugin(),
         new rspack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify("production"),
             '__VUE_OPTIONS_API__': true,
@@ -66,4 +56,4 @@ module.exports = merge(common, {
             '__VUE_PROD_HYDRATION_MISMATCH_DETAILS__': false
         })
     ],
-});
+};
