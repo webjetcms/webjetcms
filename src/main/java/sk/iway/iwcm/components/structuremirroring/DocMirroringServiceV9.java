@@ -20,6 +20,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
@@ -334,6 +335,9 @@ public class DocMirroringServiceV9 {
     */
    public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId, boolean onlyDeleted)
 	{
+      List<DocDetails> filtered = new ArrayList<>();
+      if (syncId<1) return filtered;
+
       StringBuilder sql = new StringBuilder();
       List<Object> params = new ArrayList<>();
       params.add(syncId);
@@ -375,7 +379,6 @@ public class DocMirroringServiceV9 {
       GroupsDB groupsDB = GroupsDB.getInstance();
 
       //filter groups which is not synced anymore
-      List<DocDetails> filtered = new ArrayList<>();
       if(onlyDeleted != true) {
          for (DocDetails doc : docs) {
             List<GroupDetails> parents = groupsDB.getParentGroups(doc.getGroupId(), true);
@@ -488,5 +491,55 @@ public class DocMirroringServiceV9 {
       }
 
       return languages;
+   }
+
+   /**
+    * Handle multigroup mapping for edited doc, delete old mappings and create new based on current syncId and mapping configuration
+    * @param editedDoc - original saved doc - should always be automatically master
+    * @param toDelete - list of docIds to delete
+    * @param redirect - if true, the mapping will be created with redirect, if false without redirect
+    * @param request - HttpServletRequest object
+    */
+   public static void handleMultigroupMapping(DocDetails editedDoc, List<Integer> toDelete, boolean redirect, HttpServletRequest request) {
+      if (editedDoc.getSyncId()<1) return;
+
+      List<DocDetails> syncedMasterDocs = getDocBySyncId(editedDoc.getSyncId(), editedDoc.getDocId());
+      List<Integer> slaveDocIds = MultigroupMappingDB.getSlaveDocIds(editedDoc.getDocId());
+
+      GroupsDB groupsDB = GroupsDB.getInstance();
+
+      for (DocDetails syncedDoc : syncedMasterDocs) {
+         //delete mapping for this syncedDoc
+         MultigroupMappingDB.deleteSlaves(syncedDoc.getDocId());
+
+         GroupDetails syncedDocGroup = groupsDB.getGroup(syncedDoc.getGroupId());
+         String syncedLng = GroupMirroringServiceV9.getLanguage(syncedDocGroup);
+
+         //potrebujem najst v EN verzii stranky ktore su v SK verzii nastavene ako multigroup - teda sú v slaveDocIds
+         for (Integer slaveDocId : slaveDocIds) {
+            int syncId = getSyncId(slaveDocId);
+            if (syncId < 1) continue;
+            List<DocDetails> syncedSlaveDocs = getDocBySyncId(syncId, slaveDocId);
+            for (DocDetails syncedSlaveDoc : syncedSlaveDocs) {
+               GroupDetails syncedSlaveDocGroup = groupsDB.getGroup(syncedSlaveDoc.getGroupId());
+               String syncedSlaveLng = GroupMirroringServiceV9.getLanguage(syncedSlaveDocGroup);
+
+               if (syncedSlaveLng.equals(syncedLng)) {
+                  //nasiel som stranku, ktora je v rovnakej jazykovej verzii ako aktualne spracovavana stranka, takze to je ten spravny slave
+                  Logger.debug(DocMirroringServiceV9.class, "NASTAVUJEM MAPPING, syncedDoc="+syncedDoc.getDocId()+" slaveDocId="+syncedSlaveDoc.getDocId());
+                  MultigroupMappingDB.newMultigroupMapping(syncedSlaveDoc.getDocId(), syncedDoc.getDocId(), redirect);
+               }
+            }
+         }
+      }
+
+      for(Integer docId : toDelete) {
+         int syncId = getSyncId(docId);
+         if (syncId < 1) continue;
+         List<DocDetails> syncedDocs = getDocBySyncId(syncId, docId);
+         for (DocDetails syncedDoc : syncedDocs) {
+            DocDB.deleteDoc(syncedDoc.getDocId(), request, false);
+         }
+      }
    }
 }

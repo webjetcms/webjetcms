@@ -26,16 +26,23 @@ Performs a read-only code review of changes in the repository — either all com
 
 Based on the answer, use one of the two modes:
 
+When running branch-level review commands in this skill, resolve the comparison base as follows:
+
+- Branches starting with `hotfix/` -> `origin/hotfix/2026.0-main`
+- All other branches -> `origin/main`
+
 #### Mode A — Pull Request (all commits in branch)
 
 ```bash
-git rev-parse --abbrev-ref HEAD
-git diff --name-only $(git merge-base HEAD origin/main)
+BASE_BRANCH=origin/main
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" == hotfix/* ]]; then BASE_BRANCH=origin/hotfix/2026.0-main; fi
+git diff --name-only $(git merge-base HEAD $BASE_BRANCH)
 ```
 
 For each file:
 ```bash
-git diff $(git merge-base HEAD origin/main) -- <file>
+git diff $(git merge-base HEAD $BASE_BRANCH) -- <file>
 ```
 
 #### Mode B — Uncommitted changes only (staged + unstaged)
