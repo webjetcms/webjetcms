@@ -21,6 +21,7 @@ import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.editor.rest.GroupSchedulerEditorFields;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.utils.Pair;
 
 @Component
 public class ApproveGroupListener {
@@ -55,11 +56,11 @@ public class ApproveGroupListener {
             if (dto == null) return;
 
             if("post".equalsIgnoreCase(request.getMethod())) {
-                String response = approveService.approveGroupAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
-                if(response == null) {
-                    prepareResponseModel(model, null, prop.getText("approve.group.success"));
+                Pair<Boolean, String> result = approveService.approveGroupAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
+                if(result.getFirst() == Boolean.TRUE) {
+                    prepareResponseModel(model, null, result.getSecond());
                 } else {
-                    prepareResponseModel(model, response, null);
+                    prepareResponseModel(model, result.getSecond(), null);
                 }
                 return;
             }
@@ -105,11 +106,11 @@ public class ApproveGroupListener {
             if (dto == null) return;
 
             if("post".equalsIgnoreCase(request.getMethod())) {
-                String response = approveService.approveGroupDelAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
-                if(response == null) {
-                    prepareResponseModel(model, null, prop.getText("approve.group.delete.success"));
+                Pair<Boolean, String> result = approveService.approveGroupDelAction(dto, groupSchedulerDtoRepository, GroupsDB.getInstance());
+                if(result.getFirst() == Boolean.TRUE) {
+                    prepareResponseModel(model, null, result.getSecond());
                 } else {
-                    prepareResponseModel(model, response, null);
+                    prepareResponseModel(model, result.getSecond(), null);
                 }
                 return;
             }

@@ -37,6 +37,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.utils.Pair;
 
 /**
  * Sluzby spojene so schvalovanim web stranok
@@ -68,6 +69,12 @@ public class ApproveService {
 	private boolean selfApproved = false;
 	public boolean isSelfApproved() {
 		return this.selfApproved;
+	}
+
+	// To check if user can approve first level in two level approve system
+	private boolean canApproveFirstLevel = false;
+	public boolean isCanApproveFirstLevel() {
+		return canApproveFirstLevel;
 	}
 
 	private static final String[] diffBlacklistedProperties = {
@@ -268,11 +275,13 @@ public class ApproveService {
 				//Clear approve table (dont need approve)
 				approveByTable.clear();
 				selfApproved = true;
+
 				//Mark as self approved
 				if (approveByTableLevel2.isEmpty()==false) {
 					//simulate level2 in approveByTable (it's the same process)
 					approveByTable.putAll(approveByTableLevel2);
 					selfApproved = false;
+					canApproveFirstLevel = true;
 				}
 			} else {
 				/**
@@ -464,17 +473,22 @@ public class ApproveService {
 			}
 
 			return true;
-		} else if (approveByTableLevel2.isEmpty()==false) {
+		} else if (approveByTableLevel2.isEmpty() == false) {
+			// this PAGE need level 2 approve BUT before that check, that action is doing level 1 aprover, if not, then current user cant approve this action, because he is not level 1 approver
+			if (canApproveFirstLevel == false) {
+				// Current user is not level 1 approver, so he can't approve this action -> aka move it to lvl 2
+				request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
+				return false;
+			}
+
 			//if there are also level2 approvers update approvers ID and send notifications
 			docHistory.setAwaitingApprove("," + getApproveUserIds() + ",");
 			docHistoryRepo.save(docHistory);
 
-			Identity user = UsersDB.getCurrentUser(request);
-
 			//posli mail schvalovatelovi level2
 			String notes = request.getParameter("notes");
 			if (Tools.isEmpty(notes)) notes = prop.getText("components.reservation.reservation_list.accept");
-			notes = prop.getText("approve.page.approvedToNextLevel.comment", user.getFullName(), notes);
+			notes = prop.getText("approve.page.approvedToNextLevel.comment", currentUser.getFullName(), notes);
 
 			String approverNames = getApproveUserNames();
 
@@ -493,13 +507,12 @@ public class ApproveService {
 			message.append(notes).append("<br>\n");
 			UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());
 			if (author != null && Tools.isEmail(author.getEmail())) {
-				SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
+				SendMail.send(currentUser.getFullName(), currentUser.getEmail(), author.getEmail(), subject, message.toString(), request);
 			}
 
 			return true;
 		} else {
 			//Doc NEED's approve, BUT current user is NOT selfApprover, so he can't approve this shit
-
 			request.setAttribute("message", prop.getText("approveAction.err.cantApprove"));
 			return false;
 		}
@@ -839,7 +852,7 @@ public class ApproveService {
 	 * @param groupsDB
 	 * @return true if action was successful
 	 */
-	public String approveGroupAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
+	public Pair<Boolean, String> approveGroupAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
 
 		// Load approve tables based on the parent group of the folder being changed
 		loadApproveTables(dto.getGroupId());
@@ -896,8 +909,14 @@ public class ApproveService {
 				dto = groupSchedulerDtoRepository.save(dto);
 
 				sendGroupApproveNotification(false, dto, approveNote);
-			} else { return prop.getText("approve.group.failed"); }
+			} else { return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.failed")); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
+			// this PAGE need level 2 approve BUT before that check, that action is doing level 1 aprover, if not, then current user cant approve this action, because he is not level 1 approver
+			if (canApproveFirstLevel == false) {
+				// Current user is not level 1 approver, so he can't approve this action -> aka move it to lvl 2
+				return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
+			}
+
 			// Route to level-2 approvers
 			String level2approvers = "," + getApproveUserIds() + ",";
 			if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
@@ -914,9 +933,11 @@ public class ApproveService {
 				request.setAttribute("approvedToNextLevel", prop.getText("approve.page.approvedToNextLevel", approverNames));
 
 				// Notify author that request moved to next level
-				String subject = prop.getText("approve.page.approvedToNextLevel.editorSubject", dto.getGroupName());
+				String groupName = Tools.replace(dto.getGroupName(), "[DELETE] ", "");
+				String subject = prop.getText("approve.group.approvedToNextLevel.subject", groupName);
 				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
-				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
+
+				StringBuilder message = new StringBuilder(prop.getText("approve.group.approvedToNextLevel.text", groupName, approverNames)).append("<br><br>\n\n");
 				message.append(prop.getText("approve.url")).append(":<br>\n");
 				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
 				message.append(notes).append("<br>\n");
@@ -924,13 +945,15 @@ public class ApproveService {
 				if (author != null && Tools.isEmail(author.getEmail())) {
 					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
 				}
+
+				return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
 			}
 		} else {
 			// Current user cannot approve this
-			return prop.getText("approve.group.cant_approve");
+			return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
 		}
 
-		return null; // Indicate success
+		return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.group.success")); // Indicate success
 	}
 
 	/**
@@ -940,7 +963,7 @@ public class ApproveService {
 	 * @param groupsDB
 	 * @return true if action was successful
 	 */
-	public String approveGroupDelAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
+	public Pair<Boolean, String> approveGroupDelAction(GroupSchedulerDto dto, GroupSchedulerDtoRepository groupSchedulerDtoRepository, GroupsDB groupsDB) {
 
 		// Load approve tables based on the parent group
 		loadApproveTables(dto.getGroupId());
@@ -962,7 +985,7 @@ public class ApproveService {
 
 					sendGroupApproveNotification(true, dto, approveNote);
 				} else {
-					return prop.getText("approve.group.delete.failed");
+					return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.failed"));
 				}
 
 			} else if("reject".equals(approveAction)) {
@@ -974,8 +997,14 @@ public class ApproveService {
 				dto = groupSchedulerDtoRepository.save(dto);
 
 				sendGroupApproveNotification(false, dto, approveNote);
-			} else { return prop.getText("approve.group.delete.failed"); }
+			} else { return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.failed")); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
+			// this PAGE need level 2 approve BUT before that check, that action is doing level 1 aprover, if not, then current user cant approve this action, because he is not level 1 approver
+			if (canApproveFirstLevel == false) {
+				// Current user is not level 1 approver, so he can't approve this action -> aka move it to lvl 2
+				return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
+			}
+
 			// Route to level-2 approvers
 			String level2approvers = "," + getApproveUserIds() + ",";
 			if (level2approvers.equals(dto.getAwaitingApprove()) == false) {
@@ -994,7 +1023,7 @@ public class ApproveService {
 				// Notify author that request moved to next level
 				String subject = prop.getText("approve.delete.subject") + " " + dto.getGroupName();
 				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
-				StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
+				StringBuilder message = new StringBuilder(prop.getText("approve.group.approvedToNextLevel.text", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
 				message.append(prop.getText("approve.url")).append(":<br>\n");
 				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
 				message.append(notes).append("<br>\n");
@@ -1002,13 +1031,15 @@ public class ApproveService {
 				if (author != null && Tools.isEmail(author.getEmail())) {
 					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
 				}
+
+				return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
 			}
 		} else {
 			// Current user cannot approve this
-			return prop.getText("approve.group.delete.cant_approve");
+			return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.cant_approve"));
 		}
 
-		return null; // Indicate success
+		return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.group.delete.success")); // Indicate success
 	}
 
 	/**
