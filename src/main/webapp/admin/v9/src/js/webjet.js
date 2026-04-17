@@ -997,7 +997,7 @@ const WJ = (() => {
     function _createTabItem(data, urlPrefix) {
         let li = $(`<li class="nav-item" role="presentation"></li>`);
 
-        let idNoHash = urlPrefix ? (data.url ? urlPrefix + "-" + data.url : urlPrefix) : data.url;
+        let idNoHash = urlPrefix ? (data.url ? urlPrefix + "-" + data.url : (data.id ? urlPrefix + "-" + data.id : urlPrefix)) : data.url;
         if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
         let href = "#pills-"+idNoHash;
         //ak je to URL nepridavaj #pills-
