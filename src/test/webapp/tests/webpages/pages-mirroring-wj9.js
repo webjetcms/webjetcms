@@ -302,6 +302,40 @@ Scenario('presun stranky webpage1 do podpriecinka sk-mir-subfolder1', ({ I, DT, 
      // presun stranky webpage1 do podpriecinka sk-mir-subfolder1
      wj9MoveSubpage(I, DT, DTE, randomNumber);
 });
+
+Scenario("multigroup mapping", ({ I, DT, DTE }) => {
+     var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
+     var auto_folder_en = 'en-mir-autotest-' + randomNumber;
+     var auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
+     var auto_webpage1_sk = 'sk-multigroup-autotest-' + randomNumber;
+
+     I.jstreeClick(auto_folder_sk);
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     //I.clickCss("#pills-dt-datatableInit-content-tab");
+     //I.waitForVisible('#cke_1_toolbox');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));
+     I.fillField('#DTE_Field_title', auto_webpage1_sk);
+
+     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
+     I.click(locate('#jsTree .jstree-node.jstree-closed').withText(auto_folder_sk).find('.jstree-icon.jstree-ocl'));
+     I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder1_sk).find('a.jstree-anchor'));
+
+     DTE.save();
+
+     //
+     I.say("Check if multigroup is set in EN version");
+     I.jstreeClick(auto_folder_en);
+     I.wait(1);
+     DT.waitForLoader();
+     I.seeElement(locate('tr.is-not-public').withText(auto_webpage1_sk));
+     I.click(auto_webpage1_sk);
+     DTE.waitForEditor();
+     I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails input.form-control", '/' + auto_folder_en + '/' + auto_subfolder1_sk);
+     DTE.cancel();
+});
+
 Scenario('vymazanie hlavneho sk priecinka z test priecinka', ({ I, DT, DTE }) => {
      // vymazanie hlavneho sk priecinka z test priecinka
      wj9DeleteMainFolder(I, DT, DTE, randomNumber);
