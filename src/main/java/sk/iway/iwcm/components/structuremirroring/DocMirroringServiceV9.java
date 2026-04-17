@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -410,7 +409,9 @@ public class DocMirroringServiceV9 {
       return languages;
    }
 
-   public static void handleMultigroupMapping(DocDetails editedDoc, List<GroupDetails> otherGroups, Map<Integer, Integer> groupMapping, List<Integer> toDelete, boolean redirect, HttpServletRequest request) {
+   public static void handleMultigroupMapping(DocDetails editedDoc, List<Integer> toDelete, boolean redirect, HttpServletRequest request) {
+      if (editedDoc.getSyncId()<1) return;
+
       List<DocDetails> syncedMasterDocs = getDocBySyncId(editedDoc.getSyncId(), editedDoc.getDocId());
       List<Integer> slaveDocIds = MultigroupMappingDB.getSlaveDocIds(editedDoc.getDocId());
 

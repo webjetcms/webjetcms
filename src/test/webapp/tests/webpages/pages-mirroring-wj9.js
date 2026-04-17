@@ -306,7 +306,6 @@ Scenario('presun stranky webpage1 do podpriecinka sk-mir-subfolder1', ({ I, DT, 
 Scenario("multigroup mapping", ({ I, DT, DTE }) => {
      var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
      var auto_folder_en = 'en-mir-autotest-' + randomNumber;
-     var auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
      var auto_webpage1_sk = 'sk-multigroup-autotest-' + randomNumber;
 
      I.jstreeClick(auto_folder_sk);
