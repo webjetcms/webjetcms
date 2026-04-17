@@ -159,7 +159,7 @@ const config = {
         new rspack.ProvidePlugin({
             $: 'jquery',
             jQuery: 'jquery',
-            'window.jQuery': 'jquery'
+            //'window.jQuery': 'jquery'
         }),
 
         new rspack.CssExtractRspackPlugin({
