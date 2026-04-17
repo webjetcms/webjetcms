@@ -13,6 +13,7 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -94,11 +95,16 @@ public class MultigroupService {
 			Integer docId = me.getValue();
 			if(docId != null) {
 				Logger.debug(MultigroupService.class, "Saving slave doc: "+docId+" to group "+groupId);
+				int syncId = -1;
 				if(docId < 0) {
 					masterDoc.setVirtualPath("");
 				} else {
 					masterDoc.setVirtualPath(docDB.getBasicDocDetails(docId, true).getVirtualPath());
+					//get current syncId
+					syncId = DocMirroringServiceV9.getSyncId(docId);
 				}
+				//restore syncId for existing slave doc
+				masterDoc.setSyncId(syncId);
 
 				if (docIdOriginal == docId.intValue()) {
 					//keep virtual path for edited doc (slave)
@@ -138,8 +144,13 @@ public class MultigroupService {
 			}
 		}
 
+		//must be before DocDB.deleteDoc because it will remove also the mapping
+		DocMirroringServiceV9.handleMultigroupMapping(editedDoc, otherGroups, groupMapping, toDelete, redirect, request);
+
 		// odstranime DocDetails pre zmazane slave mappingy
-		for(Integer docId : toDelete) { DocDB.deleteDoc(docId, request); }
+		for(Integer docId : toDelete) {
+			DocDB.deleteDoc(docId, request, false);
+		}
 
 		//ak sme nieco zmazali refreshneme DocDB
 		if(toDelete.isEmpty()==false)	{
