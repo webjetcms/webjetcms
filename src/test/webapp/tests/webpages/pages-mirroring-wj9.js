@@ -303,7 +303,7 @@ Scenario('presun stranky webpage1 do podpriecinka sk-mir-subfolder1', ({ I, DT, 
      wj9MoveSubpage(I, DT, DTE, randomNumber);
 });
 
-Scenario("multigroup mapping", ({ I, DT, DTE }) => {
+Scenario("mirroring with multigroup mapping", ({ I, DT, DTE }) => {
      var auto_folder_sk = 'sk-mir-autotest-' + randomNumber;
      var auto_folder_en = 'en-mir-autotest-' + randomNumber;
      var auto_subfolder2_sk = 'sk-mir-subfolder2-' + randomNumber;
@@ -340,8 +340,6 @@ Scenario("multigroup mapping", ({ I, DT, DTE }) => {
      I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails > section > div > div > button.btn-vue-jstree-add");
      I.click(locate('#jsTree .jstree-node.jstree-closed').withText(auto_folder_en).find('.jstree-icon.jstree-ocl'));
      I.click(locate('#jsTree').find('.jstree-node.jstree-leaf').withText(auto_subfolder2_sk).find('a.jstree-anchor'));
-     pause();
-
      DTE.save();
 
      //
@@ -356,6 +354,22 @@ Scenario("multigroup mapping", ({ I, DT, DTE }) => {
      I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) input.form-control", '/' + auto_folder_sk + '/' + auto_subfolder1_sk);
      I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(2) input.form-control", '/' + auto_folder_sk + '/' + auto_subfolder2_sk);
 
+     //
+     I.say("Remove auto_subfolder1_sk from multigroup mapping");
+     I.clickCss("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) button.btn-vue-jstree-item-remove");
+     DTE.save();
+
+     //
+     I.say("Check if auto_subfolder1_sk is removed from EN version but auto_subfolder2_sk is still there");
+     I.jstreeClick(auto_folder_en);
+     I.wait(1);
+     DT.waitForLoader();
+     I.seeElement(locate('tr').withText(auto_webpage1_sk));
+     I.click(auto_webpage1_sk);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     I.dontSeeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) input.form-control", '/' + auto_folder_en + '/' + auto_subfolder1_sk);
+     I.seeInField("#editorAppDTE_Field_editorFields-groupCopyDetails div.form-group:nth-child(1) input.form-control", '/' + auto_folder_en + '/' + auto_subfolder2_sk);
 });
 
 Scenario('vymazanie hlavneho sk priecinka z test priecinka', ({ I, DT, DTE }) => {

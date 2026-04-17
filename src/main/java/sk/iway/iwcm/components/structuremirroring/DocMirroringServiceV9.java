@@ -409,6 +409,13 @@ public class DocMirroringServiceV9 {
       return languages;
    }
 
+   /**
+    * Handle multigroup mapping for edited doc, delete old mappings and create new based on current syncId and mapping configuration
+    * @param editedDoc - original saved doc - should always be automatically master
+    * @param toDelete - list of docIds to delete
+    * @param redirect - if true, the mapping will be created with redirect, if false without redirect
+    * @param request - HttpServletRequest object
+    */
    public static void handleMultigroupMapping(DocDetails editedDoc, List<Integer> toDelete, boolean redirect, HttpServletRequest request) {
       if (editedDoc.getSyncId()<1) return;
 

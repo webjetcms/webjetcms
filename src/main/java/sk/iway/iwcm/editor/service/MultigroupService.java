@@ -144,7 +144,7 @@ public class MultigroupService {
 			}
 		}
 
-		//must be before DocDB.deleteDoc because it will remove also the mapping
+		//must be before DocDB.deleteDoc because DocDB.deleteDoc() will remove also the mapping
 		DocMirroringServiceV9.handleMultigroupMapping(editedDoc, toDelete, redirect, request);
 
 		// odstranime DocDetails pre zmazane slave mappingy
