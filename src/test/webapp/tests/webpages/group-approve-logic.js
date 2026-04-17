@@ -7,7 +7,7 @@ var tester2Email;
 var emailDomain;
 
 var newFolderName = "Group_approving_";
-const baseFolderId = 113935;
+const baseFolderId = 114389; // ID of "Group_approving" folder under which the test will create a new folder for approval tests
 
 const HISTORY_TABLE_ID = "datatableFieldDTE_Field_editorFields-groupSchedulerChangeHistory";
 
@@ -171,7 +171,7 @@ function checkDeleteApprovalPage(I) {
     I.dontSeeElement("#diff");
 }
 
-Scenario('prepare users for approve logic tests ', ({I, DT, DTE}) => {
+Scenario('prepare users for approve logic tests @screenshot', ({I, DT, DTE}) => {
     I.say("Set temp email addresses for both test users");
     I.relogin("admin");
     setUserEmail("tester", testerEmail + emailDomain, I, DT, DTE);
@@ -182,7 +182,7 @@ Scenario('prepare users for approve logic tests ', ({I, DT, DTE}) => {
 // CREATE LOGIC TESTS
 // ------------------------
 
-Scenario('Create new folder that requires approval ', async ({I, DT, DTE, Document}) => {
+Scenario('Create new folder that requires approval @screenshot', async ({I, DT, DTE, Document}) => {
     I.say("Log as NON-approver and create new folder");
     I.relogin("tester2");
 
@@ -194,6 +194,10 @@ Scenario('Create new folder that requires approval ', async ({I, DT, DTE, Docume
 
     I.fillField("#DTE_Field_groupName", newFolderName);
     DTE.save();
+
+    I.waitForVisible("div.toast-container div.toast", 5);
+    Document.screenshotElement("div.toast-container div.toast", "/redactor/webpages/approve/approve-notification.png");
+
     Document.notifyCheckAndClose("Žiadosť o schválenie pridania nového priečinka dostal: Publish Notification, Tester Playwright");
 
     I.say("Check created new folder - name should match, visibility should be internal");
@@ -208,6 +212,9 @@ Scenario('Create new folder that requires approval ', async ({I, DT, DTE, Docume
     openFolderHistoryTab(I, DT);
 
     DT.checkTableRow(HISTORY_TABLE_ID, 1, [null, null, newFolderName, "Tester2 Playwright2", "neschválené"]);
+
+    Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/webpages/approve/group-history-tab.png");
+
     DTE.cancel();
 
     I.say("Check automatically created document in the new folder");
@@ -223,7 +230,7 @@ Scenario('Create new folder that requires approval ', async ({I, DT, DTE, Docume
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-history", 1, [null, null, null, null, newFolderName, "Tester2 Playwright2", "neschvaľovalo sa"]);
 });
 
-Scenario('Check approve email and approve logic ', async ({I, Document, TempMail}) => {
+Scenario('Check approve email and approve logic @screenshot', async ({I, Document, TempMail}) => {
 
     I.relogin("tester2");
 
@@ -231,11 +238,15 @@ Scenario('Check approve email and approve logic ', async ({I, Document, TempMail
     await TempMail.login(testerEmail);
     await TempMail.openLatestEmail();
 
+    Document.screenshotElement("div.letter", "/redactor/webpages/approve/approve-group-email.png");
+
     I.see("Žiadosť o schválenie priečinka: " + newFolderName);
     I.see("Žiadam Vás o schválenie priečinka:");
     I.see("Polia priečinka:");
 
     await goOnEmailUrl(I, Document);
+
+    Document.screenshotElement("div.approve-group-page", "/redactor/webpages/approve/approve-group-page.png");
 
     I.say("Try to approve as non-approver - should be denied");
     I.seeElement( locate("h2").withText("Schvaľovanie priečinka") );
@@ -289,10 +300,12 @@ Scenario('Check approved structure ', async ({I, DT, DTE}) => {
     DT.checkTableRow("datatableFieldDTE_Field_editorFields-history", 1, [null, null, null, null, newFolderName, "Tester2 Playwright2", "neschvaľovalo sa"]);
 });
 
-Scenario('Check email that confirms approval ', async ({I, TempMail}) => {
+Scenario('Check email that confirms approval @screenshot', async ({I, TempMail, Document}) => {
     I.say("Verify that requester (tester2) received approval confirmation email");
     await TempMail.login(tester2Email);
     await TempMail.openLatestEmail();
+
+    Document.screenshotElement("div.letter", "/redactor/webpages/approve/approve-group-notify-mail.png");
 
     I.see("Priečinok schválený: " + newFolderName);
     I.see("Priečinok je SCHVÁLENÝ:");
@@ -547,6 +560,18 @@ Scenario('Again request for delete and this time approve it ', async ({I, DT, DT
 
 Scenario('Destroy both email inboxes', async ({I, DT, DTE, Document, TempMail}) => {
     I.say("Destroy temp email inboxes used for testing");
+    await TempMail.login(testerEmail);
+    await TempMail.destroyInbox();
+
+    await TempMail.login(tester2Email);
+    await TempMail.destroyInbox();
+});
+
+Scenario('revert users emails @screenshot', async ({I, DT, DTE, TempMail}) => {
+    I.relogin("admin");
+    setUserEmail("tester", "tester@balat.sk", I, DT, DTE);
+    setUserEmail("tester2", "tester2@balat.sk", I, DT, DTE);
+
     await TempMail.login(testerEmail);
     await TempMail.destroyInbox();
 

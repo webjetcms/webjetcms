@@ -13,6 +13,7 @@
 
 ### Webové stránky
 
+- Schvaľovanie - pridané [schvaľovanie zmien adresárov](redactor/webpages/approve/README.md) (#58405).
 - Aplikácie - pridaná možnosť nastaviť [štýly zobrazenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie). Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov (#osk418).
 
 ![](custom-apps/appstore/common-settings-tab.png)

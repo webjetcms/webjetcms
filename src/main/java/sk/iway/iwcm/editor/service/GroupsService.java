@@ -84,15 +84,6 @@ public class GroupsService extends NotifyService {
 			return false;
 		}
 
-		//Check perms - by parent group
-		approveService.loadApproveTables(group.getParentGroupId());
-		if (approveService.needApprove() && !approveService.isSelfApproved()) {
-			//No right
-			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify_folder.no_right"), NotifyBean.NotifyType.WARNING, 60000);
-			addNotify(info);
-			return false;
-		}
-
 		//publish before recover event
 		if (publishEvents) {
 			(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
@@ -110,6 +101,15 @@ public class GroupsService extends NotifyService {
 				parentGroupId = latestGroupHistory.getParentGroupId();
 				parentGroupPath = parentGroup.getFullPath();
 			}
+		}
+
+		//Check perms - by parent group
+		approveService.loadApproveTables(parentGroupId);
+		if (approveService.needApprove() && !approveService.isSelfApproved()) {
+			//No right
+			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify_folder.no_right"), NotifyBean.NotifyType.WARNING, 60000);
+			addNotify(info);
+			return false;
 		}
 
 		//Set folder derent to root

@@ -851,9 +851,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             boolean status = editorFacade.recoverGroupFromTrash(entity, getUser());
             addNotify(editorFacade.getNotify());
             //we must clear it to prevent duplicate notifications on multiple groups recovery
-            editorFacade.clearNotify();
-            setForceReload(true);
-            return status;
+            setForceReload(status);
+            return true;
         }
         return false;
     }
