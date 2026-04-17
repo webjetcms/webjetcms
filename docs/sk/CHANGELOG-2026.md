@@ -13,7 +13,12 @@
 
 ### Webové stránky
 
-- Schvaľovanie - pridané [schvaľovanie zmien adresárov](redactor/webpages/approve/README.md) (#58405).
+- Schvaľovanie - pridané [schvaľovanie zmien adresárov](redactor/webpages/approve/README.md) vrátane schvaľovania vytvorenia, editácie a zmazania adresárov. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
+
+![](redactor/webpages/approve/approve-group-page.png)
+
+- Schvaľovanie adresárov - v záložke `Na schválenie` pridané pod-záložky `Dokumenty` a `Priečinky` pre oddelené zobrazenie stránok a adresárov čakajúcich na schválenie (#58405).
+- Schvaľovanie adresárov - pridané zobrazenie stĺpca s dátumom schválenia/zamietnutia a menom schvaľovateľa v histórii zmien adresára (#58405).
 - Aplikácie - pridaná možnosť nastaviť [štýly zobrazenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie). Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov (#osk418).
 
 ![](custom-apps/appstore/common-settings-tab.png)
@@ -130,6 +135,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ### Pre programátora
 
+- Hlavičkové záložky - pridaná podpora pod-záložiek cez funkciu `WJ.headerSubTabs()` pre vnorené záložky v hlavičke stránky (#58405).
 - AI - nový `AI skill` pre opravu A11Y/WCAG chýb, stačí použiť nástroj `/wj-accessibility`.
 - Aktualizované závislosti na minimálne požiadavky pre Tomcat 11 (Tomcat 10 už nie je podporovaný). `Stripes` validácie - upravené vykonávanie EL výrazov z odstráneného `jakarta.servlet.jsp.el` na `jakarta.el` kvôli kompatibilite s `jakarta.servlet.jsp-api:4.0.0` (#58385).
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
