@@ -301,6 +301,9 @@ public class DocMirroringServiceV9 {
     */
    public static List<DocDetails> getDocBySyncId(int syncId, int skipDocId)
 	{
+      List<DocDetails> filtered = new ArrayList<>();
+      if (syncId<1) return filtered;
+
       StringBuilder sql = new StringBuilder();
       sql.append("SELECT ").append(DocDB.getDocumentFields()).append(" FROM documents d WHERE d.sync_id=?");
       if (skipDocId>0) sql.append(" AND d.doc_id!=? ");
@@ -328,7 +331,6 @@ public class DocMirroringServiceV9 {
       GroupsDB groupsDB = GroupsDB.getInstance();
 
       //filter groups which is not synced anymore
-      List<DocDetails> filtered = new ArrayList<>();
       for (DocDetails doc : docs) {
          List<GroupDetails> parents = groupsDB.getParentGroups(doc.getGroupId(), true);
          for (GroupDetails parent : parents) {
@@ -433,7 +435,9 @@ public class DocMirroringServiceV9 {
 
          //potrebujem najst v EN verzii stranky ktore su v SK verzii nastavene ako multigroup - teda sú v slaveDocIds
          for (Integer slaveDocId : slaveDocIds) {
-            List<DocDetails> syncedSlaveDocs = getDocBySyncId(getSyncId(slaveDocId), slaveDocId);
+            int syncId = getSyncId(slaveDocId);
+            if (syncId < 1) continue;
+            List<DocDetails> syncedSlaveDocs = getDocBySyncId(syncId, slaveDocId);
             for (DocDetails syncedSlaveDoc : syncedSlaveDocs) {
                GroupDetails syncedSlaveDocGroup = groupsDB.getGroup(syncedSlaveDoc.getGroupId());
                String syncedSlaveLng = GroupMirroringServiceV9.getLanguage(syncedSlaveDocGroup);
@@ -449,6 +453,7 @@ public class DocMirroringServiceV9 {
 
       for(Integer docId : toDelete) {
          int syncId = getSyncId(docId);
+         if (syncId < 1) continue;
          List<DocDetails> syncedDocs = getDocBySyncId(syncId, docId);
          for (DocDetails syncedDoc : syncedDocs) {
             DocDB.deleteDoc(syncedDoc.getDocId(), request, false);

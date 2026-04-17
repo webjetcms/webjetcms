@@ -95,15 +95,15 @@ public class MultigroupService {
 			Integer docId = me.getValue();
 			if(docId != null) {
 				Logger.debug(MultigroupService.class, "Saving slave doc: "+docId+" to group "+groupId);
+				//every group of master-slave mapping has its own syncId, so we need to get it for each slave doc
 				int syncId = -1;
 				if(docId < 0) {
 					masterDoc.setVirtualPath("");
 				} else {
 					masterDoc.setVirtualPath(docDB.getBasicDocDetails(docId, true).getVirtualPath());
-					//get current syncId
+					//restore syncId for existing slave doc
 					syncId = DocMirroringServiceV9.getSyncId(docId);
 				}
-				//restore syncId for existing slave doc
 				masterDoc.setSyncId(syncId);
 
 				if (docIdOriginal == docId.intValue()) {
