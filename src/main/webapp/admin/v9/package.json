@@ -8,6 +8,7 @@
     "scripts": {
         "dev": "rspack --config rspack.config.dev.js",
         "prod": "rspack --config rspack.config.prod.js",
+        "analyze": "node src/dev/run-bundle-analyze.js; open dist/bundle-report.html",
         "watch": "node src/dev/watch-with-reload.js",
         "watch:plain": "npm run dev -- --watch",
         "postinstall": "./postinstall.sh"
@@ -26,6 +27,7 @@
         "sass": "^1.84.0",
         "sass-embedded": "^1.99.0",
         "sass-loader": "^16.0.4",
+        "webpack-bundle-analyzer": "^4.10.2",
         "vue-loader": "^17.4.2"
     },
     "dependencies": {

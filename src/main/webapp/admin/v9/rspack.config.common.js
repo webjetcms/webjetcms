@@ -4,6 +4,9 @@ const glob = require("glob");
 const rspack = require("@rspack/core");
 const { VueLoaderPlugin } = require('vue-loader');
 
+const shouldAnalyzeBundle = process.env.ADMIN_V9_BUNDLE_ANALYZE === "1";
+const bundleAnalyzer = shouldAnalyzeBundle ? require("webpack-bundle-analyzer") : null;
+
 //Try to use sass-embedded (native Dart binary, 2-5x faster) with fallback to JS sass
 let sassImplementation;
 let sassApi;
@@ -26,6 +29,9 @@ const WP_DATA = {
     author: "InterWay, a. s. - www.interway.sk",
     publicPath: "/admin/v9/dist/"
 };
+
+const bundleAnalyzerReportPath = path.resolve(__dirname, "dist", "bundle-report.html");
+const bundleAnalyzerStatsPath = path.resolve(__dirname, "dist", "bundle-stats.json");
 
 class BuildTimestampPlugin {
     apply(compiler) {
@@ -188,6 +194,16 @@ const config = {
         }),
         new VueLoaderPlugin(),
         new BuildTimestampPlugin(),
+
+        ...(shouldAnalyzeBundle ? [
+            new bundleAnalyzer.BundleAnalyzerPlugin({
+                analyzerMode: "static",
+                openAnalyzer: false,
+                reportFilename: bundleAnalyzerReportPath,
+                generateStatsFile: true,
+                statsFilename: bundleAnalyzerStatsPath,
+            })
+        ] : []),
 
         //limit moment.js locales to only sk, cs, de
         new rspack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk|cs|de/),
