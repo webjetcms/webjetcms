@@ -102,6 +102,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Oprava chýb
 
 - `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
+- Opravené obnovenie stránky, ktorá bola vytvorená skrz zrkadlenie a nemala historický záznam ktorý sa dal použiť na obnovenie (#osk423).
+- Pri obnovení stránky z koša sa použije historická verzia aby sa zachoval jej pôvodný stav pred vymazaním (#osk423).
 
 ### Bezpečnosť
 

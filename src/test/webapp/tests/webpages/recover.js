@@ -1,9 +1,15 @@
 Feature('webpages.recover');
 
+
+var randomNumber;
+
 Before(({ I }) => {
     I.relogin("admin");
-});
 
+    if (typeof randomNumber == "undefined") {
+        randomNumber = I.getRandomText();
+    }
+});
 
 Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
@@ -191,16 +197,8 @@ Scenario('Before - mirrored recovery logic', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("mirroring.tau27.iway.sk");
 
-    // Set needed configurations
-    I.amOnPage("/admin/v9/settings/configuration/");
+    Document.setConfigValue("structureMirroringConfig", skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
 
-    I.say("Set structureMirroringConfig");
-    I.clickCss("button.buttons-create");
-    DTE.waitForEditor("configurationDatatable");
-    I.fillField("#DTE_Field_name", "structureMirroringConfig");
-    I.fillField("#DTE_Field_value", skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
-    DTE.save();
-    //Check it
     DT.filterContains("name", "structureMirroringConfig");
     I.see(skDocRecoverGroupId + "," + enDocRecoverGroupId + ":mirroring.tau27.iway.sk");
 });
@@ -208,10 +206,23 @@ Scenario('Before - mirrored recovery logic', ({ I, DT, DTE, Document }) => {
 const skDocRecoverGroup = "sk_doc_recover";
 const enDocRecoverGroup = "en_doc_recover";
 Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE }) => {
-    I.say("I remove one page, both pages are removed");
+    // STROM - TREE auto translate
+    const skRecoverPage = "strom_page_to_recover_" + randomNumber;
+    const enRecoverPage = "tree_page_to_recover_" + randomNumber;
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
     DT.waitForLoader();
-    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
+
+    // SOME problems occur when we works with NEW pages, so do create
+    I.say("First create page");
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.fillField("#DTE_Field_title", skRecoverPage);
+    DTE.save();
+
+    I.say("I remove one page, both pages are removed");
+    DT.filterEquals("title", skRecoverPage);
+    I.see(skRecoverPage, "#datatableInit_wrapper");
     I.clickCss("#datatableInit_wrapper td.dt-select-td");
     I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -220,12 +231,12 @@ Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE }) => {
     I.say('Check that both pages are removed');
     I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
-    DT.filterContains("title", "_doc_recover");
-    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
-    I.see(enDocRecoverGroup, "#datatableInit_wrapper");
+    DT.filterContainsForce("title", "_page_to_recover_" + randomNumber);
+    I.see(skRecoverPage, "#datatableInit_wrapper");
+    I.see(enRecoverPage, "#datatableInit_wrapper");
 
     I.say("Choose EN version and do recover");
-    DT.filterContains("title", enDocRecoverGroup);
+    DT.filterEquals("title", enRecoverPage);
     I.clickCss("#datatableInit_wrapper td.dt-select-td");
     I.click(DT.btn.recovery_button);
     DT.waitForLoader();
@@ -235,29 +246,31 @@ Scenario('Recovery of mirrored doc logic', ({ I, DT, DTE }) => {
     within("#toast-container-webjet div.toast.toast-success:nth-child(1)", () => {
         I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
         I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
-        I.see("/en_doc_recover/en_doc_recover", "div.toast-message");
+        I.see("/" + enDocRecoverGroup + "/" + enRecoverPage, "div.toast-message");
     });
 
     within("#toast-container-webjet div.toast.toast-success:nth-child(2)", () => {
         I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
         I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
-        I.see("/" + skDocRecoverGroup + "/" + skDocRecoverGroup, "div.toast-message");
+        I.see("/" + skDocRecoverGroup + "/" + skRecoverPage, "div.toast-message");
     });
 
     I.say('Check that they are not in trash anymore');
-    DT.filterContains("title", "_doc_recover");
-    I.dontSee(skDocRecoverGroup, "#datatableInit_wrapper");
-    I.dontSee(enDocRecoverGroup, "#datatableInit_wrapper");
+    DT.filterContainsForce("title", "_page_to_recover_" + randomNumber);
+    I.dontSee(skRecoverPage, "#datatableInit_wrapper");
+    I.dontSee(enRecoverPage, "#datatableInit_wrapper");
 
     I.say("Now check that both were recovered");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + skDocRecoverGroupId);
     DT.waitForLoader();
-    I.see(skDocRecoverGroup, "#datatableInit_wrapper");
+    DT.filterEquals("title", skRecoverPage);
+    I.see(skRecoverPage, "#datatableInit_wrapper");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + enDocRecoverGroupId);
     DT.waitForLoader();
-    I.see(enDocRecoverGroup, "#datatableInit_wrapper");
+    DT.filterEquals("title", enRecoverPage);
+    I.see(enRecoverPage, "#datatableInit_wrapper");
 });
 
 Scenario('Recovery of mirrored groups logic', ({ I, DT, DTE }) => {
