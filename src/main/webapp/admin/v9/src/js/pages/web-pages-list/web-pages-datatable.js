@@ -672,8 +672,12 @@ export class WebPagesDatatable {
     #publishAfterStartChanged() {
         var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
         var primaryButton= $("#" + this.webpagesDatatable.DATA.id + "_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary");
+        //it's not loaded on second page edit, but it is reseted by DTE, so we need to check the button value
+        if (primaryButton.length == 0) return;
         //set editor submit button to save or plan according to checkbox state
         var currentHtml = primaryButton.html();
+        if (typeof currentHtml == "undefined") return;
+
         //only change when is is save or schedule, it also can be delete or duplicate
         if (currentHtml.indexOf(WJ.translate("button.schedule"))>=0 || currentHtml.indexOf(WJ.translate('button.save'))>=0) {
             if (publishAfterStart === true) {

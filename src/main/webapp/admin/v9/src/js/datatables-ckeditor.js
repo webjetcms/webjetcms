@@ -1981,8 +1981,11 @@ export class DatatablesCkEditor {
 			this.showEditorNote();
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
-			//toto musi byt posledne, inak sa zle nacitaval obsah stranky
-			this.setEditingMode(json);
+			//ckeditor is invisible, we must wait until it is visible
+			setTimeout(() => {
+				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
+				this.setEditingMode(json);
+			}, 100);
 		}
 		setTimeout(() => {
 			this.resizeEditor(this);
@@ -2045,7 +2048,13 @@ export class DatatablesCkEditor {
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		this.ckEditorInstance.setData(data);
+		setTimeout(() => {
+			try {
+				this.ckEditorInstance.setData(data);
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+			}
+		}, 100);
 	}
 
 	getData() {
@@ -2300,7 +2309,9 @@ export class DatatablesCkEditor {
 		}
 
 		this.editorHeightLatest = 0;
-		this.resizeEditor(this);
+		setTimeout(() => {
+			this.resizeEditor(this);
+		}, 500);
 	}
 
 	setStyleComboList(sessionCssParsed) {
@@ -2381,35 +2392,39 @@ export class DatatablesCkEditor {
 	 */
 	resizeEditor(datatablesCkEditor) {
 		var that = this;
+		try {
 
-		//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
-		if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
-
-		var windowInnerHeight = $(that.myWindow).height(); //on phone height was not correct: that.myWindow.innerHeight;
-		var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
-		var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
-		var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));
-		var headerMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("margin-top"));
-		var footerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Footer").css("height"));
-
-		//console.log("id=", datatablesCkEditor.datatable.DATA.id, "windowInnerHeight=", windowInnerHeight, "dialogMarginTop=", dialogMarginTop, "dialogMarginBottom=", dialogMarginBottom, "headerHeight=", headerHeight, "footerHeight=", footerHeight);
-		//console.log("modal=", $("#"+datatablesCkEditor.datatable.DATA.id+"_modal"));
-
-		var editorHeight = windowInnerHeight - dialogMarginTop - dialogMarginBottom - headerHeight - headerMarginTop - footerHeight - 4; //4 je safe konstanta
-		if (editorHeight < 300) editorHeight = 300;
-
-		//console.log("Resizing editor, latest=", this.editorHeightLatest, " new=", editorHeight);
-
-		if (editorHeight != datatablesCkEditor.editorHeightLatest) {
 			//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
-			//console.log("RESIZING, editorHeight=", editorHeight);
-			this.ckEditorInstance.resize("99%", editorHeight);
-			datatablesCkEditor.editorHeightLatest = editorHeight;
+			if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
 
-			var pageBuilderElement = $(`#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
-			//console.log("pageBuilderElement=", pageBuilderElement, "id=", `#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
-			that.myWindow.pageBuilderElement = pageBuilderElement;
-			pageBuilderElement.css("height", (editorHeight)+"px");
+			var windowInnerHeight = $(that.myWindow).height(); //on phone height was not correct: that.myWindow.innerHeight;
+			var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
+			var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
+			var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));
+			var headerMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("margin-top"));
+			var footerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Footer").css("height"));
+
+			//console.log("id=", datatablesCkEditor.datatable.DATA.id, "windowInnerHeight=", windowInnerHeight, "dialogMarginTop=", dialogMarginTop, "dialogMarginBottom=", dialogMarginBottom, "headerHeight=", headerHeight, "footerHeight=", footerHeight);
+			//console.log("modal=", $("#"+datatablesCkEditor.datatable.DATA.id+"_modal"));
+
+			var editorHeight = windowInnerHeight - dialogMarginTop - dialogMarginBottom - headerHeight - headerMarginTop - footerHeight - 4; //4 je safe konstanta
+			if (editorHeight < 300) editorHeight = 300;
+
+			//console.log("Resizing editor, latest=", this.editorHeightLatest, " new=", editorHeight);
+
+			if (editorHeight != datatablesCkEditor.editorHeightLatest) {
+				//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
+				//console.log("RESIZING, editorHeight=", editorHeight);
+				this.ckEditorInstance.resize("99%", editorHeight);
+				datatablesCkEditor.editorHeightLatest = editorHeight;
+
+				var pageBuilderElement = $(`#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
+				//console.log("pageBuilderElement=", pageBuilderElement, "id=", `#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
+				that.myWindow.pageBuilderElement = pageBuilderElement;
+				pageBuilderElement.css("height", (editorHeight)+"px");
+			}
+		} catch (e) {
+			console.log("Error resizing editor:", e);
 		}
 	}
 
