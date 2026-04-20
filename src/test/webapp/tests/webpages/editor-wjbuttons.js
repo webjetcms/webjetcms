@@ -1,6 +1,4 @@
-Feature('webpages.webpage-content');
-
-var folder_name, randomNumber;
+Feature('webpages.editor-wjbuttons');
 
 Before(({ I, DTE, login }) => {
      login('admin');
