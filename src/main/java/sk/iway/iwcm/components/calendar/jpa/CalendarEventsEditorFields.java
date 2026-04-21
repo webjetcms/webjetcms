@@ -80,7 +80,8 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
             setCondition(approveText);
 
             UserDetails creatorUser = UsersDB.getUser(originalEntity.getCreatorId());
-            setCreator(creatorUser.getFullName());
+            if (creatorUser!=null) setCreator(creatorUser.getFullName());
+            else setCreator("");
         }
 
         if(originalEntity.getNotifyEmails() != null && !originalEntity.getNotifyEmails().isEmpty()) {

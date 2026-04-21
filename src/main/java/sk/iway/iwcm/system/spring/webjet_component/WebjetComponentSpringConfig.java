@@ -100,7 +100,7 @@ public class WebjetComponentSpringConfig {
           = new SpringResourceTemplateResolver();
         templateResolver.setPrefix("/");
         templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode("HTML5");
+        templateResolver.setTemplateMode("HTML");
         templateResolver.setOrder(0);
         templateResolver.setCacheable(false);
         Logger.debug(WebjetComponentSpringConfig.class, "thymeleafTemplateResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));

@@ -22,6 +22,9 @@ public class GalleryJsTreeItem extends JsTreeItem {
     @JsonIgnore
     private long createDate = 0;
 
+    @JsonIgnore
+    private String secondText;
+
     public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository, Identity user) {
         setId(f.getVirtualPath());
         setChildren(f.listFiles(IwcmFile::isDirectory).length > 0);
@@ -61,6 +64,12 @@ public class GalleryJsTreeItem extends JsTreeItem {
         setGalleryDimension(galleryDimension);
         setText(galleryDimension.getName());
 
+        // Gallery folder can have virtual name different from name in path - we need to filter by both using OR
+        String path = galleryDimension.getPath();
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+        String secondValue = path.substring(path.lastIndexOf("/") + 1);
+        setSecondText(secondValue);
+
         if (GalleryDimenstionRestController.isFolderEditable(galleryDimension.getPath(), user)==false) {
             setIcon("ti ti-folder-x");
         }
@@ -80,5 +89,13 @@ public class GalleryJsTreeItem extends JsTreeItem {
 
     public long getCreateDate() {
         return createDate;
+    }
+
+    public String getSecondText() {
+        return secondText;
+    }
+
+    public void setSecondText(String secondText) {
+        this.secondText = secondText;
     }
 }

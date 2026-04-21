@@ -115,6 +115,7 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
     //all*.exclude group: 'xml-apis', module: 'xml-apis'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
@@ -252,7 +253,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.16")
     implementation("org.slf4j:jcl-over-slf4j:2.0.16")
     implementation("org.slf4j:log4j-over-slf4j:2.0.16")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.24.3")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.25.4")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
@@ -289,8 +290,8 @@ dependencies {
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
 
-    // Source: https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-webp
-    implementation("com.twelvemonkeys.imageio:imageio-webp:3.13.1")
+    // Source: https://mvnrepository.com/artifact/com.github.usefulness/webp-imageio - supports both read AND write via JNI native libwebp v1.5.0
+    implementation("com.github.usefulness:webp-imageio:0.10.2")
 
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation group: 'org.springframework', name: 'spring-web', version: "${springVersion}"
@@ -309,8 +310,8 @@ dependencies {
     //testImplementation "io.qameta.allure:allure-junit5"
 
     //gopay https://mvnrepository.com/artifact/cz.gopay/gp-java-api-v3-common
-    implementation 'cz.gopay:gp-java-api-v3-common:3.9.0'
-    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.9.0'
+    implementation 'cz.gopay:gp-java-api-v3-common:3.10.0'
+    implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.10.0'
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
 
@@ -320,7 +321,7 @@ dependencies {
 
     // CVE-2026-29062
     // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
-    implementation("tools.jackson.core:jackson-core:3.1.0")
+    implementation("tools.jackson.core:jackson-core:3.1.2")
 
     agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
@@ -396,8 +397,8 @@ dependencyCheck {
     scanConfigurations=["runtimeClasspath"]
     //format see https://gist.github.com/milo-minderbinder/1e1ed911c5b2264dc659578f1baaef16
     suppressionFiles=[
-        file(new File(project.rootDir, 'dependency-check-suppressions.xml')),
-        file(new File(project.rootDir, 'dependency-check-suppressions-project.xml'))
+        "${project.rootDir}/dependency-check-suppressions.xml",
+        "${project.rootDir}/dependency-check-suppressions-project.xml"
     ]
     analyzers {
         assemblyEnabled=false
@@ -414,7 +415,7 @@ dependencyCheck {
         }
     }
     nvd {
-        //api key for NVD database for dependency check
+        //api key for NVD database for dependency check: https://nvd.nist.gov/developers/request-an-api-key
         apiKey=System.getenv('NVD_API_KEY') ?: ''
         maxRetryCount=20
         delay=8000

@@ -65,7 +65,7 @@ Do šablóny stránky môžete ľahko vložiť odkazy na jazykové mutácie pomo
 !INCLUDE(/components/structuremirroring/hreflang.jsp)!
 ```
 
-táto aplikácia vytvorí odkazy s atribútom `hreflang` pre všetky jazykové mutácie aktuálnej stránky. Ak je stránka v jazykovej mutácii nastavená na nezobrazovať, nebude sa generovať odkaz.
+táto aplikácia vytvorí odkazy s atribútom `hreflang` pre všetky jazykové mutácie aktuálnej stránky. Ak je stránka v jazykovej mutácii nastavená na nezobrazovať, nebude sa generovať odkaz. Rovnako sa nebude zobrazovať ak je priečinok v ktorom je web stránka interný, alebo sa nezobrazuje v menu.
 
 Príklad výstupu:
 

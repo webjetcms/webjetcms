@@ -25,5 +25,5 @@ Ak máte na frontende pole, ktoré umožňuje HTML formátovanie, môže do neho
 
 Ak potrebujete pracovať s HTML kódom je potrebné daný atribút anotovať:
 
-- ```@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)``` - povolí všetok HTML kód, odporúčame používať v minimálnej miere, respektíve iba v prípade keď HTML kód skutočne má obsahovať aj napr. JavaScript alebo iný potencionálne nebezpečný kód.
-- ```@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` - povolí len základné HTML formátovanie podľa odporúčaní [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Tento konvertor odporúčame používať na všetky vstupy kde je používaný jednoduchý WYSIWYG editor typu ```DataTableColumnType.QUILL```.
+- ```@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)``` - povolí všetok HTML kód, odporúčame používať v minimálnej miere, respektíve iba v prípade keď HTML kód skutočne má obsahovať aj napr. JavaScript alebo iný potencionálne nebezpečný kód.
+- ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` - povolí len základné HTML formátovanie podľa odporúčaní [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Tento konvertor odporúčame používať na všetky vstupy kde je používaný jednoduchý WYSIWYG editor typu ```DataTableColumnType.QUILL```.

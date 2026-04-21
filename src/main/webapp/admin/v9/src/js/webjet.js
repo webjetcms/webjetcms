@@ -1015,6 +1015,9 @@ const WJ = (() => {
                 idNoHash = data.id;
             }
 
+            //if it is URL remove chars as /,?,= and replace with dash for id
+            idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
+
             let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
             if (data.url.indexOf("javascript:")==0) {
                 anchor.attr("href", data.url);
@@ -1195,7 +1198,8 @@ const WJ = (() => {
 
             var conf = {
                 placement: 'top',
-                trigger: 'hover'
+                trigger: 'hover',
+                delay: { "show": 300, "hide": 0 }
             };
             if (customClass != null) conf.customClass = customClass;
 

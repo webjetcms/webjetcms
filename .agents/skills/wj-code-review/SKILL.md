@@ -1,25 +1,51 @@
 ---
 name: wj-code-review
-description: 'Reviews uncommitted code changes for correctness, backward compatibility, and code quality. Use when: reviewing staged or unstaged changes before commit, checking backward compatibility of modifications, performing code review of local changes, analyzing new code patterns and suggesting improvements.'
-argument-hint: 'Optionally specify which files or area to focus the review on (e.g. "REST controllers" or "JPA entities").'
+description: 'Reviews code changes for correctness, backward compatibility, and code quality. Use when: reviewing staged or unstaged changes before commit, reviewing all changes in a pull request before merge, checking backward compatibility of modifications, performing code review of local changes, analyzing new code patterns and suggesting improvements.'
+argument-hint: 'Optionally specify which files or area to focus the review on (e.g. "REST controllers" or "JPA entities"). You can also specify the mode: "PR" to review all commits in the current branch, or "local" to review only uncommitted changes.'
 ---
 
 # wj-code-review
 
-Performs a read-only code review of uncommitted changes in the repository. Reports findings, risks, and improvement suggestions without modifying any files.
+Performs a read-only code review of changes in the repository — either all commits in the current branch (PR mode) or only uncommitted local changes. Reports findings, risks, and improvement suggestions without modifying any files.
 
 ## When to Use
 
 - Before committing changes to verify correctness and backward compatibility
+- Before merging a pull request to review all changes in the branch
 - When you want a second opinion on your code changes
 - To check for common anti-patterns, security issues, and potential regressions
 - To analyze new code for quality and adherence to project conventions
 
 ## Procedure
 
-### 1. Collect Uncommitted Changes
+### 1. Determine the Scope of Changes
 
-Run the following commands to identify all changed files:
+**Ask the user (if not already specified):**
+
+> "Do you want to review all commits in the current branch (PR mode), or only uncommitted local changes?"
+
+Based on the answer, use one of the two modes:
+
+When running branch-level review commands in this skill, resolve the comparison base as follows:
+
+- Branches starting with `hotfix/` -> `origin/hotfix/2026.0-main`
+- All other branches -> `origin/main`
+
+#### Mode A — Pull Request (all commits in branch)
+
+```bash
+BASE_BRANCH=origin/main
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" == hotfix/* ]]; then BASE_BRANCH=origin/hotfix/2026.0-main; fi
+git diff --name-only $(git merge-base HEAD $BASE_BRANCH)
+```
+
+For each file:
+```bash
+git diff $(git merge-base HEAD $BASE_BRANCH) -- <file>
+```
+
+#### Mode B — Uncommitted changes only (staged + unstaged)
 
 ```bash
 git diff --name-only
@@ -27,7 +53,13 @@ git diff --cached --name-only
 git status --short
 ```
 
-Categorize the files:
+For each file:
+```bash
+git diff <file>
+git diff --cached <file>
+```
+
+In both modes, categorize the files:
 
 - **Modified** (`M`) — existing files with changes
 - **Added** (`A`, `??`) — new files
@@ -36,12 +68,7 @@ Categorize the files:
 
 ### 2. Examine Each Change in Detail
 
-For each changed file, get the full diff:
-
-```bash
-git diff <file>
-git diff --cached <file>
-```
+Get the full diff for each changed file using the appropriate command from Step 1 (Mode A or Mode B).
 
 For new (untracked) files, read the entire file content.
 

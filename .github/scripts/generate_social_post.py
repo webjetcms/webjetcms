@@ -37,7 +37,7 @@ def build_prompt(pr_title: str, pr_body: str, pr_files: list[str], doc_patches: 
 Changed documentation content (docs/sk/):
 {doc_patches}"""
 
-    return f"""Based on this GitHub pull request, create a short, friendly social media post for regular users (not developers).
+    return f"""Based on this GitHub pull request, create a short, friendly social media post.
 
 PR Title: {pr_title}
 PR Description:
@@ -50,11 +50,12 @@ Requirements:
 - Maximum {POST_MAX_CHARS} characters
 - Start with paragraph about what was improved and what will be main benefit for the users.
 - Add 1 relevant emoji
-- Continue with more details in a 2-4 paragraphs, but keep it concise and engaging. Here you can add more technical details if relevant, but still in an easy-to-understand way.
+- Tell more about the problem that was solved and how it improves the user experience.
+- Continue with more details in a 2-4 paragraphs, but keep it concise and engaging. Here you can add more technical details.
 - IMPORTANT: Focus on user benefits, not features.
 - Add relevant hashtags and a question at the end
 - Write in Slovak language
-- Tone: friendly, easy to understand for non-technical users
+- Tone: friendly, easy to understand
 
 Respond with ONLY the post text, nothing else."""
 

@@ -131,6 +131,17 @@ tasks.withType(JavaCompile) {
 }
 ```
 
+do `configurations` elementu si pridajte výnimku pre `log4j-core`:
+
+```gradle
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+```
+
 ## Zmeny pri prechode na 2025.0-SNAPSHOT
 
 Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
@@ -415,6 +426,7 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
     all*.exclude group: 'javax.xml.stream', module: 'stax-api'

@@ -85,6 +85,37 @@ block content
                         initialData: dtWJ.getEmptyData(true)
                     });
 
+                    let actualAction = null;
+                    galleryDimensionDatatable.EDITOR.on( 'open', function( e, mode, action ) {
+                        galleryDimensionDatatable.EDITOR.field("updateInDoc").hide();
+                        actualAction = action;
+                    });
+
+                    //listen to change of parent folder (its vue compoment so listener on input will not work)
+                    window.addEventListener("WJ.jstree-simple.change", function(e) {
+                        // Make sense only when editing
+                        if(actualAction !== "edit") return;
+
+                        const detail = e && e.detail;
+                        if (!detail || detail.textInputId !== "#galleryDimensionDatatable_modal #DTE_Field_parent") return;
+                        if (!galleryDimensionDatatable || !galleryDimensionDatatable.EDITOR) return;
+
+                        const pathField = galleryDimensionDatatable.EDITOR.field("path");
+                        if (!pathField) return;
+
+                        const originalValue = pathField.get();
+                        if (typeof originalValue !== "string" || originalValue.length < 1) return;
+
+                        const selectedParent = (detail.value || "").toString().replace(/\/+$/, "");
+                        const fileName = originalValue.substring(originalValue.lastIndexOf("/") + 1);
+                        const updatedPath = selectedParent.length > 0 ? `${selectedParent}/${fileName}` : fileName;
+
+                        pathField.set(updatedPath);
+
+                        // Show option to turn on/off replace of url in all doc's
+                        galleryDimensionDatatable.EDITOR.field("updateInDoc").show();
+                    });
+
                     var url = "/admin/rest/components/gallery";
 
                     var tabs = [
@@ -382,16 +413,21 @@ block content
                         }
                     });
 
+                    $('#SomStromcek').on("move_node.jstree", function(e, data) {
+                        // Add warning for user
+                        WJ.notifyWarning("[[\#{components.gallery.move_warning.title}]]", "[[\#{components.gallery.move_warning.desc}]]", 10000);
+                    });
+
                     //fired for treeInitialJson selected node - set galleyDimension object and upload path
-                    window.addEventListener('WJ.treeInitialJson.selectedNode', (e) => {
-                        //console.log("WJ.treeInitialJson.selectedNode", e);
+                    window.addEventListener('WJ.treeInitialJson.done', (e) => {
+                        //console.log("WJ.treeInitialJson.done", e);
                         var node = e.detail;
                         //console.log("node=", node);
                         setGalleryTablePath(dir);
 
                         var isEditable = true;
                         if (typeof node.icon != "undefined" && node.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
-                        setCurrentGalleryDimension(node.galleryDimension, isEditable);
+                        if (typeof node.galleryDimension != "undefined" && node.galleryDimension != null) setCurrentGalleryDimension(node.galleryDimension, isEditable);
                     });
 
                     function setGalleryTablePath(virtualPath) {

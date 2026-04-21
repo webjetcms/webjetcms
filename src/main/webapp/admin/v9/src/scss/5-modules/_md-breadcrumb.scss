@@ -31,9 +31,6 @@
 
         &.active {
             color: $primary;
-            &:hover {
-                cursor: default;
-            }
         }
 
         &.back-link, &.front-link {

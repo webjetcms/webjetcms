@@ -1,0 +1,16 @@
+<script>
+    function appGetComponentCode(componentPath, params, datatable) {
+        // Save captcha config
+        fetch('/admin/rest/forms-list/saveCaptchaConfig', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                "X-CSRF-Token": window.csrfToken
+            },
+            body: new URLSearchParams({ secret: params.secret || '', siteKey: params.siteKey || '' })
+        });
+
+        // Return without params, because captcha config is saved and handled separately
+        return "!INCLUDE(" + componentPath + ")!";
+    }
+</script>

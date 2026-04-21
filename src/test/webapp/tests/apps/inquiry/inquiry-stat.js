@@ -1,4 +1,4 @@
-Feature('apps.inquiry-stat');
+Feature('apps.inquiry.inquiry-stat');
 
 var randomNumber;
 const TOLERANCE = 5;

@@ -118,16 +118,19 @@ public class GalleryApp extends WebjetComponentAbstract {
 
     @Override
     public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
-        String uploadSubdir = UploadFileTools.getPageUploadSubDir(componentRequest.getDocId(), componentRequest.getGroupId(), componentRequest.getPageTitle(), "/images/gallery");
-        IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));
-        if ("/images/gallery".equals(dir)) {
-            if (uploadDirFile.exists() == false) {
-                boolean created = uploadDirFile.mkdirs();
-                if (created) dir = uploadSubdir;
-            } else {
-                dir = uploadSubdir;
+        if(componentRequest.getGroupId() > 0) {
+            String uploadSubdir = UploadFileTools.getPageUploadSubDir(componentRequest.getDocId(), componentRequest.getGroupId(), componentRequest.getPageTitle(), "/images/gallery");
+            IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));
+            if ("/images/gallery".equals(dir)) {
+                if (uploadDirFile.exists() == false) {
+                    boolean created = uploadDirFile.mkdirs();
+                    if (created) dir = uploadSubdir;
+                } else {
+                    dir = uploadSubdir;
+                }
             }
         }
+
         style = Constants.getString("galleryDefaultStyle");
     }
 

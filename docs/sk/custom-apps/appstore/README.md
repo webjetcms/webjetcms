@@ -40,6 +40,7 @@ Anotácia má nasledovné parametre:
 - ```custom``` - nastavte na `true` pre vaše zákaznícke aplikácie. Automaticky sa nastaví podľa toho, či sa nachádza v package `sk.iway.iwcm`. Zákaznícke aplikácie sú v zozname aplikácií na začiatku zoznamu.
 - ```componentPath``` - ak prepisujete staršiu aplikáciu v JSP kóde nastavte na cestu k tomuto JSP súboru, napríklad ```componentPath = "/components/calendar/calendar.jsp"```.
 - ```customHtml``` - ak potrebujete vykonať [doplnkový kód](#doplnkový-html-kód), upraviť CSS štýly a podobne nastavte na cestu k HTML súboru, ktorý sa doplní k editácii aplikácie v editore web stránok. Napríklad ```customHtml = "/apps/calendar/admin/editor-component.html"```.
+- `hideInAppstore` - ak nastavíte na `true` aplikácia sa nezobrazí v zozname aplikácií (App Store), ale ak je inak vložená do stránky (napr. cez Page Builder blok) je možné nastaviť jej parametre.
 
 ![](democomponent-desc.png)
 
@@ -261,9 +262,9 @@ Príklad nastavenia [výberového poľa](../../developer/datatables-editor/datat
 ```java
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -644,6 +645,45 @@ Cache sa nepoužije ak:
 - v URL adrese sa nachádza parameter `page` (neaplikuje sa ak je hodnota 1, teda pre prvú stranu napr. zoznamu noviniek)
 - v URL adrese sa nachádza parameter `_disableCache=true`
 
+### Skrývanie polí/kariet
+
+Ak chcete aplikáciu využívať na rôznych miestach a súčasne obmedziť, ktoré polia a karty môže používateľ vidieť, môžete využiť parameter `appHideFields`. Výhodné je takto pripraviť aplikáciu v blokoch pre Page Builder.
+
+Parameter `appHideFields` je definovaný v triede `WebjetComponentAbstract` a je dostupný pre všetky aplikácie. Ide o textovú hodnotu, kde môžete hodnotou `+` oddeliť názvy polí a kariet, ktoré sa majú v editore aplikácie skryť.
+
+**Formát hodnoty:**
+
+```text
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
+```
+
+- **Polia** - zadáte priamo názov poľa (názov atribútu v Java triede), napr. `dir`, `style`.
+- **Karty** - názov karty musí mať **povinne** prefix `tab_`, za ktorým nasleduje ID karty definované v anotácii `@DataTableTab`, napr. `tab_componentIframe`.
+
+**Príklad:** hodnota `appHideFields=dir+tab_componentIframe` skryje pole `dir` a kartu s ID `componentIframe`.
+
+#### Nastavenie parametra
+
+Parameter `appHideFields` nie je viditeľný v editore aplikácie, je potrebné ho nastaviť jedným z nasledovných spôsobov:
+
+**1. Programovo v metóde `initAppEditor`:**
+
+```java
+@Override
+public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+    //hide the dir field and the componentIframe tab
+    this.appHideFields = "dir+tab_componentIframe";
+}
+```
+
+**2. Priamo v `PageParams` (v `!INCLUDE` značke):**
+
+```html
+!INCLUDE(sk.iway.iwcm.components.gallery.GalleryApp, appHideFields=dir+tab_componentIframe)!
+```
+
+!>**Upozornenie:** parameter `appHideFields` nie je viditeľný v editore aplikácie. Nie je ho možné nastaviť cez používateľské rozhranie, je potrebné ho nastaviť programovo alebo priamo v `PageParams`.
+
 ## Doplnkový HTML kód
 
 V niektorých prípadoch je potrebné vykonať doplnkový HTML/JavaScript kód pri úprave vlastností aplikácie v editore. V anotácii `@WebjetAppStore` je možné nastaviť cestu k doplnkovému HTML súboru v atribúte `customHtml`, napríklad:
@@ -674,6 +714,7 @@ Zadaný HTML kód je vložený do stránky s editorom aplikácie. Je možné vyu
 - `appGetComponentPath(componentPath, componentDatatable)` - volané pri vložení aplikácie do stránky, môžete zmeniť cestu pre vložený `INCLUDE` napr. na základe vybraných možností.
 - `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
 - `async appCodeExecute(params)` - volanie po kliknutí na tlačidlo OK, môže volať serverovú REST službu.
+- `prepareJsonEditorDataCustom` - volané pri konvertovaní JSON dát lokálne tabuľky (po dekódovaní), môže upraviť dáta pre zobrazenie v editore.
 
 Ukážkový kód rôznych možností:
 

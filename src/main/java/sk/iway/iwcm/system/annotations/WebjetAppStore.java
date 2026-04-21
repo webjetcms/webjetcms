@@ -23,4 +23,7 @@ public @interface WebjetAppStore {
 
     String componentPath() default ""; //If this APP is for old JSP components enter path to JSP file, eg. /components/gallery/gallery.jsp
     String customHtml() default "";
+
+    //hide app in appstore, but you can still edit params if app is inserted another way (eg. via PageBuilder block)
+    boolean hideInAppstore() default false;
 }

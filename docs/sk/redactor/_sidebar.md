@@ -20,6 +20,7 @@
   - [História](/redactor/webpages/history.md)
   - [Obnovenie z koša](/redactor/webpages/recover.md)
   - [Page Builder](/redactor/webpages/pagebuilder.md)
+  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Kontrola odkazov a prázdnych stránok](/redactor/webpages/linkcheck.md)
   - [Import a export web stránok](/redactor/webpages/import-export.md)
   - [Schvaľovanie zmien](/redactor/webpages/approve/README.md)
@@ -48,6 +49,7 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
+    - [Anketa ľahko](/redactor/apps/inquiry/inquiry-simple.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
@@ -77,13 +79,15 @@
   - Formuláre
     - [Zoznam formulárov](/redactor/apps/form/README.md)
     - [Položky formuláru](/redactor/apps/multistep-form/README.md)
+    - [Štatistiky formulára](/redactor/apps/multistep-form/stat.md)
     - [Regulárne výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskusia
     - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
     - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)
   - Galéria
     - [Galéria](/redactor/apps/gallery/README.md)
-    - [Nastavenie vodoznaku](/redactor/apps/gallery/watermark.md)
+    - [Správa štruktúry](/redactor/apps/gallery/structure.md)
+    - [Nastavenie vodotlače](/redactor/apps/gallery/watermark.md)
   - GDPR
     - [Cookies súhlas](/redactor/apps/gdpr/README.md)
     - [Cookies manažér](/redactor/apps/gdpr/cookiesmanger.md)
@@ -111,6 +115,7 @@
   - [Mapa stránok](/redactor/apps/sitemap/README.md)
   - [Menu (navigačné)](/redactor/apps/menu/README.md)
   - [Navigačná lišta](/redactor/apps/navbar/README.md)
+  - [Nápovedy](/redactor/apps/tooltip/README.md)
   - [Novinky](/redactor/apps/news/README.md)
   - [Odkazy na sociálne siete](/redactor/apps/app-social_icon/README.md)
   - [Odporúčania](/redactor/apps/app-testimonials/README.md)
@@ -123,7 +128,6 @@
   - [Poslať stránku emailom](/redactor/apps/send_link/README.md)
   - [Pôsobivá prezentácia](/redactor/apps/app-impress_slideshow/README.md)
   - [Používatelia](/redactor/apps/user/README.md)
-  - [Predpripravené bloky](/redactor/apps/htmlbox/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Príbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervácie
@@ -137,7 +141,6 @@
   - [Slider](/redactor/apps/slider/README.md)
   - [Slit slider](/redactor/apps/app-slit_slider/README.md)
   - [Štatistika](/redactor/apps/stat/README.md)
-  - [Tooltip](/redactor/apps/tooltip/README.md)
   - [Video](/redactor/apps/video/README.md)
   - [Vloženie dokumentu](/redactor/apps/app-docsembed/README.md)
   - [Vloženie HTML kódu](/redactor/apps/app-htmlembed/README.md)

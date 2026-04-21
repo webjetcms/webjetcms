@@ -79,7 +79,7 @@
 
         async function createAmcharts() {
             window.initAmcharts().then(module => {
-                $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+                $.ajax({url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) {
                     barChartKeywords = new ChartTools.BarChartForm("queryName", "queryCount", '[[#{stat.graph.searchQueriesBars}]]', "statKeywords-barKeywords", result['content']);
                     ChartTools.createAmchart(barChartKeywords);
 
@@ -98,7 +98,7 @@
 
             //Reload bar chart data
             WJ.showLoader();
-            await $.ajax({url: getUrl(ChartTools.ChartType.Bar), success: function(result) {
+            await $.ajax({url: getUrl(ChartTools.ChartType.Bar_Horizontal), success: function(result) {
                 barChartKeywords.chartData = result['content'];
                 ChartTools.updateChart(barChartKeywords);
             }});
@@ -128,7 +128,7 @@
             let filterWebPage = $('#webPageSelect').val();
             let searchDateValue = ChartTools.getDateRange(null);
 
-            if(type == ChartTools.ChartType.Bar) {
+            if(type == ChartTools.ChartType.Bar_Horizontal) {
                 tmpDefURL += url + "/search/findByColumns?";
                 tmpDefURL += "searchDayDate=" + searchDateValue;
                 tmpDefURL += "&searchRootDir=" + rootDir;
