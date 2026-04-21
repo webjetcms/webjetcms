@@ -1977,7 +1977,6 @@ export class DatatablesCkEditor {
 		if (typeof json != "undefined") {
 			this.setCssStyle();
 			this.setFormData();
-			this.setData(json.data);
 			this.showEditorNote();
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
@@ -1985,6 +1984,7 @@ export class DatatablesCkEditor {
 			setTimeout(() => {
 				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 				this.setEditingMode(json);
+				this.setData(json.data);
 			}, 100);
 		}
 		setTimeout(() => {

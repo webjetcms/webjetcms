@@ -335,11 +335,14 @@ export class WebPagesDatatable {
                 self.webpagesDatatable.row("#"+docId).data(json);
                 self.webpagesDatatable.EDITOR.setJson(json);
                 //v bubble editacii neotvorme editor, len nastavme data
-                if ("bubble"!==self.webpagesDatatable.EDITOR.s.mode) self.webpagesDatatable.wjEdit(self.webpagesDatatable.row("#"+docId));
+                if ("bubble"!==self.webpagesDatatable.EDITOR.s.mode) {
+                    //console.log("Opening editor for history edit, data=", self.webpagesDatatable.row("#"+docId));
+                    self.webpagesDatatable.wjEdit(self.webpagesDatatable.row("#"+docId));
+                }
                 setTimeout(function() {
                     //console.log("returning oldJson=", oldJson);
                     self.webpagesDatatable.row("#"+docId).data(oldJson);
-                }, 100);
+                }, 500);
             }
         })
     }
