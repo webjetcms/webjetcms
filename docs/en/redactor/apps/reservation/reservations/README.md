@@ -1,164 +1,171 @@
-# List of reservations
+# Reservation list
 
-Application **List of reservations** allows you to create/edit/delete bookings, as well as import them from an Excel file and export them to an Excel/CSV file (or even print them immediately when exporting).
+The **Reservation List** application allows you to create/edit/delete reservations, as well as import them from an Excel file and export them to an Excel/CSV file (optionally with the option of immediate printing upon export).
 
-The list also contains 3 buttons for approving/rejecting/resetting a reservation, see. section [Approval of reservations](#approval-of-reservations). In the left menu you can also go to [Reservation statistics](../reservations-stat/README.md).
+The list also contains 3 buttons for approving/rejecting/resetting the reservation, see section [Approval of reservations](#approval-of-reservations). In the left menu you can also go to [Reservation statistics](../reservations-stat/README.md).
 
 ![](reservation-datatable.png)
 
-The booking editor contains 4 tabs, the functions of which are described in the following description.
+The booking editor contains 4 tabs, the functions of which are described below.
 
 ## Basic
 
-Card **Basic** as the name suggests, contains basic information about the reservation. The list with the selection of the reservation object to which the reservation relates is important.
+The **Basic** tab, as the name suggests, contains basic information about the reservation. The important thing is the list with the selection of the reservation object to which the reservation applies.
 
-| Hourly bookings | Day bookings |
-| :-------------------------------------: | :-------------------------------------: |
-| ![](reservation-editor_basic_tab_1.png) | ![](reservation-editor_basic_tab_2.png) |
+Hourly reservations | All-day reservations
+:----------------------------------------:|:---------------------------------------:
 
-The composition of the card will vary depending on whether the selected booking object is all-day or not. For more information see [List of reservation objects](../reservation-objects/README.md).
+![](reservation-editor_basic_tab_1.png)
 
-**All day reservations**
+ | ![](reservation-editor_basic_tab_2.png)
 
-In this mode, the object is reserved for the whole day. The best example is booking a hotel room. You need to enter the date range of the reservation and the arrival/departure time.
+The composition of the card will vary depending on whether the selected reservation object is a full-day object or not. For more information, see [List of reservation objects](../reservation-objects/README.md).
 
-!>**Warning:** if the reservation object can only be booked for a whole day, the last day in the date range is not counted because the customer leaves on that day. Therefore, the booking range for full-day bookings must be a minimum of 2 days.
+**All-day reservations**
 
-**Hourly bookings**
+In this mode, you book an object for the whole day. The best example is booking a hotel room. You need to enter the date range of the reservation and the arrival/departure time.
 
-There is one important thing to remember with this type of booking. If you choose days from 01.01.2022 to 03.01.2022 between 08:00 and 16:00, it does not mean that the reservation starts on 01.01.2022 at 08:00 and lasts until 03.01.2022 at 16:00 and everything in that range is booked. But it is not. With these chosen values, it means in practice that you book this **you book the reservation object from 08:00 to 16:00 for each day separately**. The reason is simple, this way you can book a property at a specific time for multiple days without having to book the entire interval. If the booking interval for a given object is set from 05:00 to 20:00, only the specified time interval is booked for individual days and the rest of the interval is not booked, even if the reservation lasts for example 3 days.
+!>**Note:** if a booking object can only be booked for a full day, the last day in the date range is not counted because the customer is leaving on that day. Therefore, the booking range for full day bookings must be at least 2 days.
 
-At the bottom of the tab, you can see an overview with the booking intervals for each day of the week. These times are set according to the currently selected booking object. This is a help when creating/editing a reservation if you don't remember exactly when a particular reservation object can be booked for a particular day of the week. This overview is displayed **for hourly bookings only**.
+**Hourly reservations**
+
+There is one important thing to note with this type of reservation. If you select the days from 01.01.2022 to 03.01.2022 from 08:00 to 16:00, this does not mean that the reservation starts on 01.01.2022 at 08:00 and lasts until 03.01.2022 16:00 and everything in that range is reserved. But that is not the case. With these selected values, in practice this means that you reserve this **reservation object from 08:00 to 16:00 for each day separately**. The reason is simple, this way you can reserve an object at a certain time for multiple days without having to reserve the entire interval. If the reservation interval for a given object is set from 05:00 to 20:00, then only the specified time interval is reserved for individual days and the rest of the interval is not reserved, even if the reservation lasts, for example, 3 days.
+
+At the bottom of the card you can see an overview of the booking intervals of the property for each day of the week. These times are set according to the currently selected booking property. This is a help when creating/editing a booking if you don't remember exactly when a specific booking property can be booked for a specific day of the week. This overview is displayed **only for hourly bookings**.
 
 ![](reservation-editor_basic_tab_4.png)
 
-Field **Notice** displays information about the validity of the booking being created. That is, whether or not a reservation for the selected object can be created in the given range. More information about the possible states in this field is explained in the section [Validation of reservations](#validation-of-reservations). If the reservation is valid, the border of the text box will turn green and if the reservation is not valid, it will turn red.
+The **Warning** field displays information about the validity of the reservation being created. This means whether a reservation for the selected object can be created within the given scope or not. More detailed information about the possible states in this field is explained in the [Validation of reservations](#validation-of-reservations) section. If the reservation is valid, the border of the text field will change to green, and if the reservation is not valid, it will change to red.
 
-**Booking price** displays the current price of the booking being created. The price depends on the selected reservation object, the reservation interval and the special prices set for the reservation object.
+**Reservation price** shows the current price of the reservation being created. The price depends on the selected reservation object, reservation interval, and any special prices set for the given reservation object.
 
-!>**Warning:** the user's discount is then automatically applied to this booking price. This percentage discount is set for specific [user groups](../../../../admin/users/user-groups.md). If a user belongs to multiple **user groups** that have a set percentage discount, the largest of these will be used. If the discount has a value of `0%`, the booking amount does not change. If the discount has a value of `100%`, booking is free.
+!>**Note:** A user discount is then automatically applied to this booking price. This percentage discount is set for specific [user groups](../../../../admin/users/user-groups.md). If a user belongs to multiple **user groups** that have a percentage discount set, the largest one will be used. If the discount is ```0%```, the booking amount does not change. If the discount is ```100%```, the booking is free.
 
-!>**Warning:** the current prices and discounts apply, i.e. the price that was calculated when the booking was made. This means that if you have a reservation scheduled for, for example, a month from now and the price of the reservation object goes up in that time or the user's discount changes, the price of the reservation **will not change**. **However** If you modify your booking, the current prices and discounts will be applied, which may change the original price, which you will not be able to get back.
+!>**Note:** the current prices and discounts apply, i.e. the price that was calculated when you made the reservation. This means that if you have a reservation scheduled for, for example, a month from now and during that time the price of the reservation object increases, or the user's discount changes, the reservation price **will not change**. **However**, if you edit your created reservation, the current prices and discounts will be used, which may change the original price, which you will not be able to get back.
 
-The booking status and the price of the reservation are updated whenever the date, time or reservation object is changed.
+The reservation status and reservation price are updated every time the date, time, or reservation object is changed.
 
 ![](reservation-editor_basic_tab_3.png)
 
 ## Personal data
 
-In the charts **Personal data** the reservation requestor's details can be set. Most of the data is automatically set from the logged-in person's profile, but these values can also be changed or not entered at all.
+In the **Personal data** tab, you can set the details of the reservation requester. Most of the data is automatically set from the logged-in person's profile, but these values ​​can also be changed or not entered at all.
 
 ![](reservation-editor_personalInfo_tab.png)
 
 ## Special price
 
-Card **Special price** contains a nested table with information about the special price of the reservation object for a specific period. The entries in the table are set according to the currently selected reservation object from the tab [Basic](../reservations/README.md#Basic) and can only be exported, but cannot be added, edited or deleted (they are for information purposes only).
+The **Special Price** tab contains a nested table with data about the special price of the reservation object for a specific period. The records in the table are set according to the currently selected reservation object from the [Basic](../reservations/README.md#basic) tab and can only be exported, but cannot be added, edited or deleted (they are for informational purposes only).
 
 ![](reservation-editor_specialPrice_tab.png)
 
 ## Approval
 
-Card **Approval** is used to change the reservation status. This tab is only displayed under specific conditions.
+The **Approval** tab is used to change the status of a reservation. This tab is only displayed under specific conditions.
 
-Conditions to view the card:
-- editing a record, the tab only appears when editing a booking record
-- need for approval, the reservation object that the reservation is trying to reserve must have the parameter **Approval is required** and must have the email of the approver entered
-- approver, the card can only be shown to the person who has permission to approve the booking. This means that if the email of the logged-in user matches the email of the approver entered in the booking system and the previous points have been met, the card will be displayed to the user
+Conditions for displaying the card:
 
-Once displayed, the tab contains 3 buttons to change the booking status. These actions will be better explained in the section **Approval of reservations**.
+- record editing, the card will only be displayed when editing a reservation record
+- approval required, the booking object that the reservation is trying to book must have the parameter **Approval Required** and must have an approver email specified
+- approver, the card can only be displayed to the person who has permission to approve the reservation. This means that if the email of the logged in user matches the email of the approver entered in the reservation system and the previous points have been met, the card will be displayed to the user
 
-![](reservation-editor_acceptation_tab.png)
+Once displayed, the card contains 3 buttons to change the booking status. These actions will be better explained in the **Approval of bookings** section.
 
-## Validation of reservations
+![](reservation-editor_acceptance_tab.png)
 
-Reservation validation logic is an important part of the application **List of reservations**, which checks whether the reservation being created or modified complies with all the rules and conditions. Validation is automatically triggered when you try to save a new reservation or modify an existing reservation. If the reservation is valid (meets all the necessary requirements) the create/edit action will be successful, otherwise an error will occur and the user will be notified with either a specific or a general error message.
+## Reservation validation
 
-The reservation will not be saved/edited until it meets all validation rules.
+Reservation validation logic is an important part of the **Reservation List** application, which checks whether the reservation being created or edited meets all the rules and conditions. Validation is automatically triggered when trying to save a new reservation or edit an existing one. If the reservation is valid (meets all the requirements), the creation/edit action will be successful, otherwise an error will occur and the user will be notified with either a specific or general error message.
+
+The reservation cannot be saved/edited until it meets all validation rules.
 
 ### Date range
 
-The from date must be less than the to date (if the dates are the same, only one day is reserved).
+The from date must be less than or equal to the to date (if the dates are the same, only that one day will be reserved).
 
-!>**Warning:** in the case of **all-day bookings**, the range shall be **at least 2 days** as the last day of the range is the day of departure and does not count towards the booking as such.
+!>**Note:** in the case of **full-day reservations**, the range must be **at least 2 days**, as the last day of the range is the departure day, and is not counted towards the reservation as such.
 
 ### Time range
 
-Validation of the time range varies according to the type of reservation.
+Time range validation varies by booking type.
 
-**All day reservations**
+**All-day reservations**
 
-For all-day bookings, the time component is not validated as **Arrival time** / **Departure time** they are not on the same day and it's up to your decision.
+For all-day reservations, the time component is not validated, as **Arrival time** / **Departure time** are not on the same day and it is up to you to decide.
 
-!>**Warning:** we strongly recommend that **Arrival time** was greater than **Departure time** otherwise the room will not be bookable for new customers on the day of the old customer's departure.
+!>**Note:** we strongly recommend that the **Arrival Time** is greater than the **Departure Time**, otherwise the room will not be bookable by a new customer on the day of the old customer's departure.
 
-**Hourly bookings**
+**Hourly reservations**
 
-**Time from** must be sharply less than **Time to** because you must book a minimum of 1 minute. At the same time, it is checked whether this time range is greater than or at least equal to the specified "Minimum reservation length (in minutes)" value set for the reservation object.
+**Time from** must be significantly less than **Time to**, because you must reserve at least 1 minute. At the same time, it is checked whether this time range is greater than or at least equal to the specified value "Minimum reservation length (in minutes)" set for the given booking object.
 
-### Scope in the past
+### Past range
 
-You cannot book the day(s) in the past. If you are trying to make a reservation for today then the time slot cannot be in the past.
+You cannot book a day/days in the past. If you are trying to make a reservation for today, the time slot cannot be in the past.
 
-!>**Warning:** at your own risk, you have the option to save the reservation even if the selected range is in the past. Just in the tab **Basic** choose the option **Allow creation in the past**.
+!>**Note:** You can save a reservation at your own risk even if the selected range is in the past. Just select the **Allow creation in the past** option in the **Basic** tab.
 
-### Valid booking range
+### Valid reservation range
 
-This check shall be carried out only for **hourly reservations**. Checks whether the specified time range is within the object's reservation interval. This check is performed for each booked day separately. For example, if you are trying to book a property between 08:00-09:00 for the next 3 days, and even one of these days has a different booking interval, the booking is not valid. Of course, special booking intervals for individual days of the week are also taken into account, for more information see [times by day](../reservation-objects/README.md#times-by-day).
+This check is performed only for **hourly reservations**. It checks whether the specified time range is within the reservation interval of the object. This check is performed for each reserved day separately. For example, if you are trying to reserve an object between 08:00-09:00 for the next 3 days, and even one of these days has a different reservation interval, the reservation is not valid. Of course, special reservation intervals for individual days of the week are also taken into account, more information in the section [times by days](../reservation-objects/README.md#times-by-days).
 
-### Maximum number of bookings at the same time
+### Maximum number of reservations at the same time
 
-In this case, it is checked whether after adding a reservation, multiple reservations will not be crossed at the same time as allowed by the parameter **Maximum number of bookings at the same time** of the object. Reservations are considered overlapping if their time intervals overlap in at least one minute (intervals do not overlap if the beginning of one is the end of the other in the same minute).
+In this case, it is checked whether after adding a reservation, more reservations will not overlap at the same time than is allowed by the parameter **Maximum number of reservations at the same time** of the given object. Reservations are considered overlapping if their time intervals overlap by at least one minute (intervals do not overlap if the start of one is the end of the other in the same minute).
 
-**All day reservations**
+**All-day reservations**
 
-For these bookings we have recommended that **Arrival time** was sharply greater than the time of departure. For example, if the check-in time is always 14:00 and the check-out time is always 10:00, then after the old customer leaves at 10:00 there is still time to clean (or otherwise prepare) the room for the new customer who checks in at 14:00. Such bookings do not overlap and it is possible to book a room on the day another customer leaves. In reality, it looks like the bookings intersect, but this is not the case (since the old customer leaves before the new one arrives).
+For these reservations, we recommended that the **Arrival time** be significantly greater than the departure time. For example, if the arrival time is always 14:00 and the departure time is always 10:00, then after the old customer leaves at 10:00, there is still time to clean the room (or otherwise prepare it) for the new customer who will check in at 14:00. Such reservations do not overlap and it is possible to book the room on the day when another customer is checking out. In reality, it looks like the reservations overlap, but this is not the case (since the old customer leaves before the new customer arrives).
 
-**Hourly bookings**
+**Hourly reservations**
 
-For example, if you have 4 reservations, and their time intervals are `08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00` so we see that the reservation at the time of `08:00-11:00` intersects with 3 different reserves, but never more than 2 at the same time, because the other 3 reserves do not intersect with each other.
+For example, if you have 4 reservations, and their time intervals are ```08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00```, we see that the reservation at time ```08:00-11:00``` overlaps with 3 different reservations, but never more than 2 at a time, because the other 3 reservations do not overlap with each other.
 
-The check takes all bookings over the property on the same day and tests whether this limit will be exceeded after adding our booking. This is tested for each day separately and if even one day exceeds the maximum number of bookings at the same time, the booking will be marked as invalid.
+The check will take all reservations for the property on the same day and test whether this limit will not be exceeded after adding our reservation. This is tested for each day separately and if even one day exceeds the maximum number of reservations at the same time, the reservation will be marked as invalid.
 
-!>**Warning:** intersection control uses **only approved** reservations above the booking object.
+!>**Note:** **only approved** reservations above a given reservation object are used when checking for intersections.
 
-!>**Warning:** you have the option to overbook at your own risk, even in the event of overbooking where the maximum number of bookings is exceeded. Simply tab **Basic** choose the option **Allow capacity overruns**.
+!>**Note:** You can save your reservation at your own risk even if you are overbooked, meaning you exceed the maximum number of reservations. Simply select the **Allow overbooking** option in the **Basic** tab.
 
-## Approval of reservations
+## Reservation approval
 
-Changing the reservation status is possible either by using the editor and more precisely in the tab [Approval](../reservations/README.md#Approval), which is only displayed under certain specific conditions, or by using the buttons to change the booking status.
+Changing the reservation status is possible either using the editor, more precisely in the [Approval](../reservations/README.md#approval) tab, which is only displayed under certain specific conditions, or using the buttons to change the reservation status.
 
-As in the card **Approval** also the buttons offer 3 different states namely :
-- ![](button-approve.png ":no-zoom"), **Approval** Reservations (Reservations approved)
-- ![](button-reject.png ":no-zoom"), **Dismiss** Reservations (Bookings rejected)
-- ![](button-reset.png ":no-zoom"), **Reset status** Reservations (Reservations pending approval)
+Just like in the **Approval** tab, the buttons offer 3 different states:
+
+- ![](button-approve.png ":no-zoom"), **Approval** of the reservation (The reservation has been approved)
+- ![](button-reject.png ":no-zoom"), **Reject** reservation (Reservation rejected)
+- ![](button-reset.png ":no-zoom"), **Reset status** of the reservation (Reservation is pending approval)
 
 ### Approval required
 
-A reservation needs to be approved if the reservation object has an approver set and the person creating/editing the reservation is not the approver. The person logged in is NOT the approver if their email does not match the set approver email in the booking object.
+A reservation needs to be approved if the booking object has an approver set up and the person creating/editing the reservation is not an approver. The logged-in person is NOT an approver if their email does not match the approved email set up in the booking object.
 
-In this case, a booking approval request will be sent to the approver's email. This request contains basic information about the booking as well as a direct link to the booking.
+In this case, a request for approval of the reservation will be sent to the approver's email. Such a request contains basic information about the reservation as well as a direct link to this reservation.
 
 ### Automatic approval
 
-You do not need to approve a reservation if the reservation object does not have an approver set, or if the reservation object has an approver set and the approver is the person who is currently logged in. The logged-in person IS the approver if their email matches the set approver email in the booking object.
+The reservation does not need to be approved if the booking object does not have an approver set up, or if the booking object has an approver set up and the person currently logged in is the approver. The logged in person IS the approver if their email matches the approved email set up in the booking object.
 
-### Making a reservation
+### Creating a reservation
 
-When we try to create a reservation, validation will run in the background. If successful, the reservation is saved and its status is set according to the situation:
-- if the booking does NOT NEED to be approved, the booking is automatically approved and given the status **The reservation has been approved**.
-- if the reservation MUST be approved, it will be saved automatically with the status **Reservation pending approval** and a request for approval is sent to the approver's email. The approver can decide whether to approve, reject or make no change to the booking. However, if the status of the reservation changes, a message is sent to the reservation requestor's email informing them of the status change (this requestor email was automatically pre-set when the reservation was created in the [Personal data](../reservations/README.md#personal-data)).
+When you try to make a reservation, a validation process will run in the background. If successful, the reservation will be saved and its status will be set according to the situation:
 
-### Modifying the reservation
+- if the reservation does NOT NEED to be approved, such a reservation will be approved automatically and will receive the status **Reservation approved**.
+- if the reservation MUST be approved, it will be automatically saved with the status **Reservation awaiting approval** and an approval request will be sent to the approver's email. The approver can decide whether to approve the reservation, reject it, or make no changes. However, if the reservation status changes, a message will be sent to the reservation requester's email with information about the status change (this requester's email was automatically pre-set when creating the reservation in the [Personal data] tab (../reservations/README.md#personal-data)).
 
-When we try to modify the reservation, validation will run in the background. If successful, the reservation is saved and its status is set according to the situation:
-- if the booking does NOT NEED to be approved, the modified booking will be saved and automatically approved, giving it the status **The reservation has been approved**.
-- if the reservation MUST be approved, its previous status is reset to **Reservation pending approval** (regardless of whether it was approved or rejected) and again a message is sent to the approver's email asking for approval. The approver can again decide whether to approve, reject or not make any changes to the booking. However, if the status of the booking changes, a message is again sent to the booking requestor's email informing them of the change in status.
+### Edit reservation
 
-### Reservation status change
+When you try to edit a reservation, a validation process will run in the background. If successful, the reservation will be saved and its status will be set according to the situation:
 
-As mentioned above, you can try to change the reservation status by using the card or buttons. In the case of a card, this is handled in such a way that only the person who has the right to do so can see it. In the case of buttons, it is treated so that everyone can see them.
+- if the reservation DOES NOT NEED to be approved, such an edited reservation will be saved and automatically approved, giving it the status **Reservation approved**.
+- if the reservation MUST be approved, its previous status is reset to **Reservation awaiting approval** (regardless of whether it was approved or rejected) and a message is sent to the approver's email again with a request for approval. The approver can again decide whether to approve, reject, or make no changes to the reservation. However, if the reservation status changes, a message is sent to the reservation requester's email again with information about the status change.
 
-Each time you try to change your reservation, you will see a confirmation of the action.
+### Change reservation status
+
+As mentioned above, you can try to change the reservation status using a card or buttons. In the case of a card, it is treated in such a way that only the person who has the right to do so can see it. In the case of buttons, it is so that everyone can see them.
+
+Every time you try to change your reservation, a confirmation of the action will be displayed.
 
 ![](approve_sure.png)
 
@@ -166,48 +173,48 @@ Each time you try to change your reservation, you will see a confirmation of the
 
 ![](reset_sure.png)
 
-If you decide to cancel, nothing will happen. If you decide to run the action anyway, our right over this booking will be checked in the background. If it is the case that we do not have the right, an error message will be displayed and the reservation status will not change.
+If you decide to cancel the action, nothing will happen. If you decide to run the action anyway, our right to this reservation will be verified in the background. If it turns out that we do not have the right, an error message will be displayed and the reservation status will not change.
 
 ![](approve_no_right.png)
 
-If we have the right to change, it will depend on what state you are trying to set up:
+If we have the right to change, it will further depend on what state you are trying to set:
 
-**BOOKING APPROVAL**, no matter what the original state of the reservation is, a validation is triggered in the background which decides what happens to the reservation
+**RESERVATION APPROVAL**, regardless of the original reservation status, a validation will be run in the background to decide what happens to the reservation
 
-- if the validation is successful, the reservation is approved, a confirmation message is displayed and an email is sent to the applicant
-- if the validation was unsuccessful, the reservation is automatically rejected, an error message with the reason for rejection is displayed and an email is sent to the applicant
+- if validation was successful, the reservation is approved, a confirmation message is displayed and an email is sent to the applicant
+- if validation was unsuccessful, the reservation will be automatically rejected, an error message will be displayed with the reason for the rejection and an email will be sent to the applicant
 
 ![](approved.png)
 
-**REFUSAL OF RESERVATION**, no matter the original booking status, the booking will simply be rejected, a confirmation message will be returned and an email will be sent to the requester.
+**REJECTION OF RESERVATION**, regardless of the original status of the reservation, the reservation will simply be rejected, a confirmation message will be returned and an email will be sent to the requester.
 
 ![](rejected.png)
 
-**RESETTING THE RESERVATION STATUS**, no matter the original reservation status, the reservation status will simply be reset, a confirmation message will be returned and a message will be sent to the requester.
+**RESETTING THE BOOKING STATUS**, regardless of the original booking status, the booking status will simply be reset, a confirmation message will be returned and a message will be sent to the requester.
 
 ![](reset.png)
 
-The emails sent to the applicant when the status of a reservation is changed contain basic information about the reservation, its new status and also the name of the approver who changed the status of this reservation.
+Emails sent to the requester when the reservation status is changed contain basic information about the reservation, its new status, and the name of the approver who changed the status of this reservation.
 
 ## Deleting reservations
 
-Deleting reservations depends on the reservation object over which the reservation was created. The reservation object can have a password set that changes the deletion process - the password was set in the tab [Advanced](../reservation-objects/README.md#Advanced).
+Deleting reservations depends on the reservation object on which the reservation was created. The reservation object may have a password set, which will change the process of deleting the reservation - the password was set in the [Advanced] tab (../reservation-objects/README.md#advanced).
 
-If the password is NOT set, reservations over this reservation object will be deleted.
+If a password is NOT set, reservations above this reservation object can be deleted.
 
 If a password IS set, you will be prompted to enter that password.
 
-- If you are deleting multiple reservations over the same object (which has a password), you will only be prompted to enter this password once (you don't have to enter it twice for each reservation separately).
-- If you are deleting multiple reservations that are over multiple objects with a password set, you may be prompted for multiple passwords (again, no duplicates).
+- If you are deleting multiple reservations for the same object (which has a password), you will only be prompted to enter this password once (you do not have to enter it twice for each reservation).
+- If you are deleting multiple reservations that are above multiple objects with a set password, you may be prompted to enter multiple passwords (again, without duplicates).
 
-The password request displayed will inform you for which reservation object you need to enter the password. If you enter multiple passwords and choose not to enter one or more of them (cancel the password entry action), the overall action of deleting the reservation will not be affected. An unentered password is automatically considered bad and therefore will not delete reservations and objects with this password.
+In the displayed password request, you will be informed for which reservation object you must enter a password. If you enter multiple passwords and decide not to enter one or more of them (you cancel the password entry action), the overall reservation deletion action will not be affected. An unentered password is automatically considered bad and therefore reservations and objects with this password will not be deleted.
 
 ![](set_password.png)
 
-Once you have entered all the necessary passwords, you will be prompted to delete your reservations. You can use the displayed window to abort the whole action or to confirm the decision.
+After entering all the necessary passwords, a prompt to delete the reservations will appear. Using the displayed window, you can cancel the entire action or confirm your decision.
 
 ![](delete_dialog.png)
 
-If one or more passwords were incorrect, a message will be returned for each reservation that could not be deleted because of this. The message contains information about which reservation object password was not entered correctly and which reservation could not be deleted because of this.
+If one or more passwords were incorrect, a message is returned for each reservation that could not be deleted because of this. The message contains information about which reservation object password was entered incorrectly and which reservation could not be deleted because of this.
 
 ![](delete_error.png)

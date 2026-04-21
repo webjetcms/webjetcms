@@ -1,40 +1,37 @@
-# Class 'Cell Visibility Service'
+# 'Cell Visibility Service' class
 
-Class `CellVisibilityService` extends functionality `DataTables`
+Class `CellVisibilityService` extends the functionality of `DataTables`
 
-***
-
+---
 **Dependencies**
 
 - [Tools](tools.md)
 - [StorageHandler](storage-handler.md)
-
-***
+---
 
 ### Description of operation:
 
-When the settings are confirmed, it is sent using the method [buildConfigDataFromObject()](#buildconfigdatafromobject) object of the current dataTable and it extracts its ID and attribute `bVisible`, which is then stored in localStorage under a unique key that identifies the specific table.
+When confirming the settings, the object of the current dataTable is sent using the [buildConfigDataFromObject()](#buildconfigdatafromobject) method.
+and it extracts its ID and attribute `bVisible`, which it then stores in localStorage under a unique key that identifies the specific table.
 
-Each time the table is reordered, the method [updateColumnConfig()](#updatecolumnconfig) to which we send the table ID and the configuration object of the table itself. We select the saved settings from localStorage based on the ID and update the configuration object, which is then set as the default.
+With each subsequent table refresh, we use the [updateColumnConfig()](#updatecolumnconfig) method to which we send the table ID and the configuration object of the table itself.
+We will retrieve the saved settings from localStorage based on the ID and update the configuration object, which will then be set as the default.
 
-***
-
+---
 ## Creating an instance:
 
 **WebJET** creates an instance in the file [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
-
 ```javascript
 import {CellVisibilityService} from "./libs/data-tables-extends/";
 
 window.dataTableCellVisibilityService = new CellVisibilityService();
 ```
 
-**Application:**
+**Usage:**
 
-**WebJET** uses a class in the file [.../webjetdatatables/index.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+**WebJET** uses the class in the file [.../webjetdatatables/index.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
-The data is collected and saved when the save button is pressed in the column configuration.
-
+Data collection and storage occurs when you press the save button in the column configuration.
 ```javascript
 {
     action: function action(e, dataTable) {
@@ -43,20 +40,19 @@ The data is collected and saved when the save button is pressed in the column co
 }
 ```
 
-The column data of the table is updated when the table is created.
-
+The table's column data is updated when it is created.
 ```javascript
 DataTable({
     columns: window.dataTableCellVisibilityService.updateColumnConfig(DATA.id, DATA.columns),
 });
 ```
 
-## List of APIs
+## API List
 
-**(Click to see the detail for the function)**
+**(Click to view feature details)**
 
-| Methods |
-| --------------------------------------------------------- |
+| Methods                                                    |
+| -----------                                               |
 | [buildConfigDataFromObject()](#buildconfigdatafromobject) |
 | [updateColumnConfig()](#updatecolumnconfig)               |
 
@@ -64,8 +60,7 @@ DataTable({
 
 #### buildConfigDataFromObject()
 
-From the dataTable object, selects the list of available fields and selects the field name (data) and the visible attribute (bVisible).
-
+From the dataTable object, it selects a list of available fields and selects the field name (data) and the visible attribute (bVisible).
 ```javascript
 /**
  * @description Z objektu dataTable, vyberie zoznam dostupných fieldov a vyberie z nich názov fieldu (data) a atribút visible (bVisible).
@@ -81,13 +76,11 @@ From the dataTable object, selects the list of available fields and selects the 
  */
 window.dataTableCellVisibilityService.buildConfigDataFromObject(dataTable);
 ```
-
-***
+---
 
 #### updateColumnConfig()
 
 Updates an existing column object with the stored data. If the data does not exist, the method returns its input.
-
 ```javascript
 /**
  * @description Aktualizuje existujúci column objekt uloženými dátami. Ak dáta neexistujú, metóda vráti jej vstup.
@@ -98,5 +91,4 @@ Updates an existing column object with the stored data. If the data does not exi
  */
 window.dataTableCellVisibilityService.updateColumnConfig(dataTableID, configArray);
 ```
-
-***
+---

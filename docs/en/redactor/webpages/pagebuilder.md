@@ -1,67 +1,70 @@
 # Page Builder
 
-Page Builder is a special page editing mode. In this mode the whole page is not edited but only selected parts of it. Page Builder separates text/image editing and page structure editing. This prevents you from accidentally deleting structural elements of a web page while editing its text.
+Page Builder is a special page editing mode. In this mode, the entire page is not edited, but only selected parts of it. Page Builder separates the editing of text/images and the page structure. This prevents you from accidentally deleting structural elements of a web page when editing its text.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ieaNWY57Exc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ieaNWY57Exc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-The mode needs to be activated, blocks need to be prepared and templates need to be set up, the procedure is in the section for [web designer](../../frontend/page-builder/README.md).
+The mode needs to be activated, blocks prepared and templates set up, the procedure is in the [web designer] section (../../frontend/page-builder/README.md).
 
-When you set the option to use Page Builder for a template, Page Builder mode is loaded when you open a web page in the editor.
+When you set the Page Builder option for a template, the Page Builder mode will load when you open a web page in the editor.
 
 ![](pagebuilder.png)
 
-If necessary, there is an option in the window to switch the editor to standard mode. Switching from PageBuilder mode to Standard mode is remembered until the page is refreshed again. Also another PageBuilder page will subsequently be displayed in standard mode. You must switch back to PageBuilder mode by toggling the selection box, or by refreshing the entire page.
+If necessary, the window has the option to switch the editor to standard mode. Switching from PageBuilder mode to Standard mode is remembered until the page is refreshed again. Any other PageBuilder page will then also be displayed in standard mode. You must switch back to PageBuilder mode by toggling the selection box or refreshing the entire page.
 
-!>**Warning:** the content of the editors is not synchronized during your edits. They both load the same content only when the window is opened. So you can't start making changes in Page Builder and then switch to the standard editor and make more changes there.
+!>**Warning:** The content of the editors is not synchronized while you are editing. Both will load the same content only when the window is opened. So you cannot start making changes in Page Builder and then switch to the standard editor to make further changes there.
 
 ## Basic work
 
-When you use Page Builder, you create a web page from pre-made blocks. Moving the cursor over the block will highlight the individual sections where:
-- The blue color represents a section - the main building block, usually the full width of the screen.
-- The red color represents a container - a block designed for inserting columns, it is usually narrower than a section for better readability of the texts on the page.
-- The green color represents a column - this already contains typically editable text, images or applications.
+When using Page Builder, you create a website from pre-made blocks. Hovering over a block will highlight individual sections, where:
+
+- The blue color represents a section - the main building block, usually the entire width of the screen.
+- The red color represents a container - a block designed to insert columns, it is usually narrower than a section for better readability of texts on the page.
+- The green color represents a column - it typically contains editable text, images, or applications.
 
 ![](pagebuilder.png)
 
-Each highlighted part displays a gear icon, click on the gear to display the toolbar. This contains options:
-- Style - allows to set advanced block style/properties such as background image, color, alignment, indentation, etc.
-- Column width - sets the column width, different widths can be set for different devices (phone, tablet, computer).
-- Move block - allows you to move a block to another place in the page, after clicking on the icon you will see options where the block can be moved.
+Each highlighted section displays a gear icon, clicking on the gear will display a toolbar. This contains options:
+
+- Style - allows you to set advanced block style/properties such as background image, colors, alignment, indentation, etc.
+- Column width - sets the column width, it is possible to set different widths for different devices (phone, tablet, computer).
+- Move block - allows you to move a block to another location on the page. After clicking the icon, options for where the block can be moved will be displayed.
 - Duplicate - duplicates the selected block.
 - Favorites - adds the block to the list of favorite blocks.
 - Delete - deletes the selected block.
 
 ![](pagebuilder-style.png)
 
-Clicking on the gear will also display the + icons for inserting a new block. Clicking on the appropriate location will display the block selection. This contains the tabs:
-- Basic - simple blocks of different sizes.
-- Library - blocks created for your web page.
+Clicking on the gear wheel will also display the + icons for inserting a new block. Clicking on the appropriate location will display the block selection. It contains the following tabs:
+
+- Basic - simple blocks of various sizes.
+- Library - blocks created for your website.
 - Favorites - blocks that you have marked as favorites.
 
 ![](pagebuilder-library.png)
 
-In the Library tab, you can search for blocks by name, or filter blocks by label. You can define these in the file `pagebuilder.properties` At [creating blocks](../../frontend/page-builder/blocks.md#name-and-block-marks) for your website.
+In the library tab, you can search for blocks by name, or filter blocks by tags. You can define these in the `pagebuilder.properties` file when [creating blocks](../../frontend/page-builder/blocks.md#block-name-and-tags) for your website.
 
-An icon appears at the bottom of the page `+` for easier addition of a new section.
+An `+` icon is displayed at the bottom of the page to make it easier to add a new section.
 
 ![](pagebuilder-plusbutton.png)
 
-## Setting the width of the columns
+## Setting column widths
 
-The editor allows you to adjust the column widths according to the selected device. In the toolbar, next to the editor type toggle, there is an option to set the size (width) of the device.
+The editor allows you to set column widths according to the selected device. In the toolbar next to the editor type switch, there is an option to set the device size (width).
 
 ![](pagebuilder-switcher.png)
 
-- Desktop - is for width greater/equal to 1200 pixels (sets the CSS class `col-xl`).
-- Tablet - is designed for width 768-1199 pixels (sets CSS class `col-md`)
-- Mobile - is for width less than 768 pixels (sets CSS class `col-`)
+- Desktop - is intended for a width greater than/equal to 1200 points (sets the CSS class ```col-xl```).
+- Tablet - is designed for a width of 768-1199 points (sets the CSS class ```col-md```)
+- Mobile - is intended for widths less than 768 points (sets CSS class ```col-```)
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Column splitting
+## Column Splitting
 
-To invoke the Split Column function, click on the `+` in the yellow bar and select Block. Then, in the Basic tab, select the Split Column option. This function allows you to quickly split a column without having to insert a new column and move the contents. It will allow you to insert new complex blocks into a long text column, for example.
+You can access the Split Column function by clicking on `+` in the yellow bar and selecting the Block option. Then, in the Basic tab, select the Split Column option. The function allows you to quickly split a column without having to insert a new column and move the content. It will allow you to insert new complex blocks, e.g. into a long text column.

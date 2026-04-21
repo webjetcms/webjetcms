@@ -1,15 +1,15 @@
 # Categories
 
-The category section is used to manage **already existing** categories that have been defined in [Document managers](./README.md). Only 2 actions are allowed, namely **edit** a **lubrication**. To work with this section, you need the Document Manager-Categories right (`menuFileArchivManagerCategory`).
+The categories section is used to manage **existing** categories that have been defined in [Document Manager](./README.md). Only 2 actions are allowed, namely **edit** and **delete**. To work with this section, you need the Document Manager-Categories (`menuFileArchivManagerCategory`) right.
 
 ![](category-manager.png)
 
-## Category modification
+## Category editing
 
-When editing a category, we are effectively renaming an existing category. This means that all documents with this category will have their value reset to the new one specified.
+When editing a category, we are essentially renaming an existing category. This means that all documents with this category will have their value set to the new value.
 
-This is used when we want to globally change the name of an existing category in the entire document manager, without having to edit individual records.
+It is used if we want to change the name of an existing category globally in the entire document manager, without having to edit individual records.
 
 ## Deleting a category
 
-By deleting the selected category(s), the action actually occurs **adjustments** when all records in the document manager are deleted from the set category. This category will also disappear from the table, as it will no longer be used anywhere.
+By deleting the selected category(ies), an **edit** action occurs, which deletes the given category from all records in the document manager. This category will also disappear from the table, as it will no longer be used anywhere.

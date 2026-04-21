@@ -1,8 +1,12 @@
 # OAuth2 Authentication in WebJET CMS
 
-WebJET CMS supports OAuth2 authentication for user login via external providers such as Google, Facebook, GitHub, Keycloak and others. Configuration is read when WebJET CMS is initialized, after changing values or initial setup you need to restart the application server.
+WebJET CMS supports OAuth2 authentication for user login through external providers such as Google, Facebook, GitHub, Keycloak and others. The configuration is read when WebJET CMS is initialized, after changing values ​​or initial settings, it is necessary to restart the application server.
 
-The pairing of users is done on the basis of an email, which must be unique. The first time a user logs in via OAuth2, a new user is created in the WebJET database with a set login, first name, last name and authorization. User groups and privilege groups are synchronized based on name matching. Administrators are automatically set based on the group membership defined in the configuration variable `NTLMAdminGroupName`.
+User pairing is done based on email, which must be unique. When logging in for the first time via OAuth2, a new user is created in the WebJET database with a set login name, first name, last name, and authorization. User groups and rights groups are synchronized based on name matching. Administrators are set up automatically based on group membership defined in the `NTLMAdminGroupName` configuration variable.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ## Configuration
 
@@ -14,18 +18,18 @@ To activate OAuth2, you need to set a configuration variable:
 oauth2_clients=google,keycloak
 ```
 
-If you need to view different providers in the administration or customer area, you can set `oauth2_clientsIncludeAdmin` a `oauth2_clientsIncludeUser`:
+If you need to display different providers in the administration or customer zone, you can set `oauth2_clientsIncludeAdmin` and `oauth2_clientsIncludeUser`:
 
 ```properties
 oauth2_clientsIncludeAdmin=keycloak
 oauth2_clientsIncludeUser=google,facebook
 ```
 
-in this case, only the `keycloak` and for the customer zone `google` a `facebook`. The specified providers must be configured in `oauth2_clients` to appear in the login page. By default, the value is set to `*`, which means that every configured provider will be displayed.
+in this case only `keycloak` will be displayed for the administration and `google` and `facebook` for the customer zone. The specified providers must be configured in `oauth2_clients` to be displayed on the login page. The default value is `*`, which means that every configured provider will be displayed.
 
 ### Predefined providers
 
-For popular providers just set `clientId` a `clientSecret`. Using the value `oauth2_{provider}DefaultGroups` You can define user groups that are assigned to a newly created user when he or she first logs on through the provider. The value is a comma-separated list of group IDs (e.g. `1,3`). These groups are not applied to existing users, so after the first login you can set the users rights as you need directly in the WebJET CMS administration, and these rights will be preserved for future logins. If you use multiple providers, you can define different groups for each provider to be able to distinguish users for providers.
+For popular providers, just set `clientId` and `clientSecret`. Using the value `oauth2_{provider}DefaultGroups`, you can define user groups that will be assigned to a newly created user upon first login through the given provider. The value is a comma-separated list of group IDs (e.g. `1,3`). These groups do not apply to existing users, so after the first login you can set the rights for users as you need directly in the WebJET CMS administration and these rights will be preserved for subsequent logins. If you use multiple providers, you can define different groups for each provider to be able to distinguish users for providers.
 
 #### Google
 
@@ -35,7 +39,7 @@ oauth2_googleClientSecret=your-google-client-secret
 oauth2_googleDefaultGroups=1,2
 ```
 
-You can get the required values via [Google API Console](https://console.developers.google.com/) in the Credentials section. When registering an OAuth2 client with Google, you must set the redirect URI in the format `https://your-domain.com/login/oauth2/code/google`.
+You can get the required values ​​via the [Google API Console](https://console.developers.google.com/) in the Credentials section. When registering an OAuth2 client with Google, it is necessary to set a redirect URI in the format `https://your-domain.com/login/oauth2/code/google`.
 
 #### Facebook
 
@@ -45,7 +49,7 @@ oauth2_facebookClientSecret=your-facebook-client-secret
 oauth2_facebookDefaultGroups=1,3
 ```
 
-You can get the required values via [Facebook for Developers](https://developers.facebook.com/docs/facebook-login) in My Apps. Create an app, set the login actions. When registering the OAuth2 client with Facebook, you must set the redirect URI in the format `https://your-domain.com/login/oauth2/code/facebook`. In the section `App settings` See `App ID` a `App Secret` that you use to configure WebJET CMS.
+You can get the required values ​​via [Facebook for Developers](https://developers.facebook.com/docs/facebook-login) in the My Apps section. Create an application, set up login actions. When registering an OAuth2 client with Facebook, you must set a redirect URI in the format `https://your-domain.com/login/oauth2/code/facebook`. In the `App settings` section, you will find `App ID` and `App Secret`, which you will use to configure WebJET CMS.
 
 #### GitHub
 
@@ -55,7 +59,7 @@ oauth2_githubClientSecret=your-github-client-secret
 oauth2_githubDefaultGroups=1,4
 ```
 
-#### Okta
+#### Octave
 
 ```properties
 oauth2_oktaClientId=your-okta-client-id
@@ -65,7 +69,7 @@ oauth2_oktaDefaultGroups=1,5
 
 ### Other OAuth2 provider
 
-For own providers (e.g. `Keycloak`) you need to set all `OAuth2` Parameters. The name of the configuration variable is formed dynamically from the name of the provider (for example `keycloak`):
+For custom providers (for example `Keycloak`), all `OAuth2` parameters need to be set. The configuration variable name is dynamically generated from the provider name (for example `keycloak`):
 
 ```properties
 oauth2_keycloakClientId=webjetcms-client
@@ -80,7 +84,7 @@ oauth2_keycloakScopes=openid,profile,email
 oauth2_keycloakClientName=Keycloak
 ```
 
-If you used a provider called `myprovider`, you would have to set the variables with the prefix `oauth2_myprovider...`. You can also have multiple OAuth2 providers set up in the system at the same time (e.g. `keycloak-admins`, `keycloak-users`), each with its own configuration.
+If you were to use a provider named `myprovider`, you would need to set variables with the prefix `oauth2_myprovider...`. This way you can have multiple OAuth2 providers set up in the system at the same time (for example `keycloak-admins`, `keycloak-users`), each with its own configuration.
 
 ### Supported OAuth2 attributes
 
@@ -88,45 +92,45 @@ WebJET CMS extracts the following attributes from the OAuth2/OIDC provider durin
 
 #### Basic user attributes
 
-- `email` - **Required** - User email (must be unique)
-- `given_name` - First name of the user
-- `family_name` - Last name of the user
-- `preferred_username` - **Default** attribute for login (standard OIDC attribute, configurable via `oauth2_usernameAttribute`)
-- `picture` - URL of the profile picture (if provided)
+- `email` - ​​**Required** - User email (must be unique)
+- `given_name` - ​​User's first name
+- `family_name` - ​​User's last name
+- `preferred_username` - ​​**Default** attribute for login (standard OIDC attribute, configurable via `oauth2_usernameAttribute`)
+- `picture` - ​​Profile image URL (if provided)
 
 #### Attributes for groups and rights
 
 To synchronize groups (only for configured providers in `oauth2_clientsWithPermissions`):
-- `groups` - A simple list of groups
-- `roles` - A simple list of roles
-- `group_membership` - Alternative name for groups
-- `resource_access.<client>.roles` - Keycloak client-specific roles
-- `realm_access.roles` - Keycloak realm roles
+
+- `groups` - ​​Simple group list
+- `roles` - ​​Simple role list
+- `group_membership` - ​​Alternative name for groups
+- `resource_access.<client>.roles` - ​​Keycloak client-specific roles
+- `realm_access.roles` - ​​Keycloak realm roles
 - Spring Security authorities - Automatically extracted from authentication
 
 **Login name extraction rules:**
 
-1. **Preferred attribute**: Value of the configuration variable `oauth2_usernameAttribute` (default `preferred_username`) - if provided by the OAuth2 server, it is used for login
-
-2. **Fallback**: The part of the email before the call sign - if the attribute is not available
+1. **Preferred attribute**: Value of configuration variable `oauth2_usernameAttribute` (default `preferred_username`) - if provided by OAuth2 server, will be used for login
+2. **Fallback**: Part of the email before the at-sign - if the attribute is not available
 
 **Examples:**
 
-- Keycloak provides `preferred_username: "john.doe"` - login will be `john.doe`
-- Google does not provide `preferred_username` - login will be the part before the @ from the email (e.g. `john.doe` z `john.doe@gmail.com`)
-- If set `oauth2_usernameAttribute=sub`, the attribute is used `sub` instead of `preferred_username`
+- Keycloak provides `preferred_username: "john.doe"` - ​​login will be `john.doe`
+- Google does not provide `preferred_username` - ​​login will be the part before @ of the email (e.g. `john.doe` from `john.doe@gmail.com`)
+- If `oauth2_usernameAttribute=sub` is set, the `sub` attribute will be used instead of `preferred_username`
 
-If there is a login name conflict when creating a new user (e.g. `john.doe` already exists), the email address will be used as the login name to avoid an error and to allow logging in. If such an account also exists, a new account will be created `oauth2.google.XXXXXX` Where `XXXXXX` is a random alphanumeric string.
+If there is a login conflict when creating a new user (e.g. `john.doe` already exists), the email address will be used as the login to avoid an error and allow logging in. If such an account also exists, a new account `oauth2.google.XXXXXX` will be created where `XXXXXX` is a random alphanumeric string.
 
-### Attribute configuration for login (username)
+### Configuring the login (username) attribute
 
-The name of the OAuth2 attribute used for the user login is configurable:
+The name of the OAuth2 attribute used for user login is configurable:
 
 ```properties
 oauth2_usernameAttribute=preferred_username
 ```
 
-If the variable is not set, the default value is used `preferred_username` (standard OIDC attribute). The value of this variable determines from which OAuth2 token attribute the login is retrieved. If the attribute does not exist in the token, the part of the email before the callback is used as the fallback.
+If the variable is not set, the default value `preferred_username` (standard OIDC attribute) is used. The value of this variable determines which attribute of the OAuth2 token the login is retrieved from. If the given attribute does not exist in the token, the part of the email before the at-sign is used as a fallback.
 
 ### Redirect URI
 
@@ -138,21 +142,18 @@ The redirect URI is automatically set for all providers:
 
 Example: `https://your-domain.com/login/oauth2/code/google`
 
-## Synchronising users
+## User synchronization
 
 ### Create a new user
 
 When a user logs in for the first time via OAuth2:
 
-1. **Data extraction** - Email, first name, last name and username are extracted from OAuth2 attributes
+1. **Data Extraction** - Email, first name, last name, and username are extracted from OAuth2 attributes
+2. **Create User** - A new user will be created in the WebJET database
+3. **Setting the login name** - The login name is preferably set from the attribute specified by the configuration variable `oauth2_usernameAttribute` (by default `preferred_username`), if it is not available, the part of the email before the at sign will be used.
+4. **Authorization** - The user is marked as authorized
 
-2. **Creating a user** - Creates a new user in the WebJET database
-
-3. **Setting a login name** - The login name is preferably set from the attribute specified by the configuration variable `oauth2_usernameAttribute` (default `preferred_username`), if it is not available, the part of the email before the curly letter is used
-
-4. **Authorization** - The user is marked as authorised
-
-Creating a user takes place in `AbstractOAuth2SuccessHandler.createNewUserFromOAuth2()`:
+User creation is done in `AbstractOAuth2SuccessHandler.createNewUserFromOAuth2()`:
 
 ```java
 UserDetails userDetails = new UserDetails();
@@ -174,53 +175,56 @@ userDetails.setAuthorized(true);
 boolean isUserSaved = UsersDB.saveUser(userDetails);
 ```
 
-**Supported attributes for login:**
+**Supported login attributes:**
 
 - Configurable via `oauth2_usernameAttribute` (default `preferred_username` - standard OIDC attribute)
-- Fallback: part of the email before the envelope
+- Fallback: part of the email before the at-sign
 
 ### Updating an existing user
 
-For existing users, they are updated:
+For existing users, the following are updated:
+
 - First and last name (if changed in the OAuth2 provider)
-- Login (if the OAuth2 provider provides the attribute defined in `oauth2_usernameAttribute` / default `preferred_username` and that has changed)
+- Login (if the OAuth2 provider provides the attribute defined in `oauth2_usernameAttribute` / default `preferred_username` and it has changed)
 - Group assignments (only for configured providers in `oauth2_clientsWithPermissions`)
 
-The update is taking place in `AbstractOAuth2SuccessHandler.updateExistingUserFromOAuth2()`.
+The update is in progress at `AbstractOAuth2SuccessHandler.updateExistingUserFromOAuth2()`.
 
-## Synchronising groups
+## Group synchronization
 
 OAuth2 Success Handlers contain specialized logic for synchronizing groups from configured OAuth2 providers.
 
-### Differences between Admin and User zone
+### Differences between Admin and User zones
 
-**Admin Zone** (`OAuth2AdminSuccessHandler`):
-- Synchronises **user groups** (user groups)
-- Synchronises **permission groups** (groups of rights)
+**Admin zone** (`OAuth2AdminSuccessHandler`):
+
+- Synchronizes **user groups**
+- Synchronizes **permission groups**
 - Sets **admin flag** based on `NTLMAdminGroupName`
-- Requires admin rights to log in successfully
+- Requires admin rights for successful login
 
 **User zone** (`OAuth2UserSuccessHandler`):
-- Synchronises only **user groups** (user groups)
-- **Not synchronising** permission groups
+
+- Only synchronizes **user groups**
+- **Does not synchronize** permission groups
 - **Does not set** admin flag
 - Does not require admin rights
 
-### Configure rights synchronization
+### Configuring rights synchronization
 
-In order to synchronize groups and rights from the OAuth2 provider, a configuration variable needs to be set:
+To synchronize groups and permissions from the OAuth2 provider, you need to set a configuration variable:
 
 ```properties
 oauth2_clientsWithPermissions=keycloak,okta
 ```
 
-This variable defines a comma-separated list of providers for which to perform group and rights synchronization. For other providers (e.g. Google, Facebook) synchronization is not performed.
+This variable defines a list of providers (separated by commas) for which groups and rights synchronization should be performed. For other providers (e.g. Google, Facebook), synchronization is not performed.
 
-The control takes place in `AbstractOAuth2SuccessHandler.shouldSyncPermissions()`.
+The check is in progress at `AbstractOAuth2SuccessHandler.shouldSyncPermissions()`.
 
 ### Provider detection
 
-Provider ID is obtained in `AbstractOAuth2SuccessHandler.getProviderId()`:
+The Provider ID is obtained in `AbstractOAuth2SuccessHandler.getProviderId()`:
 
 ```java
 protected String getProviderId(Authentication authentication) {
@@ -232,7 +236,7 @@ protected String getProviderId(Authentication authentication) {
 }
 ```
 
-Checking whether to synchronize rights is done in `AbstractOAuth2SuccessHandler.shouldSyncPermissions()`:
+The check to see if rights should be synchronized is done in `AbstractOAuth2SuccessHandler.shouldSyncPermissions()`:
 
 ```java
 protected boolean shouldSyncPermissions(String providerId) {
@@ -244,17 +248,14 @@ protected boolean shouldSyncPermissions(String providerId) {
 }
 ```
 
-### Extraction of groups
+### Group extraction
 
-The extraction of the groups takes place in `AbstractOAuth2SuccessHandler.extractGroupsFromOAuth2()` and supports various formats:
+Group extraction is done in `AbstractOAuth2SuccessHandler.extractGroupsFromOAuth2()` and supports various formats:
 
 1. **Basic attributes**: `groups`, `roles`, `group_membership`
-
-2. **Keycloak realm\_access**: `realm_access.roles`
-
-3. **Keycloak resource\_access**: `resource_access.{client}.roles`
-
-4. **Spring Security authorities**: Automatically extracted roles (with prefix removed `ROLE_`)
+2. **Keycloak realm_access**: `realm_access.roles`
+3. **Keycloak resource_access**: `resource_access.{client}.roles`
+4. **Spring Security authorities**: Automatically extracted roles (with the `ROLE_` prefix removed)
 
 ```java
 // Príklad štruktúry Keycloak tokenov
@@ -271,23 +272,22 @@ The extraction of the groups takes place in `AbstractOAuth2SuccessHandler.extrac
 ```
 
 Auxiliary methods for extraction:
-- `extractFromAttribute()` - extracts from simple attributes
-- `extractFromResourceAccess()` - extracted from Keycloak `resource_access`
-- `extractFromRealmAccess()` - extracted from Keycloak `realm_access`
-- `extractRolesFromClientResource()` - extracts roles from a specific client
-- `extractRolesFromRolesObject()` - auxiliary method for extraction from object roles
 
-### Mapping groups
+- `extractFromAttribute()` - ​​extracts from simple attributes
+- `extractFromResourceAccess()` - ​​extracts from Keycloak `resource_access`
+- `extractFromRealmAccess()` - ​​extracts from Keycloak `realm_access`
+- `extractRolesFromClientResource()` - ​​extracts roles from a specific client
+- `extractRolesFromRolesObject()` - ​​helper method for extraction from the roles object
 
-The mapping takes place in the method `applyOAuth2Permissions()` (admin) or `applyOAuth2UserGroups()` (user):
+### Group mapping
 
-1. **User Groups** - User groups with a name matching the OAuth2 group are searched for
+Mapping takes place in the `applyOAuth2Permissions()` (admin) or `applyOAuth2UserGroups()` (user) method:
 
-2. **Permission Groups** - Looking for privilege groups with a name matching the OAuth2 group (admin zone only)
+1. **User Groups** - Looking for user groups with the same name as the OAuth2 group
+2. **Permission Groups** - Looking for permission groups with the same name as the OAuth2 group (admin zone only)
+3. **Full Sync** - All old groups will be deleted and new ones will be added
 
-3. **Full synchronisation** - All old groups are removed and new ones are added
-
-**Admin Zone** (`OAuth2AdminSuccessHandler.synchronizeUserGroups()`):
+**Admin zone** (`OAuth2AdminSuccessHandler.synchronizeUserGroups()`):
 
 ```java
 // Odstránenie zo všetkých existujúcich skupín
@@ -321,17 +321,17 @@ UsersDB.saveUser(userDetails);
 
 ## Admin rights
 
-### Automatically set admin rights (admin zone only)
+### Automatic setup of admin rights (admin zone only)
 
-For configured OAuth2 providers (defined in `oauth2_clientsWithPermissions`), admin rights are set automatically in **admin area** based on the configuration variable:
+For configured OAuth2 providers (defined in `oauth2_clientsWithPermissions`), admin rights are set automatically in the **admin zone** based on the configuration variable:
 
 ```properties
 NTLMAdminGroupName=admin
 ```
 
-If OAuth2 groups contain a group named z `NTLMAdminGroupName`, the user is marked as admin.
+If OAuth2 groups contain a group named from `NTLMAdminGroupName`, the user will be marked as an admin.
 
-The setup takes place in `OAuth2AdminSuccessHandler.applyOAuth2Permissions()`:
+The setup is done in `OAuth2AdminSuccessHandler.applyOAuth2Permissions()`:
 
 ```java
 String adminGroupName = Constants.getString("NTLMAdminGroupName");
@@ -345,27 +345,25 @@ if (userDetails.isAdmin() != isAdmin) {
 }
 ```
 
-**Important**: Admin rights are checked after synchronizing groups. If the user does not have admin rights, login to the admin zone is rejected with an error `accessDenied`.
+**Important**: Admin rights are checked after group synchronization. If a user does not have admin rights, login to the admin zone is denied with the error `accessDenied`.
 
-**User zone**: `OAuth2UserSuccessHandler` does not se&#x74;**&#x20;admin rights - this is only for the admin zone.**&#x53;ecurity aspects
+**User zone**: `OAuth2UserSuccessHandler` **does not set** admin rights - this is for the admin zone only.
 
-## Limitations of OAuth2 processes
+## Security aspects
 
-### Configurable synchronisation
+### Limitations of OAuth2 processes
 
-1. **&#x20;- Synchronization of groups and admin rights only works for OAuth2 providers configured in&#x20;** &#x45;mail validation`oauth2_clientsWithPermissions`
+1. **Configurable synchronization** - Synchronization of groups and admin rights only works for OAuth2 providers configured in `oauth2_clientsWithPermissions`
+2. **Email validation** - Each user must have a valid email attribute
+3. **Email Uniqueness** - Email must be unique in the system
 
-2. **&#x20;- Each user must have a valid email attribute** The uniqueness of email
+### Error handling
 
-3. **&#x20;- Email must be unique in the system** Error handling
+OAuth2 integration includes two types of error handling:
 
-### OAuth2 integration includes two types of error handling:
+**1. Authentication errors** (`OAuth2DynamicErrorHandler`):
 
-1\ . Authentication errors
-
-**&#x20;(**):`OAuth2DynamicErrorHandler`Handles errors that occur during OAuth2 authentication (e.g. invalid token, server error):
-
-Mapping errors to codes:
+Handles errors that occur during OAuth2 authentication (e.g. invalid token, server error):
 
 ```java
 public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
@@ -383,21 +381,21 @@ public void onAuthenticationFailure(HttpServletRequest request, HttpServletRespo
 }
 ```
 
-**| Exception | Error code |
-| ----------------------------------------------------------------- | ---------------------------------------- |
-|&#x20;**
+**Error mapping to codes:**
 
-&#x20;                 | `OAuth2AuthorizationCodeRequestTypeNotSupported`         |
-| `oauth2_provider_not_configured` s `OAuth2AuthenticationException` /`invalid_token` | `invalid_grant`                   |
-| `oauth2_invalid_token` s `OAuth2AuthenticationException`                 | `access_denied`                   |
-| `oauth2_access_denied` s `OAuth2AuthenticationException`                  | `server_error`                    |
-| `oauth2_server_error`                           | `AuthorizationRequestNotFoundException` |
-| `oauth2_authorization_request_not_found`                                    | `ClientAuthorizationException`     |
-| Other | `oauth2_client_authorization_failed`           |`oauth2_authentication_failed`2. Bugs in Success Handlers
+| Exception | Error code |
+| --------- | ---------- |
+| `OAuth2AuthorizationCodeRequestTypeNotSupported` | `oauth2_provider_not_configured` |
+| `OAuth2AuthenticationException` with `invalid_token` /`invalid_grant` | `oauth2_invalid_token` |
+| `OAuth2AuthenticationException` with `access_denied` | `oauth2_access_denied` |
+| `OAuth2AuthenticationException` with `server_error` | `oauth2_server_error` |
+| `AuthorizationRequestNotFoundException` | `oauth2_authorization_request_not_found` |
+| `ClientAuthorizationException` | `oauth2_client_authorization_failed` |
+| Other | `oauth2_authentication_failed` |
 
-**&#x20;(**):`handleError`Common method in&#x20;
+**2. Errors in Success Handlers** (`handleError`):
 
-&#x20;using `AbstractOAuth2SuccessHandler`:`OAuth2LoginHelper`Admin Zone
+Common method in `AbstractOAuth2SuccessHandler` using `OAuth2LoginHelper`:
 
 ```java
 // Pomocná metóda pre spracovanie OAuth2 chýb
@@ -409,7 +407,7 @@ protected void handleError(HttpServletRequest request, HttpServletResponse respo
 }
 ```
 
-**&#x20;(**):`OAuth2AdminSuccessHandler`User zone
+**Admin zone** (`OAuth2AdminSuccessHandler`):
 
 ```java
 // Chyby sa uložia do session a používateľ je presmerovaný na /admin/logon/
@@ -424,7 +422,7 @@ if (!userDetails.isAdmin()) {
 }
 ```
 
-**&#x20;(**):`OAuth2UserSuccessHandler`Error handling in AdminLogonController
+**User zone** (`OAuth2UserSuccessHandler`):
 
 ```java
 // Chyby sa uložia do session a používateľ je presmerovaný na /
@@ -433,9 +431,9 @@ handleError(request, response, "oauth2_user_create_failed", "/");
 handleError(request, response, "oauth2_exception", "/");
 ```
 
-### AdminLogonController reads errors from the session and displays the appropriate error messages:
+### Error handling in AdminLogonController
 
-Types of errors:
+AdminLogonController reads errors from the session and displays the corresponding error messages:
 
 ```java
 // Spracuj OAuth2 chyby zo session
@@ -454,15 +452,16 @@ if (oauth2LogonError != null) {
 }
 ```
 
-**&#x20;- OAuth2 provider did not return email attribute**
-- `oauth2_email_not_found` - Failed to create a new user in the database
-- `oauth2_user_create_failed` - General error during OAuth2 process
-- `oauth2_exception` - User does not have admin rights after synchronization of rights
-- `accessDenied` Translation keys
+**Error types:**
 
-### To display error messages correctly, you must have the following translation keys defined in&#x20;
+- `oauth2_email_not_found` - ​​OAuth2 provider did not return email attribute
+- `oauth2_user_create_failed` - ​​Failed to create new user in database
+- `oauth2_exception` - ​​General error during OAuth2 process
+- `accessDenied` - ​​User does not have admin rights after rights synchronization
 
-&#x20;files:`text.properties`OAuth2 Login Helper
+### Translation keys
+
+To display error messages correctly, the following translation keys must be defined in the `text.properties` files:
 
 ```properties
 logon.err.noadmin=Zadaný používateľ nie je administrátor systému
@@ -472,11 +471,11 @@ logon.err.oauth2_exception=OAuth2 prihlásenie zlyhalo: vyskytla sa neočakávan
 logon.err.oauth2_unknown=OAuth2 prihlásenie zlyhalo: neznáma chyba
 ```
 
-## &#x20;is a helper class with shared functionality for OAuth2 processing. It provides:
+## OAuth2 Login Helper
 
-`OAuth2LoginHelper`Detection of login type
+`OAuth2LoginHelper` is a helper class with shared functionality for OAuth2 processing. It provides:
 
-### Error handling
+### Login type detection
 
 ```java
 // Zistí, či ide o admin prihlásenie (na základe session atribútu)
@@ -486,7 +485,7 @@ boolean isAdminLogin = OAuth2LoginHelper.isAdminLogin(request);
 boolean isAdminLogin = OAuth2LoginHelper.isAdminLoginAndClear(request);
 ```
 
-### Redirect URL constants
+### Error handling
 
 ```java
 // Nastaví chybu do session a presmeruje podľa typu prihlásenia
@@ -496,7 +495,7 @@ OAuth2LoginHelper.handleError(request, response, "oauth2_error_code", isAdminLog
 OAuth2LoginHelper.handleError(request, response, "oauth2_error_code", "/custom/redirect/");
 ```
 
-### OAuth2 Dynamic Success Handler
+### Redirect URL constants
 
 ```java
 OAuth2LoginHelper.getAdminRedirectUrl();  // "/admin/logon/"
@@ -504,11 +503,11 @@ OAuth2LoginHelper.getUserRedirectUrl();   // "/"
 OAuth2LoginHelper.getErrorRedirectUrl(isAdminLogin);  // Podľa typu
 ```
 
-## Principle of operation
+## OAuth2 Dynamic Success Handler
 
-### &#x20;decides which handler to use based on the session attribute&#x20;
+### Operating principle
 
-`OAuth2DynamicSuccessHandler` via `oauth2_is_admin_section`:`OAuth2LoginHelper`Setting the session attribute
+`OAuth2DynamicSuccessHandler` decides which handler to use based on the session attribute `oauth2_is_admin_section` using `OAuth2LoginHelper`:
 
 ```java
 public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -526,21 +525,21 @@ public void onAuthenticationSuccess(HttpServletRequest request, HttpServletRespo
 }
 ```
 
-### Admin Zone
+### Setting the session attribute
 
-**:&#x20;**&#x20;sets:`AdminLogonController.showLogonForm()`User zone
+**Admin zone**: `AdminLogonController.showLogonForm()` sets:
 
 ```java
 session.setAttribute("oauth2_is_admin_section", true);
 ```
 
-**: Logon controller for customer zone sets&#x20;**&#x20;or sets nothing (default is user handler).`false`Login page
+**User zone**: The logon controller for the customer zone sets `false` or sets nothing (default is user handler).
 
-## Display OAuth2 buttons
+## Login page
 
-### OAuth2 buttons are displayed automatically if a configuration variable is set&#x20;
+### Displaying OAuth2 buttons
 
-:`oauth2_clients`If the configuration variable is set&#x20;
+OAuth2 buttons are displayed automatically if the configuration variable `oauth2_clients` is set:
 
 ```jsp
 <c:if test="${isOAuth2Enabled}">
@@ -557,11 +556,11 @@ session.setAttribute("oauth2_is_admin_section", true);
 </c:if>
 ```
 
-&#x20;to the name of the provider (e.g. `oauth2_adminLogonAutoRedirect` or `Keycloak`), the administration login page automatically redirects to the OAuth2 provider. Thus, the standard WebJET CMS login form is not displayed.`Google`OAuth2 URL generation
+If the configuration variable `oauth2_adminLogonAutoRedirect` is set to the name of the provider (e.g. `Keycloak` or `Google`), the login page for the administration will automatically redirect to the given OAuth2 provider. Therefore, the standard WebJET CMS login form will not be displayed either.
 
-### &#x20;automatically generates OAuth2 URLs for all configured providers:
+### Generating OAuth2 URLs
 
-`AdminLogonController`Diagnostics and tuning
+`AdminLogonController` automatically generates OAuth2 URLs for all configured providers:
 
 ```java
 if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
@@ -581,19 +580,19 @@ if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistratio
 }
 ```
 
-## Logging in
+## Diagnostics and debugging
 
-### OAuth2 Success Handlers include detailed logging for diagnostics:
+### Logging
 
-OAuth2DynamicSuccessHandler
+OAuth2 Success Handlers include detailed logging for diagnostics:
 
-**:**&#x41;bstractOAuth2SuccessHandler
+**OAuth2DynamicSuccessHandler**:
 
 ```java
 Logger.info(OAuth2DynamicSuccessHandler.class, "OAuth2 login detected - isAdminLogin: " + isAdminLogin);
 ```
 
-**:**&#x4F;Auth2AdminSuccessHandler / OAuth2UserSuccessHandler
+**AbstractOAuth2SuccessHandler**:
 
 ```java
 Logger.debug(AbstractOAuth2SuccessHandler.class, "Detected OAuth2 provider ID: " + providerId);
@@ -601,7 +600,7 @@ Logger.debug(AbstractOAuth2SuccessHandler.class, "Provider '" + providerId + "' 
 Logger.info(AbstractOAuth2SuccessHandler.class, "Final extracted groups: " + groups);
 ```
 
-**:**&#x43;ommon problems
+**OAuth2AdminSuccessHandler / OAuth2UserSuccessHandler**:
 
 ```java
 Logger.info(class, "Created new user for email: " + email);
@@ -610,48 +609,48 @@ Logger.info(class, "Found OAuth2 groups for user " + email + ": " + groups);
 Logger.info(class, "Synchronized user " + email + " to " + newUserGroups.size() + " user groups");
 ```
 
-### Missing email
+### Common problems
 
-1. **&#x20;- OAuth2 provider does not return an email attribute** Check the scopes:&#x20;
-    - Error: `openid,profile,email`
-    - Invalid configuration`oauth2_email_not_found`
+1. **Missing email** - OAuth2 provider does not return email attribute
+   - Check scopes: `openid,profile,email`
+   - Error: `oauth2_email_not_found`
 
-2. **&#x20;- Error OAuth2 endpoint URL** Check all URIs in the configuration
-    - For custom providers, all parameters must be set
-    - Groups do not synchronise
+2. **Invalid Configuration** - Invalid OAuth2 endpoint URL
+   - Check all URIs in the configuration
+   - All parameters must be set for custom providers
 
-3. **&#x20;- Provider is not configured in&#x20;** &#x20;or erroneous group names`oauth2_clientsWithPermissions`Check&#x20;
-    - &#x20;Configuration`oauth2_clientsWithPermissions`Verify group names in WebJET vs OAuth2 provider
-    - See logs at DEBUG level for details of group extraction
-    - Redirect URI
+3. **Groups not syncing** - Provider not configured in `oauth2_clientsWithPermissions` or incorrect group names
+   - Check `oauth2_clientsWithPermissions` configuration
+   - Verify group names in WebJET vs OAuth2 provider
+   - See logs at DEBUG level for details of group extraction
 
-4. **&#x20;- Incorrectly set redirect URI at the provider** Format:&#x20;
-    - Example: `{baseUrl}/login/oauth2/code/{registrationId}`
-    - Admin zone vs User zone`https://your-domain.com/login/oauth2/code/keycloak`
+4. **Redirect URI** - Incorrectly set redirect URI at the provider
+   - Format: `{baseUrl}/login/oauth2/code/{registrationId}`
+   - Example: `https://your-domain.com/login/oauth2/code/keycloak`
 
-5. **&#x20;- Login is pointing to the wrong handler** Check the settings&#x20;
-    - &#x20;session attribute`oauth2_is_admin_section`Admin logon page must set this attribute
-    - Missing admin rights
+5. **Admin zone vs User zone** - Login is directed to the wrong handler
+   - Check the setting of the `oauth2_is_admin_section` session attribute
+   - Admin logon page must set this attribute
 
-6. **&#x20;- The user cannot access the admin area** Check&#x20;
-    - &#x20;Configuration`NTLMAdminGroupName`Verify the presence of the admin group in OAuth2 groups
-    - Error:&#x20;
-    - Configuration examples`accessDenied`
+6. **Missing admin rights** - User cannot access the admin area
+   - Check `NTLMAdminGroupName` configuration
+   - Verify the presence of the admin group in OAuth2 groups
+   - Error: `accessDenied`
 
-## Keycloak with WebJET
+## Configuration examples
 
-### Creating a client in Keycloak:
+### Keycloak with WebJET
 
-**Client ID:&#x20;**
+**Creating a client in Keycloak:**
 
-- Client Protocol: `webjetcms-client`
-- Access Type: `openid-connect`
-- Valid Redirect URIs: `confidential`
-- Standard Flow Enabled: `https://your-domain.com/login/oauth2/code/keycloak`
-- Direct Access Grants Enabled: `ON`
-- &#x20;(recommended)`OFF`Configuration in WebJET:
+- Client ID: `webjetcms-client`
+- Client Protocol: `openid-connect`
+- Access Type: `confidential`
+- Valid Redirect URIs: `https://your-domain.com/login/oauth2/code/keycloak`
+- Standard Flow Enabled: `ON`
+- Direct Access Grants Enabled: `OFF` (recommended)
 
-**Groups in Keycloak:**
+**Configuration in WebJET:**
 
 ```properties
 oauth2_clients=keycloak
@@ -669,20 +668,20 @@ oauth2_keycloakClientName=Keycloak Login
 NTLMAdminGroupName=webjet-admin
 ```
 
-**Create groups with names identical to WebJET groups**
+**Groups in Keycloak:**
 
-- Assign users to the appropriate groups
-- Admin group:&#x20;
-- &#x20;(by NTLMAdminGroupName)`webjet-admin`Map groups to a token (Client Scopes - dedicated scope - Add mapper - Group Membership)
-- Testing:
+- Create groups with names identical to WebJET groups
+- Assign users to appropriate groups
+- Admin group: `webjet-admin` (by NTLMAdminGroupName)
+- Map groups to tokens (Client Scopes - dedicated scope - Add mapper - Group Membership)
 
-**Log in via OAuth2 on the admin page:&#x20;**
+**Testing:**
 
-- Verify group synchronization in the WebJET admin interface`https://your-domain.com/admin/logon/`
-- Check the logs for detailed synchronization information
-- Google OAuth2
+- Log in via OAuth2 on the admin page: `https://your-domain.com/admin/logon/`
+- Verify group synchronization in the WebJET admin interface
+- Check logs for detailed synchronization information
 
-### Note
+### Google OAuth2
 
 ```properties
 oauth2_clients=google
@@ -690,13 +689,13 @@ oauth2_googleClientId=your-google-client-id.apps.googleusercontent.com
 oauth2_googleClientSecret=your-google-client-secret
 ```
 
-**: For Google OAuth2&#x20;**&#x6F;ut of syn&#x63;**&#x20;groups because Google is not in&#x20;**. You need to use a provider like Keycloak or Okta to sync groups.`oauth2_clientsWithPermissions`OAuth2 for customer zone (User logon)
+**Note**: For Google OAuth2, groups are **not** synchronized because Google is not in `oauth2_clientsWithPermissions`. You need to use a provider like Keycloak or Okta to synchronize groups.
 
-### To implement OAuth2 login in the customer zone:
+### OAuth2 for customer zone (User logon)
 
-Controller configuration for user logon:
+To implement OAuth2 login in the customer zone:
 
-**Difference from the admin zone:**
+**Controller configuration for user logon:**
 
 ```java
 @GetMapping("logon/")
@@ -719,156 +718,162 @@ public String showLogonForm(ModelMap model, HttpServletRequest request, HttpSess
 }
 ```
 
-**Does not set**
+**Difference from the admin zone:**
 
-- **&#x20;session attribute (or sets the&#x20;**)`oauth2_is_admin_section`Used by `false` instead of&#x20;
-- OAuth2UserSuccessHandler:`afterLogonRedirect`Synchronizes only user groups`adminAfterLogonRedirect`
-- Does not set permission groups
+- **Does not** set the `oauth2_is_admin_section` session attribute (or sets it to `false`)
+- Uses `afterLogonRedirect` instead of `adminAfterLogonRedirect`
+- OAuth2UserSuccessHandler:
+  - Synchronizes only user groups
+  - Does not set permission groups
   - Does not set admin flag
   - Does not require admin rights
-  - Overview of implementation
-  - OAuth2 integration is implemented using the Spring Security OAuth2 module and includes:
 
-## Spring Security configuration
+## Implementation overview
 
-&#x20;\- Configuring OAuth2 clients and endpoints
-- **OAuth2DynamicSuccessHandler** - Dynamic decision making between admin and user processor after successful authentication
-- **OAuth2DynamicErrorHandler** - Handling OAuth2 authentication errors with redirection to the correct logon page
+OAuth2 integration is implemented using the Spring Security OAuth2 module and includes:
+
+- **Spring Security configuration** - Configuring OAuth2 clients and endpoints
+- **OAuth2DynamicSuccessHandler** - Dynamic decision-making between admin and user handler after successful authentication
+- **OAuth2DynamicErrorHandler** - Handling errors during OAuth2 authentication with redirection to the correct logon page
 - **OAuth2LoginHelper** - Helper class with shared functionality for OAuth2 processing (login type detection, error handling)
 - **Two types of Success Handlers**:
-- **OAuth2AdminSuccessHandler** - For admin zone (synchronizes user groups + permission groups + admin flag)
-  - **OAuth2UserSuccessHandler** - For user zone (synchronizes only user groups)
-  - **AbstractOAuth2SuccessHandler** - Common base class with functionality for both processors
-- **Automatic group synchronisation** - Mapping groups from OAuth2 provider to WebJET groups (only for configured providers)
-- **Admin rights from OAuth2** - Automatically set admin rights based on groups (admin zone only)
-- **Architecture** Main components
+  - **OAuth2AdminSuccessHandler** - For admin zone (synchronizes user groups + permission groups + admin flag)
+  - **OAuth2UserSuccessHandler** - For user zone (only synchronizes user groups)
+- **AbstractOAuth2SuccessHandler** - Common base class with functionality for both handlers
+- **Automatic group synchronization** - Mapping groups from OAuth2 provider to WebJET groups (only for configured providers)
+- **Admin rights from OAuth2** - Automatic setting of admin rights based on groups (admin zone only)
 
-## SpringSecurityConf
+## Architecture
 
-### Configuring OAuth2 clients
+### Main components
 
-1. [Registering OAuth2DynamicSuccessHandler and OAuth2DynamicErrorHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java)
+1. [SpringSecurityConf](../../../../src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java)
 
-    - Configuring authorized client service
-    - OAuth2LoginHelper
-    - Helper class with shared functionality for OAuth2 processing
+   - Configuring OAuth2 clients
+   - Registering OAuth2DynamicSuccessHandler and OAuth2DynamicErrorHandler
+   - Configuring authorized client service
 
-2. [Detection of login type (admin/user)](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2LoginHelper.java)
+2. [OAuth2LoginHelper](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2LoginHelper.java)
 
-    - Error handling and redirection
-    - OAuth2DynamicSuccessHandler
-    - Dynamic decision making between admin and user processor
+   - Helper class with shared functionality for OAuth2 processing
+   - Login type detection (admin/user)
+   - Error handling and redirection
 
-3. [Uses OAuth2LoginHelper to distinguish the login type](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicSuccessHandler.java)
+3. [OAuth2DynamicSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicSuccessHandler.java)
 
-    - OAuth2DynamicErrorHandler
-    - Error handling in OAuth2 authentication
+   - Dynamic decision-making between admin and user processor
+   - Uses OAuth2LoginHelper to distinguish login type
 
-4. [Mapping exceptions to error codes](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicErrorHandler.java)
+4. [OAuth2DynamicErrorHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2DynamicErrorHandler.java)
 
-    - Redirect to the correct logon page (admin/user)
-    - AbstractOAuth2SuccessHandler
-    - Abstract base class for OAuth2 Success Handlers
+   - Handling errors during OAuth2 authentication
+   - Mapping exceptions to error codes
+   - Redirect to the correct logon page (admin/user)
 
-5. [Common functionality for extracting groups and attributes from OAuth2](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/AbstractOAuth2SuccessHandler.java)
+5. [AbstractOAuth2SuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/AbstractOAuth2SuccessHandler.java)
 
-    - Error handling via session
-    - OAuth2AdminSuccessHandler
-    - Processing successful OAuth2 authentication for&#x20;
+   - Abstract base class for OAuth2 Success Handlers
+   - Common functionality for extracting groups and attributes from OAuth2
+   - Error handling via session
 
-6. [admin area](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2AdminSuccessHandler.java)
+6. [OAuth2AdminSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2AdminSuccessHandler.java)
 
-    - Create or update a user**Synchronising groups and permissions (user groups + permission groups)**
-    - Setting admin rights
-    - OAuth2UserSuccessHandler
-    - Processing successful OAuth2 authentication for&#x20;
+   - Processing successful OAuth2 authentication for **admin zone**
+   - Create or update a user
+   - Synchronization of groups and rights (user groups + permission groups)
+   - Setting admin rights
 
-7. [customer zone](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2UserSuccessHandler.java)
+7. [OAuth2UserSuccessHandler](../../../../src/main/java/sk/iway/iwcm/system/spring/oauth2/OAuth2UserSuccessHandler.java)
 
-    - Sync only user groups (not permission groups)**Does not set admin rights**
-    - AdminLogonController
-    - Display OAuth2 login links on the logon page
+   - Processing successful OAuth2 authentication for **customer zone**
+   - Synchronize only user groups (not permission groups)
+   - Does not set admin rights
 
-8. [URL generation for OAuth2 providers](../../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java)
+8. [AdminLogonController](../../../../src/main/java/sk/iway/iwcm/logon/AdminLogonController.java)
 
-    - Handling OAuth2 session errors
-    - Settings&#x20;
-    - &#x20;attribute
-    - Logon Template`oauth2_is_admin_section`View OAuth2 login buttons
+   - Display OAuth2 login links on the logon page
+   - Generating URLs for OAuth2 providers
+   - Handling OAuth2 errors from session
+   - Setting the `oauth2_is_admin_section` attribute
 
-9. [API reference](../../../../src/main/webapp/admin/skins/webjet8/logon-spring.jsp)
-    - OAuth2LoginHelper
+9. [Logon Template](../../../../src/main/webapp/admin/skins/webjet8/logon-spring.jsp)
+   - Display OAuth2 login buttons
 
-## Auxiliary class with shared functionality:
+## API reference
 
-### &#x20;- Determines if this is an admin login based on the session attribute
+### OAuth2LoginHelper
 
-&#x20;\- Detects the login type and removes the session attribute
-- `isAdminLogin(request)` - Returns redirect URL for error by login type
-- `isAdminLoginAndClear(request)` - Returns the redirect URL for the admin zone (
-- `getErrorRedirectUrl(isAdminLogin)`)
-- `getAdminRedirectUrl()` - Returns the redirect URL for the user zone (`/admin/logon/`)
-- `getUserRedirectUrl()` - Sets the error to session and redirects`/` - Sets the error and redirects by type
-- `handleError(request, response, errorCode, redirectUrl)` OAuth2DynamicErrorHandler
-- `handleError(request, response, errorCode, isAdminLogin)` Handler for OAuth2 authentication errors:
+Helper class with shared functionality:
 
-### &#x20;- Handles the error, detects the login type and redirects to the correct logon page
+- `isAdminLogin(request)` - ​​Determines if this is an admin login based on the session attribute
+- `isAdminLoginAndClear(request)` - ​​Detects login type and removes session attribute
+- `getErrorRedirectUrl(isAdminLogin)` - ​​Returns redirect URL for error based on login type
+- `getAdminRedirectUrl()` - ​​Returns the redirect URL for the admin zone (`/admin/logon/`)
+- `getUserRedirectUrl()` - ​​Returns the redirect URL for the user zone (`/`)
+- `handleError(request, response, errorCode, redirectUrl)` - ​​Sets an error in the session and redirects
+- `handleError(request, response, errorCode, isAdminLogin)` - ​​Sets an error and redirects by type
 
-&#x20;\- Maps exceptions to error codes for the translation table
-- `onAuthenticationFailure()` OAuth2DynamicSuccessHandler
-- `getErrorCodeFromException()` Dynamic router for OAuth2 authentication:
+### OAuth2DynamicErrorHandler
 
-### &#x20;- Decides between admin and user processor using&#x20;
+Handler for OAuth2 authentication errors:
 
-AbstractOAuth2SuccessHandler
+- `onAuthenticationFailure()` - ​​Handles the error, detects the login type and redirects to the correct logon page
+- `getErrorCodeFromException()` - ​​Maps exceptions to error codes for the translation table
 
-- `onAuthenticationSuccess()` Abstract base class with common functionality:`OAuth2LoginHelper.isAdminLoginAndClear()`
+### OAuth2DynamicSuccessHandler
 
-### &#x20;- Abstract method implemented in descendants
+Dynamic router for OAuth2 authentication:
 
-&#x20;\- Returns the attribute name for username from the configuration (
-- `onAuthenticationSuccess()`), or the default value&#x20;
-- `getUsernameAttribute()` - Create a new user from OAuth2 data`oauth2_usernameAttribute` - Updating an existing user`preferred_username`
-- `createNewUserFromOAuth2()` - Getting the OAuth2 provider ID from authentication
-- `updateExistingUserFromOAuth2()` - Check whether the provider has configured rights synchronization
-- `getProviderId()` - Extracting groups from OAuth2 attributes (all formats)
-- `shouldSyncPermissions()` - Extraction from simple attributes
-- `extractGroupsFromOAuth2()` - Extraction from Keycloak&#x20;
-- `extractFromAttribute()` - Extraction from Keycloak&#x20;
-- `extractFromResourceAccess()` - Extracting roles from a specific client`resource_access`
-- `extractFromRealmAccess()` - Auxiliary method for extraction from object roles`realm_access`
-- `extractRolesFromClientResource()` - A helper method for handling OAuth2 errors over session
-- `extractRolesFromRolesObject()` OAuth2AdminSuccessHandler (Admin zone)
-- `handleError()` Handler for admin zone:
+- `onAuthenticationSuccess()` - ​​Decides between admin and user processor using `OAuth2LoginHelper.isAdminLoginAndClear()`
 
-### &#x20;- Main entry point after successful authentication
+### AbstractOAuth2SuccessHandler
 
-&#x20;\- Applying rights from OAuth2 (user groups + permission groups + admin flag)
-- `onAuthenticationSuccess()` - Remove from all groups (user + permission)
-- `applyOAuth2Permissions()` - Synchronizing user groups and permission groups
-- `removeAllGroupAssignments()` OAuth2UserSuccessHandler (User zone)
-- `synchronizeUserGroups()` Handler for the customer zone:
+Abstract base class with common functionality:
 
-### &#x20;- Main entry point after successful authentication
+- `onAuthenticationSuccess()` - ​​Abstract method implemented in descendants
+- `getUsernameAttribute()` - ​​Returns the attribute name for username from the configuration (`oauth2_usernameAttribute`), or the default value `preferred_username`
+- `createNewUserFromOAuth2()` - ​​Creating a new user from OAuth2 data
+- `updateExistingUserFromOAuth2()` - ​​Updating an existing user
+- `getProviderId()` - ​​Finding OAuth2 provider ID from authentication
+- `shouldSyncPermissions()` - ​​Checking if the provider has rights synchronization configured
+- `extractGroupsFromOAuth2()` - ​​Extract groups from OAuth2 attributes (all formats)
+- `extractFromAttribute()` - ​​Extraction from simple attributes
+- `extractFromResourceAccess()` - ​​Extraction from Keycloak `resource_access`
+- `extractFromRealmAccess()` - ​​Extraction from Keycloak `realm_access`
+- `extractRolesFromClientResource()` - ​​Extracting roles from a specific client
+- `extractRolesFromRolesObject()` - ​​Helper method for extraction from roles object
+- `handleError()` - ​​Helper method for handling OAuth2 errors via session
 
-&#x20;\- Applying only user groups (not permission groups, not admin flag)
-- `onAuthenticationSuccess()` - Remove from all user groups
-- `applyOAuth2UserGroups()` - Synchronisation of user groups only
-- `removeAllGroupAssignments()` SpringSecurityConf
-- `synchronizeUserGroups()` Methods for OAuth2 configuration:
+### OAuth2AdminSuccessHandler (Admin zone)
 
-### &#x20;- Registers&#x20;
+Handler for admin zone:
 
-&#x20;as a success handler
+- `onAuthenticationSuccess()` - ​​Main entry point after successful authentication
+- `applyOAuth2Permissions()` - ​​Applying rights from OAuth2 (user groups + permission groups + admin flag)
+- `removeAllGroupAssignments()` - ​​Removal from all groups (user + permission)
+- `synchronizeUserGroups()` - ​​Synchronization of user groups and permission groups
 
-- `filterChain()` - Bean for registering OAuth2 clients (returns empty implementation if there are no clients)`OAuth2DynamicSuccessHandler` - Create a configuration for a specific provider (supports Google, Facebook, GitHub, Okta + custom)
-- `clientRegistrationRepository()` - Bean for managing authorized clients
-- `buildClientRegistration()` AdminLogonController
-- `authorizedClientService()` Methods for OAuth2 admin login:
+### OAuth2UserSuccessHandler (User zone)
 
-### &#x20;- Sets the session attribute&#x20;
+Handler for customer zone:
 
-&#x20;and generates an OAuth2 URL
+- `onAuthenticationSuccess()` - ​​Main entry point after successful authentication
+- `applyOAuth2UserGroups()` - ​​Apply only user groups (not permission groups, not admin flag)
+- `removeAllGroupAssignments()` - ​​Removal from all user groups
+- `synchronizeUserGroups()` - ​​Synchronization of user groups only
 
-- `showLogonForm()` Handles OAuth2 errors from the session and displays the appropriate error messages`oauth2_is_admin_section`
-- 
+### SpringSecurityConf
+
+Methods for OAuth2 configuration:
+
+- `filterChain()` - ​​Registers `OAuth2DynamicSuccessHandler` as a success handler
+- `clientRegistrationRepository()` - ​​Bean for registering OAuth2 clients (returns empty implementation if there are no clients)
+- `buildClientRegistration()` - ​​Create a configuration for a specific provider (supports Google, Facebook, GitHub, Okta + custom)
+- `authorizedClientService()` - ​​Bean for managing authorized clients
+
+### AdminLogonController
+
+Methods for OAuth2 admin login:
+
+- `showLogonForm()` - ​​Sets the session attribute `oauth2_is_admin_section` and generates an OAuth2 URL
+- Handles OAuth2 errors from the session and displays appropriate error messages

@@ -1,10 +1,10 @@
 # Auditing
 
-## JPA entity
+## JPA entities
 
-> Automatic generation of audit records from JPA entities (containing a list of changes in the form attribute\_name: old value -> new value) using a simple annotation `@EntityListeners(AuditEntityListener.class)`
+>Automatically generate audit records from JPA entities (containing a list of changes in the form attribute_name: old value -> new value) using a simple annotation ```@EntityListeners(AuditEntityListener.class)```
 
-Auditing changes to JPA entities can be automated by adding annotation `@EntityListeners(AuditEntityListener.class)`, where you set the type of audit record by annotating `@EntityListenersType(Adminlog.TYPE_GALLERY)`:
+Auditing changes in JPA entities can be automated by adding the ```@EntityListeners(AuditEntityListener.class)``` annotation, while setting the audit record type with the ```@EntityListenersType(Adminlog.TYPE_GALLERY)``` annotation:
 
 ```java
 @Entity
@@ -16,18 +16,19 @@ Auditing changes to JPA entities can be automated by adding annotation `@EntityL
 public class GalleryEntity {
 ```
 
-Auditing is carried out in [AuditEntityListener](../../../src/main/java/sk/iway/iwcm/system/audit/AuditEntityListener.java) Methods:
-- `postPersist` for a newly created record
-- `preUpdate` a `postUpdate` to update an existing record (in preUpdate the current Entity in the database is retrieved to compare changes)
-- `preRemove` when deleting a record
+Auditing is performed in the [AuditEntityListener](../../../src/main/java/sk/iway/iwcm/system/audit/AuditEntityListener.java) methods:
 
-in the method `private String getChangedProperties(Object entity)` list of changed values when the record is changed or list of current values for the new record is obtained. For an existing record, first in the method `prePersist` saves to the map `private Hashtable<Long, String> preUpdateChanges;` comparison of an existing record in the database. From this map, after successful saving in the method `postUpdate` gets the list of changes for auditing from the map.
+- ```postPersist``` for a newly created record
+- ```preUpdate``` and ```postUpdate``` for updating an existing record (in preUpdate the current Entity in the database is obtained for comparing changes)
+- ```preRemove``` when deleting a record
 
-**Getting the current bean for comparison** from the database before writing changes is quite complicated. The solution to this is **getting a new EntityManager** and loading the object with this new EntityManager. Objects managed via SpringData did not suffer from this problem, but the standard JPA entities returned from the database within the current session changed to the new values. This is due to the fact that SpringData uses its own EntityManager.
+In the method ```private String getChangedProperties(Object entity)```, a list of changed values ​​is obtained when changing a record, or a list of current values ​​for a new record. For an existing record, a comparison of the existing record in the database is first saved in the method ```prePersist``` to the map ```private Hashtable<Long, String> preUpdateChanges;```. From this map, after successful saving in the method ```postUpdate```, a list of changes for auditing is obtained from the map.
 
-In the configuration variable `auditHideProperties` is a list of attributes that will be replaced in the audit by a tag `*****`. By default the attribute is set `password,password2,password_salt`, but in the configuration you can add **other sensitive attributes that you do not want to be shown in the audit**.
+**Getting the current bean for comparison** from the database before writing changes is quite complicated. This is solved by **getting a new EntityManager** and loading the object with this new EntityManager. Objects managed via SpringData did not suffer from this problem, but standard JPA entities were returned from the database within the current session with changed values. This is because SpringData uses its own EntityManager.
 
-Example of auditing a newly created entity:
+The configuration variable ```auditHideProperties``` contains a list of attributes that will be replaced with the `*****` tag in the audit. The default attribute is ```password,password2,password_salt```, but you can add **additional sensitive attributes that you do not want to be displayed in the audit** in the configuration.
+
+Example of an audit of a newly created entity:
 
 ```
 CREATE:
@@ -44,7 +45,7 @@ Domain: iwcm.interway.sk
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36
 ```
 
-Example of a changed entity audit. Only the changed fields (redirect\_to, redirect\_params and redirect\_path) are recorded in the audit:
+Example of a changed entity audit. Only changed fields (redirect_to, redirect_params, and redirect_path) are recorded in the audit:
 
 ```
 UPDATE:
@@ -58,7 +59,7 @@ Domain: iwcm.interway.sk
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36
 ```
 
-Example of an item deletion audit. The audit records all data of the deleted entity:
+Example of an audit of an item deletion. All data of the deleted entity is recorded in the audit:
 
 ```
 DELETE:

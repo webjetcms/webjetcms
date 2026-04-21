@@ -1,4 +1,4 @@
-# Responsible Vulnerability Reporting
+# Responsible vulnerability reporting
 
 We take the security of WebJET CMS very seriously. If you have discovered a security vulnerability, we ask that you report it responsibly and allow us to fix it before it is made public.
 

@@ -1,17 +1,18 @@
 # Adding a provider
 
 To add support for a new provider (`provider`), you must meet the following conditions:
-- create 2 classes with annotation `@Service`, ideally in a package `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME` where implementations already exist for `openai`, `gemini`, `openrouter` a `browser`
-- one class must implement the interface [AiInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) and implement all mandatory methods
-- the second class must implement the interface [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) and implement all mandatory methods
 
-Classes will take care of the rest [AiService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiService.java) a [AiAssistantsService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiAssistantsService.java) that dynamically process the request according to the provider identifier.
+- create 2 classes with the annotation `@Service`, ideally in the package `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME`, where implementations for `openai`, `gemini`, `openrouter` and `browser` already exist
+- one class must implement the interface [AiInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) and implement all mandatory methods
+- the second class must implement the interface [AiAssitantsInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) and implement all mandatory methods
+
+The rest will be taken care of by the classes [AiService](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiService.java) and [AiAssistantsService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiAssistantsService.java), which will dynamically process the request based on the provider identifier.
 
 ## Implementations `AiAssitantsInterface`
 
-This implementation is simple - it is just a few methods used for extensibility.
+This implementation is simple - it's just a few methods for extensibility.
 
-Example of implementation:
+Implementation example:
 
 ```java
 /**
@@ -69,13 +70,13 @@ This implementation is more complex because it handles all communication with th
 
 ### Option one
 
-Your class implements an interface `AiInterface` and at the same time extends the abstract class [SupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogic.java). This class already contains implementations of mandatory methods `AiInterface` and most of the necessary logic. Whereas `SupportLogic` implemented by [SupportLogicInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogicInterface.java), you only implement methods from this interface.
+Your class implements the interface `AiInterface` and also extends the abstract class [SupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogic.java). This class already contains implementations of the required methods `AiInterface` and most of the necessary logic. Since `SupportLogic` implements [SupportLogicInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogicInterface.java), you only implement the methods from this interface.
 
-Advantage: you avoid a lot of redundant logic common to all providers. Many implementation problems and bugs are already solved. This is how providers work `openai`, `gemini` a `openrouter`. If any part is different, you can overload the necessary method.
+Advantage: you avoid a lot of redundant logic common to all providers. Many implementation issues and bugs are already fixed. This is how providers `openai`, `gemini` and `openrouter` work. If any part is different, you can overload the necessary method.
 
-In the following example you do not see directly the extension of the `SupportLogic` because the class `OpenAiSupportService` is already expanding it.
+In the following example, you don't see the extension of `SupportLogic` directly because the class `OpenAiSupportService` already extends it.
 
-Example implementation :
+Implementation example:
 
 ```java
 /**
@@ -310,11 +311,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 }
 ```
 
-### The possibility of a second
+### Option mate
 
-Your class implements an interface `AiInterface` and all its mandatory methods. It is more time consuming - use this path only if the implementation is significantly different from other providers.
+Your class implements the `AiInterface` interface and all its required methods. This is more time-consuming - only use this path if your implementation is significantly different from other providers.
 
-Example of implementation:
+Implementation example:
 
 ```java
 /**
@@ -369,25 +370,27 @@ public class BrowserService implements AiInterface {
 
 ## `AiAssistantsService`
 
-`AiAssistantsService` takes care of the requirements related to the data table [Assistants](../../../../redactor/ai/settings/README.md). It provides support methods for selection fields and uses automatic `dependency injection` to get all interface implementations `AiAssitantsInterface`. It iterates over the list and performs an action on the correct implementation according to the identifier when the provider is queried.
+`AiAssistantsService` handles requests related to the data table [Assistants](../../../../redactor/ai/settings/README.md). Provides support methods for select fields and uses automatic `dependency injection` to get all implementations of the `AiAssitantsInterface` interface. When requesting a provider, iterates over the list and performs an action on the correct implementation based on the identifier.
 
 Important methods:
-- `getAssistantAndFieldFrom` - returns assistants that meet the display conditions for the selected field
-- `getClassOptions` - returns a list of classes to which the assistant can be bound (filtering by the string in the full name)
-- `getFieldOptions` - returns a list of fields of the selected class (name filtering by the search string)
-- `prepareBeforeSave` - finds the assistant provider and invokes the method of the same name over it to make adjustments before saving
-- `getProviderSpecificOptions` - will be added to the `DatatablePageImpl` provider-specific options
-- `getProviderFields` - returns additional fields for display in the table editor
-- `getAssistantStatus` - returns the status of the provider (whether it is configured)
+
+- `getAssistantAndFieldFrom` – returns assistants who meet the display conditions in the selected field
+- `getClassOptions` – returns a list of classes to which the assistant can be bound (filtering by string in the full name)
+- `getFieldOptions` – returns a list of fields of the selected class (filtering the name by the search string)
+- `prepareBeforeSave` – finds the assistant provider and calls the method of the same name on it for editing before saving
+- `getProviderSpecificOptions` – will add provider-specific options to `DatatablePageImpl`
+- `getProviderFields` – returns additional fields to display in the table editor
+- `getAssistantStatus` – returns the provider status (whether it is configured)
 
 ## `AiService`
 
-`AiService` handles AI requests from assistants. Provides methods to get answers from providers selected by the assistant. Uses `dependency injection` to obtain all implementations `AiInterface`.
+`AiService` handles AI requests from assistants. Provides methods to get responses from providers selected by the assistant. Uses `dependency injection` to get all implementations of `AiInterface`.
 
 Important methods:
-- `getProviders` - returns a list of configured providers
-- `getModelOptions` - returns a list of models from the given provider; there is a version with filtering by string
-- `getAiResponse` - returns the text response as a whole
-- `getAiImageResponse` - returns a picture answer
-- `getAiStreamResponse` - returns a text response streamed via `PrintWriter`
-- `getBonusHtml` - by provider identifier returns HTML additional content of the assistant window
+
+- `getProviders` – returns a list of configured providers
+- `getModelOptions` – returns a list of models for a given provider; there is a version with string filtering
+- `getAiResponse` – returns the text response as a whole
+- `getAiImageResponse` – returns an image response
+- `getAiStreamResponse` – returns a text response streamed via `PrintWriter`
+- `getBonusHtml` – returns HTML additional content of the assistant window according to the provider identifier

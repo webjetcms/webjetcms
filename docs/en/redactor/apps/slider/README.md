@@ -1,10 +1,11 @@
 # Slider
 
-Add an eye-catching animated slider with images to your page. Choose from a wide range of design styles and animation effects, some designs also include a title and additional text.
+Add an eye-catching animated image slider to your site. Choose from a wide range of design styles and animation effects, some designs also include a title and additional text.
 
 ## Application settings
 
 Available cards:
+
 - **Generated CSS styles**
 - **Advanced**
 - **Transitions**
@@ -18,23 +19,24 @@ In this section you can set the style for the Slider.
 
 ### Advanced
 
-In this section it is possible to set:
+In this section you can set:
+
 - Full width
 - Width
 - Height
-- Display of right and left arrows (Not, Always, Only when mouse over slider)
+- Display of arrows on the right and left (None, Always, Only when hovering over the slider)
 - Moving photo effect
-- Navigation style (Not, Balls, Numbers, Thumbnails)
-- Show thumbnails when hovering over the navigation
+- Navigation style (None, Bullets, Numbers, Thumbnails)
+- Show thumbnails when hovering over navigation
 - Enable scrolling by grabbing
 - Random order
 - Automatically start
-- Number of loops (Forever, Exit after)
+- Number of loops (Forever, End after)
 - Image display time
 - Show countdown
-- Countdown colour (hex/ENG)
+- Countdown color (hex/ENG)
 - Countdown position (Up, Down)
-- Go to the first picture
+- Go to the first image
 - Pause on mouseover
 - Numbering
 - Shadow
@@ -43,24 +45,25 @@ In this section it is possible to set:
 
 ### Transitions
 
-In this section you can select the transition (animation) to be used when changing images.
+In this section you can select the transition (animation) that will be used when changing images.
 
 ![](editor-transitions.png)
 
 ### Items
 
-In this section you can see and manage the application items, so classic actions like add/edit/delete...
+In this section, you can see and manage application items, so classic actions like adding/editing/deleting...
 
 ![](editor-items.png)
 
-You can set the following parameters for each item:
-- **Image**, image selection using the explorer is supported, as well as direct entry of the image path
-- **Title**, picture caption
-- **Subtitle**, image caption
-- **Click to view another page (redirect)**, select the page you will be redirected to (direct path entry is also supported)
+You can set the following parameters for individual items:
+
+- **Image**, image selection using explorer is supported, as well as direct entry of the image path
+- **Title**, image title
+- **Subtitle**, subtitle of the image
+- **When clicked, display another page (redirect)**, select the page to which you will be redirected (direct path entry is also supported)
 
 ![](editor-items-edit.png)
 
-## View application
+## View the application
 
 ![](slider.png)

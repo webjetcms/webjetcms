@@ -1,12 +1,12 @@
-# Customisation of administration
+# Customizing administration
 
-WebJET allows you to customize the administration with additional CSS styles and JavaScript files. You can change, for example, your logo for your company logo, add text to the home screen and so on.
+WebJET allows you to customize the administration with additional CSS styles and JavaScript files. This allows you to change, for example, the logo for your company, add text to the splash screen, and so on.
 
 ## Additional CSS style
 
-If you need to add/edit the administration design just create a file `/components/INSTALL-NAME/admin/style.css` While `INSTALL-NAME` is the name of the installation. If the file exists it will be added to the CSS stylesheet in the administration section.
+If you need to add/edit the design of the administration, just create the file `/components/INSTALL-NAME/admin/style.css` where `INSTALL-NAME` is the name of the installation. If the file exists, it will be added to the CSS styles of the administration section.
 
-So you can add CSS styles, for example, for [Quill field](../../developer/datatables-editor/standard-fields.md#quill):
+You can add CSS styles for example for [Quill type fields](../../developer/datatables-editor/standard-fields.md#quill):
 
 ```css
 div.ql-editor .klass {
@@ -17,7 +17,7 @@ div.ql-editor .klass {
 
 ## Additional JavaScript
 
-Similarly, you can create a JavaScript file `/components/INSTALL-NAME/admin/script.js` with the required content. We recommend to run the scripts using the `window.domReady.add(function () {...}, 900)`, which at the value of `orderId>=900` ensures execution only after the content of the standard administration page has been executed. If the value `orderId` you do not specify, the function is executed before the content of the current page.
+Similarly, you can create a JavaScript file `/components/INSTALL-NAME/admin/script.js` with the desired content. We recommend running scripts using the `window.domReady.add(function () {...}, 900)` function, which, with a value of `orderId>=900`, ensures execution only after the content of the standard administration page has been executed. If you do not specify a value of `orderId`, the function will be executed before the content of the current page.
 
 ```javascript
 if ("/admin/v9/"===window.location.pathname) {

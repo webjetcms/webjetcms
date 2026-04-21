@@ -1,12 +1,12 @@
-# Installation and start-up
+# Installation and launch
 
-If you don't already have it, install [VS Code with recommended dependencies and extensions](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - follow only the installation part of the extensions, the following chapters `Pull` project from SVN and the Tomcat setup no longer applies to you.
+If you don't have it yet, install [VS Code with recommended dependencies and extensions](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - follow only the extension installation part, subsequent chapters ```Pull``` project from SVN and Tomcat setup no longer apply to you.
 
-In the project we use [lombok](https://projectlombok.org), install the extension in your development environment - on the web page click on the menu item `Install` and follow the instructions in the IDEs section.
+We use [lombok](https://projectlombok.org) in the project, install the extension into your development environment - on the website, click on the menu item ```Install``` and in the IDEs section, follow the instructions.
 
-## Webpack build JS, CSS and PUG files
+## Webpack builds JS, CSS and PUG files
 
-Files for administration are compiled via webpack from source `js/scss/pug` files. For the initial installation, start in a new terminal:
+The administration files are compiled via webpack from the source ```js/scss/pug``` files. For the initial installation, run in a new terminal:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -14,16 +14,16 @@ npm install
 npm run prod
 ```
 
-complete reinstallation is done with the command (for node `v17+` a parameter is also needed `--legacy-peer-deps`):
+To perform a complete reinstallation, use the command (for node ```v17+```, the parameter ```--legacy-peer-deps``` is also required):
 
 ```shell
 rm -rf node_modules
 npm install
 ```
 
-the latter will install the necessary libraries, license the `Datatables Editor` and compiles the production version.
+it will install the necessary libraries, license for `Datatables Editor` and build the production version.
 
-You can then start **dev mode** whereby automatically **webpack tracks changes** v `js/scss/pug` files and builds `dist` Directory:
+You can then start **dev mode**, in which **webpack automatically tracks changes** in ```js/scss/pug``` files and builds the ```dist``` directory:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -39,30 +39,30 @@ gradlew npmwatch
 gradlew npmbuild
 ```
 
-**Production version** you generate via:
+**You can generate the **production version** via:
 
 ```shell
 cd src/main/webapp/admin/v9
 npm run prod
 ```
 
-## Build Java classes and start Tomcat
+## Build Java classes and run Tomcat
 
-Compilation of the project:
+Project compilation:
 
 ```shell
 gradlew compileJava - kompilacia projektu
 ```
 
-including refresh dependencies (WebJET from artifactory):
+including refreshing dependencies (WebJET from artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
 ```
 
-Start/stop Tomcat, create WAR archive:
+Starting/stopping Tomcat, creating a WAR archive:
 
-!>**Warning:** before running gradle appRun, build the dist directory of HTML/CSS files once via gradle npmbuild, or run npm run watch from src/main/webapp/admin/v9 in a separate terminal.
+!>**Warning:** Before running gradle appRun, build the dist directory of HTML/CSS files once via the gradle npmbuild command, or run the npm run watch command from the src/main/webapp/admin/v9 directory in a separate terminal.
 
 ```shell
 gradlew appRun
@@ -70,7 +70,7 @@ gradlew appStop
 gradlew war
 ```
 
-View all JAR library dependencies:
+To view all dependencies of JAR libraries:
 
 ```shell
 gradlew -q dependencies --configuration runtimeClasspath
@@ -83,12 +83,12 @@ Gradle wrapper update
 ```
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Setting up a hosts file
+## Setting up the hosts file
 
-WebJET is licensed by domain. To work locally, you need to add a line to the hosts file (on windows it is c:\windows\system32\drivers\etc\hosts):
+WebJET is licensed by domain. For local operation, you need to add the following line to the hosts file (on Windows it is c:\windows\system32\drivers\etc\hosts):
 
 ```
 127.0.0.1   iwcm.interway.sk
@@ -96,11 +96,11 @@ WebJET is licensed by domain. To work locally, you need to add a line to the hos
 
 !>**Warning:** at `Windows` you need to edit the file with admin rights.
 
-WebJET will be available locally as http://iwcm.interway.sk/admin/ when launched.
+After launch, WebJET will be available locally as http://iwcm.interway.sk/admin/.
 
 ## Testing
 
-For testing is used [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
+[Playwright](https://github.com/microsoft/playwright/tree/master/docs) and [CodeceptJS](https://codecept.io/basics/) are used for testing.
 
 Initial installation:
 
@@ -109,7 +109,7 @@ cd src/test/webapp/
 npm install
 ```
 
-Run all tests:
+Running all tests:
 
 ```shell
 cd src/test/webapp/

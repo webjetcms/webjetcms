@@ -1,27 +1,27 @@
 # Export to HTML
 
-Through the app **Export to HTML** it is possible to export web pages to HTML format and then use them in a limited way in an offline environment. The export works on the principle of downloading the resulting web pages and saving them to an HTML file
+The **Export to HTML** application allows you to export web pages to HTML format and then use them to a limited extent in an offline environment. The export works on the principle of downloading the resulting web pages and saving them to an HTML file
 
-The generated pages are saved in the folder `/html`.
+The generated pages are saved in the `/html` folder.
 
-## HTML file generation process
+## The process of generating HTML files
 
-After entering the folder ID of the folder for which you want to create an offline version and clicking **OK** starts the process of generating HTML files. This process can take several tens of minutes depending on the number of pages in a given branch of the web site.
+After entering the folder ID for which you want to create an offline version and clicking **OK**, the HTML file generation process will start. This process may take several tens of minutes depending on the number of pages in the given branch of the website.
 
 ![](export-to-html.png)
 
-Wait for the whole process to finish. During this time, you should see information in the window about the number of pages already generated and the total number of pages. The result is a folder `/html` containing the HTML code of each page and possibly a ZIP archive with the selected folders (a folder is automatically added to the ZIP archive `/html`).
+Wait for the entire process to finish. During this time, the window should display information about the number of pages already generated and the total number of pages. The result is a folder `/html` containing the HTML code of each page and, if applicable, a ZIP archive with the selected folders (the folder `/html` is automatically added to the ZIP archive).
 
 ![](report.png)
 
 ## Creating a ZIP archive
 
-To create a ZIP archive, you need to select the option **System backup**, you can also select which folders to include in the ZIP archive. Please note that the amount of data in the selected folders can be large and the ZIP file may not be generated correctly (the limit is to a 2GB file).
+To create a ZIP archive, you need to select the **System Backup** option, you can also select which folders to include in the ZIP archive. Please note that the amount of data in the selected folders may be large and the ZIP file may not be generated correctly (the limit is 2GB file).
 
 ## Exported files
 
-The generated pages are saved in the folder `/html` and after selecting the System Backup option, the resulting ZIP file is saved to the root folder.
+The generated pages are saved in the `/html` folder and after selecting the System Backup option, the resulting ZIP file is saved in the root folder.
 
 ![](exported-files.png)
 
-!> **Warning:** after creating the export, we recommend to delete the entire folder immediately `/html` and also a ZIP archive with a name starting with `offline-` in the root folder of the server.
+!> **Warning:** after creating the export, we recommend immediately deleting the entire folder `/html` and also the ZIP archive with a name starting with `offline-` in the server root folder.

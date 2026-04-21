@@ -1,7 +1,7 @@
-# Documentation for frontend programmer
+# Frontend programmer documentation
 
-The documentation in this section is intended for a frontend programmer who is preparing the design of a WebJET 2023-based site.
+The documentation in this section is intended for the frontend programmer who is preparing the design of a site based on WebJET 2023.
 
-First we recommend to study the use of [Ninja framework](ninja-starter-kit/README.md) for preparing templates in WebJET CMS.
+First, we recommend learning how to use the [Ninja framework](ninja-starter-kit/README.md) to prepare templates in WebJET CMS.
 
-This documentation is at an early stage and highlights the main differences between the web page templates in WebJET 8 and WebJET 2023 so far. Sections not listed here are used in the same way as in WebJET 8, please use the WebJET 8 manual.
+This documentation is in its early stages and highlights the main differences between the website templates in WebJET 8 and WebJET 2023. The parts not listed here are used the same as in WebJET 8, please refer to the WebJET 8 manual.

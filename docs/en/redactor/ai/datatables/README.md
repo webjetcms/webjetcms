@@ -1,192 +1,195 @@
 # Using AI assistants
 
-The logic of using AI assistants is consistent across the entire CMS so that the user has a consistent experience regardless of context. In this chapter, you will find an overview of assistant behavior in data tables, the Web page editor, PageBuilder, text markup, and the image editor.
+The logic for using AI assistants is consistent across the entire CMS to provide a consistent user experience regardless of context. In this chapter, you will find an overview of the assistant's behavior in data tables, the website editor, the PageBuilder, when marking up text, and the image editor.
 
 ## Text fields
 
-Text field assistant (single-line field and `textarea`) is used to generate new content or edit existing content. It is launched via the button <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles" ></i></button> at the end of the field.
+The text field assistant (single-line field and `textarea`) is used to generate new content or edit existing content. It is launched via the button <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles"></i></button> at the end of the field.
 
 ![](textarea-focus.png)
 
-When clicked, a window will open with all available assistants for the field. They are clearly divided into groups (e.g. **Generating**, **Enhance**). For each there is a name, icon and provider.
+Clicking on it will open a window with all available assistants for the given field. They are clearly divided into groups (e.g. **Generation**, **Improvement**). Each one has a name, icon and provider.
 
 ![](textarea-assistants.png)
 
-Clicking on the assistant will start its execution. If sequential loading is enabled, the result will be displayed in parts; otherwise, it will be displayed only after completion.
+Clicking on the assistant will start its execution. If it has progressive loading enabled, the result will be displayed in parts; otherwise, it will only be displayed when it is complete.
 
 ![](textarea-waiting.png)
 
-When successfully completed, the resulting text is automatically inserted into the field. A confirmation and token consumption information will be displayed in the window. If the result does not match, use the <button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back" ></i> Cancel change</button> return to the original value.
+Upon successful completion, the resulting text will be automatically inserted into the field. A confirmation window will appear with information about token consumption. If the result is not satisfactory, use the button<button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i>Cancel the change</button> to return to the original value.
 
 ![](textarea-done.png)
 
-### Input from the user
+### User input
 
-If the assistant requires additional instructions, when you select it, it will first display a form to enter the input instead of starting it immediately.
+If the assistant requires additional instructions, after selecting it, an input form will first be displayed instead of launching immediately.
 
-Assistants that need user input have an icon next to their name <i class="ti ti-blockquote has-user-prompt" ></i> for easy resolution.
+Assistants that require user input have an icon next to their name.<i class="ti ti-blockquote has-user-prompt"></i> for easy distinction.
 
 ![](textarea-prompt.png)
 
-The field can have placeholder text (`placeholder`) with instructions on how to enter the request correctly. If the field is empty and you click into it 2 times (or press the `TAB`), this placeholder text is transferred as editable text to the field. You can thus easily edit the necessary parts and use it as the basis of your request.
+A field can have placeholder text (`placeholder`) with instructions on how to correctly enter the request. If the field is empty and you double-click on it (or press the `TAB` key), this placeholder text will be transferred as editable text to the field. You can then easily edit the necessary parts and use it as the basis for your request.
 
-After entering the instructions, press **Generate**. The rest of the workflow (loading, inserting the result, reverting) is the same as for the assistant without user input.
+After entering the instructions, press **Generate**. The next process (loading, inserting the result, the option to return) is the same as with the assistant without user input.
 
 ![](textarea-prompt-loading.png)
 
 ### Quill
 
-Since even an array of type `Quill` belongs to text fields, AI assistants work for it in the same way as for classic text fields. The only difference is the location of the icon, which is not at the end of the field, but in the header between the tools.
+Since the field of type `Quill` is also a text field, AI assistants work for it in the same way as for classic text fields. The only difference is the location of the icon, which is not at the end of the field, but in the header between the tools.
 
 ![](quill.png)
 
 ## Image fields
 
-The image field assistant is used to generate or edit an image. It is launched via the button <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles" ></i></button> at the end of the field.
+The image field assistant is used to generate or edit an image. It is launched via the button <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles"></i></button> at the end of the field.
 
 ![](image-focus.png)
 
-When clicked, a window will open with all available assistants for the field. They are clearly divided into groups (e.g. **Generating**, **Edit by**). For each there is a name, icon and provider.
+After clicking, a window will open with all available assistants for the given field. They are clearly divided into groups (e.g. **Generate**, **Edit**). Each has a name, icon, and provider.
 
 ![](image-assistants.png)
 
-Clicking on the assistant will start its execution. If you select an assistant to edit an existing image (e.g. **Remove background**), but the image field has no image set, an error message is returned.
+Clicking on the wizard will start its execution. If you select a wizard that is supposed to edit an existing image (e.g. **Remove Background**), but the image field does not have an image set, an error message will be returned.
 
 ![](image-error-1.png)
 
-If the field contains an image, processing starts and a progress indication is displayed.
+If the field contains an image, processing will begin and a progress indication will be displayed.
 
 ![](image-loading.png)
 
-Once completed, you will see a confirmation, token consumption information and a preview of the result. Using the button <a target="_blank" class="zoom-in"><i class="ti ti-zoom-in" ></i></a> you can open the image in full size in a new tab.
+Once completed, a confirmation, token consumption information, and a preview of the result will be displayed. Use the button<a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> you can open the image in full size in a new tab.
 
-The image is not saved automatically. First fill in or edit the fields **Image title** a **Location**. The values will be filled according to the original image, but you can change them. Field **Location** allows folder selection via a tree structure.
+The image is not saved automatically. First, fill in or edit the **Image Name** and **Location** fields. The values ​​are filled in according to the original image, but you can change them. The **Location** field allows you to select a folder via a tree structure.
 
-To save, press **Save Image**.
+Press **Save image** to save.
 
 ![](image-done.png)
 
-If you have not changed the name or location, or the combination already exists, a dialog with options will appear:
-- **Overwrite file** - the original file is replaced by a new one
-- **Rename file** - the system will offer a recommended (AI generated) new name
-- **Cancel save** - undo without saving
+If you have not changed the name or location or the combination already exists, a dialog with options will appear:
 
-When choosing **Overwrite file** or **Rename file** the image in the field is immediately updated.
+- **Overwrite file** – the original file will be replaced with the new one
+- **Rename file** – the system will offer a recommended (AI generated) new name
+- **Cancel Save** – go back without saving
+
+When you select **Overwrite file** or **Rename file**, the image in the field is updated immediately.
 
 ![](image-name-select.png)
 
-### Input from the user
+### User input
 
-If the assistant requires additional instructions, a form will be displayed. The additional fields are specific to the particular **Provider**, so they may vary. For providers `OpenAI` for example:
+If the assistant requires additional instructions, a form will be displayed. The additional fields are specific to a particular **provider** and may vary. For example, for provider `OpenAI`, these are:
+
 - Number of images
 - Dimension
 - Quality
 
-Assistants that need user input have an icon next to their name <i class="ti ti-blockquote has-user-prompt" ></i>.
+Assistants that require user input have an icon next to their name.<i class="ti ti-blockquote has-user-prompt"></i> .
 
 ![](image-prompt.png)
 
-After confirmation, processing proceeds as standard with one exception for `OpenAI`: allows you to generate multiple images at once (according to **Number of images**). In the example below, the number 3 has been set.
+After confirmation, processing proceeds as usual with one exception for `OpenAI`: it allows multiple images to be generated at once (according to **Number of images**). In the example below, the number 3 was set.
 
-You can select and save only one result - click to select it. All views can be opened via <a target="_blank" class="zoom-in"><i class="ti ti-zoom-in" ></i></a>.
+You can only select and save one result - you select it by clicking on it. All previews can be opened via<a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> .
 
 ![](image-select.png)
 
-### Problems with content
+### Content issues
 
-The provider may refuse the request if the instructions contain a protected or sensitive entity (known person, character, licensed brand, etc.). The specific rules vary according to **Provider**. In this case, an error message may be returned `PROHIBITED_CONTENT`.
+The provider may reject the request if the instructions contain a protected or sensitive entity (a famous person, character, licensed brand, etc.). Specific rules vary by **provider**. In such a case, an error message `PROHIBITED_CONTENT` may be returned.
 
 ![](image-error-2.png)
 
-## Website Editor
+## Website editor
 
-Assistants also work in the web page editor and are used to generate new content or edit existing content on a page. They are launched via the icon <button class="btn-ai" type="button"><i class="ti ti-sparkles" ></i></button> located in the web editor toolbar.
+Assistants also work in the website editor and are used to generate new content or edit existing page content. They are launched via the icon<button class="btn-ai" type="button"><i class="ti ti-sparkles"></i></button> located in the web editor toolbar.
 
 ![](ckeditor.png)
 
-When clicked, a window will open with all available assistants for the field. They are clearly divided into groups (e.g. **Generating**, **Copywriting**, **Enhance**). For each there is a name, icon and provider.
+Clicking on it will open a window with all available assistants for the given field. They are clearly divided into groups (e.g. **Generation**, **Copywriting**, **Improvement**). Each one has a name, icon, and provider.
 
 ![](ckeditor-assistants.png)
 
-Clicking on the assistant will start its execution. If sequential loading is enabled, the result will be displayed in parts; otherwise, it will be displayed only after completion. If the content loads in parts, it may give the impression that the page structure has gone wrong, but everything will return to normal when the entire content is loaded.
+Clicking on the assistant will start its execution. If it has progressive loading enabled, the result will be displayed in parts; otherwise, it will be displayed only when it is complete. If the content is loaded in parts, it may give the impression that the structure of the page has been broken, but everything will return to normal when the entire content is loaded.
 
 ![](ckeditor-loading.png)
 
-Once successfully completed, the resulting content is automatically inserted into the page. A confirmation and token consumption information will be displayed in the window. If the result is not satisfactory, use the <button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back" ></i> Cancel change</button> return to the original value.
+Upon successful completion, the resulting content will be automatically inserted into the page. A confirmation window will appear with information about token consumption. If the result is not satisfactory, use the button<button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i>Cancel the change</button> to return to the original value.
 
-In this case, the assistant is set up (and we recommend it when editing the page content) to still describe in the window all the changes it has made to the page content, offering feedback on what needed to be edited.
+In this case, the assistant is set up so that (and we also recommend this when editing page content) it will also describe all the changes it made to the page content in the window, thus offering feedback on what needed to be edited.
 
 ![](ckeditor-done.png)
 
 ### Only part of the text
 
-You don't have to edit the entire content of the page. Assistant working with `CKEditor` also supports editing only a selected part. If you select only part of the content and then call the assistant, it will edit only the selected part.
+You don't have to edit the entire page content. The assistant working with `CKEditor` also supports editing only a selected part. If you select only a part of the content and then call the assistant, it will edit only that selected part.
 
 ![](ckeditor-text-selection.png)
 
 ## PageBuilder
 
-Assistants also work in `PageBuilder` and are used to generate new content or modify existing page content embedded in `PageBuilder`. They are launched via the icon <button class="btn-ai" type="button"><i class="ti ti-sparkles" ></i></button> located in the toolbar.
+Assistants also work in `PageBuilder` and are used to generate new content or edit existing page content inserted in `PageBuilder`. They are launched via the icon<button class="btn-ai" type="button"><i class="ti ti-sparkles"></i></button> located in the toolbar.
 
 ![](page_builder.png)
 
-When clicked, a window will open with all available assistants for the field. They are clearly divided into groups (e.g. **Generating**, **Copywriting**, **Enhance**). For each there is a name, icon and provider.
+Clicking on it will open a window with all available assistants for the given field. They are clearly divided into groups (e.g. **Generation**, **Copywriting**, **Improvement**). Each one has a name, icon, and provider.
 
 ![](page_builder-assistants.png)
 
-Clicking on the assistant will start its execution. Each block is treated as a separate text/content and processed separately. The window will gradually update the status of how many blocks out of the total number have already been processed.
+Clicking on the assistant will start its execution. Each block is considered a separate text/content and is processed separately. The window will gradually update the status of how many blocks out of the total number have already been processed.
 
 ![](page_builder-loading.png)
 
-Once successfully completed, the resulting content is automatically inserted into the page. A confirmation and token consumption information will be displayed in the window. If the result is not satisfactory, use the <button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back" ></i> Cancel change</button> return to the original value.
+Upon successful completion, the resulting content will be automatically inserted into the page. A confirmation window will appear with information about token consumption. If the result is not satisfactory, use the button<button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i>Cancel the change</button> to return to the original value.
 
-In this case, the assistant is set up (and we recommend it when editing the page content) to still describe in the window all the changes it has made to the page content, offering feedback on what needed to be edited.
+In this case, the assistant is set up so that (and we also recommend this when editing page content) it will also describe all the changes it made to the page content in the window, thus offering feedback on what needed to be edited.
 
 ![](page_builder-done.png)
 
 ### Only part of the text
 
-You don't have to edit the entire content of the page. Assistant working with `PageBuilder` also supports editing only a selected part. If you select only part of the content and then call the assistant, it will edit only the selected part.
+You don't have to edit the entire page content. The assistant working with `PageBuilder` also supports editing only a selected part. If you select only a part of the content and then call the assistant, it will edit only that selected part.
 
 ![](page_builder-selection.png)
 
 ## Chat mode
 
-If the assistant is set to chat mode, changes in PageBuilder are applied to the entire structure, not just the text/editable content. The assistant can thus generate new blocks, edit existing ones, and so on. You can make requests to it to edit text in the page and generate new blocks. You activate the mode by setting the Request Type field to `Chat` in the characteristics of the assistant.
+If the assistant is set to chat mode, changes in PageBuilder are applied to the entire structure, not just text/editable content. The assistant can then generate new blocks, edit existing ones, and so on. You can give it requests to edit text on the page and generate new blocks. You activate the mode by setting the Request type field to the value `Chat` in the assistant properties.
 
-The request window contains new fields for setting the mode:
-- **Add** - adds the output HTML code from the request to the end of the page. It does not send the actual page content to the assistant, so execution is cheaper (less tokens are consumed).
-- **Edit by** - together with the instruction and your request, the actual HTML code of the page is sent, in which the assistant can edit texts, blocks, HTML code. More tokens are consumed to execute the request.
-- **Replace** - similar to add, the actual page code is not sent with the request. As a result, the current page is replaced. Useful if you want to start over and delete all the current content.
+The request entry window includes new fields for setting the mode:
+
+- **Append** - adds the output HTML code from the request to the end of the page. It does not send the current page content to the assistant, so it is cheaper to execute (fewer tokens are consumed).
+- **Edit** - along with the instruction and your request, the current HTML code of the page is also sent, in which the assistant can edit texts, blocks, HTML code. More tokens are consumed to execute the request.
+- **Replace** - similar to add, the current page code is not sent with the request. The result is a replaced current page. Suitable if you want to start over and delete all current content.
 
 ![](pb-chat-prompt.png)
 
-After the request is executed, a window with the status and the number of tokens used is displayed. Additionally, in this window there is an option **Continue**, which redisplays the window for entering the request.
+After the request is made, a window will appear with the status and number of tokens used. In addition, there is an option **Continue** in this window, which will display the window for entering the request again.
 
 ![](pb-chat-success.png)
 
-You can then continue editing the web page and submit a request to edit the text of the page. By selecting the option **Edit by** the actual HTML code of the page is sent along with your request, so the assistant can make changes to it.
+You can then continue editing the website and submit a request to edit the text of the page. Selecting **Edit** will send the current HTML code of the page along with your request, so the assistant can make changes to it.
 
 ![](pb-chat-edit.png)
 
-The edits you have made will be displayed in the web page and you can click Continue again to enter another request, or click **OK** assistant to terminate. Note in the photo that the title has been modified from the previous version according to the request.
+The changes you made will be displayed on the web page and you can click Continue again to enter another request, or click **OK** to exit the assistant. Note in the photo that the title has been modified compared to the previous version according to the entered request.
 
 ![](pb-chat-edit-success.png)
 
-## Pictures in the page
+## Images on the page
 
-You can also use the AI assistant to embed images into a web page. The assistant button is located in the bottom right corner at the end of the image address field.
+You can also use the AI ​​assistant when inserting images into a web page. The assistant button is located in the lower right corner at the end of the image address field.
 
 ![](page-image.png)
 
-When clicked, a window opens with all available assistants, which are worked with in the same way as described in [Image fields](./README.md#image-fields)
+After clicking, a window will open with all available assistants, which are worked with in the same way as described in the [Image fields](./README.md#image-fields) section.
 
 ![](page-image-assistants.png)
 
 ## Empty field
 
-Assistants often use the contents of a given field as input; if the field is empty, they will not be displayed. For example, Translate to English does not make sense to display if the field is empty. There may be a situation where no assistant is available for an empty field, in which case an error message will be displayed. You need to enter the text in the field first, then display the assistants.
+Assistants often use the contents of a given field as an input value, if the field is empty, they will not be displayed. For example, Translate to English does not make sense to display if the field is empty. It may happen that no assistant is available for an empty field, in which case an error message will be displayed. You must first enter text into the field before displaying assistants.
 
-However, the same field is not always used for the input value. For example, in editing a web page, there is an assistant to generate the Title of the web page from its text. If the text of the web page is blank for now this option may not be displayed.
+However, the same field is not always used for the input value. For example, in editing a web page, there is an assistant for generating the Web page name from its text. If the web page text is currently empty, this option may not be displayed.
 
 ![](no-assistants-available.png)

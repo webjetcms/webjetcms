@@ -5,9 +5,11 @@ Pridajte na svoju stránku externý HTML kód pre aplikácie, ktoré nie sú pri
 ## Nastavenia aplikácie
 
 V nastaveniach možno:
+
 - Vložiť HTML kód do stránky
 
 ![](editor.png)
 
 ## Zobrazenie aplikácie
+
 ![](app-htmlembed.png)

@@ -1,21 +1,21 @@
 # Spring MVC - admin with file upload
 
-Sample Spring MVC application in administration with file upload to backend.
+Sample Spring MVC application in the administration with file upload to the backend.
 
 ![](admin-upload.png)
 
 ## Backend
 
-In the administration, the page view is realized by [AdminThymeleafController](../../developer/frameworks/README.md). The form/data for the MVC application are inserted into the model by listening [events for displaying the page in the administration](../../developer/frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
+In the administration, the page display is implemented using [AdminThymeleafController](../../developer/frameworks/README.md). The form/data for the MVC application is inserted into the model by listening to [page display events in the administration](../../developer/frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
 
-Processing the uploaded file is more complicated, if you need to use the file we recommend to extend the class [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html) which simplifies the processing of the uploaded file.
+Processing an uploaded file is more complicated, if you also need to use a file, we recommend extending the [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html) class, which simplifies processing an uploaded file.
 
-Class `AbstractUploadListener` ensure processing `multipart requestu` in the constructor by calling `super.processForm(event);` and setting the attributes of the specified bean (form). Calling `getForm()` gets the form object and the call `getBindingResult()` get any error messages - verification of mandatory fields, etc.
+The ```AbstractUploadListener``` class will handle ```multipart requestu``` in the constructor by calling ```super.processForm(event);``` and setting the attributes of the specified bean (form). Calling ```getForm()``` will get the form object and calling ```getBindingResult()``` will get any error messages - validation of required fields, etc.
 
 ```java
 package sk.iway.basecms.contact.upload;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +68,9 @@ public class UploadExampleListener extends AbstractUploadListener<Form> {
 }
 ```
 
-Class `Form` is just a simple bean, the recorded file is of type `MultipartFile`. For example, it contains the fields `p1` a `p2` with a demonstration of the validation of the mandatory field and **validation samples of 10 to 20 characters in length**.
+The ```Form``` class is just a simple bean, the uploaded file is of type ```MultipartFile```. For the example, it contains the fields ```p1``` and ```p2``` with a demonstration of mandatory field validation and **demonstrations of 10 to 20 character length validation**.
 
-For validation, standard annotations are supported for field validations using [javax.validation.Validator](https://www.baeldung.com/javax-validation).
+For validation, standard annotations for field validations are supported using [jakarta.validation.Validator](https://www.baeldung.com/javax-validation).
 
 ```java
 package sk.iway.basecms.contact.upload;
@@ -80,9 +80,9 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Component
 @Getter
@@ -109,11 +109,11 @@ form.document.not_null=Dokument nemôže byť prázdny
 
 ## Frontend
 
-The HTML code of the page contains standard `Spring MVC` Form.
+The HTML code of the page contains the standard `Spring MVC` form.
 
-The sample includes a display of the name of the uploaded file, which is obtained from the attribute `importedFileName`, which is set on the backend after the file has been successfully uploaded.
+The sample includes a display of the name of the uploaded file, which is obtained from the ```importedFileName``` attribute, which is set on the backend after the file is successfully uploaded.
 
-Error messages are retrieved from the object `fields.errors` and if any are displayed in the form.
+Error messages are retrieved from the ```fields.errors``` object and, if they exist, are displayed in the form.
 
 ```html
 <script type="text/javascript">
@@ -168,6 +168,6 @@ window.domReady.add(function () {
 </section>
 ```
 
-## Notes on implementation
+## Implementation notes
 
-The configuration for uploading the file is set in `V9SpringConfig.multipartResolver()` and served through `ThymeleafAdminController.appHandlerPost()`, which handles `consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }`.
+The configuration for file upload is set up in ```V9SpringConfig.multipartResolver()``` and served via ```ThymeleafAdminController.appHandlerPost()```, which is processed by ```consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }```.

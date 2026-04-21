@@ -1,42 +1,40 @@
-# Information about the project
+# Project information
 
 | Method | Type | Description |
-| ------------------------------ | -------- | ----------------------- |
-| ${ninja.temp.group.siteName}   | *String* | Project name |
-| ${ninja.temp.group.autor}      | *String* | Author |
-| ${ninja.temp.group.copyright}  | *String* | Copyright |
-| ${ninja.temp.group.developer}  | *String* | Developer |
-| ${ninja.temp.group.generator}  | *String* | Generator |
+| --- | --- | --- |
+| ${ninja.temp.group.siteName} | *String* |  Project name |
+| ${ninja.temp.group.author} | *String* | Author |
+| ${ninja.temp.group.copyright} | *String* | Copyright |
+| ${ninja.temp.group.developer} | *String* | Developer |
+| ${ninja.temp.group.generator} | *String* | Generator |
 | ${ninja.temp.group.textPrefix} | *String* | Text key prefix |
-| ${ninja.temp.group.fieldA}     | *String* | Field A |
-| ${ninja.temp.group.fieldB}     | *String* | Field B |
-| ${ninja.temp.group.fieldC}     | *String* | Field C |
-| ${ninja.temp.group.fieldD}     | *String* | Field D |
+| ${ninja.temp.group.fieldA} | *String* | Field A |
+| ${ninja.temp.group.fieldB} | *String* | Field B |
+| ${ninja.temp.group.fieldC} | *String* | Field C |
+| ${ninja.temp.group.fieldD} | *String* | Field D |
 
 ## Project name *String*
 
-The value set for the template group in the :european\_castle field: `Názov projektu`.
+The value set to the template group in the :european_castle: `Názov projektu` field.
 
 ```java
 ${ninja.temp.group.siteName}
 ```
 
 Used in :ghost:<code>head.jsp</code>
-
 ```html
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 ```
 
 ## Author *String*
 
-The value set for the template group in the :european\_castle field: `Autor`.
+The value set to the template group in the :european_castle: `Autor` field.
 
 ```java
 ${ninja.temp.group.autor}
 ```
 
 Used in :ghost:<code>head.jsp</code>
-
 ```html
 <title>${ninja.page.doc.title} | ${ninja.temp.group.author}</title>
 <meta name="author" content="${ninja.temp.group.author}" />
@@ -44,49 +42,46 @@ Used in :ghost:<code>head.jsp</code>
 
 ## Copyright *String*
 
-The value set for the template group in the :european\_castle field: `Copyright`.
+The value set to the template group in the :european_castle: `Copyright` field.
 
 ```java
 ${ninja.temp.group.copyright}
 ```
 
 Used in :ghost:<code>head.jsp</code>
-
 ```html
 <meta name="copyright" content="${ninja.temp.group.copyright}" />
 ```
 
 ## Developer *String*
 
-The value set for the template group in the :european\_castle field: `Developer`.
+The value set to the template group in the :european_castle: `Developer` field.
 
 ```java
 ${ninja.temp.group.developer}
 ```
 
 Used in :ghost:<code>head.jsp</code>
-
 ```html
 <meta name="developer" content="${ninja.temp.group.developer}" />
 ```
 
-## Generator *String*
+## *String* Generator
 
-The value set for the template group in the :european\_castle field: `Generátor`.
+The value set to the template group in the :european_castle: `Generátor` field.
 
 ```java
 ${ninja.temp.group.generator}
 ```
 
 Used in :ghost:<code>head.jsp</code>
-
 ```html
 <meta name="generator" content="${ninja.temp.group.generator}" />
 ```
 
-## Prefix of text keys *String*
+## Text Key Prefix *String*
 
-The value set for the template group in the :european\_castle field: `Prefix textových kľúčov`.
+The value set to the template group in the :european_castle: `Prefix textových kľúčov` field.
 
 ```java
 ${ninja.temp.group.textPrefix}
@@ -94,7 +89,7 @@ ${ninja.temp.group.textPrefix}
 
 ## Field A *String*
 
-The value set for the template group in the :european\_castle field: `Pole A`.
+The value set to the template group in the :european_castle: `Pole A` field.
 
 ```java
 ${ninja.temp.group.fieldA}
@@ -102,15 +97,15 @@ ${ninja.temp.group.fieldA}
 
 ## Field B *String*
 
-The value set for the template group in the :european\_castle field: `Pole B`.
+The value set to the template group in the :european_castle: `Pole B` field.
 
 ```java
 ${ninja.temp.group.fieldB}
 ```
 
-## Field C *String*
+## C field *String*
 
-The value set for the template group in the :european\_castle field: `Pole C`.
+The value set to the template group in the :european_castle: `Pole C` field.
 
 ```java
 ${ninja.temp.group.fieldC}
@@ -118,7 +113,7 @@ ${ninja.temp.group.fieldC}
 
 ## Field D *String*
 
-The value set for the template group in the :european\_castle field: `Pole D`.
+The value set to the template group in the :european_castle: `Pole D` field.
 
 ```java
 ${ninja.temp.group.fieldD}
