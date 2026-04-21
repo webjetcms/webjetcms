@@ -1,4 +1,4 @@
-# Test translations
+# Translation test
 
 The purpose of this file is to test the compiler and formatting retention. This file should contain various types of formatting such as **bold text**, *italics*, `kód`, and [Google](https://www.google.com) links.
 
@@ -71,7 +71,7 @@ We have various strange constructions in the changelog.
 
 ### Websites
 
-- Added the ability to insert a `PICTURE` element that displays [image based on screen resolution](../frontend/setup/ckeditor.md#picture-element) of the visitor. This allows you to display different images on a mobile phone, tablet, or computer (#58141).
+- Added the ability to insert a `PICTURE` element that displays [image based on screen resolution](../frontend/setup/ckeditor.md#picture-element) of the visitor. So you can display different images on a mobile phone, tablet or computer (#58141).
 
 ![](../frontend/setup/picture-element.png)
 
@@ -217,9 +217,9 @@ This is the second line after the soft-break.
 
 ## Escaped characters
 
-These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, \[square bracket\], \#grid, backslash \`, \&ampersand\.
+These characters must remain intact after translation: \*asterisk\*, \_underscore\_, \`spätný apostrof\`, \[square bracket\], \#grid, backslash \`, \&ersand\.
 
-## Images
+## Pictures
 
 Image with alt text:
 
@@ -233,7 +233,7 @@ Reference image:
 
 ![Logo][logo]
 
-[logo]: ../frontend/setup/picture-element.png "WebJET Logo"
+[logo]: ../frontend/setup/picture-element.png "WebJET logo"
 
 ## Mixed formatting in text
 
@@ -258,13 +258,13 @@ Table with column alignment:
 
 ## Inline HTML
 
-Text with inline HTML: this is <strong>bold HTML text</strong> and this is <em>italic HTML</em>.
+Text with inline HTML: this is <strong>bold HTML text</strong> and this is <em>HTML italics</em> .
 
-Inline <code>HTML code</code> and <a href="https://www.google.com">HTML link</a>.
+Inline <code>HTML code</code> and <a href="https://www.google.com">HTML link</a> .
 
-<p>A paragraph in HTML with <strong>bold</strong> text and a <a href="https://www.google.com" title="Google">link</a>.</p>
+<p>A paragraph in HTML tag with <strong>bold</strong> text and <a href="https://www.google.com" title="Google">a link</a> .</p>
 
-## Multiline lists with paragraphs
+## Multi-line lists with paragraphs
 
 - First item on the list.
 

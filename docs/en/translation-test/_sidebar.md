@@ -3,9 +3,9 @@
 - [:point_left: Back to Home](/?back)
 
 - Installation
-  - [Prerequisites and Versions](/install/versions.md)
+  - [Prerequisites and versions](/install/versions.md)
   - [Setting up a new installation](/install/setup/README.md)
-  - [License number setting](/install/license/README.md)
+  - [Setting the license number](/install/license/README.md)
 - Configuration
   - [Basic configuration](/install/config/README.md)
   - [External Configuration](/install/external-configuration.md)
