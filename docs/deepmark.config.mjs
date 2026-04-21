@@ -7,7 +7,7 @@ export default {
     //outputLanguages: ['cs'],
     directories: [
         //['sk', '$langcode$'],
-        ['sk/frontend', '$langcode$/frontend'],
+        ['sk/install', '$langcode$/install'],
     ],
     //translationEngine: "deepl"
     translationEngine: "google"

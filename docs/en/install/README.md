@@ -2,8 +2,8 @@
 
 WebJET CMS installation manual.
 
-## Download documentation
+## Documentation for download
 
-This documentation can also be downloaded in PDF format for printing.
+You can also download this documentation in PDF format for printing.
 
-[Installation manual - PDF](../_media/manuals/webjetcms-install.pdf)
+[Installation Manual - PDF](../_media/manuals/webjetcms-install.pdf)
