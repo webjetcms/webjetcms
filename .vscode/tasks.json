@@ -582,6 +582,32 @@
                 "clear": true,
                 "showReuseMessage": false
             }
+        },
+        {
+            "label": "Docker RAG PgSQL Start",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "if ! docker ps | grep -q webjetcms-rag-pgsql; then docker compose -f docker-compose-rag-pgsql.yml up -d && echo 'Waiting for initialization' && sleep 30 && echo 'Started RAG PgSQL container'; else echo 'RAG PgSQL container already running'; fi",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker RAG PgSQL Stop",
+            "type": "shell",
+            "options": {
+                "cwd": ".devcontainer/db/"
+            },
+            "command": "docker compose -f docker-compose-rag-pgsql.yml down",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
         }
     ]
 }

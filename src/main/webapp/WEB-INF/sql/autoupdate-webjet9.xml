@@ -3413,5 +3413,70 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>copilot</string></void>
+                <void property="date"><string>21.04.2026</string></void>
+                <void property="desc"><string>rag_index_queue - create table for RAG indexing queue</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE rag_index_queue (
+                        id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                        entity_type VARCHAR(100) NOT NULL,
+                        entity_id INT NOT NULL,
+                        action VARCHAR(20) NOT NULL,
+                        domain_id INT DEFAULT 0 NOT NULL,
+                        create_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE KEY uq_rag_queue (entity_type, entity_id, action)
+                    );
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE rag_index_queue (
+                        [id] [INT] IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                        [entity_type] [NVARCHAR](100) NOT NULL,
+                        [entity_id] [INT] NOT NULL,
+                        [action] [NVARCHAR](20) NOT NULL,
+                        [domain_id] [INT] DEFAULT 0 NOT NULL,
+                        [create_date] [DATETIME] DEFAULT GETDATE()
+                    ) ON [PRIMARY];
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action);
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE rag_index_queue (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        entity_type NVARCHAR2(100) NOT NULL,
+                        entity_id INTEGER NOT NULL,
+                        action NVARCHAR2(20) NOT NULL,
+                        domain_id INTEGER DEFAULT 0 NOT NULL,
+                        create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                    CREATE SEQUENCE S_rag_index_queue START WITH 1;
+                    CREATE TRIGGER T_rag_index_queue BEFORE INSERT ON rag_index_queue
+                        FOR EACH ROW
+                            DECLARE
+                                val INTEGER|
+                            BEGIN
+                                IF :new.id IS NULL THEN
+                                    SELECT S_rag_index_queue.nextval into val FROM dual|
+                                    :new.id:= val|
+                                END IF|
+                            END|
+                    ;
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action);
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE SEQUENCE S_rag_index_queue START WITH 1;
+                    CREATE TABLE rag_index_queue (
+                        id INT DEFAULT NEXTVAL('S_rag_index_queue') PRIMARY KEY NOT NULL,
+                        entity_type VARCHAR(100) NOT NULL,
+                        entity_id INT NOT NULL,
+                        action VARCHAR(20) NOT NULL,
+                        domain_id INT DEFAULT 0 NOT NULL,
+                        create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (entity_type, entity_id, action)
+                    );
+                </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

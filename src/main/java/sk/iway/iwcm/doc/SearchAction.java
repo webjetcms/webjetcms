@@ -31,13 +31,18 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.rag.search.HybridSearchService;
+import sk.iway.iwcm.rag.search.SemanticSearchResult;
+import sk.iway.iwcm.rag.search.SemanticSearchService;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -1009,6 +1014,10 @@ public class SearchAction
 
 		totalResults = getResultsCount(sqlTotalResults, request, words, wordsAscii, wordsMysql, aList.size(), hasAnotherPage);
 		request.setAttribute("words", words);
+
+		// Hybrid search: merge keyword results with semantic search results using RRF
+		aList = mergeWithSemanticSearch(aList, words, request);
+
 		request.setAttribute("aList", aList);
 		if (aList.isEmpty())
 		{
@@ -1686,4 +1695,87 @@ public class SearchAction
     public static String[] getCheckInputParams() {
 		return SearchTools.getCheckInputParams();
     }
+
+	/**
+	 * Merge keyword search results with semantic search results using Reciprocal Rank Fusion (RRF).
+	 * Only runs when ragSemanticSearchEnabled is true and the vector store is available.
+	 */
+	private static List<SearchDetails> mergeWithSemanticSearch(List<SearchDetails> keywordResults, String query, HttpServletRequest request) {
+		if (Constants.getBoolean("ragSemanticSearchEnabled") == false) return keywordResults;
+		if (Tools.isEmpty(query)) return keywordResults;
+
+		try {
+			org.springframework.context.ApplicationContext ctx = SpringContext.getApplicationContext();
+			if (ctx == null) return keywordResults;
+
+			SemanticSearchService semanticSearch = ctx.getBean(SemanticSearchService.class);
+			if (semanticSearch == null || semanticSearch.isAvailable() == false) return keywordResults;
+
+			Integer domainId = CloudToolsForCore.getDomainId();
+			String language = request.getParameter("lng");
+			int maxResults = keywordResults.size() > 0 ? keywordResults.size() : 20;
+
+			List<SemanticSearchResult> semanticResults = semanticSearch.search(query, domainId, language, maxResults);
+			if (semanticResults.isEmpty()) return keywordResults;
+
+			// Convert SearchDetails to DocDetails for RRF merge
+			List<DocDetails> keywordDocs = new ArrayList<>(keywordResults);
+			List<DocDetails> merged = HybridSearchService.mergeResults(keywordDocs, semanticResults, maxResults);
+
+			// Load documents that only appeared in semantic results
+			java.util.Set<Integer> semanticOnlyIds = HybridSearchService.getSemanticOnlyDocIds(keywordDocs, semanticResults);
+			Map<Integer, SearchDetails> keywordMap = new HashMap<>();
+			for (SearchDetails sd : keywordResults) {
+				keywordMap.put(sd.getDocId(), sd);
+			}
+
+			List<SearchDetails> result = new ArrayList<>();
+			for (DocDetails doc : merged) {
+				SearchDetails sd = keywordMap.get(doc.getDocId());
+				if (sd != null) {
+					result.add(sd);
+				} else {
+					// Create SearchDetails from DocDetails loaded by semantic search
+					DocDetails loaded = DocDB.getInstance().getDoc(doc.getDocId());
+					if (loaded != null) {
+						SearchDetails newSd = new SearchDetails();
+						newSd.setDocId(loaded.getDocId());
+						newSd.setTitle(loaded.getTitle());
+						newSd.setVirtualPath(loaded.getVirtualPath());
+						newSd.setData(loaded.getData());
+						result.add(newSd);
+					}
+				}
+			}
+
+			// Add any semantic-only docs that weren't in the merged list
+			for (Integer docId : semanticOnlyIds) {
+				if (keywordMap.containsKey(docId) == false) {
+					boolean alreadyInResult = false;
+					for (SearchDetails sd : result) {
+						if (sd.getDocId() == docId.intValue()) {
+							alreadyInResult = true;
+							break;
+						}
+					}
+					if (alreadyInResult == false) {
+						DocDetails loaded = DocDB.getInstance().getDoc(docId);
+						if (loaded != null) {
+							SearchDetails newSd = new SearchDetails();
+							newSd.setDocId(loaded.getDocId());
+							newSd.setTitle(loaded.getTitle());
+							newSd.setVirtualPath(loaded.getVirtualPath());
+							newSd.setData(loaded.getData());
+							result.add(newSd);
+						}
+					}
+				}
+			}
+
+			return result;
+		} catch (Exception e) {
+			Logger.error(SearchAction.class, "Error in semantic search merge, falling back to keyword results: " + e.getMessage(), e);
+			return keywordResults;
+		}
+	}
 }
