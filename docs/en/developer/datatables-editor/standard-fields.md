@@ -4,7 +4,7 @@ All standard form fields can be used in the editor.
 
 ## ID
 
-Represents a column with a primary key, example:
+Represents a primary key column, example:
 
 ```java
 public class CalendarEventsEntity {
@@ -18,9 +18,9 @@ public class CalendarEventsEntity {
 }
 ```
 
-## OPEN\_EDITOR
+## OPEN_EDITOR
 
-A text type field that displays a link to open the record editor, example:
+A text field type that displays a link to open the record editor, example:
 
 ```java
     @Column(name = "title")
@@ -44,9 +44,9 @@ Standard text field, example:
 
 ![](../../frontend/webpages/customfields/webpages-text.png)
 
-## NUMBER / TEXT\_NUMBER
+## NUMBER / TEXT_NUMBER
 
-Text field `type="number"`, the browser typically also displays arrows in the field to zoom in/out the entered value. Example:
+Text field ```type="number"```, the browser typically displays arrows in the field to increase/decrease the entered value. Example:
 
 ```java
     @Column(name = "priority")
@@ -59,11 +59,11 @@ Text field `type="number"`, the browser typically also displays arrows in the fi
 	private Integer priority;
 ```
 
-The difference between `NUMBER` a `TEXT_NUMBER` is in the datatable view. `TEXT_NUMBER` displays the rounded number, for a higher number it prints in text form, e.g. `10 tis.` instead of `10000`. In the editor, the behaviour is the same (the exact value is displayed).
+The difference between ```NUMBER``` and ```TEXT_NUMBER``` is in the display in the data table. ```TEXT_NUMBER``` displays a rounded number, for a higher number it is displayed in text form, e.g. ```10 tis.``` instead of ```10000```. In the editor the behavior is the same (the exact value is displayed).
 
 ## PASSWORD
 
-Text field `type="password"` to enter the password.
+Text field ```type="password"``` for entering the password.
 
 ```java
     @DataTableColumn(
@@ -78,7 +78,7 @@ Text field `type="password"` to enter the password.
 
 ## TEXTAREA
 
-Multi-line text box. Long text is not wrapped, if you want to wrap long text into multiple lines set `className = "wrap"`:
+Multi-line text field. Long text does not wrap, if you want to wrap long text into multiple lines, set `className = "wrap"`:
 
 ```java
     @Column(name = "gallery_perex")
@@ -108,13 +108,10 @@ Multi-line text box. Long text is not wrapped, if you want to wrap long text int
 
 ## DATE
 
-Selecting a date, when you click in the field, the date selection window appears.
-
-Note the setting `@Temporal(TemporalType.TIMESTAMP)` for correct field to database column conversion (required by JPA).
+Date selection, clicking in the field will display a date selection window.
 
 ```java
     @Column(name = "date_from")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -125,11 +122,10 @@ Note the setting `@Temporal(TemporalType.TIMESTAMP)` for correct field to databa
 
 ## DATETIME
 
-Similar field as `DATE` but in addition, it also allows you to select the time.
+Similar field to ```DATE``` but also allows time selection.
 
 ```java
     @Column(name = "date_to")
-	@Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -139,13 +135,13 @@ Similar field as `DATE` but in addition, it also allows you to select the time.
 	private Date dateTo;
 ```
 
-## TIME\_HM and TIME\_HMS
+## TIME_HM and TIME_HMS
 
-Fields similar to `DATETIME` but they ONLY allow time selection. Version `TIME_HM` is the time selection using hours and minutes. Version `TIME_HMS` allows you to select the time using hours, minutes and seconds.
+Similar fields to ```DATETIME``` but ONLY allow time selection. Version ```TIME_HM``` is time selection using hours and minutes. Version ```TIME_HMS``` allows time selection using hours, minutes and seconds.
 
-Note the setting `@Convert(converter = DefaultTimeValueConverter.class)` which sets the same date for each selected time, namely `01.01.2000` while the time selection remains unchanged. This same date setting is not visible, but is important in terms of how it works when filtering records using these time fields.
+Note the setting ```@Convert(converter = DefaultTimeValueConverter.class)``` which sets the same date for each selected time, ```01.01.2000```, while the time selection remains unchanged. This same date setting is not visible, but is important for the functionality of filtering records using these time fields.
 
-It should be remembered that the class `DefaultTimeValueConverter` implemented by `AttributeConverter`, which inherently means that this converter only works when it is a column in an entity that represents a database column. If the column you select does not satisfy this, you must set its value using one of the static functions contained in the class `DefaultTimeValueConverter`.
+Note that the ```DefaultTimeValueConverter``` class implements ```AttributeConverter```, which means that this converter only works if it is a column in an entity that represents a database column. If the column you have chosen does not meet this requirement, you must set its value using one of the static functions contained in the ```DefaultTimeValueConverter``` class.
 
 ```java
     @Column(name = "reservation_time_to")
@@ -161,15 +157,15 @@ It should be remembered that the class `DefaultTimeValueConverter` implemented b
 
 ## SELECT
 
-Selection field, set by type `DataTableColumnType.SELECT`.
+Selection field, set with type ```DataTableColumnType.SELECT```.
 
 ![](../../frontend/webpages/customfields/webpages-select.png)
 
 It is important to define the options of the selection field:
 
-### By transferring data from the REST service
+### By transferring data from a REST service
 
-When reading the datatable, it is possible to transfer not only the records, but also the so-called. `option` Attributes. These are then also set as options for the specified fields. The options can be set by overriding the method `getOptions`.
+When reading a data table, in addition to records, it is possible to transfer so-called ```option``` attributes. These are subsequently set as options for the specified fields. The options can be set by overriding the ```getOptions``` method.
 
 ```java
 public class ContactRestController extends DatatableRestControllerV2<ContactEntity, Long> {
@@ -205,11 +201,11 @@ public class ContactEntity {
 }
 ```
 
-Warning: if you overwrote the method as well `getAll(Pageable pageable)` a call is needed `getOptions` make in your code methods `getAll`.
+Warning: if you also overwrite method ```getAll(Pageable pageable)```, the call to ```getOptions``` must be made in your code of method ```getAll```.
 
-### By linking to the dial
+### By linking to the dialer
 
-User-editable lists of data can be easily created in the dials application. These can be used as selection field options. This is set by the value `enumeration:MENO-CISELNIKA`:
+In the code list application, it is easy to create user-editable lists of data. These can be used as selection field options. This is set with the value ```enumeration:MENO-CISELNIKA```:
 
 ```java
 public class ContactEntity {
@@ -227,9 +223,9 @@ public class ContactEntity {
 }
 ```
 
-### Linking to Java class
+### By linking to a Java class
 
-If the data is retrieved in a special way you can get a list of options by calling a Java class that returns a list of data. This is set by the value `method:PACKAGE.TRIEDA.METODA` whereby the `value` it is possible to specify attribute names to retrieve text and values in the format `LABEL-PROPERTY:VALUE-PROPERTY`.
+If the data is retrieved in a special way, you can get a list of options by calling a Java class that returns a list of data. This is set to the value ```method:PACKAGE.TRIEDA.METODA```, while in ```value``` you can enter attribute names to retrieve text and values ​​in the format ```LABEL-PROPERTY:VALUE-PROPERTY```.
 
 ```java
 public class ContactRestController extends DatatableRestControllerV2<ContactEntity, Long> {
@@ -263,9 +259,9 @@ public class ContactEntity {
 }
 ```
 
-### By listing the options directly in the entity
+### By listing options directly in the entity
 
-You can directly list individual options using the list `@DataTableColumnEditorAttr`, as displayed text (attribute `key`), you can use the translation key:
+You can list the individual options directly using the ```@DataTableColumnEditorAttr``` list, and use the translation key as the displayed text (attribute ```key```):
 
 ```java
 	@Column(name = "banner_type")
@@ -286,15 +282,15 @@ You can directly list individual options using the list `@DataTableColumnEditorA
 	private Integer bannerType;
 ```
 
-Note that even if you enter the values in value as a string they are correctly converted to a number (technically in the HTML code everything is a string, but Spring converts it correctly when sending and displaying).
+Note that even if you enter values ​​into value as strings, they are correctly converted to numbers (technically, everything in the HTML code is a string, but Spring converts it correctly when sending and displaying).
 
 ## MULTISELECT
 
-Multiple choice selection box, type `DataTableColumnType.MULTISELECT`. Allows to work with an array of objects, or with a comma-separated list (after setting the attribute `separator` in which you specify the separator character).
+Multiple-choice selection field, type ```DataTableColumnType.MULTISELECT```. Allows you to work with an array of objects or a comma-separated list (after setting the ```separator``` attribute, in which you specify a separator character).
 
 ![](../../frontend/webpages/customfields/webpages-select-multi.png)
 
-Examples of use:
+Usage examples:
 
 ```java
 public class ContactEntity {
@@ -339,9 +335,9 @@ public class ContactEntity {
 }
 ```
 
-For the attribute `multipleOddeleneCiarkou` the values are separated by the character defined in the attribute `separator`. So the value after sending will look like e.g. `"Tri,Pat"`.
+For the ```multipleOddeleneCiarkou``` attribute, the values ​​are separated using the character defined in the ```separator``` attribute. So the value after sending will look like, for example, ```"Tri,Pat"```.
 
-Values separated by a comma should be used for `MULTISELECT` fields used for application setup (using annotation `@WebjetAppStore`):
+Comma separated values ​​should be used for ```MULTISELECT``` fields used for application settings (using ```@WebjetAppStore``` annotation):
 
 ```java
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
@@ -368,9 +364,9 @@ public class ContactApp extends WebjetComponentAbstract {
 
 ## CHECKBOX
 
-Standard checkbox, allows to work with an array of objects (multiple options selected). Using the attribute `unselectedValue` is set if the field is unchecked.
+Standard checkbox, allows you to work with object fields (multiple options selected). The ```unselectedValue``` attribute is used to set the value if the field is not checked.
 
-You can also use the option to set the attribute `data-dt-field-headline` for a separate heading above the list of fields.
+You can also use the option to set the ```data-dt-field-headline``` attribute for a separate heading above the field list.
 
 ```java
     @DataTableColumn(
@@ -420,7 +416,7 @@ Standard field for selecting one of the options.
 
 ## BOOLEAN
 
-Represents a simplified notation of an array type `CHECKBOX` for binary yes/no option.
+Represents a simplified notation of a field of type ```CHECKBOX``` for a binary yes/no choice.
 
 ```java
     @Column(name = "require_approve")
@@ -432,9 +428,9 @@ Represents a simplified notation of an array type `CHECKBOX` for binary yes/no o
     private Boolean requireApprove;
 ```
 
-## BOOLEAN\_TEXT
+## BOOLEAN_TEXT
 
-It represents the type `BOOLEAN` for a binary yes/no option with a caption on the right instead of the left and a Yes option next to the checkbox.
+Represents the type ```BOOLEAN``` for a binary yes/no option with a caption on the right instead of the left and a Yes option for a checkbox.
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.news.paging")
@@ -456,7 +452,7 @@ Hidden field, will not be displayed in the editor.
 
 ## DISABLED
 
-Displays a text field whose value cannot be changed. In the example, note that the field types can be combined. Setting `DISABLED` sets the HTML attribute `disabled="disabled"`.
+Displays a text field whose value cannot be changed. Note in the example that field types can be mixed. Setting ```DISABLED``` sets the HTML attribute ```disabled="disabled"```.
 
 ```java
     @Size(max = 255)
@@ -467,9 +463,9 @@ Displays a text field whose value cannot be changed. In the example, note that t
 
 ## QUILL
 
-Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and link.
+Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and links.
 
-Note the use of the converter `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)` which will only allow you to send [secure HTML code](../backend/security.md) (without embedded JavaScript elements and so on).
+Note the use of the ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` converter, which will allow only [secure HTML code](../backend/security.md) to be sent (without embedded JavaScript elements and the like).
 
 ```java
     @Column(name = "l_description_sk")
@@ -478,24 +474,24 @@ Note the use of the converter `@javax.persistence.Convert(converter = AllowSafeH
             title = "[[#{gallery.l_description}]] <span class='lang-shortcut'>sk</span>",
             tab = "description"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongSk;
 ```
 
 ![](../../redactor/apps/tooltip/tooltip-editor.png)
 
-If you set the CSS class `quill-oneline` a simplified editor without the ability to create paragraphs is displayed:
+If you set the CSS class ```quill-oneline```, a simplified editor will appear without the ability to create paragraphs:
 
 ```java
     @Column(name = "tooltip")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.formsimple.tooltip", className="quill-oneline", hidden = true, tab = "advanced")
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String tooltip;
 ```
 
 ## WYSIWYG
 
-Displays the full-featured HTML editor as used for editing web pages.
+Displays a full-featured HTML editor as used for editing web pages.
 
 ```java
     @Column(name = "description")
@@ -508,7 +504,7 @@ Displays the full-featured HTML editor as used for editing web pages.
     private String description;
 ```
 
-field must be used in a separate tab that has the attribute set `content: ''`:
+the field must be used in a separate card that has the ```content: ''``` attribute set:
 
 ```javascript
     var tabs = [
@@ -521,7 +517,7 @@ field must be used in a separate tab that has the attribute set `content: ''`:
 
 ## JSON
 
-Field [adding directories and web pages](field-json.md).
+Field [adding directories and websites](field-json.md).
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array")
@@ -530,9 +526,9 @@ Field [adding directories and web pages](field-json.md).
 
 ![](field-json-group-array.png)
 
-## DATATABLE
+## DATA TABLE
 
-Field [nested datatable in the editor](field-datatable.md).
+Field [nested datatable in editor](field-datatable.md).
 
 ```java
     @Transient
@@ -555,7 +551,7 @@ Field [nested datatable in the editor](field-datatable.md).
 
 ## ELFINDER
 
-Field for [file selection](field-elfinder.md) (link to file).
+Field for [file selection](field-elfinder.md) (file links).
 
 ```java
     @Column(name = "watermark")
@@ -571,7 +567,7 @@ Field for [file selection](field-elfinder.md) (link to file).
 
 ## JSTREE
 
-Field for selection [tree structures](field-jstree.md).
+Field for selecting [tree structure](field-jstree.md).
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.JSTREE, title = "components.user.righrs.user_group_rights", tab = "rightsTab", hidden = true,
@@ -591,7 +587,7 @@ Field for selection [tree structures](field-jstree.md).
 
 ## COLOR
 
-Field for selecting the colour in `HEX` format including transparency, e.g. `#FF0000FF`:
+Color selection field in `HEX` format including transparency, e.g. `#FF0000FF`:
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "basic", title="components.app-cookiebar.textColor")
@@ -600,7 +596,7 @@ Field for selecting the colour in `HEX` format including transparency, e.g. `#FF
 
 ## ICON
 
-Field for entering an icon from the set [Tabler Icons](https://tabler.io/icons/).
+Field for entering an icon from the [Tabler Icons](https://tabler.io/icons/) set.
 
 ```java
     @Column(name = "icon")
@@ -610,7 +606,7 @@ Field for entering an icon from the set [Tabler Icons](https://tabler.io/icons/)
 
 ## IFRAME
 
-Field for inserting another page into `iframe` element, it is used in applications in the editor for inserting e.g. photo galleries:
+Field for inserting another page into the `iframe` element, used in applications in the editor to insert, for example, a photo gallery:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
@@ -631,9 +627,9 @@ public class GalleryApp extends WebjetComponentAbstract {
 
 ## BASE64
 
-An array that encodes and decodes a value using an algorithm `base64`, shown as `textarea`. It is primarily used as a field for application in the editor to preserve special characters of the inserted value. If you need to use `base64` you can also set to another field type `className = "dt-style-base64"`.
+A field that encodes and decodes a value using the `base64` algorithm, displayed as `textarea`. It is primarily used as a field for the application in the editor to preserve special characters of the entered value. If you need to use `base64` for another type of field, you can set `className = "dt-style-base64"`.
 
-!>**Warning:** JavaScript function `btoa` only supports `ASCII` Characters.
+!>**Warning:** The JavaScript function `btoa` only supports `ASCII` characters.
 
 ```java
     @DataTableColumn(
@@ -652,9 +648,9 @@ An array that encodes and decodes a value using an algorithm `base64`, shown as 
     private String url;
 ```
 
-## STATIC\_TEXT
+## STATIC_TEXT
 
-Display static text at the position of the normal input field, i.e. on the right. Markdown syntax is supported in the translation key.
+Display of static text in the position of a regular input field, i.e. in the right part. Markdown syntax is supported in the translation key.
 
 ```java
     @DataTableColumn(
@@ -665,11 +661,11 @@ Display static text at the position of the normal input field, i.e. on the right
     private String explain;
 ```
 
-## IMAGE\_RADIO
+## IMAGE_RADIO
 
-Display a selection of one of the options based on the image. Used, for example, in the Poll app. Images are retrieved as a list from the file system, they need to be populated into an object `options` REST service responses. The image reference is entered into the object `OptionDto.original`.
+Displaying the selection of one of the options based on an image. Used, for example, in the Survey application. Images are obtained as a list from the file system, they need to be filled into the `options` object of the REST service response. The link to the image is entered into the `OptionDto.original` object.
 
-By setting up `className = "image-radio-horizontal"` it is possible to switch the display of options to horizontal in the row. By adding a CSS class `image-radio-fullwidth` the display of the label and selection is switched to row instead of column, in this case we recommend not to have any other fields in the tab and to set the value in the tab definition `content = ""` that the card does not have a grey bar in the background underlining the labels.
+By setting `className = "image-radio-horizontal"` it is possible to switch the display of options to horizontal in a row. By adding the CSS class `image-radio-fullwidth` it is possible to switch the display of the label and selection in a row instead of in a column, in which case we recommend not to have other fields in the card and to set the value `content = ""` in the card definition so that the card does not have a gray bar in the background that shades the labels.
 
 The implementation is in the file [field-type-imageradio.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-imageradio.js).
 

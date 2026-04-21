@@ -1,36 +1,35 @@
-# Library 'Ready'
+# 'Ready' library
 
 for managing and triggering callbacks.
 
-***
-
+---
 **Dependencies**
 
 - [Tools](tools.md)
-
-***
+---
 
 ### Description of operation:
 
-`ReadyExtender` serves as a virtual repository or collector of functions collected during the loading of the site and this collection of functions is manually executed at the end of the render in the order in which it is in the repository (in the order in which the functions were added).
+`ReadyExtender` serves as a virtual storage or collector of functions collected when loading the website
+and this collection of functions is manually executed at the end of the render in the order in which it is found in the repository (in the order in which the functions were added).
 
-**The order of the added function can also be specified when adding it.**
+**The order of the added function can also be determined when adding it.**
 
-At the end of loading the site, e.g. in `document.ready` call the method [fire()](#fire) and this will start the execution of the collected functions.
+At the end of loading the website, e.g. in `document.ready` we call the [fire()](#fire) method and this starts the execution of the collected functions.
 
-So we can specify when to run which function and we don't need to keep track of the order of execution of classic `document.ready` functions and we only need one function `document.ready` for the execution of [fire()](#fire)
+We can therefore determine when which function should be run and we no longer need to follow the order of execution of classic `document.ready` functions.
+and we only need one function `document.ready` to execute [fire()](#fire)
 
 ## Creating an instance:
 
 **WebJET** initializes the library in the file [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
-
 ```javascript
 import Ready from './libs/ready-extender/ready-extender';
 
 window.domReady = new Ready();
 ```
 
-**Application:**
+**Usage:**
 
 ```javascript
 window.domReady.add(() => {
@@ -60,17 +59,17 @@ window.domReady.add(() => {
 window.domReady.fire();
 ```
 
-## List of APIs
+## API List
 
-**(Click to see the detail for the function)**
+**(Click to view feature details)**
 
-| Methods | Getters |
-| ------------------- | --------------------- |
-| [add()](#add)       | [listName](#listName) |
-| [remove()](#remove) | [list](#list)         |
-| [fire()](#fire)     |
+| Methods                | Getters               |
+| -----------           | -----------           |
+| [add()](#add)         | [listName](#listName) |
+| [remove()](#remove)   | [list](#list)         |
+| [fire()](#fire)       |
 
-***
+---
 
 ### Detailed description of functions
 
@@ -78,10 +77,9 @@ window.domReady.fire();
 
 Adds a new function to the list.
 
-**Second input argument** determines the order of the added function. It is numbered from 1. If not specified, the function is added to the end of the list. Order values >= 900 are not taken into account, it is assumed that these must always be at the end.
+**The second input argument** determines the order of the added function. It is numbered from 1. If not specified, the function is added to the end of the list. Order values ​​>= 900 are ignored, it is assumed that they must always be at the end.
 
-**Third input argument** set to TRUE will ensure that when the function exists at that position (`orderId`), the function is overwritten and the previous function is added to the next available position.
-
+**The third input argument** set to TRUE ensures that if a function exists at the given position (`orderId`), the function is forcibly overwritten and the previous one is added to the nearest free space.
 ```javascript
 /**
  * @description Pridá do zoznamu nový callback.
@@ -94,12 +92,10 @@ Adds a new function to the list.
 add(callback, orderId = 0, rewriteOrder = false);
 ```
 
-***
-
+---
 #### remove()
 
 Removes a callback from the list based on its sequence number.
-
 ```javascript
 /**
  * @description Odstráni callback zo zoznamu na základe čísla jeho poradia.
@@ -110,12 +106,10 @@ Removes a callback from the list based on its sequence number.
 remove(orderId);
 ```
 
-***
-
+---
 #### fire()
 
-Starts execution of all callbacks in the list, in order.
-
+Triggers the execution of all callbacks in the list, in order.
 ```javascript
 /**
  * @description Spustí vykonanie všetkých callbackov v zozname, zaradom podľa poradia.
@@ -125,12 +119,10 @@ Starts execution of all callbacks in the list, in order.
 fire();
 ```
 
-***
-
+---
 #### listName
 
-Get the generated repository name
-
+Gets the generated repository name
 ```javascript
 /**
  * @description Získa vygenerovaný názov úložiska
@@ -144,12 +136,10 @@ Get the generated repository name
 const IdReadyCallbackListu = window.domReady.listName;
 ```
 
-***
+---
+#### leaf
 
-#### list
-
-Returns a complete list of all added functions with their serial number
-
+Returns a complete list of all added functions, including their sequence number.
 ```javascript
 /**
  * @description Vráti kompletný zoznam všetkých pridaných callbackov aj s ich poradovým číslom
@@ -163,4 +153,4 @@ Returns a complete list of all added functions with their serial number
 const zoznamCallbackov = window.domReady.list;
 ```
 
-***
+---

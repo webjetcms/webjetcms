@@ -1,16 +1,16 @@
-# Domain Data Department
+# Domain data separation
 
-It is often necessary in a multi-domain installation to separate application data for a domain (each domain has externally separate data in the application). WebJET supports such separation by adding a database column `domain_id`, which represents the domain ID (technically the same as the first directory ID in the domain) in the database table (e.g. `questions_answers`). Then, when selecting data from the table, the data is filtered based on the currently selected domain according to the column `domain_id` in the database.
+It is often necessary in a multi-domain installation to separate application data for a domain (each domain has its own data in the application). WebJET supports such separation by adding a database column ```domain_id```, which represents the domain ID (technically it is the same as the first directory ID in the given domain) to the database table (e.g. ```questions_answers```). Subsequently, when selecting data from the table, it is filtered based on the currently selected domain according to the column ```domain_id``` in the database.
 
-Setting up multi-domain mode is described in [template settings](../../frontend/setup/README.md#management-of-multiple-domains), setting the configuration variable is important `enableStaticFilesExternalDir=true` which enables the separation of domain data (by default, common data is used in multidomain mode, the conf. variable is set to `false`).
+Setting up multi-domain mode is described in [template settings](../../frontend/setup/README.md#multi-domain-management), it is important to set the configuration variable ```enableStaticFilesExternalDir=true```, which turns on domain data separation (by default, common data is used in multidomain mode, the conf. variable is set to ```false``` by default).
 
-The value for the column `domain_id` can be obtained in Java code by calling `CloudToolsForCore.getDomainId()`.
+You can get the value for column ```domain_id``` in Java code by calling ```CloudToolsForCore.getDomainId()```.
 
 ![](../../redactor/webpages/domain-select.png)
 
 ## Entity
 
-Java entity must contain a column `domainId`:
+The Java entity must contain the column ```domainId```:
 
 ```java
     @Column(name = "domain_id")
@@ -20,7 +20,7 @@ Java entity must contain a column `domainId`:
 	private Integer domainId;
 ```
 
-and of course there must be a column in the database `domain_id`:
+and of course the column ```domain_id``` must exist in the database:
 
 ```sql
 ALTER TABLE table_name ADD domain_id int DEFAULT 1 NOT NULL;
@@ -28,7 +28,7 @@ ALTER TABLE table_name ADD domain_id int DEFAULT 1 NOT NULL;
 
 ## Repository
 
-WebJET has prepared a basic repository that automatically supports all the necessary operations to ensure the separation of domain data, in your implementation you just need to extend your repository from the class `DomainIdRepository<T, ID>`:
+WebJET has a ready-made basic repository that automatically supports all necessary operations to ensure the separation of domain data; in your implementation, you just need to extend your repository from the ```DomainIdRepository<T, ID>``` class:
 
 ```java
 package sk.iway.iwcm.components.qa;
@@ -43,11 +43,11 @@ public interface QuestionsAnswersRepository extends DomainIdRepository<Questions
 }
 ```
 
-directly `DatatableRestControllerV2` then ensures that the data filtering is completed according to the currently selected domain.
+```DatatableRestControllerV2``` will then provide additional data filtering according to the currently selected domain.
 
 ## REST interface
 
-In your implementation, when the method is overloaded `getOneItem` (or other `Item` methods) always check the correctness of your implementation. Alternatively, if you just need to add data, use the call `super.get...`, which will check the domain and then process the next code:
+When overloading the ```getOneItem``` method (or other ```Item``` methods), always check the correctness of your implementation. Alternatively, if you just need to add data, use the ```super.get...``` call, which will check the domain and only then process the next code:
 
 ```java
 @Override
@@ -69,7 +69,7 @@ public QuestionsAnswersEntity getOneItem(long id) {
 
 ## Implementation details
 
-In class `DatatableRestControllerV2` support is detected in the constructor `DomainIdRepository` repository, which causes the variable to be set `checkDomainId` to the value of `true`.
+In class ```DatatableRestControllerV2```, the ```DomainIdRepository``` repository support is detected in the constructor, which causes the variable ```checkDomainId``` to be set to the value ```true```.
 
 ```java
     if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
@@ -93,7 +93,7 @@ public interface DomainIdRepository<T, ID> extends JpaRepository<T, ID>, JpaSpec
 }
 ```
 
-Variable `checkDomainId` is subsequently in `DatatableRestControllerV2` is used to test whether it is a multi-domain repository and then the appropriate methods are called (e.g. `findAllByDomainId`):
+The variable ```checkDomainId``` is then used in ```DatatableRestControllerV2``` to test whether it is a repository with multi-domain support and then the appropriate methods are called (e.g. ```findAllByDomainId```):
 
 ```java
 public Page<T> getAllItems(Pageable pageable) {
@@ -115,7 +115,7 @@ public Page<T> getAllItems(Pageable pageable) {
 }
 ```
 
-Similarly, the domain ID is used when a record is retrieved, edited or deleted (deletion is technically done by retrieving the entity by calling `findFirstByIdAndDomainId` and then calling `delete`). The search uses `JpaSpecificationExecutor` which adds a condition to the search:
+Similarly, the domain ID is used when retrieving, editing, or deleting a record (deletion is technically done by retrieving the entity by calling ```findFirstByIdAndDomainId``` and then calling ```delete```). When searching, ```JpaSpecificationExecutor``` is used to add a condition to the search:
 
 ```java
 @SuppressWarnings("unchecked")
