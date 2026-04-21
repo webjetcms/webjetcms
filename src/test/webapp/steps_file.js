@@ -55,6 +55,74 @@ module.exports = function () {
     },
 
     /**
+     * Dispatches mouse events on an element specified by selector and optional text and position.
+     * @param {*} selector - CSS selector to find the element(s)
+     * @param {*} text - Optional text to match within the element(s)
+     * @param {*} position - Optional position {x, y} to click within the element
+     * @param {*} buttonName - Mouse button name: left, right, middle
+     * @returns {Promise<boolean>} - Returns true if the event was dispatched successfully
+     */
+    dispatchMouseEvent(selector, text = null, position = null, buttonName = 'left') {
+      return this.executeScript((root, args) => {
+        const options = args && typeof args.selector !== 'undefined' ? args : root;
+        const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+        const { selector, text, position, buttonName } = options;
+        const normalizeText = (value) => (value || '').replace(/\s+/g, ' ').trim();
+        const elements = Array.from(scope.querySelectorAll(selector));
+        const element = text == null
+          ? elements[0]
+          : elements.find((item) => normalizeText(item.textContent) === normalizeText(text));
+
+        const buttonConfig = {
+          left: {
+            button: 0,
+            buttons: 1,
+            events: ['mousedown', 'mouseup', 'click'],
+          },
+          middle: {
+            button: 1,
+            buttons: 4,
+            events: ['mousedown', 'mouseup', 'auxclick'],
+          },
+          right: {
+            button: 2,
+            buttons: 2,
+            events: ['mousedown', 'mouseup', 'contextmenu'],
+          },
+        };
+
+        const activeButton = buttonConfig[buttonName] || buttonConfig.left;
+
+        if (!element) {
+          throw new Error(`Element not found for selector: ${selector}, text: ${text}`);
+        }
+
+        const rect = element.getBoundingClientRect();
+        const offsetX = position && typeof position.x === 'number' ? position.x : rect.width / 2;
+        const offsetY = position && typeof position.y === 'number' ? position.y : rect.height / 2;
+        const clientX = rect.left + offsetX;
+        const clientY = rect.top + offsetY;
+
+        activeButton.events.forEach((type) => {
+          element.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            view: window,
+            button: activeButton.button,
+            buttons: activeButton.buttons,
+            clientX,
+            clientY,
+            screenX: window.screenX + clientX,
+            screenY: window.screenY + clientY,
+          }));
+        });
+
+        return true;
+      }, { selector, text, position, buttonName });
+    },
+
+    /**
      * Naformatuje zadany timestamp do datumu a casu podla nastavenia moment v stranke
      * @param timestamp
      */
