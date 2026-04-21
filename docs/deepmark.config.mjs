@@ -6,8 +6,8 @@ export default {
     outputLanguages: ['en-US'],
     //outputLanguages: ['cs'],
     directories: [
-        ['sk', '$langcode$'],
-        //['sk/translation-test', '$langcode$/translation-test'],
+        //['sk', '$langcode$'],
+        ['sk/admin', '$langcode$/admin'],
     ],
     //translationEngine: "deepl"
     translationEngine: "google"
