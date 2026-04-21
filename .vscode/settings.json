@@ -40,8 +40,6 @@
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
 
     "spellright.language": [
-        "cs_CZ",
-        "en_US",
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,
