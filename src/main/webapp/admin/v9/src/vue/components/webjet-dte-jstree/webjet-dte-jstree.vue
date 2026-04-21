@@ -114,8 +114,9 @@
                 if (that.$props.dataTable.DATA.jsonField != null && "function"==(typeof that.$props.dataTable.DATA.jsonField.getItem)) {
                     item = that.$props.dataTable.DATA.jsonField.getItem(that.$props, data);
                 } else {
-                    if (that.click.indexOf("dt-tree-group")==0) item = data.node.original.groupDetails;
-                    else if (that.click.indexOf("dt-tree-page")==0) {
+                    if (that.click.indexOf("dt-tree-group")==0) {
+                        item = data.node.original.groupDetails;
+                    } else if (that.click.indexOf("dt-tree-page")==0) {
                         item = data.node.original.docDetails;
                         //kopirujeme virtualPath z node do DocDetails objektu, kedze ta hodnota sa potom pouziva, nemusime na backende modifikovat DocDetails objekt
                         if (that.click.indexOf("alldomains")!=-1) item.fullPath = data.node.original.virtualPath;
@@ -200,9 +201,12 @@
                 }
 
                 if(that.click.indexOf("alldomains")!=-1 && data.node.icon !== undefined && data.node.icon.indexOf("ti ti-home") != -1) {
-                    //it's not possible to select domain root because it's not a real group in alldomains select
-                    data.instance.open_node(data.node.id);
-                    return false;
+                    // Allow selection only if it's the special "all domains" root node
+                    if(that.click.indexOf("alldomains-all") == -1) {
+                        // Domain root nodes cannot be selected in alldomains mode (not real groups)
+                        data.instance.open_node(data.node.id);
+                        return false;
+                    }
                 }
 
                 //kontrola, ci sa vybral adresar ked sa mal
@@ -210,11 +214,13 @@
                     WJ.notifyError("Vyberte adresár", null, 5000);
                     return false;
                 }
+
                 //alebo ci sa vybrala stranka ked sa mala
                 if (that.click.indexOf("dt-tree-page")==0 && typeof(data.node.original.docDetails)=="undefined") {
                     WJ.notifyError("Vyberte web stránku", null, 5000);
                     return false;
                 }
+
                 return true;
             },
             _validateDuplicity(that, data) {

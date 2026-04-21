@@ -21,8 +21,10 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.users.UsersDB;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,23 +53,13 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         }
         final Identity user = UsersDB.getCurrentUser(getRequest());
 
-        if (GroupsDB.isGroupViewable(user, id)==false && GroupsDB.isGroupEditable(user, id)==false) {
+        if (GroupsDB.isGroupViewable(user, id) == false && GroupsDB.isGroupEditable(user, id) == false && GroupsTreeService.canSeeAllGroups(getRequest(), user) == false) {
             result.put("result", false);
             result.put("error", getProp().getText("components.jstree.access_denied__group"));
             return;
         }
 
         getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(id));
-
-        boolean parentEditable = GroupsDB.isGroupEditable(user, id);
-        boolean parentViewable = GroupsDB.isGroupViewable(user, id);
-
-        if (!parentEditable && !parentViewable)
-        {
-            result.put("result", false);
-            result.put("error", getProp().getText("components.jstree.access_denied_parenteditable_and_parentviewable_is_false"));
-            return;
-        }
 
         boolean showPages = true;
 
@@ -88,10 +80,35 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             rootItem.getState().setOpened(true);
             items.add(rootItem);
         }
+
+        if (click != null && click.contains("dt-tree-groupid-alldomains-all") && id < 0) {
+            // show virtual root group for all domains
+            GroupsJsTreeItem rootItem = new GroupsJsTreeItem(WebpagesService.getRootGroupAllDomains(), user, false);
+            rootItem.setIcon("ti ti-world");
+            rootItem.getState().setLoaded(true);
+            rootItem.getState().setOpened(false);
+            rootItem.setChildren(false);
+            items.add(rootItem);
+        }
+
         if (click != null && click.contains("alldomains") && id<0 && Constants.getBoolean("multiDomainEnabled")) {
+            List<String> domains = new ArrayList<>();
+
+            if (GroupsTreeService.canSeeAllGroups(getRequest(), user)) {
+                Set<String> allDomains = new LinkedHashSet<>();
+                // Collect all unique domain names from root groups
+                for (GroupDetails rootGroup : GroupsDB.getRootGroups()) {
+                    String domainName = rootGroup.getDomainName();
+                    if (Tools.isNotEmpty(domainName)) allDomains.add(domainName);
+                }
+                domains.addAll(allDomains);
+            } else {
+                // Get domains from layout configuration for current request
+                LayoutService layoutService = new LayoutService(getRequest());
+                domains = layoutService.getLayoutBean().getHeader().getDomains();
+            }
+
             //vygeneruj zoznam vsetkych domen
-            LayoutService ls = new LayoutService(getRequest());
-            List<String> domains = ls.getLayoutBean().getHeader().getDomains();
             for (String domain : domains) {
                 GroupDetails domainGroup = WebpagesService.getRootGroup();
                 domainGroup.setGroupName(domain);

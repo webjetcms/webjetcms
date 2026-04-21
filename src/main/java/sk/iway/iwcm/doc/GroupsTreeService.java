@@ -59,12 +59,11 @@ public class GroupsTreeService {
         List<GroupDetails> groups = getGroups(id, treeSearchValue, request);
 
         //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RETURN ALL ITEMS
-        String referer = request.getHeader("referer");
         String uri = request.getRequestURI();
         final boolean checkGroupsPerms;
         //Referer -> that we call from stat section
         //Uri -> that it's called from GroupTreeRestController NOT from WebPagesListener
-        if(referer!=null && referer.contains("/apps/stat/admin/") && uri != null && uri.contains("/admin/rest/groups/tree/tree") && user.isEnabledItem("cmp_stat_seeallgroups")) {
+        if(GroupsTreeService.canSeeAllGroups(request, user) && uri != null && uri.contains("/admin/rest/groups/tree/tree")) {
             checkGroupsPerms = false;
         } else {
             checkGroupsPerms = true;
@@ -619,5 +618,14 @@ public class GroupsTreeService {
         state.setOpened(false);
         state.setLoaded(true);
         return state;
+    }
+
+    public static boolean canSeeAllGroups(HttpServletRequest request, Identity user) {
+        String referer = request.getHeader("referer");
+
+        boolean statSectionShowAll = (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
+        boolean usersSectionShowAll = (referer != null && referer.contains("/users/user-list/") && user.isEnabledItem("users.edit_admins"));
+
+        return statSectionShowAll || usersSectionShowAll;
     }
 }
