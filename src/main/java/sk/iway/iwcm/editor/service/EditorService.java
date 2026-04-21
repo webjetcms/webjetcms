@@ -1500,54 +1500,54 @@ public class EditorService {
 			GroupDetails trashGroupDetails = disableHistory == false ? groupsDB.getCreateGroup(trashDirName) : null;
 
 			if (trashGroupDetails==null || navbarNoHref.startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()))  {
-					//Permanent DOC delete
-					docRepo.deleteById(Long.valueOf(delDocId));
+				//Permanent DOC delete
+				docRepo.deleteById(Long.valueOf(delDocId));
 
-					//Every docHistory record awaiting for approve is canceled (DOC is deleted so changes waiting for approve are irelevant)
-					historyRepo.updateAwaitingApprove("", delDocId);
+				//Every docHistory record awaiting for approve is canceled (DOC is deleted so changes waiting for approve are irelevant)
+				historyRepo.updateAwaitingApprove("", delDocId);
 
-					//Check, if DOC is main in the folder
-                    if (group.getDefaultDocId() == delDocId)  {
-                        List<DocDetails> pages = docDB.getDocByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, true);
-                        if (pages.size() > 0) {
-                            docDetails = pages.get(0);
+				//Check, if DOC is main in the folder
+                if (group.getDefaultDocId() == delDocId)  {
+                    List<DocDetails> pages = docDB.getDocByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, true);
+                    if (pages.size() > 0) {
+                        docDetails = pages.get(0);
 
-                            if (docDetails != null) {
-                                group.setDefaultDocId(docDetails.getDocId());
-                                group.setSyncStatus(1);
-                                groupsDB.setGroup(group);
-                            } else {
-                                group.setDefaultDocId(0);
-                                group.setSyncStatus(1);
-                                groupsDB.setGroup(group);
-                            }
+                        if (docDetails != null) {
+                            group.setDefaultDocId(docDetails.getDocId());
+                            group.setSyncStatus(1);
+                            groupsDB.setGroup(group);
+                        } else {
+                            group.setDefaultDocId(0);
+                            group.setSyncStatus(1);
+                            groupsDB.setGroup(group);
                         }
                     }
-                    //Set for ApproveDelAction (proof of succesfull delete)
-                    if (request!=null) request.setAttribute("deleteSuccess", "yes");
+                }
+                //Set for ApproveDelAction (proof of succesfull delete)
+                if (request!=null) request.setAttribute("deleteSuccess", "yes");
 
-					//delete doc from multigroup mapping
-					MultigroupMappingDB.deleteSlaveDocFromMapping(delDocId);
+				//delete doc from multigroup mapping
+				MultigroupMappingDB.deleteSlaveDocFromMapping(delDocId);
 
-                    //14.8.2012 pridany Admin log stranka bola vymazana uplne (z kosa)
-                    Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: "+delDocId+"): Stranka bola uplne zmazana (z kosa)", delDocId, 0);
+                //14.8.2012 pridany Admin log stranka bola vymazana uplne (z kosa)
+                Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: "+delDocId+"): Stranka bola uplne zmazana (z kosa)", delDocId, 0);
 
-					List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
-					if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
-						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).toList();
+				List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
+				if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
+					List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).toList();
 
-						//Delete all connections from multigroup table
-						MultigroupMappingDB.deleteSlaves(delDocId);
+					//Delete all connections from multigroup table
+					MultigroupMappingDB.deleteSlaves(delDocId);
 
-						//Perform HARD (permanent) delete of slave pages
-						docRepo.deleteByDocIdIn(slaveIds);
+					//Perform HARD (permanent) delete of slave pages
+					docRepo.deleteByDocIdIn(slaveIds);
 
-						for (Long slaveId : slaveIds) {
-							DocDB.getInstance().updateInternalCaches(slaveId.intValue());
-						}
-
-						Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID's : " + StringUtils.collectionToDelimitedString(slaveIds, ",") + "): Slave stranky boli uplne zmazane (hard delete)", delDocId, 0);
+					for (Long slaveId : slaveIds) {
+						DocDB.getInstance().updateInternalCaches(slaveId.intValue());
 					}
+
+					Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID's : " + StringUtils.collectionToDelimitedString(slaveIds, ",") + "): Slave stranky boli uplne zmazane (hard delete)", delDocId, 0);
+				}
             } else {
                 //failsafe na zle zmazane polozky (take co v kosi boli volakedy a zle sa zmazali)
 
@@ -1564,12 +1564,24 @@ public class EditorService {
 				if(buf != null) ids = buf.toString();
 
 				if (ids != null) {
-					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")");
+					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")", trashGroupDetails.getGroupId());
 					GroupsDB.getInstance(true);
 				}
 
                 //presun to do trash adresara
                 Logger.println(EditorService.class,"presuvam do trash adresara");
+
+				Integer maxHistoryId = historyRepo.findMaxHistoryId(delDocId);
+				if(maxHistoryId == null || maxHistoryId < 1) {
+					// page does not have any history record, add default one so it can be recovered from trash
+					DocHistory defaultHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(docDetails);
+					defaultHistory.setSaveDate(new Date(now));
+					defaultHistory.setActual(true);
+					defaultHistory.setApprovedBy(0);
+					defaultHistory.setAwaitingApprove(null);
+					defaultHistory.setPublicable(false);
+					historyRepo.save(defaultHistory);
+				}
 
 				//Soft delete, move to thash folder
 				docRepo.moveToTrash(false, trashGroupDetails.getGroupId(), delDocId);
@@ -1688,74 +1700,59 @@ public class EditorService {
 	 * @param recoverDocId
 	 * @param publishEvents - if true, publish ON_RECOVER and AFTER_RECOVER events, if false, do not publish any events
 	 */
-	public void recoverWebpageFromTrash(int recoverDocId, boolean publishEvents) {
-		if(recoverDocId <1) throw new RuntimeException("recoverDocId is not valid");
+    public void recoverWebpageFromTrash(int recoverDocId, boolean publishEvents) {
+        if(recoverDocId < 1) throw new RuntimeException("recoverDocId is not valid");
 
-		//Try get DocDetails object by id, if not present return error message
-		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(recoverDocId));
-		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
-		DocDetails docDetailsToRecover = docDetailsOpt.get();
+        //Try get DocDetails object by id, if not present throw error
+        DocDetails docDetailsToRecover = docRepo.findById(Long.valueOf(recoverDocId)).orElseThrow(() -> new RuntimeException("DocDetails doesn't exists."));
 
-		//To check permissions and approve for this action before publishing recover event
-		checkPermissions(currentUser, docDetailsToRecover, true);
+        //Check permissions for this action
+        checkPermissions(currentUser, docDetailsToRecover, true);
 
-		//Find last actual (if posible) history id (so we know wehre to recover page)
-		Integer historyId = null;
-		Optional<Integer> historyIdOpt = historyRepo.findMaxHistoryId(recoverDocId, true); //(actual history id)
-		if(historyIdOpt.isPresent()) historyId = historyIdOpt.get();
-		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
+        //Find last actual (if possible) history id (so we know where to recover page)
+        Integer historyId = historyRepo.findMaxHistoryId(recoverDocId, true)
+                .orElseGet(() -> historyRepo.findMaxHistoryId(recoverDocId)); // any history id if there is no actual one
 
-		String notifyTitle = prop.getText("editor.recover.notifyTitle");
-		if(historyId == null) {
-			//There is no history
-			NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            addNotify(info);
-			return;
-		} else {
-			Optional<Integer> destGroupId = historyRepo.findGroupIdById(Long.valueOf(historyId));
-			if(!destGroupId.isPresent()) {
-				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            	addNotify(info);
-				return;
-			}
-			GroupDetails destGroup = groupsDB.getGroup(destGroupId.get());
-			if(destGroup == null) {
-				NotifyBean info = new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            	addNotify(info);
-				return;
-			}
+        String notifyTitle = prop.getText("editor.recover.notifyTitle");
+        if(historyId == null) {
+            //There is no history
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
 
-			//Check perms
-			approveService.loadApproveTables(destGroup.getGroupId());
-			if(approveService.needApprove() == false || approveService.isSelfApproved()) {
-				//Have right
+        DocDetails recoveredDoc = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(
+                historyRepo.findById(historyId.longValue()).orElseThrow(() -> new RuntimeException("History doesn't exists."))
+        );
+		recoveredDoc.setDocId(recoverDocId); // ensure doc_id is always correct
 
-				//Publish recover event after successful permission check
-				if (publishEvents) {
-					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.ON_RECOVER)).publishEvent();
-				}
+        if(recoveredDoc.getGroup() == null) {
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
 
-				docDetailsToRecover.setGroupId(destGroup.getGroupId());
-				docDetailsToRecover.setAvailable(true);
-				docRepo.save(docDetailsToRecover);
+        //Check approve permissions for target group
+        approveService.loadApproveTables(recoveredDoc.getGroupId());
+        if(approveService.needApprove() == true && approveService.isSelfApproved() == false) {
+            //No right
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
 
-				if (publishEvents) {
-					(new WebjetEvent<DocDetails>(docDetailsToRecover, WebjetEventType.AFTER_RECOVER)).publishEvent();
-				}
-			} else {
-				//No right
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
-				addNotify(info);
-				return;
-			}
-		}
+        //Publish recover event after successful permission check
+        if (publishEvents) (new WebjetEvent<DocDetails>(recoveredDoc, WebjetEventType.ON_RECOVER)).publishEvent();
 
-		//Refresh
-		DocDB.getInstance(true);
-		GroupsDB.getInstance(true);
+        docRepo.save(recoveredDoc);
 
-		//Success
-		NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.success_page"), prop.getText("editor.recover.notify_body.success_page", docDetailsToRecover.getTitle(), docDetailsToRecover.getFullPath()), NotifyBean.NotifyType.SUCCESS, 60000);
-		addNotify(info);
-	}
+        if (publishEvents) (new WebjetEvent<DocDetails>(recoveredDoc, WebjetEventType.AFTER_RECOVER)).publishEvent();
+
+        //Audit log - page recovered from trash
+        Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, "(DocID: " + recoverDocId + "): Stranka bola obnovena z kosa", recoverDocId, 0);
+
+        //Refresh caches
+        DocDB.getInstance(true);
+        GroupsDB.getInstance(true);
+
+        //Success
+        addNotify(new NotifyBean(prop.getText("editor.recover.notify_title.success_page"), prop.getText("editor.recover.notify_body.success_page", recoveredDoc.getTitle(), recoveredDoc.getFullPath()), NotifyBean.NotifyType.SUCCESS, 60000));
+    }
 }
