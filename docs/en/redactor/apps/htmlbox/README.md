@@ -1,57 +1,66 @@
+
 # Pre-prepared blocks
 
-The page editor offers the possibility to insert preset blocks (`HTML` objects) per page. E.g. table, text, contact form, etc. You can also insert the content of another page into the current page (e.g. a repeating form).
+The page editor offers the ability to insert predefined blocks (```HTML``` objects) into a page. For example, a table, text, contact form, etc. You can also insert content from another page into the current page (e.g. a repeating form).
 
-To view the blocks, click on the icon ![](htmlbox_icon.png ":no-zoom") in the page editor, which displays a dialog box with block categories.
+You can view available blocks by clicking the ![](htmlbox_icon.png ":no-zoom") icon in the page editor to open the block categories dialog, or by adding the **Pre-built Blocks** application.
 
-## Card - Yours
+Types of blocks (HTML objects) that you can insert via **Embedding code type**:
 
-In the tab **Yours** pages generated from the directory **System** -> **Templates**. Each directory in the directory **Templates** represents a single list in the module selection field. The content can be inserted dynamically or statically. If dynamically inserted, then when the content (one page) is edited later, the change will be reflected in all the places where the content was inserted dynamically. When inserted statically, the content is duplicated and inserted as a copy, which is always edited only at a specific place in the web page.
+- **Pre-prepared block**
+- **Website**
+- **Templates**
 
-The Your tab will appear as selected when opened if the folder contains System->Templates under folders or there are more than 2 pages in the folder.
+## Pre-prepared block
 
-### Application settings - OTHER
+Blocks prepared by the web designer will be displayed. These blocks are loaded from files in the `/components/INSTALL_NAME/htmlbox/objects` folder, where `INSTALL_NAME` is the name of your installation (set in the `installName` variable). If this folder does not exist, the standard blocks from `/components/htmlbox/objects` will be used.
 
-The list of available blocks is read from the Templates folder (by default in the System sub-folder, the folder ID is set in the conf. variable `tempGroupId`)
-- Dynamic block - HTML code of the block is inserted by dynamic link, if the content of the block is modified it is automatically changed in all inserted parts
-- Static block - HTML code of the block is inserted directly into the page as a copy, changing the original block does not affect the inserted version
-- Page selection
-  - A list of available blocks is displayed, e.g. Normal page, Page with title and 2 columns, etc.
+There may also be subfolders in the folder. Each block is stored in a `.html` file and for correct display it is necessary to also create a `.jpg` file with a block preview of the same name.
 
-![](htmlbox_dialog.png)
+The following block groups/categories are available by default:
 
-### Application settings - ANOTHER PAGE with `DocID`
-
-Allows you to select any web page for embedding
-
-- Method of insertion
-  - Directly into the page - a copy of the selected web page text is inserted
-  - Dynamic link - the HTML code of the block is inserted by dynamic link, if the content of the block is modified it is automatically changed in all inserted parts
-- `DocID` - selecting the page ID to insert
-
-![](editor-our.png)
-
-### Folders
-
-If the System/Templates folder in the web pages contains subfolders, the folder names will be displayed in the selection box, i.e. in addition to Other/Other page with DocID, the individual folders with prepared blocks will be displayed in the selection box.
-
-## Card - General
-
-In the tab **General** contains all pre-made elements and modules that the editor cannot change or add - remove. It is a pre-prepared list containing the content elements of the web page, which are available to the editor of the web site.
-
-### Application settings
-
-Displaying blocks prepared by the web site designer, read from files in the folder `/components/INSTALL_NAME/htmlbox/objects` Where `INSTALL_NAME` is the installation name (conf. variable `installName`). If the folder does not exist, standard blocks from the folder are read `/components/htmlbox/objects`. There can be sub-folders in a folder, the individual blocks are in `html` files. With the same name, you also need to create `jpg` a file with a sample block.
-
-By default, the following block groups/categories are available:
 - `Columns`
 - `Contact`
 - `Content`
 - `Download`
 - `Header`
 
-![](editor-general.png)
+![](editor-block.png)
 
-## View application
+## Website
+
+This option allows you to insert the content of any web page by selecting it in the `Doc ID` field.
+
+**Insert method:**
+
+- **Directly to page (copy):** A copy of the text of the selected web page will be inserted.
+- **Dynamic link:** The HTML code of the block is inserted as a dynamic link. If the content of the block is modified, the change is automatically reflected in all inserted parts.
+
+The content of the currently selected web page is displayed in a preview at the bottom of the window.
+
+![](editor-doc.png)
+
+## Template
+
+This option contains pages generated from the **System/Templates** folder and its first-level subfolders. Either the folder with the ID defined in the `tempGroupId` configuration variable is used, or if a local System folder exists, it is searched for a folder named Templates (the name can be changed in the `config.templates_dir` translation key).
+
+**Insert method:**
+
+- **Directly to page (copy):** A copy of the text of the selected web page will be inserted.
+- **Dynamic link:** The HTML code of the block is inserted as a dynamic link. If the content of the block is modified, the change is automatically reflected in all inserted parts.
+
+![](editor-template.png)
+
+## Static vs dynamic insertion
+
+**Dynamic insertion:**
+
+A link to the content is inserted. When you later edit the content (e.g. a single page), the change will be reflected in all places where the content was inserted dynamically.
+
+**Static insertion:**
+
+The content is duplicated and pasted as a copy. The edits then only apply to a specific location on the web page.
+
+## View the application
 
 ![](htmlbox.png)

@@ -1,15 +1,16 @@
 # Documentation for the editor
 
-In this manual, so far only **specific documentation for version 2021**. Like **base** Use **existing manual for WebJET 8** and here you can read about **new features and changes** against the original documentation.
+This guide only contains **specific documentation for version 2021**. Use the **existing manual for WebJET 8** as a **basis** and read about **new features and changes** compared to the original documentation here.
 
-Continue by selecting the section in the left menu.
+Continue by selecting a section in the left menu.
 
-## Download documentation
+## Documentation for download
 
-This documentation can also be downloaded in PDF format for printing.
+You can also download this documentation in PDF format for printing.
 
-[Manual for the editor - PDF](../_media/manuals/webjetcms-redactor.pdf)
+[Editor Manual - PDF](../_media/manuals/webjetcms-redactor.pdf)
 
-Legacy core documentation in format `docx` Download. It contains information on basic work with WebJET CMS, it may not contain all the latest changes and does not contain a description of all applications and options. Always consider the online documentation on this page to be authoritative, the version in `docx` format is only an additional option.
+Older basic documentation in `docx` format for download. Contains information on basic work with WebJET CMS, may not include all the latest changes and does not contain a description of all applications and options. Always consider the online documentation on this page as authoritative, the version in `docx` format is only an additional option.
 
-[WebJET\_for\_editors.docx](../_media/manuals/WebJET_pre_redaktorov.docx)
+[WebJET_for_editors.docx](../_media/manuals/WebJET_for_editors.docx)
+
