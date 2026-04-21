@@ -245,7 +245,8 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
 
     I.say("Check the icons");
     I.seeElement( locate('//*[@id="domain:demo.webjetcms.sk"]/a').withChild("i.jstree-icon.ti-home") );
-    I.click("i.jstree-icon.jstree-ocl");
+    //I.click("i.jstree-icon.jstree-ocl");
+    I.click(locate('//*[@id="domain:demo.webjetcms.sk"]/i[contains(@class,"jstree-ocl")]'));
     I.seeElement( locate('//*[@id="1"]/a').withChild("i.jstree-icon.ti-folder-x") );
     I.seeElement( locate('//*[@id="67"]/a').withChild("i.jstree-icon.ti-folder-filled") );
 
