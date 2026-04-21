@@ -105,6 +105,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - opravené obnovenie stránky, ktorá bola vytvorená cez zrkadlenie a nemala historický záznam, ktorý sa dal použiť na obnovenie (#208).
 - Webové stránky - pri obnovení stránky z koša sa použije historická verzia aby sa zachoval jej pôvodný stav pred vymazaním (#208).
 - Tlačidlo - opravená možnosť nastaviť vlastnosti tlačidla ktoré je zakázané (atribút `disabled=disabled`) (#209).
+- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
 
 ### Bezpečnosť
 
@@ -126,9 +127,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Používatelia - ak vytváraní nového používateľa alebo jeho editácii do poľa heslo zadáte znak `*` vygeneruje sa nové bezpečné heslo a zobrazí sa vám v notifikácii (#58369).
 - [Skupiny práv](admin/users/perm-groups.md) - pridaná možnosť nastaviť príznak **Prístup ku všetkým adresárom web stránok** a **Prístup ku všetkým priečinkom súborového systému**, ktoré pri prihlásení prepíšu sčítané práva z ostatných skupín a poskytnú používateľovi neobmedzený prístup k web stránkam, alebo súborom (#osk422).
 
-### Oprava chýb
+### Dokumentácia
 
-- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
+- Upravený automatický prekladač pre použitie Google Translator API v3 (#58301).
+- Anglická verzia dokumentácie nanovo preložená (#58301).
 
 ### Pre programátora
 

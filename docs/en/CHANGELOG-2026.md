@@ -105,6 +105,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Websites - fixed restoring a page that was created via mirroring and did not have a historical record that could be used for restoration (#208).
 - Web pages - when restoring a page from the trash, the historical version is used to preserve its original state before deletion (#208).
 - Button - fixed the ability to set button properties which is disabled (attribute `disabled=disabled`) (#209).
+- Photo gallery - fixed folder search (#58433).
 
 ### Safety
 
@@ -126,9 +127,10 @@ Redesigned application properties settings in the editor from the old code in `J
 - Users - if you enter the character `*` in the password field when creating or editing a new user, a new secure password will be generated and displayed in a notification (#58369).
 - [Permission Groups](admin/users/perm-groups.md) - added the option to set the flag **Access to all web directory** and **Access to all file system folders**, which will overwrite the accumulated rights from other groups upon login and provide the user with unlimited access to web pages or files (#osk422).
 
-### Bug fixes
+### Documentation
 
-- Photo gallery - fixed folder search (#58433).
+- Modified automatic translator to use Google Translator API v3 (#58301).
+- English version of documentation re-translated (#58301).
 
 ### For the programmer
 
