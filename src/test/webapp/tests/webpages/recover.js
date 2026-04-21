@@ -1,13 +1,12 @@
 Feature('webpages.recover');
 
-
 var randomNumber;
 
 Before(({ I }) => {
     I.relogin("admin");
 
     if (typeof randomNumber == "undefined") {
-        randomNumber = I.getRandomText();
+        randomNumber = I.getRandomTextShort();
     }
 });
 
