@@ -230,7 +230,9 @@ module.exports = {
         I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
         //First check, if button is already active
-        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active").withText(columnText));
+        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active-a").withText(columnText));
+
+        I.say("Showing column: " + columnText + ", active count: " + count);
 
         if (count == 0) {
             //Not active, click
@@ -245,7 +247,7 @@ module.exports = {
     /**
      * Check cell value in selected row and column, index starts at 1
      * @param {*} name - table name/ID
-     * @param {*} row - row number (starst at 1)
+     * @param {*} row - row number (starts at 1)
      * @param {*} col - col number (starts at 1)
      * @param {*} value - expected cell value
      */
