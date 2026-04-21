@@ -102,6 +102,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Oprava chýb
 
 - `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
+- Tlačidlo - opravená možnosť nastaviť vlastnosti tlačidla ktoré je zakázané (atribút `disabled=disabled`) (#209).
 
 ### Bezpečnosť
 
@@ -176,6 +177,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - zladené získanie zoznamu šablón medzi web stránkami a priečinkami (#58317-03).
 - Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
 - Webové stránky - opravená chyba získania [šablóny pre mobilné zariadenia](frontend/templates/templates.md#zobrazenie-pre-špecifické-zariadenie) v MultiWEB inštalácii pri zhode mien šablóny v rôznych doménach (#58317-5).
+- Webové stránky - opravené ukladanie stránky, ktorá má kópie vo viacerých priečinkoch a zároveň je použité zrkadlenie stránok (#58317-7).
 
 ## 2026.0
 

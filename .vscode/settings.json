@@ -93,7 +93,8 @@
         "awk": true,
         "read": true,
         "npm install": true,
-        "npm audit": true
+        "npm audit": true,
+        "npx codeceptjs": true,
     },
     "chat.agent.maxRequests": 150
 }

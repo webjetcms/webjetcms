@@ -168,7 +168,7 @@ public class MultigroupMappingDB
 		{
 			SimpleQuery sq = new SimpleQuery();
 			String sql = "";
-			sql = "SELECT doc_id FROM multigroup_mapping WHERE master_id = ?";
+			sql = "SELECT doc_id FROM multigroup_mapping WHERE master_id = ? ORDER BY doc_id ASC";
 			for(Object o : sq.forList(sql, masterId))
 			{
 				if(o instanceof Number && ((Number)o).intValue() > 0)
