@@ -20,7 +20,7 @@ Scenario("Datatable SUM footer logic", async ({ I, DT }) => {
     I.say("Show/hide collumns and test footer");
 
     await DT.showColumn("Mesiac", "statsDataTable");
-    await DT.showColumn("Návštev", "statsDataTable");
+    await DT.hideColumn("Návštev", "statsDataTable");
 
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", "", 382]);
 

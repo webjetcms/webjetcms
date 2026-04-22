@@ -2205,15 +2205,16 @@ export class DatatablesCkEditor {
 			}
 		}
 
-		this.switchEditingMode(this.editingMode);
+		this.switchEditingMode(this.editingMode, false, json.data);
 	}
 
 	/**
 	 * Switch mode
 	 * @param {String} newEditingMode
 	 * @param {Boolean} userChange - true if this is user change and we would like to preserve HTML code between modes
+	 * @param {String} setData - if we want to set specific data when switching mode, otherwise it will be preserved from current editor content
 	 */
-	switchEditingMode(newEditingMode, userChange=false) {
+	switchEditingMode(newEditingMode, userChange=false, setData = null) {
 		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
@@ -2245,7 +2246,8 @@ export class DatatablesCkEditor {
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			if (data == null) data = this.ckEditorInstance.getData();
+			if (setData != null) data = setData;
+			else if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				ck.setMode('wysiwyg');

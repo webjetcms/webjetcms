@@ -67,6 +67,29 @@ module.exports = function () {
         const options = args && typeof args.selector !== 'undefined' ? args : root;
         const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
         const { selector, text, position, buttonName } = options;
+
+        //sync clicked element to ckeditor
+        const syncSelectionWithElement = (targetElement) => {
+          const editableRoot = targetElement.closest('[contenteditable="true"]');
+
+          if (!editableRoot) {
+            return;
+          }
+
+          editableRoot.focus();
+
+          const selection = window.getSelection();
+          if (!selection) {
+            return;
+          }
+
+          const range = document.createRange();
+          range.selectNode(targetElement);
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        };
+
         const normalizeText = (value) => (value || '').replace(/\s+/g, ' ').trim();
         const elements = Array.from(scope.querySelectorAll(selector));
         const element = text == null
@@ -96,6 +119,8 @@ module.exports = function () {
         if (!element) {
           throw new Error(`Element not found for selector: ${selector}, text: ${text}`);
         }
+
+        syncSelectionWithElement(element);
 
         const rect = element.getBoundingClientRect();
         const offsetX = position && typeof position.x === 'number' ? position.x : rect.width / 2;

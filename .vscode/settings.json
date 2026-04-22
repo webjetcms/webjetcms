@@ -95,6 +95,7 @@
         "npm install": true,
         "npm audit": true,
         "npx codeceptjs": true,
+        "npm run pause": true
     },
     "chat.agent.maxRequests": 150
 }
