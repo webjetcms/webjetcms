@@ -1,19 +1,20 @@
 # Field Type - elfinder/file selection
 
-The elfinder data field integrates the selection of a file reference using the elfinder/files application. The field appears as a text field, with a pencil icon at the end. Clicking on the icon opens the elfinder/file selection dialog.
+The elfinder data field integrates file link selection using the elfinder/files application. The field is displayed as a text field, with a pencil icon at the end. Clicking on the icon opens the elfinder/file selection dialog.
 
-For a field containing a link to an image, a preview of the image is displayed at the beginning of the field.
+For a field containing an image link, a preview of the image is displayed at the beginning of the field.
 
-The field value is displayed with a grey background, but the field is not of type `disabled`, the value can be modified if necessary, or inserted from the clipboard. The gray color is chosen to guide the user to click on the link selection icon.
+The field value is displayed with a gray background, but the field is not of type ```disabled```, if necessary, the value can be edited or pasted from the clipboard. The gray color is chosen to guide the user to click on the link selection icon.
 
 ![](field-type-elfinder.png)
 
-## Use of annotation
+## Using annotation
 
-Annotation is used as `DataTableColumnType.ELFINDER`, and the following attributes can be set:
-- `className` - if it contains the value `image` a preview of the selected image is displayed at the beginning of the field (or a blank image icon if the image is not yet selected)
+The annotation is used as ```DataTableColumnType.ELFINDER```, and the following attributes can be set:
 
-Full annotation example:
+- ```className``` - ​​if it contains the value ```image```, a preview of the selected image will be displayed at the beginning of the field (or an empty image icon if the image is not yet selected)
+
+Complete example of annotation:
 
 ```java
 //vyber obrazka = className="image"
@@ -32,19 +33,20 @@ String perexImage = "";
 private String externalLink;
 ```
 
-## Settings
+## Setting
 
-Using the attribute `className` additional filtering of the displayed files can be set:
-- `image` - only files whose `mime-type` starting at `image/`.
-- `video` - only files whose `mime-type` starting at `video/`.
-- `multimedia` - only files whose `mime-type` starting at `image/` or `video/`.
+Using the `className` attribute, it is possible to set additional filtering of displayed files:
 
-Settings `mime-type` is read from the file [mime.types](../../../../src/main/webapp/WEB-INF/mime.types).
+- `image` - ​​only files whose `mime-type` starts with `image/` will be displayed.
+- `video` - ​​only files whose `mime-type` starts with `video/` will be displayed.
+- `multimedia` - ​​only files whose `mime-type` starts with `image/` or `video/` will be displayed.
 
-## Notes on implementation
+The `mime-type` setting is read from the [mime.types](../../../../src/main/webapp/WEB-INF/mime.types) file.
 
-The implementation is in the file [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). According to `className` generates the appropriate HTML code for the input field. Into the variable `conf._prepend` stores a reference to the prepend element (`div.input-group-prepend .input-group-text`) with a preview image. Feature `setValue(conf, val)` is used to set the value of the field and also to set the preview image (if it is of type `.jpg` or `.png`).
+## Implementation notes
 
-The preview image is set as `background-image`, at the same time is `prepend` element set CSS class `has-image`.
+The implementation is in the file [field-type-elfinder.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). According to ```className```, it generates the appropriate HTML code for the input field. In the variable ```conf._prepend```, it stores a reference to the prepend element (```div.input-group-prepend .input-group-text```) with the preview image. The function ```setValue(conf, val)``` is used to set the field value and also to set the preview image (if it is of type ```.jpg``` or ```.png```).
 
-Opening the elfinder window is provided by calling the function [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialogue) with set `callback` to function `setValue`.
+The preview image is set as ```background-image```, while the ```prepend``` element has the CSS class ```has-image``` set.
+
+Opening the elfinder window is ensured by calling the function [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialog) with ```callback``` set to the function ```setValue```.

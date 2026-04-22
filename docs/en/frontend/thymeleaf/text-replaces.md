@@ -115,7 +115,8 @@ The text of a page created directly in the WebJET editor may contain special tag
 
 ## Logged in user
 
-Logged-in user details (if there is a section of the website that is only accessible under a password). The values can be used to pre-populate form field values. If no user is logged in, the values of all tags will be a blank character.
+Data about the logged-in user (if there is a section of the website that is only accessible with a password).
+The values ​​can be used to pre-populate form field values. If no user is logged in, the values ​​of all tags will be a blank character.
 
 ```html
 <table width="100%" class="ramikTable">

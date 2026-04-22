@@ -1,34 +1,36 @@
 # CKEditor
 
-When editing web pages is used [CKEditor with our own modifications](https://github.com/webjetcms/libs-ckeditor4/) and extensions.
+When editing websites, [CKEditor with our own modifications](https://github.com/webjetcms/libs-ckeditor4/) and extensions are used.
 
 ## Configuration variables
 
 The following configuration variables are supported:
-- `editorAutomaticWordClean` - if set to `true`, the HTML code is automatically cleaned when the text is inserted. The user has the option to paste the text as plain text.
-- `editorFontAwesomeCssPath` - setting the path to [FontAwesome](../webpages/fontawesome/README.md).
-- `ckeditor_toolbar` - setup toolbar items for the website section, values are in JSON format.
-- `ckeditor_toolbar-standalone` - setting toolbar items for inserting the editor into different data tables, values are in JSON format.
-- `ckeditor_removeButtons` - list of buttons you want to hide (not show) in the editor, no need to edit the settings `toolbar`, just set a comma separated list here.
+
+- `editorAutomaticWordClean` - ​​if set to `true`, HTML code cleaning is automatically performed when inserting text. The user has the option to insert text as plain text.
+- `editorFontAwesomeCssPath` - ​​setting the path to [FontAwesome](../webpages/fontawesome/README.md).
+- `ckeditor_toolbar` - ​​setting toolbar items for a website section, values ​​are in JSON format.
+- `ckeditor_toolbar-standalone` - ​​setting toolbar items for inserting the editor into various data tables, values ​​are in JSON format.
+- `ckeditor_removeButtons` - ​​list of buttons that you want to hide (not display) in the editor, no need to adjust the `toolbar` setting, just set a comma-separated list here.
 
 Settings for tables:
-- `ckeditor_table_class` - Default CSS class for tables in CKEditor, by default `table table-sm tabulkaStandard`.
-- `ckeditor_table_cols` - Default number of table columns in CKEditor, by default 5.
-- `ckeditor_table_rows` - Default number of table rows in CKEditor, by default 2.
-- `ckeditor_table_width` - Default table width in CKEditor, by default 100%.
-- `ckeditor_table_height` - Default table height in CKEditor.
-- `ckeditor_table_border` - Default table border value in CKEditor, by default 1.
-- `ckeditor_table_cellpadding` - Default value `cellpadding` tables in CKEditor, by default 1.
-- `ckeditor_table_cellspacing` - Default value `cellspacing` tables in CKEditor, by default 1.
-- `ckeditor_table_wrapper_class` - CSS wrapper class for table in CKEditor, by default `table-responsive`. If empty, the table will not wrap to the responsive container.
+
+- `ckeditor_table_class` - ​​Default CSS class for tables in CKEditor, defaults to `table table-sm tabulkaStandard`.
+- `ckeditor_table_cols` - ​​Default number of table columns in CKEditor, default 5.
+- `ckeditor_table_rows` - ​​Default number of table rows in CKEditor, default 2.
+- `ckeditor_table_width` - ​​Default table width in CKEditor, default 100%.
+- `ckeditor_table_height` - ​​Default table height in CKEditor.
+- `ckeditor_table_border` - ​​Default table margin value in CKEditor, defaults to 1.
+- `ckeditor_table_cellpadding` - ​​Default value of `cellpadding` table in CKEditor, default 1.
+- `ckeditor_table_cellspacing` - ​​Default value of `cellspacing` table in CKEditor, default 1.
+- `ckeditor_table_wrapper_class` - ​​CSS wrapper class for a table in CKEditor, defaults to `table-responsive`. If empty, the table will not be wrapped in a responsive container.
 
 ## PICTURE element
 
-If you need support in your project for `PICTURE` element, it is enough if the configuration `ckeditor_toolbar` add a value to the appropriate place `WebjetPicture`. The icon is automatically added even if you have set a custom value in the configuration variable `ckeditor_pictureDialogBreakpoints`.
+If you need support for the `PICTURE` element in your project, simply add the value `WebjetPicture` to the appropriate place in the `ckeditor_toolbar` configuration. The icon will also be added automatically if you have set a custom value in the `ckeditor_pictureDialogBreakpoints` configuration variable.
 
 ![](picture-element.png)
 
-Values `breakpoints` can be set via the configuration variable `ckeditor_pictureDialogBreakpoints`, Example:
+The values ​​of `breakpoints` can be set via the configuration variable `ckeditor_pictureDialogBreakpoints`, example:
 
 ```json
 [
@@ -56,20 +58,21 @@ Values `breakpoints` can be set via the configuration variable `ckeditor_picture
 ]
 ```
 
-A value that has the attribute set `fallback: true` shall also be inserted in the backup `IMG` element for browsers that `PICTURE` they don't know.
+The value that has the `fallback: true` attribute set is also inserted into the fallback `IMG` element for browsers that do not recognize `PICTURE`.
 
 ## SVG icons
 
-CKEditor supports the use of SVG icons instead of classic PNG icons. To enable this feature, you need to set the configuration variable `ckeditor_svgIcon_path` the path to the SVG sprite file that contains the icon definitions.
+CKEditor supports the use of SVG icons instead of classic PNG icons. To enable this feature, you need to set the configuration variable `ckeditor_svgIcon_path` to the path to the SVG sprite file that contains the icon definitions.
 
 ![](svgicon.png)
 
-Optionally, you can also set other configuration variables to customize the icons:
-- `ckeditor_svgIcon_icons` - JSON object defining icons for CKEditor, see example below. If empty it is retrieved from the SVG file by the value of the element ID, groups are not available in this case.
-- `ckeditor_svgIcon_width` - SVG icon width in pixels.
-- `ckeditor_svgIcon_height` - SVG icon height in points.
-- `ckeditor_svgIcon_sizes` - Available icon sizes separated by a comma, e.g. `small,medium,large,xlarge,xxlarge,huge`.
-- `ckeditor_svgIcon_colors` - Available icon colours separated by a comma, e.g. `info,success,warning,danger,orange`.
+Optionally, you can also set other configuration variables for icon customization:
+
+- `ckeditor_svgIcon_icons` - ​​JSON object defining icons for CKEditor, see example below. If empty, it is obtained from the SVG file by the element ID value, in which case groups are not available.
+- `ckeditor_svgIcon_width` - ​​Width of the SVG icon in points.
+- `ckeditor_svgIcon_height` - ​​Height of the SVG icon in points.
+- `ckeditor_svgIcon_sizes` - ​​Available icon sizes separated by a comma, e.g. `small,medium,large,xlarge,xxlarge,huge`.
+- `ckeditor_svgIcon_colors` - ​​Available icon colors separated by a comma, e.g. `info,success,warning,danger,orange`.
 
 Example of setting `ckeditor_svgIcon_icons` including groups:
 
@@ -83,7 +86,7 @@ Example of setting `ckeditor_svgIcon_icons` including groups:
 }
 ```
 
-The SVG file must contain icon definitions with the set ID attribute, example:
+The SVG file must contain icon definitions with the ID attribute set, example:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -101,31 +104,32 @@ The SVG file must contain icon definitions with the set ID attribute, example:
 </svg>
 ```
 
-Sample `sprite.svg` you can get the file in [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) package in the way `build/sprite.svg`.
+You can get the sample `sprite.svg` file in the [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) package in the `build/sprite.svg` path.
 
-Clicking on an existing icon in the toolbar will open a dialog for setting it, where you can select the size, color and a specific icon from the available icons defined in the SVG file. Right-clicking on the icon will show the option to delete it with confirmation.
+Clicking on an existing icon in the toolbar will open a dialog for its settings, where you can select the size, color, and a specific icon from the available icons defined in the SVG file. Right-clicking will display the option to delete it with confirmation.
 
 ## Button
 
-The button is often used as a `call to action` element on the website. WebJET supports element insertion `button` or `a` with class `btn` via a custom button in CKEditor. For `button` the following configuration variables can be set:
-- `ckeditor_button_baseClass` - Basic CSS class for buttons in CKEditor, by default `btn`.
-- `ckeditor_button_sizes` - Available button sizes separated by a comma, standard `btn-lg,btn-sm`.
-- `ckeditor_button_types` - Available button colours/types separated by a comma, standard `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
-- `ckeditor_button_textHiddenClass` - CSS class for hiding button text - displaying only the icon, by default `visually-hidden`.
-- `ckeditor_button_allowedClasses` - A comma-separated list of allowed CSS classes to open the button settings dialog. An empty value will enable all CSS classes. Example `btn-primary,btn-secondary,btn-lg`.
-- `ckeditor_button_deniedClasses` - A comma-separated list of disabled CSS classes to open the button settings dialog. An empty value will not disable any CSS classes. Example `no-button,no-btn`.
-- `ckeditor_button_attrs` - Comma-separated list of configurable button attributes, by default `data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label`.
+A button is often used as a `call to action` element on web pages. WebJET supports inserting a `button` or `a` element with a `btn` class via a custom button in CKEditor. The following configuration variables can be set for `button`:
 
-SVG icons are also supported and can be embedded in the button, see section above.
+- `ckeditor_button_baseClass` - ​​Base CSS class for buttons in CKEditor, defaults to `btn`.
+- `ckeditor_button_sizes` - ​​Available button sizes separated by comma, default `btn-lg,btn-sm`.
+- `ckeditor_button_types` - ​​Available button colors/types separated by comma, default `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
+- `ckeditor_button_textHiddenClass` - ​​CSS class for hiding button text - displaying only the icon, default `visually-hidden`.
+- `ckeditor_button_allowedClasses` - ​​A comma-separated list of allowed CSS classes to open the button settings dialog. An empty value will allow all CSS classes. Example `btn-primary,btn-secondary,btn-lg`.
+- `ckeditor_button_deniedClasses` - ​​Comma-separated list of disabled CSS classes to open the button settings dialog. An empty value will not disable any CSS classes. Example `no-button,no-btn`.
+- `ckeditor_button_attrs` - ​​A comma-separated list of configurable button attributes, defaulting to `data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label`.
 
-If you set the button as disabled - `disabled`, it is not possible to click on it in the editor to open a dialog for editing the button properties. However, you can click the first button and select Button Properties from the context menu.
+SVG icons are also supported and can be inserted into the button, see the section above.
 
-The insert button option is displayed in the form insert selection menu. You can add it to the toolbar by adding a value `WebjetFormButton` to the configuration variable `ckeditor_toolbar`. It will appear automatically if you have configured SVG icon embedding.
+The option to insert a button appears in the form insertion selection menu. You add it to the toolbar by adding the value `WebjetFormButton` to the configuration variable `ckeditor_toolbar`. It appears automatically if you have SVG icon insertion configured.
+
+![](../../redactor/webpages/working-in-editor/wjformbutton.png)
 
 ## Custom plugins
 
-CKEditor supports adding your own plugins. After creating a custom plugin, you need to add it to the configuration variable `ckeditor_extraPlugins` as a comma-separated list. For more information on creating custom add-ins, see [CKEditor documentation](https://ckeditor.com/docs/ckeditor4/latest/guide/plugin_sdk_intro.html).
+CKEditor supports adding custom plugins. After creating your own plugin, you need to add it to the `ckeditor_extraPlugins` configuration variable as a comma-separated list. For more information about creating custom plugins, see the [CKEditor documentation](https://ckeditor.com/docs/ckeditor4/latest/guide/plugin_sdk_intro.html).
 
-Place the resulting plugin in the directory `src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/` your project.
+Place the resulting plugin in the `src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/` directory of your project.
 
-Then add the button to the configuration variable `ckeditor_toolbar` to a suitable location.
+Then add the button to the configuration variable `ckeditor_toolbar` in the appropriate place.

@@ -1,14 +1,15 @@
 # Basic description of the frameworks used
 
 Technologies used:
-- [Spring REST + Spring DATA](spring.md)
-- [thymeleaf.org](thymeleaf.md) - templating system connected to Java backend
-- `webpack+node` for compiling html/PUG/JS files
-- datatables.net + [editor](https://editor.datatables.net) - basic work and editing of tabular data, connected to Spring via DatatablesRestControllerV2 - example in [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
-- [pugjs.org](pugjs.md) - `preprocessor` for generating HTML code for pages
-- [Vue.js](vue.md) - available as `window.Vue`, a short demonstration in [photo gallery](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 
-The whole procedure of generating a web page in `/admin/v9/` is as follows:
+- [Spring REST + Spring DATA] (spring.md)
+- [thymeleaf.org](thymeleaf.md) - templating system connected to a Java backend
+- ```webpack+node``` for compiling html/PUG/JS files
+- datatables.net + [editor](https://editor.datatables.net) - basic work and editing of tabular data, connected to Spring via DatatablesRestControllerV2 - example in [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) and [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [pugjs.org](pugjs.md) - ```preprocessor``` for generating HTML code for pages
+- [Vue.js](vue.md) - available as ```window.Vue```, short demo in [photo gallery](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+
+The entire process of generating a web page in ```/admin/v9/``` is as follows:
 
 ```mermaid
 graph TD;
@@ -19,21 +20,22 @@ graph TD;
     ThymeleafAdminController.java/LayoutService.java-->prehliadac
 ```
 
-so it is necessary to think about what is happening in which step.
+So it is necessary to think about what happens in each step.
 
 ## npm
 
-For build JS/CSS files is used `node`, basic commands:
-- `npm install` - installs all necessary modules
-- `npm outdated` - lists obsolete modules
-- `npm update MODUL` - updates the specified module, beware it only updates `minor` version, if you don't specify a module name, it updates all modules
-- `npm i MODUL@VERZIA` - installs/updates the module to the specified version
-- `npm audit` - lists the modules containing the vulnerability
-- `npm audit fix` - updates modules containing the vulnerability
-- `npm list --depth=0` - lists the installed modules, the depth parameter can be used to specify the nesting depth
-- `npm view MODUL version` - prints the current latest version of the module
+To build JS/CSS files, ```node``` is used, basic commands:
 
-If you also need to update dependencies, you can proceed using the module [npm-check-updates](https://flaviocopes.com/update-npm-dependencies/):
+- ```npm install``` - ​​installs all necessary modules
+- ```npm outdated``` - ​​lists obsolete modules
+- ```npm update MODUL``` - ​​updates the specified module, be careful, it only updates the ```minor``` version, if you do not specify a module name, it updates all modules
+- ```npm i MODUL@VERZIA``` - ​​installs/updates the module to the specified version
+- ```npm audit``` - ​​lists modules containing the vulnerability
+- ```npm audit fix``` - ​​updates modules containing the vulnerability
+- ```npm list --depth=0``` - ​​lists the list of installed modules, the depth parameter can be used to specify the nesting depth
+- ```npm view MODUL version``` - ​​lists the current latest version of the given module
+
+If you also need to update dependencies, you can do so using the [npm-check-updates](https://flaviocopes.com/update-npm-dependencies/) module:
 
 ```shell
 //instalacia modulu
@@ -48,7 +50,7 @@ npm install
 
 ## Events
 
-!>**Warning:** it is not possible to use event in JavaScript code `$(document).ready`, because the translation key store must be initialized first. We have implemented a custom function `window.domReady.add` in the library [ready](../libraries/ready-extender.md), which is executed only after the translation key store has been initialized.
+!>**Warning:** It is not possible to use the ```$(document).ready``` event in JavaScript code, because the translation key store must be initialized first. We have implemented our own function ```window.domReady.add``` in the [ready](../libraries/ready-extender.md) library, which is executed only after the translation key store is initialized.
 
 ```javascript
 window.domReady.add(function () {
@@ -63,9 +65,9 @@ window.domReady.add(function () {
 
 ## Webpack
 
-Folding and compilation `pug/js/css` is done by [webpack](https://webpack.js.org/).
+The assembly and compilation of ```pug/js/css``` is done using [webpack](https://webpack.js.org/).
 
-JS and CSS files are stored after compilation in `dist` folder. From there, the PUG is loaded using the list from `htmlWebpackPlugin.files`. At the same time, only scripts that do not start with a prefix are inserted by default `pages_`. A file with this prefix will only be inserted if its name matches the name of the pug file.
+JS and CSS files are saved after compilation in the ```dist``` folder. From there they are inserted into PUG using the list from ```htmlWebpackPlugin.files```. At the same time, by default only scripts that do not start with the prefix ```pages_``` are inserted. A file with this prefix is ​​inserted only if its name matches the name of the pug file.
 
 ```javascript
 // Outpul all script files
@@ -80,8 +82,8 @@ each js in WPF.js
         script(type='text/javascript', src=js)
 ```
 
-So if you need to insert a special JavaScript file for a page in the administration, create it in the folder `src/main/webapp/admin/v9/src/js/pages/` If you expect to use several separate JS files combined into one, create a subfolder. An example is `src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js` which is in the subfolder `web-pages-list` and in the script `web-pages-list.js` the class is imported from `preview.js`.
+So, if you need to insert a special JavaScript file for a page in the administration, create it in the ```src/main/webapp/admin/v9/src/js/pages/``` folder, if you expect to use several separate JS files combined into one whole, create a subfolder as well. An example is ```src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js``` which is in the ```web-pages-list``` subfolder, and in the ```web-pages-list.js``` script, the class from ```preview.js``` is imported.
 
-This script is inserted only when the web page is called `web-pages-list.pug`, that is, at the URL address `/admin/v9/webpages/web-pages-list/`.
+This script is only inserted when calling the web page ```web-pages-list.pug```, i.e. at the URL address ```/admin/v9/webpages/web-pages-list/```.
 
-The above procedure can only be used for PUG files, since the script is inserted into the generated HTML during compilation. For applications from `/apps` folders that use directly `.html` files is ready to insert JavaScript [file as a module](../../custom-apps/admin-menu-item/README.md#attaching-a-javascript-file) while the HTML page is displayed.
+The above procedure can only be used for PUG files, as the script is inserted into the generated HTML during compilation. For applications from the ```/apps``` folder that directly use ```.html``` files, there is a provision to insert a JavaScript [file as a module](../../custom-apps/admin-menu-item/README.md#insert-javascript-file) during the display of the HTML page.

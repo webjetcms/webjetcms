@@ -1,14 +1,16 @@
 # Disqus comments
 
-Embed Disqus Comments on your website. Before adding it to your site, register for a free account at https://www.disqus.com to set up discussion options.
+Add Disqus comments to your website. Before adding them to your site, register a free account at https://www.disqus.com through which you will set up discussion options.
 
 ## Application settings
 
-After creating an account, register a site at https://disqus.com/admin/create/ and choose a Unique Disqus URL (e.g. webjet.disqus.com) and enter it in the following field:
+After creating an account, register a page at https://disqus.com/admin/create/ and choose a Unique Disqus URL (e.g. webjet.disqus.com) and paste it into the following field:
+
 - Unique Disqus URL (website shortname)
+
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](app-disqus.png)

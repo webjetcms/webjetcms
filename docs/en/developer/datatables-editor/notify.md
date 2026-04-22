@@ -1,16 +1,17 @@
 # Notifications
 
-When working with the editor, it is possible to send a notification from the REST service that is displayed to the user.
+When working with the editor, it is possible to send a notification from the REST service that will be displayed to the user.
 
 ![](notify.png)
 
-Currently, the following operations are supported to display the notification:
-- `/all` - obtaining all records
-- `/{id}` - getting an entry into the editor (when using the `fetchOnCreate/fetchOnEdit`)
-- `/editor` - saving the record in the editor
-- `/action/{action}` - execution [server actions](../datatables/README.md#button-to-perform-a-server-action) in the table
+Currently, displaying notifications is supported for the following operations:
 
-You simply add the notification in your REST service:
+- ```/all``` - ​​get all records
+- ```/{id}``` - ​​getting a record into the editor (when using the ```fetchOnCreate/fetchOnEdit``` option)
+- ```/editor``` - ​​save record in editor
+- ```/action/{action}``` - ​​execute [server action](../datatables/README.md#button-for-execute-server-action) in the table
+
+You can easily add a notification in your REST service:
 
 ```java
 addNotify(new NotifyBean(prop.getText("text.warning"), prop.getText("editor.notify.checkHistory"), NotifyBean.NotifyType.WARNING, 15000));
@@ -19,15 +20,16 @@ NotifyBean notify = new NotifyBean(prop.getText("editor.approve.notifyTitle"), g
 addNotify(notify);
 ```
 
-constructor [NotifyBean](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) class has the following parameters:
-- `String title` - notification headline
-- `String text` - notification text
-- `NotifyType type` - notification type (`SUCCESS, INFO, WARNING, ERROR`)
-- `long timeout` - number of ms for automatic closing of the notification, or 0 for disabling automatic closing
+The constructor of the [NotifyBean](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) class has the following parameters:
+
+- ```String title``` - ​​notification title
+- ```String text``` - ​​notification text
+- ```NotifyType type``` - ​​notification type (```SUCCESS, INFO, WARNING, ERROR```)
+- ```long timeout``` - ​​number of ms for automatic closing of the notification, or 0 to disable automatic closing
 
 ## Adding a button
 
-A button can be added to the notification to perform an action (e.g. retrieve the last page from history). Using the API method [NotifyBean.addButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) you can add a button (object type [NotifyButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). When the button is clicked, the specified JavaScript function is executed (it is inserted as an attribute `onlick` on the button). You must implement the definition of the called function directly in the page.
+It is possible to add a button to a notification to perform an action (e.g. loading the last page from the history). Using the API method [NotifyBean.addButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) you can add a button (object of type [NotifyButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). After clicking the button, the specified JavaScript function is executed (it is inserted as the ```onlick``` attribute on the button). You must implement the definition of the called function directly in the given page.
 
 Example:
 
@@ -46,15 +48,18 @@ addNotify(notify);
 
 ### Backend
 
-Notifications are stored in the REST service while it is running. `ThreadLocal` object `ThreadBean` so that they can be added at any time. They are then generated into an output JSON object:
-- For `DatatableResponse` the list of notifications is added as `if(hasNotify()) response.setNotify(getThreadData().getNotify());`
-- for the returned entity to `BaseEditorFields` object as `addNotifyToEditorFields(T entity);`, actual only when calling `getOne`
+Notifications are stored in the ```ThreadLocal``` object ```ThreadBean``` during the REST service runtime so that they can be added at any time. They are then generated into the output JSON object:
+
+- for ```DatatableResponse``` the notification list is added as ```if(hasNotify()) response.setNotify(getThreadData().getNotify());```
+- for the returned entity to the ```BaseEditorFields``` object as ```addNotifyToEditorFields(T entity);```, currently only when calling ```getOne```
 
 ### Frontend
 
-Notification display is implemented directly in `index.js` in 2 places:
-- `EDITOR.on('submitSuccess', function (e, json, data, action)` - called when saved in the editor, notifications are retrieved from `json.notify`
-- `_executeAction(action, ids)` - called when a server action is executed in the table, notifications are obtained from `json.notify`
-- `refreshRow(id, callback)` - this call is used when `fetchOnCreate/fetchOnEdit`, notifications are obtained from `json.editorFields.notify` object
+Notification display is implemented directly in ```index.js``` in 2 places:
 
-The notification display itself is implemented in the function `showNotify(notifyList)` which for each element of the notification list calls the display via [WJ.notify](../frameworks/webjetjs.md#notifications)
+- ```EDITOR.on('submitSuccess', function (e, json, data, action)``` - ​​called when saving in the editor, notifications are obtained from ```json.notify```
+- ```_executeAction(action, ids)``` - ​​called when a server action is performed on a table, notifications are obtained from ```json.notify```
+- ```refreshRow(id, callback)``` - ​​this call is used for ```fetchOnCreate/fetchOnEdit```, notifications are obtained from the ```json.editorFields.notify``` object
+
+The notification display itself is implemented in the function ```showNotify(notifyList)``` which calls the display via [WJ.notify](../frameworks/webjetjs.md#notifications) for each element of the notification list.
+

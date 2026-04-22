@@ -1,69 +1,71 @@
 # List of articles
 
-The Articles List application lists all articles currently logged in by a user of type blogger. It allows him/her to edit the structure of his/her blog by adding additional sections (sub-folders) and create/edit/duplicate/delete articles.
+The Article List application contains a list of all articles of the currently logged-in blogger user. It allows them to edit the structure of their blog by adding additional sections (sub-folders) and create/edit/duplicate/delete articles.
 
-The result of the application is the display of articles on a web page, with articles placed in categories/sections.
+The result of the application is the display of articles on the website, with the articles placed in categories/sections.
 
 ![](blog-news-list.png)
 
-!>**Warning:** this application will only appear to the currently logged-in user if one of the following conditions is met:
-- The currently logged-in user is the so-called **blogger**. In other words, the user must have the Blog right and also belong to the Blog user group. Such a user can create new blog posts and new sections within his blog.
-- The currently logged-in user is the so-called **blogger administrator** who is an admin, must have both Blog and Manage Bloggers rights and should not belong to the Blog user group. Such a user can create new bloggers (users), delete an existing blogger, and possibly make edits to the text of any blogger.
+!>**Warning:** this application will only be displayed to the currently logged in user if it meets one of the following conditions:
+
+- The currently logged in user is a so-called **blogger**. In other words, the user must have the Blog permission and must also belong to the Blog user group. Such a user can create new blog posts and new sections within his blog.
+- The currently logged in user is the so-called **Blogger Administrator**, who is an admin, must have the right Blog and Manage Bloggers and should not belong to the Blog user group. Such a user creates new bloggers (users), can delete an existing blogger and possibly make edits to the text of any blogger.
 
 So we know two types of users:
-- **blogger** can only work with folders to which it has the right and articles that belong to its folders. More information on the user type **blogger** can be found in the section [Blogger Management](bloggers.md).
-- **blogger administrator** can work with folders of all bloggers as well as with articles belonging to these folders.
+
+- **blogger** can only work with folders to which he has rights and articles that belong to his folders. For more information about **blogger** users, see the [Blogger Management] section (bloggers.md).
+- **Blogger Administrator** can work with all bloggers' folders, as well as with articles belonging to these folders.
 
 ![](blogger-blog.png)
 
 ## Filter by folder
 
-The page contains an external section (sub-folder) filter in the upper left corner, which allows filtering the displayed articles only for the selected blog section (folder). Default value **All sections**, displays all articles from all sections (sub-folders).
+The page contains an external filter for sections (sub-folders) in the upper left corner, which allows filtering the displayed articles only for the selected blog section (folder). The default value **All sections** will display all articles from all sections (sub-folders).
 
-The selection of sections itself is ordered as a tree structure, with deeper nested sections below. The user sees the entire path to the section, and the main folder has the same name as its **login name (login)**, which in the example in the figure is `bloggerPerm`.
+The section selection itself is arranged as a tree structure, where deeper nested sections are lower. The user sees the full path to the section, and the main folder has the same name as their **login**, which in the example in the image is `bloggerPerm`.
 
 ![](groupFilter_allValues.png)
 
 ## Adding an article
 
-To create a new article, use the button ![](add_article.png ":no-zoom"). Working with articles is similar to working with [common websites](../../webpages/README.md).
+You can create a new article using the ![](add_article.png ":no-zoom" button). Working with articles is similar to working with [regular web pages](../../webpages/README.md).
 
 ![](editor-text.png)
 
-For a new article, the inclusion in the tree structure is preset according to the value in the external section filter (e.g. /Applications/Blog/bloggerPerm).
+For a new article, the placement in the tree structure is preset according to the value in the external section filter (e.g. /Applications/Blog/bloggerPerm).
 
-!>**Warning:** if you try to create a new article without selecting a section in the external filter (at its value **All sections**) the Uncategorized section is set, or the first folder the blogger has rights to. You can change the section in the editor under the Basic tab by setting the value to Parent Folder.
+!>**Warning:** if you try to create a new article without selecting a section in the external filter (with its value **All sections**) the Uncategorized section will be set, or the first folder to which the blogger has rights. You can change the section in the editor on the Basic tab by setting the Parent folder value.
 
-The title of the article will appear in the list of articles. If you want to display a short introduction in the list, enter it in the Annotation field in the article editor in the Perex tab. We recommend that you also enter an illustration image in the Image field in the Perex tab.
+The article title will be displayed in the article list. If you want to also display a short introduction in the list, enter it in the Annotation field in the article editor in the Perex tab. We recommend also entering an illustrative image in the Image field in the Perex tab.
 
 ![](editor-perex.png)
 
-The article will be displayed on the web page according to the defined design template, e.g. as follows:
+On the web page, the article will be displayed according to the defined design template, e.g. like this:
 
 ![](blog-page-detail.png)
 
 ## Adding a section
 
-To create a new section, use the button ![](add_folder.png ":no-zoom").
+You can create a new section using the ![](add_folder.png ":no-zoom") button.
 
-If you try to create a new section without selecting the destination folder in the external filter, you will be prompted to select it.
+If you try to create a new section without selecting a target folder in the external filter, you will be prompted to select one.
 
 ![](adding_folder_warning.png)
 
-After selecting a folder and pressing the ![](add_folder.png ":no-zoom") will be prompted for the name of a new section (sub-folder).
+After selecting a folder and pressing the ![](add_folder.png ":no-zoom") button, you will be prompted to enter a name for the new section (sub-folder).
 
 ![](adding_folder_info.png)
 
-Start the process by confirming the action with the button ![](adding_folder_info_button.png ":no-zoom").
+You start the process by confirming the action with the ![](adding_folder_info_button.png ":no-zoom") button.
 
-If a name for the new section is not entered or an error occurs, the section creation process will be aborted and you will be notified via a notification.
+If a name for the new section is not entered, or an error occurs, the section creation process will be interrupted and you will be informed via notification.
 
 ![](adding_folder_error.png)
 
-If the section is successfully created, you will be notified by a notification.
+If the section is successfully created, you will be notified.
 
 ![](adding_folder_success.png)
 
-Immediately after a section is successfully created, its value is automatically added to the external filter.
+Immediately after the section is successfully created, its value is automatically filled into the external filter.
 
 ![](groupFilter_allValues_withNew.png)

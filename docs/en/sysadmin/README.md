@@ -1,9 +1,9 @@
-# Manual for operation
+# Operation manual
 
-Manual for WebJET CMS operation.
+WebJET CMS operation manual.
 
-## Download documentation
+## Documentation for download
 
-This documentation can also be downloaded in PDF format for printing.
+You can also download this documentation in PDF format for printing.
 
-[Manual for operation - PDF](../_media/manuals/webjetcms-sysadmin.pdf)
+[Operation Manual - PDF](../_media/manuals/webjetcms-sysadmin.pdf)

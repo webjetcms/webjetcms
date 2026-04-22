@@ -1,18 +1,18 @@
-# Selection field with editing
+# Editable selection field
 
-It is possible to add an icon for editing or adding a new record to the code fields. The field appears as a standard selection field, but includes an icon ![](field-select-icon-edit.png ":no-zoom") to edit the selected record, or the icon ![](field-select-icon-add.png ":no-zoom") to add a new record.
+For number fields, it is possible to add an icon for editing or adding a new record. The field is displayed as a standard selection field, but contains an icon ![](field-select-icon-edit.png ":no-zoom") for editing the selected record, or an icon ![](field-select-icon-add.png ":no-zoom") for adding a new record.
 
-The sample is from editing web pages, where it is possible to select a template in the selection box **Website template**.
+The example is from editing web pages, where it is possible to select a template in the **Web page template** selection field.
 
 ![](field-select.png)
 
-But sometimes it is necessary to check/edit something in the template, so the possibility to load the selected template directly from the web page into the editor is convenient. As a result, a nested dialog with editing e.g. the template is loaded:
+Sometimes, however, it is necessary to check/edit something in the template, so the option to load the selected template directly from the web page into the editor is convenient. The result is loading a nested dialog box with editing, for example, the template:
 
 ![](field-select-editable.png)
 
-## Use of annotation
+## Using annotation
 
-The field is activated by setting the editor attributes using the annotation `@DataTableColumnEditorAttr`:
+The field is activated by setting the editor attributes using the ```@DataTableColumnEditorAttr``` annotation:
 
 ```java
 @Column(name = "temp_id")
@@ -28,12 +28,13 @@ The field is activated by setting the editor attributes using the annotation `@D
 private Integer tempId;
 ```
 
-The following attributes are supported, only mandatory `data-dt-edit-url`, but we always recommend to set the field `data-dt-edit-perms`:
-- `data-dt-edit-url` - URL of the web page for editing the record, up to the value `{id}` the currently selected value in the selection field is transferred.
-- `data-dt-edit-perms` - the name of the right, if the user does not have this right, the option to edit the record will not be displayed (the field will be displayed as a standard selection field).
-- `data-dt-edit-title` - (optional) translation key of the window caption, if not specified the field name from the editor is used.
+The following attributes are supported, only ```data-dt-edit-url``` is mandatory, but we always recommend setting the ```data-dt-edit-perms``` field as well:
 
-When calling a web page, special tags can be specified for the url to open the System or Trash tab:
+- ```data-dt-edit-url``` - ​​URL address of the web page for editing the record, the currently selected value in the selection field will be transferred to the value ```{id}```.
+- ```data-dt-edit-perms``` - ​​name of the right, if the user does not have this right, the option to edit the record will not be displayed (the field will be displayed as a standard selection field).
+- ```data-dt-edit-title``` - ​​(optional) translation key for the window title, if not specified, the field name from the editor will be used.
+
+When calling a web page, it is possible to enter special tags for the URL to open the System or Trash tab:
 
 ```java
 @DataTableColumnEditorAttr(key = "data-dt-edit-url", value = "/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&docid={id}")
@@ -42,24 +43,25 @@ When calling a web page, special tags can be specified for the url to open the S
 ...
 ```
 
-## Notes on implementation
+## Implementation notes
 
-The implementation is in the file `/admin/v9/npm_packages/webjetdatatables/field-type-select-editable.js` and through the call `$.fn.dataTable.Editor.fieldTypes.select.create` modifies the original type field `select` from Datatables Editor. The modification consists in adding buttons for editing and adding a record. Clicking on one of these buttons calls the function `openIframeModal` to open the iframe dialog.
+The implementation is in the file ```/admin/v9/npm_packages/webjetdatatables/field-type-select-editable.js``` and through the call ```$.fn.dataTable.Editor.fieldTypes.select.create``` it modifies the original field of type ```select``` from the Datatables Editor. The modification consists in adding buttons for editing and adding a record. Clicking on one of these buttons calls the function ```openIframeModal``` to open an iframe dialog.
 
-In the event `onload` event listening is added to open and close the editor window in a nested dialog. For the event `WJ.DTE.close` (i.e. closing the editor window), the iframe dialog is closed and the datatable data refresh is invoked. This will also cause the values in the selection fields to be refreshed.
+In the ```onload``` event, an event listener is added to open and close the editor window in the nested dialog. In the ```WJ.DTE.close``` event (i.e. closing the editor window), the iframe dialog is closed and a refresh of the data table data is triggered. This also causes the values ​​in the selection fields to be refreshed.
 
-In an event `WJ.DTE.open` the nested editor sets the window title according to the specified attribute `data-dt-edit-title`, or by field name in the editor.
+At the ```WJ.DTE.open``` event, the window title of the nested editor is set according to the specified attribute ```data-dt-edit-title```, or according to the name of the field in the editor.
 
-Opening the relevant record for editing is provided by [datatable-opener.js](../libraries/datatable-opener.md), which for the record with `?id=-1` will trigger a click on the add record button.
+Opening the relevant record for editing is provided by [datatable-opener.js](../libraries/datatable-opener.md), which triggers a click on the add record button for a record with ```?id=-1```.
 
-After saving, the datatable data is restored by calling `EDITOR.TABLE.wjUpdateOptions();`. It calls the REST interface `/all` for obtaining `json.options` the data of the selection fields.
+After saving, the data table data is refreshed by calling ```EDITOR.TABLE.wjUpdateOptions();```. This calls the REST interface ```/all``` to retrieve the ```json.options``` selection field data.
 
 ### Display method
 
-In the nested dialog, we do not want to display the datatable or navigation options, but only the editor itself. This is provided by CSS styles:
-- v `app-init.js` the CSS class is set for the iframe window `in-iframe` at `html` Badge. It is set by the URL parameter `showOnlyEditor=true` which is added to the URL automatically when the dialog is opened. The dialog sets the CSS class for other cases `in-iframe-show-table`, which will also leave the datatable displayed. The parameter `showEditorFooterPrimary=true` it is possible to display a footer with an active primary button (if the save is not performed in a nested manner).
-- after initialization the event is fired `WJ.iframeLoaded`, which then executes the function code `onload`, [iframe of the dialogue](../frameworks/webjetjs.md?id=iframe-dialóg).
+In the nested dialog, we don't want to display the data table or navigation options, but only the editor itself. This is achieved using CSS styles:
 
-In the file `src/main/webapp/admin/v9/src/scss/3-base/_modal.scss` is set to display in mode `html.in-iframe` that hides the whole `.ly-page-wrapper` which contains the datatable and the whole GUI.
+- in ```app-init.js```, for the case of a window in an iframe, the CSS class ```in-iframe``` is set on the ```html``` tag. It is set according to the URL parameter ```showOnlyEditor=true``` which is automatically added to the URL when the dialog is opened. For other cases, the dialog sets the CSS class ```in-iframe-show-table```, which also keeps the data table displayed. The parameter ```showEditorFooterPrimary=true``` allows you to display a footer with an active primary button (if the Save is not performed in a nested manner).
+- after initialization, the ```WJ.iframeLoaded``` event is triggered, which subsequently runs the code of the ```onload``` function, [dialog iframe](../frameworks/webjetjs.md?id=iframe-dialog).
 
-However, since it may take a while to load, the element is displayed `#modalIframeLoader` (which is hidden by default) and hides after the `onload` events. This way the user knows that something else is being loaded (the editor is initialized).
+In the file ```src/main/webapp/admin/v9/src/scss/3-base/_modal.scss```, the display is set to ```html.in-iframe``` mode, which hides the entire ```.ly-page-wrapper``` containing the data table and the entire GUI.
+
+However, since loading may take a while, the ```#modalIframeLoader``` element (which is hidden by default) is displayed and hidden after the ```onload``` event is executed. This way the user knows that something is still loading (the editor is initializing).

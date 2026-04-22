@@ -102,7 +102,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Oprava chýb
 
 - `imageradio` - opravené zobrazenie poľa typu `imageradio` v editore datatabuľky (#58333).
+- Webové stránky - opravené obnovenie stránky, ktorá bola vytvorená cez zrkadlenie a nemala historický záznam, ktorý sa dal použiť na obnovenie (#208).
+- Webové stránky - pri obnovení stránky z koša sa použije historická verzia aby sa zachoval jej pôvodný stav pred vymazaním (#208).
 - Tlačidlo - opravená možnosť nastaviť vlastnosti tlačidla ktoré je zakázané (atribút `disabled=disabled`) (#209).
+- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
 
 ### Bezpečnosť
 
@@ -125,9 +128,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Skupiny práv](admin/users/perm-groups.md) - pridaná možnosť nastaviť príznak **Prístup ku všetkým adresárom web stránok** a **Prístup ku všetkým priečinkom súborového systému**, ktoré pri prihlásení prepíšu sčítané práva z ostatných skupín a poskytnú používateľovi neobmedzený prístup k web stránkam, alebo súborom (#osk422).
 - Aktualizovaná knižnica `Datatables.net/Editor` z verzie `2.2.2/2.3.2` na `2.3.7/2.5.2` (#206).
 
-### Oprava chýb
+### Dokumentácia
 
-- Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
+- Upravený automatický prekladač pre použitie Google Translator API v3 (#58301).
+- Anglická verzia dokumentácie nanovo preložená (#58301).
 
 ### Pre programátora
 

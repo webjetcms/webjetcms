@@ -1,17 +1,18 @@
 # News calendar
 
-Applications **News calendar** a **News** are interconnected - after selecting a date in the calendar, a list of news filtered by the selected date will be displayed. News items with a matching date in the Start Date field will be displayed.
+The **News Calendar** and **News** applications are linked to each other - after selecting a date in the calendar, a list of news items filtered by the selected date will be displayed. News items with the same date will be displayed in the Start Date field.
 
 ![](news-calendar.png)
 
-## Setting up applications
+## Application settings
 
 ### Shared folder for News and News Calendar:
 
-Both applications must be set to the same news folder. If these settings do not match, **News calendar** will not be able to properly filter the news for the selected date. The way the link between the apps works is that the first app **News** inserted for **News calendar** in the editor will be automatically linked to it.
+Both applications must be set to the same news folder. If these settings do not match, **News Calendar** will not be able to properly filter news for the selected date. The link between the applications works in such a way that the first **News** application inserted after **News Calendar** in the editor will be automatically linked to it.
 
-So put the News Calendar app and then the News app into the page.
+So, insert the News Calendar application into the page and then the News application.
 
 ![](editor.png)
 
 ![](news-editor.png)
+
