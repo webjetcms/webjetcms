@@ -34,6 +34,7 @@ function closeAllClients() {
 }
 
 const server = http.createServer((request, response) => {
+    // this is dev server only, running on 127.0.0.1 allow all origins
     response.setHeader("Access-Control-Allow-Origin", "*");
     response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     response.setHeader("Access-Control-Allow-Headers", "Content-Type");

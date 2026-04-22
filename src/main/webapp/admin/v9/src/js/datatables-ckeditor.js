@@ -2045,16 +2045,24 @@ export class DatatablesCkEditor {
 		}
 	}
 
-	setData(data) {
+	setData(data, useTimeout=true) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		setTimeout(() => {
+		if (useTimeout) {
+			setTimeout(() => {
+				try {
+					this.ckEditorInstance.setData(data);
+				} catch (error) {
+					console.error("Error setting data to CKEditor instance:", error);
+				}
+			}, 100);
+		} else {
 			try {
 				this.ckEditorInstance.setData(data);
 			} catch (error) {
 				console.error("Error setting data to CKEditor instance:", error);
 			}
-		}, 100);
+		}
 	}
 
 	getData() {

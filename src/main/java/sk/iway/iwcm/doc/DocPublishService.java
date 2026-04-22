@@ -136,8 +136,10 @@ public class DocPublishService {
 
 		//Before save add audit param that signalize that webpage was published
 		//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
+		boolean createdRequestBean = false;
 		if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
 			SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
+			createdRequestBean = true;
 		}
 		RequestBean.addAuditValue("publishStatus", "Webpage was published");
 
@@ -148,6 +150,9 @@ public class DocPublishService {
 			ddr.saveAndFlush(docDetails);
 		} finally {
 			RequestBean.removeAuditValue("publishStatus");
+			if (createdRequestBean) {
+				SetCharacterEncodingFilter.setCurrentRequestBean(null);
+			}
 		}
 
 		// vypublikovanie slave clankov z historie (multikategorie)
