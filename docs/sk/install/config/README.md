@@ -83,6 +83,8 @@ Najjednoduchšie je bežať v režime auto, konf. premennú `clusterNames` nasta
 
 Hodnota je skrátená na prvých 16 znakov. Ak je premenná `clusterHostnameTrimFromEnd` nastavená na `true`, použije sa koncových 16 znakov (napr. kubernetes vytvára `hostname` s náhodnou hodnotou na konci).
 
+Konfiguračná premenná `clusterAutoRandomDelay` nastavuje maximálny čas náhodného oneskorenia v milisekundách pridaný v režime `clusterNames=auto` pri štarte `ClusterRefresher` a pred spustením `CRON` úloh. Pomáha rozložiť štart úloh medzi uzly clustra a znížiť riziko databázového `deadlock`. Hodnota `0` oneskorenie úplne vypne.
+
 ### Presný zoznam uzlov
 
 Ak mate stabilnú konfiguráciu bežiacich uzlov/`nodes` nastavte konf. premennú:
@@ -107,7 +109,9 @@ Pre niektoré časti sa historicky používa generátor primárnych kľúčov, m
 - `pkeyGenOffset` - hodnota posunu pre cluster.
 - `pkeyGenBlockSize` - veľkosť výberu bloku pre generátor primárnych kľúčov. Štandardne nastavené na hodnotu 10, pre server s vysokou záťažou odporúčame nastaviť na vyššiu hodnotu (100 - 1000).
 
-Aby nedochádzalo ku konfliktu v cluster konfigurácii používa sa hodnota `pkeyGenOffset` pre posun podľa nodov. Napr. hodnota `pkeyGenIncrement` je nastavená na 5 a `offset` na 0-5 pre jednotlivé uzly. Pri režime `auto` clustra je automaticky nastavená hodnota `pkeyGenBlockSize=1` aby sa vždy čítala posledná hodnota z databázy. Má to mierny dopad na výkon servera.
+Aby nedochádzalo ku konfliktu v cluster konfigurácii používa sa hodnota `pkeyGenOffset` pre posun podľa nodov. Napr. hodnota `pkeyGenIncrement` je nastavená na 5 a `offset` na 0-5 pre jednotlivé uzly.
+
+Pri režime `auto` clustra nie je možné použiť `pkeyGenOffset`, preto sa alokuje zadaný blok v transakcii a ak nastane `deadlock` pokus sa opakuje 5 krát s oneskorením `attemptCount*50ms`.
 
 ## Licencie
 

@@ -39,6 +39,7 @@ import sk.iway.iwcm.tags.CombineTag;
  */
 public class ClusterRefresher extends TimerTask
 {
+	private static final java.util.Random RANDOM = new java.util.Random();
 	private Timer timer;
 	public static final String THREAD_NAME = "ClusterRefresherThread";
 
@@ -61,7 +62,30 @@ public class ClusterRefresher extends TimerTask
 		}
 
 		timer = new Timer(true);
-		timer.schedule(this, 5000, Constants.getInt("clusterRefreshTimeout"));
+		//in cluster auto mode add configurable random initial delay to spread out timer execution across nodes and reduce Galera deadlock risk
+		long initialDelay = 5000 + getAutoModeRandomDelay();
+		timer.schedule(this, initialDelay, Constants.getInt("clusterRefreshTimeout"));
+	}
+
+	/**
+	 * If clusterNames is set to "auto", returns a random delay in milliseconds up to the value of clusterAutoRandomDelay constant, otherwise returns 0.
+	 * This method is used to add a random delay to the start of tasks to reduce the risk of DB deadlocks by spreading out the execution across nodes.
+	 * @return
+	 */
+	public static int getAutoModeRandomDelay()
+	{
+		if ("auto".equals(Constants.getString("clusterNames")) == false)
+		{
+			return 0;
+		}
+
+		int clusterAutoRandomDelay = Constants.getInt("clusterAutoRandomDelay");
+		if (clusterAutoRandomDelay <= 0)
+		{
+			return 0;
+		}
+
+		return RANDOM.nextInt(clusterAutoRandomDelay);
 	}
 
 	/**

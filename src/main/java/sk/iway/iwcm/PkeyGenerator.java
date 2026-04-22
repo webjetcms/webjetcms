@@ -197,7 +197,7 @@ public class PkeyGenerator
 						ps.execute();
 						ps.close();
 
-						ps = db_conn.prepareStatement("SELECT max(value) AS value FROM pkey_generator WHERE name=?");
+						ps = db_conn.prepareStatement("SELECT value FROM pkey_generator WHERE name=?");
 						ps.setString(1, p.getName());
 						ResultSet rs = ps.executeQuery();
 						try
@@ -243,7 +243,8 @@ public class PkeyGenerator
 			catch (SQLException ex)
 			{
 				//detect deadlock (Galera certification conflict): sqlState 40001 or errorCode 1213
-				boolean isDeadlock = "40001".equals(ex.getSQLState()) || ex.getErrorCode() == 1213;
+				//GALERA: errorCode=1213 (ER_LOCK_DEADLOCK), sqlState=40001 (serialization failure), errorCode=1047 (ER_UNKNOWN_COM_ERROR)
+				boolean isDeadlock = "40001".equals(ex.getSQLState()) || ex.getErrorCode() == 1213 || ex.getErrorCode() == 1047 || (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("deadlock"));
 				if (isDeadlock && attempt < maxRetries - 1)
 				{
 					long sleepMs = (long)(50 * Math.pow(2, attempt)) + random.nextInt(50);

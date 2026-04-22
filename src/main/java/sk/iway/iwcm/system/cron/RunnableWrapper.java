@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.cron;
 import java.lang.reflect.Method;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 
 
 /**
@@ -27,12 +28,12 @@ class RunnableWrapper implements Runnable
 	private final boolean audit;
 	private final Long id;
 
-	public RunnableWrapper(Class<?> clazz, String[] args, boolean audit, Long id)
+	public RunnableWrapper(Class<?> clazz, CronTask task)
 	{
 		this.clazz = clazz;
-		this.args = args;
-		this.audit = audit;
-		this.id = id;
+		this.args = task.receiveArgs();
+		this.audit = task.getAudit();
+		this.id = task.getId();
 	}
 
 	@Override
@@ -40,6 +41,12 @@ class RunnableWrapper implements Runnable
 	{
 		try
 		{
+			int autoModeRandomDelay = ClusterRefresher.getAutoModeRandomDelay();
+			if (autoModeRandomDelay > 0)
+			{
+				Thread.sleep(autoModeRandomDelay);
+			}
+
 			Method main = clazz.getMethod("main", String[].class);
 			Object[] arguments = new Object[]{args};
 
