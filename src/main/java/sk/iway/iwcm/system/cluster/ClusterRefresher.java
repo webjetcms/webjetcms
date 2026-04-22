@@ -309,12 +309,20 @@ public class ClusterRefresher extends TimerTask
 			cal.add(Calendar.MINUTE, -5*60);
 		}
 
-		new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE refresh_time<=?", new Timestamp(cal.getTimeInMillis()));
+		try
+		{
+			new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE refresh_time<=?", new Timestamp(cal.getTimeInMillis()));
 
-		//zmas aj stare konf. premenne statXXX
-		if ("auto".equals(Constants.getString("clusterNames")) && Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")) {
-			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statDistinctUsers-%", new Timestamp(cal.getTimeInMillis()));
-			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statSessions-%", new Timestamp(cal.getTimeInMillis()));
+			//zmas aj stare konf. premenne statXXX
+			if ("auto".equals(Constants.getString("clusterNames")) && Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")) {
+				new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statDistinctUsers-%", new Timestamp(cal.getTimeInMillis()));
+				new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statSessions-%", new Timestamp(cal.getTimeInMillis()));
+			}
+		}
+		catch (Exception ex)
+		{
+			//on clustered MariaDB (Galera) concurrent DELETE from multiple nodes can cause certification conflict / deadlock, cleanup will succeed on the next cycle
+			Logger.debug(ClusterRefresher.class, "cleanOldStatusAllNodes failed (will retry on next cycle): " + ex.getMessage());
 		}
 	}
 

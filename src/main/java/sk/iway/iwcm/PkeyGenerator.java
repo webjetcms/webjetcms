@@ -160,9 +160,9 @@ public class PkeyGenerator
     * Znova nacitanie kluca z DB (alokacia rozsahu)
     * @param keyName
     */
-   private void allocate(PkeyBean p)
+   	private void allocate(PkeyBean p)
 	{
-   	int INCREMENT = Constants.getInt("pkeyGenIncrement");
+   		int pkeyGenIncrement = Constants.getInt("pkeyGenIncrement");
 
 		//este nebol inicializovany, skus ziskat max hodnotu z DB a opravit tabulku
 		if (p.getMaxValue()==0)
@@ -175,49 +175,99 @@ public class PkeyGenerator
 			}
 		}
 
-		try
+		int maxRetries = 5;
+		long blockIncrement = (long)Constants.getInt("pkeyGenBlockSize") * pkeyGenIncrement;
+
+		for (int attempt = 0; attempt < maxRetries; attempt++)
 		{
-			long value = -1;
-			Connection db_conn = DBPool.getConnection();
+			Connection db_conn = null;
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+"+(Constants.getInt("pkeyGenBlockSize") * INCREMENT)+" WHERE name=?");
+				long value = -1;
+				db_conn = DBPool.getConnection();
+				//wrap UPDATE+SELECT in a single transaction to prevent Galera certification conflicts
+				db_conn.setAutoCommit(false);
 				try
 				{
-					ps.setString(1, p.getName());
-					ps.execute();
-					ps.close();
-
-					ps = db_conn.prepareStatement("SELECT max(value) AS value FROM pkey_generator WHERE name=?");
-					ps.setString(1, p.getName());
-					ResultSet rs = ps.executeQuery();
+					PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? WHERE name=?");
 					try
 					{
-						while (rs.next())
+						ps.setLong(1, blockIncrement);
+						ps.setString(2, p.getName());
+						ps.execute();
+						ps.close();
+
+						ps = db_conn.prepareStatement("SELECT max(value) AS value FROM pkey_generator WHERE name=?");
+						ps.setString(1, p.getName());
+						ResultSet rs = ps.executeQuery();
+						try
 						{
-							value = rs.getLong("value");
+							while (rs.next())
+							{
+								value = rs.getLong("value");
+							}
 						}
+						finally { rs.close(); }
 					}
-					finally { rs.close(); }
+					finally { ps.close(); }
+
+					db_conn.commit();
 				}
-				finally { ps.close(); }
+				catch (SQLException ex)
+				{
+					try { if (db_conn != null) db_conn.rollback(); } catch (Exception rollbackEx) { Logger.error(PkeyGenerator.class, "Rollback failed: " + rollbackEx.getMessage()); }
+					throw ex;
+				}
+				finally
+				{
+					if (db_conn != null)
+					{
+						try { db_conn.setAutoCommit(true); } catch (Exception autocommitEx) { /* ignore */ }
+						db_conn.close();
+						db_conn = null;
+					}
+				}
+
+				p.setMaxValue(value);
+				p.setValue(value - blockIncrement);
+
+				//zaokruhli hodnotu podla incrementu a offsetu
+				//int newValue = (((keyName.getValue() / INCREMENT) + 1) * INCREMENT) + INCREMENT_OFFSET;
+				long newValue = ((((p.getValue()-1) / pkeyGenIncrement) ) * pkeyGenIncrement) + 1; //NOSONAR
+				Logger.debug(this,"ZAOKRUHLENE: " + p.getValue() + "->" + newValue);
+				p.setValue(newValue);
+
+				Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
+				return;
 			}
-			finally { db_conn.close(); }
-
-			p.setMaxValue(value);
-			p.setValue(value - (Constants.getInt("pkeyGenBlockSize") * INCREMENT));
-
-			//zaokruhli hodnotu podla incrementu a offsetu
-			//int newValue = (((keyName.getValue() / INCREMENT) + 1) * INCREMENT) + INCREMENT_OFFSET;
-			long newValue = ((((p.getValue()-1) / INCREMENT) ) * INCREMENT) + 1; //NOSONAR
-			Logger.debug(this,"ZAOKRUHLENE: " + p.getValue() + "->" + newValue);
-			p.setValue(newValue);
-
-			Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
+			catch (SQLException ex)
+			{
+				//detect deadlock (Galera certification conflict): sqlState 40001 or errorCode 1213
+				boolean isDeadlock = "40001".equals(ex.getSQLState()) || ex.getErrorCode() == 1213;
+				if (isDeadlock && attempt < maxRetries - 1)
+				{
+					long sleepMs = (long)(50 * Math.pow(2, attempt)) + random.nextInt(50);
+					Logger.error(PkeyGenerator.class, "PkeyGenerator deadlock on allocate for " + p.getName() + ", retry " + (attempt + 1) + "/" + maxRetries + ", sleeping " + sleepMs + "ms");
+					try { Thread.sleep(sleepMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+				}
+				else
+				{
+					sk.iway.iwcm.Logger.error(ex);
+					return;
+				}
+			}
+			catch (Exception ex)
+			{
+				sk.iway.iwcm.Logger.error(ex);
+				return;
+			}
+			finally
+			{
+				if (db_conn != null)
+				{
+					try { db_conn.close(); } catch (Exception closeEx) { /* ignore */ }
+				}
+			}
 		}
 	}
 
