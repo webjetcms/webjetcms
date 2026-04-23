@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const glob = require("glob");
 const rspack = require("@rspack/core");
+const browserslist = require("browserslist");
 const { VueLoaderPlugin } = require('vue-loader');
 
 const shouldAnalyzeBundle = process.env.ADMIN_V9_BUNDLE_ANALYZE === "1";
@@ -32,6 +33,38 @@ const WP_DATA = {
 
 const bundleAnalyzerReportPath = path.resolve(__dirname, "dist", "bundle-report.html");
 const bundleAnalyzerStatsPath = path.resolve(__dirname, "dist", "bundle-stats.json");
+const swcTargets = browserslist.loadConfig({ path: __dirname });
+
+if (!swcTargets) {
+    throw new Error("No Browserslist config found for admin/v9 SWC targets.");
+}
+
+const resolvedSwcTargets = browserslist(undefined, { path: __dirname });
+const resolvedSwcTargetsByBrowser = resolvedSwcTargets.reduce((accumulator, target) => {
+    const separatorIndex = target.indexOf(' ');
+    const browser = separatorIndex === -1 ? target : target.slice(0, separatorIndex);
+    const version = separatorIndex === -1 ? '' : target.slice(separatorIndex + 1);
+
+    if (!accumulator[browser]) {
+        accumulator[browser] = [];
+    }
+
+    if (version) {
+        accumulator[browser].push(version);
+    }
+
+    return accumulator;
+}, {});
+
+console.info("SWC Browserslist queries:");
+for (const query of swcTargets) {
+    console.info(`  - ${query}`);
+}
+
+console.info("SWC resolved browser targets:");
+for (const [browser, versions] of Object.entries(resolvedSwcTargetsByBrowser)) {
+    console.info(`  - ${browser}: ${versions.join(', ')}`);
+}
 
 class BuildTimestampPlugin {
     apply(compiler) {
@@ -101,7 +134,7 @@ const config = {
                                 }
                             },
                             env: {
-                                targets: "last 5 versions, > 0.5%, not dead"
+                                targets: swcTargets
                             }
                         }
                     }

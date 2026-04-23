@@ -231,7 +231,6 @@ module.exports = {
 
         //First check, if button is already active
         const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active-a").withText(columnText));
-
         I.say("Showing column: " + columnText + ", active count: " + count);
 
         if (count == 0) {
@@ -256,7 +255,6 @@ module.exports = {
 
         //First check, if button is already active
         const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active-a").withText(columnText));
-
         I.say("Hiding column: " + columnText + ", active count: " + count);
 
         if (count > 0) {

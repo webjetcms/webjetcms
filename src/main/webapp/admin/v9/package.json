@@ -20,6 +20,7 @@
         "@rspack/cli": "^1.7.11",
         "@rspack/core": "^1.7.11",
         "autoprefixer": "^10.4.20",
+        "browserslist": "^4.28.2",
         "css-loader": "^7.1.2",
         "postcss-loader": "^8.1.1",
         "pug": "^3.0.3",
