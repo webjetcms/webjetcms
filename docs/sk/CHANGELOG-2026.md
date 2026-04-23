@@ -106,6 +106,22 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - pri obnovení stránky z koša sa použije historická verzia aby sa zachoval jej pôvodný stav pred vymazaním (#208).
 - Tlačidlo - opravená možnosť nastaviť vlastnosti tlačidla ktoré je zakázané (atribút `disabled=disabled`) (#209).
 - Fotogaléria - opravené vyhľadávanie v priečinkoch (#58433).
+- Súbory - doplnené zachovanie `.min.js` a `.min.css` v názve súboru pri nahratí do `/files,/images` priečinkov (#213).
+
+### Výkon
+
+- Upravený `PkeyGenerator` pre režim cluster `auto`. Metóda `allocate` obalená do transakcie (`setAutoCommit(false)`) s opakovaním pri `deadlock`. Zlepšené získanie bloku aj v režime cluster `auto`, čím sa znižuje počet prístupov do databázy a riziko `deadlock`. Navýšenie a čítanie hodnoty `pkey_generator` prebieha v jednom atomickom SQL dotaze, čo zabraňuje prideleniu rovnakého bloku viacerým uzlom clustra. Používajú sa databázovo špecifické SQL príkazy (#213):
+
+| Databáza | SQL príkaz | Minimálna verzia |
+| --- | --- | --- |
+| MySQL | `LAST_INSERT_ID(expr)` | 3.23+ |
+| MariaDB | `LAST_INSERT_ID(expr)` | 5.1+ (všetky GA) |
+| Microsoft SQL Server | `UPDATE ... OUTPUT inserted` | 2005+ |
+| PostgreSQL | `UPDATE ... RETURNING` | 8.2+ |
+| Oracle | `RETURNING value INTO` | 10g+ |
+
+- `SeoManager` a `ClusterRefresher` tolerujú databázový `deadlock` pri `UPDATE/DELETE` operáciách bez chybového logu (#213).
+- Režim cluster `auto` - pridaná konfiguračná premenná `clusterAutoRandomDelay` pre [náhodné oneskorenie štartu](install/config/README.md#režim-auto) niektorých úloh, aby sa znížilo riziko súbežných databázových konfliktov medzi uzlami clustra (#213).
 
 ### Bezpečnosť
 

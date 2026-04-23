@@ -39,6 +39,7 @@ import sk.iway.iwcm.tags.CombineTag;
  */
 public class ClusterRefresher extends TimerTask
 {
+	private static final java.util.Random RANDOM = new java.util.Random();
 	private Timer timer;
 	public static final String THREAD_NAME = "ClusterRefresherThread";
 
@@ -61,7 +62,30 @@ public class ClusterRefresher extends TimerTask
 		}
 
 		timer = new Timer(true);
-		timer.schedule(this, 5000, Constants.getInt("clusterRefreshTimeout"));
+		//in cluster auto mode add configurable random initial delay to spread out timer execution across nodes and reduce Galera deadlock risk
+		long initialDelay = 5000 + getAutoModeRandomDelay();
+		timer.schedule(this, initialDelay, Constants.getInt("clusterRefreshTimeout"));
+	}
+
+	/**
+	 * If clusterNames is set to "auto", returns a random delay in milliseconds up to the value of clusterAutoRandomDelay constant, otherwise returns 0.
+	 * This method is used to add a random delay to the start of tasks to reduce the risk of DB deadlocks by spreading out the execution across nodes.
+	 * @return
+	 */
+	public static int getAutoModeRandomDelay()
+	{
+		if ("auto".equals(Constants.getString("clusterNames")) == false)
+		{
+			return 0;
+		}
+
+		int clusterAutoRandomDelay = Constants.getInt("clusterAutoRandomDelay");
+		if (clusterAutoRandomDelay <= 0)
+		{
+			return 0;
+		}
+
+		return RANDOM.nextInt(clusterAutoRandomDelay);
 	}
 
 	/**
@@ -309,12 +333,20 @@ public class ClusterRefresher extends TimerTask
 			cal.add(Calendar.MINUTE, -5*60);
 		}
 
-		new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE refresh_time<=?", new Timestamp(cal.getTimeInMillis()));
+		try
+		{
+			new SimpleQuery().execute("DELETE FROM cluster_refresher WHERE refresh_time<=?", new Timestamp(cal.getTimeInMillis()));
 
-		//zmas aj stare konf. premenne statXXX
-		if ("auto".equals(Constants.getString("clusterNames")) && Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")) {
-			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statDistinctUsers-%", new Timestamp(cal.getTimeInMillis()));
-			new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statSessions-%", new Timestamp(cal.getTimeInMillis()));
+			//zmas aj stare konf. premenne statXXX
+			if ("auto".equals(Constants.getString("clusterNames")) && Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")) {
+				new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statDistinctUsers-%", new Timestamp(cal.getTimeInMillis()));
+				new SimpleQuery().execute("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name like ? AND date_changed<=?", "statSessions-%", new Timestamp(cal.getTimeInMillis()));
+			}
+		}
+		catch (Exception ex)
+		{
+			//on clustered MariaDB (Galera) concurrent DELETE from multiple nodes can cause certification conflict / deadlock, cleanup will succeed on the next cycle
+			Logger.debug(ClusterRefresher.class, "cleanOldStatusAllNodes failed (will retry on next cycle): " + ex.getMessage());
 		}
 	}
 
