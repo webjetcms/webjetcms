@@ -137,6 +137,10 @@ public class ComplexQuery
 				{
 					showError = false;
 				}
+			} else if (ex.getMessage() != null && ex.getMessage().contains("because \"db_conn\" is null"))
+			{
+				Logger.error(ComplexQuery.class, "Database connection is NULL");
+				showError = false;
 			}
 
 			if (showError) sk.iway.iwcm.Logger.error(ex);

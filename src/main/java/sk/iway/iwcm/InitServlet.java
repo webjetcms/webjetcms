@@ -608,9 +608,6 @@ public class InitServlet extends HttpServlet
 					}
 				}
 				if (Tools.isEmpty(clusterMyNodeName)) clusterMyNodeName = trimHostname("auto-"+Tools.getNow());
-
-				//if it's default value change it to 1 to always load pkeyGen value from DB
-				if (Constants.getInt("pkeyGenBlockSize")==10) Constants.setInt("pkeyGenBlockSize", 1);
 			}
 			if (Tools.isNotEmpty(clusterMyNodeName))
 			{

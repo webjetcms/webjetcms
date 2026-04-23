@@ -1,6 +1,7 @@
 package sk.iway.iwcm;
 
 import java.security.MessageDigest;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -138,11 +139,11 @@ public class PkeyGenerator
 			}
 		});
 
-   	for (PkeyBean p : pkeys)
+   		for (PkeyBean p : pkeys)
 		{
-   		//uloz ho
-   		generators.put(p.getName(), p);
-   		Logger.println(this,"PkeyGenerator:" + p.toString());
+			//uloz ho
+			generators.put(p.getName(), p);
+			Logger.debug(this,"PkeyGenerator:" + p.toString());
 		}
 	}
 
@@ -160,9 +161,9 @@ public class PkeyGenerator
     * Znova nacitanie kluca z DB (alokacia rozsahu)
     * @param keyName
     */
-   private void allocate(PkeyBean p)
+   	void allocate(PkeyBean p)
 	{
-   	int INCREMENT = Constants.getInt("pkeyGenIncrement");
+   		int pkeyGenIncrement = Constants.getInt("pkeyGenIncrement");
 
 		//este nebol inicializovany, skus ziskat max hodnotu z DB a opravit tabulku
 		if (p.getMaxValue()==0)
@@ -175,50 +176,185 @@ public class PkeyGenerator
 			}
 		}
 
-		try
+		int maxRetries = 5;
+		long blockIncrement = (long)Constants.getInt("pkeyGenBlockSize") * pkeyGenIncrement;
+
+		for (int attempt = 0; attempt < maxRetries; attempt++)
 		{
-			long value = -1;
-			Connection db_conn = DBPool.getConnection();
+			Connection db_conn = null;
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+"+(Constants.getInt("pkeyGenBlockSize") * INCREMENT)+" WHERE name=?");
+				long value = -1;
+				db_conn = DBPool.getConnection();
+				//use atomic UPDATE+read to prevent Galera/multi-node race conditions
+				db_conn.setAutoCommit(false);
 				try
 				{
-					ps.setString(1, p.getName());
-					ps.execute();
-					ps.close();
-
-					ps = db_conn.prepareStatement("SELECT max(value) AS value FROM pkey_generator WHERE name=?");
-					ps.setString(1, p.getName());
-					ResultSet rs = ps.executeQuery();
-					try
-					{
-						while (rs.next())
-						{
-							value = rs.getLong("value");
-						}
-					}
-					finally { rs.close(); }
+					value = atomicIncrementAndGet(db_conn, p.getName(), blockIncrement);
+					db_conn.commit();
 				}
-				finally { ps.close(); }
+				catch (SQLException ex)
+				{
+					try { if (db_conn != null) db_conn.rollback(); } catch (Exception rollbackEx) { Logger.error(PkeyGenerator.class, "Rollback failed: " + rollbackEx.getMessage()); }
+					throw ex;
+				}
+				finally
+				{
+					if (db_conn != null)
+					{
+						try { db_conn.setAutoCommit(true); } catch (Exception autocommitEx) { /* ignore */ }
+						db_conn.close();
+						db_conn = null;
+					}
+				}
+
+				p.setMaxValue(value);
+				p.setValue(value - blockIncrement);
+
+				//zaokruhli hodnotu podla incrementu a offsetu
+				//int newValue = (((keyName.getValue() / INCREMENT) + 1) * INCREMENT) + INCREMENT_OFFSET;
+				long newValue = ((((p.getValue()-1) / pkeyGenIncrement) ) * pkeyGenIncrement) + 1; //NOSONAR
+				Logger.debug(this,"ZAOKRUHLENE: " + p.getValue() + "->" + newValue);
+				p.setValue(newValue);
+
+				Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
+				return;
 			}
-			finally { db_conn.close(); }
-
-			p.setMaxValue(value);
-			p.setValue(value - (Constants.getInt("pkeyGenBlockSize") * INCREMENT));
-
-			//zaokruhli hodnotu podla incrementu a offsetu
-			//int newValue = (((keyName.getValue() / INCREMENT) + 1) * INCREMENT) + INCREMENT_OFFSET;
-			long newValue = ((((p.getValue()-1) / INCREMENT) ) * INCREMENT) + 1; //NOSONAR
-			Logger.debug(this,"ZAOKRUHLENE: " + p.getValue() + "->" + newValue);
-			p.setValue(newValue);
-
-			Logger.debug(this,"PkeyGenerator ALLOCATE:" + p.toString());
+			catch (SQLException ex)
+			{
+				//detect deadlock (Galera certification conflict): sqlState 40001 or errorCode 1213
+				//GALERA: errorCode=1213 (ER_LOCK_DEADLOCK), sqlState=40001 (serialization failure), errorCode=1047 (ER_UNKNOWN_COM_ERROR)
+				boolean isDeadlock = "40001".equals(ex.getSQLState()) || ex.getErrorCode() == 1213 || ex.getErrorCode() == 1047 || (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("deadlock"));
+				if (isDeadlock && attempt < maxRetries - 1)
+				{
+					long sleepMs = (long)(50 * Math.pow(2, attempt)) + random.nextInt(50);
+					Logger.info(PkeyGenerator.class, "PkeyGenerator deadlock on allocate for " + p.getName() + ", retry " + (attempt + 1) + "/" + maxRetries + ", sleeping " + sleepMs + "ms");
+					try { Thread.sleep(sleepMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+				}
+				else
+				{
+					sk.iway.iwcm.Logger.error(ex);
+					throw new IllegalStateException("Failed to allocate pkey block for " + p.getName() + " after " + (attempt + 1) + " attempt(s)", ex);
+				}
+			}
+			catch (Exception ex)
+			{
+				sk.iway.iwcm.Logger.error(ex);
+				throw new IllegalStateException("Unexpected error while allocating pkey block for " + p.getName(), ex);
+			}
+			finally
+			{
+				if (db_conn != null)
+				{
+					try { db_conn.close(); } catch (Exception closeEx) { /* ignore */ }
+				}
+			}
 		}
-		catch (Exception ex)
+	}
+
+	/**
+	 * Atomically increment pkey_generator value and return the new value.
+	 * Uses database-specific SQL to avoid race conditions between UPDATE and SELECT
+	 * (especially on Galera multi-master clusters where another node can modify the row between two statements).
+	 *
+	 * - MySQL/MariaDB: LAST_INSERT_ID(value+?) ensures connection-local read
+	 * - PostgreSQL: UPDATE ... RETURNING value
+	 * - MSSQL: UPDATE ... OUTPUT inserted.value
+	 * - Oracle: RETURNING value INTO ? via CallableStatement
+	 */
+	private long atomicIncrementAndGet(Connection db_conn, String name, long blockIncrement) throws SQLException
+	{
+		long value = -1;
+
+		if (Constants.DB_TYPE == Constants.DB_MSSQL)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			//MSSQL: OUTPUT clause returns updated value atomically
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? OUTPUT inserted.value WHERE name=?");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
 		}
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+		{
+			//PostgreSQL: RETURNING clause returns updated value atomically
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? WHERE name=? RETURNING value");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
+		}
+		else if (Constants.DB_TYPE == Constants.DB_ORACLE)
+		{
+			//Oracle: use RETURNING INTO with CallableStatement
+			CallableStatement cs = db_conn.prepareCall("BEGIN UPDATE pkey_generator SET value=value+? WHERE name=? RETURNING value INTO ?; END;");
+			try
+			{
+				cs.setLong(1, blockIncrement);
+				cs.setString(2, name);
+				cs.registerOutParameter(3, java.sql.Types.BIGINT);
+				cs.execute();
+				value = cs.getLong(3);
+			}
+			finally { cs.close(); }
+		}
+		else
+		{
+			//MySQL/MariaDB: LAST_INSERT_ID(expr) stores the value per-connection,
+			//so concurrent updates from other Galera nodes cannot affect the result
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=LAST_INSERT_ID(value+?) WHERE name=?");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ps.execute();
+			}
+			finally { ps.close(); }
+
+			ps = db_conn.prepareStatement("SELECT LAST_INSERT_ID()");
+			try
+			{
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
+		}
+
+		if (value == -1)
+		{
+			throw new SQLException("Failed to read updated pkey value for: " + name);
+		}
+
+		return value;
 	}
 
    /**
@@ -269,7 +405,12 @@ public class PkeyGenerator
 		}
 		catch (Exception ex)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			if (ex.getMessage() != null && ex.getMessage().contains("because \"db_conn\" is null"))
+			{
+				Logger.error(PkeyGenerator.class, "getNextValueAsLong: Database connection is NULL");
+			} else {
+				sk.iway.iwcm.Logger.error(ex);
+			}
 		}
 		return(value + INCREMENT_OFFSET);
 	}
@@ -297,7 +438,12 @@ public class PkeyGenerator
 		{
 			String message = ex.getMessage();
 			if (message.contains("doesn't exist")) throw new RuntimeException("Table pkey_generator doesn't exist, please create it.");
-			sk.iway.iwcm.Logger.error(ex);
+			if (ex.getMessage() != null && ex.getMessage().contains("because \"db_conn\" is null"))
+			{
+				Logger.error(PkeyGenerator.class, "getNextValueAsLong: Database connection is NULL");
+			} else {
+				sk.iway.iwcm.Logger.error(ex);
+			}
 		}
 		finally
 		{
