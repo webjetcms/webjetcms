@@ -83,7 +83,7 @@ Najjednoduchšie je bežať v režime auto, konf. premennú `clusterNames` nasta
 
 Hodnota je skrátená na prvých 16 znakov. Ak je premenná `clusterHostnameTrimFromEnd` nastavená na `true`, použije sa koncových 16 znakov (napr. kubernetes vytvára `hostname` s náhodnou hodnotou na konci).
 
-Konfiguračná premenná `clusterAutoRandomDelay` nastavuje maximálny čas náhodného oneskorenia v milisekundách pridaný v režime `clusterNames=auto` pri štarte `ClusterRefresher` a pred spustením `CRON` úloh. Pomáha rozložiť štart úloh medzi uzly clustra a znížiť riziko databázového `deadlock`. Hodnota `0` oneskorenie úplne vypne.
+Konfiguračná premenná `clusterAutoRandomDelay` nastavuje maximálny čas náhodného oneskorenia v milisekundách pridaný v režime `clusterNames=auto` pri štarte `ClusterRefresher`, `Sender` a pred spustením `CRON` úloh. Pomáha rozložiť štart úloh medzi uzly clustra a znížiť riziko databázového `deadlock`. Hodnota `0` oneskorenie úplne vypne.
 
 ### Presný zoznam uzlov
 
