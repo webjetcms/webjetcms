@@ -139,11 +139,11 @@ public class PkeyGenerator
 			}
 		});
 
-   	for (PkeyBean p : pkeys)
+   		for (PkeyBean p : pkeys)
 		{
-   		//uloz ho
-   		generators.put(p.getName(), p);
-   		Logger.println(this,"PkeyGenerator:" + p.toString());
+			//uloz ho
+			generators.put(p.getName(), p);
+			Logger.debug(this,"PkeyGenerator:" + p.toString());
 		}
 	}
 
@@ -405,7 +405,12 @@ public class PkeyGenerator
 		}
 		catch (Exception ex)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			if (ex.getMessage() != null && ex.getMessage().contains("because \"db_conn\" is null"))
+			{
+				Logger.error(PkeyGenerator.class, "getNextValueAsLong: Database connection is NULL");
+			} else {
+				sk.iway.iwcm.Logger.error(ex);
+			}
 		}
 		return(value + INCREMENT_OFFSET);
 	}
@@ -433,7 +438,12 @@ public class PkeyGenerator
 		{
 			String message = ex.getMessage();
 			if (message.contains("doesn't exist")) throw new RuntimeException("Table pkey_generator doesn't exist, please create it.");
-			sk.iway.iwcm.Logger.error(ex);
+			if (ex.getMessage() != null && ex.getMessage().contains("because \"db_conn\" is null"))
+			{
+				Logger.error(PkeyGenerator.class, "getNextValueAsLong: Database connection is NULL");
+			} else {
+				sk.iway.iwcm.Logger.error(ex);
+			}
 		}
 		finally
 		{

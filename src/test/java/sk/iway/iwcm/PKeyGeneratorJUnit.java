@@ -33,7 +33,14 @@ import sk.iway.iwcm.database.SimpleQuery;
  */
 public class PKeyGeneratorJUnit
 {
-	private static final String TEST_TABLE = "_test";
+	private static final String TEST_TABLE = "webjet_test";
+
+	/**
+	 * Returns the SQL type for a big integer column, Oracle uses NUMBER(19) instead of BIGINT.
+	 */
+	private static String bigintType() {
+		return Constants.DB_TYPE == Constants.DB_ORACLE ? "NUMBER(19)" : "BIGINT";
+	}
 
 
 	@BeforeEach
@@ -41,8 +48,11 @@ public class PKeyGeneratorJUnit
 	{
 		Constants.setServletContext(new MockServletContext(""));
 		Constants.setInt("pkeyGenOffset", 0);
-		new SimpleQuery().execute("CREATE TABLE _test (_test_id BIGINT PRIMARY KEY);");
-		new SimpleQuery().execute("INSERT INTO _test VALUES(?) ", Integer.MAX_VALUE - 2);
+		//initialize DB so DB_TYPE will be correctly set
+		new SimpleQuery().execute("SELECT count(*) FROM pkey_generator");
+
+		new SimpleQuery().execute("CREATE TABLE webjet_test (webjet_test_id " + bigintType() + " PRIMARY KEY)");
+		new SimpleQuery().execute("INSERT INTO webjet_test VALUES(?) ", Integer.MAX_VALUE - 2);
 		//value now = MAX_VALUE - 1
 		PkeyGenerator.getNextValue(TEST_TABLE);
 	}
@@ -51,14 +61,14 @@ public class PKeyGeneratorJUnit
 	public void tearDown()
 	{
 		new SimpleQuery().execute("DELETE FROM pkey_generator WHERE table_name = ?", TEST_TABLE);
-		new SimpleQuery().execute("DROP TABLE _test");
+		new SimpleQuery().execute("DROP TABLE webjet_test");
 	}
 
 	@Test
 	public void getInt()
 	{
 		int value = PkeyGenerator.getNextValue(TEST_TABLE);
-		assertTrue(value == Integer.MAX_VALUE);
+		assertTrue(value == Integer.MAX_VALUE, "Expected value to be " + Integer.MAX_VALUE + ", but got: " + value);
 	}
 
 	@Test
@@ -68,7 +78,7 @@ public class PKeyGeneratorJUnit
 		//value now == MAX_VALUE
 		value = PkeyGenerator.getNextValueAsLong(TEST_TABLE);
 		//value now = MAX_VALUE + 1
-		assertTrue(value == (long)(Integer.MAX_VALUE) + 1);
+		assertTrue(value == (long)(Integer.MAX_VALUE) + 1, "Expected value to be " + ((long)Integer.MAX_VALUE + 1) + ", but got: " + value);
 	}
 
 	/**
@@ -79,12 +89,19 @@ public class PKeyGeneratorJUnit
 	@Test
 	public void testConcurrentAllocate() throws Exception
 	{
-		String concurrentTable = "_test_conc";
+		String dbType = "MariaDB";
+		if (Constants.DB_TYPE == Constants.DB_MSSQL) dbType = "MSSQL";
+		else if (Constants.DB_TYPE == Constants.DB_ORACLE) dbType = "Oracle";
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL) dbType = "PostgreSQL";
 
-		int threadCount = 5;
+		System.out.println("Starting testConcurrentAllocate - simulating concurrent allocate calls - DBType=" + Constants.DB_TYPE + "/" + dbType);
+
+		String concurrentTable = "webjet_test_conc";
+
+		int threadCount = 20;
 
 		//create test table and pkey_generator entry
-		new SimpleQuery().execute("CREATE TABLE _test_conc (_test_conc_id BIGINT PRIMARY KEY)");
+		new SimpleQuery().execute("CREATE TABLE webjet_test_conc (webjet_test_conc_id " + bigintType() + " PRIMARY KEY)");
 		new SimpleQuery().execute("INSERT INTO pkey_generator (name, value, table_name, table_pkey_name) VALUES (?, 100, ?, ?)",
 			concurrentTable, concurrentTable, concurrentTable + "_id");
 
@@ -193,7 +210,7 @@ public class PKeyGeneratorJUnit
 		finally
 		{
 			new SimpleQuery().execute("DELETE FROM pkey_generator WHERE name=?", concurrentTable);
-			new SimpleQuery().execute("DROP TABLE _test_conc");
+			new SimpleQuery().execute("DROP TABLE webjet_test_conc");
 		}
 	}
 
@@ -204,11 +221,11 @@ public class PKeyGeneratorJUnit
 	@Test
 	public void testConcurrentGetNextValue() throws Exception
 	{
-		String concurrentTable = "_test_conc2";
+		String concurrentTable = "webjet_test_conc2";
 		int threadCount = 5;
 		int valuesPerThread = 100;
 
-		new SimpleQuery().execute("CREATE TABLE _test_conc2 (_test_conc2_id BIGINT PRIMARY KEY)");
+		new SimpleQuery().execute("CREATE TABLE webjet_test_conc2 (webjet_test_conc2_id " + bigintType() + " PRIMARY KEY)");
 
 		try
 		{
@@ -284,7 +301,7 @@ public class PKeyGeneratorJUnit
 		finally
 		{
 			new SimpleQuery().execute("DELETE FROM pkey_generator WHERE name=?", concurrentTable);
-			new SimpleQuery().execute("DROP TABLE _test_conc2");
+			new SimpleQuery().execute("DROP TABLE webjet_test_conc2");
 		}
 	}
 }
