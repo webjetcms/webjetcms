@@ -264,6 +264,10 @@ public class ConstantsV9 {
 		Constants.setString("imageMagickCustomParams_webp", "\n-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50", "images", "Custom parameters for ImageMagick WebP format. Value can have 2 lines: line 1 = params before operation, line 2 = params after operation.");
 
 		Constants.setString("appWrapperClasses", "apps.wrapper.container:container,apps.wrapper.container-fluid:container-fluid,apps.wrapper.mt-1:mt-1,apps.wrapper.mt-2:mt-2,apps.wrapper.mt-3:mt-3,apps.wrapper.mt-4:mt-4,apps.wrapper.mb-1:mb-1,apps.wrapper.mb-2:mb-2,apps.wrapper.mb-3:mb-3,apps.wrapper.mb-4:mb-4,apps.wrapper.w-100:w-100,apps.wrapper.w-75:w-75,apps.wrapper.w-50:w-50,apps.wrapper.mx-auto:mx-auto", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie výstupu aplikácie do wrapper kontajnera. Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Ak je uvedený prekladový kľúč, zobrazí sa preložený názov.");
+
+		Constants.setBoolean("ragSemanticSearchEnabled", false);
+
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector)");
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package sk.iway.iwcm.rag.indexing;
 
+import sk.iway.iwcm.rag.service.RagEntityType;
+
 /**
  * Interface for extracting plain text from an entity for embedding.
  */
@@ -15,5 +17,5 @@ public interface ContentExtractor<T> {
     /**
      * Returns the entity type identifier (e.g., "document").
      */
-    String getEntityType();
+    RagEntityType getEntityType();
 }

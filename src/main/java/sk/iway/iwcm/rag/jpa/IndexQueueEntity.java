@@ -1,18 +1,20 @@
 package sk.iway.iwcm.rag.jpa;
 
+import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.validation.constraints.NotBlank;
-
-import java.util.Date;
-
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -37,9 +39,9 @@ public class IndexQueueEntity {
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "entity_type")
-    @NotBlank
-    private String entityType;
+    private RagEntityType entityType;
 
     @Column(name = "entity_id")
     private Integer entityId;

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
@@ -47,7 +48,7 @@ public class RagJpaConfig {
         Logger.println(RagJpaConfig.class, "loading RAG RagJpaConfig");
 
         String dsName = getRagDataSourceName();
-        if (dsName == null) {
+        if (Tools.isEmpty(dsName)) {
             Logger.println(RagJpaConfig.class, "RAG datasource not available, using iwcm as fallback");
             dsName = "iwcm";
         }

@@ -21,7 +21,6 @@ import java.util.StringTokenizer;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -37,12 +36,10 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.rag.search.HybridSearchService;
 import sk.iway.iwcm.rag.search.SemanticSearchResult;
 import sk.iway.iwcm.rag.search.SemanticSearchService;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -73,11 +70,18 @@ public class SearchAction
 	{
 		PageParams pageParams = new PageParams(request);
 
-		if (Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
+		String searchType = Constants.getString("searchType");
+		if ("lucene".equals(searchType) || Constants.getBoolean("luceneAsDefaultSearch") || "true".equals(request.getParameter("useLucene")) || pageParams.getBooleanValue("useLucene", false))
 		{
 			//parameter useLucene=true je mozne pouzit pri porovnani standardneho a lucene vyhladavania
 			return LuceneSearchAction.search(request);
 		}
+		if ("semantic".equals(searchType) || "true".equals(request.getParameter("useSemantic")) || pageParams.getBooleanValue("useSemantic", false))
+		{
+			return semanticSearch(request, response);
+		}
+
+		// ELSE - standardne databazove vyhladavanie
 
 		Identity user = UsersDB.getCurrentUser(request);
 
@@ -1015,9 +1019,6 @@ public class SearchAction
 		totalResults = getResultsCount(sqlTotalResults, request, words, wordsAscii, wordsMysql, aList.size(), hasAnotherPage);
 		request.setAttribute("words", words);
 
-		// Hybrid search: merge keyword results with semantic search results using RRF
-		aList = mergeWithSemanticSearch(aList, words, request);
-
 		request.setAttribute("aList", aList);
 		if (aList.isEmpty())
 		{
@@ -1697,85 +1698,215 @@ public class SearchAction
     }
 
 	/**
-	 * Merge keyword search results with semantic search results using Reciprocal Rank Fusion (RRF).
-	 * Only runs when ragSemanticSearchEnabled is true and the vector store is available.
+	 * Standalone semantic search using pgvector embeddings.
+	 * Same pagination and request attributes as DB search, but results come purely from semantic search.
 	 */
-	private static List<SearchDetails> mergeWithSemanticSearch(List<SearchDetails> keywordResults, String query, HttpServletRequest request) {
-		if (Constants.getBoolean("ragSemanticSearchEnabled") == false) return keywordResults;
-		if (Tools.isEmpty(query)) return keywordResults;
+	private static String semanticSearch(HttpServletRequest request, HttpServletResponse response) {
+		Identity user = UsersDB.getCurrentUser(request);
+
+		String forward = "success";
+		String error = "error";
+		boolean english = false;
+		if (request.getParameter("lng") != null) {
+			english = true;
+			forward = "english";
+		}
+		String pForward = request.getParameter("forward");
+		if (pForward != null && pForward.endsWith(".jsp")) {
+			forward = "/templates/" + pForward;
+		}
+
+		int perPage = 10;
+		try {
+			if (getParamAttribute("perpage", request, "10") != null)
+				perPage = Integer.parseInt(getParamAttribute("perpage", request, "10"));
+		} catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+		}
+
+		String rq = request.getParameter("index");
+		int index = 0;
+		if (rq != null) {
+			try {
+				index = Integer.parseInt(rq);
+			} catch (Exception e) {
+				index = 0;
+			}
+		}
+
+		String words = request.getParameter("words");
+		if (Tools.isEmpty(words)) words = (String) request.getAttribute("words");
+		if (words == null) words = "";
+		String text = request.getParameter("text");
+		if (Tools.isNotEmpty(text)) words = text;
+		if (Tools.isNotEmpty((String) request.getAttribute("forceWords"))) {
+			words = (String) request.getAttribute("forceWords");
+		}
+
+		words = words.replace('\'', ' ').replace(',', ' ').replace('.', ' ').replace(';', ' ');
+		if (Tools.isNotEmpty(Constants.getString("searchActionOmitCharacters"))) {
+			words = words.replaceAll("[" + Constants.getString("searchActionOmitCharacters") + "]", "");
+		}
+		words = words.trim();
+
+		if (words.length() == 0) {
+			request.setAttribute("aList", new ArrayList<SearchDetails>());
+			request.setAttribute("wrong", "true");
+			request.setAttribute("emptyrequest", "true");
+			return forward;
+		}
+
+		// spam protection (same as DB search)
+		long wait;
+		if (request.getAttribute("disableSearchSpamProtection") == null
+				&& request.getAttribute("forceWords") == null && rq == null) {
+			if ((wait = SpamProtection.getWaitTimeout("search", request)) != 0) {
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossHourlyLimit", "true");
+				request.setAttribute("wait", (wait / 60 / 1000));
+				return forward;
+			}
+			if (!SpamProtection.canPost("search", "", request)) {
+				request.setAttribute("wrong", "true");
+				request.setAttribute("crossTimeout", "true");
+				return forward;
+			}
+		}
+
+		request.removeAttribute("forceWords");
 
 		try {
-			org.springframework.context.ApplicationContext ctx = SpringContext.getApplicationContext();
-			if (ctx == null) return keywordResults;
-
-			SemanticSearchService semanticSearch = ctx.getBean(SemanticSearchService.class);
-			if (semanticSearch == null || semanticSearch.isAvailable() == false) return keywordResults;
+			SemanticSearchService semanticSearchService = Tools.getSpringBean("semanticSearchService", SemanticSearchService.class);
+			if (semanticSearchService == null || semanticSearchService.isAvailable() == false) {
+				Logger.debug(SearchAction.class, "Semantic search service not available");
+				request.setAttribute("aList", new ArrayList<SearchDetails>());
+				request.setAttribute("wrong", "true");
+				request.setAttribute("notfound", "true");
+				return forward;
+			}
 
 			Integer domainId = CloudToolsForCore.getDomainId();
 			String language = request.getParameter("lng");
-			int maxResults = keywordResults.size() > 0 ? keywordResults.size() : 20;
 
-			List<SemanticSearchResult> semanticResults = semanticSearch.search(query, domainId, language, maxResults);
-			if (semanticResults.isEmpty()) return keywordResults;
+			// Fetch enough results for pagination
+			int maxFetch = index + perPage + 1;
+			List<SemanticSearchResult> semanticResults = semanticSearchService.search(words, domainId, language, maxFetch);
 
-			// Convert SearchDetails to DocDetails for RRF merge
-			List<DocDetails> keywordDocs = new ArrayList<>(keywordResults);
-			List<DocDetails> merged = HybridSearchService.mergeResults(keywordDocs, semanticResults, maxResults);
+			// Apply pagination - skip results before index
+			int totalResults = semanticResults.size();
+			List<SearchDetails> aList = new ArrayList<>();
+			GroupsDB groupsDB = GroupsDB.getInstance();
+			String ttf = words;
 
-			// Load documents that only appeared in semantic results
-			java.util.Set<Integer> semanticOnlyIds = HybridSearchService.getSemanticOnlyDocIds(keywordDocs, semanticResults);
-			Map<Integer, SearchDetails> keywordMap = new HashMap<>();
-			for (SearchDetails sd : keywordResults) {
-				keywordMap.put(sd.getDocId(), sd);
-			}
+			int resultIndex = 0;
+			for (SemanticSearchResult sr : semanticResults) {
+				if (resultIndex < index) {
+					resultIndex++;
+					continue;
+				}
+				if (aList.size() >= perPage) {
+					break;
+				}
 
-			List<SearchDetails> result = new ArrayList<>();
-			for (DocDetails doc : merged) {
-				SearchDetails sd = keywordMap.get(doc.getDocId());
-				if (sd != null) {
-					result.add(sd);
+				DocDetails loaded = DocDB.getInstance().getDoc(sr.getDocId().intValue());
+				if (loaded == null) continue;
+
+				// Skip non-searchable / non-available documents
+				if (loaded.isSearchable() == false || loaded.isAvailable() == false) continue;
+
+				// Skip internal groups
+				GroupDetails group = groupsDB.getGroup(loaded.getGroupId());
+				if (group != null && group.isInternal()) continue;
+
+				// Skip password protected pages for anonymous users
+				if (user == null && Tools.isNotEmpty(loaded.getPasswordProtected())) continue;
+
+				SearchDetails sd = new SearchDetails();
+				sd.setDocId(loaded.getDocId());
+				sd.setTitle(loaded.getTitle());
+				sd.setVirtualPath(loaded.getVirtualPath());
+
+				if (group != null) {
+					sd.setLink(groupsDB.getNavbar(group.getGroupId()));
 				} else {
-					// Create SearchDetails from DocDetails loaded by semantic search
-					DocDetails loaded = DocDB.getInstance().getDoc(doc.getDocId());
-					if (loaded != null) {
-						SearchDetails newSd = new SearchDetails();
-						newSd.setDocId(loaded.getDocId());
-						newSd.setTitle(loaded.getTitle());
-						newSd.setVirtualPath(loaded.getVirtualPath());
-						newSd.setData(loaded.getData());
-						result.add(newSd);
-					}
+					sd.setLink("");
 				}
+
+				// Generate snippet
+				sd.setDataOriginal(loaded.getData());
+				sd.setData("");
+				SearchSnippet searchSnippet = new SearchSnippet(sd, ttf, request);
+				String snippet = searchSnippet.getSnippet();
+				if (Tools.isEmpty(snippet)) snippet = "&nbsp;";
+				sd.setData(snippet);
+
+				aList.add(sd);
+				resultIndex++;
 			}
 
-			// Add any semantic-only docs that weren't in the merged list
-			for (Integer docId : semanticOnlyIds) {
-				if (keywordMap.containsKey(docId) == false) {
-					boolean alreadyInResult = false;
-					for (SearchDetails sd : result) {
-						if (sd.getDocId() == docId.intValue()) {
-							alreadyInResult = true;
-							break;
-						}
-					}
-					if (alreadyInResult == false) {
-						DocDetails loaded = DocDB.getInstance().getDoc(docId);
-						if (loaded != null) {
-							SearchDetails newSd = new SearchDetails();
-							newSd.setDocId(loaded.getDocId());
-							newSd.setTitle(loaded.getTitle());
-							newSd.setVirtualPath(loaded.getVirtualPath());
-							newSd.setData(loaded.getData());
-							result.add(newSd);
-						}
-					}
-				}
+			request.setAttribute("words", words);
+			request.setAttribute("aList", aList);
+
+			if (aList.isEmpty()) {
+				request.setAttribute("wrong", "true");
+				request.setAttribute("notfound", "true");
+				return forward;
 			}
 
-			return result;
+			// Build pagination params (same logic as DB search)
+			String paramsLink = "";
+			StringBuilder paramsLinkBuilder = new StringBuilder();
+			Enumeration<String> e = request.getParameterNames();
+			while (e.hasMoreElements()) {
+				String name = e.nextElement();
+				if ("index".equals(name) || "docid".equals(name)) continue;
+				String[] values = request.getParameterValues(name);
+				for (int v = 0; v < values.length; v++) {
+					paramsLinkBuilder.append("&amp;").append(Tools.URLEncode(name)).append('=').append(Tools.URLEncode(values[v]));
+				}
+			}
+			paramsLink = paramsLinkBuilder.toString();
+			request.setAttribute("paramsLink", paramsLink);
+
+			request.setAttribute("fromIndex", Integer.toString(index + 1));
+			int toIndex = index + aList.size();
+			request.setAttribute("toIndex", Integer.toString(toIndex));
+
+			Logger.debug(SearchAction.class, "semantic totalResults=" + totalResults);
+			request.setAttribute("totalResults", Integer.toString(totalResults));
+
+			preparePages(request, perPage, index, totalResults, paramsLink, "search.do");
+
+			if (totalResults > toIndex) {
+				if (!english) {
+					request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Ďalej &gt;&gt;&gt; </a>");
+				} else {
+					request.setAttribute("next", "<a href=\"search.do?index=" + (index + perPage) + paramsLink + "\"> Next &gt;&gt;&gt; </a>");
+				}
+				request.setAttribute("nextHref", "search.do?index=" + (index + perPage) + paramsLink);
+			}
+			if (index != 0) {
+				if (!english) {
+					request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Späť </a>");
+				} else {
+					request.setAttribute("prev", "<a href=\"search.do?index=" + (index - perPage) + paramsLink + "\"> &lt;&lt;&lt; Back </a>");
+				}
+				request.setAttribute("prevHref", "search.do?index=" + (index - perPage) + paramsLink);
+			}
+
+			String searchTerm = request.getParameter("words");
+			if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter("text");
+			if (Tools.isNotEmpty(searchTerm)) {
+				StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter("docid"), -1), request);
+			}
+
+			return forward;
 		} catch (Exception e) {
-			Logger.error(SearchAction.class, "Error in semantic search merge, falling back to keyword results: " + e.getMessage(), e);
-			return keywordResults;
+			Logger.error(SearchAction.class, "Error in semantic search: " + e.getMessage(), e);
+			request.setAttribute("wrong", "true");
+			request.setAttribute("notfound", "true");
+			request.setAttribute("err_msg", "Chyba pri sémantickom vyhľadávaní: " + e.getMessage());
+			return error;
 		}
 	}
 }

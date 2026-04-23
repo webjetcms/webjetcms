@@ -1,6 +1,7 @@
 package sk.iway.iwcm.rag.vectorstore;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Abstraction for vector storage and similarity search.
@@ -48,7 +49,22 @@ public interface VectorStore {
     boolean isAvailable();
 
     /**
+     * Mark all chunks for an entity as ERROR with a message.
+     * @param entityType entity type
+     * @param entityId entity ID
+     * @param embeddingModel model used
+     * @param errorMessage error description
+     */
+    void markError(String entityType, long entityId, String embeddingModel, String errorMessage);
+
+    /**
      * Initialize the pgvector extension and create the table if needed.
      */
-    void initializeSchema();
+    boolean initializeSchema();
+
+    /**
+     * Get existing embeddings for an entity, keyed by content hash.
+     * Used to skip re-embedding unchanged chunks.
+     */
+    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel);
 }

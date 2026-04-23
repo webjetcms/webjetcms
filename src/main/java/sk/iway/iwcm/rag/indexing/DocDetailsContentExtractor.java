@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.util.EditorUtils;
+import sk.iway.iwcm.rag.service.RagEntityType;
 
 /**
  * Content extractor for DocDetails entities.
@@ -17,7 +18,7 @@ import sk.iway.iwcm.editor.util.EditorUtils;
 @Component
 public class DocDetailsContentExtractor implements ContentExtractor<DocDetails> {
 
-    public static final String ENTITY_TYPE = "document";
+    public static final RagEntityType ENTITY_TYPE = RagEntityType.DOCUMENT;
 
     @Override
     public String extractText(DocDetails doc) {
@@ -29,7 +30,11 @@ public class DocDetailsContentExtractor implements ContentExtractor<DocDetails> 
 
             // Use isLucene=true to preserve diacritics for better embedding quality
             String text = EditorUtils.getDataAsc(data, doc, true, null);
-            return text != null ? text : "";
+
+            if(text == null)  text = "";
+
+            // Text can contain a lot of whitespace, trim whitespace's
+            return text.replaceAll("\\s+", " ");
         } catch (Exception e) {
             Logger.error(DocDetailsContentExtractor.class, "Error extracting text from doc " + doc.getDocId() + ": " + e.getMessage());
             return "";
@@ -37,7 +42,7 @@ public class DocDetailsContentExtractor implements ContentExtractor<DocDetails> 
     }
 
     @Override
-    public String getEntityType() {
+    public RagEntityType getEntityType() {
         return ENTITY_TYPE;
     }
 }

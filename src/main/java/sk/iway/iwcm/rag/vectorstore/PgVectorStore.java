@@ -1,15 +1,16 @@
 package sk.iway.iwcm.rag.vectorstore;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.pgvector.RagJpaConfig;
 
 /**
@@ -35,11 +36,9 @@ public class PgVectorStore implements VectorStore {
             dimensions      INT NOT NULL,
             language        VARCHAR(10),
             domain_id       INT,
-            status          VARCHAR(20) NOT NULL DEFAULT 'COMPLETED',
-            retry_count     INT DEFAULT 0,
+            status          VARCHAR(20) NOT NULL DEFAULT '" + EmbeddingChunkStatus.COMPLETED.name() + "',
             error_message   VARCHAR(500),
             create_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            update_date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_model)
         )
         """;
@@ -56,26 +55,33 @@ public class PgVectorStore implements VectorStore {
     private static final String CREATE_DOMAIN_LANG_INDEX_SQL =
         "CREATE INDEX IF NOT EXISTS idx_rag_chunk_domain_lang ON rag_embedding_chunks (domain_id, language, status)";
 
-    private static final String UPSERT_SQL = """
-        INSERT INTO rag_embedding_chunks
-            (entity_type, entity_id, chunk_index, chunk_text, content_hash, embedding,
-             embedding_model, dimensions, language, domain_id, status, create_date, update_date)
-        VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?, ?, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ON CONFLICT (entity_type, entity_id, chunk_index, embedding_model)
-        DO UPDATE SET chunk_text = EXCLUDED.chunk_text, content_hash = EXCLUDED.content_hash,
-                      embedding = EXCLUDED.embedding, status = 'COMPLETED',
-                      update_date = CURRENT_TIMESTAMP, retry_count = 0, error_message = NULL
-        """;
+    private static final String UPSERT_SQL =
+        "INSERT INTO rag_embedding_chunks" +
+        "    (entity_type, entity_id, chunk_index, chunk_text, content_hash, embedding," +
+        "     embedding_model, dimensions, language, domain_id, status, create_date)" +
+        " VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?, ?, '" + EmbeddingChunkStatus.COMPLETED.name() + "', CURRENT_TIMESTAMP)" +
+        " ON CONFLICT (entity_type, entity_id, chunk_index, embedding_model)" +
+        " DO UPDATE SET chunk_text = EXCLUDED.chunk_text, content_hash = EXCLUDED.content_hash," +
+        "              embedding = EXCLUDED.embedding, status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'," +
+        "              error_message = NULL";
 
     private static final String DELETE_BY_ENTITY_SQL =
         "DELETE FROM rag_embedding_chunks WHERE entity_type = ? AND entity_id = ?";
 
-    private static final String SEARCH_SQL = """
-        SELECT id, entity_type, entity_id, chunk_index, chunk_text,
-               1 - (embedding <=> ?::vector) AS similarity
-        FROM rag_embedding_chunks
-        WHERE status = 'COMPLETED'
-        """;
+    private static final String MARK_ERROR_SQL =
+        "UPDATE rag_embedding_chunks" +
+        " SET status = '" + EmbeddingChunkStatus.ERROR.name() + "', error_message = ?" +
+        " WHERE entity_type = ? AND entity_id = ? AND embedding_model = ?";
+
+    private static final String SEARCH_SQL =
+        "SELECT id, entity_type, entity_id, chunk_index, chunk_text," +
+        "       1 - (embedding <=> ?::vector) AS similarity" +
+        " FROM rag_embedding_chunks" +
+        " WHERE status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
+
+    private static final String GET_EXISTING_HASH_EMBEDDING =
+        "SELECT content_hash, embedding::text AS embedding_text FROM rag_embedding_chunks " +
+        "WHERE entity_type = ? AND entity_id = ? AND embedding_model = ? AND status = '" + EmbeddingChunkStatus.COMPLETED.name() + "'";
 
     @Override
     public void store(String entityType, long entityId, int chunkIndex, String chunkText,
@@ -84,37 +90,12 @@ public class PgVectorStore implements VectorStore {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
-        Connection conn = null;
-        PreparedStatement ps = null;
         try {
-            conn = DBPool.getConnection(dsName);
-            ps = conn.prepareStatement(UPSERT_SQL);
-            ps.setString(1, entityType);
-            ps.setLong(2, entityId);
-            ps.setInt(3, chunkIndex);
-            ps.setString(4, chunkText);
-            ps.setString(5, contentHash);
-            ps.setString(6, vectorToString(embedding));
-            ps.setString(7, embeddingModel);
-            ps.setInt(8, dimensions);
-            ps.setString(9, language);
-            if (domainId != null) ps.setInt(10, domainId);
-            else ps.setNull(10, java.sql.Types.INTEGER);
-            ps.executeUpdate();
+            new SimpleQuery(dsName).execute(UPSERT_SQL,
+                entityType, entityId, chunkIndex, chunkText, contentHash,
+                vectorToString(embedding), embeddingModel, dimensions, language, domainId);
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error storing embedding for " + entityType + "/" + entityId + "/" + chunkIndex + ": " + e.getMessage());
-        } finally {
-            try
-			{
-				if (ps != null)
-					ps.close();
-				if (conn != null)
-					conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
         }
     }
 
@@ -123,36 +104,32 @@ public class PgVectorStore implements VectorStore {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) return;
 
-        Connection conn = null;
-        PreparedStatement ps = null;
         try {
-            conn = DBPool.getConnection(dsName);
-            ps = conn.prepareStatement(DELETE_BY_ENTITY_SQL);
-            ps.setString(1, entityType);
-            ps.setLong(2, entityId);
-            ps.executeUpdate();
+            new SimpleQuery(dsName).execute(DELETE_BY_ENTITY_SQL, entityType, entityId);
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error deleting embeddings for " + entityType + "/" + entityId + ": " + e.getMessage());
-        } finally {
-             try
-			{
-				if (ps != null)
-					ps.close();
-				if (conn != null)
-					conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
+        }
+    }
+
+    @Override
+    public void markError(String entityType, long entityId, String embeddingModel, String errorMessage) {
+        String dsName = RagJpaConfig.getRagDataSourceName();
+        if (Tools.isEmpty(dsName)) return;
+
+        try {
+            String truncatedMessage = errorMessage != null && errorMessage.length() > 500
+                ? errorMessage.substring(0, 500) : errorMessage;
+            new SimpleQuery(dsName).execute(MARK_ERROR_SQL,
+                truncatedMessage, entityType, entityId, embeddingModel);
+        } catch (Exception e) {
+            Logger.error(PgVectorStore.class, "Error marking chunks as ERROR for " + entityType + "/" + entityId + ": " + e.getMessage());
         }
     }
 
     @Override
     public List<VectorSearchResult> search(float[] queryEmbedding, Integer domainId, String language, int limit) {
-        List<VectorSearchResult> results = new ArrayList<>();
         String dsName = RagJpaConfig.getRagDataSourceName();
-        if (dsName == null) return results;
+        if (dsName == null) return new ArrayList<>();
 
         StringBuilder sql = new StringBuilder(SEARCH_SQL);
         List<Object> params = new ArrayList<>();
@@ -162,7 +139,7 @@ public class PgVectorStore implements VectorStore {
             sql.append(" AND domain_id = ?");
             params.add(domainId);
         }
-        if (language != null) {
+        if (Tools.isNotEmpty(language)) {
             sql.append(" AND language = ?");
             params.add(language);
         }
@@ -170,52 +147,18 @@ public class PgVectorStore implements VectorStore {
         params.add(vectorToString(queryEmbedding));
         params.add(limit);
 
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBPool.getConnection(dsName);
-            ps = conn.prepareStatement(sql.toString());
-
-            int idx = 1;
-            for (Object param : params) {
-                if (param instanceof Integer) ps.setInt(idx, (Integer) param);
-                else if (param instanceof String) ps.setString(idx, (String) param);
-                else ps.setObject(idx, param);
-                idx++;
-            }
-
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                VectorSearchResult result = new VectorSearchResult(
-                    rs.getLong("id"),
-                    rs.getString("entity_type"),
-                    rs.getLong("entity_id"),
-                    rs.getInt("chunk_index"),
-                    rs.getString("chunk_text"),
-                    rs.getDouble("similarity")
-                );
-                results.add(result);
-            }
-        } catch (Exception e) {
-            Logger.error(PgVectorStore.class, "Error executing vector search: " + e.getMessage());
-        } finally {
-            try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (conn != null)
-					conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
-        }
-
-        return results;
+        return new ComplexQuery()
+            .setSql(sql.toString())
+            .setParams(params.toArray())
+            .setDatabase(dsName)
+            .list(rs -> new VectorSearchResult(
+                rs.getLong("id"),
+                rs.getString("entity_type"),
+                rs.getLong("entity_id"),
+                rs.getInt("chunk_index"),
+                rs.getString("chunk_text"),
+                rs.getDouble("similarity")
+            ));
     }
 
     @Override
@@ -223,62 +166,34 @@ public class PgVectorStore implements VectorStore {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) return false;
 
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
         try {
-            conn = DBPool.getConnection(dsName);
-            ps = conn.prepareStatement("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
-            rs = ps.executeQuery();
+            new SimpleQuery(dsName).forInt("SELECT 1 FROM rag_embedding_chunks LIMIT 1");
             return true;
         } catch (Exception e) {
             return false;
-        } finally {
-             try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (conn != null)
-					conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
         }
     }
 
     @Override
-    public void initializeSchema() {
+    public boolean initializeSchema() {
         String dsName = RagJpaConfig.getRagDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema initialization");
-            return;
+            return false;
         }
 
-        Connection conn = null;
         try {
-            conn = DBPool.getConnection(dsName);
-            try (PreparedStatement ps = conn.prepareStatement(CREATE_EXTENSION_SQL)) { ps.execute(); }
-            try (PreparedStatement ps = conn.prepareStatement(CREATE_TABLE_SQL)) { ps.execute(); }
-            try (PreparedStatement ps = conn.prepareStatement(CREATE_HNSW_INDEX_SQL)) { ps.execute(); }
-            try (PreparedStatement ps = conn.prepareStatement(CREATE_ENTITY_INDEX_SQL)) { ps.execute(); }
-            try (PreparedStatement ps = conn.prepareStatement(CREATE_DOMAIN_LANG_INDEX_SQL)) { ps.execute(); }
+            SimpleQuery sq = new SimpleQuery(dsName);
+            sq.execute(CREATE_EXTENSION_SQL);
+            sq.execute(CREATE_TABLE_SQL);
+            sq.execute(CREATE_HNSW_INDEX_SQL);
+            sq.execute(CREATE_ENTITY_INDEX_SQL);
+            sq.execute(CREATE_DOMAIN_LANG_INDEX_SQL);
             Logger.println(PgVectorStore.class, "RAG pgvector schema initialized successfully");
+            return true;
         } catch (Exception e) {
             Logger.error(PgVectorStore.class, "Error initializing RAG pgvector schema: " + e.getMessage());
-        } finally {
-             try
-			{
-				if (conn != null)
-					conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
+            return false;
         }
     }
 
@@ -293,5 +208,47 @@ public class PgVectorStore implements VectorStore {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    /**
+     * Parse pgvector text format "[0.1,0.2,0.3]" back to float[].
+     */
+    private float[] parseVector(String vectorStr) {
+        if (vectorStr == null || vectorStr.length() < 2) return new float[0];
+        // Strip brackets
+        String inner = vectorStr.substring(1, vectorStr.length() - 1);
+        String[] parts = inner.split(",");
+        float[] result = new float[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Float.parseFloat(parts[i].trim());
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel) {
+        String dsName = RagJpaConfig.getRagDataSourceName();
+        if (dsName == null) return new java.util.HashMap<>();
+
+        try {
+            List<Map.Entry<String, float[]>> entries = new ComplexQuery()
+                .setSql(GET_EXISTING_HASH_EMBEDDING)
+                .setParams(entityType, entityId, embeddingModel)
+                .setDatabase(dsName)
+                .list(rs -> {
+                    String hash = rs.getString("content_hash");
+                    float[] emb = parseVector(rs.getString("embedding_text"));
+                    return java.util.Map.entry(hash, emb);
+                });
+
+            java.util.Map<String, float[]> result = new java.util.HashMap<>();
+            for (Map.Entry<String, float[]> entry : entries) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+            return result;
+        } catch (Exception e) {
+            Logger.error(PgVectorStore.class, "Error fetching existing embeddings for " + entityType + "/" + entityId + ": " + e.getMessage());
+            return new java.util.HashMap<>();
+        }
     }
 }

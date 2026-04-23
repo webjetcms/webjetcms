@@ -1,0 +1,21 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var embeddingChunksDataTable;
+
+        window.domReady.add(function () {
+            var url = "/admin/rest/settings/embedding-chunks";
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity')})];
+
+            embeddingChunksDataTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                serverSide: true,
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+        });
+
+    table.datatableInit.table

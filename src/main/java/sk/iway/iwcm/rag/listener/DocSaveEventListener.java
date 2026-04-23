@@ -1,14 +1,20 @@
 package sk.iway.iwcm.rag.listener;
 
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.rag.RagIndexAction;
+import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
+import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
+import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
@@ -19,25 +25,14 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 @Component
 public class DocSaveEventListener {
 
-    private static final String ENTITY_TYPE = "document";
+    public static final RagEntityType ENTITY_TYPE = RagEntityType.DOCUMENT;
 
-    // Use INSERT IGNORE / ON CONFLICT to avoid duplicates if the same doc is saved multiple times
-    // before the cron task processes the queue
-    private static final String INSERT_QUEUE_MYSQL =
-        "INSERT IGNORE INTO rag_index_queue (entity_type, entity_id, action, domain_id, create_date) VALUES (?, ?, ?, ?, NOW())";
+    private final IndexQueueRepository queueRepository;
 
-    private static final String INSERT_QUEUE_MSSQL =
-        "IF NOT EXISTS (SELECT 1 FROM rag_index_queue WHERE entity_type=? AND entity_id=? AND action=?) " +
-        "INSERT INTO rag_index_queue (entity_type, entity_id, action, domain_id, create_date) VALUES (?, ?, ?, ?, GETDATE())";
-
-    private static final String INSERT_QUEUE_PGSQL =
-        "INSERT INTO rag_index_queue (entity_type, entity_id, action, domain_id, create_date) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) " +
-        "ON CONFLICT (entity_type, entity_id, action) DO NOTHING";
-
-    private static final String INSERT_QUEUE_ORACLE =
-        "MERGE INTO rag_index_queue q USING (SELECT ? entity_type, ? entity_id, ? action FROM dual) s " +
-        "ON (q.entity_type=s.entity_type AND q.entity_id=s.entity_id AND q.action=s.action) " +
-        "WHEN NOT MATCHED THEN INSERT (entity_type, entity_id, action, domain_id, create_date) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+    @Autowired
+    public DocSaveEventListener(IndexQueueRepository queueRepository) {
+        this.queueRepository = queueRepository;
+    }
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'")
     public void handleDocEvent(final WebjetEvent<DocDetails> event) {
@@ -51,35 +46,30 @@ public class DocSaveEventListener {
         int domainId = GroupsDB.getDomainId(domainName);
 
         try {
-            if (event.getEventType() == WebjetEventType.AFTER_SAVE) {
-                addToQueue(doc.getDocId(), "INDEX", domainId);
+            if (event.getEventType() == WebjetEventType.AFTER_SAVE || event.getEventType() == WebjetEventType.AFTER_RECOVER) {
+                // updated or recovered, re-index
+                addToQueue(doc.getDocId(), RagIndexAction.INDEX, domainId);
             } else if (event.getEventType() == WebjetEventType.AFTER_DELETE) {
-                addToQueue(doc.getDocId(), "DELETE", domainId);
+                // deleted, remove index even when it's soft delete
+                addToQueue(doc.getDocId(), RagIndexAction.DELETE, domainId);
             }
+
         } catch (Exception e) {
             Logger.error(DocSaveEventListener.class, "Error adding doc " + doc.getDocId() + " to RAG queue: " + e.getMessage());
         }
     }
 
-    private void addToQueue(int docId, String action, int domainId) {
-        String sql;
-        Object[] params;
+    private void addToQueue(int docId, RagIndexAction action, int domainId) {
+        // Remove any previously queued action for this entity (e.g. INDEX before DELETE)
+        queueRepository.deleteByEntityTypeAndEntityId(ENTITY_TYPE, docId, domainId); // Yes docId is unique across domains but this dont need to be case for other entity types, so we need domainId in delete query
 
-        if (Constants.DB_TYPE == Constants.DB_MSSQL) {
-            sql = INSERT_QUEUE_MSSQL;
-            params = new Object[]{ ENTITY_TYPE, docId, action, ENTITY_TYPE, docId, action, domainId };
-        } else if (Constants.DB_TYPE == Constants.DB_ORACLE) {
-            sql = INSERT_QUEUE_ORACLE;
-            params = new Object[]{ ENTITY_TYPE, docId, action, ENTITY_TYPE, docId, action, domainId };
-        } else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
-            sql = INSERT_QUEUE_PGSQL;
-            params = new Object[]{ ENTITY_TYPE, docId, action, domainId };
-        } else {
-            // MySQL/MariaDB
-            sql = INSERT_QUEUE_MYSQL;
-            params = new Object[]{ ENTITY_TYPE, docId, action, domainId };
-        }
+        IndexQueueEntity queueItem = new IndexQueueEntity();
+        queueItem.setEntityType(ENTITY_TYPE);
+        queueItem.setEntityId(docId);
+        queueItem.setAction(action.name());
+        queueItem.setDomainId(domainId);
+        queueItem.setCreateDate(new Date());
 
-        new SimpleQuery().execute(sql, params);
+        queueRepository.save(queueItem);
     }
 }

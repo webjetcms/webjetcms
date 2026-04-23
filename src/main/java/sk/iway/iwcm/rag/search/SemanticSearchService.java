@@ -41,7 +41,7 @@ public class SemanticSearchService {
      * @return list of document IDs with their best similarity scores
      */
     public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults) {
-        if (!vectorStore.isAvailable()) {
+        if (vectorStore.isAvailable() == false) {
             Logger.debug(SemanticSearchService.class, "Vector store not available, returning empty results");
             return List.of();
         }
@@ -60,7 +60,7 @@ public class SemanticSearchService {
         // Aggregate by entity_id, keeping best similarity per document
         Map<Long, SemanticSearchResult> docMap = new HashMap<>();
         for (VectorSearchResult chunk : chunkResults) {
-            if (!"document".equals(chunk.getEntityType())) continue;
+            if ("document".equals(chunk.getEntityType()) == false) continue;
 
             docMap.compute(chunk.getEntityId(), (id, existing) -> {
                 if (existing == null) {

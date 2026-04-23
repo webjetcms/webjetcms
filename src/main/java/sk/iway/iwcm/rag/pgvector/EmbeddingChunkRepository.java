@@ -1,24 +1,28 @@
 package sk.iway.iwcm.rag.pgvector;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import sk.iway.iwcm.rag.service.RagEntityType;
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 @Repository
-public interface EmbeddingChunkRepository extends JpaRepository<EmbeddingChunkEntity, Long>, JpaSpecificationExecutor<EmbeddingChunkEntity> {
+public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingChunkEntity, Long> {
 
-    List<EmbeddingChunkEntity> findByEntityTypeAndEntityId(String entityType, Long entityId);
+    List<EmbeddingChunkEntity> findByEntityTypeAndEntityId(RagEntityType entityType, Long entityId);
 
-    List<EmbeddingChunkEntity> findByEntityTypeAndEntityIdAndEmbeddingModel(String entityType, Long entityId, String embeddingModel);
+    List<EmbeddingChunkEntity> findByEntityTypeAndEntityIdAndEmbeddingModel(RagEntityType entityType, Long entityId, String embeddingModel);
 
     @Modifying
     @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId")
-    void deleteByEntityTypeAndEntityId(@Param("entityType") String entityType, @Param("entityId") Long entityId);
+    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId);
 
-    Long countByStatus(String status);
+    Long countByStatus(EmbeddingChunkStatus status);
+
+    @Query("SELECT DISTINCT c.entityType FROM EmbeddingChunkEntity c WHERE c.domainId = :domainId")
+    List<RagEntityType> findDistinctEntityTypes(@Param("domainId") Integer domainId);
 }

@@ -2,19 +2,26 @@ package sk.iway.iwcm.rag.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
 import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
+import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
+import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 
 /**
@@ -29,42 +36,84 @@ public class SemanticIndexService {
     private final EmbeddingProvider embeddingProvider;
     private final PgVectorStore vectorStore;
 
+    private final IndexQueueRepository queueRepository;
+
     @Autowired
     public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
                                 SlidingWindowChunker chunker,
                                 EmbeddingProvider embeddingProvider,
-                                PgVectorStore vectorStore) {
+                                PgVectorStore vectorStore,
+                                IndexQueueRepository queueRepository) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
         this.embeddingProvider = embeddingProvider;
         this.vectorStore = vectorStore;
+
+        this.queueRepository = queueRepository;
+    }
+
+    public void processQueue() {
+        // If vector store is not available, start initialization. If initialization fails, skip processing - next runs will retry initialization.
+        if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
+            Logger.error(SemanticIndexService.class, "Vector store not available and initialization failed, skipping queue processing");
+            return;
+        }
+
+        List<IndexQueueEntity> items = queueRepository.findTop100ByDomainIdOrderByCreateDateAsc( CloudToolsForCore.getDomainId() );
+        if (items.isEmpty()) return;
+
+        Logger.println(SemanticIndexService.class, "Processing " + items.size() + " RAG queue items");
+
+        for (IndexQueueEntity item : items) {
+            try {
+
+                RagIndexAction action = RagIndexAction.valueOf(item.getAction());
+                RagEntityType entityType = item.getEntityType();
+
+                //
+                processEntity(action, entityType, item.getEntityId());
+
+                // Remove processed item from queue
+                queueRepository.deleteById(item.getId());
+            } catch (Exception e) {
+                Logger.error(SemanticIndexService.class, "Error processing queue item " + item.getId() +
+                    " (" + item.getEntityType() + "/" + item.getEntityId() + "): " + e.getMessage());
+                // Don't delete failed items - they'll be retried on next run
+            }
+        }
+    }
+
+    private void processEntity(RagIndexAction action, RagEntityType entityType, int entityId) {
+        if (entityType == RagEntityType.DOCUMENT) {
+            if (action == RagIndexAction.DELETE) {
+                vectorStore.deleteByEntity(DocDetailsContentExtractor.ENTITY_TYPE.name(), entityId);
+            } else if(action == RagIndexAction.INDEX) {
+                indexDocument(entityId);
+            } else {
+                Logger.error(SemanticIndexService.class, "Unsupported rag index action: " + action);
+            }
+        } else {
+            Logger.error(SemanticIndexService.class, "Unsupported entity type: " + entityType);
+        }
     }
 
     /**
-     * Index a document: extract text, chunk, embed, and store vectors.
-     * @param docId the document ID to index
+     * Index a document from a DocDetails object.
      */
-    public void indexDocument(int docId) {
+    private void indexDocument(int docId) {
         DocDetails doc = DocDB.getInstance().getDoc(docId);
         if (doc == null) {
             Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, skipping indexing");
             return;
         }
 
-        indexDocument(doc);
-    }
-
-    /**
-     * Index a document from a DocDetails object.
-     */
-    public void indexDocument(DocDetails doc) {
-        String entityType = DocDetailsContentExtractor.ENTITY_TYPE;
+        String entityType = DocDetailsContentExtractor.ENTITY_TYPE.name();
         long entityId = doc.getDocId();
 
         try {
             // Step 1: Extract text
             String text = contentExtractor.extractText(doc);
-            if (text == null || text.isBlank()) {
+            if (Tools.isEmpty(text)) {
                 // Empty document, remove any existing embeddings
                 vectorStore.deleteByEntity(entityType, entityId);
                 return;
@@ -77,46 +126,66 @@ public class SemanticIndexService {
                 return;
             }
 
+            // Step 2.5: Check existing chunks to reuse unchanged embeddings
             String model = embeddingProvider.getDefaultModel();
             int dimensions = embeddingProvider.getDimensions(model);
 
-            // Step 3: Embed all chunks in a batch
-            List<float[]> embeddings = embeddingProvider.embed(chunks, model);
-            if (embeddings.size() != chunks.size()) {
-                Logger.error(SemanticIndexService.class, "Embedding count mismatch for doc " + entityId +
-                    ": expected " + chunks.size() + ", got " + embeddings.size());
-                return;
+            Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, model);
+
+            // Compute hashes for all new chunks and separate into reusable vs needs-embedding
+            List<String> chunkHashes = new ArrayList<>();
+            List<Integer> chunksToEmbedIndices = new ArrayList<>();
+            List<String> chunksToEmbedTexts = new ArrayList<>();
+            float[][] resolvedEmbeddings = new float[chunks.size()][];
+
+            for (int i = 0; i < chunks.size(); i++) {
+                String hash = sha256(chunks.get(i));
+                chunkHashes.add(hash);
+
+                float[] cached = existingEmbeddingsByHash.get(hash);
+                if (cached != null && cached.length == dimensions) {
+                    // Reuse existing embedding
+                    resolvedEmbeddings[i] = cached;
+                } else {
+                    // Needs new embedding
+                    chunksToEmbedIndices.add(i);
+                    chunksToEmbedTexts.add(chunks.get(i));
+                }
+            }
+
+            Logger.debug(SemanticIndexService.class, "Doc " + entityId + ": " + (chunks.size() - chunksToEmbedTexts.size()) +
+                " chunks reused, " + chunksToEmbedTexts.size() + " chunks need embedding");
+
+            // Step 3: Embed only changed chunks
+            if (chunksToEmbedTexts.isEmpty() == false) {
+                List<float[]> newEmbeddings = embeddingProvider.embed(chunksToEmbedTexts, model);
+                if (newEmbeddings.size() != chunksToEmbedTexts.size()) {
+                    Logger.error(SemanticIndexService.class, "Embedding count mismatch for doc " + entityId +
+                        ": expected " + chunksToEmbedTexts.size() + ", got " + newEmbeddings.size());
+                    return;
+                }
+                for (int i = 0; i < chunksToEmbedIndices.size(); i++) {
+                    resolvedEmbeddings[chunksToEmbedIndices.get(i)] = newEmbeddings.get(i);
+                }
             }
 
             // Step 4: Delete old chunks and store new ones
             vectorStore.deleteByEntity(entityType, entityId);
 
-            String language = GroupMirroringServiceV9.getLanguage( doc.getGroup() );
-
-            int docId = doc.getDocId();
+            String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
             String domainName = DocDB.getInstance().getDomain(docId);
             int domainId = GroupsDB.getDomainId(domainName);
 
             for (int i = 0; i < chunks.size(); i++) {
-                String chunkText = chunks.get(i);
-                String contentHash = sha256(chunkText);
-                float[] embedding = embeddings.get(i);
-
-                vectorStore.store(entityType, entityId, i, chunkText, contentHash,
-                    embedding, model, dimensions, language, domainId);
+                vectorStore.store(entityType, entityId, i, chunks.get(i), chunkHashes.get(i),
+                    resolvedEmbeddings[i], model, dimensions, language, domainId);
             }
 
             Logger.debug(SemanticIndexService.class, "Indexed doc " + entityId + " with " + chunks.size() + " chunks");
         } catch (Exception e) {
             Logger.error(SemanticIndexService.class, "Error indexing doc " + entityId + ": " + e.getMessage());
+            vectorStore.markError(entityType, entityId, embeddingProvider.getDefaultModel(), e.getMessage());
         }
-    }
-
-    /**
-     * Remove all embeddings for a document.
-     */
-    public void deleteDocument(int docId) {
-        vectorStore.deleteByEntity(DocDetailsContentExtractor.ENTITY_TYPE, docId);
     }
 
     /**
