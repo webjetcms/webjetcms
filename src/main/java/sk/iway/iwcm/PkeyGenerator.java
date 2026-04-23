@@ -160,7 +160,7 @@ public class PkeyGenerator
     * Znova nacitanie kluca z DB (alokacia rozsahu)
     * @param keyName
     */
-   	private void allocate(PkeyBean p)
+   	void allocate(PkeyBean p)
 	{
    		int pkeyGenIncrement = Constants.getInt("pkeyGenIncrement");
 
