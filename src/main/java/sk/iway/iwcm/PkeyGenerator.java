@@ -1,6 +1,7 @@
 package sk.iway.iwcm;
 
 import java.security.MessageDigest;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -185,32 +186,11 @@ public class PkeyGenerator
 			{
 				long value = -1;
 				db_conn = DBPool.getConnection();
-				//wrap UPDATE+SELECT in a single transaction to prevent Galera certification conflicts
+				//use atomic UPDATE+read to prevent Galera/multi-node race conditions
 				db_conn.setAutoCommit(false);
 				try
 				{
-					PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? WHERE name=?");
-					try
-					{
-						ps.setLong(1, blockIncrement);
-						ps.setString(2, p.getName());
-						ps.execute();
-						ps.close();
-
-						ps = db_conn.prepareStatement("SELECT value FROM pkey_generator WHERE name=?");
-						ps.setString(1, p.getName());
-						ResultSet rs = ps.executeQuery();
-						try
-						{
-							if (rs.next())
-							{
-								value = rs.getLong("value");
-							}
-						}
-						finally { rs.close(); }
-					}
-					finally { ps.close(); }
-
+					value = atomicIncrementAndGet(db_conn, p.getName(), blockIncrement);
 					db_conn.commit();
 				}
 				catch (SQLException ex)
@@ -270,6 +250,111 @@ public class PkeyGenerator
 				}
 			}
 		}
+	}
+
+	/**
+	 * Atomically increment pkey_generator value and return the new value.
+	 * Uses database-specific SQL to avoid race conditions between UPDATE and SELECT
+	 * (especially on Galera multi-master clusters where another node can modify the row between two statements).
+	 *
+	 * - MySQL/MariaDB: LAST_INSERT_ID(value+?) ensures connection-local read
+	 * - PostgreSQL: UPDATE ... RETURNING value
+	 * - MSSQL: UPDATE ... OUTPUT inserted.value
+	 * - Oracle: RETURNING value INTO ? via CallableStatement
+	 */
+	private long atomicIncrementAndGet(Connection db_conn, String name, long blockIncrement) throws SQLException
+	{
+		long value = -1;
+
+		if (Constants.DB_TYPE == Constants.DB_MSSQL)
+		{
+			//MSSQL: OUTPUT clause returns updated value atomically
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? OUTPUT inserted.value WHERE name=?");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
+		}
+		else if (Constants.DB_TYPE == Constants.DB_PGSQL)
+		{
+			//PostgreSQL: RETURNING clause returns updated value atomically
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=value+? WHERE name=? RETURNING value");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
+		}
+		else if (Constants.DB_TYPE == Constants.DB_ORACLE)
+		{
+			//Oracle: use RETURNING INTO with CallableStatement
+			CallableStatement cs = db_conn.prepareCall("BEGIN UPDATE pkey_generator SET value=value+? WHERE name=? RETURNING value INTO ?; END;");
+			try
+			{
+				cs.setLong(1, blockIncrement);
+				cs.setString(2, name);
+				cs.registerOutParameter(3, java.sql.Types.BIGINT);
+				cs.execute();
+				value = cs.getLong(3);
+			}
+			finally { cs.close(); }
+		}
+		else
+		{
+			//MySQL/MariaDB: LAST_INSERT_ID(expr) stores the value per-connection,
+			//so concurrent updates from other Galera nodes cannot affect the result
+			PreparedStatement ps = db_conn.prepareStatement("UPDATE pkey_generator SET value=LAST_INSERT_ID(value+?) WHERE name=?");
+			try
+			{
+				ps.setLong(1, blockIncrement);
+				ps.setString(2, name);
+				ps.execute();
+			}
+			finally { ps.close(); }
+
+			ps = db_conn.prepareStatement("SELECT LAST_INSERT_ID()");
+			try
+			{
+				ResultSet rs = ps.executeQuery();
+				try
+				{
+					if (rs.next())
+					{
+						value = rs.getLong(1);
+					}
+				}
+				finally { rs.close(); }
+			}
+			finally { ps.close(); }
+		}
+
+		if (value == -1)
+		{
+			throw new SQLException("Failed to read updated pkey value for: " + name);
+		}
+
+		return value;
 	}
 
    /**

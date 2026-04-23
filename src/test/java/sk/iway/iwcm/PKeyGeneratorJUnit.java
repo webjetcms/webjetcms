@@ -35,6 +35,7 @@ public class PKeyGeneratorJUnit
 {
 	private static final String TEST_TABLE = "_test";
 
+
 	@BeforeEach
 	public void setup()
 	{
@@ -79,6 +80,7 @@ public class PKeyGeneratorJUnit
 	public void testConcurrentAllocate() throws Exception
 	{
 		String concurrentTable = "_test_conc";
+
 		int threadCount = 5;
 
 		//create test table and pkey_generator entry
