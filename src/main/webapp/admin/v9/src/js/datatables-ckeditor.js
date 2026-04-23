@@ -1984,7 +1984,7 @@ export class DatatablesCkEditor {
 			setTimeout(() => {
 				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 				this.setEditingMode(json);
-				this.setData(json.data);
+				this.setData(json.data, false);
 			}, 100);
 		}
 		setTimeout(() => {
@@ -2259,12 +2259,12 @@ export class DatatablesCkEditor {
 			var ck = this.ckEditorInstance;
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				ck.setMode('wysiwyg');
-				ck.setData(data);
+				ck.setData(data, false);
 			}
 			setTimeout(()=>{
 				//this fix problems with codemirror line gutter
 				if (ck.mode!=="source") ck.setMode('source');
-				ck.setData(data);
+				ck.setData(data, false);
 			}, 500);
 
 			//nastav select na korektnu hodnotu
@@ -2280,7 +2280,7 @@ export class DatatablesCkEditor {
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				var ck = this.ckEditorInstance;
 				setTimeout(()=>{
-					ck.setData(data);
+					ck.setData(data, false);
 				}, 500);
 			}
 		}

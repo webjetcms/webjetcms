@@ -16,6 +16,20 @@ const devReloadClientSource = path.resolve(__dirname, "src/dev/dev-reload-client
 const devReloadClientOutput = path.resolve(distDir, "js/dev-reload-client.js");
 const devReloadClientPublicPath = publicPath + "js/dev-reload-client.js";
 
+function formatLogTimestamp(date = new Date()) {
+    return date.toTimeString().slice(0, 8);
+}
+
+function formatDuration(ms) {
+    if (ms < 1000) return ms + " ms";
+
+    return (ms / 1000).toFixed(2) + " s";
+}
+
+function logWithTimestamp(message) {
+    console.log("[" + formatLogTimestamp() + "] " + message);
+}
+
 function writeDevReloadClient() {
     if (!devReloadEnabled) return;
 
@@ -119,7 +133,7 @@ class PugWatchPlugin {
 
             if (hasSharedChange) {
                 //Shared partial changed - must recompile all pages
-                console.log("PUG shared partial changed, re-compiling all " + common.PAGES.length + " pages...");
+                logWithTimestamp("PUG shared partial changed, re-compiling all " + common.PAGES.length + " pages...");
                 const ms = pugRenderer.compileAllPugPages({
                     baseDir: __dirname,
                     data: WP_DATA,
@@ -127,7 +141,7 @@ class PugWatchPlugin {
                     files: devFiles,
                     pages: common.PAGES
                 });
-                console.log("PUG re-compilation done in " + ms + " ms");
+                logWithTimestamp("PUG re-compilation done in " + formatDuration(ms));
             } else {
                 //Only page-specific files changed - recompile only those
                 changedPugFiles.forEach(f => {
@@ -141,7 +155,7 @@ class PugWatchPlugin {
                             files: devFiles,
                             page
                         });
-                        console.log("PUG re-compiled " + page + " in " + (Date.now() - startTime) + " ms");
+                        logWithTimestamp("PUG re-compiled " + page + " in " + formatDuration(Date.now() - startTime));
                     }
                 });
             }
@@ -182,7 +196,7 @@ class DevReloadPlugin {
 }
 
 //Initial compilation: write all pre-compiled HTML files to disk
-console.log("Pre-compiling " + common.PAGES.length + " PUG templates...");
+logWithTimestamp("Pre-compiling " + common.PAGES.length + " PUG templates...");
 const ms = pugRenderer.compileAllPugPages({
     baseDir: __dirname,
     data: WP_DATA,
@@ -190,7 +204,7 @@ const ms = pugRenderer.compileAllPugPages({
     files: devFiles,
     pages: common.PAGES
 });
-console.log("PUG pre-compilation done in " + ms + " ms");
+logWithTimestamp("PUG pre-compilation done in " + formatDuration(ms));
 
 module.exports = {
     ...common,

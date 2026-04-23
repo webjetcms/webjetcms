@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="/templates/webjet8/ninja-starter-kit/assets/css/highlight.css">
 
 <link rel="stylesheet" href="/templates/webjet8/ninja-starter-kit/assets/css/fontawesome.min.css">
-<script>hljs.initHighlightingOnLoad();</script>
 
 <style>
   body{
