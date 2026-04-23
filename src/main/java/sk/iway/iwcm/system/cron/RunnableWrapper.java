@@ -67,11 +67,16 @@ class RunnableWrapper implements Runnable
 			}
 			main.invoke(null, arguments);
 		}
+		catch (InterruptedException ie)
+		{
+			Thread.currentThread().interrupt();
+			sk.iway.iwcm.Logger.error(RunnableWrapper.class, "Cron task interrupted: " + clazz.getName(), ie);
+		}
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.println(RunnableWrapper.class, "---------FAILED TO LAUNCH A CRONTAB TASK-----------");
 			sk.iway.iwcm.Logger.println(RunnableWrapper.class, clazz.getName());
-			sk.iway.iwcm.Logger.error(e);
+			sk.iway.iwcm.Logger.error(RunnableWrapper.class, "Error while executing cron task: " + clazz.getName(), e);
 		}
 	}
 }

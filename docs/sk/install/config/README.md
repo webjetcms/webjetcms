@@ -15,7 +15,7 @@ sk.iway.iwcm=WARN
 org.springframework=WARN
 ```
 
-V prípade potreby je možné nastavit/implementovať vlastný [Appender](https://logback.qos.ch/manual/appenders.html). Ten môže odosielať logy napríklad do externého systému na analýzu logov. Priamo `Logback` okrem iných poskytuje `Appender` pre [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) alebo [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). V prípade potreby je možné vytvoriť [vlastný Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
+V prípade potreby je možné nastaviť/implementovať vlastný [Appender](https://logback.qos.ch/manual/appenders.html). Ten môže odosielať logy napríklad do externého systému na analýzu logov. Priamo `Logback` okrem iných poskytuje `Appender` pre [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) alebo [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). V prípade potreby je možné vytvoriť [vlastný Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
 ## Odosielanie emailov
 
@@ -111,7 +111,7 @@ Pre niektoré časti sa historicky používa generátor primárnych kľúčov, m
 
 Aby nedochádzalo ku konfliktu v cluster konfigurácii používa sa hodnota `pkeyGenOffset` pre posun podľa nodov. Napr. hodnota `pkeyGenIncrement` je nastavená na 5 a `offset` na 0-5 pre jednotlivé uzly.
 
-Pri režime `auto` clustra nie je možné použiť `pkeyGenOffset`, preto sa alokuje zadaný blok v transakcii a ak nastane `deadlock` pokus sa opakuje 5 krát s oneskorením `attemptCount*50ms`.
+Pri režime `auto` clustra nie je možné použiť `pkeyGenOffset`, preto sa alokuje zadaný blok v transakcii a ak nastane `deadlock`, pokus sa opakuje maximálne 5-krát s exponenciálne rastúcim oneskorením od 50 ms (`50 * 2^attempt`) a s náhodnou zložkou (jitter).
 
 ## Licencie
 

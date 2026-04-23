@@ -202,7 +202,7 @@ public class PkeyGenerator
 						ResultSet rs = ps.executeQuery();
 						try
 						{
-							while (rs.next())
+							if (rs.next())
 							{
 								value = rs.getLong("value");
 							}
@@ -248,19 +248,19 @@ public class PkeyGenerator
 				if (isDeadlock && attempt < maxRetries - 1)
 				{
 					long sleepMs = (long)(50 * Math.pow(2, attempt)) + random.nextInt(50);
-					Logger.error(PkeyGenerator.class, "PkeyGenerator deadlock on allocate for " + p.getName() + ", retry " + (attempt + 1) + "/" + maxRetries + ", sleeping " + sleepMs + "ms");
+					Logger.info(PkeyGenerator.class, "PkeyGenerator deadlock on allocate for " + p.getName() + ", retry " + (attempt + 1) + "/" + maxRetries + ", sleeping " + sleepMs + "ms");
 					try { Thread.sleep(sleepMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
 				}
 				else
 				{
 					sk.iway.iwcm.Logger.error(ex);
-					return;
+					throw new IllegalStateException("Failed to allocate pkey block for " + p.getName() + " after " + (attempt + 1) + " attempt(s)", ex);
 				}
 			}
 			catch (Exception ex)
 			{
 				sk.iway.iwcm.Logger.error(ex);
-				return;
+				throw new IllegalStateException("Unexpected error while allocating pkey block for " + p.getName(), ex);
 			}
 			finally
 			{

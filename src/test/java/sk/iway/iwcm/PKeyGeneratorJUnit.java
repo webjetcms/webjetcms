@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
@@ -106,38 +108,43 @@ public class PKeyGeneratorJUnit
 			}
 
 			CountDownLatch startLatch = new CountDownLatch(1);
-			CountDownLatch doneLatch = new CountDownLatch(threadCount);
 			List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
 			long[][] ranges = new long[threadCount][2];
 
-			for (int t = 0; t < threadCount; t++)
+			ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+			try
 			{
-				final int idx = t;
-				Thread thread = new Thread(() -> {
-					try
-					{
-						//all threads wait here until released simultaneously
-						startLatch.await();
-						pkGen.allocate(beans[idx]);
-						ranges[idx][0] = beans[idx].getValue();
-						ranges[idx][1] = beans[idx].getMaxValue();
-					}
-					catch (Exception e)
-					{
-						errors.add(e);
-					}
-					finally
-					{
-						doneLatch.countDown();
-					}
-				});
-				thread.setName("allocate-thread-" + idx);
-				thread.start();
-			}
+				for (int t = 0; t < threadCount; t++)
+				{
+					final int idx = t;
+					executor.submit(() -> {
+						try
+						{
+							//all threads wait here until released simultaneously
+							startLatch.await();
+							pkGen.allocate(beans[idx]);
+							ranges[idx][0] = beans[idx].getValue();
+							ranges[idx][1] = beans[idx].getMaxValue();
+						}
+						catch (Exception e)
+						{
+							errors.add(e);
+						}
+					});
+				}
 
-			//release all threads at once
-			startLatch.countDown();
-			assertTrue(doneLatch.await(30, TimeUnit.SECONDS), "All threads should finish within 30 seconds");
+				//release all threads at once
+				startLatch.countDown();
+				executor.shutdown();
+				if (executor.awaitTermination(30, TimeUnit.SECONDS) == false)
+				{
+					executor.shutdownNow();
+					throw new AssertionError("Threads did not finish within 30 seconds, interrupted hanging workers");
+				}
+			}
+			catch (AssertionError ae) { throw ae; }
+			catch (Exception e) { throw new AssertionError("Unexpected exception during concurrent execution", e); }
+			finally { executor.shutdownNow(); }
 			assertTrue(errors.isEmpty(), "No exceptions expected, but got: " + errors);
 
 			//verify each thread got a valid range
@@ -207,37 +214,42 @@ public class PKeyGeneratorJUnit
 			PkeyGenerator.getNextValue(concurrentTable);
 
 			CountDownLatch startLatch = new CountDownLatch(1);
-			CountDownLatch doneLatch = new CountDownLatch(threadCount);
 			List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
 			List<Long> allValues = Collections.synchronizedList(new ArrayList<>());
 
-			for (int t = 0; t < threadCount; t++)
+			ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+			try
 			{
-				Thread thread = new Thread(() -> {
-					try
-					{
-						startLatch.await();
-						for (int i = 0; i < valuesPerThread; i++)
+				for (int t = 0; t < threadCount; t++)
+				{
+					executor.submit(() -> {
+						try
 						{
-							long val = PkeyGenerator.getNextValueAsLong(concurrentTable);
-							allValues.add(val);
+							startLatch.await();
+							for (int i = 0; i < valuesPerThread; i++)
+							{
+								long val = PkeyGenerator.getNextValueAsLong(concurrentTable);
+								allValues.add(val);
+							}
 						}
-					}
-					catch (Exception e)
-					{
-						errors.add(e);
-					}
-					finally
-					{
-						doneLatch.countDown();
-					}
-				});
-				thread.setName("getNextValue-thread-" + t);
-				thread.start();
-			}
+						catch (Exception e)
+						{
+							errors.add(e);
+						}
+					});
+				}
 
-			startLatch.countDown();
-			assertTrue(doneLatch.await(60, TimeUnit.SECONDS), "All threads should finish within 60 seconds");
+				startLatch.countDown();
+				executor.shutdown();
+				if (executor.awaitTermination(60, TimeUnit.SECONDS) == false)
+				{
+					executor.shutdownNow();
+					throw new AssertionError("Threads did not finish within 60 seconds, interrupted hanging workers");
+				}
+			}
+			catch (AssertionError ae) { throw ae; }
+			catch (Exception e) { throw new AssertionError("Unexpected exception during concurrent execution", e); }
+			finally { executor.shutdownNow(); }
 			assertTrue(errors.isEmpty(), "No exceptions expected, but got: " + errors);
 
 			int expectedTotal = threadCount * valuesPerThread;
