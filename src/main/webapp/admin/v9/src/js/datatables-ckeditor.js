@@ -1849,7 +1849,7 @@ export class DatatablesCkEditor {
 					data = data.replace(/&lt;article&gt;/gi, '');
 					data = data.replace(/&lt;\/article&gt;/gi, '');
 					e.data.dataValue = data;
-					//console.log("Vysledne data=", data);
+					//console.log("Vysledne GET data=", data);
 				},
 
 				'setData' : function(e)
@@ -1977,14 +1977,36 @@ export class DatatablesCkEditor {
 		if (typeof json != "undefined") {
 			this.setCssStyle();
 			this.setFormData();
+			try {
+				//this.ckEditorInstance.undoManager.reset();
+				//this.ckEditorInstance.status = "loaded";
+				//this.setData(json.data, false);
+				this.ckEditorInstance.element.$.value = json.data;
+				this.ckEditorInstance.resetDirty();
+				//this.ckEditorInstance.fire("setData", {dataValue: json.data});
+				this.ckEditorInstance.setData(json.data);
+
+				//this.setData(json.data);
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+			}
+			//this.setData(json.data);
 			this.showEditorNote();
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
+			try {
+				//this.ckEditorInstance.status = "ready";
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+			}
+
 			//ckeditor is invisible, we must wait until it is visible
+			var that = this;
 			setTimeout(() => {
 				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 				this.setEditingMode(json);
-				this.setData(json.data, false);
+				//data must be set with timeout, otherwise CKEditor does not render content in page builder mode
+				//that.setData(json.data, false);
 			}, 100);
 		}
 		setTimeout(() => {
@@ -2045,28 +2067,19 @@ export class DatatablesCkEditor {
 		}
 	}
 
-	setData(data, useTimeout=true) {
-		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
+	setData(data) {
+		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		if (useTimeout) {
-			setTimeout(() => {
-				try {
-					this.ckEditorInstance.setData(data);
-				} catch (error) {
-					console.error("Error setting data to CKEditor instance:", error);
-				}
-			}, 100);
-		} else {
-			try {
-				this.ckEditorInstance.setData(data);
-			} catch (error) {
-				console.error("Error setting data to CKEditor instance:", error);
-			}
+		try {
+			console.log("Set data without timeout, instance=", this.ckEditorInstance, "data=", data);
+			this.ckEditorInstance.setData(data);
+		} catch (error) {
+			console.error("Error setting data to CKEditor instance:", error);
 		}
 	}
 
 	getData() {
-		//console.log("getData, data=", data, "this=", this);
+		//console.log("getData, this=", this);
 		let htmlCode = this.ckEditorInstance.getData();
 		if ("pageBuilder"===this.editingMode) {
 			//ziskaj HTML kod z iframe elementu
@@ -2223,7 +2236,7 @@ export class DatatablesCkEditor {
 	 * @param {String} setData - if we want to set specific data when switching mode, otherwise it will be preserved from current editor content
 	 */
 	switchEditingMode(newEditingMode, userChange=false, setData = null) {
-		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
+		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange, "setData=", setData);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
@@ -2259,17 +2272,19 @@ export class DatatablesCkEditor {
 			var ck = this.ckEditorInstance;
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				ck.setMode('wysiwyg');
-				ck.setData(data, false);
+				ck.setData(data);
 			}
 			setTimeout(()=>{
 				//this fix problems with codemirror line gutter
 				if (ck.mode!=="source") ck.setMode('source');
-				ck.setData(data, false);
+				ck.setData(data);
 			}, 500);
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");
 		} else {
+			//console.log("switchEditingMode to", newEditingMode, "data=", data);
+
 			ckEditorElement.show();
 			pageBuilderElement.hide();
 			this.ckEditorInstance.setMode('wysiwyg');
@@ -2280,7 +2295,8 @@ export class DatatablesCkEditor {
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				var ck = this.ckEditorInstance;
 				setTimeout(()=>{
-					ck.setData(data, false);
+					//console.log("forcing setData, data=", data);
+					ck.setData(data);
 				}, 500);
 			}
 		}
