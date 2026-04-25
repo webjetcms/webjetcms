@@ -1972,41 +1972,24 @@ export class DatatablesCkEditor {
 	}
 
 	setJson(json) {
+		//console.log("setJson, json=", json);
 		this.json = json;
 		//undefined je json ked sa nacita zoznam a da sa zmazat stranka
 		if (typeof json != "undefined") {
 			this.setCssStyle();
 			this.setFormData();
 			try {
-				//this.ckEditorInstance.undoManager.reset();
-				//this.ckEditorInstance.status = "loaded";
-				//this.setData(json.data, false);
-				this.ckEditorInstance.element.$.value = json.data;
-				this.ckEditorInstance.resetDirty();
-				//this.ckEditorInstance.fire("setData", {dataValue: json.data});
-				this.ckEditorInstance.setData(json.data);
-
-				//this.setData(json.data);
+				this.ckEditorInstance._.value = json.data;
 			} catch (error) {
 				console.error("Error setting data to CKEditor instance:", error);
 			}
-			//this.setData(json.data);
 			this.showEditorNote();
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
-			try {
-				//this.ckEditorInstance.status = "ready";
-			} catch (error) {
-				console.error("Error setting data to CKEditor instance:", error);
-			}
-
 			//ckeditor is invisible, we must wait until it is visible
-			var that = this;
 			setTimeout(() => {
 				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 				this.setEditingMode(json);
-				//data must be set with timeout, otherwise CKEditor does not render content in page builder mode
-				//that.setData(json.data, false);
 			}, 100);
 		}
 		setTimeout(() => {
@@ -2071,7 +2054,6 @@ export class DatatablesCkEditor {
 		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
 		try {
-			console.log("Set data without timeout, instance=", this.ckEditorInstance, "data=", data);
 			this.ckEditorInstance.setData(data);
 		} catch (error) {
 			console.error("Error setting data to CKEditor instance:", error);

@@ -87,6 +87,7 @@ export function typeWysiwyg() {
                     window.createDatatablesCkEditor().then(module => {
                         //allow to use module for Page Builder
                         window.datatablesCkEditorModule = module;
+                        //console.log("Creating WYSIWYG editor, module=", module);
 
                         const options = {
                             datatable: EDITOR.TABLE,
@@ -100,9 +101,12 @@ export function typeWysiwyg() {
                             },
                             onReady: function() {
                                 //console.log("Setting json onReady, json=", EDITOR.currentJson);
-                                conf.wjeditor.setJson(EDITOR.currentJson);
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
+
+                                conf.wjeditor.setJson(EDITOR.currentJson);
+                                //on first run call also setData to push HTML content after JSON is set (so there will be correct CSS styles allready set in editor)
+                                conf.wjeditor.setData(EDITOR.currentJson.data);
 
                                 //nastav otvorene docid do inputu
                                 if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != undefined && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -220,12 +224,18 @@ export function typeWysiwyg() {
             return html;
         },
 
+        /**
+         * Set value to CKEditor, if editor is initialized setData, otherwise wait for EDITOR.on('open') event and set value from JSON
+         * @param {*} conf
+         * @param {*} val
+         */
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
             if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
                 conf.wjeditor.setData(val);
             }
-            conf._input.val(val);
+            // set directly as value to not propagate change events
+            conf._input.value = val;
 
             // reset dirty status
             getThisField(conf).resetDirty(conf);
@@ -269,6 +279,11 @@ export function typeWysiwyg() {
                 conf.dirtyDataOriginal = getThisField(conf).get(conf);
                 //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
             }, DIRTY_CHECK_DELAY_MS);
+        },
+
+        setJson: function(conf, json) {
+            //console.log("field-type-wysiwyg setJson, json=", json, "conf=", conf);
+            conf.wjeditor.setJson(json);
         }
 
     }

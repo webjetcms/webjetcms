@@ -330,22 +330,22 @@ export class WebPagesDatatable {
             url: "/admin/rest/web-pages/"+docId+"?historyId="+historyId,
             method: "GET",
             success: function(json) {
-                console.log("Edit JSON", json);
-                let oldJson = self.webpagesDatatable.row("#"+docId).data();
-                //self.webpagesDatatable.row("#"+docId).data(json);
-                self.webpagesDatatable.EDITOR.setJson(json);
-                //show content tab
-                $("#pills-dt-datatableInit-content-tab").trigger("click");
+                //console.log("Edit JSON", json);
 
                 //v bubble editacii neotvorme editor, len nastavme data
                 if ("bubble"!==self.webpagesDatatable.EDITOR.s.mode) {
                     //console.log("Opening editor for history edit, data=", self.webpagesDatatable.row("#"+docId));
-                    //self.webpagesDatatable.wjEdit(self.webpagesDatatable.row("#"+docId));
+                    //this must be before set data to first set CSS styles in editor
+                    webpagesDatatable.EDITOR.field("data").setJson(json);
                 }
-                setTimeout(function() {
-                    //console.log("returning oldJson=", oldJson);
-                    //self.webpagesDatatable.row("#"+docId).data(oldJson);
-                }, 500);
+
+                // this will set ALL input fields from JSON value
+                // it is different function as webpagesDatatable.EDITOR.field("data").setJson(json)
+                self.webpagesDatatable.EDITOR.setJson(json);
+
+                //show content tab
+                $("#pills-dt-datatableInit-content-tab").trigger("click");
+
             }
         })
     }
