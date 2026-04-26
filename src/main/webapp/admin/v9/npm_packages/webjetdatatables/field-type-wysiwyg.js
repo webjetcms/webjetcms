@@ -184,7 +184,8 @@ export function typeWysiwyg() {
         },
 
         get: function ( conf ) {
-            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+            //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
+            if (conf.wjeditor != null) {
                 var htmlCode = conf.wjeditor.getData();
                 //console.log("WYSIWYG get, htmlCode=", htmlCode);
                 //set htmlCode to input element, because it can be PageBuilder instance
@@ -231,7 +232,7 @@ export function typeWysiwyg() {
          */
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+            if (conf.wjeditor != null) {
                 conf.wjeditor.setData(val);
             }
             // set directly as value to not propagate change events
