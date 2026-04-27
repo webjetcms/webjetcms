@@ -1,5 +1,5 @@
-const path = require("path");
-const { spawn } = require("child_process");
+const path = require("node:path");
+const { spawn } = require("node:child_process");
 
 const projectDir = path.resolve(__dirname, "../..");
 const rspackCommand = process.platform === "win32" ? "rspack.cmd" : "rspack";

@@ -1,5 +1,5 @@
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 const glob = require("glob");
 const rspack = require("@rspack/core");
 const browserslist = require("browserslist");
@@ -89,7 +89,7 @@ const PAGES = glob.sync("**/*.pug", { cwd: pagesDir })
         return firstLine.startsWith('extends');
     })
     .map(file => "/" + file.replace(/\.pug$/, ''))
-    .sort();
+    .sort(); //NOSONAR
 
 const config = {
     entry: {

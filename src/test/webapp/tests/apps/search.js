@@ -81,6 +81,7 @@ Scenario('testovanie app - Vyhladavanie', async ({ I, DTE, Apps, Document }) => 
     DTE.save()
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=77875');
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
 
     I.clickCss('button.btn.btn-warning.btn-preview');
     await Document.waitForTab();

@@ -1,6 +1,6 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const glob = require("glob");
-const path = require("path");
+const path = require("node:path");
 const pug = require("pug");
 
 function createPugRenderLocals(data, files, outputFile, publicPath) {

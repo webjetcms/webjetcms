@@ -1,5 +1,5 @@
-const path = require("path");
-const { fork, spawn } = require("child_process");
+const path = require("node:path");
+const { fork, spawn } = require("node:child_process");
 
 const projectDir = path.resolve(__dirname, "../..");
 const serverScript = path.resolve(__dirname, "dev-reload-server.js");

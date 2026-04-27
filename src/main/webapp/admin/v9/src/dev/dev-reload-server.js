@@ -1,4 +1,4 @@
-const http = require("http");
+const http = require("node:http");
 
 const port = Number(process.env.ADMIN_V9_DEV_RELOAD_PORT || 35729);
 const host = "127.0.0.1";

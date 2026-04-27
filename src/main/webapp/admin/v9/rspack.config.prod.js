@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("node:path");
 const common = require("./rspack.config.common");
 const pugRenderer = require("./pug.render");
 const rspack = require("@rspack/core");

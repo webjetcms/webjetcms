@@ -1,6 +1,6 @@
-const path = require("path");
-const fs = require("fs");
-const http = require("http");
+const path = require("node:path");
+const fs = require("node:fs");
+const http = require("node:http");
 const common = require("./rspack.config.common");
 const pugRenderer = require("./pug.render");
 const rspack = require("@rspack/core");
@@ -34,7 +34,7 @@ function writeDevReloadClient() {
     if (!devReloadEnabled) return;
 
     const source = fs.readFileSync(devReloadClientSource, "utf8");
-    const clientCode = source.replace(/__ADMIN_V9_DEV_RELOAD_PORT__/g, String(devReloadPort));
+    const clientCode = source.replaceAll("__ADMIN_V9_DEV_RELOAD_PORT__", String(devReloadPort));
 
     fs.mkdirSync(path.dirname(devReloadClientOutput), { recursive: true });
     fs.writeFileSync(devReloadClientOutput, clientCode);
@@ -164,10 +164,8 @@ class PugWatchPlugin {
 }
 
 class DevReloadPlugin {
-    constructor() {
-        this.isInitialBuild = true;
-        this.lastReloadKind = "full";
-    }
+    isInitialBuild = true;
+    lastReloadKind = "full";
 
     apply(compiler) {
         if (!devReloadEnabled) return;

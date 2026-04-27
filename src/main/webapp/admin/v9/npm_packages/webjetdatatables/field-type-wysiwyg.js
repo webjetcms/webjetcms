@@ -1,7 +1,7 @@
 export function typeWysiwyg() {
 
     var DIRTY_CHECK_DELAY_MS = 5000;
-    function getThisField(conf) {
+    function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
     }
 
@@ -62,7 +62,7 @@ export function typeWysiwyg() {
 
             //console.log("input=", conf._input);
             //nastav atributy
-            if (typeof conf.attr != undefined && conf.attr != null) {
+            if (typeof conf.attr != "undefined" && conf.attr != null) {
                 $.each(conf.attr, function( key, value ) {
                     //console.log("Setting attr: key=", key, " value=", value);
                     $(conf._input).attr(key, value);
@@ -81,8 +81,6 @@ export function typeWysiwyg() {
                 }
 
                 //console.log("data field: ", EDITOR.field( 'data' ).val());
-
-                //TODO: FormDB.getAllRegularExpression();
                 if (conf.wjeditor==null) {
                     window.createDatatablesCkEditor().then(module => {
                         //allow to use module for Page Builder
@@ -109,7 +107,7 @@ export function typeWysiwyg() {
                                 conf.wjeditor.setData(EDITOR.currentJson.data);
 
                                 //nastav otvorene docid do inputu
-                                if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != undefined && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
+                                if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
                             }
                         }
                         if (typeof window.CKEDITOR == "undefined") {
@@ -257,7 +255,7 @@ export function typeWysiwyg() {
         isDirty: function ( conf ) {
             try
             {
-                var now = new Date().getTime();
+                var now = Date.now();
                 var timeDiff = now - conf.editorLastResetDirty;
                 if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
                 {
@@ -274,7 +272,7 @@ export function typeWysiwyg() {
         },
 
         resetDirty: function ( conf ) {
-            conf.editorLastResetDirty = new Date().getTime();
+            conf.editorLastResetDirty = Date.now();
             //get current data to compare
             setTimeout(() => {
                 conf.dirtyDataOriginal = getThisField(conf).get(conf);

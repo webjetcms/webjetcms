@@ -34,18 +34,18 @@ import '../js/plugins/jquery.cookie.js';
 import '../js/plugins/modernizr-custom.js';
 import 'jstree';
 //import * as dtConfig from '../js/datatables-config.js';
-import Ninja from '../js/global-functions.js';
+import Ninja from '../js/global-functions.js'; //NOSONAR
 import AutoCompleter from '../js/autocompleter.js';
 
 import numeral from 'numeral';
-import numeralsk from 'numeral/locales/sk';
-import numeralcz from 'numeral/locales/cs';
-import numeralde from 'numeral/locales/de';
+import numeralsk from 'numeral/locales/sk'; //NOSONAR
+import numeralcz from 'numeral/locales/cs'; //NOSONAR
+import numeralde from 'numeral/locales/de'; //NOSONAR
 import moment from 'moment';
-import momentsk from 'moment/locale/sk';
-import momentcz from 'moment/locale/cs';
-import momentde from 'moment/locale/de';
-import Scrollbar from 'smooth-scrollbar';
+import momentsk from 'moment/locale/sk'; //NOSONAR
+import momentcz from 'moment/locale/cs'; //NOSONAR
+import momentde from 'moment/locale/de'; //NOSONAR
+import Scrollbar from 'smooth-scrollbar'; //NOSONAR
 import Quill from 'quill';
 import toastr from 'toastr';
 
