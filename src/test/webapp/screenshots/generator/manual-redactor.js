@@ -36,7 +36,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     switch (confLng) {
         case 'sk':
@@ -53,7 +53,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     }
 
     I.click("button.btn.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.forceClick({ css: '#dtRecursiveSwitch' });
     I.moveCursorTo('#dtRecursiveSwitch');
@@ -63,7 +63,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     Document.screenshot("/redactor/datatables/dt-colvis.png");
     switch (confLng) {
@@ -80,16 +80,16 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
             throw new Error(`Unsupported language code: ${confLng}`);
     }
 
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForElement("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", 10);
+    I.waitForElement("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]", 10);
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
-    I.click("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu] button.dt-close-modal")
+    I.click("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu] button.dt-close-modal")
 
     I.say("specialne ikony");
     I.click("button.buttons-select-all");

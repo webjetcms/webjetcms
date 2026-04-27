@@ -129,12 +129,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Aktualizované knižnice `AspectJ, Eclipselink, slf4j, GoPay` (#57793).
 - Verzia `SpringSecurity` zvýšená na verziu 7 (#56665).
 - Pridaná možnosť prihlasovania sa cez [OAuth2/Keycloak/Google/Facebook...](install/oauth2/oauth2.md) (#56665).
-- Odstránené nepoužívané knižnice `lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/q8xs3qDq-G4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- Odstránené nepoužívané knižnice `lodash,pdfmake`, aktualizovaný zoznam `dependency-check-suppressions`, opravená prvotná inštalácia (#204).
 - Opravené spracovanie neplatného hesla pri API/BASIC autentifikácii po prechode na `Spring Security 7`, aby sa chyba `password encoder` nepremenila na internú výnimku a požiadavka sa korektne zamietla (#58369).
 - Pridaná podpora prihlasovania do administrácie cez [Prístupové kľúče](redactor/admin/logon.md#použiť-prístupový-kľúč) `PassKey/WebAuthn` (#58369).
 
@@ -142,6 +142,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Používatelia - ak vytváraní nového používateľa alebo jeho editácii do poľa heslo zadáte znak `*` vygeneruje sa nové bezpečné heslo a zobrazí sa vám v notifikácii (#58369).
 - [Skupiny práv](admin/users/perm-groups.md) - pridaná možnosť nastaviť príznak **Prístup ku všetkým adresárom web stránok** a **Prístup ku všetkým priečinkom súborového systému**, ktoré pri prihlásení prepíšu sčítané práva z ostatných skupín a poskytnú používateľovi neobmedzený prístup k web stránkam, alebo súborom (#osk422).
+- Aktualizovaná knižnica `Datatables.net/Editor` z verzie `2.2.2/2.3.2` na `2.3.7/2.5.2` (#206).
 
 ### Dokumentácia
 
@@ -153,6 +154,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - AI - nový `AI skill` pre opravu A11Y/WCAG chýb, stačí použiť nástroj `/wj-accessibility`.
 - Aktualizované závislosti na minimálne požiadavky pre Tomcat 11 (Tomcat 10 už nie je podporovaný). `Stripes` validácie - upravené vykonávanie EL výrazov z odstráneného `jakarta.servlet.jsp.el` na `jakarta.el` kvôli kompatibilite s `jakarta.servlet.jsp-api:4.0.0` (#58385).
 - Aktualizovaný spôsob zobrazenia API dokumentácie na štandard [OpenAPI 3.0](https://www.openapis.org/). Dokumentácia je dostupná na adrese `/admin/swagger-ui/index.html` pre používateľov, ktorí majú právo na editáciu administrátorov (#57793).
+- Administrácia - zmenený `build` súborov administrácie z `webpack` na `rspack`, ktorý je výrazne rýchlejší (#206).
+- Administrácia - zjednotené generovanie `PUG` šablón pre `watch` a `prod`, odstránené nepoužívané `npm` build závislosti a historické `webpack` skripty (#206).
+- Administrácia - doplnené automatické obnovenie otvorenej stránky pri `npm run watch` po zmene `JS/CSS/PUG` súborov (#206).
+- Administrácia - pridaný skript `npm run analyze` s HTML reportom veľkosti použitých knižníc (#206).
 - Doplnená knižnica `Jackson v3`, niektoré JSON objekty nemusí serializovať správne pokiaľ nemajú správne `Java Bean` meno (napr. `setcookieId` bez veľkého `C`, alebo `set__rowNum__`). Najlepšie riešenie je správne nastaviť meno premennej, prípadne použiť anotáciu typu `@JsonProperty("__rowNum__")` aj na `getter/setter` (#58369).
 - Galéria - upravené volanie knižnice ImageMagick, zmenené API pre jeho volanie na `ImageTools.executeImageMagick(...)` (#osk396).
 - Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).

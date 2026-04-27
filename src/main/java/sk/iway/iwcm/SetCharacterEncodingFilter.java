@@ -874,7 +874,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		try
 		{
 			Logger.debug("Setting request bean to thread: "+Thread.currentThread().getId());
-			requests.put(Thread.currentThread().getId(), requestBean);
+			if (requestBean != null) requests.put(Thread.currentThread().getId(), requestBean);
+			else requests.remove(Thread.currentThread().getId());
 		}
 		catch (Exception e)
 		{

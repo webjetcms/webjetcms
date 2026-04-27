@@ -87,7 +87,7 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
     var container = "#galleryTable_wrapper";
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.see("Priečinok", "div.colvisbtn_wrapper button.buttons-columnVisibility span.column-title");
 
 });
