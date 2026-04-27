@@ -97,16 +97,20 @@
     },
     "chat.agent.maxRequests": 150,
     "cSpell.language": "en,sk",
+    "cSpell.enabledFileTypes": {
+        "*": false,
+        "markdown": true
+    },
     "cSpell.customDictionaries": {
-        "myWords": {
+        "webjetcms": {
             "name": "WebJET CMS",
             "path": "${workspaceFolder}/.vscode/spellright.dict",
             "scope": "user",
-            "addWords": true
+            "addWords": true,
         }
     },
     "cSpell.ignoreRegExpList": [
         "/`[^`\\n]+`/g",
         "/```[\\s\\S]*?```/g"
-    ]
+    ],
 }
