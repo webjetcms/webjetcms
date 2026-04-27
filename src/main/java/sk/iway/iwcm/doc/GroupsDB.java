@@ -3255,7 +3255,7 @@ public class GroupsDB extends DB
 		if (Tools.isNotEmpty(user.getEditableGroups(true)))
 		{
 			GroupsDB groupsDB = GroupsDB.getInstance();
-			String parentGroups = "," + groupId + "," + groupsDB.getParents(groupId)+",";
+			String parentGroups = "," + groupId + "," + groupsDB.getParents(groupId) + ",";
 			StringTokenizer st = new StringTokenizer(user.getEditableGroups(true), ",");
 			String id;
 			int i_id;

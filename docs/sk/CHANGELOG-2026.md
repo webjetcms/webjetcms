@@ -98,6 +98,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](developer/frameworks/charts/frontend/line-chart.png)
 
 - Aplikácia `Tooltip` premenovaná na Nápovedy (#205).
+- Štatistika návštevnosti - upravené filtrovanie podľa priečinka. Používateľ môže zvoliť ľubovoľný priečinok aj z iných domén, ak nemá obmedzené práva na priečinky alebo ak má právo **Zobraziť štatistiku pre všetky priečinky** (#58453).
+- Používatelia - upravená možnosť vidieť všetky priečinky v nastavení **Práva na adresáre a stránky**, ak má administrátor právo **Správa administrátorov**. Priečinky sú zobrazené aj v prípade, že administrátor má sám obmedzené práva na priečinky (#58453).
 
 ### Oprava chýb
 
