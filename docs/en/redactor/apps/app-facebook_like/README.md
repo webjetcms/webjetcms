@@ -1,22 +1,22 @@
 # Facebook Like button
 
-The Facebook Like/share button allows you to set a "Like" or share the page content with the page visitor's friends.
+The Facebook Like/share button allows you to "Like" or share page content with the page visitor's friends.
 
 ## Application settings
 
-- **Method of liking**: Select your preferred method of liking:
-  - Like the whole site
+- **Like Method**: Select your preferred like method:
+  - Like the entire website
   - Like the currently displayed page (each page separately)
-- **Width**: Specify the width to display, for example `980`.
-- **Layout**: Select a layout type:
+- **Width**: Enter the width for the display, for example `980`.
+- **Layout**: Select layout type:
   - Standard
   - Short
-- **Type of action**: Select the type of action you want to perform:
-  - I like
+- **Action type**: Select the type of action you want to perform:
+  - I like it.
   - Recommend
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](app-facebook_like.png)

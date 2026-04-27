@@ -178,7 +178,7 @@ Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
 
 async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     if (pageUrl != null) I.amOnPage(pageUrl);
-    const columnLabelSelector = "#datatableInit_wrapper tr:nth-child(1) > th > span.dt-column-title";
+    const columnLabelSelector = "#datatableInit_wrapper tr:nth-child(1) > th > .dt-column-header span.dt-column-title";
     const filterSelector =      "#datatableInit_wrapper tr:nth-child(2) > th";
 
     if (showColumns) {

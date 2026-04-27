@@ -14,11 +14,11 @@ function checkField(I, label, value) {
     I.waitForInvisible(".cke_reset_all.cke_dialog_container", 10)
 }
 
-function ckeditorCheckField(I, value, isButton = false) {
+function ckeditorCheckField(I, value, isButton = false, btnSelector = "button.btn") {
 
     I.switchTo(".cke_wysiwyg_frame.cke_reset");
 
-    if (isButton) I.dispatchMouseEvent("button.btn", value, { x: 10, y: 10 });
+    if (isButton) I.dispatchMouseEvent(btnSelector, value);
     else I.click(locate("a").withText(value));
 
     var label = "Text";
@@ -32,11 +32,7 @@ function ckeditorCheckField(I, value, isButton = false) {
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
 
-        if ("NON clicking button" === value) {
-            I.dispatchMouseEvent("button.btn", value, { x: 40, y: 20 }, "right");
-        } else {
-            I.rightClick(locate("button.btn").withText(value));
-        }
+        I.dispatchMouseEvent(btnSelector, value, null, "right");
 
         I.switchTo();
         I.switchTo(".cke_panel_frame");
@@ -54,7 +50,7 @@ Scenario('test buttons in webpage content', ({ I, DT }) => {
     ckeditorCheckField(I, "A button");
     ckeditorCheckField(I, "A block button");
 
-    ckeditorCheckField(I, "normal button", true);
-    ckeditorCheckField(I, "NON clicking button", true);
+    ckeditorCheckField(I, "normal button", true, "button.btn-primary");
+    ckeditorCheckField(I, "NON clicking button", true, "button.btn-secondary");
 
 });

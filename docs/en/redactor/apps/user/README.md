@@ -1,62 +1,64 @@
 # Users
 
-The application allows you to easily insert information about the logged-in user on the page, including name, email, address and optional fields. In addition, it allows you to insert a login form in a secure section or a registration form for new users.
+The application allows you to easily insert information about a logged-in user into a page, including name, email, address, and optional fields. It also allows you to insert a login form into a secure section or a registration form for new users.
 
 ## Application settings
 
-What information is inserted on the page is indicated by selecting **Insert field** from the card **Basic**. If you select the option **Registration form** or **Registration form** additional settings/tabs will be displayed, which we will then describe.
+What information is inserted into the page is specified by selecting **Insert Field** from the **Basic** tab. If you select the **Registration Form** or **Login Form** option, additional settings/tabs will be displayed, which we will describe below.
 
 ### Registration form
 
-**Registration form** is the preset value for the application. It offers a wide range of data settings for user registration. For default settings, you can leave the values as they are preset.
+**Registration form** is the default value for the application. It offers a wide range of settings for user registration data. For a standard setting, you can leave the values ​​as they are.
 
 Setting options:
+
 - **User groups**
-- **User groups**, groups that the user can log in or out of during registration
-- **The email address must be unique**
-- **DocID pages**, the page that appears after successful registration (leave blank if you want to leave the user on the original page)
-- **Notification of registration will be sent to your e-mail**, the email address to which the notification of the new registration will be sent (leave blank if you do not want to be notified)
-- **Require email address confirmation**, a confirmation email will be sent to the user with a link to verify the address. If the email needs to be approved, the confirmation email will not be sent.
-- **DocID of the email text page**, the page from which an email will be sent to the user if approval is required (leave blank for a standard message).
-- **After registration the user will automatically log in**, after successful registration the user will be automatically logged in
-- **Send via AJAX**, the form will be submitted in the background without refreshing the page (it is not possible to submit photos)
+- **User Groups**, groups that a user can join or leave during registration
+- **Email address must be unique**
+- **Page DocID**, the page that will be displayed after successful registration (leave blank if you want to keep the user on the original page)
+- **Registration notification will be sent to email**, email address to which notification of new registration will be sent (leave blank if you do not want to send notification)
+- **Require email address confirmation**, a confirmation email will be sent to the user with a link to verify the address. If the email requires approval, the confirmation email will not be sent.
+- **DocID of the page with the email text**, the page from which the email will be sent to the user if approval is required (leave blank for a standard message).
+- **Automatically log in after user registration**, after successful registration the user will be automatically logged in
+- **Submit via AJAX**, the form will be submitted in the background without refreshing the page (cannot submit photos)
 
 ![](editor.png)
 
-For **Registration form** tabs are additionally displayed **Viewed at** a **Required**.
+For the **Registration Form**, the **Displayed** and **Required** tabs will also be displayed.
 
-#### Card - Fields
+#### Tab - Fields
 
-In the Fields tab, you can select the fields that will appear in the registration form.
+In the Fields tab, you can choose the fields that will appear in the registration form.
 
-![](editor-showed.png)
+![](editor-shown.png)
 
 #### Card - Required
 
-In the Required tab, you can select the fields that will be required when you submit the form.
+In the Required tab, you can select the fields that will be required when submitting the form.
 
-!>**Warning:** if you set a field as mandatory, the application does not check if it was also set as visible. This is something you need to watch out for.
+!>**Warning:** if you set a field as required, the application does not check whether it has also been set as visible. You need to be careful about this.
 
 ![](editor-required.png)
 
-### Registration form
+### Login form
 
-You can set only one parameter for the login form, namely:
-- **User groups**, if no option is selected, the groups are generated according to the page to which the user is trying to log in using social networks
+You can only set one parameter for the login form, namely:
+
+- **User groups**, if no option is selected, groups will be generated based on the page the user is trying to log in to using social networks
 
 ![](editor-login_form.png)
 
-## View application
+## View the application
 
 ### Registration form
 
 ![](user.png)
 
-### Registration form
+### Login form
 
 ![](signin.png)
 
-### Email authorization line
+### Email authorization link
 
 ![](email.png)
 

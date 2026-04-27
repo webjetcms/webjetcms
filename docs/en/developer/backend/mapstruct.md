@@ -1,10 +1,10 @@
-# Mapping of DTO objects
+# Mapping DTO objects
 
-If you want to map objects, you can use the library [mapstruct](https://mapstruct.org).
+When requesting object mapping, the [mapstruct](https://mapstruct.org) library can be used.
 
-An example is object mapping [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) at [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
+An example is the mapping of the object [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) to [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
 
-It is necessary to prepare a DTO object and `interface` class for `mapper`. The created interface is implemented automatically during compilation, in `build.gradle` is enabled by setting:
+It is necessary to prepare a DTO object and ```interface``` class for ```mapper```. The created interface is implemented automatically during compilation, in ```build.gradle``` it is enabled by setting:
 
 ```javascript
 ext {
@@ -18,7 +18,6 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 }
 ```
-
 ## DTO object
 
 When implementing, first prepare a DTO object, e.g. [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
@@ -58,7 +57,7 @@ public class DocHistoryDto {
 
 ## Mapping
 
-!>**Warning:** the mapping class must contain the expression in the name `Mapper` because of the compilation on `Jenkins` server, e.g. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Warning:** The mapping class must contain the expression ```Mapper``` in the name due to compilation on the ```Jenkins``` server, e.g. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;
@@ -94,25 +93,25 @@ public interface DocHistoryDtoMapper {
 }
 ```
 
-You write the mappings as methods for a single object (`docToHistoryDto`) or as a list of objects (`toHistoryDtos`). The name of the method is irrelevant, choose a concise name.
+You write mappings as methods for a single object (```docToHistoryDto```) or as a list of objects (```toHistoryDtos```). The name of the method is not important, choose a descriptive name.
 
-Attribute `INSTANCE` is used to get an instance of `mapper` object, always implement it.
+The ```INSTANCE``` attribute is used to get an instance of the ```mapper``` object, always implement it.
 
-Attributes between objects are converted automatically, if they match you don't need to set annotation `@Mapping`. If the attribute names do not match, use annotation:
+Attributes between objects are converted automatically, if they match you do not need to set the ```@Mapping``` annotation. If the attribute names do not match use the annotation:
 
 ```java
 @Mapping(source = "historyId", target = "id")
 ```
 
-If you need to perform a specific conversion between attributes, you can implement a method for the conversion and set its use using the attribute `qualifiedByName`. In the sample is the implementation of the method `stringDateToLong` which converts the date in `String` objects on `timestamp`.
+If you need to perform a specific conversion between attributes, you can implement a method for the conversion and set its usage using the ```qualifiedByName``` attribute. The example shows the implementation of the ```stringDateToLong``` method, which converts a date in an ```String``` object to ```timestamp```.
 
-Full documentation on mapping options can be found at [mapstruct.org](https://mapstruct.org/documentation/stable/reference/html/#defining-mapper).
+Complete documentation on mapping options can be found at [mapstruct.org](https://mapstruct.org/documentation/stable/reference/html/#defining-mapper).
 
-Annotation `@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)` informs `mapstruct` to ignore non-existent attributes.
+The annotation ```@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)``` tells ```mapstruct``` to ignore non-existent attributes.
 
 ## Using mapping
 
-In the class where you need to map the original object to a DTO object, use the attribute `INSTANCE` and then calling the appropriate method:
+In the class where you need to map the original object to a DTO object, use the ```INSTANCE``` attribute and then call the appropriate method:
 
 ```java
 //povodny list DocDetails objektov
@@ -120,3 +119,4 @@ List<DocDetails> list = historyDB.getHistory(docId, false, false);
 //premapovanie na DTO objekty
 List<DocDetailsDto> dtolist = DocHistoryDtoMapper.INSTANCE.toHistoryDtos(list);
 ```
+

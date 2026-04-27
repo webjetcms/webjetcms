@@ -1,14 +1,14 @@
 # Google Tag Manager integration
 
-If the site uses `Google Tag Manager` to insert scripts and tracking tools, we need to ensure the following points.
+If ```Google Tag Manager``` is used on the website to embed scripts and tracking tools, we need to ensure the following points.
 
-- Initiation `DataLayer`
+- Initialization ```DataLayer```
 - Default consent settings
-- Update consents when visitor preferences and confirmations change `cookies` rails
+- Update consents when changing visitor preferences and confirmations ```cookies``` bar
 
-## DataLayer initialization
+## Initializing the DataLayer
 
-`DataLayer` must be created before the inserted `GTM`.
+```DataLayer``` musí byť vytvorený ešte pred vloženým ```GTM```.
 
 ```javascript
     window.dataLayer = window.dataLayer || [];
@@ -17,7 +17,7 @@ If the site uses `Google Tag Manager` to insert scripts and tracking tools, we n
 
 ## Default consent settings
 
-`ad_storage` a `analytics_storage` are the default consents that Google tools can read without the need for additional conditions in `GTM`. They can acquire values `denied` a `granted`.
+```ad_storage``` a ```analytics_storage``` sú predvolené súhlasy, ktoré vedia čítať Google nástroje bez potreby ďalších podmienok v ```GTM```. Nadobudnúť môžu hodnoty ```denied``` a ```granted```.
 
 ```javascript
     gtag('consent', 'default', {
@@ -28,22 +28,22 @@ If the site uses `Google Tag Manager` to insert scripts and tracking tools, we n
     });
 ```
 
-This is the default setting. When the page is loaded, it is set to `denied/granted` according to our cookie `enableCookieCategory`. If the visitor comes to the site for the first time, the values are `denied`.
+This is the default setting. When the page loads, it is set to ```denied/granted``` according to our cookie ```enableCookieCategory```. If the visitor comes to the site for the first time, the values ​​are ```denied```.
 
-**In principle, the**
+**In principle, the following applies**
 
-- `ad_storage` = WebJET marketing category `cookies`
-- `ad_user_data` = WebJET marketing category `cookies`
-- `ad_personalization` = WebJET marketing category `cookies`
-- `analytics_storage` = WebJET statistical category `cookies`
+- ```ad_storage``` = WebJET marketing category ```cookies```
+- ```ad_user_data``` = WebJET marketing category ```cookies```
+- ```ad_personalization``` = WebJET marketing category ```cookies```
+- ```analytics_storage``` = WebJET statistical category ```cookies```
 
-!>**Warning:** the default setting of consents must be in the code before the inserted `GTM`.
+!>**Warning:** the default permissions setting must be in the code before the ```GTM``` is inserted.
 
-*Interestingly, if the consents above are disabled, Google Analytics will still run. However, it does not create `cookies` and does not send information about the user, his browser, does not track the visit, etc. It is being launched because it promises to do-model analytics based on missing data from users who have not given consent.*
+*Interestingly, if the consents above are disabled, Google Analytics will still run. However, it does not create ```cookies``` and does not send information about the user, their browser, the visit is not tracked, etc. It is run because it promises to do-model analytics based on the missing data of users who did not give consent.*
 
 ### Other categories of consent
 
-The code above should of course also be supplemented with WebJET categories `cookies` that are used within the site, e.g. preferences.
+The code above should of course be supplemented with WebJET categories ```cookies``` that are used within the website, e.g. preferential.
 
 ```javascript
     gtag('consent', 'default', {
@@ -56,9 +56,9 @@ The code above should of course also be supplemented with WebJET categories `coo
     });
 ```
 
-## Updating consents when changing preferences
+## Updating consents when preferences change
 
-As soon as changes are made to the consents (the visitor interacts with the cookie bar), it is necessary to manage **updating consent** + **Send to GTM event**.
+Once there are changes in consents (visitor interacts with the cookie bar), it is necessary to **update consent** + **send to GTM event**.
 
 ```javascript
     gtag('consent', 'update', {
@@ -69,17 +69,17 @@ As soon as changes are made to the consents (the visitor interacts with the cook
     dataLayer.push({'event': 'consent-update'});
 ```
 
-In the framework of `gtag update` you only need to insert the categories that have changed.
+Within ```gtag update```, you only need to insert the categories that have changed.
 
-`DataLayer` push is an event due to `GTM` to be able to launch the tools directly when consent is granted and not wait for the page to refresh.
+```DataLayer``` push je event kvôli ```GTM```, aby sa vedeli spustiť nástroje priamo pri udelení súhlasu a nemuselo sa čakať na obnovenie stránky.
 
-The data is automatically updated by the application `GDPR Cookies` and the app `Cookiebar`.
+Aktualizáciu údajov automaticky vykonáva aplikácia ```GDPR Cookies``` aj aplikácia ```Cookiebar```.
 
-## Defining consents if the visitor has confirmed their choices
+## Definovanie súhlasov, ak návštevník potvrdil svoje voľby
 
-`Consent default` - categories (except `nutne`) are always set to `denied`, even though it is a repeat visit and the visitor has previously enabled each category. But in this case, right after defining `consent default` follows in the code `consent update` (without DataLayer push event - it is sent only when interacting with the cookie bar).
+`Consent default` - kategórie (okrem `nutne`) sú vždy nastavené na `denied`, aj napriek tomu, že ide o opakovanú návštevu a návštevník predtým povolil jednotlivé kategórie. No v takomto prípade hneď za definovaním `consent default` nasleduje v kóde `consent update` (bez DataLayer push eventu - ten sa posiela len pri interagovaní s cookies lištou).
 
-## Model example
+## Modelový príklad
 
 ```html
     <html>
@@ -106,7 +106,7 @@ The data is automatically updated by the application `GDPR Cookies` and the app 
 
 ## Form submission event
 
-After submitting the form via AJAX, an event is published `WJ.formSubmit`, which can be listened to when connected to `DataLayer`, e.g. as:
+After submitting the form via AJAX, an event `WJ.formSubmit` is published, which can be listened to when connected to `DataLayer`, e.g. like this:
 
 ```javascript
     window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });

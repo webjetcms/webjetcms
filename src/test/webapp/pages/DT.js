@@ -212,9 +212,9 @@ module.exports = {
       this.waitForLoader();
       I.clickCss(container+" button.buttons-settings");
       I.clickCss(container+" button.buttons-colvis");
-      I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       I.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
-      I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.waitForLoader();
     },
 
@@ -227,10 +227,11 @@ module.exports = {
         var container = "#"+tableId+"_wrapper";
         I.clickCss(container+" button.buttons-settings");
         I.clickCss(container+" button.buttons-colvis");
-        I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+        I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
         //First check, if button is already active
-        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active").withText(columnText));
+        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active-a").withText(columnText));
+        I.say("Showing column: " + columnText + ", active count: " + count);
 
         if (count == 0) {
             //Not active, click
@@ -238,14 +239,38 @@ module.exports = {
         }
 
         I.clickCss("button.btn.btn-primary.dt-close-modal");
-        I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+        I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
+    },
+
+    /**
+     * Hide a column in the data table based on the column name (columnText).
+     * @param {string} columnText - The name of the column to be hidden.
+     * @param {string} tableId - The ID of the table wrapper (default is "datatableInit").
+     */
+    async hideColumn(columnText, tableId="datatableInit") {
+        var container = "#"+tableId+"_wrapper";
+        I.clickCss(container+" button.buttons-settings");
+        I.clickCss(container+" button.buttons-colvis");
+        I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
+
+        //First check, if button is already active
+        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active-a").withText(columnText));
+        I.say("Hiding column: " + columnText + ", active count: " + count);
+
+        if (count > 0) {
+            //Active, click to hide
+            I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
+        }
+
+        I.clickCss("button.btn.btn-primary.dt-close-modal");
+        I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     },
 
 
     /**
      * Check cell value in selected row and column, index starts at 1
      * @param {*} name - table name/ID
-     * @param {*} row - row number (starst at 1)
+     * @param {*} row - row number (starts at 1)
      * @param {*} col - col number (starts at 1)
      * @param {*} value - expected cell value
      */

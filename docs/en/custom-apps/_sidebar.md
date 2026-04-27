@@ -1,32 +1,32 @@
- <div class="sidebar-section">Programming of customer applications</div>
+<div class="sidebar-section">Programming customer applications</div>
 
-- [:point\_left: Back to Home](/?back)
+- [:point_left: Back to Home](/?back)
 
 - Spring
-  - [Spring configuration](/custom-apps/spring-config/)
-  - [Token authorisation](/custom-apps/spring/api-auth.md)
-  - [REST service provisioning](/custom-apps/spring/rest-url.md)
-  - [Extension of Spring DATA repositories of WebJET CMS](/custom-apps/spring/repository-extend.md)
-  - [Public services](/custom-apps/spring/public-services.md)
+  - [Spring Configuration](/custom-apps/spring-config/)
+  - [Token Authorization](/custom-apps/spring/api-auth.md)
+  - [Securing REST services](/custom-apps/spring/rest-url.md)
+  - [Spring DATA WebJET CMS repository extension](/custom-apps/spring/repository-extend.md)
+  - [Public Services](/custom-apps/spring/public-services.md)
 - Applications
-  - [Customisation of administration](/custom-apps/apps/customize-admin.md)
-  - [Menu item in the admin section](/custom-apps/admin-menu-item/)
+  - [Customize Administration](/custom-apps/apps/customize-admin.md)
+  - [Item in the admin section menu](/custom-apps/admin-menu-item/)
   - [List of websites/news](/custom-apps/news/)
   - [Users](/custom-apps/apps/user/README.md)
   - [Configuration](/custom-apps/config/README.md)
   - [AI - adding a new provider](/custom-apps/apps/ai/assistants/README.md)
-  - Ecommerce
-    - [Payment methods](/custom-apps/apps/eshop/payment-methods/README.md)
+  - E-commerce
+    - [Payment Methods](/custom-apps/apps/eshop/payment-methods/README.md)
   - [Forms](/custom-apps/apps/multistep-forms/README.md)
 - Spring MVC
-  - [Application in the web page](/custom-apps/spring-mvc/)
+  - [Website Application](/custom-apps/spring-mvc/)
   - [Admin with file upload](/custom-apps/spring-mvc/admin-with-upload.md)
   - [Admin import from Excel](/custom-apps/spring-mvc/admin-excel-import.md)
-- Appstore
-  - [To view in the App list](/custom-apps/appstore/)
+- App store
+  - [App list display](/custom-apps/appstore/)
 - VS Code
-  - [Home](/custom-apps/vscode/README.md)
+  - [Introduction](/custom-apps/vscode/README.md)
   - [Setting debug mode](/custom-apps/vscode/debugging/README.md)
 - Testing
-  - [Testing options](/custom-apps/testing/README.md)
-  - [Code coverage](/custom-apps/testing/codecoverage.md)
+  - [Testing Options](/custom-apps/testing/README.md)
+  - [Code Coverage](/custom-apps/testing/codecoverage.md)

@@ -1,75 +1,77 @@
-# Website
+# Pages
 
-The section contains an overview of linked pages under a common synchronization identifier `syncId`.
+The section contains an overview of linked pages under the common synchronization identifier `syncId`.
 
 ![](docs_datatable.png)
 
 ## Table structure
 
-To be able to read the table, we need to understand the structure of the table, where:
-- **Lines**, each row contains all pages (more precisely, paths to pages) that are linked together by the same parameter value `syncId` (minimum one page)
-- **Columns** are divided as follows:
-  - **SyncID**, the value of the synchronization identifier by which the pages in the row are bound
-  - **Status**, icons that draw attention to special states (see more in [the state of binding](./docs#the-state-of-binding))
-  - **en, en, ...**, columns are automatically generated, where each column contains the pages for that language. This language is obtained from the page's parent folder or its template. The number of columns in the table varies dynamically and depends on how many language mutations the pages are linked in. If a value is missing in a column, it does not exist for that `syncId` a linked page in a given language.
+To be able to read a table, we need to understand the structure of the table, where:
 
-!>**Warning:** in the case of multiple linked pages with the same value `syncId` and in the same language mutation, their values will be concatenated in the column for that language mutation, so that the value in the column will contain paths to multiple pages.
+- **Rows**, each row contains all pages (more precisely, paths to pages) that are linked to each other by the same value of the parameter `syncId` (at least one page)
+- **Columns** are divided as follows:
+  - **SyncID**, the value of the synchronization identifier by which the pages in the row are linked
+  - **Status**, icons that indicate special states (more in the [binding status] section(./docs#binding-status))
+  - **sk, en, ...**, are automatically generated columns, where each column contains pages for a given language mutation. This language is obtained from the page's parent folder or its template. The number of columns in the table changes dynamically and depends on how many language mutations the pages are linked to. If the value in the column is missing, then there is no linked page for the given `syncId` in the given language mutation.
+
+!>**Warning:** If there are multiple linked pages with the same `syncId` value and in the same language mutation, their values ​​will be combined in the column for the given language mutation, so the value in the column will contain paths to multiple pages.
 
 ## Binding status
 
-Column **Status** offers a quick overview of the binding status using icons. It supports the following states:
-- <i class="ti ti-exclamation-circle" style="color: #ff4b58;" ></i>, the icon corresponding to the state **Bad mapping**. Page binding will take this state if multiple linked pages are found in the same language.
-- <i class="ti ti-alert-triangle" style="color: #fabd00;" ></i>, the icon corresponding to the state **Uneven nesting**. Page rebinding takes this state if the depth of the rebound pages differs from the root folder.
-- **nothing**, no icon is displayed if the binding is correct (does not fall into the preceding states)
+The **Status** column provides a quick overview of the binding status using icons. It supports the following states:
+
+-<i class="ti ti-exclamation-circle" style="color: #E00028;"></i> , the icon responsible for the **Bad mapping** status. Linking pages will acquire this status if multiple linked pages in the same language mutation appear.
+-<i class="ti ti-alert-triangle" style="color: #fabd00;"></i> , the icon responsible for the **Uneven nesting** status. Linking pages will acquire this status if the linked pages are at different depths from the root folder.
+- **nothing**, no icon is displayed if the binding is correct (does not fall into the previous states)
 
 ### Bad mapping
 
-Since only pages with the same content in a different language should be linked, it doesn't make sense to have multiple pages linked in the same language. Therefore, such bindings are evaluated as **poor mapping**.
+Since only pages with the same content in a different language variant should be linked, it makes no sense to have multiple pages in the same language variant linked. Therefore, such linking is evaluated as **bad mapping**.
 
 ### Uneven nesting
 
-Since the same structures should be linked, different depths of the parent directories of the linked pages indicate an error between the structures. Compared to **poor mapping** it may not be a bug right away, such bindings are marked for better searching of possible bugs.
+Since the linked structures should be the same, different depths of the parent directories of the linked pages indicate an error between the structures. Unlike **bad mapping**, this may not necessarily be an error, such links are marked for better detection of potential errors.
 
-## Deleting/canceling a rebinding
+## Delete/Unlink
 
-When deleting/cancelling the entire binding, the existing synchronization parameter is lost `syncId` as he has nothing to tie up.
+When deleting/unlinking the entire binding, the existing synchronization parameter `syncId` disappears, as it no longer has anything to bind.
 
-## Editing the binding
+## Editing binding
 
-When editing a rebind, each rebinded page will be displayed as a page picker with the language abbreviation as a label.
+When editing a link, each linked page is displayed as a page selection field with the language abbreviation as a label.
 
-In the following picture we can see an example **bad mapping** where multiple pages in the same language are linked, specifically in the case of `sk` Language.
+In the following image we can see an example of **bad mapping**, where multiple pages in the same language mutation are linked, specifically in the case of the `sk` language.
 
 ![](doc_editor_A.png)
 
-### Change pages
+### Changing pages
 
-When editing, the linked pages can be changed. In this case, the synchronization parameter will be removed from the replaced page `syncId` and a parameter is added to the newly selected page `syncId`.
+When editing, linked pages can be changed. In this case, the synchronization parameter `syncId` will be removed from the replaced page and the parameter `syncId` will be added to the newly selected page.
 
-For the selected site is not allowed:
-- duplicate election of the same page
-- selecting the page with the set `syncId` (other than the currently edited ones, of course). If you still insist on rebinding the page, you must first unbind the current page (remove `syncId`) and then you can link it to other pages (add new `syncId`).
-- selection of multiple pages in the same language (error [poor mapping](./docs#poor-mapping))
-- selection of pages at different depths (error [uneven nesting](./docs#uneven-nesting))
+The following is not allowed for the selected pages:
 
-Each of these errors shall be checked. If such an error occurs when attempting to change, the action will be blocked.
+- duplicate selection of the same page
+- selecting a page with `syncId` set (of course different from the one currently being edited). If you still insist on linking the given page, you must first cancel its current linking (remove `syncId`) and only then can you link it to other pages (add a new `syncId`).
+- selecting multiple pages in the same language mutation (error [bad mapping](./docs#bad-mapping))
+- selecting pages at different depths (error [uneven nesting](./docs#uneven-nesting))
 
-!>**Warning:** editor provides the possibility **Ignore problems/warnings**. By selecting this option, you can also save records that contain errors **poor mapping** a **uneven nesting**. You can switch this protection off at your own risk if the situation requires it.
+Each of these errors is checked. If such an error occurs when attempting to make a change, the action will be blocked.
+
+!>**Warning:** the editor provides an option to **Ignore issues/warnings**. By selecting this option, you can also save records that contain **bad mapping** and **uneven nesting** errors. You can disable this protection at your own risk if the situation requires it.
 
 ### Adding a page
 
-The table does not allow the creation of a completely new binding (a new `syncId`), but allows adding (linking) new pages to existing ones. In the editor, when editing a record, there is a button
+The table does not allow you to create a completely new link (new `syncId`) but allows you to add (link) new pages to existing ones. In the editor, when editing a record, there is a button
 
 <button id="add-sync-btn" class="btn btn-outline-secondary" onclick="showNewSelector(groupsMirroringTable)">
-  <i class="ti ti-plus" ></i>
-
-  <span> Attach folder </span>
+    <i class="ti ti-plus"></i>
+    <span>Attach folder</span>
 </button>
 
-which you can use to add new fields for selecting pages. When you display the maximum number of allowed fields (allowed bindings) the button will be hidden.
+which allows you to add new fields for page selection. When you display the maximum number of fields allowed (allowed bindings), the button is hidden.
 
 ![](groups_editor_B.png)
 
-### Removing the rebinding
+### Removing binding
 
-You can virtually remove the entire rebinding with a page change action. This situation occurs when you remove all the linked pages.
+By changing the page action, you can practically remove the entire link. This situation occurs when you remove all linked pages.

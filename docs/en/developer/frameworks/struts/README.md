@@ -1,10 +1,10 @@
-# Transition from Struts to Spring
+# Transitioning from Struts to Spring
 
-Struts is an old MVC technology (framework) that with the help of a configuration file `struts-config.xml` maps incoming requests to `Struts Action` objects. As of WebJET 2025, struts is replaced by Spring MVC/REST.
+Struts is an old MVC technology (framework) that maps incoming requests to `struts-config.xml` objects using a configuration file. Since WebJET 2025, struts has been replaced by Spring MVC/REST.
 
 ## Original mapping using Struts
 
-URL mapping `*.do` is configured in the file `struts-config.xml`, in the sample mapping `/inquiry.answer` (the actual URL has the suffix `.do` that is to say `/inquiry.answer.do`) per class `InquiryAnswerAction`.
+The mapping of URL addresses `*.do` is configured in the file `struts-config.xml`, in the example the mapping of `/inquiry.answer` (the actual URL has the suffix `.do`, i.e. `/inquiry.answer.do`) to the class `InquiryAnswerAction`.
 
 ```xml
 <action path="/inquiry.answer" type="sk.iway.iwcm.inquiry.InquiryAnswerAction">
@@ -13,7 +13,7 @@ URL mapping `*.do` is configured in the file `struts-config.xml`, in the sample 
 </action>
 ```
 
-Action class, in this case `InquiryAnswerAction`, processes the request using the method `execute` and may use data stored in `ActionForm` bean. It then uses the method `mapping.findForward()` to redirect the request to the output view in the JSP file. In the example, the redirection is used to display `fail`, which is defined in the file `struts-config.xml` Like `/components/inquiry/fail.jsp`.
+The Action class, in this case `InquiryAnswerAction`, processes the request using the method `execute` and can use data stored in the `ActionForm` bean. It then uses the method `mapping.findForward()` to redirect the request to the output view in the JSP file. In the example, the redirection is used to the view `fail`, which is defined in the file `struts-config.xml` as `/components/inquiry/fail.jsp`.
 
 ```java
     @Override
@@ -30,15 +30,15 @@ Action class, in this case `InquiryAnswerAction`, processes the request using th
     }
 ```
 
-## Switching from Struts to Spring mapping
+## Transitioning from Struts to Spring mapping
 
-To switch to Spring, delete the mapping from `struts-config.xml` and create a new one in Spring controllers. The problem is if you need to keep the original URLs (since they can be used in different JSP files). It is not possible to create a Spring mapping to `/cokolvek.do` as `*.do` handled by Struts `servlet`. The solution is a class `UnknownAction` which maps the unknown Struts `*.do` calls to `*.struts` that you can already map in Spring:
+To switch to Spring, delete the mapping from `struts-config.xml` and create a new one in the Spring controller. The problem is if you need to keep the original URLs (since they can be used in different JSP files). It is not possible to create a Spring mapping to `/cokolvek.do`, since `*.do` handles Struts `servlet`. The solution is a class `UnknownAction` that maps the unknown Struts `*.do` calls to `*.struts`, which you can already map in Spring:
 
 ```xml
     <action path="/unknown" type="sk.iway.iwcm.sync.UnknownAction" unknown="true" />
 ```
 
-Class `UnknownAction` the unknown requirements are modified so that the suffix `.do` is replaced by the suffix `.struts`:
+The unknown requirements of the `UnknownAction` class are modified so that the `.do` suffix is ​​replaced with the `.struts` suffix:
 
 ```java
     public class UnknownAction extends Action {
@@ -62,7 +62,7 @@ Class `UnknownAction` the unknown requirements are modified so that the suffix `
     }
 ```
 
-So if you need to keep the URL `/cokolvek.do` in Spring class you set the mapping to `/cokolvek.struts`:
+So if you need to keep the URL address `/cokolvek.do` in the Spring class, you set the mapping to `/cokolvek.struts`:
 
 ```java
     @Controller
@@ -81,11 +81,11 @@ So if you need to keep the URL `/cokolvek.do` in Spring class you set the mappin
     }
 ```
 
-## Examples of implementation
+## Implementation examples
 
-### Move a request to a JSP file
+### Moving a request to a JSP file
 
-In most cases, it will probably be sufficient for the controller method mapping the request to have a return type of `String` to move the request to the JSP file. For example, we can return a reference to a file `ok.jsp`, which served as an output display of the successful poll vote. Care should be taken that the line does not contain the suffix `.jsp`, this will ensure that Spring mapping is set to add a suffix to the returned link `.html` for search `Thymeleaf` template or if it does not find the suffix `.jsp` for use `jsp` file.
+In most cases, it will probably be enough for the controller method mapping the request to have a return type of `String` to transfer the request to the JSP file. For example, we can return a link to the file `ok.jsp`, which served as the output display of a successful vote in the poll. It is necessary to be careful that the line does not contain the extension `.jsp`, this will be ensured by the configured Spring mapping, which will add the extension `.html` to the returned link to search for the `Thymeleaf` template or, if it does not find it, the extension `.jsp` to use the `jsp` file.
 
 ```java
     @GetMapping("/inquiry.answer.struts")
@@ -95,9 +95,9 @@ In most cases, it will probably be sufficient for the controller method mapping 
     }
 ```
 
-### Redirect to
+### Redirection
 
-If you need to redirect to another page, just add a prefix to the returned value `redirect:`, but we recommend to use the method `String SpringUrlMapping.redirect(String url)` to add a prefix so you don't make a typo. An example use case is when the user is not yet logged in, so it redirects them to the login page.
+If you need to redirect to another page, just add the prefix `redirect:` to the returned value, but we recommend using the `String SpringUrlMapping.redirect(String url)` method to add the prefix to avoid typos. An example of use is when the user is not yet logged in, so redirect them to the login page.
 
 ```java
     @GetMapping("/inquiry.answer.struts")
@@ -110,11 +110,11 @@ If you need to redirect to another page, just add a prefix to the returned value
 
 ### Direct HTML code output
 
-If you need to generate HTML code directly in the class, you can use `PrintWriter`. The method must have a return type `void` and annotation `@ResponseBody`.
+If you need to generate HTML code directly in the class, you can use `PrintWriter`. The method must have a return type of `void` and an annotation of `@ResponseBody`.
 
-In this case, you no longer do the redirection using the prefix `redirect:` but directly through `HttpServletResponse.sendRedirect` Methods.
+In this case, you no longer redirect using the `redirect:` prefix but directly via the `HttpServletResponse.sendRedirect` method.
 
-In case of moving a request to a JSP file, you can use the method `request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);`.
+If you want to move the request to a JSP file, you can use the `request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);` method.
 
 ```java
     @ResponseBody
@@ -138,4 +138,4 @@ In case of moving a request to a JSP file, you can use the method `request.getRe
 
 ### JSP tags
 
-Brands like `<logic:present/iterate/...` substituted for the corresponding `<iwcm:present/iterate/...`, beware `<bean:write` For `<iwcm:beanWrite`.
+Tags like `<logic:present/iterate/...` replaced with corresponding `<iwcm:present/iterate/...`, be careful `<bean:write` for `<iwcm:beanWrite`.

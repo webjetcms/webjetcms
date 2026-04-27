@@ -2,32 +2,35 @@
 
 ## Editor initialization
 
-When editing a page, the editor is initialized to individual editable blocks, i.e. **multiple editors are initialized in the page at the same time**. Page Builder is used to modify the structure of a page using its block tools. The CK editor is used to edit the text itself.
+When editing a page, the editor is initialized to individual editable blocks, meaning **multiple editors are initialized on the page at the same time**. The Page Builder is used to edit the page structure using its tools for working with blocks. The CK editor is used to edit the texts themselves.
 
 The editor is automatically initialized to:
-- column elements (`class="col-*"`)
-- elements marked with CSS class `pb-editable` (`class="pb-editable"`)
+
+- column elements (```class="col-*"```)
+- elements marked with CSS class ```pb-editable``` (```class="pb-editable"```)
 
 **Setup and configuration:**
 
 To run Page Builder correctly, set:
-- in the properties of the template group Page editor type to Page Builder
-- if you want Page Builder to be available also when the page is displayed on the frontend, set the configuration variable `inlineEditingEnabled` at `true`
-- in case of non-standard `bootstrap gridu`, configuration variable `bootstrapColumns` which specifies the number of columns `gridu`
 
-Other conf. variables that can be modified:
-- `pagebuilderFilterAutoOpenItems` - the number of items that are automatically opened when filtering in the block list, by default 10.
-- `pagebuilderLibraryImageWidth` - width of preview images in the block library, 310 by default.
-- `inlineEditingDisabledUrls` - list of URLs for which the inline editor will not be available
-- `pageBuilderPrefix` - prefix used for CSS Page Builder classes (pb by default), can only be changed if you also change prefixes in CSS Page Builder classes
+- in the template group properties, set Page Editor Type to Page Builder.
+- if you want the Page Builder to be available even when the page is displayed on the frontend, set the configuration variable ```inlineEditingEnabled``` to ```true```
+- in case of non-standard ```bootstrap gridu```, configuration variable ```bootstrapColumns```, which determines the number of columns ```gridu```
+
+Other config variables that can be edited:
+
+- `pagebuilderFilterAutoOpenItems` - ​​number of items that will automatically open when filtering in the block list, default 10.
+- `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
+- `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
+- `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
 
 **Exceptions**
 
-The mode is set for a group of templates if you need to **specific template mode to turn off** you can set another option in the template in the Basic tab in the field `Typ editora stránok` as used by the template group.
+The mode is set for a group of templates. If you need to disable the mode in a **specific template**, you can set a different option in the `Typ editora stránok` field in the template on the Basic tab than the one used by the group of templates.
 
-**Headers/heels**
+**Headers/Footers**
 
-Page Builder in the editor is initialized to the full page, it is loaded including CSS styles and template into the iframe element. But in this mode we don't want to display other elements of the web page (header, footer...) so these elements are set to empty value. Additionally, when the page is displayed, the CSS attribute `display: none` the following elements are hidden:
+The Page Builder in the editor is initialized to the entire page, it is loaded including CSS styles and template into an iframe element. In this mode, however, we do not want to display other elements of the web page (header, footer...) so these elements are set to an empty value. In addition, when the page is displayed, the following elements are hidden via the CSS attribute ```display: none```:
 
 ```css
  body div.header, body header, body div.footer, body footer { display: none; }
@@ -35,7 +38,7 @@ Page Builder in the editor is initialized to the full page, it is loaded includi
 
 ## CSS class convention with support for Ninja page builder
 
-The correct html code structure over which Page Builder can initialize is as follows:
+The correct HTML code structure that Page Builder can initialize on is as follows:
 
 ```html
 <section>
@@ -64,11 +67,12 @@ The correct html code structure over which Page Builder can initialize is as fol
 </section>
 ```
 
-Styling is only recommended on `section`, `container` a `column content` because only these elements can be customized by the user using Page Builder.
+Styling is recommended only for ```section```, ```container``` and ```column content```, because only these elements can be edited by the user using Page Builder.
 
-!>**Warning:** v `column` elements are not allowed to use text directly, it is necessary to use at least P element. Additionally, because of the possibility of setting indentations (`margin/padding`) in the framework of `column` element content is wrapped in a DIV element with CSS class after opening in Page Builder `column-content`.
+!>**Warning:** in ```column``` elements it is not allowed to use text directly, at least a P element must be used.
+Additionally, due to the ability to set indents (```margin/padding```) within the ```column``` element, the content of the element is wrapped in a DIV element with the CSS class ```column-content``` when opened in Page Builder.
 
-That is, from code:
+So from the code:
 
 ```html
 <div class="col-4">
@@ -76,7 +80,7 @@ That is, from code:
 </div>
 ```
 
-will be created after initializing the Page Builder code:
+The following code is created after the Page Builder initialization:
 
 ```html
 <div class="col-4">
@@ -86,25 +90,25 @@ will be created after initializing the Page Builder code:
 </div>
 ```
 
-## Styling of elements
+## Styling elements
 
-### `SECTION` (blue colour)
+### `SECTION` (blue color)
 
-Initialization when using the element: `<section>`.
+Initialization when using element: ```<section>```.
 
-Styling by class, with prefix: `pb-style-section-`
+Styling using a class, with prefix: ```pb-style-section-```
 
 ```html
 <section class="pb-style-section-team-26"></section>
 ```
 
-By setting the CSS class `pb-not-section` the element \**will not be considered as a section* element.
+By setting the CSS class ```pb-not-section```, the element **will not be considered a section* element.
 
-### `CONTAINER` (red)
+### `CONTAINER` (red color)
 
-Initialization when using CSS classes: `container` or `pb-custom-container`. By setting the CSS class `pb-not-container` with the element **will not be considered as a container** even if it has a CSS class `container`.
+Initialization when using CSS class: ```container``` or ```pb-custom-container```. By setting CSS class ```pb-not-container```, the element **will not be considered a container** even if it has CSS class ```container```.
 
-Styling by class, with prefix: `pb-style-container-`
+Styling using a class, with prefix: ```pb-style-container-```
 
 ```html
 <div class="container pb-style-container-group-26"></div>
@@ -112,29 +116,29 @@ Styling by class, with prefix: `pb-style-container-`
 
 ### `ROW`
 
-`<div class="row">` is currently not editable with Page Builder, it is used for bootstrap compatibility reasons.
+```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
 
-### `COLUMN` (green colour)
+### `COLUMN` (zelená farba)
 
-Initialization when using the class: `col-` OR `pb-col-` (if the DIV element is not a standard bootstrap `col-`). Values are also accepted `pb-col` a `pb-col-auto` - if the element contains these CSS styles, the column width setting icon will not appear in the toolbar.
+Inicializácia pri použití triedy: ```col-``` ALEBO ```pb-col-``` (ak DIV element nie je štandardný bootstrap ```col-```). Akceptované sú aj hodnoty ```pb-col``` a ```pb-col-auto``` - ak element obsahuje tieto CSS štýly, tak v nástrojovej lište sa nezobrazí ikona nastavenia šírky stĺpca.
 
-If the column has a CSS class `pb-not-editable` so with **will not be considered as a column** (it will not automatically include editable text). If for a non-editable element you need to be able to set the width/copy/move etc. by setting the CSS class `pb-always-mark` the element will be selected and a green box with its options will be displayed.
+Ak má column CSS triedu ```pb-not-editable``` tak sa **nebude považovať za column** (nebude v ňom automaticky aj editovateľný text). Ak pre ne-editovateľný element potrebujete mať možnosť nastavovania šírky/kopírovania/presúvania atď. nastavením CSS triedy ```pb-always-mark``` sa element označí a bude sa zobrazovať zelený rámik aj s jeho možnosťami.
 
-Styling by class, with prefix: `pb-style-column-`.
+Štýlovanie pomocou triedy, s prefixom: ```pb-style-column-```.
 
 ```html
 <div class="col-12 pb-style-content-person-26"></div>
 ```
 
-By setting the CSS class `pb-not-column` the element \**will not be considered as columns* even if it has a CSS class `col-`.
+By setting the CSS class ```pb-not-column```, the element **will not be considered columns* even if it has the CSS class ```col-```.
 
 ## Editing exceptions
 
 ### Editable element
 
-If editing is required for an element that is not one of the above, it is possible to use an element with the class `pb-editable`.
+If editing an element that is not among those mentioned above is required, an element with the class ```pb-editable``` can be used.
 
-This element will not be stylable with Page Builder, but will be editable with the CK editor.
+This element will not be styled using Page Builder, but will be editable using the CK editor.
 
 ```html
 <div class="pb-editable"></div>
@@ -142,9 +146,9 @@ This element will not be stylable with Page Builder, but will be editable with t
 
 ### Non-editable element
 
-If an element is required that you do not want to be editable, it is possible to use the class `pb-not-editable`.
+If an element is required that you do not want to be editable, the ```pb-not-editable``` class can be used.
 
-This disables initialization of Page Builder and CK editor on the element and all elements in it.
+This will disable the initialization of Page Builder and CK editor on the given element and all elements within it.
 
 ```html
 <section class="pb-not-editable"></section>
@@ -152,7 +156,7 @@ This disables initialization of Page Builder and CK editor on the element and al
 
 ## Unique ID
 
-If you need a unique ID to be used in the blocks you can use the value `__ID__`, which is replaced by a random value (`timestamp`).
+If you need a unique ID to be used in blocks, you can use the value ```__ID__```, which will be replaced with a random value (```timestamp```) in the HTML code after insertion into the page.
 
 ```html
 <div class="carousel slide" id="carouselControls__ID__" data-bs-ride="carousel">
@@ -166,7 +170,7 @@ If you need a unique ID to be used in the blocks you can use the value `__ID__`,
 
 ## Events
 
-PageBuilder will call the `windows` several events. You can listen to them as follows:
+PageBuilder raises several events on the ```windows``` object while it is working. You can listen to them as follows:
 
 ```javascript
 window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
@@ -175,9 +179,22 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 ```
 
 The following events are currently supported:
-- `WJ.PageBuilder.loaded` - after uploading the page in the editor
-- `WJ.PageBuilder.gridChanged` - change in `gride`
-- `WJ.PageBuilder.styleChange` - change in block properties (styling)
-- `WJ.PageBuilder.newElementAdded` - new element added
-- `WJ.PageBuilder.elementDuplicated` - duplicated element
-- `WJ.PageBuilder.elementMoved` - moved element
+
+- ```WJ.PageBuilder.loaded``` - ​​after loading the page in the editor
+- ```WJ.PageBuilder.gridChanged``` - ​​change in ```gride```
+- ```WJ.PageBuilder.styleChange``` - ​​change in block properties (styling)
+- ```WJ.PageBuilder.newElementAdded``` - ​​new element added
+- ```WJ.PageBuilder.elementDuplicated``` - ​​duplicate element
+- ```WJ.PageBuilder.elementMoved``` - ​​moved element
+
+## Showing unnecessary blocks
+
+The Page Builder also displays blocks such as header, footer, menu, etc., which may not be desirable in some cases. A simple solution is to hide these blocks via CSS style. In editor mode, the `body` element has a CSS class `is-edit-mode` that allows you to hide unnecessary elements.
+
+If you just need to disable links, you can set the CSS style `pointer-events: none`:
+
+```css
+.is-edit-mode .header a {
+    pointer-events: none;
+}
+```

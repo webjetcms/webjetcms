@@ -247,7 +247,7 @@ module.exports = {
 
     async setAsc() {
         for (let i = 0; i < 3 && !await I.grabNumberOfVisibleElements('.dt-ordering-asc[aria-sort="ascending"]'); i++) {
-            I.clickCss('.dt-th-id > .dt-column-order');
+            I.clickCss('.dt-th-id > .dt-column-header > .dt-column-order');
         }
     },
 

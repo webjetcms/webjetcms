@@ -1,55 +1,55 @@
 # Mirroring the structure
 
-The user description of the mirroring structure is in [documentation for the editor](../../redactor/apps/docmirroring/README.md). Only the technical description is included in this documentation.
+A user-friendly description of structure mirroring is in the [editor documentation](../../redactor/apps/docmirroring/README.md). This documentation contains only a technical description.
 
-The basic java package is `sk.iway.iwcm.components.structuremirroring` and directory for JSP components `/components/structuremirroring/`.
+The basic java package is ```sk.iway.iwcm.components.structuremirroring``` and the directory for JSP components is ```/components/structuremirroring/```.
 
-## Linking method
+## Connection method
 
-Linking individual directories and pages uses the database attribute `sync_id`, originally used for synchronization between WebJets. However, such functionality is not currently used (export and import in XML format is used) and the attribute has not been used.
+The linking of individual directories and pages uses the database attribute ```sync_id```, originally used for synchronization between WebJETs. However, such functionality is not currently used (export and import in XML format are used) and the given attribute was not used.
 
-In the attribute `sync_id` the linked directories and pages are set to a value from the key generator by calling `PkeyGenerator.getNextValue("structuremirroring")`. Value `sync_id` of interlinked directories or pages must of course be the same. According to the value in `sync_id` linked directories/pages can be searched in the database.
+The value from the key generator is set to the attribute ```sync_id``` for linked directories and pages by calling ```PkeyGenerator.getNextValue("structuremirroring")```. The value ```sync_id``` of the directories or pages linked to each other must of course be the same. The value in ```sync_id``` allows you to search for linked directories/pages in the database.
 
-## Link initialization
+## Initializing the connection
 
-The link is set in the configuration variable `structureMirroringConfig` where each line lists the directory IDs (the main directories of that language) to be linked. Setting a configuration variable fires an event that listens `SaveListener.handleConfSave` and subsequently invokes `MirroringService.checkRootGroupsConfig()`. Here the attribute is checked `syncId` of defined directories, if not set it will be set automatically.
+The link is set in the configuration variable ```structureMirroringConfig``` where each line contains a list of directory IDs (main directories of a given language mutation) that are to be linked. Setting the configuration variable triggers an event that ```SaveListener.handleConfSave``` listens to and then triggers ```MirroringService.checkRootGroupsConfig()```. Here the attribute ```syncId``` of the defined directories is checked, if it is not set it is set automatically.
 
-Calling `MirroringService.isEnabled(int groupId)` verifies that structure mirroring is enabled for the specified directory ID.
+The call ```MirroringService.isEnabled(int groupId)``` verifies whether structure mirroring is enabled for the specified directory ID.
 
 ## Linking directories
 
-Directory linking is done by listening for a directory change event `SaveListener.handleGroupSave`, which subsequently calls `GroupMirroringServiceV9.handleGroupSave`.
+Directory linking is implemented by listening to the directory change event ```SaveListener.handleGroupSave```, which in turn calls ```GroupMirroringServiceV9.handleGroupSave```.
 
-Note: the exception is for the directory named **New subdirectory** (translation key `editor.dir.new_dir`), which will be created in the tree structure by clicking Add new directory in the context menu. This would create directories in other languages `Nový podadresár` which would be of no practical use (since changing the directory name no longer changes the mirrored copies created).
+Note: the exception is for the directory named **New subdirectory** (translation key ```editor.dir.new_dir```), which is created in the tree structure by clicking on add new directory in the context menu. This would create directories ```Nový podadresár``` in other language mutations, which would have no practical meaning (since changing the directory name does not change the created mirror copies).
 
-In an event `WebjetEventType.ON_START` is checked to see if the directory has already set `syncId`. If not, we know that it is a new directory that is not yet mirrored and we set a new value for it `syncId`.
+The ```WebjetEventType.ON_START``` event checks whether the directory already has ```syncId``` set. If not, we know that it is a new directory that is not yet mirrored and we set it to a new value of ```syncId```.
 
-In an event `WebjetEventType.AFTER_SAVE`, that is, after saving the directory according to `syncId` looking for mirrored directories. If none exist, new directories are created. The API is used `groupsDB.setGroup(mirror, false);` with the other `false` an attribute that **does not bring up** event again after saving the directory (which would cause recursion).
+For event ```WebjetEventType.AFTER_SAVE```, i.e. after saving the directory according to ```syncId```, we look for mirrored directories. If none exist, new directories are created. The ```groupsDB.setGroup(mirror, false);``` API is used with a second ```false``` attribute, which **does not** raise the event again after saving the directory (which would cause recursion).
 
-When a link exists, it verifies that a parent directory change has occurred. This is a rather complicated detection. First, a list of linked directories is obtained for the current directory. Then it is verified that the actually linked directories have parents from that list. If not, a directory move to the correct one is performed.
+If a link exists, it is checked whether the parent directory has changed. This is a relatively complicated detection. First, a list of linked directories for the current directory is obtained. Then, it is checked whether the actually linked directories have parents from the specified list. If not, the directory is moved to the correct one.
 
-Verifying the ordering priority is straightforward - linked directories and a matching ordering priority value are verified. If it is not the same, it is set.
+Verifying the sort priority is simple - the linked directories are checked and the sort priority value matches. If it is not the same, it is set.
 
-In an event `WebjetEventType.AFTER_DELETE` with the call `GroupsDB.deleteGroup` mirrored directories are also deleted. These are typically moved to the Recycle Bin. They will remain set `syncId`, but since they are outside the mirrored structure, their subsequent changes are no longer mirrored.
+In the event ```WebjetEventType.AFTER_DELETE```, calling ```GroupsDB.deleteGroup``` also deletes mirrored directories. These are typically moved to the trash. They will still have ```syncId``` set, but since they are outside the mirrored structure, subsequent changes to them are no longer mirrored.
 
 ## Linking websites
 
-The linking of web pages is implemented in `DocMirroringServiceV9.handleDocSave(DocDetails doc, WebjetEventType type)`, which solves the saving of the web page in the page editor. Object `DocDetails` but does not contain the value `syncId`, so in the first step the value to the object is set (according to `docId`).
+The web page link is implemented in ```DocMirroringServiceV9.handleDocSave(DocDetails doc, WebjetEventType type)```, which solves the problem of saving the web page in the page editor. The object ```DocDetails``` does not contain the value ```syncId```, so in the first step the value is set to the object (according to ```docId```).
 
-Similar to the directory for the event `WebjetEventType.ON_START` for a page that `syncId` has not been set will generate a new value.
+Similar to the directory, a new value is generated for a page that does not have ```syncId``` set for the ```WebjetEventType.ON_START``` event.
 
-In an event `WebjetEventType.AFTER_SAVE` linked pages are obtained. If none exist, they are created by calling `DocDB.saveDoc(mirror, false)`, attribute `false` solves the problem with recursion (does not trigger events again). The only problem that may arise is rights and approvals, the current implementation does not address this. If the editor doesn't have rights to another language the web page will still be created.
+The linked pages are retrieved at the ```WebjetEventType.AFTER_SAVE``` event. If none exist, they are created by calling ```DocDB.saveDoc(mirror, false)```, the ```false``` attribute solves the recursion problem (does not call the events again). The only problem that may arise is rights and approval, the current implementation does not solve this. If the editor does not have rights to another language mutation, the website will be created anyway.
 
-If the currently stored page already has linked pages, as for a directory, the correctness of the parent directory and the ordering priority is verified.
+If the currently saved page already has linked pages, similarly to a directory, the correctness of the parent directory and arrangement priorities is verified.
 
-Deleting a page is detected in `SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)`. In an event `WebjetEventType.AFTER_DELETE` the list of mirrored pages is retrieved and the `DeleteServlet.deleteDoc`.
+A page deletion is detected at ```SaveListener.handleDocSave(final WebjetEvent<DocDetails> event)```. On event ```WebjetEventType.AFTER_DELETE```, a list of mirrored pages is obtained and ```DeleteServlet.deleteDoc``` is called.
 
-## Enforcing the restoration of the tree structure
+## Forcing tree structure to be restored
 
-If a change in the structure requires the tree structure to be restored, an attribute can be set in the events:
+If a change in the structure requires a tree structure to be restored, the following attribute can be set in the events:
 
 ```java
 RequestBean.setAttribute("forceReloadTree", Boolean.TRUE);
 ```
 
-This is then verified in the REST services after the save is complete and the tree structure restore is invoked. Calling via `RequestBean` has been used on the ground that it is available throughout the `requestu` and is statically available.
+This is then validated in the REST services after the save is complete and a tree structure refresh is invoked. The call via ```RequestBean``` was used because it is available throughout ```requestu``` and is statically available.

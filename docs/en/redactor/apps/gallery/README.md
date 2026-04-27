@@ -1,153 +1,172 @@
 # Gallery
 
-The gallery app allows you to create a photo gallery in an easy way. Just upload pictures from your digital camera to the gallery. WebJET will automatically reduce the photos to the desired format. 3 copies are created from each photo:
-- Thumbnail image - small resolution photo, approx. 160x120 pixels, used in the image list
-- Image in normal resolution - photo in resolution for a normal monitor, i.e. about 600x400 pixels - this photo will be displayed after clicking on the preview image
-- Original photo - primarily serves as a copy of the uploaded photo for the possibility of resizing smaller images. However, depending on the gallery settings, the original photo can be downloaded to get the best quality version.
+The gallery application allows you to easily create a photo gallery. Just upload images from your digital camera to the gallery. WebJET automatically reduces the photos to the desired format. The supported formats are `JPG`, `JPEG`, `GIF`, `PNG` and `WebP`. 3 copies are created for each photo:
 
-The dimensions of the thumbnail image and the normal resolution image can be set in the folder properties and possibly changed at any time (the images are automatically generated from the original photo).
+- Preview image - a photo in low resolution, approximately 160x120 pixels, used in the image list
+- Image in normal resolution – photo in resolution for a normal monitor, i.e. approx. 600x400 pixels – this photo will be displayed after clicking on the preview image
+- Original photo – primarily serves as a copy of the uploaded photo for the possibility of regenerating the dimensions of smaller images. However, depending on the gallery settings, it is possible to download the original photo to obtain the highest quality version.
 
-## Working with the gallery application
+The dimensions of the preview image and the image in regular resolution can be set in the folder properties and changed at any time (the images are automatically generated from the original photo).
 
-The gallery administration is divided into two columns, similarly to the website. In the first one is the folder structure and in the second one the photos themselves are displayed. The icons for adding, editing, deleting, etc. refer to the corresponding column.
+## Working with the Gallery app
+
+The gallery administration is divided into two columns, similar to a website. The first column contains the folder structure, and the second column displays the photos themselves. The icons for adding, editing, deleting, etc. are related to the respective column.
 
 ![](admin-dt.png)
 
-In the tree structure it is possible to [Search](../../webpages/README.md#search-in-tree-structure) similar to the website. Only folders stored in the database are searched, i.e. those with a full icon <i class="ti ti-folder-filled" role="presentation" ></i>.
+You can [search](../../webpages/README.md#searching-in-the-tree-structure) in the tree structure, just like you would in a web page. Only folders stored in the database, i.e. those with a full icon, are searched.<i class="ti ti-folder-filled" role="presentation"></i> .
 
 ### Structure management
 
-In the folders column, you can browse and add/edit/delete a folder of the gallery tree structure.
+In the folders column, you can browse and add/edit/delete a folder in the gallery tree structure. For more information, see [Structure Management](structure.md).
 
 ![](admin-edit-group.png)
 
-Among others, the folder settings contain the following fields:
-- Gallery name - the name of the gallery, when created, a folder will be created by this name. For an already created gallery if you change the name the files will remain in the original folder, this name is only "virtual".
-- Method of resizing
-  - Customized display - the image size is set so that the dimension does not exceed the set size
-  - Crop to fit - the image is cropped to fill the specified dimensions, and if the aspect ratio doesn't match it is cropped.
-  - Exact size - the image size is set exactly according to the folder, if the aspect ratio is different the image will be deformed.
-  - Exact width - the image size uses the specified width and calculates the height according to the aspect ratio. However, the height can be larger than the specified dimension.
-  - Exact height - the image size uses the specified height and calculates the width according to the aspect ratio. However, the width can be larger than the specified dimension.
-  - Do not generate thumbnails - the gallery will only use the original image and will not generate thumbnail images. Thumbnail images can then be generated as needed using `/thumb` prefix.
-
-In the Watermark tab, you can set up the brand/logo to be inserted into the image as a watermark. It is also possible to use a vector SVG image whose size is adjusted to the size of the generated image according to the setting in the conf. variable `galleryWatermarkSvgSizePercent` a `galleryWatermarkSvgMinHeight`.
-
-Folders will be displayed in the tree structure:
-- z `/images/gallery`.
-- z `/images/{PRIECINOK}/gallery` While `{PRIECINOK}` is any folder. If for some reason you need to separate a gallery for a project/micro-site.
-- from the database table `gallery_dimension` there is an entry with the gallery dimension setting for the path in the column `image_path` (but that starts at /images).
-
-When using domain aliases (conf. variable set `multiDomainAlias:www.domena.com=ALIAS`), the folder is displayed/opened by default `/images/ALIAS/gallery`. For backward compatibility, other gallery folders (e.g. `/images/gallery`), but those that contain the domain alias of another domain in the folder name will not be displayed.
-
-Folders have the following icons:
-- <i class="ti ti-folder-filled" role="presentation" ></i> full folder icon = standard folder, has gallery dimensions set
-- <i class="ti ti-folder" role="presentation" ></i> empty folder icon = folder does not have gallery dimensions set, typically it is `{PRIECINOK}`, see above.
-
 ### Photo management
 
-Upload new photos to the gallery by clicking the Add icon in the Images column (hold down the CTRL key to select more images) or by dragging and dropping them directly from your computer.
+You can upload new photos to the gallery by clicking the Add icon in the Images column (hold down the CTRL key to select multiple images) or by dragging them directly from your computer.
 
-The toolbar contains icons `SML` to set the size of the displayed photos (their size is changed only for display in the administration), or the last option displays the images in a standard table, where you can e.g. use the Edit Cell function.
+The toolbar contains icons `SML` to set the size of the displayed photos (their size changes only for display in the administration), or the last option displays the images in a standard table, where you can, for example, use the Edit cell function.
 
 ![](admin-toolbar-photo.png)
 
-Click on the photo to select it, then you can select the function by clicking on the toolbar (edit, delete, view, rotate...). You can click directly on the file name to quickly view the editor.
+Click on the photo to select it, then you can select a function by clicking on the toolbar (edit, delete, view, rotate...). You can click directly on the file name to quickly display the editor.
 
 The editor contains the following tabs:
 
 **Description**
 
-Short and long description of the photo in different languages.
+Short and long description of the photo in different language variants.
 
-These descriptions are important for international users. A short description gives a quick preview of the content of the photo, while a long description provides more detailed information. The descriptions are automatically displayed according to the selected language of the page.
+These descriptions are important for international users. A short description provides a quick overview of the photo's content, while a long description provides more detailed information. The descriptions are automatically displayed based on the selected page language.
 
 ![](description-preview.png)
 
 **Metadata**
 
-Includes additional data:
-- **File name**: Unique file name of the photo that allows its identification in the system.
-- **Folder**: The path or location within the repository where the photo is stored. Helps to organize and search for photos.
-- **Author**: Name or pseudonym of the person who took the photo.
-- **Date uploaded**: The date and time the photo was uploaded to the system. It helps to keep track of the chronology and allows you to search for photos by the time they were uploaded.
-- **Priority**: A level of importance or preference that can be used to arrange photos in the gallery. A lower priority means that the photo will be displayed in a more prominent position.
-- **URL of the image source**: URL from where we got the image.
+Contains additional data:
+
+- **File name**: The unique file name of the photo that allows it to be identified in the system.
+- **Folder**: The path or location within storage where a photo is stored. Helps organize and search for photos.
+- **Author**: Name or pseudonym of the person who created the photo.
+- **Date Uploaded**: The date and time the photo was uploaded to the system. Helps track the chronology and allows you to search for photos by the time they were uploaded.
+- **Priority**: A level of importance or preference that can be used to organize photos in the gallery. A lower priority means the photo will be displayed in more prominent places.
+- **Image source URL**: The URL from which we obtained the image.
 
 ![](metadata-preview.png)
 
 **Image Editor**
 
-Includes an image editor where you can easily rotate, crop, resize, add text and apply various effects, more info [in the Image Editor](../../image-editor/README.md)
+It contains an image editor where you can easily rotate, crop, resize, add text and apply various effects to your photo, more info [in the Image Editor section](../../image-editor/README.md)
 
 ![](../../image-editor/editor-preview.png)
 
-**Area of interest**
+**Area of ​​interest**
 
-Sets [area of interest](../../../frontend/thumb-servlet/interest-point.md) on the photo for displaying e.g. in the news list etc.
+Sets the [area of ​​interest](../../../frontend/thumb-servlet/interest-point.md) on the photo for display, e.g. in the news list and the like.
 
-This is used when we need to have the original photo, but only show a certain crop from it - we don't crop the photo, we just set the area of interest.
+It is used if we need to have the original photo, but only display a certain section of it - we do not crop the photo, but only set the area of ​​interest.
 
 ![](area_of_interest-preview.png)
 
-## Embedding an application in a web page
+## Embedding an application into a website
 
-Embedding a gallery into a page is also very easy. You select the gallery application. In the "Application Parameters" tab, just specify the directory where the gallery images are located, the ability to browse subdirectories, the number of images on the page, etc.
+Inserting a gallery into a page is also very easy. You select the gallery application. In the "Application Parameters" tab, you just need to specify the directory where the gallery images are located, the ability to browse subdirectories, the number of images per page, etc.
 
 ![](editor-dialog.png)
 
 You have the option to choose the visual style of the gallery:
-- `Photo Swipe` - Responsive gallery with the ability to scroll photos with your finger, compatible with mobile devices.
-- `PrettyPhoto` - older version of the view, scrolling photos is solved by clicking on the left/right arrow icon.
+
+- `Photo Swipe` - ​​responsive gallery with the ability to scroll photos with your finger, compatible with mobile devices.
+- `PrettyPhoto` - ​​older version of the display, moving photos is done by clicking on the left/right arrow icon.
 
 The "Photos" tab is used to add more photos to the gallery or create a new folder.
 
-For each photo you can set a title and perex (long description/annotation) in the administration. The title can be displayed when the image is in the list, and the perex when the large image is displayed (after clicking on the image in the list).
+For each photo, you can set a name and a caption (long description/annotation) in the administration. The name can be displayed next to the image in the list and when viewing the large image (after clicking on the image in the list).
 
-The resulting gallery on the web page may look like this:
+The resulting gallery on the website may look like this:
 
 ![](photoswipe.png)
 
-## Move image
+## Moving an image
 
-By changing the value **Folder** in charts **Metadata** a storage change occurs within the repository. You can change the folder both when editing and when duplicating an image. You can select the destination folder via the selection window, or you can specify the path directly. The path must **always** start at `/images/gallery`. This functionality is useful when moving, as the gallery does not support action `drag&drop`.
+Changing the **Folder** value in the **Metadata** tab will change the storage location within the repository. You can change the folder when editing or duplicating an image. You can select the target folder via the selection window, or you can enter the path directly. The path must **always** start with `/images/gallery`. This functionality is useful when moving, as the gallery does not support the `drag&drop` action.
 
-If the specified folder does not already exist, it will be created automatically. The properties of the created folder are set according to the nearest parent folder. This also works for several levels at the same time, so that an entire nesting tree can be created automatically.
+If the specified folder does not yet exist, it will be created automatically. The properties of the created folder will be set according to the nearest parent folder. This also works for several levels at once, so an entire nesting tree can be created automatically.
 
 ## Possible configuration variables
 
-- `imageMagickDir` - If set, the command is used to resize the images `convert` from the package `ImageMagick` (default value: `/usr/bin`).
-- `galleryAlwaysUseImageMagick` - if set to `true`, the resizing of images < 500 pixels will also be done by calling an external program `ImageMagick` (default value: `true`).
-- `galleryWatermarkSaturation` - Adjusts the transparency of the watermark in the resulting image. Number 0-100, 0 means full transparency, 100 means opacity. (default value: 70).
-- `galleryWatermarkGravity` - The position of the watermark in the resulting image. Options by cardinal directions in English: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast` (default value: `Center`).
-- `galleryEnableWatermarking` - Turns off/on watermarking for images. Watermarking can significantly slow down large image imports due to recursive searching for watermark settings. (Default: `true`).
-- `galleryEnableExifDate` - When a photo is uploaded, the creation date is obtained as its date from `exif` information, to turn it off you need to set this variable to false (default value: `true`).
-- `galleryStripExif` - If it is set to `true` so they are removed from the photo `exif` information, it is primarily about its rotation for correct display of scales (default value: `true`).
-- `galleryImageQuality` - Image quality parameter for conversion via `ImageMagick`, shall be written in the format `šírka_px:kvalita;šírka_px:kvalita`, e.g. `0:30;100:50;400:70`, the best or end interval is used (default value:).
-- `galleryVideoMode` - Video conversion mode settings for photo gallery, possible values: `all`=both small and large video will be generated, `big`=only a large video will be generated, `small`=only a small video is generated (default value: `big`).
-- `thumbServletCacheDir` - Path to the cache directory `/thumb` images, for a server with a high number of images we recommend moving it to a location other than /WEB-INF/ for the sake of application server startup speed (default: `/WEB-INF/imgcache/`).
-- `defaultVideoWidth` - Preset video width (default value: `854`).
-- `defaultVideoHeight` - Preset video height (default value: `480`).
-- `defaultVideoBitrate` - Preset `bitrate` video (default value: `2048`).
-- `galleryConvertCmykToRgb` - If it is set to `true` so it detects if the photo is in `CMYK` and if so, it is converted to RGB (default value: `false`).
-- `galleryConvertCmykToRgbInputProfilePath` - Path (RealPath) to the entrance fee `ICC` profile on disk (default value:).
-- `galleryConvertCmykToRgbOutputProfilePath` - The path (RealPath) to the output `ICC` profile on disk (default value:).
-- `galleryUseFastLoading` - If it is set to `true` will be used for the gallery listing simplified file test, speeds up the display on network file systems (default value: `false`).
-- `galleryCacheResultMinutes` - Number of minutes during which the list of images in the gallery is cached, the change is detected by the change of the directory date (available only on Linux OS) (default value: 0).
-- `imageAlwaysCreateGalleryBean` - If it is switched on `true` will be the record in `gallery` DB table to create also for images outside the photo gallery (default value: false).
-- `galleryUploadDirVirtualPath` - if set to `true` the URL of the web page is used as the directory for file upload (normally only the directory structure without the web page name is used) (default value: false).
-- `wjImageViewer` - To configure the display type of the preview image embedded in the page, you can `wjimageviewer` or `photoswipe` (default: photoswipe).
-- `galleryWatermarkApplyOnUpload` - Used to automatically apply watermarks when images are uploaded to the gallery (default: false).
-- `galleryWatermarkApplyOnUploadDir` - Directory where images are placed for automatic watermarking when uploaded. The name of the image must be `default.png`, with multidomain is the ability to have for each domain a different, in your face `doména.png` (e.g. `www.interway.sk.png`) (default value: `/templates/{INSTALL_NAME}/assets/watermark/`).
-- `galleryWatermarkApplyOnUploadExceptions` - List of path names for which the watermark will not be applied when the file is uploaded to WebJET (default value: `logo,nowatermark,system,funkcionari`).
-- `galleryWatermarkSvgSizePercent` - The height in percentage that the SVG watermark will occupy of the image height (default value: 5).
-- `galleryWatermarkSvgMinHeight` - Minimum SVG watermark height in pixels (default: 30).
+- `imageMagickDir` - ​​If set, `ImageMagick` will be used to resize images. The system first looks for the command `magick` (version 7), if it does not exist, `convert` (version 6) will be used (default value: `/usr/bin`).
+- `galleryWatermarkSaturation` - ​​Sets the transparency of the watermark in the resulting image. Number 0-100, 0 means full transparency, 100 opacity. (default value: 70).
+- `galleryWatermarkGravity` - ​​Position of the watermark in the resulting image. Options according to the cardinal points in English: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast` (default value: `Center`).
+- `galleryEnableWatermarking` - ​​Disables/enables watermarking for images. Watermarking can significantly slow down large image imports due to recursively searching for watermark settings. (default: `true`).
+- `galleryEnableExifDate` - ​​When uploading a photo, the date of creation is obtained from `exif` information, to disable it, you need to set this variable to false (default value: `true`).
+- `galleryStripExif` - ​​If set to `true`, `exif` information is removed from the photo, primarily rotating it to display thumbnails correctly (default value: `true`).
+- `galleryImageQuality` - ​​Image quality parameter for conversion via `ImageMagick`, written in the format `šírka_px:kvalita;šírka_px:kvalita`, i.e. `0:30;100:50;400:70`, the best or end interval is used (default value:).
+- `galleryVideoMode` - ​​Setting the video conversion mode for the photo gallery, possible values: `all`=both small and large videos are generated, `big`=only large videos are generated, `small`=only small videos are generated (default value: `big`).
+- `thumbServletCacheDir` - ​​Path to the directory for the image cache `/thumb`, for a server with a large number of images, we recommend moving it to a location other than /WEB-INF/ to speed up the application server startup (default value: `/WEB-INF/imgcache/`).
+- `defaultVideoWidth` - ​​Preset video width (default: `854`).
+- `defaultVideoHeight` - ​​Preset video height (default: `480`).
+- `defaultVideoBitrate` - ​​Preset `bitrate` video (default: `2048`).
+- `galleryConvertCmykToRgb` - ​​If set to `true`, it checks if the photo is in `CMYK` and if so, it is converted to RGB (default value: `false`).
+- `galleryConvertCmykToRgbInputProfilePath` - ​​Path (RealPath) to the input `ICC` profile on disk (default value:).
+- `galleryConvertCmykToRgbOutputProfilePath` - ​​Path (RealPath) to the output `ICC` profile on disk (default value:).
+- `galleryUseFastLoading` - ​​If set to `true`, a simplified file test is used for gallery listing, speeding up display on network file systems (default value: `false`).
+- `galleryCacheResultMinutes` - ​​Number of minutes during which the list of images in the gallery is cached, the change is detected according to the directory change date (available only on Linux OS) (default value: 0).
+- `imageAlwaysCreateGalleryBean` - ​​If enabled on `true`, a record in the `gallery` DB table will also be created for images outside the photo gallery (default value: false).
+- `galleryUploadDirVirtualPath` - ​​if set to `true`, the URL of the website will be used as the directory for uploading files (normally only the directory structure without the website name is used) (default value: false).
+- `wjImageViewer` - ​​Configures the type of preview display of the image inserted into the page, can be `wjimageviewer` or `photoswipe` (default value: photoswipe).
+- `galleryWatermarkApplyOnUpload` - ​​Used to automatically apply a watermark when uploading images to the gallery (default value: false).
+- `galleryWatermarkApplyOnUploadDir` - ​​Directory where images for automatic watermarking are placed when uploading. The image name must be `default.png`, with multidomain it is possible to have a different one for each domain, in the form of `doména.png` (e.g. `www.interway.sk.png`) (default value: `/templates/{INSTALL_NAME}/assets/watermark/`).
+- `galleryWatermarkApplyOnUploadExceptions` - ​​List of path names for which a watermark will not be applied when uploading a file to WebJET (default value: `logo,nowatermark,system,funkcionari`).
+- `galleryWatermarkSvgSizePercent` - ​​The height in percentage that the SVG watermark will occupy from the image height (default value: 5).
+- `galleryWatermarkSvgMinHeight` - ​​Minimum height of the SVG watermark in points (default: 30).
 
-### Reduce the dimensions of the original image
+### ImageMagick custom parameters
 
-If the original image is taking up a lot of disk space, you can set it to shrink on upload using configuration variables:
-- `metadataRemoverCommand` - if set, the removal of metadata from uploaded files is activated, or `imageMagick` to reduce the size - set to `/usr/bin/convert`.
-- `metadataRemoverParams` - parameters, to shrink the image via `imageMagick` set to `{filePath} -resize 1920x1080 {filePath}`. Adjust the size as required.
-- `metadataRemoverExtensions` - suffixes for which it will be used, for images set to `jpg,jpeg,png,gif`.
+When performing image operations via `ImageMagick` (resizing, cropping, rotating), you can set your own parameters using configuration variables. The parameters are written in command line format, e.g. `-strip -interlace Plane -quality 85`.
 
-The tool is required `ImageMagick` on the server.
+The value of a configuration variable can contain **two lines** separated by a newline:
+
+- **Line 1** - parameters inserted **before the operation** (after the input file), e.g. `-filter Lanczos`
+- **Line 2** - parameters inserted **after the operation** (before the output file), e.g. `-define png:compression-level=9`
+
+If only one line is specified (without a newline), all parameters are inserted before the operation.
+
+Example of the resulting command with two lines:
+
+```sh
+magick vstup.png -filter Lanczos -strip -resize 640x427! -interlace Plane -sampling-factor 4:2:0 vystup.png
+            ↑ riadok 1 (pred operáciou)                   ↑ riadok 2 (za operáciou)
+```
+
+- `imageMagickCustomParams` - ​​Basic custom parameters for all `ImageMagick` operations. They will be used if a more specific parameter for the given operation or format is not set (default value: `-filter Lanczos` line 1, `-interlace Plane -sampling-factor 4:2:0 -unsharp 2x0.5+0.5+0` line 2).
+- `imageMagickCustomParams_resize` - ​​Custom parameters for the resize operation (default value: ).
+- `imageMagickCustomParams_crop` - ​​Custom parameters for the crop operation (default value: ).
+- `imageMagickCustomParams_rotate` - ​​Custom parameters for the rotation operation (default value: ).
+- `imageMagickCustomParams_jpg` - ​​Custom parameters for format `JPG` (default value: `-define jpeg:optimize-coding=true` on line 2).
+- `imageMagickCustomParams_png` - ​​Custom parameters for format `PNG` (default value: `-define png:compression-level=9 -define png:compression-strategy=1` on line 2).
+- `imageMagickCustomParams_webp` - ​​Custom parameters for WebP format (default value: `-quality 80 -define webp:method=6 -define webp:auto-filter=true -define webp:sns-strength=50` on line 2).
+
+**Parameter search order:**
+
+The system searches for settings in the following order of specificity (using the example of operation `resize` for format `jpg`):
+
+1. `imageMagickCustomParams_resize_jpg` - ​​most specific, for a specific operation and format
+2. If not set, `imageMagickCustomParams_resize` (operation parameters) + `imageMagickCustomParams_jpg` (format parameters) are searched for - these are **combined** (joined) line by line
+3. If not set for the operation either, `imageMagickCustomParams` (basic parameters) + `imageMagickCustomParams_jpg` (format parameters) will be used
+
+When combining parameters, the rows are combined separately - row 1 of the basic parameters is combined with row 1 of the format parameters, and so is row 2.
+
+If the custom parameters contain the `compression-level` or `quality` setting, any existing `-quality` parameter will be automatically removed from the command to avoid a conflict.
+
+### Reducing the size of the original image
+
+If the original image takes up a lot of disk space, it is possible to set its size to be reduced during upload using configuration variables:
+
+- `metadataRemoverCommand` - ​​if set, metadata removal from uploaded files is activated, or `imageMagick` is used to reduce the size - set to `/usr/bin/convert`.
+- `metadataRemoverParams` - ​​parameters, to reduce the image via `imageMagick` set to `{filePath} -resize 1920x1080 {filePath}`. Adjust the size as needed.
+- `metadataRemoverExtensions` - ​​extensions to use, set to `jpg,jpeg,png,gif` for images.
+- `metadataRemoveMinFileSize` - ​​minimum file size in bytes below which metadata removal is skipped. If the value is `0` or not set, the check is not performed and metadata is always removed.
+
+The `ImageMagick` tool on the server is required.

@@ -331,15 +331,21 @@ export class WebPagesDatatable {
             method: "GET",
             success: function(json) {
                 //console.log("Edit JSON", json);
-                let oldJson = self.webpagesDatatable.row("#"+docId).data();
-                self.webpagesDatatable.row("#"+docId).data(json);
-                self.webpagesDatatable.EDITOR.setJson(json);
+
                 //v bubble editacii neotvorme editor, len nastavme data
-                if ("bubble"!==self.webpagesDatatable.EDITOR.s.mode) self.webpagesDatatable.wjEdit(self.webpagesDatatable.row("#"+docId));
-                setTimeout(function() {
-                    //console.log("returning oldJson=", oldJson);
-                    self.webpagesDatatable.row("#"+docId).data(oldJson);
-                }, 100);
+                if ("bubble"!==self.webpagesDatatable.EDITOR.s.mode) {
+                    //console.log("Opening editor for history edit, data=", self.webpagesDatatable.row("#"+docId));
+                    //this must be before set data to first set CSS styles in editor
+                    webpagesDatatable.EDITOR.field("data").setJson(json);
+                }
+
+                // this will set ALL input fields from JSON value
+                // it is different function as webpagesDatatable.EDITOR.field("data").setJson(json)
+                self.webpagesDatatable.EDITOR.setJson(json);
+
+                //show content tab
+                $("#pills-dt-datatableInit-content-tab").trigger("click");
+
             }
         })
     }
@@ -672,8 +678,12 @@ export class WebPagesDatatable {
     #publishAfterStartChanged() {
         var publishAfterStart = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
         var primaryButton= $("#" + this.webpagesDatatable.DATA.id + "_modal .DTE_Footer .DTE_Form_Buttons button.btn-primary");
+        //it's not loaded on second open, but it is reseted by DTE, so we need to check the button value
+        if (primaryButton.length == 0) return;
         //set editor submit button to save or plan according to checkbox state
         var currentHtml = primaryButton.html();
+        if (typeof currentHtml == "undefined") return;
+
         //only change when is is save or schedule, it also can be delete or duplicate
         if (currentHtml.indexOf(WJ.translate("button.schedule"))>=0 || currentHtml.indexOf(WJ.translate('button.save'))>=0) {
             if (publishAfterStart === true) {

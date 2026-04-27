@@ -1,14 +1,15 @@
-# Contact
+# Contacts
 
-[Sample application for programmers](../../../custom-apps/spring-mvc/README.md) with a list of contacts
+[Sample application for programmers](../../../custom-apps/spring-mvc/README.md) with contact list
 
 ## Application settings
 
-In this section it is possible to set:
-- Landscape
+In this section you can set:
+
+- Country
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](contact.png)

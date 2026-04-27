@@ -1,14 +1,15 @@
 # Blocks
 
-Page Builder also includes inserting prepared blocks. Their list is automatically loaded from the directory `/templates/INSTALL_NAME/skupina_sablon/menosablony/pagebuilder`. **We always recommend preparing a set of blocks for the template.**
+Page Builder also includes the ability to insert ready-made blocks. Their list is automatically loaded from the ```/templates/INSTALL_NAME/skupina_sablon/menosablony/pagebuilder``` directory. **We always recommend preparing a set of blocks for the template.**
 
-You can have the following subdirectories in the root directory for blocks:
-- `section` - for section blocks (blue marking in Page Builder)
-- `container` - for containers (red marking in Page Builder)
-- `column` - for columns (green label in Page Builder)
-- `content` - for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
+In the root directory for blocks, you can have the following subdirectories:
 
-In each of these subdirectories you still need to create **block groups as additional subdirectories**, e.g. `Contact, Features`. Only in these subdirectories you create individual HTML blocks. An example is the directory structure:
+- ```section``` - ​​for section blocks (blue marking in Page Builder)
+- ```container``` - ​​for containers (red marking in Page Builder)
+- ```column``` - ​​for columns (green marking in Page Builder)
+- ```content``` - ​​for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
+
+In each of these subdirectories, you need to create **block groups as additional subdirectories**, e.g. ```Contact, Features```. Only in these subdirectories do you create individual HTML blocks. An example of this is the directory structure:
 
 ```java
 - section
@@ -41,9 +42,9 @@ In each of these subdirectories you still need to create **block groups as addit
     - contactus.html
 ```
 
-## Block name and marks
+## Block name and tags
 
-If you want to have a nice block name in the block list, you can create a file `pagebuilder.properties` in encoding `utf-8` in the appropriate subdirectory of the block group (e.g. in `section/Contact/pagebuilder.properties`). In it, you can define the block group name, icon, and tags (tags) for searching:
+If you want to have a nice block name in the block list, you can create a file `pagebuilder.properties` in the encoding `utf-8` in the corresponding subdirectory of the block group (e.g. in `section/Contact/pagebuilder.properties`). In it, you can define the block group name, icon and search tags:
 
 ```properties
 title=Základné prvky
@@ -55,7 +56,7 @@ title.Citat_v2=Citát v2
 
 You can also create language versions of the file, e.g. `pagebuilder_en.properties`.
 
-If you use `pug` format, so in the file `build-pug.js` check/complete the condition so that it is also transferred `.properties` file for blocks:
+If you are using the `pug` format, check/add the condition in the `build-pug.js` file so that the `.properties` file for blocks is also transferred:
 
 ```javascript
   } else if (
@@ -64,17 +65,17 @@ If you use `pug` format, so in the file `build-pug.js` check/complete the condit
   )
 ```
 
-## Setting the width of the columns
+## Setting column widths
 
-The editor allows you to adjust the column widths according to the selected device. In the toolbar, next to the editor type toggle, there is an option to set the size (width) of the device.
+The editor allows you to set column widths according to the selected device. In the toolbar next to the editor type switch, there is an option to set the device size (width).
 
 ![](../../redactor/webpages/pagebuilder-switcher.png)
 
-- Desktop - is for width greater/equal to 1200 pixels (sets the CSS class `col-xl`).
-- Tablet - is designed for width 768-1199 pixels (sets CSS class `col-md`)
-- Mobile - is for width less than 768 pixels (sets CSS class `col-`)
+- Desktop - is intended for a width greater than/equal to 1200 points (sets the CSS class ```col-xl```).
+- Tablet - is designed for a width of 768-1199 points (sets the CSS class ```col-md```)
+- Mobile - is intended for widths less than 768 points (sets CSS class ```col-```)
 
-The correct block setting includes all preset widths, e.g. `col-12 col-md-6 col-xl-3`:
+The correct block setup includes all widths preset, e.g. `col-12 col-md-6 col-xl-3`:
 
 ```html
 <section>
@@ -120,57 +121,59 @@ The correct block setting includes all preset widths, e.g. `col-12 col-md-6 col-
 
 ## Thymeleaf code support
 
-It is important to note that the blocks are inserted into the page without executing the Thymeleaf code (technically the code is inserted directly from the html file into the editor). However, the following thymeleaf attributes are currently supported during insertion:
-- `data-iwcm-write` - to support application insertion
-- `data-iwcm-remove` - to support application insertion
-- `data-th-src` - inserting an image
-- `data-th-href` - inserting a link
+It is important to note that blocks are inserted into the page without executing the Thymeleaf code (technically, the code is inserted directly from the html file into the editor). However, the following thymeleaf attributes are currently supported when inserting:
 
-At the same time, the following ninja objects are executed during insertion (written e.g. as `src="./assets/images/logo.png" data-th-src="${ninja.temp.basePathImg}logo.png"`):
-- `${ninja.temp.basePath}`
-- `${ninja.temp.basePathAssets}`
-- `${ninja.temp.basePathCss}`
-- `${ninja.temp.basePathJs}`
-- `${ninja.temp.basePathPlugins}`
-- `${ninja.temp.basePathImg}`
+- ```data-iwcm-write``` - ​​for application embedding support
+- ```data-iwcm-remove``` - ​​for application embedding support
+- ```data-th-src``` - ​​inserting an image
+- ```data-th-href``` - ​​inserting a link
 
-If you need other Thymeleaf tags made for your work, you can send us a request via the Feedback function on the administration homepage.
+At the same time, the following ninja objects are executed during insertion (written, for example, as ```src="./assets/images/logo.png" data-th-src="${ninja.temp.basePathImg}logo.png"```):
+
+- ```${ninja.temp.basePath}```
+- ```${ninja.temp.basePathAssets}```
+- ```${ninja.temp.basePathCss}```
+- ```${ninja.temp.basePathJs}```
+- ```${ninja.temp.basePathPlugins}```
+- ```${ninja.temp.basePathImg}```
+
+If you need other Thymeleaf tags for your work, you can send us a request via the Feedback function on the administration homepage.
 
 ## Generating preview images
 
-Note that for each HTML block there is also an image with the same name. If it exists, it will appear in Page Builder in the block list as a block image. The images can be prepared manually, but can also be automatically generated by calling a script `/components/grideditor/phantom/generator.jsp`.
+Note that for each HTML block there is also an image with the same name. If it exists, it will appear in the Page Builder in the list of blocks as the block image. Images can be prepared manually, but can also be generated automatically by calling the ```/components/grideditor/phantom/generator.jsp``` script.
 
-The script inserts individual blocks into the specified JSP template with a simulation of the specified `docid` and creates screenshots. Requires an installed program [PhantomJS](https://phantomjs.org) and in the configuration variable `grideditorPhantomjsPath` set path to the directory where the `PhantomJS` installed.
+The script inserts individual blocks into the specified JSP template simulating the specified ```docid``` and creates screenshots. It requires the installed program [PhantomJS](https://phantomjs.org) and the path to the directory where ```grideditorPhantomjsPath``` is installed in the configuration variable ```PhantomJS```.
 
 ## Common blocks
 
-Unfortunately there is currently no option to nest blocks inside each other. There may be a requirement to insert `section` a block containing a certain `container` block, while it is necessary to be able to insert also the same `container` block separately. In this case, duplication of the HTML code of the blocks in the directory `section` Also `container`.
+Unfortunately, there is currently no option to nest blocks. There may be a requirement to insert a ```section``` block containing a certain ```container``` block, while it is necessary to be able to insert the same ```container``` block separately. In this case, there is a duplication of HTML code of blocks in both the ```section``` and ```container``` directories.
 
-We recommend to generate blocks using [PugJS](https://pugjs.org).
+We recommend generating blocks using [PugJS](https://pugjs.org).
 
-## CSS classes for image
+## CSS classes for an image
 
-If the image has a CSS class set `fixedSize-w-h-ip` the specified dimension is set automatically after changing the image address `w` a `h` if the last entry is also entered `ip` is also set [point of interest](../../frontend/thumb-servlet/README.md). E.g. CSS class `fixedSize-160-160-5` automatically generates a 160 x 160 pixel image with a set point of interest of 5. We recommend setting the class to all illustration images where the size is important.
+If the image has the CSS class ```fixedSize-w-h-ip``` set, the specified dimensions ```w``` and ```h``` are automatically set after changing the image address, if the last data ```ip``` is also specified, the [point of interest](../../frontend/thumb-servlet/README.md) is also set. For example, the CSS class ```fixedSize-160-160-5``` automatically generates an image of size 160 x 160 pixels with a set point of interest of 5. We recommend setting the class to all illustrative images where their size is important.
 
-When you click on an image with CSS class `fixedSize/w-100/autoimg` will immediately open the image properties window for easy replacement. This way the editor does not have to click on the image and then on the change image icon in the toolbar.
+When clicking on an image with the CSS class ```fixedSize/w-100/autoimg```, the image properties window will immediately open for easy replacement. This way, the editor does not have to click on the image and then click the change image icon in the toolbar.
 
-If the image contains the phrase in the URL `placeholder` or `stock` the dialog box for selecting an image will not open in the folder containing that image, but in the Media folder of this page. This allows the user to easily upload a new image.
+If an image contains the expression `placeholder` or `stock` in the URL, the image selection dialog will not open to the folder containing that image, but to the Media folder of this page. This allows the user to easily upload a new image.
 
 ## Card support
 
-For convenient editing of cards (`tabs`) is supported to generate them automatically from HTML structure. Each tab is represented by a container. Containers can be easily duplicated and moved, and tabs are automatically generated from their contents.
+For convenient editing of cards (```tabs```), their automatic generation from HTML structure is supported. Each card is represented by a container. Containers can be easily duplicated and moved, cards are automatically generated from their content.
 
-Element `UL` should be marked with CSS class `pb-autotabs`. JavaScript code in the file `/admin/webpages/page-builder/scripts/pagesupport.js` ensure card generation after adding an element / every 5 seconds. Takes the card name from `title` container attribute, or from an element with CSS class `pb-tab-title` (which is more convenient for editing).
+The ```UL``` element needs to be marked with the CSS class ```pb-autotabs```. The JavaScript code in the ```/admin/webpages/page-builder/scripts/pagesupport.js``` file will generate cards after adding the / element every 5 seconds. The card name is taken from the ```title``` container attribute, or from an element with the CSS class ```pb-tab-title``` (which is more convenient for editing).
 
-The tabs themselves are therefore not editable, they are generated automatically. Only the content is editable `tab` container. Note that in the sample code the UL element does not contain any `LI taby`, these will be generated automatically. They will remain in the HTML code afterwards and will also be saved correctly. The page will remain displaying the tab as it was displayed during editing (this is something to keep in mind).
+The cards themselves are not editable, they are generated automatically. Only the content of the ```tab``` container is editable. Note that in the sample code, the UL element does not contain any ```LI taby```, they are generated automatically. They will subsequently remain generated in the HTML code and will also be saved correctly. The card will remain displayed on the page as it was displayed during editing (this is something to keep in mind).
 
-The ID attributes of each card are generated automatically according to the card name. If you need to use a specific name it is possible to set a value in the HTML code `data-title` at `.tab-pane` element.
+The ID attributes of individual cards are generated automatically based on the card name. If you need to use a specific name, you can set the value `data-title` on the `.tab-pane` element in the HTML code.
 
-Note the use of the CSS class `pb-not-container` on the main container elements. This will ensure that this element will not be marked as a container and only the individual tabs will be considered containers. Each tab uses a CSS class `pb-custom-container`, which will ensure that the red frame/toolbar of the container is displayed.
+Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the red frame/toolbar of the container is displayed.
 
-When you select the tab move option (in the container toolbar), all tabs are automatically displayed so that you can easily mark the tab where to move it. This is provided by the CSS style of the Page Builder.
+When you select the tab move option (in the container toolbar), all tabs are automatically displayed so that you can easily mark the tab where to move it. This is provided by the Page Builder CSS style.
 
-Sample block code (in `section` directory):
+Sample block code (in the ```section``` directory):
 
 ```html
 <section>
@@ -225,9 +228,9 @@ Sample block code (in `section` directory):
 
 ## Accordion support
 
-`Accordion` works similarly to tabs, Page Builder ensures correct generation of necessary attributes and their automatic restoration when duplicating an item `accordion-u`. Functionality is linked to CSS class `pb-autoaccordion` and implemented similarly as for cards. Containers are used in a similar way.
+```Accordion``` pracuje podobne ako karty, Page Builder zabezpečí korektné vygenerovanie potrebných atribútov a ich automatickú obnovu pri zduplikovaní položky ```accordion-u```. Funkčnosť je napojená na CSS triedu ```pb-autoaccordion``` a implementovaná podobne ako pre karty. Podobne sa používajú aj kontajnery.
 
-Sample code:
+Ukážkový kód:
 
 ```html
 <section>
@@ -277,15 +280,15 @@ Sample code:
 </section>
 ```
 
-## Cards in accordion
+## Accordion cards
 
-When the requirement of inserting objects of the card type into the `accordion-u` it is possible to use the Page Builder property - it also indicates **nested containers**. It is necessary to consider what will be editable, how to duplicate individual items and so on. Practically, inserting cards into `accordion-ov` (which is a container) as the insertion of another `columnu` into the container (whereby the inserted `column` further contains nested containers of individual cards).
+When requesting the nesting of card-type objects into ```accordion-u```, it is possible to use the Page Builder property - it also indicates **nested containers**. It is necessary to consider what will be editable, how to duplicate individual items, etc. In practice, inserting cards into ```accordion-ov``` (which is a container) works like inserting another ```columnu``` into the container (whereas the inserted ```column``` further contains nested containers of individual cards).
 
-In the example, note that the main `column` has CSS style `pb-not-editable` not to be automatically editable by CK editor and at the same time CSS class `pb-always-mark`. A non-editable column is not marked with a green border by default, but without this option it would not be possible to add another column after the tabs, or to delete entire tabs (the column tools would not be available).
+In the example, note that the main ```column``` has the CSS style ```pb-not-editable``` so that it is automatically not editable by the CK editor and also the CSS class ```pb-always-mark```. A non-editable column is not marked with a green frame by default, but without this option it would not be possible to add another column after the tabs, or delete entire tabs (the column tools would not be available).
 
-When inserting HTML code containing an expression `container` as the object column is started `PageBuilder.mark_grid_elements();` to mark all elements (to display toolbars also for nested containers).
+When inserting HTML code containing the expression ```container``` as a column object, ```PageBuilder.mark_grid_elements();``` is executed to mark all elements (so that toolbars are displayed even for nested containers).
 
-Sample card code for accordion (in the column directory):
+Sample accordion card code (in the column directory):
 
 ```html
 <div class="col-12 pb-not-editable pb-always-mark">
@@ -321,7 +324,7 @@ Sample card code for accordion (in the column directory):
 </div>
 ```
 
-after inserting it, a structure of the type will be created in the web page:
+After insertion, the web page will have a structure like this:
 
 ```html
 <section>
@@ -384,17 +387,18 @@ after inserting it, a structure of the type will be created in the web page:
 
 ## Menu support
 
-PageBuilder can generate menu items into bootstrap menus, this is provided by `pbAutoMenu` v `pagesupport.js`. The menu item generates to `ul.pb-automenu` of all `section` elements in the web page. It works as follows:
+PageBuilder can generate menu items into bootstrap menu, this is provided by the `pbAutoMenu` function in `pagesupport.js`. It generates menu items into `ul.pb-automenu` from all `section` elements in the web page. It works as follows:
+
 - `section.pb-not-automenu` is omitted from the list.
 - The name of the menu item is taken from:
   - element with CSS style `.section-title`
-  - if not found is taken from `h1` element
-  - if not found, the attribute is taken `title` at `section` element
-- If the section is not set `id` attribute, is set by the section sequence number.
+  - if not found, it is taken from the `h1` element
+  - if not found, the attribute `title` on the `section` element is taken
+- If the section does not have the `id` attribute set, it is set according to the section's serial number.
 
-From the found data, entries are generated `li.nav-item` to `ul.pb-automenu`.
+Items `li.nav-item` to `ul.pb-automenu` will be generated from the found data.
 
-Sample block with menu:
+Sample menu block:
 
 ```html
 <section class="pb-not-automenu">
@@ -428,9 +432,9 @@ Sample block with menu:
 </section>
 ```
 
-In the demonstration, the elements `Home, Features, Pricing a Disabled` replace for the content in the PageBuilder page. The content is automatically updated when a section is added, deleted or moved in the web page. The title is updated every 5 seconds, so if you change the `h1` Wait a moment for the new version of the menu to be generated.
+In the example, the `Home, Features, Pricing a Disabled` elements are replaced with content in the PageBuilder page. The content is automatically updated when a section is added, deleted, or moved on the web page. The title is updated every 5 seconds, so if you change the `h1` title, please wait a moment for the new version of the menu to be generated.
 
-Complete HTML code sample web page with sample sections:
+Complete HTML code sample of the website with sample sections:
 
 ```html
 <section class="pb-not-automenu">
@@ -485,11 +489,11 @@ Complete HTML code sample web page with sample sections:
 </section>
 ```
 
-## Support JavaScript code
+## Supporting JavaScript code
 
-If you need a custom JavaScript support file (see above mentioned `pagesupport.js`), you can create a file `/components/INSTALL_NAME/admin/pagesupport-custom.js` which, if it exists, is loaded after the file `pagesupport.js`. You can add your own functions or modify standard existing functions from [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
+If you need your own JavaScript support file (see `pagesupport.js` mentioned above), you can create a file `/components/INSTALL_NAME/admin/pagesupport-custom.js`, which if it exists will be loaded after the file `pagesupport.js`. You can add your own functions, or modify the standard existing functions from [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-You can also adjust some settings such as color list, adjust CSS selectors, adjust width for different devices and so on. The following code is just a sample, paste it into a file `pagesupport-custom.js`:
+You can also edit some settings, such as the color list, edit CSS selectors, set width for different devices, etc. The following code is just a sample, paste it into the `pagesupport-custom.js` file:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
@@ -542,19 +546,110 @@ window.pbGetWindowSize = function(name) {
     //console.log("pbGetWindowSize, name=", name, "maxWidth=", maxWidth);
     return maxWidth;
 }
+
+/**
+
+- Customize tab menu in style dialog
+- @param {Object} me - page builder instance
+- @param {JSON} tabMenu - tab menu object
+- @returns {JSON} modified tab menu
+ */
+window.pbBuildTabMenu = function(me, tabMenu) {
+
+    console.log("pbBuildTabMenu called, me=", me, "tabMenu=", tabMenu);
+    //hide first main tab
+    tabMenu.tabs[0].visible = false;
+
+    //move item id=10 to the first position
+    var items = tabMenu.tabs[1].items;
+    const tab10Index = items.findIndex(tab => tab.id === "10");
+    if (tab10Index > -1) {
+        const [tab10] = items.splice(tab10Index, 1);
+        items.unshift(tab10);
+    }
+
+    //hide items 09,11,12
+    items.forEach(tab => {
+        if (["09", "11", "12"].includes(tab.id)) {
+            tab.visible = false;
+        }
+    });
+
+    return tabMenu;
+
+};
+```
+
+## Custom functions for cleaning HTML code
+
+If necessary, you can add your own function to clean up HTML code after pasting from Microsoft Office or when retrieving HTML code. Please note that the `wysiwygGetCallback` function can be called multiple times, it does not have to be just the final retrieval of HTML code before saving the page. At the same time, the page editor modifies HTML code, entities, etc., so it is advisable to clean up HTML code and replace characters/entities in the `wysiwygGetCallback` function as well.
+
+```javascript
+/**
+
+- Callback function to modify pasted HTML from word before it is inserted into editor
+- @param {*} html - pasted HTML code
+- @param {*} editor - editor instance
+- @returns
+ */
+window.afterPasteFromWordCallback = function(html, editor) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        console.log("afterPasteFromWordCallback called, html=", html, "editor=", editor);
+        //custom code to modify pasted html from word before it is inserted into editor
+    }
+    return html;
+};
+
+/**
+
+- Callback function to modify HTML code from editor before it is returned from get() method of wysiwyg field type
+- @param {*} html - HTML code from editor
+- @param {*} conf - configuration
+- @returns
+ */
+window.wysiwygGetCallback = function(html, conf) {
+    if (window.location.pathname == "/test-stavov/page-builder/style-test-osk.html") {
+        console.log("wysiwygGetCallback called, html=", html, "conf=", conf);
+        //custom code to modify html before it is returned from get() method of wysiwyg field type
+
+        const replacements = [
+            ['×', '&times;'],
+            ['„', '&bdquo;'],
+            ['“', '&ldquo;'],
+            ['”', '&rdquo;'],
+            ['‚', '&sbquo;'],
+            ['‘', '&lsquo;'],
+            ['’', '&rsquo;'],
+            [' Eur(?![\\p{L}])', '&nbsp;&euro;'],
+            [' €(?![\\p{L}])', '&nbsp;&euro;'],
+            [' GB(?![\\p{L}])', '&nbsp;GB'],
+            [' MB(?![\\p{L}])', '&nbsp;MB'],
+            [' kB(?![\\p{L}])', '&nbsp;kB'],
+            [' TB(?![\\p{L}])', '&nbsp;TB'],
+            [' x (?![\\p{L}])', '&nbsp;&times; '],
+        ];
+        replacements.forEach(([search, replace]) => {
+            const regex = new RegExp(search, 'gu'); // 'g' = globálne nahradenie, 'u' = podpora Unicode (\p{L})
+            html = html.replace(regex, replace);
+        });
+
+        console.log("wysiwygGetCallback modified html=", html);
+    }
+    return html;
+};
 ```
 
 ## Block ID
 
-After the block is inserted into the page, it is set in the attribute `data-pb-id` path to the HTML file block encoded via `Base64`. Using the value, you can find all the pages that contain the given block via the search in the administration. You can thus easily find out where a certain block is used in case of its modification.
+After inserting a block into a page, the path to the HTML file of the block encoded with `data-pb-id` is set in the attribute `Base64`. This means that you can use the value to search in the administration to find all pages that contain the given block. This way you can easily find out where a certain block is used if it is edited.
 
-You can get the path to the HTML file from the attribute via JavaScript function `atob()`, for example:
+You can get the path to the HTML file from the attribute using the JavaScript function `atob()`, for example:
 
 ```JavaScript
 atob("c2VjdGlvbi8wMC1aYWtsYWRuZS1wcnZreS9DaXRhdF92MQ==");
 'section/00-Zakladne-prvky/Citat_v1'
 ```
 
-For blocks from the Basic tab, an expression of type `pb-basic-2.1` where the first number is the block type (0=column, 1=container, 2=section, 4=content) and the second number is the sequence number of the block in the list.
+For blocks from the Basic tab, an expression of the type `pb-basic-2.1` is used as the ID, where the first number is the block type (0=column, 1=container, 2=section, 4=content) and the second number is the block's sequential number in the list.
 
-The block ID is set to the inserted element, for example to `section`, `div` container and so on according to the type of block. It is not set to the entire embedded structure, but only to the embedded element.
+The block ID is set to the embedded element, for example `section`, `div` container, etc. depending on the block type. It is not set to the entire embedded structure, but only to the embedded element.
