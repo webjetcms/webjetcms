@@ -43,9 +43,7 @@
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,
-    "spellright.documentTypes": [
-        "markdown"
-    ],
+    "spellright.documentTypes": [],
     "spellright.suggestionsInHints": false,
     "spellright.ignoreRegExpsByClass": {
         "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
@@ -94,5 +92,18 @@
         "read": true,
         "npx codeceptjs": true
     },
-    "chat.agent.maxRequests": 150
+    "chat.agent.maxRequests": 150,
+    "cSpell.language": "en,sk",
+    "cSpell.customDictionaries": {
+        "myWords": {
+            "name": "WebJET CMS",
+            "path": "${workspaceFolder}/.vscode/spellright.dict",
+            "scope": "user",
+            "addWords": true
+        }
+    },
+    "cSpell.ignoreRegExpList": [
+        "/`[^`\\n]+`/g",
+        "/```[\\s\\S]*?```/g"
+    ]
 }
