@@ -1,9 +1,9 @@
 {
-  "name": "webjet9test",
-  "version": "1.0.0",
+  "name": "webjetcms-tests",
+  "version": "2.0.0",
   "description": "Automated testing, after update of codeceptjs chromium change version in dev-reload-client.js",
   "scripts": {
-    "postinstall": "npx playwright install",
+    "postinstall": "npx playwright install chromium firefox",
     "codeceptjs": "codeceptjs run --steps",
     "codeceptjs:ui": "codecept-ui --app",
     "all": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
@@ -48,17 +48,16 @@
   },
   "author": "Lubos Balat, InterWay, a. s.",
   "devDependencies": {
-    "@codeceptjs/configure": "^1.0.1",
-    "@codeceptjs/ui": "^1.2.0",
-    "acorn": "^8.14.0",
-    "allure-codeceptjs": "^3.0.8",
-    "allure-commandline": "^2.32.0",
+    "@codeceptjs/configure": "^4.0.0-beta.2",
+    "acorn": "^8.16.0",
+    "allure-codeceptjs": "^3.7.1",
+    "allure-commandline": "^2.38.1",
     "axe-playwright": "^2.2.2",
-    "codeceptjs": "^3.6.10",
+    "codeceptjs": "^4.0.0-rc.17",
     "codeceptjs-chai": "^2.3.5",
-    "mochawesome": "^7.1.3",
+    "mochawesome": "^7.1.4",
     "moment": "^2.30.1",
-    "playwright": "^1.49.1"
+    "playwright": "^1.59.1"
   },
   "dependencies": {
     "codeceptjs-pixelmatchhelper": "^1.0.6"
