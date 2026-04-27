@@ -54,8 +54,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         final Identity user = UsersDB.getCurrentUser(getRequest());
 
         if (GroupsDB.isGroupViewable(user, id) == false && GroupsDB.isGroupEditable(user, id) == false && GroupsTreeService.canSeeAllGroups(getRequest(), user) == false) {
-            result.put("result", false);
-            result.put("error", getProp().getText("components.jstree.access_denied__group"));
+            setResult(result, false, getProp().getText("components.jstree.access_denied__group"));
             return;
         }
 
@@ -135,8 +134,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         if( Tools.isNotEmpty(user.getEditableGroups()) ) { //Cant show all groups
 
             //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
-            String referer = getRequest().getHeader("referer");
-            if(false == (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups")) ) {
+            if (GroupsTreeService.canSeeAllGroups(getRequest(), user) == false) {
                 //If root group is in list, remove it
                 if(items.size()>0 && Tools.getIntValue( items.get(0).getId(), -1 ) == 0)
                     items.remove(0);
@@ -157,8 +155,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
     protected void move(Map<String, Object> result, JsTreeMoveItem item) {
         JsTreeItem original = item.getNode().getOriginal();
         if (original == null) {
-            result.put("result", false);
-            result.put("error", getProp().getText("java.GroupsTreeRestController.move.json_original_missing"));
+            setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.json_original_missing"));
             return;
         }
 
@@ -169,40 +166,34 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
 
             GroupDetails groupById = groupsDB.getGroup(Tools.getIntValue(original.getId(), 0));
             if (groupById == null) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.group_not_found", original.getId()));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.group_not_found", original.getId()));
                 return;
             }
 
             GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));
             if (parent == null) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.parent_not_found", item.getParent()));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.parent_not_found", item.getParent()));
                 return;
             }
 
             if (user.isDisabledItem("editDir")) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.editDir_disabled", item.getParent()));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.editDir_disabled", item.getParent()));
                 return;
             }
 
             if (!GroupsDB.isGroupEditable(user, groupById.getGroupId())) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.group_not_editable", item.getParent()));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.group_not_editable", item.getParent()));
                 return;
             }
             if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.parent_group_not_editable", item.getParent()));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.parent_group_not_editable", item.getParent()));
                 return;
             }
 
             groupById.setParentGroupId(parent.getGroupId());
             boolean saved = groupsDB.save(groupById);
             if (!saved) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.save_failed"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.save_failed"));
                 return;
             }
 
@@ -237,33 +228,28 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             DocDetails editorForm = editorFacade.getDocForEditor(docId, -1, -1);
 
             if (editorForm == null) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.doc_not_found", "" + docId));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.doc_not_found", "" + docId));
                 return;
             }
 
             GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));
             if (parent == null) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.parent_not_found"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.parent_not_found"));
                 return;
             }
 
             if (user.isDisabledItem("addPage")) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.addPage_disabled"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.addPage_disabled"));
                 return;
             }
 
             if (!editorFacade.isPageEditable(user, editorForm, false)) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.doc_not_editable"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.doc_not_editable"));
                 return;
             }
 
             if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.parent_group_not_editable"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.parent_group_not_editable"));
                 return;
             }
 
@@ -275,8 +261,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             editorFacade.save(editorForm);
             int historyId = editorForm.getHistoryId();
             if (historyId == 0) {
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.save_failed"));
+                setResult(result, false, getProp().getText("java.GroupsTreeRestController.move.save_failed"));
                 return;
             }
 
@@ -314,6 +299,11 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
         else {
             //GroupDetails group = (GroupDetails) item;
         }*/
+    }
+
+    private void setResult(Map<String, Object> result, boolean success, String errorText) {
+        result.put("result", success);
+        if (errorText != null) result.put("error", errorText);
     }
 
     @Override
