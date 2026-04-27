@@ -1,17 +1,19 @@
 # Navigation bar
 
-The navigation bar (navbar / breadcrumb / breadcrumb navigation) displays a clickable path in the web page to the currently displayed web page. The directory names can be clicked on to easily get to the next level down. Example:
+The navigation bar (navbar / breadcrumb) displays a clickable path to the currently displayed web page on a web page. You can click on the directory names to easily go down one level. Example:
 
 ![](navbar.png)
 
-The display of an item in the navigation bar depends on the setting of the Navigation Bar field in the Navigation tab of the Web Site Directory. It has the following options:
-- Just like the menu - the display in the navigation bar behaves the same way as the display field is set in the menu.
-- Show - the item will be displayed in the navigation bar.
-- Don't show - the item will not appear in the navigation bar (including sub-folders).
+The display of an item in the navigation bar depends on the setting of the Navigation Bar field in the Navigation tab of the website directory. It has the following options:
 
-For the display option, you can set the display option for the web page that is still displayed (typically this is the last item in the navigation bar). This is also in the Navigation tab and contains the options:
-- View - the web page will be displayed in the navigation bar.
-- Do not show - the web page will not be displayed in the navigation bar.
+- Same as menu - display in the navigation bar behaves the same as the field set for display in the menu.
+- Show - the item will be displayed in the navigation bar.
+- Do not display - the item will not be displayed in the navigation bar (including subfolders).
+
+With the display option, you can set the display option for the currently displayed web page (typically the last item in the navigation bar). This is also in the Navigation tab and contains the following options:
+
+- Show - the website will be displayed in the navigation bar.
+- Do not display - the website will not be displayed in the navigation bar.
 
 ![](groups-dialog.png)
 
@@ -23,7 +25,7 @@ The navigation bar is inserted directly into the JSP template as a tag:
 <iwcm:write name="navbar"/>
 ```
 
-or it can be inserted directly into the web page as an expression:
+or it can be inserted directly into a web page as an expression:
 
 ```html
 !REQUEST(navbar)!
@@ -33,16 +35,16 @@ or it can be inserted directly into the web page as an expression:
 
 ## Custom navigation bar implementation
 
-For some projects, it may be necessary to create a custom navigation bar implementation with different formatting or structure. WebJET allows you to define a custom class for generating the navigation bar.
+For some projects it may be necessary to create a custom navigation bar implementation with different formatting or structure. WebJET allows you to define a custom class for generating a navigation bar.
 
 ### Creating your own implementation
 
-The actual implementation must implement the interface `sk.iway.iwcm.doc.NavbarInterface`:
+Your own implementation must implement the `sk.iway.iwcm.doc.NavbarInterface` interface:
 
 ```java
 package com.example.custom;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.doc.NavbarInterface;
 
 public class CustomNavbar implements NavbarInterface {
@@ -60,9 +62,9 @@ public class CustomNavbar implements NavbarInterface {
 }
 ```
 
-### Settings
+### Setting
 
-After creating a custom implementation, it is necessary to set the configuration variable `navbarDefaultType` to the full class name (including package):
+After creating your own implementation, you need to set the configuration variable `navbarDefaultType` to the full class name (including package):
 
 ```txt
 navbarDefaultType=com.example.custom.CustomNavbar
@@ -73,12 +75,13 @@ This configuration is set in **Settings > Configuration** in the WebJET administ
 ### Standard implementations
 
 WebJET includes three standard implementations:
+
 - [NavbarStandard](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarStandard.java) - standard text navigation (value `normal` or empty)
-- [NavbarRDF](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarRDF.java) - navigation format `RDF` (value `rdf`)
-- [NavbarSchemaOrg](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarSchemaOrg.java) - navigation format `Schema.org` (value `schema.org`)
+- [NavbarRDF](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarRDF.java) - navigation in `RDF` format (value `rdf`)
+- [NavbarSchemaOrg](../../../../../src/main/java/sk/iway/iwcm/doc/NavbarSchemaOrg.java) - navigation in format `Schema.org` (value `schema.org`)
 
 ### Notes
 
-- If the configuration variable `navbarDefaultType` contains the class name (not the default values `normal`, `rdf`, `schema.org`), WebJET will try to load this class and use it.
-- If the class does not exist or does not implement `NavbarInterface`, the standard implementation is used.
-- The custom class must have a public constructor without parameters.
+- If the configuration variable `navbarDefaultType` contains a class name (not the default values ​​`normal`, `rdf`, `schema.org`), WebJET will attempt to load that class and use it.
+- If the class does not exist or does not implement `NavbarInterface`, the default implementation is used.
+- The custom class must have a public constructor with no parameters.

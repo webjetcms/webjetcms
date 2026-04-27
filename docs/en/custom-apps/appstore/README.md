@@ -1,16 +1,16 @@
-# To view in the App list
+# Display in the application list
 
-If you have created an application, you can simply display it in the list of applications in the editor. In the screenshot you can see the Contacts application and the Demo component, which are applications for WebJET written in [Spring](../spring-mvc/README.md).
+If you have created an application, you can easily view it in the list of applications in the editor. The screenshot shows the Contacts and Demo component applications, which are applications for WebJET written in [Spring](../spring-mvc/README.md).
 
 ![](appstore.png)
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2r6-0zk5ZNQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/2r6-0zk5ZNQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Use of annotation
+## Using annotation
 
-In order for an application to appear in the list, its class must have an annotation `@WebjetAppStore`, examples:
+For an application to appear in the list, its class must have the annotation ```@WebjetAppStore```, examples:
 
 ```java
 @WebjetComponent("sk.iway.demo8.DemoComponent")
@@ -27,32 +27,35 @@ public class ContactApp extends WebjetComponentAbstract {
 ```
 
 The annotation has the following parameters:
-- `nameKey` - translation key **application name** (in the examples it is directly text, but we recommend to use the translation key), e.g. `components.DemoComponent.title`.
-- `descKey` - translation key **description of the application**, if not specified the translation key specified as `nameKey.desc` (if `nameKey` ends at `.title` shall be replaced `.title` For `.desc`).
-- `itemKey` - unique application identifier for access rights, typically `cmp_app_name`.
-- `variant` - by default, only one application with the same `itemKey`. If you need to have multiple apps with the same `itemKey`, you can set a different application variant, for example `variant = "unsubscribe",` for the opt-out variant of the app.
-- `imagePath` - the way to the picture **icons** Application. It can be a file, or it can be a CSS class for an icon [TablerIcons](https://tabler.io/icons) Like `ti ti-meno-ikony`.
-- `galleryImages` - a comma-separated list of images that appear in the app description, e.g. `/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png`.
-- `componentPath` - comma separated list of JSP files for which the application should be displayed (if it is not a Spring application), for example `/components/search/search.jsp,/components/search/lucene_search.jsp`. The first JSP file is used when inserting a new application.
-- `domainName` - if you have a multi-domain installation, you can restrict the application to display only on the specified domain. You can specify multiple domains separated by a comma.
-- `commonSettings` - A parameter that determines whether the View tab for Common Settings appears in the application editor. The default value is `true`, so the card will be displayed.
-- `custom` - set to `true` for your customer applications. It automatically adjusts itself according to whether it is in the package `sk.iway.iwcm`. Customer apps are in the list of apps at the top of the list.
-- `componentPath` - if you are overwriting an older application in JSP code, set the path to this JSP file, for example `componentPath = "/components/calendar/calendar.jsp"`.
-- `customHtml` - if you need to make [additional code](#additional-html-code), edit CSS styles and so on set the path to the HTML file that will be added to the application editing in the web page editor. For example `customHtml = "/apps/calendar/admin/editor-component.html"`.
+
+- ```nameKey``` - ​​translation key **application name** (in the examples there is direct text, but we recommend using a translation key), e.g. ```components.DemoComponent.title```.
+- ```descKey``` - ​​translation key **application description**, if not specified, the translation key specified as ```nameKey.desc``` is searched for (if ```nameKey``` ends with ```.title```, ```.title``` is replaced with ```.desc```).
+- ```itemKey``` - ​​unique application identifier for access rights, typically ```cmp_app_name```.
+- ```variant``` - ​​by default, only one application with the same ```itemKey``` is displayed in the application list. If you need to have multiple applications with the same ```itemKey``` in the list, you can set a different application variant, for example ```variant = "unsubscribe",``` for the logout application variant.
+- ```imagePath``` - ​​path to the application's **icon** image. This can be a file, or the CSS class for the [TablerIcons](https://tabler.io/icons) icon can be specified as ```ti ti-meno-ikony```.
+- ```galleryImages``` - ​​comma-separated list of images that will appear in the application description, e.g. ```/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png```.
+- ```componentPath``` - ​​comma-separated list of JSP files for which the application should be displayed (if it is not a Spring application), for example ```/components/search/search.jsp,/components/search/lucene_search.jsp```. When inserting a new application, the first JSP file will be used.
+- ```domainName``` - ​​if you have a multi-domain installation, you can limit the application display to only the specified domain. You can specify multiple domains separated by commas.
+- ```commonSettings``` - ​​parameter determining whether the View tab for common settings will be displayed in the application editor. The default value is `true`, meaning the tab will be displayed.
+- ```custom``` - ​​set to `true` for your customer applications. It will be set automatically depending on whether it is in package `sk.iway.iwcm`. Customer applications are at the top of the list in the application list.
+- ```componentPath``` - ​​if you are rewriting an older application in JSP code, set it to the path to this JSP file, for example ```componentPath = "/components/calendar/calendar.jsp"```.
+- ```customHtml``` - ​​if you need to execute [additional code](#additional-html-code), edit CSS styles, and the like, set it to the path to the HTML file that will be added to the application editing in the web page editor. For example ```customHtml = "/apps/calendar/admin/editor-component.html"```.
+- `hideInAppstore` - ​​if you set it to `true` the application will not appear in the application list (App Store), but if it is otherwise inserted into the page (e.g. via the Page Builder block) its parameters can be set.
 
 ![](democomponent-desc.png)
 
-The annotation is searched in the following packages (including sub packages):
-- `sk.iway.iwcm` - standard WebJET CMS applications.
-- `sk.iway.INSTALL_NAME` - applications by installation name (conf. variable `installName`), you should have standard customer applications here.
-- `sk.iway.LOG_INSTALL_NAME` - application by installation logging name (conf. variable `logInstallName`), it is used if you have a customer application but deployed in multiple variants or environments.
-- packages defined in conf. variable `springAddPackages` - additional packages for Spring applications, used if the application is programmed outside the WebJET CMS, or uses a different prefix than `sk.iway`.
+The annotation is searched in the following packages (including subpackages):
 
-Applications with package starting with `sk.iway.iwcm` are placed at the end of the list of applications, others are placed at the beginning. It is assumed that you want to have customer applications displayed at the top of the application list.
+- ```sk.iway.iwcm``` - ​​standard WebJET CMS applications.
+- ```sk.iway.INSTALL_NAME``` - ​​applications by installation name (config variable ```installName```), here you should have standard customer applications.
+- ```sk.iway.LOG_INSTALL_NAME``` - ​​application by installation logging name (config. variable ```logInstallName```), used if you have a customer application but deployed in multiple variants or environments.
+- packages defined in the conf. variable ```springAddPackages``` - ​​additional packages for Spring applications, used if the application is programmed outside of WebJET CMS, or uses a prefix other than ```sk.iway```.
 
-If you want to place the application also in the promo list (at the top), edit the conf. variable `appstorePromo`, which contains a list of app promo keys.
+Applications with a package starting with ```sk.iway.iwcm``` are placed at the end of the application list, others are placed at the beginning. It is assumed that you want customer applications to be displayed at the beginning of the application list.
 
-!>**Warning:** the application is embedded in the page as `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)` if it is found multiple times in the page, the class is reused and its attributes and variables are preserved during the execution of the HTTP request.
+If you want to place the application in the promo list (at the top), edit the config variable ```appstorePromo```, which contains the list of promo application keys.
+
+!>**Warning:** the application is inserted into the page as `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)`, if it is present multiple times in the page, the class is reused and its attributes and variables are preserved during the execution of the HTTP request.
 
 ## Application parameters
 
@@ -72,11 +75,11 @@ public class DemoComponent extends WebjetComponentAbstract {
 }
 ```
 
-these attributes are linked to the brand `!INCLUDE(... stringField=hodnota, booleanField=false)!` and are used for [Parameterization of the application display](../spring-mvc/README.md#using-application-parameters).
+these attributes are attached to the ```!INCLUDE(... stringField=hodnota, booleanField=false)!``` tag and are used to [parameterize the application view](../spring-mvc/README.md#using-application-parameters).
 
-WebJET supports displaying parameter settings in a dialog box using `@DataTableColumn` annotations as well as for [standard datatable editor](../../developer/datatables-editor/datatable-columns.md). Also supported are cards set with the attribute `tab` Annotation. The translation key with the name `editor.tab.MENO`.
+WebJET supports displaying parameter settings in a dialog box using ```@DataTableColumn``` annotations just like for the [standard datatable editor](../../developer/datatables-editor/datatable-columns.md). Tabs set by the ```tab``` annotation attribute are also supported. The translation key named ```editor.tab.MENO``` is being searched.
 
-In addition to primitive/basic data types and `java.util.Date` conversion of objects of type `DocDetails/GroupDetails` including `List` using the field type `DataTableColumnType.JSON`.
+In addition to primitive/basic data types and ```java.util.Date```, conversion of objects of type ```DocDetails/GroupDetails``` including ```List``` using the array type ```DataTableColumnType.JSON``` is supported.
 
 Example of use:
 
@@ -214,7 +217,7 @@ public class DemoComponent extends WebjetComponentAbstract {
 }
 ```
 
-Sample HTML code `/components/aceintegration/demo-component/view.html`:
+Sample HTML code ```/components/aceintegration/demo-component/view.html```:
 
 ```html
 <p>
@@ -252,16 +255,16 @@ Sample HTML code `/components/aceintegration/demo-component/view.html`:
 </ul>
 ```
 
-Example of setting [selection field](../../developer/datatables-editor/datatable-columns.md#selection-field-options) in Contacts. Note also the options `@JsonIgnore` set above the repository. Otherwise, the repository itself would be serialized into the JSON object for editing application parameters, causing a JSON error.
+Example of setting up a [select field](../../developer/datatables-editor/datatable-columns.md#select-field-options) in the Contacts application. Also note the ```@JsonIgnore``` option set above the repository. Otherwise, the repository itself would be serialized into the JSON object for editing application parameters, which causes a JSON error.
 
 ![](contacts-prop.png)
 
 ```java
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -413,7 +416,7 @@ public class ContactApp extends WebjetComponentAbstract {
 
 ## Data initialization
 
-If you need to execute code to initialize values when you open the application, you can implement the method `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)` in which you can set the initial values or execute another code. In the object `ComponentRequest` there is information about the current website.
+If you need to execute code to initialize values ​​when opening the application, you can implement the `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)` method, in which you can set initial values ​​or execute other code. The `ComponentRequest` object contains information about the current web page.
 
 ```java
     @Override
@@ -431,9 +434,9 @@ If you need to execute code to initialize values when you open the application, 
     }
 ```
 
-## Setting selection fields
+## Setting up selection fields
 
-For dynamically created selection fields you can implement the method `getAppOptions(ComponentRequest componentRequest, HttpServletRequest request)` which sets `options` REST response object. This is transferred to the datatable and sets the options for the selection fields, or a list of checkboxes.
+For dynamically created select fields, you can implement a method `getAppOptions(ComponentRequest componentRequest, HttpServletRequest request)` that sets a `options` REST response object. This is passed to the datatable and sets the options for the select fields or list of checkboxes.
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
@@ -516,7 +519,7 @@ public class GalleryApp extends WebjetComponentAbstract {
 }
 ```
 
-Setting up groups of fields using a prepared method `WebjetComponentAbstract.addOptions`:
+Setting up field groups using the prepared method `WebjetComponentAbstract.addOptions`:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.media.MediaApp")
@@ -562,7 +565,7 @@ public class MediaApp extends WebjetComponentAbstract {
 
 ## Cards
 
-If you need to split fields into multiple tabs, you can define them by annotating `@DataTableTabs`, you can also use the field type `IFRAME` for easy insertion of another page, e.g. a list of photos in a gallery:
+If you need to split fields into multiple tabs, you can define them with the `@DataTableTabs` annotation, you can also use the `IFRAME` field type to easily insert another page, e.g. a list of photos in a gallery:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
@@ -595,53 +598,95 @@ public class GalleryApp extends WebjetComponentAbstract {
 }
 ```
 
-## View tab
+## Display tab
 
-The View tab for Common Settings, is displayed by default for each application, unless otherwise set for that application ( [more information here](#application-parameters) ).
+The View tab for common settings is displayed by default for every application, unless otherwise set for that application ( [more information here](#application-parameters) ).
 
 ![](common-settings-tab.png)
 
-The card contains the parameters:
-- View on devices, used for setting up [conditional display application](#conditional-application-view).
-- Logged in user - allows to set the application display according to the login status of the website visitor - display always, only if the user is logged in, or if the user is not logged in.
-- Buffer time (minutes), used to set the amount of time in minutes that the initialized application should be buffered.
+The card contains the following parameters:
 
-If you do not want to display the tab in the Spring application, set the attribute `commonSettings=false` in the annotation `@WebjetAppStore`.
+- Display on devices, used to set [conditional display of applications](#conditional-display-of-applications).
+- Logged in user - allows you to set the application display according to the website visitor's login status - display only if the user is logged in, or if they are not logged in.
+- Cache time (minutes), used to set the time in minutes for which the initialized application should be stored in the cache.
 
-### Conditional application view
+If you do not want to display the card in your Spring application, set the `commonSettings=false` attribute in the `@WebjetAppStore` annotation.
 
-If `PageParams` object contains a parameter `device=XXX` the app will only be displayed for the device you specify. This is detected on the server by the HTTP header `User-Agent`. The phone is detected when an expression is found `iphone`, or `mobile` and at the same time the expression `android`. Tablet as `ipad||tablet||kindle` or if it contains `android` and does not contain `mobile`. Supported options for value `device` are `phone,tablet,pc`. Supported if combinations of type `phone+pc`. If a blank value or all combinations are entered, the application will be displayed for all devices.
+### Conditional app display
 
-When previewing an application in the editor that has a conditional view, the preview displays text of type `Zobrazenie na zariadeniach: XXX`:
+If the `PageParams` object contains the parameter `device=XXX`, the application will be displayed only for the specified device. This is detected on the server according to the HTTP header `User-Agent`. A phone is detected when the expression `iphone`, or `mobile` and the expression `android` are found. A tablet is detected as `ipad||tablet||kindle` or if it contains `android` and does not contain `mobile`. Supported options for the value `device` are `phone,tablet,pc`. Supported combinations are `phone+pc`. If an empty value is specified, or all combinations, the application will be displayed for all devices.
+
+When previewing an application in the editor that has conditional display, the preview displays text like `Zobrazenie na zariadeniach: XXX`:
 
 ![](../../redactor/apps/banner/multiple-devieces-banner-edit.png)
 
-To test when displaying a web page, you can use the URL parameter `?forceBrowserDetector=` that we can convince WebJET that we are accessing a specific type of device. The supported types for this parameter are `phone`, `tablet` a `pc`.
+To test when viewing a web page, you can use the URL parameter ```?forceBrowserDetector=```, which can convince WebJET that we are accessing it with a specific type of device. The supported types of this parameter are ```phone```, ```tablet``` and ```pc```.
 
-When using old `editor_component.jsp` you can add a display settings tab for the device by calling `$(document).ready(function() { addAdvancedSettingsTab(); });` and get the set value as `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. The implementation of the function is in `/components/bottom.jsp` and is thus ready for your easy use.
+When using the old `editor_component.jsp` you can add a display setting card for the device by calling `$(document).ready(function() { addAdvancedSettingsTab(); });` and get the set value as `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. The implementation of the function is in `/components/bottom.jsp` and is thus ready for your easy use.
 
 ### Logged in user
 
-The application will be displayed according to the status of the logged-in user. V `PageParams` set by the parameter `showForLoggedUser`:
-- Blank value/parameter is not entered - the application is always displayed.
-- `onlyLogged` - the app will only be displayed to the logged-in user.
-- `onlyNotLogged` - the application will only be displayed if the user is not logged in.
+The application will be displayed according to the status of the logged in user. In `PageParams` set by the parameter `showForLoggedUser`:
 
-In the page editor, the application will always be displayed, but in the preview or page view, it will be displayed according to the set value.
+- Empty value/parameter not specified - the application will always be displayed.
+- `onlyLogged` - ​​the application will only be displayed to the logged in user.
+- `onlyNotLogged` - ​​the application will only be displayed if the user is not logged in.
 
-### Buffer time (minutes)
+The application is always displayed in the page editor, but in the preview or page view it is displayed according to the set value.
 
-The number of minutes during which the HTML code of an application that has already been executed should be stored in memory. It speeds up the display of a web page.
+### Cache time (minutes)
+
+The number of minutes during which the HTML code of an application that has already been executed should be kept in memory. It speeds up the display of a web page.
 
 The cache is not used if:
-- is logged in as administrator (but the cache value is updated when the page is displayed, so you can easily update the cache for non-logged in users). You can also enable caching for administrators by setting the conf. variable `cacheStaticContentForAdmin` to the value of `true`.
-- specified value of the parameter `cacheMinutes` < 1
-- there is a parameter in the URL address `page` (not applicable if the value is 1, i.e. for the first page of e.g. the news list)
-- there is a parameter in the URL address `_disableCache=true`
+
+- the administrator is logged in (however, the cache value is updated when the page is viewed, so you can easily update the cache for non-logged-in users). You can enable caching for administrators by setting the config variable `cacheStaticContentForAdmin` to the value `true`.
+- specified value of parameter `cacheMinutes` < 1
+- the URL contains the parameter `page` (does not apply if the value is 1, i.e. for the first page of e.g. the news list)
+- the URL contains the parameter `_disableCache=true`
+
+### Hiding fields/tabs
+
+If you want to use the application in different places and at the same time limit which fields and tabs the user can see, you can use the `appHideFields` parameter. This is advantageous for preparing the application in blocks for Page Builder.
+
+The `appHideFields` parameter is defined in the `WebjetComponentAbstract` class and is available to all applications. It is a text value where you can use the `+` value to separate the names of the fields and tabs to be hidden in the application editor.
+
+**Value format:**
+
+```text
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
+```
+
+- **Fields** - you enter the field name directly (the name of the attribute in the Java class), e.g. `dir`, `style`.
+- **Cards** - the card name must **mandatory** have the prefix `tab_`, followed by the card ID defined in the annotation `@DataTableTab`, e.g. `tab_componentIframe`.
+
+**Example:** the value `appHideFields=dir+tab_componentIframe` hides the field `dir` and the card with ID `componentIframe`.
+
+#### Parameter setting
+
+The parameter `appHideFields` is not visible in the application editor, it must be set in one of the following ways:
+
+**1. Programmatically in the method `initAppEditor`:**
+
+```java
+@Override
+public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+    //hide the dir field and the componentIframe tab
+    this.appHideFields = "dir+tab_componentIframe";
+}
+```
+
+**2. Directly in `PageParams` (in `!INCLUDE` tag):**
+
+```html
+!INCLUDE(sk.iway.iwcm.components.gallery.GalleryApp, appHideFields=dir+tab_componentIframe)!
+```
+
+!>**Warning:** The parameter `appHideFields` is not visible in the application editor. It cannot be set via the user interface, it must be set programmatically or directly in `PageParams`.
 
 ## Additional HTML code
 
-In some cases, additional HTML/JavaScript code must be executed when editing the application properties in the editor. In the annotation `@WebjetAppStore` it is possible to set the path to the additional HTML file in the attribute `customHtml`, for example:
+In some cases, it is necessary to execute additional HTML/JavaScript code when editing application properties in the editor. In the `@WebjetAppStore` annotation, it is possible to set the path to the additional HTML file in the `customHtml` attribute, for example:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.calendar.CalendarApp")
@@ -661,13 +706,15 @@ public class CalendarApp extends WebjetComponentAbstract {
 }
 ```
 
-The entered HTML code is inserted into the application editor page. It is possible to use the following functions to execute the JavaScript code:
-- `appBeforeXhr(data)` - called before getting information about the editor, `data` contains the object sent to the REST service.
-- `appAfterXhr(response)` - called after getting data from the REST service, it is possible to modify the data (e.g. add an input field) in `response` facility.
-- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - called after initializing the datatable, in `componentDatatable` is an instance of the datatable/editor and in `isInsert` indicates whether the application is a newly inserted application or a modification.
-- `appGetComponentPath(componentPath, componentDatatable)` - called when you embed an application in a page, you can change the path for the embedded `INCLUDE` e.g. based on the selected options.
-- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - called when the application is inserted into the page, it can return the complete code for inserting into the page (it does not have to be directly `!INCLUDE` code).
-- `async appCodeExecute(params)` - call after clicking OK, it can call the server's REST service.
+The entered HTML code is inserted into the page with the application editor. The following functions can be used to execute the JavaScript code:
+
+- `appBeforeXhr(data)` - ​​called before getting information about the editor, `data` contains the object sent to the REST service.
+- `appAfterXhr(response)` - ​​called after retrieving data from a REST service, it is possible to modify data (e.g. add an input field) in the `response` object.
+- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - ​​called after datatable initialization, `componentDatatable` contains the datatable/editor instance and `isInsert` informs whether it is a newly inserted application or an adjustment.
+- `appGetComponentPath(componentPath, componentDatatable)` - ​​called when inserting an application into a page, you can change the path for the inserted `INCLUDE` e.g. based on the selected options.
+- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - ​​called when inserting an application into a page, can return the complete code for insertion into the page (it does not have to be the `!INCLUDE` code directly).
+- `async appCodeExecute(params)` - ​​call after clicking the OK button, can call the server REST service.
+- `prepareJsonEditorDataCustom` - ​​called when converting JSON data to local tables (after decoding), can edit data for display in the editor.
 
 Sample code of different options:
 
@@ -751,7 +798,7 @@ Sample code of different options:
 
 ### Setting the type by JSP file name
 
-In some cases, it is necessary to change the displayed fields according to the application type, resulting in a different JSP file for display. An example is in [RatingApp.java](../../../../src/main/java/sk/iway/iwcm/components/rating/RatingApp.java) and the corresponding HTML file. If you don't need the parameter in the output `!INCLUDE()` set him `className = "dt-app-skip"`, because in this case the value is set according to the JSP file name.
+In some cases, it is necessary to change the displayed fields according to the type of application, which results in a different JSP file for display. An example is in [RatingApp.java](../../../../src/main/java/sk/iway/iwcm/components/rating/RatingApp.java) and the corresponding HTML file. If you do not need the parameter in the output `!INCLUDE()`, set it to `className = "dt-app-skip"`, in this case the value is set according to the name of the JSP file.
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.rating.RatingApp")
@@ -774,7 +821,7 @@ public class RatingApp extends WebjetComponentAbstract {
 }
 ```
 
-and relevant [HTML file](../../../../src/main/webapp/apps/rating/admin/editor-component.html) in which you get the name of the JSP file from the object `requestJson`:
+and the corresponding [HTML file](../../../../src/main/webapp/apps/rating/admin/editor-component.html) in which you get the JSP file name from the `requestJson` object:
 
 ```html
 <script>
@@ -816,7 +863,7 @@ and relevant [HTML file](../../../../src/main/webapp/apps/rating/admin/editor-co
 </script>
 ```
 
-For simple situations, just set the annotation to `className` value `dt-app-componentPath`, then the JSP file name is automatically set to the object and used at the same time. There is no need to manually set it using JavaScript code as above.
+For simple situations, it is enough to set the value `className` to `dt-app-componentPath` in the annotation, then the name of the JSP file will automatically be set to the given object and used at the same time. There is no need to manually set it using JavaScript code as mentioned above.
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.reservation.ReservationApp")
@@ -849,10 +896,10 @@ public class ReservationApp extends WebjetComponentAbstract {
 
 ## Implementation details
 
-- The datatable is inserted via `/admin/v9/views/pages/webpages/component.pug`
-- The logic for displaying the administration is in `/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp`, displays either the classic `editor_component.jsp`, this automatic editor via annotation, or list of applications.
-- Added method for getting a list of cards from the property annotation `sk.iway.iwcm.system.datatable.DataTableColumnsFactory`
-- Created new data object for cards `sk.iway.iwcm.system.datatable.json.DataTableTab`
-- Service class for application data `sk.iway.iwcm.editor.rest.ComponentsService`
-- New data `request` object for obtaining application data `sk.iway.iwcm.editor.rest.ComponentRequest`
-- The list of applications is searched from the annotations in `sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations`.
+- The data table is inserted via ```/admin/v9/views/pages/webpages/component.pug```
+- The logic for displaying the administration is in ```/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp```, it displays either the classic ```editor_component.jsp```, this automatic editor via annotations, or a list of applications.
+- Added method to get card list from property annotation ```sk.iway.iwcm.system.datatable.DataTableColumnsFactory```
+- Created new data object for cards ```sk.iway.iwcm.system.datatable.json.DataTableTab```
+- Service class for application data ```sk.iway.iwcm.editor.rest.ComponentsService```
+- New data ```request``` object for retrieving application data ```sk.iway.iwcm.editor.rest.ComponentRequest```
+- The list of applications is searched from annotations in ```sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations```.

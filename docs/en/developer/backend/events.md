@@ -2,40 +2,46 @@
 
 WebJET uses Spring to publish and listen to events. A basic description can be found at [baeldung](https://www.baeldung.com/spring-events). Both synchronous and asynchronous events are supported.
 
-Events are typically implemented generically using the class `WebjetEvent` which is a universal carrier of events. It contains the following attributes:
-- `source` - the source object of the event (e.g. `GroupDetails`, `DocDetails`)
-- `eventType` - [type of event](#event-types)
-- `clazz` - the name of the class also with the package for [event filtering](#listening-event) while listening
+Events are typically implemented generically using the `WebjetEvent` class, which is a universal event container. It contains the following attributes:
 
-## Types of events
+- `source` - ​​event source object (e.g. `GroupDetails`, `DocDetails`)
+- `eventType` - ​​[event type](#event-types)
+- `clazz` - ​​class name and package for [event filtering](#listening-events) when listening
 
-For standard operations, event types are implemented in `enum` Classroom `WebjetEventType`, the following types are currently available:
-- `ON_START` - called at the beginning of the method, at this point you can modify the object data via the synchronous event
-- `AFTER_SAVE` - invoked after saving an object, you have access to the already saved object
-- `ON_DELETE` - invoked before deleting the object
-- `AFTER_DELETE` - invoked after deleting the object
-- `ON_XHR_FILE_UPLOAD` - invoked after uploading a file via URL `/XhrFileUpload`
-- `ON_END` - called at the end of the method, it is used when no saving is performed (i.e. it is not called `AFTER_SAVE`), but just some action
+## Event types
+
+For standard operations, event types are implemented in the `enum` class `WebjetEventType`, the following types are currently available:
+
+- `ON_START` - ​​called at the beginning of the method, at this point you can modify the object's data via a synchronous event
+- `AFTER_SAVE` - ​​called after saving an object, you have access to an already saved object
+- `ON_DELETE` - ​​called before deleting an object
+- `AFTER_DELETE` - ​​called after deleting an object
+- `ON_XHR_FILE_UPLOAD` - ​​called after uploading a file via URL address `/XhrFileUpload`
+- `ON_END` - ​​called at the end of the method, used when no saving is performed (i.e. `AFTER_SAVE` is not called), but only some action
+- `ON_RECOVER` - ​​called at the beginning of the method in the process of restoring a web page or folder from the trash. You have access to the object being restored.
+- `AFTER_RECOVER` - ​​called after restoring a web page or folder from the Recycle Bin. You have access to an already restored object.
 
 ## Current published events
 
 Currently WebJET publishes the following events:
-- Web page - saving a web page - an object is published `DocDetails` before and after saving in the page editor when calling `EditorFacade.save`, condition: `#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`. You can check whether you are publishing a page or just saving a working version in the attribute `doc.getEditorFields().isRequestPublish()` which returns the value `false` if it is a working version of the page.
-- Web page - delete web page - object is published `DocDetails` before and after deletion when calling `DeleteServlet.deleteDoc`, condition: `"event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`.
-- Web pages - saving and deleting the directory - the object is published `GroupDetails` before and after saving when calling `GroupsDB.setGroup` a `GroupsDB.deleteGroup` which should be used for standard web page directory operations. Prerequisite: `#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'`.
-- Web pages - displaying the web page on the frontend - the object is published `ShowDocBean` after obtaining `DocDetails` object (event `ON_START`) and an event is published before routing to the JSP template `ON_END`. At `ON_START` attribute can be set `forceShowDoc` at `DocDetails` the object to be used to display the page, the attribute `doc` is empty for now. It is only set `docId`. In an event `ON_END` is in the attribute `doc` Retrieved from `DocDetails` object. Condition: `#event.clazz eq 'sk.iway.iwcm.doc.ShowDocBean'`.
-- Web page - when the page is published in time - the object is published `DocumentPublishEvent` which contains `DocDetails` published web page and attribute `oldVirtualPath` with information about the original URL of the page (to detect if it has changed during publishing). Prerequisite `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, event `ON_PUBLISH`.
-- Configuration - create and change a configuration variable - an object is published `ConfDetails` after saving the value via the user interface by calling `ConfDB.setName`, condition: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
-- Uploading a file - an object is published `File` Like `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, condition: `#event.clazz eq 'java.io.File'`.
-- Updating codes in text - an object is published `UpdateCodesEvent` after processing the standard codes in the method `DocTools.updateCodes`, allows you to add custom codes. Prerequisite: `#event.clazz eq 'sk.iway.iwcm.system.spring.events.UpdateCodesEvent'`, event `ON_START` Also `ON_END` for the possibility of replacing codes before and after WebJET processing.
 
-## Listening event
+- Web pages - saving a web page - the object `DocDetails` is published both before and after saving in the page editor when calling `EditorFacade.save`, condition: `#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`. You can verify whether this is publishing the page or just saving a working version in the attribute `doc.getEditorFields().isRequestPublish()`, which returns the value `false` if it is a working version of the page.
+- Web pages - deleting a web page - object `DocDetails` is published both before and after deletion when calling `DeleteServlet.deleteDoc`, condition: `"event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`.
+- Web pages - saving and deleting a directory - the object `GroupDetails` is published both before and after saving when calling `GroupsDB.setGroup` and `GroupsDB.deleteGroup`, which should be used for standard operations with the web page directory. Condition: `#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'`.
+- Web pages - display of a web page on the frontend - the object `ShowDocBean` is published after obtaining the `DocDetails` object (event `ON_START`) and before routing to the JSP template, the event `ON_END` is published. At `ON_START`, it is possible to set the attribute `forceShowDoc` to the `DocDetails` object that will be used to display the page, the attribute `doc` is empty for now. Only `docId` is set. At event `ON_END`, the `DocDetails` object is displayed in the attribute `doc`. Condition: `#event.clazz eq 'sk.iway.iwcm.doc.ShowDocBean'`.
+- Web pages - when publishing a page at a time - the object `DocumentPublishEvent` is published, which contains `DocDetails` of the published web page and the attribute `oldVirtualPath` with information about the original URL address of the page (to detect whether it changed during publishing). Condition `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, event `ON_PUBLISH`.
+- Web pages - at the beginning of the process of restoring a web page or folder from the trash, an event `ON_RECOVER` is published, which contains the restored object. After the restoration is complete, an event `AFTER_RECOVER` is published, which contains the restored page or folder object. When restoring a folder, the event is published only for the given folder, individual events for subfolders and web pages located in this folder are not published.
+- Configuration - creating and changing a configuration variable - the object `ConfDetails` is published after saving the value via the user interface by calling `ConfDB.setName`, condition: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
+- File upload - object `File` is published as `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, condition: `#event.clazz eq 'java.io.File'`.
+- Updating codes in the text - object `UpdateCodesEvent` is published after processing standard codes in method `DocTools.updateCodes`, allows adding custom codes. Condition: `#event.clazz eq 'sk.iway.iwcm.system.spring.events.UpdateCodesEvent'`, event `ON_START` and `ON_END` for the possibility of replacing codes before WebJET processing and after processing.
 
-To listen to an event, you need to implement a class with annotation `@Component` and method with annotation `@EventListener`. Using the attribute `condition` the triggered events are filtered. Theoretically (according to the instructions) a correctly set generic type is enough, but practically this did not help and the event was fired with a different generic type than the set one.
+## Listening to an event
+
+To listen to an event, you need to implement a class with the annotation `@Component` and a method with the annotation `@EventListener`. Using the attribute `condition`, the triggered events are filtered. Theoretically (according to the instructions), a correctly set generic type is enough, but in practice this did not help and the event was also triggered with a generic type other than the set one.
 
 ### Synchronous events
 
-By default, events are invoked as synchronous, that is, within the same thread, both the invocation of the event and the methods that listen for the event are executed. Effectively, this makes it possible to modify data in events before saving.
+Events are by default invoked synchronously, meaning that both the event invocation and the methods that listen to the event are executed within the same thread. This effectively allows for data modification in events before they are saved.
 
 Example of listening to a synchronous event:
 
@@ -60,7 +66,7 @@ public class SaveListener {
 }
 ```
 
-In the attribute `condition` it is possible to filter events by `clazz` also according to `eventType`, for example:
+In the `condition` attribute, it is possible to filter events by `clazz` as well as by `eventType`, for example:
 
 ```java
 @EventListener(condition = "#event.eventType.name() == 'AFTER_SAVE' && event.clazz eq 'sk.iway.iwcm.doc.DocDetails'")
@@ -70,11 +76,11 @@ public void handleAfterSaveEditor2(final WebjetEvent<DocDetails> event) {
 
 ### Asynchronous events
 
-If the method implementing event listening does not need to modify the data or its duration is long, it is advisable to implement it asynchronously. In this case it is executed in a separate thread, the original event trigger does not wait for it to complete.
+If the method implementing the event listener does not need to modify data, or its duration is long, it is advisable to implement it asynchronously. In this case, it is executed in a separate thread, the original event trigger does not wait for its completion.
 
-The setting is provided in the classroom `BaseSpringConfig` WebJET using annotation `@EnableAsync`. A method that listens for an event and is to be executed asynchronously needs an annotation `@Async`.
+The setting is provided in the `BaseSpringConfig` WebJET class using the `@EnableAsync` annotation. The method that listens to the event and is to be executed asynchronously needs the `@Async` annotation.
 
-When obtaining `Thread.currentThread().getName()` it can be seen that this is a separate thread, different from the standard `http` fibers.
+When you get `Thread.currentThread().getName()`, you can see that this is a separate thread, different from the standard `http` thread.
 
 Example:
 
@@ -103,9 +109,9 @@ public class SaveListenerAsync {
 
 ```
 
-## Publishing an event
+## Publish an event
 
-Event publishing is provided by the class `WebjetEventPublisher`, for ease of use but directly class `WebjetEvent` contains a method `publishEvent`. Example of publishing an object event `GroupDetails`:
+Event publishing is provided by the `WebjetEventPublisher` class, but for ease of use, the `WebjetEvent` class directly contains the `publishEvent` method. Example of publishing an event for an `GroupDetails` object:
 
 ```java
 public boolean setGroup(GroupDetails group)
@@ -116,13 +122,13 @@ public boolean setGroup(GroupDetails group)
 }
 ```
 
-Typically, raising an event of type `WebjetEventType.ON_START` should be at the beginning of the method and `WebjetEventType.AFTER_SAVE` at the end (after saving the data).
+Typically, the event type `WebjetEventType.ON_START` should be invoked at the beginning of the method and `WebjetEventType.AFTER_SAVE` at the end (after saving the data).
 
 ## Updating codes in text
 
-If you need to add custom codes to the page text (e.g. `!CUSTOM_CODE!`), you can use the event `ON_START` or `ON_END` For `UpdateCodesEvent`. These events are published before and after the processing of standard codes in the method `DocTools.updateCodes`.
+If you need to add custom codes to the page text (e.g. `!CUSTOM_CODE!`), you can use the `ON_START` or `ON_END` event for `UpdateCodesEvent`. These events are published before and after the standard codes are processed in the `DocTools.updateCodes` method.
 
-Example of custom implementation `listener`:
+Example of implementing your own `listener`:
 
 ```java
 package sk.iway.custom;
@@ -156,8 +162,9 @@ public class CustomCodesListener {
 }
 ```
 
-In this example the listener listens to the event `ON_START` and replaces custom codes in the text. You can access all parameters from `UpdateCodesEvent`:
-- `text` - page text (modifiable)
-- `user` - currently logged in user
-- `currentDocId` - ID of the current page
-- `request` - HTTP request
+In this example, the listener listens to the `ON_START` event and replaces its own codes in the text. You can access all the parameters from `UpdateCodesEvent`:
+
+- `text` - ​​page text (modifiable)
+- `user` - ​​currently logged in user
+- `currentDocId` - ​​ID of the current page
+- `request` - ​​HTTP request

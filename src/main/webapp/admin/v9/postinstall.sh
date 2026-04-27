@@ -5,7 +5,7 @@ set -u  # Treat unset variables as an error
 set -o pipefail  # Catch errors in pipelines
 
 # Define constants
-EDITOR_ZIP_PATH="src/js/plugins/Editor-2.3.2.zip"
+EDITOR_ZIP_PATH="src/js/plugins/Editor-2.5.2.zip"
 XLSX_PACKAGE_JSON="node_modules/xlsx/package.json"
 ELFINDER_SRC="node_modules/@webjetcms/elfinder/dist"
 ELFINDER_DEST="../elfinder"

@@ -1007,7 +1007,8 @@ public class LogonTools {
         if (user != null) return;
 
         //ak uz mame nieco ulozene neprepiseme to
-        if (session.getAttribute("adminAfterLogonRedirect")!=null) return;
+        String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
+        if (adminAfterLogonRedirect != null && "/admin/".equals(adminAfterLogonRedirect)==false) return;
 
         //bereme orig_path, je potrebne toto volat zo vsetkych miest pred redirectom dalej
         //teoreticky by sa dal pouzit referer, ale skrz viacere presmerovania a bezpecnost to nemozeme pouzit
@@ -1015,7 +1016,7 @@ public class LogonTools {
 
         Logger.debug(LogonTools.class, "adminAfterLogonRedirect="+session.getAttribute("adminAfterLogonRedirect"));
 
-        if (origPath != null && origPath.indexOf("logon")==-1 && origPath.equals("/admin/")==false && origPath.equals("/admin")==false && origPath.indexOf("/admin/index.jsp")==-1 && origPath.indexOf("/admin/welcome.jsp")==-1 && session.getAttribute("adminAfterLogonRedirect")==null)
+        if (origPath != null && origPath.indexOf("logon")==-1 && origPath.equals("/admin/")==false && origPath.equals("/admin")==false && origPath.indexOf("/admin/index.jsp")==-1 && origPath.indexOf("/admin/welcome.jsp")==-1)
         {
             //ukladame iba taketo cesty, nech sa nam tam neulozi odkaz na css, js alebo nieco podobne
             if (origPath.endsWith(".do") || origPath.endsWith(".jsp") || origPath.endsWith("/") || origPath.endsWith(".action"))

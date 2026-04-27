@@ -949,6 +949,8 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
 Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
     tolerance = 4;
 
+    I.amOnPage("/localconf.jsp");
+
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
     DT.waitForLoader();
     I.jstreeWaitForLoader();

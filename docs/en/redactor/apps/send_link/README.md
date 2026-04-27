@@ -1,25 +1,27 @@
-# Send page by email
+# Email this page
 
-Inserts an application into the page that allows you to send a link to the current page along with the completed text to an email address. If a visitor finds interesting information on your site, they can forward it to their email or to the email of a friend they want to share the page with.
+It embeds an application into the page that allows you to send a link to the current page along with the added text to an email address. If a visitor finds interesting information on your website, they can forward it to their email, or to the email of a friend with whom they want to share the page.
 
 ## Application settings
 
-In the settings, you can select from the following options:
-- Send full page by e-mail
-- Send by email the page title, perex and link to the page
+In the settings you can choose from the following options:
+
+- Email the entire page
+- Send the page title, URL and link to the page by email
 
 ![](editor.png)
 
-## View application
+## View the application
 
 For the user, the fields are:
+
 - Your name
-- Your e-mail
-- E-mail of the recipient
+- Your email
+- Recipient's email
 - Subject
-- Enter the text from the image
+- Enter text from image
 - Report
 
-All fields except the message are required
+All fields except the message are required.
 
 ![](send_link.png)

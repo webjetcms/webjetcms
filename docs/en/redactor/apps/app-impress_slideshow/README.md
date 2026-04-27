@@ -1,14 +1,15 @@
 # Impressive presentation
 
-Animated presentation view with 3D effect of transition between slides. You can define title, subtitle, font and background color, illustration photo for each slide.
+Animated presentation display with 3D transition effect between slides. You can define a title, subtitle, font and background color, and illustrative photo for each slide.
 
 ## Application settings
 
-Settings tabs **Style and settings** a **Items**.
+**Style and Settings** and **Items** settings tabs.
 
 ### Style and settings
 
-In this section it is possible to set:
+In this section you can set:
+
 - Height
 - Image width
 - Image height
@@ -17,21 +18,22 @@ In this section it is possible to set:
 
 ### Items
 
-In this section you can see and manage the application items, so classic actions like add/edit/delete...
+In this section you can see and manage application items, so classic actions like adding/editing/deleting...
 
 ![](editor-items.png)
 
-You can set the following parameters for each item:
-- **Image**, image selection using the explorer is supported, as well as direct entry of the image path
-- **Title**, image caption (text styling is also possible)
+You can set the following parameters for individual items:
+
+- **Image**, image selection using explorer is supported, as well as direct entry of the image path
+- **Title**, image title (text styling is also possible)
 - **Subtitle**, image subtitle (text styling is also possible)
-- **Click to view another page (redirect)**, select the page you will be redirected to (direct path entry is also supported)
-- **Title colour**
-- **Colour of the subtitle**
-- **Background colour**
+- **When clicked, display another page (redirect)**, select the page to which you will be redirected (direct path entry is also supported)
+- **Title color**
+- **Subtitle color**
+- **Background color**
 
 ![](editor-items-edit.png)
 
-## View application
+## View the application
 
 ![](app-impress_slideshow.png)

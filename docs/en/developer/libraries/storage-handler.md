@@ -1,20 +1,20 @@
-# Library 'StorageHandler'
+# 'StorageHandler' library
 
-for the management and use of Storage
+for managing and using Storage
 
-***
-
+---
 **Dependencies**
 
 - [Tools](tools.md)
 - [Store](store.md)
+---
 
-***
+`StorageHandler` allows you to manipulate `window.localStorage` and `window.sessionStorage` at the nested object level,
+where each created master key specified with [setStoreName()](#setstorename) contains an object,
+in which we can simply define [setStorageItem()](#setstorageitem) and select [getStorageItem()](#getstorageitem) data based on a sub-key.
 
-`StorageHandler` allows you to manipulate `window.localStorage` a `window.sessionStorage` at the level of nested objects, where each created master key specified by [setStoreName()](#setstorename) contains an object in which we can easily define [setStorageItem()](#setstorageitem) and choose [getStorageItem()](#getstorageitem) data based on the sub-key.
 
-Expands the class [Store](store.md).
-
+Extends the [Store](store.md) class.
 ```javascript
 import Store from '../store/store';
 
@@ -23,19 +23,20 @@ class StorageHandler extends Store {}
 
 ### Description of operation:
 
-In the system **WebJET** Is `StorageHandler` used as an interface in extension classes and libraries to store data under the key of the class or library being used.
+In the **WebJET** system, `StorageHandler` is used as an interface in extension classes and libraries to store data under the key of the class or library being used.
 
-Examples of such uses are e.g. [Translator](translator.md) or [CellVisibilityService](cell-visibility-service.md)
+Examples of such uses are, for example, [Translator](translator.md) or [CellVisibilityService](cell-visibility-service.md)
 
-Methods [getStorageItem()](#getstorageitem) a [setStorageItem()](#setstorageitem) do not work directly with the local/session Storage key, but with the object key that is under the master key specified by [setStoreName()](#setstorename) when creating a class instance. The data is stored as a JSON object. Therefore, each time a change is made to the object, the value of the master key is overwritten with a new record of the entire JSON object.
+The [getStorageItem()](#getstorageitem) and [setStorageItem()](#setstorageitem) methods do not work directly with the local/session Storage key but with the object key,
+which is located under the master key specified using [setStoreName()](#setstorename) when creating an instance of the class.
+The data is stored as a JSON object. Therefore, every time the object is changed, the master key value is overwritten with a new record of the entire JSON object.
 
 ## Creating an instance:
 
 ```javascript
 import {StorageHandler} from 'storage-handler/storage-handler';
 ```
-
-**Application:**
+**Usage:**
 
 ```javascript
 // Defaultne sa pracuje s localStorage
@@ -46,30 +47,29 @@ store.setStorageItem('sub-kľúč-1', 'hodnota-1');
 store.setStorageItem('sub-kľúč-2', 'hodnota-2');
 ```
 
-## List of APIs
+## API List
 
-**(Click to see the detail for the function)**
+**(Click to view feature details)**
 
-| Methods | Note |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [setStoreName()](#setstorename)                      |
-| [setSessionStorage()](store.md?id=setsessionstorage) | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
-| [setLocalStorage()](store.md?id=setlocalstorage)     | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
-| [getStorageItem()](#getstorageitem)                  |
-| [setStorageItem()](#setstorageitem)                  |
-| [removeStorageItem()](#removestorageitem)            |
-| [clearData()](#cleardata)                            |
-| [destroy()](#destroy)                                |
-| [storeExist()](#storeexist)                          |
+| Methods                                                | Note    |
+| -----------                                           | ----------- |
+| [setStoreName()](#setstorename)                       |
+| [setSessionStorage()](store.md?id=setsessionstorage)  | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
+| [setLocalStorage()](store.md?id=setlocalstorage)      | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
+| [getStorageItem()](#getstorageitem)                   |
+| [setStorageItem()](#setstorageitem)                   |
+| [removeStorageItem()](#removestorageitem)             |
+| [clearData()](#cleardata)                             |
+| [destroy()](#destroy)                                 |
+| [storeExist()](#storeexist)                           |
 
-A more detailed API can be found in [GIT repositories](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/storage-handler#storagehandler-kni%C5%BEnica-na-spr%C3%A1vu-a-pou%C5%BE%C3%ADvanie-storage)
+A more detailed API can be found in the [GIT repository](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/storage-handler#storagehandler-kni%C5%BEnica-na-spr%C3%A1vu-a-pou%C5%BE%C3%ADvanie-storage)
 
 ### Detailed description of functions
 
 #### setStoreName()
 
-Sets the class to a new key name where the data will be stored. It can be used on the fly and thus have only one instance. The method returns the class `StorageHandler`
-
+Sets the class to a new key name to store data in. It can be used at runtime, so there is only one instance. The method returns the class ``StorageHandler``
 ```javascript
 /**
  * @description Nastaví triede nový názov kľúča, do ktorého sa budú ukladať dáta.
@@ -81,13 +81,10 @@ Sets the class to a new key name where the data will be stored. It can be used o
  */
 setStoreName(name);
 ```
-
-***
-
+---
 #### getStorageItem()
 
 Returns a value based on the name of the specified key.
-
 ```javascript
 /**
  * @description Vráti hodnotu na základe názvu zadaného kľúča.
@@ -97,13 +94,10 @@ Returns a value based on the name of the specified key.
  */
 getStorageItem(key);
 ```
-
-***
-
+---
 #### setStorageItem()
 
-Creates the key specified in the repository and stores the specified value under it.
-
+Creates the specified key in the repository and stores the specified value under it.
 ```javascript
 /**
  * @description Vytvorí zadaný v úložisku kľúč a uloží pod ním zadanú hodnotu.
@@ -114,13 +108,10 @@ Creates the key specified in the repository and stores the specified value under
  */
 setStorageItem(key, value);
 ```
-
-***
-
+---
 #### removeStorageItem()
 
-Removes the item based on the key. The method can have caseSensitive checking disabled.
-
+Deletes an item based on the key. The method can have caseSensitive checking disabled.
 ```javascript
 /**
  * @description Odstráni položku na základe kľúča.
@@ -132,13 +123,10 @@ Removes the item based on the key. The method can have caseSensitive checking di
  */
 removeStorageItem(key, caseSensitive = true);
 ```
-
-***
-
+---
 #### clearData()
 
-Deletes the currently used repository and leaves it empty - null. However, the master key is retained.
-
+Deletes the currently used storage and leaves it empty - null. However, it retains the master key.
 ```javascript
 /**
  * @description Zmaže aktuálne používané úložisko a nechá ho prázdne - null. Ponechá však master kľúč.
@@ -147,13 +135,10 @@ Deletes the currently used repository and leaves it empty - null. However, the m
  */
 clearData();
 ```
-
-***
-
+---
 #### destroy()
 
-Completely removes the currently used repository.
-
+It will completely remove the currently used storage.
 ```javascript
 /**
  * @description Úplne odstráni aktuálne používané úložisko.
@@ -162,13 +147,10 @@ Completely removes the currently used repository.
  */
 destroy()
 ```
-
-***
-
+---
 #### storeExist()
 
 Tests whether the specified repository exists.
-
 ```javascript
 /**
  * @description Otestuje, či existuje zadané úložisko.
@@ -178,5 +160,4 @@ Tests whether the specified repository exists.
  */
 storeExist(storeName);
 ```
-
-***
+---

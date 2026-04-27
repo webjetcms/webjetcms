@@ -416,6 +416,7 @@ Scenario('Overenie editacie cez vsetky media a zobrazenie zmeny hned', ({I, DT, 
     //ak padne predchadzajuci test nastav datum stranky na aktualny
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=24008");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     DTE.save();
 
     I.amOnPage("/admin/v9/webpages/media/");

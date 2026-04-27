@@ -1,10 +1,10 @@
-# Problem solving
+# Troubleshooting
 
-Here you will find possible solutions to the problems we encountered during development.
+Here you will find possible solutions to problems we encountered during development.
 
 ## java.lang.NoSuchFieldError: r$sfields
 
-If SPRING does not work after the boot (login does not appear) and you find an error in the log like:
+If SPRING does not work for you (login does not appear) and you find an error like this in the log:
 
 ```java
 okt 14, 2020 10:39:19 AM org.apache.catalina.core.StandardContext loadOnStartup
@@ -17,11 +17,11 @@ java.lang.NoSuchFieldError: r$sfields
         at org.springframework.cglib.core.AbstractClassGenerator.generate(AbstractClassGenerator.java:359)
 ```
 
-so the likely problem is in using the same package for the spring class as is already used in WebJET 8. Spring has some problem with the class loader in the classes directory and the spring archive. We could not find a solution other than using a different package for WebJET 2021.
+so the likely problem is using the same package for the spring class as is already used in WebJET 8. Spring has some problem with the class loader of the class in the classes directory and the jar archive. We were unable to find a solution other than using a different package for WebJET 2021.
 
 ## XXXrepository is not accessible
 
-If SPRING doesn't work after boot (no login), the problem may be that the repository is not declared as `public`:
+If SPRING doesn't work after starting (login is not displayed), the problem may be that the repository is not declared as ```public```:
 
 ```java
 @Repository
@@ -30,39 +30,39 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
 
 ## Error Cannot find message resources under key org.apache.struts.action.MESSAGE
 
-The error appears when you have a directory on the server `/WEB-INF/lib/` Libraries `struts-core-1.3.8.jar` or `struts-taglib-1.3.8.jar`. These libraries are implemented in `webjet-8.7-SNAPSHOT-struts.jar` and duplication can cause WebJET to become inoperable.
+The error appears when you have libraries ```struts-core-1.3.8.jar``` or ```struts-taglib-1.3.8.jar``` in the ```/WEB-INF/lib/``` directory on your server. These libraries are implemented in ```webjet-8.7-SNAPSHOT-struts.jar``` and duplication can cause WebJET to not work.
 
-## Display translation keys
+## View translation keys
 
-If you are seeing translation keys of type `components.monitoring.date_insert` instead of text like **Date of insertion**, probably not defined in the translation file. Follow the instructions on [defining translation keys](../datatables-editor/datatable-columns.md#translations-of-column-headings).
+If you see translation keys of the type ```components.monitoring.date_insert``` instead of text of the type **Date inserted**, they are probably not defined in the translation file. Follow the instructions for [defining translation keys](../datatables-editor/datatable-columns.md#translations-of-column-names).
 
-## Error NoSuchMethodError (Ljava/lang/String;)V
+## NoSuchMethodError (Ljava/lang/String;)In error
 
-An error may appear if a parent class that contains an annotation `@MappedSuperclass` has methods generated using Lombok annotations as `@Data, @Getter alebo @Setter` as Lombok is not adapted to inheritance methods. In this case, you need to remove the Lombok annotations and generate all the necessary methods and constructors directly in the parent class.
+The error may appear if the parent class that contains the ```@MappedSuperclass``` annotation has methods generated using Lombok annotations like ```@Data, @Getter alebo @Setter```, since Lombok is not designed for method inheritance. In this case, it is necessary to remove the Lombok annotations and generate all necessary methods and constructors directly into the parent class.
 
 ## StackOverflowError
 
-The error is displayed when the code is looped. This may be caused by the mapping of OneToMany and ManyToOne. The workaround for this situation is to add JSON annotations from both sides of the mapping.
+The error appears when the code loops. This can be caused by OneToMany and ManyToOne mappings. The solution to this situation is to add JSON annotations on both sides of the mapping.
 
 ```java
 @JsonBackReference(value="")
 ```
 
-Annotation `@JsonBackReference` is added on the @ManyToOne side, where value is the name of the variable.
+The annotation ```@JsonBackReference``` is added on the @ManyToOne side, where value is the name of the given variable.
 
 ```java
 @JsonManagedReference(value="")
 ```
 
-Annotation `@JsonManagedReference` is added on the @OneToMany side, where value is the name of the variable we are mapping by (the name of the variable from the ManyToOne side).
+The annotation ```@JsonManagedReference``` is added on the @OneToMany side, where value is the name of the variable we are mapping against (the name of the variable from the ManyToOne side).
 
 ## Crashing on XssAttributeConverter
 
-If you are failing a conversion on a class `XssAttributeConverter` on the conversion e.g. `BigDecimal` and it seems to you that this is a mistake `XssAttributeConverter` because the latter is to be applied only to `String` object, then check the Java entity for the attribute to see if it is defined as `String` and check the type in the database to see if you have it as `varchar`. Because it seems to you that you have it as a number, but actually somewhere you have an attribute as a string and thus it is applied to it `XssAttributeConverter`.
+If you are getting a conversion error on class ```XssAttributeConverter``` on conversion e.g. ```BigDecimal``` and it seems to you that it is an error ```XssAttributeConverter``` because it should only be applied to the ```String``` object, then check the attribute in the Java entity to see if it is defined as ```String``` and also check the type in the database to see if it is not defined as ```varchar```. Because it seems to you that you have it as a number, but in reality you have the attribute as a string somewhere and therefore ```XssAttributeConverter``` is applied to it.
 
 ## Service/Data repository is NULL
 
-If you have in `Controller` Classroom `@Service` or Spring DATA repository and for some `@GetMapping` is suddenly `NULL` make sure the method is set as `public`.
+If you have a ```Controller``` class in ```@Service``` or a Spring DATA repository and for some ```@GetMapping``` it is suddenly ```NULL```, make sure the method is set as ```public```.
 
 ```java
 public class FormsController extends DatatableRestControllerV2<FormsEntity, Long> {
@@ -82,9 +82,9 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     }
 ```
 
-## Problem with entity saving
+## Problem saving entity
 
-If you encounter an error when creating/modifying an entity `Content type 'application/json;charset=UTF-8' not supported` this may be due to a nested table.
+If you encounter the ```Content type 'application/json;charset=UTF-8' not supported``` error when creating/editing an entity, it may be caused by a nested table.
 
 ```java
     @Transient
@@ -102,6 +102,6 @@ If you encounter an error when creating/modifying an entity `Content type 'appli
     private List<StatClicksEntity> statClicksTab;
 ```
 
-An error occurs if the Entity of the nested table (in this case StatClicksEntity) contains a mapping `@OneToMany` or `@ManyToOne` and in this mapping the annotation is used `@JsonManagedReference`. At a glance, it helps to use annotation `@JsonIgnore` (it will stop displaying the error) but it won't work.
+The error occurs if the Entity of the nested table (in this case StatClicksEntity) contains the mapping ```@OneToMany``` or ```@ManyToOne``` and the annotation ```@JsonManagedReference``` is used in this mapping. At first glance, using the annotation ```@JsonIgnore``` will help (the error will stop appearing), but it will not work.
 
-The solution is to remove the annotation `@JsonManagedReference`.
+The solution is to remove the ```@JsonManagedReference``` annotation. 

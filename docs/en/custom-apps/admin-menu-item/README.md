@@ -1,34 +1,34 @@
-# Menu item in the admin section
+# Admin menu item
 
-The administration is based on [data tables](../../developer/datatables/README.md) a [REST interface](../../developer/datatables/restcontroller.md). As a basis, it is necessary to understand their operation according to the documentation for [WebJET CMS Programmer](../../developer/README.md).
+The administration is based on [data tables](../../developer/datatables/README.md) and [REST interfaces](../../developer/datatables/restcontroller.md). As a basis, it is necessary to understand their functioning according to the documentation for [WebJET CMS Programmer](../../developer/README.md).
 
-In this demonstration we will program the contact management, the table is used `contact` which exists in the standard WebJET CMS installation (but is typically not used).
+In this example, we will program contact management, using the ```contact``` table, which exists in the standard WebJET CMS installation (but is typically not used).
 
 ![](contact.png)
 
 ## Backend
 
-The ideal solution uses `Spring DATA` repository, REST controller and datatable generated from `@DataTableColumn`, [Annotations](../../developer/datatables-editor/datatable-columns.md).
+The ideal solution uses a `Spring DATA` repository, a REST controller, and a datatable generated from ```@DataTableColumn```, [annotations](../../developer/datatables-editor/datatable-columns.md).
 
-Sample JPA entity with annotations `@DataTableColumn`, [for datatable and editor](../../developer/datatables-editor/datatable-columns.md). Also note the annotation `@EntityListeners` for automatic [audit logging](../../developer/backend/auditing.md) when changing the entity.
+Sample JPA entity also with ```@DataTableColumn``` annotations, [for datatable and editor](../../developer/datatables-editor/datatable-columns.md). Also note the ```@EntityListeners``` annotation for automatic [audit logging](../../developer/backend/auditing.md) when changing the entity.
 
-Mandatory fields and other validations [you set annotations](../../developer/datatables/restcontroller.md#validation---required-fields), `@NotBlank,@Size,@Email` etc.
+Required fields and other validations [are set with annotations](../../developer/datatables/restcontroller.md#validation--required-fields), ```@NotBlank,@Size,@Email``` etc.
 
-!>**Warning:** do not use primitive types in the entity `int, long` but only object `Integer, Long` otherwise filtering/searching will not work correctly.
+!>**Warning:** Do not use primitive types `int, long` in the entity, but only object types `Integer, Long`, otherwise filtering/searching will not work correctly.
 
 ```java
 package sk.iway.basecms.contact;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -89,7 +89,7 @@ public class ContactEntity {
 }
 ```
 
-Sample JPA repository, when using it always use also `Pageable` object for paging and layout. To support dynamic generation of search criteria (in the REST controller method `addSpecSearch`) the repository also extends `JpaSpecificationExecutor`.
+Sample JPA repository, when using it always use the ```Pageable``` object for pagination and ordering. To support dynamic generation of search criteria (in the REST controller, the ```addSpecSearch``` method), the repository also extends ```JpaSpecificationExecutor```.
 
 ```java
 package sk.iway.basecms.contact;
@@ -111,13 +111,13 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long>, J
 }
 ```
 
-!>**Warning:** note the use of `JpaSpecificationExecutor`. It allows dynamic creation of SQL statement for searching/filtering/arranging records in the datatable. If you wouldn't use it, it searches in the form of [Query By Example](https://www.baeldung.com/spring-data-query-by-example) when **You must not** use primitive types and initialization values in Entity (e.g. `String text="test"`). When searching, the value would then be `test` automatically searched even when not entered. This solves `JpaSpecificationExecutor`, which searches only for the parameters specified in the filter (by testing request parameters starting with `search`).
+!>**Warning:** note the use of ```JpaSpecificationExecutor```. This allows for dynamic creation of SQL statements for searching/filtering/sorting records in a datatable. If you do not use it, the search is performed in the form of [Query By Example](https://www.baeldung.com/spring-data-query-by-example) where you **must** not use primitive types and initialization values ​​in the Entity (e.g. ```String text="test"```). When searching, the value ```test``` would then be automatically searched for even if it is not specified. This is solved by ```JpaSpecificationExecutor```, which searches only for parameters specified in the filter (by testing request parameters starting with ```search```).
 
-Sample REST controller, always pay attention to checking rights via annotation `@PreAuthorize` and don't forget the annotation `@Datatable` for correct generation of error responses.
+Sample REST controller, always pay attention to checking permissions via the ```@PreAuthorize``` annotation and don't forget the ```@Datatable``` annotation for correct generation of error responses.
 
-In the method `getOptions` sets the options for the country selection field.
+In the ```getOptions``` method, it sets the options for the country selection field.
 
-In the method `beforeSave` it is possible to set additional (non-editable) data before storing the entity in the database.
+In the ```beforeSave``` method, it is possible to set additional (non-editable) data before saving the entity to the database.
 
 ```java
 package sk.iway.basecms.contact;
@@ -188,13 +188,13 @@ public class ContactRestController extends DatatableRestControllerV2<ContactEnti
 
 ## Frontend
 
-As mentioned above datatables are used for the frontend. The administration is compiled from pug files to html and then displayed.
+As mentioned above, data tables are used for the frontend. The administration is compiled from pug files into html and then displayed.
 
-To make it easy to create a new page in the administration, we have introduced a pre-made page layout template. You will only add the middle part of the page (the template will ensure the generation of the header and menu). [URL mapping](../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) is prepared as `/apps/{app}/admin/` or `/apps/{app}/admin/{subpage}`.
+To easily create a new page in the administration, we have introduced a ready-made page layout template. You only need to fill in the middle part of the page (the template will generate the header and menu). [URL mapping](../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) is prepared as ```/apps/{app}/admin/``` or ```/apps/{app}/admin/{subpage}```.
 
-Just prepare the file `/apps/{app}/admin/index.html` or `/apps/{app}/admin/{subpage}.html` Where `{app}` is the name of the directory where the application is located (without accents and spaces), and `{subpage}` is the filename without suffix (if it is not the name index.html).
+Just prepare the file ```/apps/{app}/admin/index.html``` or ```/apps/{app}/admin/{subpage}.html``` where ```{app}``` is the name of the directory where the application is located (without diacritics and spaces) and ```{subpage}``` is the possible file name without an extension (if it is not index.html).
 
-An example is the application `src/main/webapp/apps/contact/admin/index.html` called via URL `/apps/contact/admin/`:
+An example is the application ```src/main/webapp/apps/contact/admin/index.html``` called via the URL address ```/apps/contact/admin/```:
 
 ```html
 <script>
@@ -234,15 +234,15 @@ An example is the application `src/main/webapp/apps/contact/admin/index.html` ca
 <table id="dataTable" class="datatableInit table"></table>
 ```
 
-Using the function [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigation-bar) a navigation bar is generated.
+Using the [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigation-bar) function, a navigation bar is generated.
 
 ![](breadcrumb.png)
 
-Feature [WJ.DataTable](../../developer/datatables/README.md#configuration-options) initializes the datatable in the page to an HTML table with `id=dataTable`. Please note the call `window.domReady.add` to be used instead of `$(document).ready` - call waiting for initialization [translation keys](../../developer/libraries/translator.md) and only after they are obtained, the specified function is called.
+The function [WJ.DataTable](../../developer/datatables/README.md#configuration-options) initializes the datatable in the page into an HTML table with ```id=dataTable```. Please note the call ```window.domReady.add```, which must be used instead of ```$(document).ready``` - the call waits for the initialization of [translation keys](../../developer/libraries/translator.md) and only after they are obtained is the specified function called.
 
 ![](datatable.png)
 
-In order to display the menu item and display the user rights, you still need to create a configuration file `modinfo.properties`, place this in the `/apps/MENO_APLIKACIE/`, for our case `src/main/webapp/apps/contact/modinfo.properties`:
+To display the menu item and display the user rights, it is still necessary to create a configuration file ```modinfo.properties```, place it in ```/apps/MENO_APLIKACIE/```, in our case ```src/main/webapp/apps/contact/modinfo.properties```:
 
 ```sh
 #prekladovy kluc menu polozky
@@ -265,9 +265,9 @@ custom=true
 #leftSubmenu1Link=/apps/contact/admin/subpage/
 ```
 
-If you have a site like `master-detail` which is not defined in `modinfo.properties` it may not display the left menu correctly because it doesn't know what item to highlight. The simplest solution is to name such a page `meno-details.html` (such as a URL `/apps/stat/admin/top-details/?docId=35267&dateRange=` in the file `/apps/stat/admin/top-details.html`). The term `-details` or `-detail` is removed when searching for a menu item to highlight, so that the main (`master`) Page.
+If you have a page of type ```master-detail``` that is not defined in ```modinfo.properties```, the left menu may not display correctly because it does not know which item to highlight. The simplest solution is to name such a page ```meno-details.html``` (such as the URL address ```/apps/stat/admin/top-details/?docId=35267&dateRange=``` in the file ```/apps/stat/admin/top-details.html```). The expression ```-details``` or ```-detail``` will be removed when searching for an item to highlight in the menu, and the main (```master```) page will be highlighted.
 
-If such use is not appropriate you can use the JavaScript function in your page `WJ.selectMenuItem(href)` to highlight the specified menu item. In the parameter `href` enter directly the URL of the page in the menu you want to highlight:
+If this is not appropriate, you can use the ```WJ.selectMenuItem(href)``` JavaScript function in your page to highlight the specified menu item. In the ```href``` parameter, you directly enter the URL address of the page in the menu that you want to highlight:
 
 ```JavaScript
 window.domReady.add(function () {
@@ -275,11 +275,11 @@ window.domReady.add(function () {
 });
 ```
 
-In the case of an old JSP component, call the function using `setTimeout` to be executed after the page is displayed.
+In the case of an old JSP component, call the function using ```setTimeout``` so that it is executed only after the page is displayed.
 
 ### Attaching a JavaScript file
 
-If you need to attach JavaScript to your application, the WebJET module automatically searches for the file `/apps/{app}/admin/{app}.js` and, if it exists, inserts it into the HTML code header as a module, importing it as an object `appModule`:
+If you need to connect a JavaScript module to your application, WebJET automatically looks for the file ```/apps/{app}/admin/{app}.js``` and, if it exists, inserts it into the HTML code header as a module, importing it as the object ```appModule```:
 
 ```html
 <script type="module">
@@ -288,7 +288,7 @@ If you need to attach JavaScript to your application, the WebJET module automati
 </script>
 ```
 
-For example, in a stat application there would be a file `/apps/stat/admin/stat.js`:
+For example, in the stat application there would be a file ```/apps/stat/admin/stat.js```:
 
 ```javascript
 export const ChartType = {
@@ -308,11 +308,11 @@ export async function setAmchart(chartForm) {
 }
 ```
 
-which is then called in JavaScript/HTML code as `appModule.ChartType.Bar` etc.
+which is then called in JavaScript/HTML code as ```appModule.ChartType.Bar``` etc.
 
 ## Automated test
 
-For the date table is ready [basic automated test](../../developer/testing/datatable.md), which you just need to configure. Create a new test scenario in `src/test/webapp/tests/apps/contact.js` with at least a basic test:
+There is a [basic automated test](../../developer/testing/datatable.md) ready for the datatable, which you just need to configure. Create a new test scenario in ```src/test/webapp/tests/apps/contact.js``` with at least a basic test:
 
 ```javascript
 Feature('contact');

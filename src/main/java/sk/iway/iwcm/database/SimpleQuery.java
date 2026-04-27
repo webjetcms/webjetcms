@@ -103,7 +103,7 @@ public class SimpleQuery
 			exceptionMessage = ex.getMessage();
 			IllegalStateException exception = new IllegalStateException(exceptionMessage);
 			exception.initCause(ex);
-			Logger.error(SimpleQuery.class, "ERROR SQL: "+ sql + params);
+			Logger.error(SimpleQuery.class, "ERROR SQL: "+ sql + " ,params=" + params);
 			throw exception;
 		}
 		finally

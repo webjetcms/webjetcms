@@ -1,10 +1,10 @@
 # Optional fields
 
-Via optional fields it is possible to set optional attributes (values, texts) to the web page and directory according to the customer's needs. The values can then be transferred and used in the page template, see [documentation for Frontend programmer](../../frontend/webpages/customfields/README.md).
+Optional fields allow you to set optional attributes (values, texts) for the website and directory according to the customer's needs. The values ​​can then be transferred and used in the page template, see [Frontend programmer documentation](../../frontend/webpages/customfields/README.md).
 
 # Backend
 
-The settings for the optional fields depend on the template, template group, or domain being used (since they are controlled by the translation key settings). Thus, the options need to be sent from the backend for each edited web page separately. The transfer of settings is generically implemented [BaseEditorFields.getFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
+The settings of optional fields depend on the used template, template group or domain (since they are controlled by the translation key settings). Therefore, the options need to be sent from the backend for each edited web page separately. The transfer of settings is generically implemented [BaseEditorFields.getFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
 
 ```java
 @JsonIgnore
@@ -20,7 +20,7 @@ public List<Field> getFields(Object bean, String keyPrefix, char lastAlphabet) {
 }
 ```
 
-Call `getFields` as you can see it has an annotation `@JsonIgnore`. You must implicitly call the method to prepare the object array. Basic usage example:
+The call ```getFields``` as you can see has the annotation ```@JsonIgnore```. You must implicitly call the method to prepare the array of objects. Basic usage example:
 
 ```java
 //vytvorte triedu, ktora extenduje BaseEditorFields, nemusi obsahovat nic dalsie (ak nepotrebujete v editore dodatocne polia)
@@ -67,7 +67,7 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
 }
 ```
 
-Example in [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) where there are more operations and therefore the method `fromDocDetails` is implemented separately in `editorFields` object and called from `DocRestController.processFromEntity`.
+Example in [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) where there are multiple operations and therefore the method ```fromDocDetails``` is implemented separately in the ```editorFields``` object and called from ```DocRestController.processFromEntity```.
 
 ```java
 
@@ -103,23 +103,23 @@ public void fromDocDetails(DocDetails doc, boolean loadSubQueries) {
 }
 ```
 
-in the method `fromDocDetails` translation key prefixes are first set for searching by both template group and template ID, and then the list is retrieved `fieldsDefinition` (the frontend implicitly looks for this list in the object `editorFields.fieldsDefinition`).
+In the ```fromDocDetails``` method, the translation key prefixes are first set for searching by template group and template ID, and then the list ```fieldsDefinition``` is obtained (the frontend implicitly searches for this list in the ```editorFields.fieldsDefinition``` object).
 
-For functionality it is necessary that the bean contains attributes named `fieldX`, which in turn with the call `getFields` can bring optional fields to any bean.
+For functionality, it is necessary that the given bean contains attributes named ```fieldX```, which can then bring optional fields to any bean with a call to ```getFields```.
 
 ## Frontend
 
-Integration into the datatable editor is implemented in the file [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). For each field of the JSON object `editorFields.fieldsDefinition` the settings are obtained and the form fields are re-created in the DOM tree.
+Integration into the datatable editor is implemented in the file [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). For each field, the settings are retrieved from the JSON object ```editorFields.fieldsDefinition``` and the form fields are recreated in the DOM tree.
 
-The key is to connect the form field to an existing editor, this is provided by the call:
+The key is to connect the form field to the existing editor, this is done by calling:
 
 ```javascript
 EDITOR.field("field"+keyUpper).s.opts._input = inputBox.find('input, select');
 ```
 
-which from the new `inputBox` object gets the form field and sets it to the editor. An internal API call is used `.s.opts._input` which is dangerous in terms of API changes in the datatables editor, but we have not found any other solution.
+which gets the form field from the new ```inputBox``` object and sets it to the editor. An internal API call ```.s.opts._input``` is used, which is dangerous from the point of view of changes in the API in the datatables editor, but we have not found another solution.
 
-The function call is made in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) when you open the window.
+The function call is made in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) when the window is opened.
 
 ```javascript
 import * as CustomFields from './custom-fields';
@@ -130,7 +130,7 @@ EDITOR.on('open', function (e, mode, action) {
 });
 ```
 
-In case of use `multiple select` this stores the value of the field as `Array`. Conversion to String separated `|` before sending the form is secured using the method `prepareCustomFieldsDataBeforeSend` which is called in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+In case of using ```multiple select``` this stores the field value as ```Array```. Conversion to String separated by ```|``` before submitting the form is provided by the method ```prepareCustomFieldsDataBeforeSend```, which is called in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 ```
 EDITOR.on('preSubmit', function (e, data, action) {
@@ -142,9 +142,9 @@ EDITOR.on('preSubmit', function (e, data, action) {
 
 ## Renaming columns
 
-If you also need to rename the displayed columns in the table according to the optional fields just set the option `customFieldsUpdateColumns: true` when initializing the datatable. The settings of the optional fields are obtained from the first record `content[0].editorFields.fieldsDefinition` after each data retrieval.
+If you also need to rename the displayed columns in the table according to the optional fields, just set the ```customFieldsUpdateColumns: true``` option when initializing the datatable. The optional field settings are obtained from the first record ```content[0].editorFields.fieldsDefinition``` after each data load.
 
-Columns with `null` v `label` are hidden in the table and are also hidden in the column display settings (as if they did not exist).
+Columns with ```null``` in ```label``` are hidden in the table and are also hidden in the column display settings (as if they did not exist).
 
 ```javascript
 translationKeysTable = WJ.DataTable({
@@ -155,10 +155,10 @@ translationKeysTable = WJ.DataTable({
 });
 ```
 
-By setting up `customFieldsUpdateColumnsPreserveVisibility` to the value of `true` the column display setting for the mode is preserved for the user `customFieldsUpdateColumns`. It can only be used when the columns for the datatable are not changed during display. For example, in the Translation Keys section, the data is not changed, it can be set to `true` and the user will retain the column display settings. In the Dials section, the columns are changed when the dial is changed (data is loaded), this option is not applicable there.
+Setting `customFieldsUpdateColumnsPreserveVisibility` to the value `true` will preserve the column display setting for the `customFieldsUpdateColumns` mode for the user. It can only be used if the columns for the data table are not changed during display. For example, in the Translation keys section, the data does not change, it can be set to `true` and the user will preserve the column display setting. In the Codebooks section, the columns change when the codebook is changed (data is loaded), this option is not applicable there.
 
 ### Implementation details
 
-Processing is in `index.js` in the function of `updateOptionsFromJson`. If the option is turned on `DATA.customFieldsUpdateColumns===true` and the JSON object contains in the first record contains `editorFields?.fieldsDefinition` so the column names in the header and also in the `DATA` facility. Columns named `null` are hidden (this is ensured by the configuration `colVis` in the function of `columns` where the columns named `null` omit). Then the `$("#"+DATA.id).trigger("column-reorder.dt");` to update the column names in the column view settings (`colvis`).
+The processing is in ```index.js``` in the function ```updateOptionsFromJson```. If the option ```DATA.customFieldsUpdateColumns===true``` is enabled and the JSON object contains ```editorFields?.fieldsDefinition``` in the first record, the column names in the header and also in the ```DATA``` object will be changed. Columns with the name ```null``` are hidden (this is ensured by the configuration of ```colVis``` in the function ```columns``` where columns with the name ```null``` are omitted). Subsequently, ```$("#"+DATA.id).trigger("column-reorder.dt");``` is called to update the column names in the column display settings (```colvis```).
 
-In the definition `buttons.colvis` is a modified reading `columnText` so that it always takes the current value from `DATA` definitions and `columns` function, which defines what columns are displayed in the settings, returns `true/false` according to whether the column has the name `null`. This way, the current column names are always shown in the column display settings and those that do not have a defined name are hidden (they are used).
+In the definition ```buttons.colvis```, the reading ```columnText``` is modified so that it always takes the current value from the ```DATA``` definition and the ```columns``` function that defines which columns will be displayed in the setting returns ```true/false``` depending on whether the column has the name ```null```. This way, the current column names are always displayed in the column display setting and those that do not have a defined name (are in use) are hidden.

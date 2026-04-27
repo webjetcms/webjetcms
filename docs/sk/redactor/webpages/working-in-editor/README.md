@@ -131,7 +131,9 @@ V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, ti
 
 ![](link_dialog_button_advanced.png)
 
-Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Ten vložíte kliknutím na menu výberové menu pre vloženie formuláru a následne možnosť Tlačidlo. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+
+![](wjformbutton.png)
 
 ## Vkladanie obrázkov
 

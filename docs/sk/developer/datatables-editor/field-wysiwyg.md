@@ -24,7 +24,7 @@ var tabs = [
 
 ## Poznámky k implementácii
 
-Implementácia je v súbore [field-type-wysiwyg.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg) a v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastavené ako ```$.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();```.
+Implementácia je v súbore [field-type-wysiwyg.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg.js) a v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastavené ako ```$.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();```.
 
 Pri zobrazení v editore sa v ```create``` funkcii vygeneruje samostatný formulár s názvom ```editorForm```, ktorý obsahuje dodatočné polia ```docId```, ```groupId```, ```virtualPath```, ```title``` s hodnotami naplnenými podľa aktuálneho JSON objektu. Tieto polia sa používajú z historických dôvodov v rôznych komponenách ckeditora pre získanie ID aktuálne upravovanej stránky (napr. pre zobrazenie Média tejto stránky pri výbere obrázka/súboru).
 
@@ -32,7 +32,7 @@ Z dôvodu rýchlosti zobrazenia zoznamu web stránok sa ckeditor inicializuje a�
 
 ### Inicializácia ckeditor
 
-Samotná funkčnosť ckeditora je upravená v súbore [datatables-ckeditor.js](../../../src/main/webapp/admin/v9/src/js/datatables-ckeditor.js) ktorý upravuje štandardný ckeditor pre požiadavky WebJETu (integrácia elfinder, upravené dialógové okná, pridané nové pluginy atď.). Základ vychádza z pôvodného kódu z verzie 8, ale funkčnosť je obalená do triedy ```DatatablesCkEditor```. Jeho inicializácia je zapuzdrená v ```app.js``` ako:
+Samotná funkčnosť ckeditora je upravená v súbore [datatables-ckeditor.js](../../../../src/main/webapp/admin/v9/src/js/datatables-ckeditor.js) ktorý upravuje štandardný ckeditor pre požiadavky WebJETu (integrácia elfinder, upravené dialógové okná, pridané nové pluginy atď.). Základ vychádza z pôvodného kódu z verzie 8, ale funkčnosť je obalená do triedy ```DatatablesCkEditor```. Jeho inicializácia je zapuzdrená v ```app.js``` ako:
 
 ```javascript
 const createDatatablesCkEditor = () => {

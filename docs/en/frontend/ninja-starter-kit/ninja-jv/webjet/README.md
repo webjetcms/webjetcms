@@ -1,16 +1,16 @@
 # Information about Webjet
 
 | Method | Type | Description |
-| --------------------------------- | -------- | ------------------------------------ |
-| ${ninja.webjet.installName}       | *String* | Installname |
-| ${ninja.webjet.generatedTime}     | *String* | Page generation time |
-| ${ninja.webjet.pageFunctionsPath} | *String* | Basic JS Functions |
-| ${ninja.webjet.insertJqueryHtml}  | *String* | Global Jquery Library |
-| ${ninja.webjet.insertJqueryFake}  | *String* | Blocking the global Jquery library |
+| --- | --- | --- |
+| ${ninja.webjet.installName} | *String* | Install name |
+| ${ninja.webjet.generatedTime} | *String* | Page generation time |
+| ${ninja.webjet.pageFunctionsPath} | *String* | Basic JS functions |
+| ${ninja.webjet.insertJqueryHtml} | *String* | Global Jquery library  |
+| ${ninja.webjet.insertJqueryFake} | *String* | Blocking the global Jquery library |
 
-## Installname *String*
+## Install name *String*
 
-Returns the value of InstallName
+Returns the InstallName value.
 
 ```java
 ${ninja.webjet.installName}
@@ -18,7 +18,7 @@ ${ninja.webjet.installName}
 
 ## Page generation time *String*
 
-Returns the server-side page generation time in the format `DD:MM:RRRR HH:MM:SS` e.g. `27.11.2018 16:18:24`.
+Returns the time the page was generated on the server side in the format `DD:MM:RRRR HH:MM:SS` e.g. `27.11.2018 16:18:24`.
 
 ```java
 ${ninja.webjet.generatedTime}
@@ -26,28 +26,27 @@ ${ninja.webjet.generatedTime}
 
 ## Basic JS functions *String*
 
-Returns the path to the basic global webjet functions that are required for the site to function properly.The path must be generated in a combine or script tag as a link.
+Returns the path to the basic global webjet functions that are necessary for the correct functioning of the website. The path needs to be generated in combine or in a script tag as a link.
 
 ```java
 ${ninja.webjet.pageFunctionsPath}
 ```
 
-The path that is generated:
-
+The path that will be generated:
 ```url
 /components/_common/javascript/page_functions.js.jsp
 ```
 
 ## Global Jquery library *String*
 
-Inserts a script with a link to the current version of jquery that is used in the webject. If you don't insert it this way, it will insert itself anyway. At least this way you can specify the location where the call should be generated. If you don't want jquery to be added, call the method `${ninja.webjet.insertJqueryFake}`. She simulates it and jquery doesn't join.
+It inserts a script with a link to the current version of jQuery that is being used in the website. If you don't insert it this way, it will insert itself anyway. This way you can at least specify where the call should be generated.
+If you don't want jQuery to be added, call the `${ninja.webjet.insertJqueryFake}` method. It will simulate it and jQuery will not be added.
 
 ```java
 ${ninja.webjet.insertJqueryHtml}
 ```
 
-The message that is generated:
-
+The link that will be generated:
 ```html
 <script type="text/javascript" src="/components/_common/javascript/jquery.js" ></script>
 <script type="text/javascript" src="/components/_common/javascript/page_functions.js.jsp?language=sk" ></script>
@@ -56,7 +55,7 @@ The message that is generated:
 
 ## Blocking the global Jquery library *String*
 
-Simulating the insertion of the jquery version. This will block the automatic insertion of the current jquery library on the web. It is then necessary to manually add global JS function calls using `${ninja.webjet.pageFunctionsPath}`.
+Simulate the insertion of a jQuery version. This blocks the automatic insertion of the current jQuery library into the website. It is then necessary to manually add the call to global JS functions using `${ninja.webjet.pageFunctionsPath}`.
 
 ```java
 ${ninja.webjet.insertJqueryFake}

@@ -1,16 +1,16 @@
 # List of websites/news
 
-Application [News](../../redactor/apps/news/README.md), inserts a list of web pages in the specified folder into the page. It is used to insert a list of news, press releases, but also other similar listings (list of contact points, personal contacts, products and so on).
+The [News] application (../../redactor/apps/news/README.md) inserts a list of websites in the specified folder into the page. It is used to insert a list of news, press releases, but also other similar listings (list of contact points, personal contacts, products, etc.).
 
 The table provides editing options similar to a list of web pages.
 
 ![](../../redactor/apps/news/admin-dt.png)
 
-If the customer has specific requirements for displaying columns (e.g. for a product list) or information, you can implement a custom application that uses the code for the news list.
+If a customer has specific requirements for displaying columns (e.g. for a product list) or information, you can implement your own application that uses the code for the news list.
 
-Below is the complete code for the news page. You can take advantage of the feature of editing standard columns using the `window.WJ.DataTable.mergeColumns`. The example modifies the column visibility attribute setting, but you can also rename the title as shown in the page title example.
+Below is the complete code for the news list page. You can use the feature of editing standard columns using the `window.WJ.DataTable.mergeColumns` function. In the example, the visibility attribute setting of the column is modified, but you can also rename the name as shown in the case of the page name.
 
-If you don't need to change the folder ID value, you can of course remove the AJAX call `/admin/rest/news/news-list/convertIdsToNamePair`, which gets the list for the folder selection field in the header.
+If you don't need to change the folder ID value, you can of course remove the AJAX call `/admin/rest/news/news-list/convertIdsToNamePair` that gets the list for the folder selection field in the header.
 
 ```html
 <script data-th-inline="javascript">
@@ -102,11 +102,11 @@ If you don't need to change the folder ID value, you can of course remove the AJ
 <table id="newsDataTable" class="datatableInit table"></table>
 ```
 
-If the user does not have direct access to the web pages, you need to add your application right to the conf. variable `webpagesFunctionsPerms`, which lists the rights to work with the website. This includes functions for inserting an image and the like.
+If the user does not have direct access to the web pages, it is necessary to add your application rights to the config variable `webpagesFunctionsPerms`, which contains a list of rights that acquire the right to work with the web pages. These include functions for inserting images and the like.
 
 ## Backend
 
-If you need a specific REST service for providing a list of web pages/news you can use the ready class [WebpagesDatatable](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) which you can extend and override the methods to suit your needs.
+If you need a specific REST service for providing a list of web pages/news, you can use the ready-made class [WebpagesDatatable](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) which you can extend and override the methods according to your needs.
 
 ```java
 @Datatable

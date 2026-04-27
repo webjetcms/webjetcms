@@ -122,9 +122,9 @@ Tlačidlo sa často používa ako `call to action` prvok na webových stránkach
 
 Podporované sú aj SVG ikony, ktoré je možné vložiť do tlačidla, viď sekcia vyššie.
 
-Ak tlačidlo nastavíte ako zakázané - `disabled`, tak naň nie je možné v editore kliknúť pre otvorenie dialógu na úpravu vlastností tlačidla. Môžete ale kliknúť prvým tlačidlom a v kontextovej ponuke zvoliť možnosť Vlastnosti tlačidla.
-
 Možnosť vložiť tlačidlo sa zobrazuje vo výberovom menu pre vloženie formuláru. Do nástrojovej lišty ho pridáte pridaním hodnoty `WebjetFormButton` do konfiguračnej premennej `ckeditor_toolbar`. Zobrazí sa automaticky ak máte nakonfigurované vkladanie SVG ikon.
+
+![](../../redactor/webpages/working-in-editor/wjformbutton.png)
 
 ## Vlastné doplnky (plugins)
 

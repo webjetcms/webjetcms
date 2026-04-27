@@ -1,7 +1,7 @@
 export function typeWysiwyg() {
 
     var DIRTY_CHECK_DELAY_MS = 5000;
-    function getThisField(conf) {
+    function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
     }
 
@@ -62,7 +62,7 @@ export function typeWysiwyg() {
 
             //console.log("input=", conf._input);
             //nastav atributy
-            if (typeof conf.attr != undefined && conf.attr != null) {
+            if (typeof conf.attr != "undefined" && conf.attr != null) {
                 $.each(conf.attr, function( key, value ) {
                     //console.log("Setting attr: key=", key, " value=", value);
                     $(conf._input).attr(key, value);
@@ -81,12 +81,11 @@ export function typeWysiwyg() {
                 }
 
                 //console.log("data field: ", EDITOR.field( 'data' ).val());
-
-                //TODO: FormDB.getAllRegularExpression();
                 if (conf.wjeditor==null) {
                     window.createDatatablesCkEditor().then(module => {
                         //allow to use module for Page Builder
                         window.datatablesCkEditorModule = module;
+                        //console.log("Creating WYSIWYG editor, module=", module);
 
                         const options = {
                             datatable: EDITOR.TABLE,
@@ -100,12 +99,15 @@ export function typeWysiwyg() {
                             },
                             onReady: function() {
                                 //console.log("Setting json onReady, json=", EDITOR.currentJson);
-                                conf.wjeditor.setJson(EDITOR.currentJson);
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
 
+                                conf.wjeditor.setJson(EDITOR.currentJson);
+                                //on first run call also setData to push HTML content after JSON is set (so there will be correct CSS styles allready set in editor)
+                                conf.wjeditor.setData(EDITOR.currentJson.data);
+
                                 //nastav otvorene docid do inputu
-                                if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != undefined && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
+                                if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
                             }
                         }
                         if (typeof window.CKEDITOR == "undefined") {
@@ -180,7 +182,8 @@ export function typeWysiwyg() {
         },
 
         get: function ( conf ) {
-            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+            //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
+            if (conf.wjeditor != null) {
                 var htmlCode = conf.wjeditor.getData();
                 //console.log("WYSIWYG get, htmlCode=", htmlCode);
                 //set htmlCode to input element, because it can be PageBuilder instance
@@ -220,12 +223,18 @@ export function typeWysiwyg() {
             return html;
         },
 
+        /**
+         * Set value to CKEditor, if editor is initialized setData, otherwise wait for EDITOR.on('open') event and set value from JSON
+         * @param {*} conf
+         * @param {*} val
+         */
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.wjeditor != null && "main"==conf.datatableEditingType) {
+            if (conf.wjeditor != null) {
                 conf.wjeditor.setData(val);
             }
-            conf._input.val(val);
+            // set directly as value to not propagate change events
+            conf._input.value = val;
 
             // reset dirty status
             getThisField(conf).resetDirty(conf);
@@ -246,7 +255,7 @@ export function typeWysiwyg() {
         isDirty: function ( conf ) {
             try
             {
-                var now = new Date().getTime();
+                var now = Date.now();
                 var timeDiff = now - conf.editorLastResetDirty;
                 if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
                 {
@@ -263,12 +272,17 @@ export function typeWysiwyg() {
         },
 
         resetDirty: function ( conf ) {
-            conf.editorLastResetDirty = new Date().getTime();
+            conf.editorLastResetDirty = Date.now();
             //get current data to compare
             setTimeout(() => {
                 conf.dirtyDataOriginal = getThisField(conf).get(conf);
                 //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
             }, DIRTY_CHECK_DELAY_MS);
+        },
+
+        setJson: function(conf, json) {
+            //console.log("field-type-wysiwyg setJson, json=", json, "conf=", conf);
+            conf.wjeditor.setJson(json);
         }
 
     }

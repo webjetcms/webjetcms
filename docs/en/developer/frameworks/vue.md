@@ -1,15 +1,15 @@
 # Vue.js
 
-- [Vue.js](#vuey)
+- [Vue.js](#vuejs)
   - [Databinding](#databinding)
   - [Vue.js as a standalone component](#vuejs-as-a-standalone-component)
   - [Date and time formatting](#date-and-time-formatting)
 
-## Databinding
+## Data binding
 
-You can also use Vue.js for Databinding, it is imported in `app.js` from the class `vuetools.js` and available as a global object `window.VueTools.getVue()`. Example of use in [folder-tree-gallery.pug](src/main/webapp/admin/v9/views/partials/folder-tree-galleria.pug).
+Vue.js can also be used for Databinding, it is imported in ```app.js``` from class ```vuetools.js``` and available as a global object ```window.VueTools.getVue()```. Example of use in [folder-tree-galleria.pug](src/main/webapp/admin/v9/views/partials/folder-tree-galleria.pug).
 
-Use in HTML code via v-model attributes and `{{ objekt.property }}`:
+Usage in HTML code via v-model attributes and ```{{ objekt.property }}```:
 
 ```html
 <input type="text" class="form-control" v-model="galleryFolder.galleryName">
@@ -27,7 +27,7 @@ Use in HTML code via v-model attributes and `{{ objekt.property }}`:
 
 ```
 
-Initializing Databinding:
+Databinding initialization:
 
 ```javascript
     //zakladny objekt vlastnosti adresara galerie
@@ -47,7 +47,7 @@ Initializing Databinding:
 
 ## Vue.js as a standalone component
 
-If we want to use it as a separate component, there is a folder for that `vue/components`, then the component must be registered in `vuetools.js` for its asynchronous retrieval. The reason is that directly in `pug` JavaScript cannot be used `import`. But you can create your own JavaScript file, use the necessary `import` and through `script src=...` tag it in the pug file.
+If we want to use it as a separate component, a folder ```vue/components``` is created for it, then the component needs to be registered in ```vuetools.js``` for its asynchronous loading. The reason is that it is not possible to use JavaScript ```import``` directly in ```pug```. However, you can create your own JavaScript file, use the necessary ```import``` in it and insert it into the pug file via the ```script src=...``` tag.
 
 ```javascript
     //príklad s použitím dynamického importu
@@ -62,7 +62,7 @@ If we want to use it as a separate component, there is a folder for that `vue/co
     }
 ```
 
-We are not currently initializing a new Vue object in `app.js` that is, for each .pug file where we want to use our component, we need to initialize a new Vue object if it is not already created.
+Currently, we do not initialize a new Vue object in ```app.js```, so we need to initialize a new Vue object for each .pug file where we want to use our component, unless it has already been created.
 
 ```html
     <div id="app"><nazov-nasho-komponentu></nazov-nasho-komponentu></div>
@@ -76,11 +76,11 @@ We are not currently initializing a new Vue object in `app.js` that is, for each
     vm.mount("#app")
 ```
 
-If we want to use instead of `css` For example `scss` should be added in `webpack.common.js` to `rules.options.loaders` Also `scss loader`.
+If we want to use ```css``` instead of ```scss```, for example, we need to add ```webpack.common.js``` to ```rules.options.loaders``` and ```scss loader```.
 
 ## Date and time formatting
 
-V `VueTools.setDefaultObjects` the object is set `$WJ`, from which it is possible to call [standard functions](webjetjs.md) to format the date and time.
+In ```VueTools.setDefaultObjects```, the object ```$WJ``` is set up, from which it is possible to call [standard functions](webjetjs.md) for formatting date and time.
 
 Example of use:
 

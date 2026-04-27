@@ -319,6 +319,8 @@ table.datatableInit {
                         font-family: $ti-font-name-filled;
                         font-size: 18px;
                         right: 8px;
+                        top: 5px;
+                        position: absolute;
                         &::before {
                             content: $ti-icon-caret-up-filled;
                         }
@@ -815,11 +817,14 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
     overflow: scroll;
 }
 
-.dt-button-collection div[role=menu] > .btn-group {
+.dt-button-collection ul[role=menu] > .btn-group {
     width: 100%;
     > .btn {
         text-align: left;
         border-radius: 0 !important;
+        a {
+            padding: 0px;
+        }
         i.ti-menu.flipped {
             transform: rotate(90deg);
             display: inline-block;
@@ -830,8 +835,11 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
         }
     }
 }
+.dt-button-collection:has(ul[role=menu]) {
+    padding-bottom: 8px;
+}
 
-div.dt-header-row div[role=menu] {
+div.dt-header-row ul[role=menu] {
     .dt-button-collection {
         min-width: 778px !important;
         width: 778px;
@@ -843,7 +851,38 @@ div.dt-header-row div[role=menu] {
         top: 5% !important;
         left: 50% !important;
     }
-    div[role=menu] {
+    ul[role=menu] {
+
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flow-root;
+
+        a {
+            padding: 0px;
+        }
+        button.btn-outline-secondary {
+            a {
+                background-color: transparent;
+                color: $secondary;
+                &:hover {
+                    color: $white;
+                }
+            }
+            &:hover a {
+                color: $white;
+            }
+        }
+        button.btn-primary {
+            a {
+                color: $white;
+                &:hover {
+                    color: $white;
+                    background-color: transparent;
+                }
+            }
+        }
+
         button {
             width: 100%;
             margin:4px;
@@ -922,7 +961,7 @@ div.dt-header-row div[role=menu] {
                 display: none !important;
             }
             //oznacena moznost v nastaveni DT v dialogu (napr. pocet riadkov)
-            &.dt-button-active {
+            &.dt-button-active-a {
                 background-color: $primary;
                 color: $white;
                 border: 1px solid $primary;
@@ -952,7 +991,7 @@ div.dt-header-row div[role=menu] {
             float: right;
             color: $nice-black;
             text-overflow: unset;
-            &.dt-button-active {
+            &.dt-button-active-a {
                 color: $nice-black;
                 background-color: transparent;
                 border-color: transparent;
@@ -961,8 +1000,11 @@ div.dt-header-row div[role=menu] {
             &:hover {
                 background-color: $nice-gray;
             }
-            &>span {
+            &>a {
                 display: inline-flex;
+                &::after {
+                    display: none;
+                }
             }
             span.tab-title {
                 color: $nice-gray-300;
@@ -1013,10 +1055,18 @@ div.dt-header-row div[role=menu] {
         }
 
         button.button-page-length {
+            a {
+                display: inline;
+                color: $secondary;
+                background-color: transparent;
+            }
             &::before {
                 content: "\ea6b";
             }
-            &.dt-button-active {
+            &.dt-button-active-a {
+                a {
+                    color: $white;
+                }
                 &::before {
                     content: "\efb1";
                 }
@@ -1025,7 +1075,7 @@ div.dt-header-row div[role=menu] {
     }
 
     .btn-group:nth-child(2) {
-        div[role=menu] {
+        ul[role=menu] {
             button.btn {
                 margin-left: 16px;
             }
@@ -1053,6 +1103,7 @@ div.dt-button-collection div.btn-group button:last-child {
             padding-top: 8px;
             padding-bottom: 4px;
             padding-right: 16px;
+            position: relative;
             .datatable-column-width {
                 padding-right: 16px;
             }
@@ -1523,7 +1574,7 @@ div.dt-datetime table td.selectable.selected button, div.dt-datetime table td.se
 }
 
 div.dt-datetime table td.selectable button:hover,
-.dt-button-collection div[role=menu] > .btn-group > .btn:hover {
+.dt-button-collection ul[role=menu] > .btn-group > .btn:hover {
     background-color: $nice-gray;
     color: $secondary;
 }

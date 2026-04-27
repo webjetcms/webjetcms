@@ -2,20 +2,20 @@
 
 The Calendar Events -> Recommended Events section is used for the process of recommending/not recommending calendar [events](../README.md).
 
-It shows events that are approved (automatically or by the administrator) and whose start date is in the future.
+Events that are approved (automatically or by an administrator) and whose start time is in the future are displayed.
 
 ![](page.png)
 
-!>**Warning:** after the recommendation/non-recommendation, the event continues to **will display** in the table so that their recommendation status can be changed. However, when the start of the event gets into the past, **stop displaying**. However, events will still be visible in the [List of events](../README.md)
+!>**Note:** after recommending/not recommending, the event will still **be displayed** in the table, so their recommendation status can be changed. However, once the event's start time is in the past, they will **stop being displayed**. However, the events will still be visible in the [Event List](../README.md)
 
 ## Event recommendation
 
-The event recommendation is triggered by the button ![](suggest_button.png ":no-zoom"). After a successful recommendation, an informative message will be displayed.
+Event recommendation is triggered by the ![](suggest_button.png ":no-zoom") button. After a successful recommendation, an informative message will be displayed.
 
 ![](suggested_toast.png)
 
-## Non-recommendation of the event
+## Event deprecation
 
-The non-reject event is triggered by the button ![](not_suggest_button.png ":no-zoom"). An informative message will be displayed after a successful non-recommendation.
+The event is not recommended by pressing the ![](not_suggest_button.png ":no-zoom" button). After a successful not recommendation, an informative message will be displayed.
 
 ![](not_suggested_toast.png)

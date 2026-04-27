@@ -1,22 +1,22 @@
 # Spring MVC application
 
-Sample application in a public website using Spring MVC and Thymeleaf templates.
+Sample application on a public website using Spring MVC and Thymeleaf templates.
 
 ![](list.png)
 
 ## Backend
 
-The created class must extend the class `WebjetComponentAbstract` and at the same time include an annotation `@WebjetComponent`. This will ensure the Spring setup `@Component` annotation and execution of the application via `!INCLUDE()!` command in the web page.
+The created class must extend the ```WebjetComponentAbstract``` class and also contain the ```@WebjetComponent``` annotation. This will ensure that the Spring ```@Component``` annotation is set and the application is executed via the ```!INCLUDE()!``` command in the web page.
 
-Individual methods `view, edit, add, saveForm` are called based on a URL parameter match, e.g. the method `edit` is called by adding the URL parameter `?edit=true`. Using annotation `@DefaultHandler` the method to be executed if no other URL parameter match is found. The name of the method can be arbitrary, it does not have to be from the given list, the existence of a URL parameter with the same name is sufficient.
+Individual methods ```view, edit, add, saveForm``` are called based on a URL parameter match, e.g. method ```edit``` is called by adding URL parameter ```?edit=true```. Using annotation ```@DefaultHandler```, the method that will be executed if no other URL parameter match is found is determined. The method name can be arbitrary, it does not have to be from the given list, it is enough that there is a URL parameter with the same name.
 
 Example:
 
 ```java
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -151,7 +151,7 @@ public class ContactApp extends WebjetComponentAbstract {
 
 ### Validation
 
-Using annotation `@Valid` a `@ModelAttribute` validation of entity attributes can be performed. The result is stored in the object `BindingResult result`:
+Using the ```@Valid``` and ```@ModelAttribute``` annotations, it is possible to perform validation of entity attributes. The result is stored in the ```BindingResult result``` object:
 
 ```java
 public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
@@ -165,9 +165,9 @@ public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, Bi
 }
 ```
 
-### Embedding an application in a web page
+### Embedding an application into a website
 
-The application is embedded in the public web page in the same way as any other standard application using the tag `!INCLUDE()!`. The name entered must match the annotation `@WebjetComponent` in the classroom. The name must be unique, so it is necessary to set the name of the class with the full path, e.g. `@WebjetComponent("sk.iway.basecms.contact.ContactApp")`.
+The application is inserted into the public website just like any other standard application using the ```!INCLUDE()!``` tag. The entered name must match the ```@WebjetComponent``` annotation in the class. The name must be unique, so it is necessary to set the class name with the full path, e.g. ```@WebjetComponent("sk.iway.basecms.contact.ContactApp")```.
 
 ```html
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
@@ -175,7 +175,7 @@ The application is embedded in the public web page in the same way as any other 
 
 ### Using application parameters
 
-Each application can in `!INCLUDE()!` tag to contain parameters, in our example this is the parameter `country`. It is automatically transferred to the attribute `country` in the classroom `ContactApp`.
+Each application can contain parameters in the ```!INCLUDE()!``` tag, in our example it is the parameter ```country```. This is automatically transferred to the ```country``` attribute in the ```ContactApp``` class.
 
 ```html
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
@@ -194,22 +194,22 @@ The following data types are supported:
 String, BigDecimal, Boolean, Integer, Double, Float, boolean, int, double, float
 ```
 
-To view an application in the application list and set its parameters, see [To view in the App list](../appstore/README.md)
+Displaying the application in the application list and setting its parameters is in the chapter [Displaying in the application list](../appstore/README.md)
 
 ## Frontend
 
 The following file types can be used for display:
-- `JSP` - the file has an extension `.jsp`
-- `Freemarker` - the file has an extension `.ftl`
-- `Thymeleaf` - the file has an extension `.html`
+- ```JSP``` - ​​the file has the extension ```.jsp```
+- ```Freemarker``` - ​​the file has the extension ```.ftl```
+- ```Thymeleaf``` - ​​the file has the extension ```.html```
 
-For new applications, we strictly recommend using [Thymeleaf](../../developer/frameworks/thymeleaf.md). Note that in `ContactApp` methods return a path without a suffix (e.g. `return "/apps/contact/mvc/edit"`), WebJET automatically searches for the file according to the list above and uses the first one it finds. You can thus easily change the technology used on the frontend without changing the backend.
+For new applications, we strongly recommend using [Thymeleaf](../../developer/frameworks/thymeleaf.md). Note that in ```ContactApp``` methods return a path without an extension (e.g. ```return "/apps/contact/mvc/edit"```), WebJET automatically searches for the file according to the given list and uses the first one it finds. This way you can easily change the technology used on the frontend without changing the backend.
 
-For `Thymeleaf` objects are automatically inserted into the model `request a session` that can be used as e.g. `${request.getAttribute('ninja').page.urlPath}`.
+For `Thymeleaf`, objects `request a session` are automatically inserted into the model, which can be used as, for example, `${request.getAttribute('ninja').page.urlPath}`.
 
 ### View list of companies
 
-List of companies in the file `src/main/webapp/apps/contact/mvc/list.html` uses [iteration of the list](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#using-theach) companies in a standard HTML table:
+The list of companies in the file ```src/main/webapp/apps/contact/mvc/list.html``` uses [list iteration](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#using-theach) of companies in a standard HTML table:
 
 ![](list.png)
 
@@ -241,7 +241,7 @@ List of companies in the file `src/main/webapp/apps/contact/mvc/list.html` uses 
 
 ### Company editing
 
-File `src/main/webapp/apps/contact/mvc/edit.html` for editing a company is also used for adding a new company. It uses the standard options for [forms in Spring](https://spring.io/guides/gs/handling-form-submission/). In the upper part it shows [listing of error messages](https://www.baeldung.com/spring-thymeleaf-error-messages) in case of a validation error (e.g. company name not entered or postal code format not matching).
+The ```src/main/webapp/apps/contact/mvc/edit.html``` file for editing a company is also used for adding a new company. It uses standard options for [Spring forms](https://spring.io/guides/gs/handling-form-submission/). At the top, it displays [a list of error messages](https://www.baeldung.com/spring-thymeleaf-error-messages) in case of a validation error (e.g., company name not entered, or incorrect zip code format).
 
 ![](edit.png)
 
@@ -300,17 +300,17 @@ File `src/main/webapp/apps/contact/mvc/edit.html` for editing a company is also 
 </form>
 ```
 
-### Display validation errors
+### View validation errors
 
-Validation errors are conditionally displayed in the block `<div data-th-if="${error!=null}" class="alert alert-danger">`. In the example they are displayed in a simple list, but it is also possible to use the error display for [individual fields](https://www.baeldung.com/spring-thymeleaf-error-messages).
+Validation errors are conditionally displayed in the ```<div data-th-if="${error!=null}" class="alert alert-danger">``` block. In the example, they are displayed in a simple list, but it is also possible to display errors for [individual fields](https://www.baeldung.com/spring-thymeleaf-error-messages).
 
 ![](validation.png)
 
 ### Automatic file search
 
-If the class extends the class `WebjetComponentAbstract`, the embedded application entry can contain the parameter `viewFolder`, which allows us to specify the subdirectory where to search for files to display.
+If the class extends the ```WebjetComponentAbstract``` class, the embedded application entry can contain the ```viewFolder``` parameter, which allows us to specify the subdirectory where to look for files for display.
 
-If the method returns `/components/contact/edit` and the parameter is specified `viewFolder`, WebJET automatically inserts the link `installName` and the value in `viewFolder`:
+If the method returns `/components/contact/edit` and the parameter ```viewFolder``` is specified, WebJET automatically inserts ```installName``` into the line and the value in ```viewFolder```:
 
 ```java
 /components/{installName}/contact/{viewFolder}/edit.html
@@ -330,7 +330,8 @@ Example:
 ```java
 !INCLUDE(sk.iway.basecms.contact.ContactApp, viewFolder="subfolder", country="sk")!
 ```
-- in this case the \`\`en.iway.basecms.contact.ContactApp\`\` class is used,
-- method with annotation is called `@DefaultHandler` which will return `return "/apps/contact/mvc/list";`,
-- WebJET searches `/components/{installName}/contact/subfolder/list.html`, or `/components/contact/subfolder/list.html`
-- embeds the resulting HTML code into the page.
+
+- in this case the class ``sk.iway.basecms.contact.ContactApp``` is used,
+- a method with the annotation ```@DefaultHandler``` is called, which returns ```return "/apps/contact/mvc/list";```,
+- WebJET searches for `/components/{installName}/contact/subfolder/list.html`, or `/components/contact/subfolder/list.html`
+- inserts the resulting HTML code into the page.

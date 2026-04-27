@@ -1,22 +1,22 @@
 # External filter
 
-An external filter is a special kind of filter used by sections **Statistics** a **SEO**. The data can be filtered at the top of the page under the page title according to the options below. This filter works differently from the other datatables. At the top near the title is the main filter that filters the data retrieved from the server. Subsequently in the datatables, you can filter on the displayed data by other columns, but the filtering only happens over the data loaded according to the main filter anymore.
+An external filter is a special type of filter used by the **Statistics** and **SEO** sections. The data can be filtered in the upper part under the page title according to the options listed below. This filter works differently than in other data tables. In the upper part near the title there is a main filter that filters the data loaded from the server. Subsequently, in the data tables it is possible to filter the displayed data according to other columns, but filtering only takes place over the data loaded according to the main filter.
 
 ![](ext-filter-1.png)
 
-If the external filter contains filtering by a column that is also in the datatable, filtering over this column is automatically disabled. The reason is to prevent multiple filtering for the same parameter.
+If the external filter contains filtering by a column that is also in the data table, filtering on this column is automatically disabled. The reason is to prevent multiple filtering for the same parameter.
 
-Such a case can be seen in the following figure, where the external filter includes filtering by date and the same filtering in the datatable is disabled.
+You can see such a case in the following image, where the external filter contains filtering by date and the same filtering in the datatable is disabled.
 
 ![](ext-filter-2.png)
 
-> Set data si main filter at the top **remembers in the browser until you close it**. So if you set a period from-to you can scroll through the sections **Statistics** a **SEO**, while all external filters containing period filtering are automatically set according to the value you specify. In this case, the data is automatically filtered when it is retrieved from the server. The same applies to filtering by folder etc.
+> The main filter at the top **remembers the data you set in the browser until you close it**. So if you set a period from-to, you can navigate through the individual parts of the **Statistics** and **SEO** sections, while all external filters containing filtering by period will automatically be set according to the value you entered. In this case, the data is automatically filtered when loaded from the server. The same applies to filtering by folder, etc.
 
 ## Date filter
 
-The date filter allows you to set a date range for displaying data (e.g. traffic for Statistics).
+The date filter allows you to set a date range for displaying data (e.g. traffic in Statistics).
 
-If the filter is not specified, the data for:
+If no filter is specified, data for:
 
 **SEO**
 
@@ -24,42 +24,42 @@ If the filter is not specified, the data for:
 
 **Statistics**
 
-- the last 30 days in case of grouping by days, weeks and hours
-- the last 6 months in the case of grouping by month.
+- the last 30 days when grouped by days, weeks and hours
+- the last 6 months if grouped by months.
 
-If only the "from" part is entered, the traffic from the entered date to the current day is displayed. If only the 'to' part is set, the display will show :
+If only the "from" part is specified, the traffic from the specified date to the current day will be displayed. If only the to part is specified, the following will be displayed:
 
 **SEO**
 
-- the last 30 days to date.
+- the last 30 days as of the given date.
 
 **Statistics**
 
-- the last 30 days to date in the case of statistics for days, weeks and hours and 6 months in the case of statistics for months.
+- the last 30 days as of the given date in the case of statistics for days, weeks and hours and 6 months in the case of statistics for months.
 
 ![](stats-extFilter.png)
 
 ## View from folder
 
-You can filter data only for a specific folder, e.g. for language mutations or product microsites. We can think of this as traffic for statistics. Option **All (from all domains)** is the default value and will display the data regardless of folder and domain, which in the case of Statistics represents **complete attendance**.
+You can filter data only for a specific folder, e.g. for language mutations or product micro sites. We can imagine this as traffic in statistics. The **All (from all domains)** option is the default value and will display data regardless of folder and domain, which in the case of Statistics represents **complete traffic**.
 
 ![](stats-domainSelect.png)
 
-If the logged in user has limited folder permissions it will not appear **complete attendance**, but the first folder to which the user has been granted permission is set.
+If the logged in user has limited folder rights, **complete traffic** will not be displayed, but the first folder to which the user has been granted rights will be set.
 
 ![](stats-groupSelect.png)
 
-Folders that the user does not have permission to are displayed with an icon ![](groupNonActiveIcon.png ":no-zoom"), such a folder cannot be selected. However, the folder may contain a subfolder to which the user has the right and will of course be able to select.
+Folders that the user does not have access to will be displayed with the icon ![](groupNonActiveIcon.png ":no-zoom"), such a folder cannot be selected. However, the folder may contain a subfolder that the user has access to and will of course be able to select it.
 
 ![](groupSelect_noAllRights.png)
 
-In situations where you want to allow the user to view **complete attendance** statistics, but you want to keep the restriction of rights, use the access right **View statistics for all folders**. Users with this permission will be able to see **complete attendance** in the statistics section despite limited folder permissions. This right will only affect the folder selection in the statistics section.
+In situations where you want to allow a user to view **complete traffic** statistics, but want to keep the rights restricted, use the **View statistics for all folders** access right. Users with this right will be able to see **complete traffic** in the statistics section despite restricted folder rights. This right only affects the folder selection in the statistics section.
 
-## Filter web pages
+## Website filter
 
-Filtering web pages (e.g. in the Search engines section) allows you to select a specific web page from the selected folder. If no folder is selected (folder filtering has the selected value **All (from all domains)**), no web page is displayed for selection.
+Website filtering (e.g. in the Search Engines section) allows you to select a specific website from a selected folder. If no folder is selected (folder filtering has the selected value **All (from all domains)**), no website is displayed for selection.
 
-The default option is **All websites** and displays the data of all websites that match the other parameters.
+The default option is **All websites** and will display data from all websites that match the other parameters.
 
 ![](ext-filter-webPageSelect.png)
 
@@ -69,20 +69,20 @@ Filter based on the selected search engine.
 
 **Statistics**
 
-In this section, filtering is used, for example, to filter out search terms for a specific search engine only, which allows us to verify which search engine was used the most to access our website.
+In this section, filtering is used, for example, to filter out search terms only for a specific search engine, which allows you to verify which search engine was used most to access our website.
 
 **SEO**
 
-In this section, filtering is used e.g. to specify a search engine to verify the most searched keywords.
+In this section, filtering is used, for example, to specify a search engine to verify the most searched keywords.
 
-The search engines offered for filtering depend on the selected time range, the selected folder and the filtered web page.
+The search engines offered for filtering depend on the selected time range, selected folder, and filtered web page.
 
-The default option is **All search engines** and displays data from all search engines.
+The default option is **All search engines** and will display data from all search engines.
 
 ![](ext-filter-searchEngineSelect.png)
 
-## Switch to filter out bots
+## Toggle to filter out bots
 
-If you don't want to show data from bots (search bots, spam bots) in the statistics, you can filter them out. To determine the load on the server, it is necessary to take into account the bots, but for marketing purposes it is advisable to filter them out.
+If you do not want to display data from bots (search bots, spam bots) in the statistics, you can filter them out in the display. Bots must also be taken into account to determine the load on the server, but for marketing purposes it is advisable to filter them out.
 
 ![](stats-filterBotsOut.png)

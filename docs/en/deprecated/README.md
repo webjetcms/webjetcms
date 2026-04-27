@@ -1,15 +1,16 @@
-# Deleted/unsupported properties
+# Deprecated/unsupported features
 
 ## User interface
 
-**Web pages**
+**Website**
 
-- EditorForm is no longer used when saving a page if you use [WebjetEvent](../developer/backend/events.md) it needs to be adapted from the use of `EditorForm` at `DocDetails` object.
-- The web page can no longer be set to "Require secure connection (https)", the recommended solution is to set the redirection of the entire domain to a secure (https) connection. There is no point in setting this individually for the site as in the past.
-- Law `Uložiť (pracovná verzia)` is changed to the right `Uložiť`. If a user does not have this right, they cannot save existing web pages. The original use for the working version only did not make practical sense.
+- When saving a page, EditorForm is no longer used, if you are using [WebjetEvent](../developer/backend/events.md) you need to modify it from using ```EditorForm``` to ```DocDetails``` object.
+- The "Require secure connection (https)" attribute can no longer be set for a website, the recommended solution is to set up a redirect for the entire domain to a secure (https) connection. There is no point in setting this individually for websites as in the past.
+- The right ```Uložiť (pracovná verzia)``` is changed to the right ```Uložiť```. If the user does not have this right, they cannot save existing web pages. The original use only for the working version did not make practical sense.
 
 ## Backend API
 
-- Support `Struts` framework.
-- Library `itext` is no longer part of the standard WebJET CMS distribution because it contains unpatched vulnerabilities and the new version is commercial, The ability to export PDFs in `DisplayTag` and export the form to PDF (`/formtopdf.do`), if you need in the project, you need to get a library `itext` manually add at the risk of possible vulnerability.
-- Library `commons-httpclient-3.1` is no longer part of the standard WebJET CMS distribution because it contains unpatched vulnerabilities. Integrated is [version 4.5](https://hc.apache.org/httpcomponents-client-4.5.x/quickstart.html), we recommend using [Fluent API](https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
+- Support of the ```Struts``` framework.
+- The ```itext``` library is no longer part of the standard WebJET CMS distribution because it contains unpatched vulnerabilities and the new version is commercial. The option to export PDF in ```DisplayTag``` and export a form to PDF (```/formtopdf.do```) has been removed. If you need it in your project, you need to manually add the ```itext``` library with the risk of possible vulnerability.
+- The ```commons-httpclient-3.1``` library is no longer part of the standard WebJET CMS distribution because it contains unpatched vulnerabilities. [Version 4.5](https://hc.apache.org/httpcomponents-client-4.5.x/quickstart.html) is integrated, we recommend using the [Fluent API](https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
+

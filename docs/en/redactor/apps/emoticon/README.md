@@ -1,13 +1,13 @@
 # Emoticons
 
-Inserts a "smiley face" image (emoticon) into the page.
+Inserts an "emoticon" image into the page.
 
 ## Application settings
 
-In this section, you can select from a list of emoticons that you want to insert.
+In this section, you can select the emoticon you want to insert from the list.
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](emoticon.png)
