@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario("Datatable SUM footer logic", ({ I, DT }) => {
+Scenario("Datatable SUM footer logic", async ({ I, DT }) => {
     I.amOnPage("/apps/stat/admin/");
     DT.resetTable("statsDataTable");
 
@@ -18,12 +18,10 @@ Scenario("Datatable SUM footer logic", ({ I, DT }) => {
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", 21902, 382]);
 
     I.say("Show/hide collumns and test footer");
-    I.clickCss("button.buttons-settings");
-    I.clickCss("button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-    I.click( locate("button.buttons-columnVisibility").withChild( locate("span > span.tab-columntext > span.column-title").withText("Mesiac")  ) );
-    I.click( locate("button.buttons-columnVisibility").withChild( locate("span > span.tab-columntext > span.column-title").withText("Návštev")  ) );
-    I.clickCss("button.colvis-postfix.btn-primary.dt-close-modal");
+
+    await DT.showColumn("Mesiac", "statsDataTable");
+    await DT.hideColumn("Návštev", "statsDataTable");
+
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", "", 382]);
 
     I.say("Change page, test values are same because mode 'all'");

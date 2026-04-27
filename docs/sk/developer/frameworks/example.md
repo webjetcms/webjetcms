@@ -30,16 +30,6 @@ block content
     <table class="datatableInit table"></table>
 ```
 
-Po vytvorení nového pug súboru je potrebné ho pridať do `webpack` v súbore [webpack.common.js](../../../../src/main/webapp/admin/v9/webpack.common.js) do sekcie plugins:
-
-```javascript
-plugins: [
-    ...
-    new HtmlWebpackPlugin(generateHtmlPlugins("/settings/menosuborubezpripony"))
-    ...
-]
-```
-
 ## Spring DATA repozitár a JPA Entita/Bean
 
 JPA bean vytvorte v príslušnom package, typicky `sk.iway.iwcm.components.MENOMODULU` s rovnakým názvom ako meno tabuľky a príponou Entity.

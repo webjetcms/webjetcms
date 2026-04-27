@@ -89,7 +89,7 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     I.say("Phase 10 - Check that the same file was saved");
     DT.filterContains('fileName', validPdfFileName.split('.')[0]);
     I.see('Záznamy 1 až 2 z 2');
-    I.clickCss('.dt-th-id > .dt-column-order');
+    I.clickCss('.dt-th-id > .dt-column-header > .dt-column-order');
     DT.checkTableRow("fileArchiveDataTable", 2, ["", "", duplicatePdfVirtualFileName, "", "files/archiv/", SL.getVersionName(validPdfFileName,1)]);
     SL.checkStatus(2, 4, ['star', 'map-pin']);
 });

@@ -68,7 +68,7 @@ function setDates(I, DT, dateFrom, dateTo) {
 function setPageRowLimit(I, DT, rows) {
     I.click(DT.btn.settings_button);
     I.clickCss('.buttons-page-length');
-    I.click(locate('button.btn.button-page-length').find('span').withText(rows));
+    I.click(locate('button.btn.button-page-length').find('a').withText(rows));
     I.clickCss('button.btn.btn-primary.dt-close-modal');
 }
 

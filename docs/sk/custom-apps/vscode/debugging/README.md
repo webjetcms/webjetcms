@@ -80,10 +80,10 @@ Tá sa objaví v možnosti spustenia Debug. Dôležité je nastavenie:
 
 Tu je dôležité si uvedomiť, že ak sú JavaScript súbory kompilované, je potrebné aby sa generoval aj ```.map``` súbor. Ten ale typicky nemá presne nastavenú cestu vo vašom vývojovom prostredí, preto v konfigurácii ```sourceMapPathOverrides``` je možné nastaviť nahradenie/doplnenie cesty na absolútnu.
 
-Aby ```webpack``` generoval aj ```.map``` súbor je potrebné upraviť konfiguráciu nastavením atribútu ```devtoolModuleFilenameTemplate```:
+Aby ```rspack``` generoval aj ```.map``` súbor je potrebné upraviť konfiguráciu nastavením atribútu ```devtoolModuleFilenameTemplate```:
 
-```
-module.exports = {
+```javascript
+const config = {
     entry: {
         ...
     },
