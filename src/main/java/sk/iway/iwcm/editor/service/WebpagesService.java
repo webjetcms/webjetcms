@@ -164,6 +164,12 @@ public class WebpagesService {
         return templates;
 	}
 
+	/**
+	 * Vrati fiktivny korenovy adresar, je potrebny pre zobrazenie v stromovej strukture
+	 * v editore ked je mozne vybrat aj korenovy adresar
+	 * @param isAllDomains - ak je true, bude nazov korenoveho adresara "Vsetky domeny", ak je false bude "Korenovy adresar"
+	 * @return
+	 */
 	private static GroupDetails getRootGroup(boolean isAllDomains) {
 		GroupEditorField groupEditorField = new GroupEditorField();
 

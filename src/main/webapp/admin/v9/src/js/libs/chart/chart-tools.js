@@ -1914,7 +1914,7 @@ export async function initGroupIdSelect() {
                 "groupId": groupId,
                 "fullPath": fullPath
             }],
-            className: $element.is("input.webjet-dte-jstree-alldomains") ? "dt-tree-groupid-alldomains-all" : "dt-tree-groupid-root",
+            className: $element.hasClass("webjet-dte-jstree-alldomains") ? "dt-tree-groupid-alldomains-all" : "dt-tree-groupid-root",
             _id: id
         };
         //console.log("conf=", conf);

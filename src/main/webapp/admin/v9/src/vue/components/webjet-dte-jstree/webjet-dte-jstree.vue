@@ -201,12 +201,9 @@
                 }
 
                 if(that.click.indexOf("alldomains")!=-1 && data.node.icon !== undefined && data.node.icon.indexOf("ti ti-home") != -1) {
-                    // Allow selection only if it's the special "all domains" root node
-                    if(that.click.indexOf("alldomains-all") == -1) {
-                        // Domain root nodes cannot be selected in alldomains mode (not real groups)
-                        data.instance.open_node(data.node.id);
-                        return false;
-                    }
+                    //it's not possible to select domain root because it's not a real group in alldomains select
+                    data.instance.open_node(data.node.id);
+                    return false;
                 }
 
                 //kontrola, ci sa vybral adresar ked sa mal
