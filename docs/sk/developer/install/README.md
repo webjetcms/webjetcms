@@ -46,7 +46,7 @@ cd src/main/webapp/admin/v9
 npm run prod
 ```
 
-## Build Java tried a spustenie Tomcatu
+## Build Java tried a spustenie Tomcat
 
 Kompilácia projektu:
 
@@ -54,15 +54,15 @@ Kompilácia projektu:
 gradlew compileJava - kompilacia projektu
 ```
 
-vrátane refreshu dependencies (WebJETu z artifactory):
+vrátane obnovenia dependencies (WebJETu z artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
 ```
 
-Spustenie / zastavenie Tomcatu, vytvorenie WAR archívu:
+Spustenie / zastavenie Tomcat, vytvorenie WAR archívu:
 
-!>**Upozornenie:** pred spustením gradle appRun buildnite jednorázovo dist adresár HTML/CSS súborov cez príkaz gradle npmbuild, alebo majte v samostatnom termináli pustený z adresára src/main/webapp/admin/v9 príkaz npm run watch.
+!>**Upozornenie:** pred spustením gradle appRun buildnite jednorázovo dist adresár HTML/CSS súborov cez príkaz gradle `npmbuild`, alebo majte v samostatnom termináli pustený z adresára src/main/webapp/admin/v9 príkaz npm run watch.
 
 ```shell
 gradlew appRun
