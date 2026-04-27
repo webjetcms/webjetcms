@@ -25,4 +25,5 @@ Scenario('verify template CSS is loaded', async ({ I, DT, DTE }) => {
 
     await checkColor("Produktová stránka - B verzia", "rgb(0, 163, 224)", I, DTE);
     await checkColor("Produktová stránka - yellow", "rgb(255, 170, 0)", I, DTE);
+    await checkColor("Produktová stránka - B verzia", "rgb(0, 163, 224)", I, DTE);
 });
