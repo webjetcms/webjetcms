@@ -1,5 +1,7 @@
 Feature('admin.cronjob');
 
+var randomNumber, jobName, newTask;
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/admin/v9/settings/cronjob/");
@@ -86,7 +88,7 @@ Scenario('Delete all echo cronjobs', async ({ I, DT, DTE }) => {
 
 
 function addNewCronjob(I, DTE, DT, task, params, seconds, runAtStartup, enableTask, audit) {
-    let [years, daysOfMonth, daysOfWeek, months, hours, minutes] = Array(6).fill('*');
+    let [years, daysOfMonth, daysOfWeek, months, hours, minutes] = new Array(6).fill('*');
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
@@ -105,9 +107,11 @@ function addNewCronjob(I, DTE, DT, task, params, seconds, runAtStartup, enableTa
     I.seeInField("#DTE_Field_clusterNode", "all");
 
     if (runAtStartup) I.checkOption('#DTE_Field_runAtStartup_0');
-    else I.checkOption('#DTE_Field_runAtStartup_0');
+    else I.uncheckOption('#DTE_Field_runAtStartup_0');
+
     if (enableTask) I.checkOption('#DTE_Field_enableTask_0');
     else  I.uncheckOption('#DTE_Field_enableTask_0');
+
     if (audit) I.checkOption('#DTE_Field_audit_0');
     else I.uncheckOption('#DTE_Field_audit_0');
 

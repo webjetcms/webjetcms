@@ -17,11 +17,20 @@ Podporované sú nasledovné formáty obrázkov vodotlače:
 
 !>**Upozornenie:** uvedomte si, že v galérii sa vodotlač nevkladá do originálneho obrázku, je to tak z dôvodu možnosti pregenerovania existujúcich obrázkov (napr. zmena veľkosti, alebo zmena vodotlače). Originálny obrázok je dostupný s prefixom ```o_``` a teda je možné ho takto verejne získať. Ak nutne potrebujete mať vodotlač vo všetkých obrázkoch je potrebné nastaviť automatické aplikovanie vodotlače po nahratí obrázka nastavením konf. premennej `galleryWatermarkApplyOnUpload` na hodnotu `true`.
 
+ImageMagick má štandardne zakázanú prácu s SVG súbormi, je preto potrebné upraviť súbor `/etc/ImageMagick-7/policy.xml` v ktorom je potrebné pridať riadky:
+
+```xml
+    <policy domain="module" rights="read|write" pattern="SVG"/>
+    <policy domain="coder" rights="read|write" pattern="SVG" />
+```
+
+a vymazať hodnotu `SVG` z `<policy domain="module" rights="write" pattern="{MSL,MVG,PS,URL,XPS}"/>`.
+
 ## Automatické aplikovanie vodotlače po nahratí obrázku
 
 Automatické vkladanie vodotlače do fotiek pri ich nahratí do WebJETu zapnete nastavením konfiguračnej premennej ```galleryWatermarkApplyOnUpload``` na ```true```. Vodotlač sa vkladá do nahratej fotky, aby nenastávala nasledovne duplicita jej vloženia pri zmene veľkosti fotky a podobne.
 
-Výnimky, pre ktoré sa vodotlač pri nahratí súboru neaplikuje je možné definovať v konfiguračnej premennej ```galleryWatermarkApplyOnUploadExceptions``` (štandardne nastavené na logo,nowatermark,system) kde sú výrazy, ktoré keď sa nájdu v ceste k obrázku (meno obrázku alebo názov adresára), tak sa vodotlač neaplikuje.
+Výnimky, pre ktoré sa vodotlač pri nahratí súboru neaplikuje je možné definovať v konfiguračnej premennej ```galleryWatermarkApplyOnUploadExceptions``` (štandardne nastavené na `logo,nowatermark,system`) kde sú výrazy, ktoré keď sa nájdu v ceste k obrázku (meno obrázku alebo názov adresára), tak sa vodotlač neaplikuje.
 
 Vodotlač sa pri tomto režime vkladá rovnaká pre celý web (nie je možné špecifikovať rôzne vodotlače), pre multidomain inštaláciu je možné nastaviť obrázok pre každú doménu. Nastavuje sa v konfiguračnej premennej ```galleryWatermarkApplyOnUploadDir``` (predvolene /templates/{INSTALL_NAME}/assets/watermark/) - adresár kde sú umiestnené obrázky pre automatickú vodotlač pri nahratí obrázku. Názov obrázku musí byť ```default.png```, pri multidomain je možnosť mať pre každú doménu iný, v tvare ```domena.png``` (napr. ```www.interway.sk.png```).
 

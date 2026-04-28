@@ -55,7 +55,7 @@ class RunnableWrapper implements Runnable
 			{
 				for (String arg : args)
 				{
-					if (argsString.length()>0) argsString.append(' ');
+					if (!argsString.isEmpty()) argsString.append(' ');
 					argsString.append(arg);
 				}
 			}

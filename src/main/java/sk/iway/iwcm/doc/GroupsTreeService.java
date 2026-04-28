@@ -624,8 +624,9 @@ public class GroupsTreeService {
         String referer = request.getHeader("referer");
 
         boolean statSectionShowAll = (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
+        boolean seoSectionShowAll = (referer != null && referer.contains("/apps/seo/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
         boolean usersSectionShowAll = (referer != null && referer.contains("/users/user-list/") && user.isEnabledItem("users.edit_admins"));
 
-        return statSectionShowAll || usersSectionShowAll;
+        return statSectionShowAll || usersSectionShowAll || seoSectionShowAll;
     }
 }
