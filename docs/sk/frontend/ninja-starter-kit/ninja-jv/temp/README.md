@@ -13,7 +13,7 @@
 
 ## Cesta k root adresáru šablóny *String*
 
-Cesta k root adresáru šablóny vyskladaná z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
+Cesta k root adresáru šablóny zložená z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
 
 ```java
 ${ninja.temp.basePath}
@@ -21,7 +21,7 @@ ${ninja.temp.basePath}
 
 ## Cesta k CSS štýlom *String*
 
-Cesta k CSS štýlom vyskladaná z `${ninja.temp.basePath} + /assets/css/`.
+Cesta k CSS štýlom zložená z `${ninja.temp.basePath} + /assets/css/`.
 
 ```java
 ${ninja.temp.basePathCss}
@@ -29,7 +29,7 @@ ${ninja.temp.basePathCss}
 
 ## Cesta k JS skriptom *String*
 
-Cesta k JS skriptom vyskladaná z `${ninja.temp.basePath} + /assets/js/`.
+Cesta k JS skriptom zložená z `${ninja.temp.basePath} + /assets/js/`.
 
 ```java
 ${ninja.temp.basePathJs}
@@ -37,7 +37,7 @@ ${ninja.temp.basePathJs}
 
 ## Cesta k obrázkom *String*
 
-Cesta k obrázkom vyskladaná z `${ninja.temp.basePath} + /assets/images/`.
+Cesta k obrázkom zložená z `${ninja.temp.basePath} + /assets/images/`.
 
 ```java
 ${ninja.temp.basePathImg}
@@ -102,7 +102,7 @@ HTML kód, ktorý sa vygeneruje:
 
 ## Názov priečinka šablóny *String*
 
-Názov priečinka šablóny, defaultne `/ninja-starter-kit/`
+Názov priečinka šablóny, predvolene `/ninja-starter-kit/`
 
 ```java
 ${ninja.temp.templateFolderName}

@@ -118,7 +118,7 @@ public class Temp {
                 dimension = defaultDimension;
             }
             //ak uz tam nieco je odsad nech to je krajsie v HTML kode
-            if (sb.isEmpty()==false) sb.append("        ");
+            if (sb.isEmpty() == false) sb.append("        ");
 
             sb.append("<link rel=\"apple-touch-icon-precomposed\"");
             if (Tools.isNotEmpty(sizes)) {
