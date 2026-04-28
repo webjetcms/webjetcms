@@ -113,12 +113,12 @@ public class Tools
 	public static String formatDate(Object o, String nullValue)
 	{
 		if (o == null) return nullValue;
-		if(o instanceof Date)
-			return simpleDateFormat.format((Date)o);
-		if(o instanceof java.sql.Timestamp)
-			return simpleDateFormat.format((java.sql.Timestamp)o);
-		if(o instanceof java.sql.Date)
-			return simpleDateFormat.format((java.sql.Date)o);
+		if(o instanceof Date date)
+			return simpleDateFormat.format(date);
+		if(o instanceof java.sql.Timestamp timestamp)
+			return simpleDateFormat.format(timestamp);
+		if(o instanceof java.sql.Date sqlDate)
+			return simpleDateFormat.format(sqlDate);
 		return nullValue;
 	}
 	public static String formatTime(long time)
@@ -143,12 +143,12 @@ public class Tools
 	public static String formatDateTime(Object o, String nullValue)
 	{
 		if (o == null) return nullValue;
-		if(o instanceof Date)
-			return formatDateTime(((Date)o).getTime());
-		if(o instanceof java.sql.Timestamp)
-			return formatDateTime(((java.sql.Timestamp)o).getTime());
-		if(o instanceof java.sql.Date)
-			return formatDateTime(((java.sql.Date)o).getTime());
+		if(o instanceof Date date)
+			return formatDateTime(date.getTime());
+		if(o instanceof java.sql.Timestamp timestamp)
+			return formatDateTime(timestamp.getTime());
+		if(o instanceof java.sql.Date sqlDate)
+			return formatDateTime(sqlDate.getTime());
 		return nullValue;
 	}
 
@@ -825,7 +825,7 @@ public class Tools
 	 * @param len
 	 * @return
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public static String generatePassword(int len)
 	{
 		return Password.generatePassword(len);
@@ -986,8 +986,8 @@ public class Tools
 		{
 			if (value!=null)
 			{
-				if (value instanceof BigDecimal) {
-					return ((BigDecimal)value);
+				if (value instanceof BigDecimal bg) {
+					return bg;
 				}
 				return getBigDecimalValue(value.toString(), defaultValue);
 			}
@@ -1109,7 +1109,7 @@ public class Tools
 		}
 
 		//nemozeme pouzit Tools.isEmpty, pretoze to nam trimne medzery aj crlf a podmienka bude zla
-		if (oldStr == null || oldStr.length()==0) return src;
+		if (oldStr == null || oldStr.isEmpty()) return src;
 
 		if (src.indexOf(oldStr) == -1)
 		{
@@ -2033,13 +2033,9 @@ public class Tools
 		{
 			baseHref = new StringBuilder(httpServerName);
 		}
-		else if (Constants.getBoolean("serverBeyoundProxy") && Tools.isNotEmpty(request.getHeader("x-forwarded-host")))
-		{
-			baseHref.append(request.getHeader("x-forwarded-host"));
-		}
 		else
 		{
-			baseHref.append(Tools.getServerName(request, false));
+			baseHref.append(getServerName(request, false));
 		}
 
         if (Constants.getInt("httpServerPort") == -1)
@@ -2536,8 +2532,8 @@ public class Tools
 
 		// This method returns a buffered image with the contents of an image
 	public static BufferedImage toBufferedImage(Image image) {
-	    if (image instanceof BufferedImage) {
-	        return (BufferedImage)image;
+	    if (image instanceof BufferedImage bi) {
+	        return bi;
 	    }
 
 	    // This code ensures that all the pixels in the image are loaded
@@ -2836,7 +2832,8 @@ public class Tools
 			{
 				values.add(addStringStart + splitted[i]);
 				sb.append(splitterRegex);
-				sb.append(addStringStart + splitted[i]);
+				sb.append(addStringStart);
+				sb.append(splitted[i]);
 			}
 		}
 		return sb.substring(1) + ",";
@@ -3058,11 +3055,7 @@ public class Tools
     }
 
     /**
-     * RequestParameterNames
-     */
-
-    /**
-     *
+     * Returns unescaped request parameter names, use with caution, only if you are sure that you will not have XSS vulnerability
      * @param request HttpServletRequest
      * @return unescaped request parameter names
      */
@@ -3102,11 +3095,7 @@ public class Tools
     }
 
     /**
-     * RequestParameterValues
-     */
-
-    /**
-     *
+     * Returns escaped/safe request parameter values
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @return escaped request parameter values
@@ -3116,7 +3105,7 @@ public class Tools
 	}
 
     /**
-     *
+     * Returns escaped/safe request parameter values
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @param sanitize escape request parameter values if it's true
@@ -3137,7 +3126,7 @@ public class Tools
 	}
 
     /**
-     *
+     * Returns unescaped request parameter values, use with caution, only if you are sure that you will not have XSS vulnerability
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @return unescaped request parameter values
@@ -3147,11 +3136,7 @@ public class Tools
 	}
 
     /**
-     * RequestParameter
-     */
-
-    /**
-     *
+     * Returns escaped/safe request parameter value
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @return escaped request parameter value
@@ -3161,7 +3146,7 @@ public class Tools
 	}
 
     /**
-     *
+     * Returns unescaped request parameter value, use with caution, only if you are sure that you will not have XSS vulnerability
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @@return unescaped request parameter value
@@ -3171,7 +3156,7 @@ public class Tools
     }
 
     /**
-     *
+     * Returns escaped/safe or unescaped request parameter value based on sanitize parameter
      * @param request HttpServletRequest
      * @param param Request parameter name
      * @param sanitize escape request parameter value if it's true
@@ -3186,7 +3171,7 @@ public class Tools
 	}
 
 	/**
-	 *
+	 * Prints JSON to JspWriter, if callback is not null, it will print JSONP with callback as a function name
 	 * @param out JspWriter
 	 * @param json JSONArray with news
 	 * @param callback name of callback you want to call with json as a parameter
@@ -3258,7 +3243,7 @@ public class Tools
 	 * @param aliasedDomainName
 	 * @return
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public static String getDomainFromAlias(String aliasedDomainName) {
 		return DomainRedirectDB.getDomainFromAlias(aliasedDomainName);
 	}
