@@ -11,6 +11,7 @@
 - Bezpečnosť - aktualizovaný `Swagger UI` a výnimky pre `dependencyCheckAnalyze` (#58317-6).
 - Bezpečnosť - aktualizované knižnice `log4j,pdfbox` (#58317-6).
 - Dátové tabuľky - opravená možnosť zatvorenia editora vo vnorenom modálnom okne (#OSK303).
+- Dotazníky - opravené ukladanie dotazníka pri použití databázy Oracle alebo Microsoft SQL (#217).
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
@@ -29,7 +30,7 @@
 - Webové stránky - opravený prenos dátumov publikovania pri náhľade web stránky a presmerovanie pri vlastnostiach bloku (#osk412).
 - Webové stránky - opravená chyba získania [šablóny pre mobilné zariadenia](frontend/templates/templates.md#zobrazenie-pre-špecifické-zariadenie) v MultiWEB inštalácii pri zhode mien šablóny v rôznych doménach (#58317-5).
 - Webové stránky - opravené ukladanie stránky, ktorá má kópie vo viacerých priečinkoch a zároveň je použité zrkadlenie stránok (#58317-7).
-- Webové stránky - Ninja - doplnený atribút `${ninja.temp.lngIsoUnderscore}` s kódom jazykovej mutácie vo formáte `sk_SK` namiesto `sk-SK` (#osk469).
+- Webové stránky - Ninja - doplnený atribút `${ninja.temp.lngIsoUnderscore}` s kódom jazykovej mutácie vo formáte `sk_SK` namiesto `sk-SK` (#217).
 
 ## 2026.0
 
