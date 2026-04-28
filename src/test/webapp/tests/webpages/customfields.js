@@ -268,6 +268,7 @@ Scenario('custom-fields advanced set default values', ({ I, DT, DTE }) => {
 function openFieldsTabForPage(I, DT, DTE, id) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + id);
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
 }

@@ -38,13 +38,13 @@ public class SearchService {
         String searchText = Tools.getStringValue(params.get("searchText"), null);
         String searchType = Tools.getStringValue(params.get("searchType"), "docs");
         int rootGroupId = Tools.getIntValue(params.get("searchRootGroupId"), -1);
-        int rootGroupIdFinal = GroupsTreeService.gerDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
+        int rootGroupIdFinal = GroupsTreeService.getDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
         fillPredicates(searchText, searchType, rootGroupIdFinal, user, predicates, root, builder);
     }
 
     public static List<DocDetails> searchTextAll(String searchText, String searchType, int rootGroupId, Identity user) {
         //Safety check - if user has no rights for root folder, set it to default
-        int rootGroupIdFinal = GroupsTreeService.gerDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
+        int rootGroupIdFinal = GroupsTreeService.getDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
 
         @SuppressWarnings("java:S1602")
         Specification<DocDetails> spec = (Specification<DocDetails>) (root, query, builder) -> {

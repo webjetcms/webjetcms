@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("java:S6204")
 @Service
 public class GroupsTreeService {
 
@@ -88,7 +89,7 @@ public class GroupsTreeService {
 
             if (Constants.getBoolean("enableStaticFilesExternalDir") && domainRootGroup!=null)
             {
-                ///files adresar vytvarame v domenovom foldri
+                // /files adresar vytvarame v domenovom foldri
                 groups = filterFullPath(groups, domainFilesPrefix + "/files");
             }
         }
@@ -410,7 +411,7 @@ public class GroupsTreeService {
      * @param user
      * @return
      */
-    public static GroupDetails gerDefaultGroupTreeOptionForUser(int groupId, Identity user) {
+    public static GroupDetails getDefaultGroupTreeOptionForUser(int groupId, Identity user) {
         GroupsDB groupsDB = GroupsDB.getInstance();
 
         //User can edit all groups -> so return group (no check needed)
@@ -420,7 +421,7 @@ public class GroupsTreeService {
         if (rb != null) {
             referer = rb.getReferrer();
         }
-        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
+        if( Tools.isEmpty(user.getEditableGroups(true)) || canSeeAllGroups(referer, user)) {
             if(groupId > 0) return groupsDB.findGroup(groupId);
 
             GroupDetails rootGroup = new GroupDetails();
@@ -623,9 +624,15 @@ public class GroupsTreeService {
     public static boolean canSeeAllGroups(HttpServletRequest request, Identity user) {
         String referer = request.getHeader("referer");
 
+        return canSeeAllGroups(referer, user);
+    }
+
+    public static boolean canSeeAllGroups(String referer, Identity user) {
+
         boolean statSectionShowAll = (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
+        boolean seoSectionShowAll = (referer != null && referer.contains("/apps/seo/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
         boolean usersSectionShowAll = (referer != null && referer.contains("/users/user-list/") && user.isEnabledItem("users.edit_admins"));
 
-        return statSectionShowAll || usersSectionShowAll;
+        return statSectionShowAll || usersSectionShowAll || seoSectionShowAll;
     }
 }

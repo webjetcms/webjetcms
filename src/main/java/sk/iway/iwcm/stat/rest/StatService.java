@@ -221,7 +221,7 @@ public class StatService {
         filter.setDateTo(dateRange[1]);
 
         // Safety FIRST
-        filter.setRootGroupId( GroupsTreeService.gerDefaultGroupTreeOptionForUser(filter.getRootGroupId(), user).getGroupId());
+        filter.setRootGroupId( GroupsTreeService.getDefaultGroupTreeOptionForUser(filter.getRootGroupId(), user).getGroupId());
 
         return filter;
     }
@@ -296,7 +296,7 @@ public class StatService {
 
 
         // Safety FIRST
-        filter.setRootGroupId( GroupsTreeService.gerDefaultGroupTreeOptionForUser(filter.getRootGroupId(), UsersDB.getCurrentUser(request)).getGroupId() );
+        filter.setRootGroupId( GroupsTreeService.getDefaultGroupTreeOptionForUser(filter.getRootGroupId(), UsersDB.getCurrentUser(request)).getGroupId() );
 
         return filter;
     }

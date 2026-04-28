@@ -330,7 +330,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
      * @return
      */
     @GetMapping("/defaultValue")
-    public GroupDetails gerDefaultGroupTreeOptionForUser(@RequestParam("groupId") int groupId) {
-        return GroupsTreeService.gerDefaultGroupTreeOptionForUser(groupId, getUser());
+    public GroupDetails getDefaultGroupTreeOptionForUser(@RequestParam("groupId") int groupId) {
+        return GroupsTreeService.getDefaultGroupTreeOptionForUser(groupId, getUser());
     }
 }
