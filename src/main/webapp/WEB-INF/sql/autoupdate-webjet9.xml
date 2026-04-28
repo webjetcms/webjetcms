@@ -3178,8 +3178,11 @@
                     ALTER TABLE QUIZ_RESULTS ALTER COLUMN DESCRIPTION NVARCHAR(MAX) NULL;
                 </string></void>
                 <void property="oracle"><string>
-                    ALTER TABLE QUIZ_RESULTS MODIFY SCORE_TO INT NULL;
-                    ALTER TABLE QUIZ_RESULTS MODIFY DESCRIPTION CLOB NULL;
+                    ALTER TABLE QUIZ_RESULTS MODIFY (SCORE_TO INT NULL);
+                    ALTER TABLE QUIZ_RESULTS ADD (DESCRIPTION_NEW CLOB NULL);
+                    UPDATE QUIZ_RESULTS SET DESCRIPTION_NEW = DESCRIPTION;
+                    ALTER TABLE QUIZ_RESULTS DROP COLUMN DESCRIPTION;
+                    ALTER TABLE QUIZ_RESULTS RENAME COLUMN DESCRIPTION_NEW TO DESCRIPTION;
                 </string></void>
                 <void property="pgsql"><string></string></void>
             </object>
