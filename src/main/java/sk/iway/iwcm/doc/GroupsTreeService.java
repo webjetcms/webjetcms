@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("java:S6204")
 @Service
 public class GroupsTreeService {
 
@@ -172,21 +173,21 @@ public class GroupsTreeService {
                         jstree.setVirtualPath(addDomainPrefixToFullPath(doc, groupsDB));
                     }
                     return jstree;
-                }).toList());
+                }).collect(Collectors.toList()));
             }
         }
 
         if (id == Constants.getInt("systemPagesNotApprovedDocs")) {
             List<DocDetails> notApproved = docDB.getNotApprovedDocs(user.getUserId());
             if (notApproved != null && notApproved.size() > 0) {
-                items.addAll(notApproved.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).toList());
+                items.addAll(notApproved.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
             }
         }
 
         if (id == Constants.getInt("systemPagesDocsToApprove")) {
             List<DocDetails> approve = docDB.getDocsForApprove(user.getUserId());
             if (approve != null && approve.size() > 0) {
-                items.addAll(approve.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).toList());
+                items.addAll(approve.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
             }
         }
 
@@ -214,7 +215,7 @@ public class GroupsTreeService {
 
         return groups.stream()
             .sorted(comparator)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     private List<JsTreeItem> sortTreeBasedOnUserSettings(Identity user, List<GroupDetails> groups, boolean showPages, boolean checkGroupsPerms) {
@@ -259,7 +260,7 @@ public class GroupsTreeService {
             }
 
             return viewable || editable;
-        }).toList();
+        }).collect(Collectors.toList());
 
         return filtered;
     }
@@ -278,7 +279,7 @@ public class GroupsTreeService {
             if (Tools.isEmpty(g.getDomainName()) || g.getDomainName().equals(currentDomain)) return true;
 
             return false;
-        }).toList();
+        }).collect(Collectors.toList());
 
         return filtered;
     }
@@ -305,7 +306,7 @@ public class GroupsTreeService {
         List<GroupDetails> filtered = filteredByPath.stream().filter(g->{
             if ("System".equals(g.getGroupName()) && g.getParentGroupId()==domainId) return false;
             return true;
-        }).toList();
+        }).collect(Collectors.toList());
 
         return filtered;
     }
@@ -339,7 +340,7 @@ public class GroupsTreeService {
             if ( g.getFullPath().startsWith(filterFullPath) ) return false;
             if (filterFullPath.startsWith("*") && filterFullPath.length()>2 && g.getFullPath().contains(filterFullPath.substring(1)) ) return false;
             return true;
-        }).toList();
+        }).collect(Collectors.toList());
 
         return filtered;
     }
@@ -362,7 +363,7 @@ public class GroupsTreeService {
                 if (fullPath.startsWith(system.getFullPath())) return true;
             }
             return false;
-        }).toList();
+        }).collect(Collectors.toList());
 
         return filtered;
     }
@@ -461,19 +462,19 @@ public class GroupsTreeService {
         if("contains".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().contains(wantedValueLC))
-                .toList();
+                .collect(Collectors.toList());
         } else if("startwith".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().startsWith(wantedValueLC))
-                .toList();
+                .collect(Collectors.toList());
         } else if("endwith".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().endsWith(wantedValueLC))
-                .toList();
+                .collect(Collectors.toList());
         } else if("equals".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).equalsIgnoreCase(wantedValueLC))
-                .toList();
+                .collect(Collectors.toList());
         } else return new ArrayList<>();
     }
 
@@ -532,7 +533,7 @@ public class GroupsTreeService {
         items.addAll(
             filtered.stream()
             .map(g -> new GroupsJsTreeItem(g, user, showPages))
-            .toList()
+            .collect(Collectors.toList())
         );
 
         // Add to filtered groups their parents -> but only to height of original groups
@@ -595,7 +596,7 @@ public class GroupsTreeService {
         items.addAll(
             kk.values().stream()
             .map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))
-            .toList()
+            .collect(Collectors.toList())
         );
 
         //Set them states
