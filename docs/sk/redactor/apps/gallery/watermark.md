@@ -43,5 +43,3 @@ Pozíciu vodotlače nastavujete v konfiguračnej premennej ```galleryWatermarkGr
 - ```galleryWatermarkGravity``` (predvolene Center) - Pozícia vodotlače vo výslednom obrázku. Možnosti podľa svetových strán v angličtine: ```NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast```.
 - ```galleryWatermarkApplyOnUpload``` (predvolene false) - Po nastavení na ```true``` aktivuje automatické aplikovanie vodotlače pri nahratí obrázkov, vodotlač sa teda aplikuje aj na originálne obrázky v galérii.
 - ```galleryWatermarkApplyOnUploadDir``` (predvolene /templates/{INSTALL_NAME}/assets/watermark/) - Adresár kde sú umiestnené obrázky pre automatickú vodotlač pri nahratí obrázku. Názov obrázku musí byť ```default.png```, pri multidomain je možnosť mať pre každú doménu iný, v tvare ```domena.png``` (napr. ```www.interway.sk.png```).
-
-
