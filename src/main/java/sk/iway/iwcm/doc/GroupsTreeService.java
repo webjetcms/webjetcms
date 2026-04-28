@@ -88,7 +88,7 @@ public class GroupsTreeService {
 
             if (Constants.getBoolean("enableStaticFilesExternalDir") && domainRootGroup!=null)
             {
-                ///files adresar vytvarame v domenovom foldri
+                // /files adresar vytvarame v domenovom foldri
                 groups = filterFullPath(groups, domainFilesPrefix + "/files");
             }
         }
@@ -172,21 +172,21 @@ public class GroupsTreeService {
                         jstree.setVirtualPath(addDomainPrefixToFullPath(doc, groupsDB));
                     }
                     return jstree;
-                }).collect(Collectors.toList()));
+                }).toList());
             }
         }
 
         if (id == Constants.getInt("systemPagesNotApprovedDocs")) {
             List<DocDetails> notApproved = docDB.getNotApprovedDocs(user.getUserId());
             if (notApproved != null && notApproved.size() > 0) {
-                items.addAll(notApproved.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
+                items.addAll(notApproved.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).toList());
             }
         }
 
         if (id == Constants.getInt("systemPagesDocsToApprove")) {
             List<DocDetails> approve = docDB.getDocsForApprove(user.getUserId());
             if (approve != null && approve.size() > 0) {
-                items.addAll(approve.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
+                items.addAll(approve.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).toList());
             }
         }
 
@@ -214,7 +214,7 @@ public class GroupsTreeService {
 
         return groups.stream()
             .sorted(comparator)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     private List<JsTreeItem> sortTreeBasedOnUserSettings(Identity user, List<GroupDetails> groups, boolean showPages, boolean checkGroupsPerms) {
@@ -259,7 +259,7 @@ public class GroupsTreeService {
             }
 
             return viewable || editable;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return filtered;
     }
@@ -278,7 +278,7 @@ public class GroupsTreeService {
             if (Tools.isEmpty(g.getDomainName()) || g.getDomainName().equals(currentDomain)) return true;
 
             return false;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return filtered;
     }
@@ -305,7 +305,7 @@ public class GroupsTreeService {
         List<GroupDetails> filtered = filteredByPath.stream().filter(g->{
             if ("System".equals(g.getGroupName()) && g.getParentGroupId()==domainId) return false;
             return true;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return filtered;
     }
@@ -339,7 +339,7 @@ public class GroupsTreeService {
             if ( g.getFullPath().startsWith(filterFullPath) ) return false;
             if (filterFullPath.startsWith("*") && filterFullPath.length()>2 && g.getFullPath().contains(filterFullPath.substring(1)) ) return false;
             return true;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return filtered;
     }
@@ -362,7 +362,7 @@ public class GroupsTreeService {
                 if (fullPath.startsWith(system.getFullPath())) return true;
             }
             return false;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return filtered;
     }
@@ -410,7 +410,7 @@ public class GroupsTreeService {
      * @param user
      * @return
      */
-    public static GroupDetails gerDefaultGroupTreeOptionForUser(int groupId, Identity user) {
+    public static GroupDetails getDefaultGroupTreeOptionForUser(int groupId, Identity user) {
         GroupsDB groupsDB = GroupsDB.getInstance();
 
         //User can edit all groups -> so return group (no check needed)
@@ -420,7 +420,7 @@ public class GroupsTreeService {
         if (rb != null) {
             referer = rb.getReferrer();
         }
-        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
+        if( Tools.isEmpty(user.getEditableGroups(true)) || canSeeAllGroups(referer, user)) {
             if(groupId > 0) return groupsDB.findGroup(groupId);
 
             GroupDetails rootGroup = new GroupDetails();
@@ -461,19 +461,19 @@ public class GroupsTreeService {
         if("contains".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().contains(wantedValueLC))
-                .collect(Collectors.toList());
+                .toList();
         } else if("startwith".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().startsWith(wantedValueLC))
-                .collect(Collectors.toList());
+                .toList();
         } else if("endwith".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().endsWith(wantedValueLC))
-                .collect(Collectors.toList());
+                .toList();
         } else if("equals".equals(treeSearchType)) {
             return groups.stream()
                 .filter(group -> DB.internationalToEnglish(group.getGroupName()).equalsIgnoreCase(wantedValueLC))
-                .collect(Collectors.toList());
+                .toList();
         } else return new ArrayList<>();
     }
 
@@ -532,7 +532,7 @@ public class GroupsTreeService {
         items.addAll(
             filtered.stream()
             .map(g -> new GroupsJsTreeItem(g, user, showPages))
-            .collect(Collectors.toList())
+            .toList()
         );
 
         // Add to filtered groups their parents -> but only to height of original groups
@@ -595,7 +595,7 @@ public class GroupsTreeService {
         items.addAll(
             kk.values().stream()
             .map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))
-            .collect(Collectors.toList())
+            .toList()
         );
 
         //Set them states
@@ -622,6 +622,11 @@ public class GroupsTreeService {
 
     public static boolean canSeeAllGroups(HttpServletRequest request, Identity user) {
         String referer = request.getHeader("referer");
+
+        return canSeeAllGroups(referer, user);
+    }
+
+    public static boolean canSeeAllGroups(String referer, Identity user) {
 
         boolean statSectionShowAll = (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
         boolean seoSectionShowAll = (referer != null && referer.contains("/apps/seo/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"));
