@@ -25,6 +25,10 @@
         margin-left: -15px;
     }
 
+    body.ly-submenu-active .ly-content-wrapper {
+        padding-top: 0px !important;
+    }
+
 }
 
 html.in-iframe, html.in-iframe-show-table {
@@ -34,5 +38,8 @@ html.in-iframe, html.in-iframe-show-table {
     }
     div.dt-container .dt-header-row .row, .col-md-4.tree-col .dt-header-row .row {
         margin-left: -15px;
+    }
+    .hide-in-iframe {
+        display: none;
     }
 }

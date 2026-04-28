@@ -49,7 +49,7 @@ window.initSubmenuTabsClick = function() {
             $this.addClass("active");
             $this.closest('ul').removeClass("open");
             //hide menu
-            $("div.js-sidebar-toggler").trigger("click");
+            $(".js-sidebar-toggler").trigger("click");
         }
     });
 }
@@ -212,7 +212,7 @@ function initClosure() {
     });
 
     //sidebar toogler responsive
-    $("div.js-sidebar-toggler").on("click", function(e) {
+    $(".js-sidebar-toggler").on("click", function(e) {
         $("div.ly-sidebar").toggleClass("active");
         $("div.ly-page-wrapper").toggleClass("active");
         $(this).children("i").toggleClass("ti-x");

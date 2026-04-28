@@ -4,7 +4,7 @@ block content
 
     .approve-group-page
 
-        div.dt-header-row.clearfix.push-content-down
+        div.dt-header-row.clearfix.push-content-down.hide-in-iframe
             h2(data-th-text="#{approve.group.page.title}") Schvaľování zmien adresára
 
         .alert.alert-danger(data-th-if="${errMsg!=null}")
@@ -76,7 +76,7 @@ block content
             display: flex;
             flex-direction: column;
             flex: 1 1 auto;
-            min-height: 0;
+            min-height: 400px;
             margin-bottom: 0 !important;
         }
 
