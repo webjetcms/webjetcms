@@ -203,6 +203,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/database-delete")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/in-memory-logging")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/embedding-chunks")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/doc-chunks")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-list")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-groups")),

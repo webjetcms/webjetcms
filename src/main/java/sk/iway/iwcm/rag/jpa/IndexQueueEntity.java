@@ -11,9 +11,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -46,9 +46,9 @@ public class IndexQueueEntity {
     @Column(name = "entity_id")
     private Integer entityId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "action")
-    @NotBlank
-    private String action;
+    private RagIndexAction action;
 
     @Column(name = "domain_id")
     private Integer domainId;

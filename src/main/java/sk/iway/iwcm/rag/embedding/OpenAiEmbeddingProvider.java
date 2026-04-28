@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
@@ -61,7 +62,8 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             post.setHeader("Content-Type", "application/json; charset=utf-8");
             post.setEntity(new StringEntity(MAPPER.writeValueAsString(requestBody), StandardCharsets.UTF_8));
 
-            try (CloseableHttpResponse response = HttpClients.createDefault().execute(post)) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(post)) {
                 int statusCode = response.getStatusLine().getStatusCode();
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
 

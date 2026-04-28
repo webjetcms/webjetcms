@@ -13,6 +13,7 @@ import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.rag.service.RagEntityType;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -27,7 +28,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Table(name = "rag_embedding_chunks")
 @Getter
 @Setter
-public class EmbeddingChunkEntity {
+public class EmbeddingChunkEntity extends BaseEditorFields {
 
     @Id
     @Column(name = "id")
@@ -39,11 +40,13 @@ public class EmbeddingChunkEntity {
     @Column(name = "entity_type", nullable = false, length = 100)
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.rag.entity_type",
+        title = "settings.embedding-chunks.entityType",
         tab = "main",
         renderFormat = "dt-format-select",
+        visible = false,
         editor = {
             @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") },
                 options = {
                     @DataTableColumnEditorAttr(key = "DOCUMENT", value = "DOCUMENT")
                 }
@@ -55,7 +58,7 @@ public class EmbeddingChunkEntity {
     @Column(name = "entity_id", nullable = false)
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
-        title = "components.rag.entity_id",
+        title = "settings.embedding-chunks.entityId",
         tab = "main"
     )
     private Long entityId;
@@ -63,7 +66,7 @@ public class EmbeddingChunkEntity {
     @Column(name = "chunk_index", nullable = false)
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
-        title = "components.rag.chunk_index",
+        title = "settings.embedding-chunks.chunkIndex",
         tab = "main"
     )
     private Integer chunkIndex;
@@ -71,9 +74,13 @@ public class EmbeddingChunkEntity {
     @Column(name = "chunk_text", nullable = false, columnDefinition = "TEXT")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        title = "components.rag.chunk_text",
+        title = "settings.embedding-chunks.chunkText",
         tab = "main",
-        hidden = true
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
     )
     private String chunkText;
 
@@ -93,15 +100,16 @@ public class EmbeddingChunkEntity {
     @Column(name = "embedding_model", nullable = false, length = 100)
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
-        title = "components.rag.embedding_model",
-        tab = "main"
+        title = "settings.embedding-chunks.embeddingModel",
+        tab = "main",
+        visible = false
     )
     private String embeddingModel;
 
     @Column(name = "dimensions", nullable = false)
     @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
-        title = "components.rag.dimensions",
+        title = "settings.embedding-chunks.dimensions",
         tab = "main",
         visible = false
     )
@@ -110,8 +118,13 @@ public class EmbeddingChunkEntity {
     @Column(name = "language", length = 10)
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.rag.language",
-        tab = "main"
+        title = "settings.embedding-chunks.language",
+        tab = "main",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
     )
     private String language;
 
@@ -123,11 +136,12 @@ public class EmbeddingChunkEntity {
     @Column(name = "status", nullable = false, length = 20)
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.rag.status",
+        title = "settings.embedding-chunks.status",
         tab = "main",
         renderFormat = "dt-format-select",
         editor = {
             @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") },
                 options = {
                     @DataTableColumnEditorAttr(key = "PENDING", value = "PENDING"),
                     @DataTableColumnEditorAttr(key = "COMPLETED", value = "COMPLETED"),
@@ -141,19 +155,23 @@ public class EmbeddingChunkEntity {
     @Column(name = "error_message", length = 500)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        title = "components.rag.error_message",
+        title = "settings.embedding-chunks.errorMessage",
         tab = "main",
-        hidden = true
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        },
+        visible = false
     )
     private String errorMessage;
 
     @Column(name = "create_date")
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title = "components.rag.create_date",
+        title = "settings.embedding-chunks.createDate",
         tab = "main",
-        renderFormat = "dt-format-date-time",
-        hiddenEditor = true
+        renderFormat = "dt-format-date-time"
     )
     private Date createDate;
 }

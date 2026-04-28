@@ -184,6 +184,8 @@
                         $element.attr("data-text", text);
                         $element.val(id);
                         $element.trigger("change");
+
+                        WJ.dispatchEvent("WJ.jstree-groupid.change", {textInputId: id, item: item});
                     }, 100);
                 } else {
                     window.$(textInputId).val(JSON.stringify(that.$root.data, undefined, 4)).change();

@@ -60,7 +60,7 @@ public class SemanticSearchService {
         // Aggregate by entity_id, keeping best similarity per document
         Map<Long, SemanticSearchResult> docMap = new HashMap<>();
         for (VectorSearchResult chunk : chunkResults) {
-            if ("document".equals(chunk.getEntityType()) == false) continue;
+            if ("document".equalsIgnoreCase(chunk.getEntityType()) == false) continue;
 
             docMap.compute(chunk.getEntityId(), (id, existing) -> {
                 if (existing == null) {

@@ -1,0 +1,279 @@
+extends ../../partials/iframe
+
+block content
+
+    .container-fluid.py-3.doc-chunks-settings
+        .card.shadow-sm.mb-3
+            .card-body
+                p#action-title.action-title.mb-3
+                span#action-title-index.d-none(data-th-utext="#{settings.doc-chunks.group}")
+                span#action-title-delete.d-none(data-th-utext="#{settings.doc-chunks.group.delete}")
+
+                .controls-wrap
+                    .rootDirDiv.col-auto(data-th-title='#{components.stat.filter.showOnlyFromGroup}' data-bs-toggle='tooltip')
+                        input#rootDir.webjet-dte-jstree(type='text' value='-1' data-th-data-text='#{jstree.all_dirs}' data-th-data-text-empty='#{jstree.all_dirs}')
+
+                    .DTE_Field.form-group.row.DTE_Field_Type_checkbox
+                        div(data-dte-e="input")
+                            .DTE_Field_InputControl(data-dte-e="input-control", style="display: block;")
+                            div
+                                .custom-control.form-switch
+                                    input#include_subfolders.form-check-input(
+                                        type="checkbox",
+                                        value="true"
+                                    )
+                                    label.form-check-label(for="include_subfolders" data-th-utext="#{settings.doc-chunks.include_subfolders}")
+
+            //- .card-footer.bg-transparent
+            button.btn.btn-primary.submit(type='button' id='submitBtn' onClick='handleDocIndexing()' style="display: none;") start-action
+
+        .card.shadow-sm.mb-3
+            .card-body
+                h5.card-title.mb-3 [[\#{settings.doc-chunks.stat.title}]]
+
+                ul.stats-list.mb-0
+                    li
+                        span [[\#{settings.doc-chunks.stat.all_groups}]]
+                        strong#allGroups 0
+                    li
+                        span [[\#{settings.doc-chunks.stat.all_doc}]]
+                        strong#allDoc 0
+                    li
+                        span [[\#{settings.doc-chunks.stat.indexed_doc}]]
+                        strong#indexedDoc 0
+                    li
+                        span [[\#{settings.doc-chunks.stat.queued_doc}]]
+                        strong#queuedDoc 0
+
+        .status-wrap
+            p#wait-msg.status-msg.status-msg-wait(role='status' style='display: none;' data-th-utext="#{settings.embedding-chunks.wait_please}")
+            p#succ-msg-index.status-msg.status-msg-success(role='status' style='display: none;' data-th-utext="#{settings.doc-chunks.success}")
+            p#fail-msg-index.status-msg.status-msg-fail(role='alert' style='display: none;' data-th-utext="#{settings.doc-chunks.failed}")
+            p#succ-msg-delete.status-msg.status-msg-success(role='status' style='display: none;' data-th-utext="#{settings.doc-chunks.delete.success}")
+            p#fail-msg-delete.status-msg.status-msg-fail(role='alert' style='display: none;' data-th-utext="#{settings.doc-chunks.delete.failed}")
+
+    style.
+        .doc-chunks-settings .card {
+            border: 1px solid rgba(28, 39, 60, 0.08);
+        }
+
+        .doc-chunks-settings .action-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #3a557f;
+            background: linear-gradient(90deg, rgba(58, 85, 127, 0.08), rgba(58, 85, 127, 0));
+            border-left: 3px solid #3a557f;
+            border-radius: 4px;
+            padding: 0.45rem 0.7rem;
+        }
+
+        .doc-chunks-settings .action-title b,
+        .doc-chunks-settings .action-title strong {
+            font-weight: 800;
+            color: #213a63;
+        }
+
+        .doc-chunks-settings .controls-wrap {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .doc-chunks-settings .rootDirDiv.col-auto {
+            max-width: 100%;
+            padding-left: 0;
+        }
+
+        .doc-chunks-settings .rootDirDiv .select2,
+        .doc-chunks-settings .rootDirDiv .select2-container {
+            width: 100% !important;
+        }
+
+        .doc-chunks-settings div.form-switch {
+            margin-top: 0.25rem;
+            margin-bottom: 0;
+            min-height: 1.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .doc-chunks-settings input.form-check-input {
+            margin-right: 0.55rem;
+            margin-top: 0;
+        }
+
+        .doc-chunks-settings .stats-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .doc-chunks-settings .stats-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.45rem 0;
+            border-bottom: 1px solid rgba(28, 39, 60, 0.08);
+            font-size: 0.92rem;
+        }
+
+        .doc-chunks-settings .stats-list li:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .doc-chunks-settings .stats-list strong {
+            min-width: 3rem;
+            text-align: right;
+            font-size: 1rem;
+            color: #223655;
+        }
+
+        .doc-chunks-settings .status-wrap {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .doc-chunks-settings .status-msg {
+            margin: 0;
+            padding: 0.6rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font-size: 0.9rem;
+        }
+
+        .doc-chunks-settings .status-msg-wait {
+            color: #1f4f91;
+            background: #eef5ff;
+            border-color: #c8dcff;
+        }
+
+        .doc-chunks-settings .status-msg-success {
+            color: #0f6a58;
+            background: #e7f8f4;
+            border-color: #b4ebde;
+        }
+
+        .doc-chunks-settings .status-msg-fail {
+            color: #8d1f38;
+            background: #ffeff3;
+            border-color: #ffd0dc;
+        }
+
+    script.
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const action = urlParams.get('action') || 'index';
+
+        function getElementHtmlById(id) {
+            const element = document.getElementById(id);
+            return element != null ? element.innerHTML : "";
+        }
+
+        const actionTitleByType = {
+            index: getElementHtmlById("action-title-index"),
+            delete: getElementHtmlById("action-title-delete")
+        };
+
+        ChartTools.initGroupIdSelect();
+
+        const actionTitleEl = document.getElementById("action-title");
+        actionTitleEl.innerHTML = actionTitleByType[action] || actionTitleByType.index;
+
+        ["index", "delete"].forEach(a => {
+            const successMsg = document.getElementById("succ-msg-" + a);
+            if(successMsg != null) {
+                successMsg.dataset.baseText = successMsg.innerHTML;
+            }
+        });
+
+        function hideStatusMessages() {
+            ["wait-msg", "succ-msg-index", "fail-msg-index", "succ-msg-delete", "fail-msg-delete"].forEach(id => {
+                const msg = document.getElementById(id);
+                if(msg != null) {
+                    msg.style.display = "none";
+                }
+            });
+        }
+
+        function resetSuccessMessageText() {
+            ["index", "delete"].forEach(a => {
+                const successMsg = document.getElementById("succ-msg-" + a);
+                if(successMsg != null && successMsg.dataset.baseText != null) {
+                    successMsg.innerHTML = successMsg.dataset.baseText;
+                }
+            });
+        }
+
+        function handleDocIndexing() {
+            const rootDir = document.getElementById("rootDir").value;
+            const includeSubfolders = document.getElementById("include_subfolders").checked;
+
+            const params = new URLSearchParams({ rootDir, includeSubfolders, action });
+
+            const waitMsg = document.getElementById("wait-msg");
+            const successMsg = document.getElementById("succ-msg-" + action);
+            const failMsg = document.getElementById("fail-msg-" + action);
+
+            hideStatusMessages();
+            resetSuccessMessageText();
+            waitMsg.style.display = "block";
+
+            fetch("/admin/rest/settings/embedding-chunks/document-action", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRF-Token": window.csrfToken
+                },
+                body: params.toString()
+            })
+            .then(response => response.json())
+            .then(count => {
+                // count can be even 0, when there is no document to index OR it was already in queue
+                waitMsg.style.display = "none";
+                if(count < 0) {
+                    failMsg.style.display = "block";
+                } else {
+                    if(count > 0) {
+                        successMsg.innerHTML = successMsg.dataset.baseText + " (" + count + ")";
+                    }
+                    successMsg.style.display = "block";
+                    getStats();
+                }
+            })
+            .catch(() => {
+                waitMsg.style.display = "none";
+                failMsg.style.display = "block";
+            });
+        }
+
+        function getStats() {
+            const rootDir = document.getElementById("rootDir").value;
+            const includeSubfolders = document.getElementById("include_subfolders").checked;
+
+            const params = new URLSearchParams({ rootDir, includeSubfolders, action });
+
+            fetch("/admin/rest/settings/embedding-chunks/document-stat?" + params.toString(), {
+                method: "GET",
+                headers: { "X-CSRF-Token": window.csrfToken }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("allGroups").textContent = data.totalGroups ?? 0;
+                document.getElementById("allDoc").textContent = data.totalDocuments ?? 0;
+                document.getElementById("indexedDoc").textContent = data.indexedDocuments ?? 0;
+                document.getElementById("queuedDoc").textContent = data.queuedDocuments ?? 0;
+            })
+            .catch(err => {
+                console.error("Failed to load document stats:", err);
+            });
+        }
+
+        window.addEventListener("WJ.jstree-groupid.change", function(e) {
+            let location = e.srcElement.location.pathname;
+            if(location != null && location != undefined && location === "/admin/v9/settings/doc-chunks/") {
+                getStats();
+            }
+        });
+
+        getStats();
+        document.getElementById("rootDir").addEventListener("change", getStats);
+        document.getElementById("include_subfolders").addEventListener("change", getStats);

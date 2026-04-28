@@ -9,9 +9,9 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -38,6 +38,8 @@ public class SemanticIndexService {
 
     private final IndexQueueRepository queueRepository;
 
+    private static final String PROCESSING_QUEUE_KEY = "SemanticIndexService.processQueue.running";
+
     @Autowired
     public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
                                 SlidingWindowChunker chunker,
@@ -59,27 +61,43 @@ public class SemanticIndexService {
             return;
         }
 
-        List<IndexQueueEntity> items = queueRepository.findTop100ByDomainIdOrderByCreateDateAsc( CloudToolsForCore.getDomainId() );
-        if (items.isEmpty()) return;
+        Cache cache = Cache.getInstance();
 
-        Logger.println(SemanticIndexService.class, "Processing " + items.size() + " RAG queue items");
+        // Prevent concurrent execution from another thread/scheduler invocation
+        if (cache.getObject(PROCESSING_QUEUE_KEY) != null) {
+            Logger.debug(SemanticIndexService.class, "Queue processing already running, skipping");
+            return;
+        }
+        // Set flag with 60-minute TTL as a safety net in case of unexpected termination
+        cache.setObject(PROCESSING_QUEUE_KEY, Boolean.TRUE, 60);
 
-        for (IndexQueueEntity item : items) {
-            try {
+        try {
+            List<IndexQueueEntity> items;
 
-                RagIndexAction action = RagIndexAction.valueOf(item.getAction());
-                RagEntityType entityType = item.getEntityType();
+            do {
+                items = queueRepository.findTop500ByOrderByCreateDateAsc();
+                if (items.isEmpty()) break;
 
-                //
-                processEntity(action, entityType, item.getEntityId());
+                // Refresh TTL so the flag doesn't expire during a slow batch (e.g. slow AI provider)
+                cache.setObject(PROCESSING_QUEUE_KEY, Boolean.TRUE, 60);
 
-                // Remove processed item from queue
-                queueRepository.deleteById(item.getId());
-            } catch (Exception e) {
-                Logger.error(SemanticIndexService.class, "Error processing queue item " + item.getId() +
-                    " (" + item.getEntityType() + "/" + item.getEntityId() + "): " + e.getMessage());
-                // Don't delete failed items - they'll be retried on next run
-            }
+                Logger.println(SemanticIndexService.class, "Processing " + items.size() + " RAG queue items");
+
+                for (IndexQueueEntity item : items) {
+                    try {
+                        processEntity(item.getAction(), item.getEntityType(), item.getEntityId());
+
+                        // Remove processed item from queue
+                        queueRepository.deleteById(item.getId());
+                    } catch (Exception e) {
+                        Logger.error(SemanticIndexService.class, "Error processing queue item " + item.getId() +
+                            " (" + item.getEntityType() + "/" + item.getEntityId() + "): " + e.getMessage());
+                        // Don't delete failed items - they'll be retried on next run
+                    }
+                }
+            } while (items.size() == 500);
+        } finally {
+            cache.removeObject(PROCESSING_QUEUE_KEY);
         }
     }
 

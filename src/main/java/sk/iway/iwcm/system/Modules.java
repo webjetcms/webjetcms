@@ -779,6 +779,20 @@ public class Modules
 		sub.setMenuIcon("refresh");
 		loadModule(sub);
 
+		// Embedding-chunks
+		sub = new ModuleInfo().setMenuOrder(7400);
+		sub.setLeftMenuNameKey("settings.embedding-chunks.title");
+		sub.setNameKey("settings.embedding-chunks.title");
+		sub.setPath("/admin/v9/settings/embedding-chunks/");
+		sub.setWjVersions("BPECDIM");
+		sub.setUserItem(true);
+		sub.setItemKey("embeddingChunks");
+		sub.setDefaultDisabled(false);
+		sub.setShowInLeftMenu(true);
+		sub.setGroup("config");
+		sub.setMenuIcon("database-search");
+		loadModule(sub);
+
 		// Editacia textov
 		sub = new ModuleInfo().setMenuOrder(7020);
 		sub.setLeftMenuNameKey("admin.conf_editor.edit_text");
