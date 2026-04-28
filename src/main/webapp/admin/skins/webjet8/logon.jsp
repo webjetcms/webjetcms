@@ -30,17 +30,7 @@ response.setHeader("Cache-Control","no-Cache");
 String adminHost = Constants.getString("multiDomainAdminHost");
 //out.println("adminHost="+adminHost+" domain="+DocDB.getDomain(request));
 
-String serverName = request.getServerName();
-String forwardHost = request.getHeader("x-forwarded-host");
-if (Constants.getBoolean("serverBeyoundProxy") && Tools.isNotEmpty(forwardHost)) serverName = forwardHost;
-
-if ("web.vucke.sk".equals(serverName))
-{
-	String hosts[] = Tools.getTokens(adminHost, ",");
-	response.sendRedirect(request.getScheme()+"://"+hosts[0]+"/admin/");
-	return;
-}
-
+String serverName = Tools.getServerName(request, true);
 if (("iwcm.interway.sk".equals(request.getServerName())==false && "localhost".equals(request.getServerName())==false) && Tools.isNotEmpty(adminHost) && (","+adminHost+",").indexOf(","+serverName+",")==-1)
 {
 	if (Constants.getBoolean("adminLogonShowSimpleErrorMessage"))

@@ -41,16 +41,16 @@ public class Temp {
             } else {
 
                 //39796 - Constants.getInstallName() uz nepotrebujeme, pridava ho WJ automaticky
-                basePathNoSuffix = "/templates/";
+                basePathNoSuffix = "/templates/"; //NOSONAR
                 String configInstallName = ninja.getConfig("installName", "");
                 if (Tools.isNotEmpty(configInstallName))
                 {
                     basePathNoSuffix += configInstallName + "/";
                 }
 
-                String templateFolderName = getTemplateFolderName();
-                if (Tools.isNotEmpty(templateFolderName) && !("/".equals(templateFolderName))) {
-                    basePathNoSuffix += templateFolderName + "/";
+                String folder = getTemplateFolderName();
+                if (Tools.isNotEmpty(folder) && !("/".equals(folder))) {
+                    basePathNoSuffix += folder + "/";
                 }
             }
         }
@@ -118,7 +118,7 @@ public class Temp {
                 dimension = defaultDimension;
             }
             //ak uz tam nieco je odsad nech to je krajsie v HTML kode
-            if (sb.length()>0) sb.append("        ");
+            if (sb.isEmpty()==false) sb.append("        ");
 
             sb.append("<link rel=\"apple-touch-icon-precomposed\"");
             if (Tools.isNotEmpty(sizes)) {
@@ -138,6 +138,10 @@ public class Temp {
 
     public String getLngIso(){
         return PageLng.getUserLngIso(ninja.getRequest());
+    }
+
+    public String getLngIsoUnderscore(){
+        return Tools.replace(PageLng.getUserLngIso(ninja.getRequest()), "-", "_");
     }
 
     public TempGroup getGroup() {

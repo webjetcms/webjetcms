@@ -82,5 +82,22 @@
     ],
     "chat.tools.terminal.autoApprove": {
         "git rev-parse": true
-    }
+    },
+    "cSpell.language": "en,sk",
+    "cSpell.enabledFileTypes": {
+        "*": false,
+        "markdown": true
+    },
+    "cSpell.customDictionaries": {
+        "webjetcms": {
+            "name": "WebJET CMS",
+            "path": "${workspaceFolder}/.vscode/spellright.dict",
+            "scope": "user",
+            "addWords": true,
+        }
+    },
+    "cSpell.ignoreRegExpList": [
+        "/`[^`\\n]+`/g",
+        "/```[\\s\\S]*?```/g"
+    ],
 }
