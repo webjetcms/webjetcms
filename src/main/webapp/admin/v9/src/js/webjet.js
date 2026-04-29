@@ -125,6 +125,7 @@ const WJ = (() => {
      * - closeButtonPosition = pozicia tlacidla na zatvorenie, prazdne - male X v hlavicke, close-button-over - male X v hlavicke ponad content (nevytvara samostatny riadok), pridanim nopadding sa zrusi horny padding hlavicky
      * - okclick = callback po kliknuti na tlacidlo potvrdit
      * - onload = callback po nacitani okna, ako parameter dostane event.detail obsahujuci property window s odkazom na okno v iframe
+     * - buttons = pole buttonov v modal-footer: [{title, cssClass, onClick}], ak nie je zadane zobrazi sa default button Potvrdiť
      */
     function openIframeModal(options) {
 
@@ -155,9 +156,27 @@ const WJ = (() => {
         if (title === "") $('#modalIframe .modal-header h5').hide();
         else $('#modalIframe .modal-header h5').show();
 
-        //nastav button title
-        const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
-        $('#modalIframe div.modal-footer button.btn-primary span').text(buttonTitle);
+        //nastav footer buttons - custom alebo default
+        const $defaultButtons = $('#modalIframe div.modal-footer-default-buttons');
+        const $customButtons = $('#modalIframe div.modal-footer-custom-buttons');
+        $customButtons.empty();
+        if (typeof options.buttons != "undefined" && options.buttons != null && options.buttons.length > 0) {
+            $defaultButtons.hide();
+            options.buttons.forEach(function(btn) {
+                const $btn = $('<button class="btn ' + btn.cssClass + '" tabindex="0"><span>' + btn.title + '</span></button>');
+                if (typeof btn.onClick === 'function') {
+                    $btn.on('click', btn.onClick);
+                }
+                $customButtons.append($btn);
+            });
+            $customButtons.show();
+        } else {
+            $customButtons.hide();
+            $defaultButtons.show();
+            //nastav button title
+            const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
+            $defaultButtons.find('button.btn-primary span').text(buttonTitle);
+        }
 
         //console.log('modalIframe=', modalIframe);
         modalIframeOptions = options;
@@ -167,7 +186,7 @@ const WJ = (() => {
             _showIframeModal();
 
             //console.log("modalIframeShow, modalIframe=", modalIframe);
-            $('#modalIframe button.btn-primary').on('click', (e) => {
+            $('#modalIframe div.modal-footer-default-buttons button.btn-primary').on('click', (e) => {
                 //console.log("Klik na btn-prinary, e=", e);
                 let success = _modalOkClick();
                 if (false === success) return;
@@ -184,9 +203,58 @@ const WJ = (() => {
                     modalIframeOptions.onload(event.detail);
                 }
             });
+
+            //drag & drop - chytenie za hlavicku a presuvanie okna
+            if ($("html").hasClass("in-iframe") == false && window.location.href.indexOf("showOnlyEditor=true") == -1) {
+                $("#modalIframe .modal-header").addClass("modal-header-draggable");
+                $("body").on("mousedown.modalIframeDrag", "#modalIframe .modal-header", function(mousedownEvt) {
+                    //allow interaction with buttons in header
+                    if ($(mousedownEvt.target).closest("button").length > 0) return;
+                    var $draggable = $(this);
+                    var x = mousedownEvt.pageX - $draggable.offset().left,
+                        y = mousedownEvt.pageY - $draggable.offset().top;
+                    var $modalContent = $("#modalIframe div.modal-content");
+                    $("#modalIframe").addClass("modal-iframe-dragging");
+                    $("body").on("mousemove.modalIframeDraggable", function(mousemoveEvt) {
+                        $modalContent.offset({
+                            "left": mousemoveEvt.pageX - x,
+                            "top": mousemoveEvt.pageY - y
+                        });
+                    });
+                    $("body").one("mouseup.modalIframeDrag", function() {
+                        $("body").off("mousemove.modalIframeDraggable");
+                        $("#modalIframe").removeClass("modal-iframe-dragging");
+                    });
+                });
+            }
+
+            //maximize / minimize okna
+            $('#modalIframe div.modal-header div.dialog-buttons .maximize, #modalIframe div.modal-header div.dialog-buttons .minimize').on("click", function() {
+                var $modalDialog = $('#modalIframe div.modal-dialog');
+                var isMaximizing = !$modalDialog.hasClass("modal-fullscreen");
+                $modalDialog.toggleClass("modal-fullscreen");
+                if (isMaximizing) {
+                    //fullscreen - uvolni inline max-width a height, CSS prevezme
+                    $modalDialog.css('max-width', '');
+                    $('#modalIframe div.modal-body').css('height', '');
+                    $('#modalIframeIframeElement').css({'width': '100%', 'height': '100%'}).removeAttr('width').removeAttr('height');
+                    //reset pozicia po maximalizacii
+                    $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
+                } else {
+                    //restore max-width, height a iframe dimensions z options
+                    const borderWidth = 2;
+                    $modalDialog.css('max-width', (modalIframeOptions.width + borderWidth) + 'px');
+                    $('#modalIframe div.modal-body').css('height', modalIframeOptions.height + 'px');
+                    $('#modalIframeIframeElement').css({'width': '', 'height': ''}).attr('width', modalIframeOptions.width).attr('height', modalIframeOptions.height);
+                }
+            });
         } else {
             _showIframeModal();
         }
+
+        //reset fullscreen state and position when opening
+        $('#modalIframe div.modal-dialog').removeClass("modal-fullscreen");
+        $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
 
         let $modalIframe = $("#modalIframe");
         $modalIframe.removeClass("close-button-over");
@@ -211,6 +279,12 @@ const WJ = (() => {
 
         let $modalIframe = $("#modalIframe");
         $modalIframe.find(".modal-body .modal-body-content").html("");
+        //reset fullscreen a polohu
+        $modalIframe.find("div.modal-dialog").removeClass("modal-fullscreen");
+        $modalIframe.find("div.modal-content").css({"left": "auto", "top": "auto"});
+        //zrus pripadny prebiehajuci drag
+        $("body").off("mousemove.modalIframeDraggable");
+        $modalIframe.removeClass("modal-iframe-dragging");
 
         if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
     }
