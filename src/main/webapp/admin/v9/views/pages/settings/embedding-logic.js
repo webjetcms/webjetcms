@@ -5,12 +5,12 @@
  */
 function getActiveTabValue() {
     const activeTab = document.querySelector("#pills-embedding-chunks .nav-link.active");
-    if (!activeTab || !activeTab.textContent) {
+    if (!activeTab || !activeTab.hash) {
         return null;
     }
 
-    const value = activeTab.textContent.trim().toLowerCase();
-    return value.length > 0 ? value : null;
+    const value = activeTab.hash.trim().toLowerCase();
+    return value.length > 0 ? value.replace("#pills-", "") : null;
 }
 
 /**
@@ -20,24 +20,27 @@ function getActiveTabValue() {
  */
 function filterFn() {
     const entityType = getActiveTabValue();
-    if ("document" !== entityType) {
-        return;
-    }
 
     if (typeof embeddingChunksDataTable === "undefined" || typeof WJ === "undefined" || typeof $ !== "function") {
         return;
     }
 
-    const rootDirValue = $("#rootDir").val();
-    // The switch keeps id "botFilterOut" for compatibility with existing chart logic.
-    const includeSubfolders = $("#botFilterOut").is(":checked");
+    embeddingChunksDataTable.setAjaxUrl(
+        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "entityType", entityType.toUpperCase())
+    );
 
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "searchRootDir", rootDirValue)
-    );
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "includeSubfolders", includeSubfolders)
-    );
+    if ("document" === entityType) {
+        const rootDirValue = $("#rootDir").val();
+        // The switch keeps id "botFilterOut" for compatibility with existing chart logic.
+        const includeSubfolders = $("#botFilterOut").is(":checked");
+
+        embeddingChunksDataTable.setAjaxUrl(
+            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "searchRootDir", rootDirValue)
+        );
+        embeddingChunksDataTable.setAjaxUrl(
+            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "includeSubfolders", includeSubfolders)
+        );
+    }
 
     if (embeddingChunksDataTable.ajax && typeof embeddingChunksDataTable.ajax.reload === "function") {
         embeddingChunksDataTable.ajax.reload();
@@ -47,21 +50,61 @@ function filterFn() {
 /**
  * Creates root directory selector element for external filters.
  *
- * @returns {HTMLDivElement}
+ * @returns {Promise<HTMLDivElement>}
  * @private
  */
-function _getRootDirDiv() {
+async function _getRootDirDiv() {
     const rootDirDiv = document.createElement("div");
     rootDirDiv.className = "rootDirDiv col-auto";
-    rootDirDiv.setAttribute("data-title", "[[#{components.stat.filter.showOnlyFromGroup}]]");
+    rootDirDiv.setAttribute("title", "[[#{components.stat.filter.showOnlyFromGroup}]]");
     rootDirDiv.setAttribute("data-bs-toggle", "tooltip");
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    let rootDirId = urlParams.get('rootDir') || '-1';
+    let rootDirPath = "[[#{jstree.all_dirs}]]";
+
+    if (rootDirId !== '-1') {
+        const urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=" + rootDirId;
+
+        try {
+            const response = await fetch(urlGroupIdFilter, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-Token": window.csrfToken
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+            const selectedDir = Array.isArray(data)
+                ? data.find(item => String(item.value) === String(rootDirId))
+                : null;
+
+            if (selectedDir && selectedDir.label) {
+                rootDirPath = selectedDir.label;
+            } else {
+                rootDirId = '-1';
+                rootDirPath = "[[#{jstree.all_dirs}]]";
+            }
+        } catch (error) {
+            console.error("Group filter request failed:", error);
+            rootDirId = '-1';
+            rootDirPath = "[[#{jstree.all_dirs}]]";
+        }
+    }
 
     const input = document.createElement("input");
     input.id = "rootDir";
     input.className = "webjet-dte-jstree";
     input.type = "text";
-    input.value = "-1";
-    input.setAttribute("data-text", "[[#{jstree.all_dirs}]]");
+    input.value = rootDirId;
+    input.setAttribute("data-text", rootDirPath);
     input.setAttribute("data-text-empty", "[[#{jstree.all_dirs}]]");
 
     rootDirDiv.appendChild(input);
@@ -81,7 +124,7 @@ function _getSubFolderCheck() {
     const innerDiv = document.createElement("div");
     innerDiv.className = "btn btn-sm custom-control form-switch";
     innerDiv.setAttribute("data-toggle", "tooltip");
-    innerDiv.setAttribute("data-th-title", "#{stat.withoutBots}");
+    innerDiv.setAttribute("title", "[[#{settings.embedding-chunks.sub-folder}]]");
 
     const input = document.createElement("input");
     input.id = "botFilterOut";
@@ -100,7 +143,7 @@ function _getSubFolderCheck() {
     return colDiv;
 }
 
-function addFilterBasedOnTab() {
+async function addFilterBasedOnTab() {
     const bonusFilterTab = document.getElementById("pills-bonusFilter-tab");
     if (!bonusFilterTab) {
         return;
@@ -109,9 +152,6 @@ function addFilterBasedOnTab() {
     bonusFilterTab.innerHTML = "";
 
     const entityType = getActiveTabValue();
-    if ("document" !== entityType) {
-        return;
-    }
 
     let extFilter = document.getElementById("embeddingChunksDataTable_extfilter");
     if (!extFilter) {
@@ -121,8 +161,10 @@ function addFilterBasedOnTab() {
         const wrapper = document.createElement("div");
         wrapper.className = "row datatableInit";
 
-        wrapper.appendChild(_getRootDirDiv());
-        wrapper.appendChild(_getSubFolderCheck());
+        if ("document" === entityType) {
+            wrapper.appendChild(await _getRootDirDiv());
+            wrapper.appendChild(_getSubFolderCheck());
+        }
 
         extFilter.appendChild(wrapper);
     }
@@ -130,16 +172,14 @@ function addFilterBasedOnTab() {
     bonusFilterTab.appendChild(extFilter);
 
     setTimeout(() => {
-        if (typeof ChartTools === "undefined") {
-            return;
-        }
-
-        if (typeof ChartTools.initGroupIdSelect === "function") {
+        if ("document" === entityType) {
             ChartTools.initGroupIdSelect();
-        }
-        if (typeof ChartTools.bindFilter === "function") {
             ChartTools.bindFilter(filterFn);
         }
+
+        // Init tooltips
+        WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-toggle*="tooltip"]'));
+        WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-bs-toggle*="tooltip"]'));
     }, 0);
 }
 
@@ -159,8 +199,7 @@ function _getTabFromUrl() {
 
 function getHeaderTabs() {
     const tabs = [
-        { url: "#document", title: "[[#{document}]]", active: true },
-        { url: "#forum", title: "[[#{forum}]]", active: false }
+        { url: "#document", title: "[[#{menu.web_sites}]]", active: true }
     ];
 
     const actualTab = _getTabFromUrl();
@@ -177,6 +216,18 @@ function getHeaderTabs() {
     return tabs;
 }
 
+function _addParamsBtnUrl(baseUrl) {
+    const rootDir = document.getElementById("rootDir");
+    const rootDirValue = rootDir ? String(rootDir.value || "") : "";
+    const rootDirText = rootDir ? String(rootDir.getAttribute("data-text") || "") : "";
+
+    const url = new URL(baseUrl, window.location.origin);
+    if (rootDirValue.length > 0) { url.searchParams.set("rootDir", rootDirValue); }
+    if (rootDirText.length > 0) { url.searchParams.set("rootDirText", rootDirText); }
+
+    return url;
+}
+
 /**
  * Returns configuration for the "add to index" action.
  *
@@ -186,8 +237,9 @@ function getHeaderTabs() {
 function _getAddIndexButtonConf() {
     const entityType = getActiveTabValue();
     if ("document" === entityType) {
+        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=index");
         return {
-            url: "/admin/v9/settings/doc-chunks/?action=index",
+            url: url.pathname + url.search,
             title: "[[#{settings.doc-chunks.title}]]",
             buttonTitleKey: "[[#{settings.embedding-chunks.start}]]",
             tooltip: "[[#{settings.embedding-chunks.add}]]"
@@ -206,8 +258,9 @@ function _getAddIndexButtonConf() {
 function _getRemoveIndexButtonConf() {
     const entityType = getActiveTabValue();
     if ("document" === entityType) {
+        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=delete");
         return {
-            url: "/admin/v9/settings/doc-chunks/?action=delete",
+            url: url.pathname + url.search,
             title: "[[#{settings.doc-chunks.title}]]",
             buttonTitleKey: "[[#{settings.embedding-chunks.start}]]",
             tooltip: "[[#{settings.embedding-chunks.remove}]]"
@@ -268,7 +321,8 @@ function getAddIndexButton() {
     return {
         text: "<i class=\"ti ti-database-plus\"></i>",
         action: function () {
-            _openIndexModal(conf);
+            const clickConf = _getAddIndexButtonConf();
+            _openIndexModal(clickConf);
         },
         init: function (dt) {
             _initRowUnselectedVisibility(this, dt);
@@ -287,7 +341,8 @@ function getRemoveIndexButton() {
     return {
         text: "<i class=\"ti ti-database-minus\"></i>",
         action: function () {
-            _openIndexModal(conf);
+            const clickConf = _getRemoveIndexButtonConf();
+            _openIndexModal(clickConf);
         },
         init: function (dt) {
             _initRowUnselectedVisibility(this, dt);
@@ -298,4 +353,12 @@ function getRemoveIndexButton() {
             "data-toggle": "tooltip"
         }
     };
+}
+
+async function initPage() {
+    // First set filter
+    await addFilterBasedOnTab();
+
+    // Tehn call filter
+    filterFn();
 }

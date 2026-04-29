@@ -28,11 +28,7 @@ block content
             tab.addEventListener('click', function () {
                 // Wait a tick so the "active" class updates
                 setTimeout(() => {
-                    var entityType = getActiveTabValue();
-                    embeddingChunksDataTable.setAjaxUrl(WJ.urlUpdateParam(url, "entityType", entityType));
-                    embeddingChunksDataTable.ajax.reload();
-
-                    addFilterBasedOnTab();
+                    initPage();
                 }, 0);
             });
         });
@@ -40,7 +36,7 @@ block content
         window.domReady.add(function () {
 
             embeddingChunksDataTable = WJ.DataTable({
-                url: WJ.urlUpdateParam(url, "entityType", getActiveTabValue()),
+                url: url,
                 columns: columns,
                 serverSide: true,
                 fetchOnCreate: true,
@@ -52,11 +48,8 @@ block content
             embeddingChunksDataTable.button().add(buttonCounter++, getAddIndexButton());
             embeddingChunksDataTable.button().add(buttonCounter++, getRemoveIndexButton());
 
-            addFilterBasedOnTab();
+            initPage();
         });
-
-    script
-        include embedding-logic.js
 
     style.
         label[for=botFilterOut]::after {

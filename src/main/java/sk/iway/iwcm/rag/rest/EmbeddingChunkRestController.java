@@ -74,12 +74,27 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
             page = chunkRepository.findAllByEntityTypeAndEntityIdIn(ragEntityType, data.getSecond(), pageable);
         } else {
-            page = chunkRepository.findAllByEntityType(ragEntityType, pageable);
+            // No valid entityType provided, return empty page
+            return new DatatablePageImpl<>( new ArrayList<>() );
         }
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
         return page;
+    }
+
+    @Override
+    public Page<EmbeddingChunkEntity> findByColumns(Map<String, String> params, Pageable pageable, EmbeddingChunkEntity search) {
+
+        // entityType is required
+        String entityType = Tools.getStringValue(params.get("entityType"), null);
+        if(Tools.isEmpty(entityType)) return new DatatablePageImpl<>( new ArrayList<>() );
+
+        // Check if entityType is valid
+        RagEntityType ragEntityType = RagEntityType.fromString(entityType);
+        if(ragEntityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
+
+        return super.findByColumns(params, pageable, search);
     }
 
     @Override
@@ -93,7 +108,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     @Override
     public EmbeddingChunkEntity processFromEntity(EmbeddingChunkEntity entity, ProcessItemAction action) {
 
-        if(ProcessItemAction.GETALL.equals(action)) {
+        if(ProcessItemAction.GETALL.equals(action) || ProcessItemAction.FIND.equals(action)) {
             if(EmbeddingChunkStatus.PENDING.equals(entity.getStatus()) ) {
                 entity.setRowClass("is-pending");
             } else if(EmbeddingChunkStatus.ERROR.equals(entity.getStatus()) ) {

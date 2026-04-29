@@ -42,7 +42,9 @@ block content
                         span [[\#{settings.doc-chunks.stat.indexed_doc}]]
                         strong#indexedDoc 0
                     li
-                        span [[\#{settings.doc-chunks.stat.queued_doc}]]
+                        span#queued-doc-label(data-th-utext="#{settings.doc-chunks.stat.queued_doc}")
+                        span#queued-doc-label-index.d-none(data-th-utext="#{settings.doc-chunks.stat.queued_doc}")
+                        span#queued-doc-label-delete.d-none(data-th-utext="#{settings.doc-chunks.stat.queued_doc.delete}")
                         strong#queuedDoc 0
 
         .status-wrap
@@ -173,10 +175,33 @@ block content
             delete: getElementHtmlById("action-title-delete")
         };
 
+        const queuedDocLabelByType = {
+            index: getElementHtmlById("queued-doc-label-index"),
+            delete: getElementHtmlById("queued-doc-label-delete")
+        };
+
+        const rootDirInput = document.getElementById("rootDir");
+        const rootDirParam = urlParams.get("rootDir");
+        const rootDirTextParam = urlParams.get("rootDirText");
+
+        if(rootDirInput != null) {
+            if(rootDirParam != null && rootDirParam.length > 0) {
+                rootDirInput.value = rootDirParam;
+            }
+            if(rootDirTextParam != null && rootDirTextParam.length > 0) {
+                rootDirInput.setAttribute("data-text", rootDirTextParam);
+            }
+        }
+
         ChartTools.initGroupIdSelect();
 
         const actionTitleEl = document.getElementById("action-title");
         actionTitleEl.innerHTML = actionTitleByType[action] || actionTitleByType.index;
+
+        const queuedDocLabelEl = document.getElementById("queued-doc-label");
+        if(queuedDocLabelEl != null) {
+            queuedDocLabelEl.innerHTML = queuedDocLabelByType[action] || queuedDocLabelByType.index;
+        }
 
         ["index", "delete"].forEach(a => {
             const successMsg = document.getElementById("succ-msg-" + a);
