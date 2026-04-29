@@ -1,9 +1,3 @@
-const { setHeadlessWhen } = require('@codeceptjs/configure');
-
-// turn on headless mode when running with HEADLESS=true environment variable
-// HEADLESS=true npx codecept run
-setHeadlessWhen(process.env.HEADLESS);
-
 let url = process.env.CODECEPT_URL || "https://"+process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
 let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
@@ -136,7 +130,7 @@ exports.config = {
       resultsDir: "../../../build/test/allure-results",
     },
     pauseOnFail: {},
-    autoLogin: {
+    auth: {
       enabled: true,
       saveToFile: false,
       inject: 'login',
