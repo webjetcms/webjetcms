@@ -1154,6 +1154,11 @@ public class ApproveService {
 		message.append("<b>").append(prop.getText("approve.reject.notes")).append(":</b><br>\n");
 		message.append(note).append("<br>\n");
 
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/web-pages-list/?groupid=" + dto.getGroupId();
+		message.append("<br>\n");
+		message.append(prop.getText("approve.url")).append(":<br>\n");
+		message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
+
 		UserDetails author = UsersDB.getUserCached(dto.getUserId());
 		String authorEmail = author != null ? author.getEmail() : null;
 		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(authorEmail), subject, message.toString(), request);
