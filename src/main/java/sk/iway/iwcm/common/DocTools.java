@@ -253,21 +253,25 @@ public class DocTools {
                 ret = Tools.replace(ret, "-"+spojka+"-", "-");
                 ret = Tools.replace(ret, "-"+spojka+"/", "/");
             }
-
-            try
-            {
-                //ponechame len poslednu .
-                int lastBodka = ret.lastIndexOf('.');
-                if (lastBodka > 0)
-                {
-                    String ret2 = Tools.replace(ret, ".", "-");
-                    ret = ret2.substring(0, lastBodka) + "." + ret2.substring(lastBodka+1);
-                }
-            } catch (Exception ex)
-            {
-
-            }
         }
+
+        try
+        {
+            //ponechame len poslednu .
+            int lastBodka = ret.lastIndexOf('.');
+            if (lastBodka > 0)
+            {
+                String ret2 = Tools.replace(ret, ".", "-");
+                ret = ret2.substring(0, lastBodka) + "." + ret2.substring(lastBodka+1);
+            }
+        } catch (Exception ex)
+        {
+
+        }
+
+        //ponechajme .min.js / .min.css
+        if (ret.endsWith("-min.js")) ret = ret.substring(0, ret.length()-7)+".min.js";
+        if (ret.endsWith("-min.css")) ret = ret.substring(0, ret.length()-8)+".min.css";
 
         ret = Tools.replace(ret, "---", "-");
         ret = Tools.replace(ret, "--", "-");

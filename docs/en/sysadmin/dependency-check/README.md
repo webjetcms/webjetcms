@@ -1,22 +1,23 @@
-# Vulnerability scanning of libraries
+# Checking library vulnerabilities
 
-Using the tool [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) you can easily check for vulnerabilities in the Java and JavaScript libraries of a web application. We recommend checking these on a regular basis.
+You can easily check for vulnerabilities in your web application's Java and JavaScript libraries using the [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) tool. We recommend checking these on a regular basis.
 
-If you have access to the source code/gradle of the project you can run the analysis directly using [gradlew command](../../developer/backend/security.md#vulnerability-scanning-in-libraries).
+If you have access to the source code/gradle project, you can run the analysis directly using the [gradlew command](../../developer/backend/security.md#library-vulnerability-check).
 
-But the tool can also be run over the generated `war` web application archive. Install the version of the tool for [command line](https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html).
+However, the tool can also be run on a generated ```war``` web application archive. Install the [command line](https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html) version of the tool.
 
-You can then run the check using the command:
+You can then run the scan using the command:
 
 ```sh
 dependency-check --project "Meno projektu" --suppression dependency-check-suppressions.xml --suppression dependency-check-suppressions-project.xml --scan build/libs/*.war
 ```
 
-parameters are set:
-- `--project` - the name of the project that will be displayed in the report.
-- `--suppression` - way to [file with exceptions](../../developer/backend/security.md#vulnerability-scanning-in-libraries), typically this file is part of a git repository.
-- `--scan` - the path to the file/directory to be analyzed.
+The parameters are set to:
 
-The result is a set of `dependency-check-report.html` in the current directory.
+- ```--project``` - ​​project name that will be displayed in the report.
+- ```--suppression``` - ​​path to [files with exceptions](../../developer/backend/security.md#library-vulnerability-checking), typically this file is part of a git repository.
+- ```--scan``` - ​​path to the file/directory to be analyzed.
+
+The result is the file ```dependency-check-report.html``` in the current directory.
 
 ![](dependency-check-cli.png)

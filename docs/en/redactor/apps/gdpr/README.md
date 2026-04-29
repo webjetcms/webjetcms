@@ -1,15 +1,16 @@
-# Cookies consent
+# Cookie consent
 
-Inserts the visitor's cookie settings into the site with a choice of categories that the visitor can allow or deny. For correct insertion of marketing scripts, it is necessary to use the Scripts application, which is linked to the enabled cookies.
+It inserts cookie settings for the visitor into the page with the option to select categories that the visitor can allow or deny. To correctly insert marketing scripts, it is necessary to use the Scripts application, which is connected to the allowed cookies.
 
-GDPR Cookies provide detailed control over what types of cookies can be stored. The user can specifically set which categories of cookies they agree to (e.g. necessary, marketing cookies).
+GDPR Cookies provide detailed control over what types of cookies can be stored. The user can specifically set which categories of cookies they consent to (e.g. necessary, marketing cookies).
 
 ## Application settings
 
-- **Insert link to edit cookies allowed**: Allows you to add a link to give users the option to modify their preferences for cookies allowed.
+- **Insert link to edit allowed cookies**: Allows you to add a link that will give users the ability to edit their preferences for allowed cookies.
+  
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](gdpr.png)

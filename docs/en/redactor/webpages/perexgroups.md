@@ -1,56 +1,57 @@
-# Tags
+# Brands
 
-With the help of signs (original name **perex groups**) or English `hashtag` you can tag keywords in a web page. In the news app, you can filter news by tags.
+You can use tags (original name **perex group**) or English ```hashtag``` to mark keywords on a web page. In the news application, you can filter news by tags.
 
-To access the menu item Web pages - tags you need to have the right **Website - Brands**, otherwise the menu item will not appear.
+To access the Web pages - tags menu item, you need to have the **Web pages - Tags** right, otherwise the menu item will not be displayed.
 
 ![](perex-groups.png)
 
-## Creating brands
+## Branding
 
-The editor for creating tags is simple and contains only 2 tabs.
+The tag creation editor is simple and contains only 2 tabs.
 
 ### Basic tab
 
 The card contains the following fields:
+
 - **Group name**, a unique brand name, is required.
-- **Show for**, set to restrict the display of tags to only certain directories of web pages.
+- **Show for**, setting the display restriction for tags only for certain website directories.
 
 ![](perex-groups_tab-basic.png)
 
 ### Translations tab
 
-The translations tab is used for **Optional** defining the brand name for each language mutation. If they are defined, they are used in the web page instead of the value **Group name**.
+The Translations tab is used to **optionally** define the tag name for individual language mutations. If defined, they will be used in the website instead of the **Group Name** value.
 
 ![](perex-groups_tab-translates.png)
 
 ### Optional Fields tab
 
-Card **Optional fields** contains freely usable fields. For more information on how to configure them, see the documentation [optional fields](../../frontend/webpages/customfields/README.md).
+The **Optional Fields** tab contains freely usable fields. For more information on configuring them, see the [optional fields] documentation(../../frontend/webpages/customfields/README.md).
 
 ![](perex-fields_tab.png)
 
-## Web pages
+## Website
 
 Tags are displayed in the page editor in the Perex sheet, where they can be easily assigned to a web page:
 
 ![](webpage-perex-groups.png)
 
-Tags are displayed as checkboxes by default, but if more than 30 tags are defined, they will be displayed as multiple selection fields for clarity. The value 30 can be changed in the conf. variable `perexGroupsRenderAsSelect`.
+Tags are displayed as checkboxes by default, but if more than 30 tags are defined, they are displayed as a multiple selection field for clarity. The value 30 can be changed in the conf. variable `perexGroupsRenderAsSelect`.
 
-!> **Warning:** the name of the tag (group perex) varies depending on the language selected. If such a language mutation exists, it will be displayed. If not, the value from the field **Group name**.
+!> **Warning:** the brand name (or group name) changes depending on the selected language. If such a language mutation exists, it will be displayed. If not, the value from the **Group Name** field will be displayed.
 
-### Duplication of brand names
+### Duplicate brand names
 
-If you create multiple tags with the same language version of the name, the web page editor will display them when you select the tag. **ID** a **Group name** for resolution. If the mark has only **Group name** or language mutation is the same as **Group name**, in addition, only the **ID**.
+If you create multiple tags with the same language mutation of the name, in the website editor, when you select a tag, their **ID** and **Group Name** will be displayed for differentiation. If the tag only has a **Group Name** or the language mutation is the same as the **Group Name**, only the **ID** will be displayed.
 
 ![](perex-duplicity-values.png)
 
-!> **Warning:** values are compared without the influence of diacritics and upper/lower case letters
+!> **Warning:** values ​​are compared without the influence of diacritics and upper/lower case letters
 
 ### Use
 
-You can use the tags, for example, in the news list. Example of a newsletter template that displays the name of the newsgroup and sets the CSS style according to the group ID. `color-ID` to set the color of the perex group. Automatically uses the language variant of the tag (if defined) according to the page language:
+You can use tags, for example, in the news list. Sample news template that displays the name of the perex group of the given news and sets the CSS style `color-ID` to set the color of the perex group based on the group ID. It automatically uses the language variant of the tag (if defined) based on the page language:
 
 ```velocity
 <section class="md-news-subpage">

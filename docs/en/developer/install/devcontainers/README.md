@@ -1,86 +1,84 @@
 # Development Containers
 
-[Development Containers](https://containers.dev) (devconatiners) is a method of development in containers. The GUI of the development environment runs on your machine, but its `backend` and complete code execution in containers.
+[Development Containers](https://containers.dev) (devconatiners) is a way of developing in containers. The GUI of the development environment runs on your computer, but its ```backend``` and the complete code execution is in the containers.
 
 ![](architecture-containers.png)
 
-It is currently supported in [VS Code](https://code.visualstudio.com/docs/devcontainers/containers), support for [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050).
+It is currently supported in [VS Code](https://code.visualstudio.com/docs/devcontainers/containers), support for [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050) is in the works.
 
 ## Benefits of using devcontainers
 
 The main advantages of using devcontainers are:
-- It only requires Docker to be installed on the machine (you don't need to have Java, NodeJS, etc. installed).
+
+- It only requires Docker to be installed on your computer (you don't need to have Java, NodeJS, etc. installed).
 - Simplifies the overall installation of the environment on the developer's computer.
-- It unifies the environment between developers - the container is installed with the exact version of Java, NodeJS and other tools as for example on the production environment.
+- Unifies the environment between developers - the exact version of Java, NodeJS and other tools is installed in the container as in the production environment.
 
 It is therefore particularly suitable for the following scenarios:
-- You are working on multiple projects, each using a different version of Java, NodeJS, and it is difficult to coordinate versions on your machine.
-- Occasionally, you need to work on an outdated project that uses technologies that are no longer supported and are difficult to keep on your computer.
-- You need to launch/test/verify/test the project quickly.
 
-Of course development has its drawbacks - running in a container is a bit slower, especially working with the file system. Installing `node_modules` is significantly slower (but you typically rarely perform it) and the WebJET CMS start is about 20% slower. Similarly `git commit/push` lasts a few seconds longer.
+- You are working on multiple projects, each using a different version of Java, NodeJS, and it is difficult to coordinate the versions on your computer.
+- Occasionally you need to work on an outdated project that uses technologies that are no longer supported and are difficult to keep on your computer.
+- You need to launch/try/verify/test the project quickly.
 
-When you run a project in a container, the standard HTTP ports 80,443,8080 are mapped to the local machine, so that you will see the WebJET running from the container in your browser by default, just as you would if you were running the project on your own machine.
+Of course, development also has its drawbacks - running in a container is a bit slower, especially working with the file system. Installing ```node_modules``` is significantly slower (but you typically do it rarely) and starting WebJET CMS is about 20% slower. Similarly, ```git commit/push``` takes a few seconds longer.
 
-The information about the launch from the container can be seen in the bottom left where the blue text is `Dev Container: meno`.
+After running the project in the container, the standard HTTP ports 80,443,8080 are mapped to the local computer, so you will see WebJET running from the container in your browser by default, just as if you had run the project on your computer.
+
+Information about launching from the container can be seen in the bottom left where the blue text ```Dev Container: meno``` is.
 
 ![](browser.png)
 
 ## Using devcontainers
 
-Using devcontainers is easy, in the IDE you can switch between working locally and working in a container, the file system is shared.
+Using devcontainers is easy, you can switch between working locally and working in a container in the IDE, the file system is shared.
 
 <!-- tabs:start -->
-
 #### **VS Code**
 
-For VS Code you need to install the extension `ms-vscode-remote.remote-containers`. After installation, you will see a blue icon in the bottom left corner `><` to switch between local development and development in the container. Click to display the option `Reopen in Container` to open the development environment from the container and vice versa `Reopen Folder Locally` to open the local version if you are in a container.
+For VS Code, you need to install the `ms-vscode-remote.remote-containers` extension. After installation, you will see a blue icon `><` in the lower left corner to switch between local development and container development. Clicking it will show the option `Reopen in Container` to open the development environment from the container and vice versa `Reopen Folder Locally` to open the local version if you are in the container.
 
-An icon appears in the left toolbar `Remote Explorer` where you will see a list of containers that you can delete and re-create if necessary.
+The icon ```Remote Explorer``` is displayed in the left toolbar, where you will see a list of containers, which you can delete and recreate if necessary.
 
-After launching, verify the installed extensions, you should be prompted to install the recommended extensions. You can check them by clicking in the left sidebar on `Extensions` and entering the expression `@recommended` in the search. In the section `Workspace recommendations` you will see a list of recommended extensions and the option to install them.
+After launching, verify the installed extensions, you should be prompted to install recommended extensions. You can check them by clicking on ```Extensions``` in the left bar and entering ```@recommended``` in the search. In the ```Workspace recommendations``` section, you will see a list of recommended extensions with the option to install them.
 
 ![](extensions.png)
 
-You may see compilation errors when you first open the project `Mapper` classes, but just open the class, make the change (space, delete space) and save the file and the error will be fixed.
+When you first open the project, you may see ```Mapper``` class compilation errors, but just open the class, make a change (space, delete space), and save the file and the error will be fixed.
 
 #### **IntelliJ**
 
-Support for [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050) is under preparation, this section will be added later.
+Support for [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050) is in development, this section will be added later.
 
 <!-- tabs:end -->
-
 ## Settings
 
-For [optimal running of devcontainers](https://code.visualstudio.com/remote/advancedcontainers/improve-performance) Docker and other tool settings need to be made.
+For [optimal running of devcontainers](https://code.visualstudio.com/remote/advancedcontainers/improve-performance) it is necessary to configure Docker and other tools.
 
 <!-- tabs:start -->
-
 #### **Windows**
 
-For Windows, no special Docker settings are needed to speed up the runtime, but you can verify the information at the link above. However, there may be a problem with different [setting the end of lines between Windows/Linux](https://code.visualstudio.com/docs/devcontainers/tips-and-tricks#_resolving-git-line-ending-issues-in-containers-resulting-in-many-modified-files).
+There are no special Docker settings required for Windows to speed up the runtime, but you can check the information in the link above. However, there may be an issue with different [line ending settings between Windows/Linux](https://code.visualstudio.com/docs/devcontainers/tips-and-tricks#_resolving-git-line-ending-issues-in-containers-resulting-in-many-modified-files).
 
-#### **macOS**
+#### **MacOS**
 
-For macOS, you need to optimize the Docker settings for [faster disk work](https://www.docker.com/blog/speed-boost-achievement-unlocked-on-docker-desktop-4-6-for-mac/). Click on the Docker icon in the menu bar and select `Settings`, in the charts `General` select the option `VirtioFS` in section `Choose file sharing implementation for your containers`. The charts `Advanced` select the option `Allow the default Docker socket to be used` and click `Apply & Restart`.
+For MacOS, you need to optimize Docker settings for [faster disk work](https://www.docker.com/blog/speed-boost-achievement-unlocked-on-docker-desktop-4-6-for-mac/). Click the Docker icon in the menu bar and select the ```Settings``` option, in the ```General``` tab, select the ```VirtioFS``` option in the ```Choose file sharing implementation for your containers``` section. In the ```Advanced``` tab, select the ```Allow the default Docker socket to be used``` option and click the ```Apply & Restart``` button.
 
 ![](docker-settings.png)
 
 <!-- tabs:end -->
 
-You can use a DNS record in the container `host.docker.internal` to connect to your computer (e.g. your local database server).
+In the container, you can use the DNS record ```host.docker.internal``` to connect to your computer (e.g., your local database server).
 
 ## Gitlab/SSH keys
 
-In order to get a connection to the gitlab server using SSH keys to work in the container, you need to configure [key sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) via `ssh-agent` between your computer and the container. Technically, you could copy the SSH key directly to a folder `/home/vscode/.ssh` but this is not an ideal solution.
+To connect to the gitlab server using SSH keys in your container, you need to set up [key sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) using ```ssh-agent``` between your computer and the container. Technically, you could copy the SSH key directly to the ```/home/vscode/.ssh``` folder, but that's not ideal.
 
-First you need to start the ssh-agent (one-time operation):
+First you need to start ssh-agent (one-time operation):
 
 <!-- tabs:start -->
-
 #### **Windows**
 
-Run `local Administrator PowerShell` and enter the following commands:
+Run ```local Administrator PowerShell``` and enter the following commands:
 
 ```sh
 # Make sure you're running as an Administrator
@@ -88,20 +86,18 @@ Set-Service ssh-agent -StartupType Automatic
 Start-Service ssh-agent
 Get-Service ssh-agent
 ```
+#### **MacOS**
 
-#### **macOS**
-
-On macOS the SSH agent is running by default, it should be sufficient to add SSH keys as below.
-
+In MacOS, the SSH agent is running by default, it should be enough to add SSH keys as shown below.
 <!-- tabs:end -->
 
-And then add your SSH keys to `ssh-agent` command:
+And then add your SSH keys to ```ssh-agent``` with the command:
 
 ```sh
 ssh-add $HOME/.ssh/id_rsa
 ```
 
-To view the list of added keys, use the command:
+To view the list of added keys, run the command:
 
 ```sh
 ssh-add -l
@@ -109,49 +105,47 @@ ssh-add -l
 
 You can then verify this in the container terminal.
 
-After restarting devcontainers, you should be able to connect to git/gitlab just like on your machine. The above settings are also in the script `.devcontainer/localInit.sh` which is executed before each container start, so you don't need to execute these commands manually.
+After restarting devcontainers, you should be able to connect to git/gitlab just like on your computer. The settings are also in the ```.devcontainer/localInit.sh``` script that is executed before each container start, so you don't need to run these commands manually.
 
-If you have a problem connecting to the git server, you can always switch to the local version and `pull/push` the operation is performed locally.
+If you have trouble connecting to the git server, you can always switch to the local version and perform the ```pull/push``` operation locally.
 
-## Launching the Automated Test Viewer
+## Launching the Automated Test Browser
 
-If you need to see the browser for automated tests you need to set [XServer/X11 forwarding](https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/) (window manager for Linux) on your computer.
+If you need to see the browser for automated tests, you need to set up [XServer/X11 forwarding](https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/) (a window manager for Linux) on your computer.
 
 ![](autotest.png)
 
 <!-- tabs:start -->
-
 #### **Windows**
 
-On Windows is `XServer` supported within `Windows Subsystem for Linux/WSL` and should be available by default on both Windows 10 and 11. `WSL` via the start menu and enter the following command:
+On Windows, ```XServer``` is supported within ```Windows Subsystem for Linux/WSL``` and should be available by default on Windows 10 and 11. To verify, launch ```WSL``` from the start menu and enter the following command:
 
 ```sh
 ls -a -w 1 /mnt/wslg
 ```
 
-in the statement you should see the value `.X11-unix`. If not, go to the store and download [the current version of WSL](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
+you should see the value ```.X11-unix``` in the listing. If not, go to the store and download the [current version of WSL](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
 
-Unfortunately in the configuration there is a difference between Windows and macOS, in the file `.devcontainer/devcontainer.json` adjust the value `"DISPLAY": "host.docker.internal:0"` at `"DISPLAY": ":0"`.
+Unfortunately, there is a difference in the configuration between Windows and MacOS, in the ```.devcontainer/devcontainer.json``` file, change the value of ```"DISPLAY": "host.docker.internal:0"``` to ```"DISPLAY": ":0"```.
 
-#### **macOS**
+#### **MacOS**
 
-For macOS, you first need to install [XQuartz](https://www.xquartz.org). After installation and restart, navigate in the app `XQuartz` to `Preferences -> Security` and tick the option `Allow connections from network clients`.
+For MacOS, you first need to install [XQuartz](https://www.xquartz.org). After installing and restarting, go to ```XQuartz``` in the application ```Preferences -> Security``` and check the option ```Allow connections from network clients```.
 
 ![](xquartz-settings.png)
 
-Restart the computer and then enter the command in the terminal:
+Restart your computer again and then enter the command in the terminal:
 
 ```sh
 xhost +localhost
 ```
 
-to allow connection to `XQuartz` from the local computer. Setting up `xhost +localhost` is also in the script `.devcontainer/localInit.sh`, which is done before each container start, so that you do not forget about it.
-
+to allow connections to ```XQuartz``` from the local machine. The ```xhost +localhost``` setting is also in the ```.devcontainer/localInit.sh``` script that is executed before each container start, so you don't forget it.
 <!-- tabs:end -->
 
 Once set up, you will see a window from containerized Linux directly on your computer. Technically, you can run any GUI application installed in the container in this mode.
 
-The first time you run the tests, you may get an error that it is not installed `playwright`, in the container terminal, run the commands to install it:
+When you run the tests for the first time, you may see an error that `playwright` is not installed, run the commands in the container terminal to install it:
 
 ```sh
 npx playwright install
@@ -160,9 +154,9 @@ npx playwright install-deps
 
 ## Sample files
 
-The following is a list of sample files that you can use as a basis for your project. They are all located in the folder `.devcontainer`:
+The following is a list of sample files that you can use as a basis for your project. They are all located in the ```.devcontainer``` folder:
 
-`devcontainer.json` - the configuration itself `devcontainer`:
+```devcontainer.json``` - samotná konfigurácia ```devcontainer```:
 
 ```json
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
@@ -225,7 +219,7 @@ The following is a list of sample files that you can use as a basis for your pro
 }
 ```
 
-`localInit.sh` - The script is run on the local machine before the container is created:
+```localInit.sh``` - skript sa spúšťa na lokálnom počítači pred vytvorením kontajnera:
 
 ```sh
 #!/bin/sh
@@ -238,7 +232,7 @@ ssh-add $HOME/.ssh/id_rsa
 ssh-add -l
 ```
 
-`postCreateCommand.sh` - the script is run after the container is created already inside it, allowing you to install additional programs:
+```postCreateCommand.sh``` - skript sa spustí po vytvorení kontajnera už v jeho vnútri, umožňuje inštalovať dodatočné programy:
 
 ```sh
 #!/bin/sh
@@ -247,7 +241,7 @@ sudo apt install iputils-ping
 sudo apt -y install imagemagick
 ```
 
-`postStartCommand.sh` - the script is executed every time the container is started, because of the slow translation `.local` domains added to `/etc/hosts` necessary DNS records:
+```postStartCommand.sh``` - skript sa vykoná pri každom spustení kontajnera, z dôvodu pomalého prekladu ```.local``` domén pridáva do ```/etc/hosts``` potrebné DNS záznamy:
 
 ```sh
 #!/bin/sh

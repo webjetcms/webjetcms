@@ -1,66 +1,71 @@
-# Rating/Rating
+# Rating
 
-The Rating application allows you to rate a page (its quality). It then offers a view of the rating on the page, statistics on the number of voters, a list of the most frequently voting users, as well as a list of the pages with the highest rating.
+The Rating application allows you to rate a page (its quality). It then offers a display of the rating on the page, statistical data on the number of voters, a list of the most frequently voting users, as well as a list of pages with the highest ratings.
 
-The form for inserting the application into the page is available in the page editor. It provides the option to select the type of evaluation:
+The form for inserting an application into a page is available in the page editor. It provides the option to select the type of evaluation:
+
 - Rating form
 - Site rating
 - Top users
-- Top pages
+- Top sites
 
 ## Rating form
 
-You can add a form to rate a page as an app or directly using code `!INCLUDE(/components/rating/rating_form.jsp, checkLogon=false, ratingDocId=70839, range=10)!`.
+You can add a page rating form as an app or directly using the ```!INCLUDE(/components/rating/rating_form.jsp, checkLogon=false, ratingDocId=70839, range=10)!``` code.
 
-The form contains parameters:
-- `checkLogon` - Enable logged in user check, if selected, only logged in users can rate the page.
-- `ratingDocId` - Doc ID of the page to be evaluated, if the entered value is less than 1, the ID of the currently displayed web page will be used automatically.
-- `range` - The range of the rating scale.
+The form contains the following parameters:
+
+- `checkLogon` - ​​Enable logged in user checking, if the option is selected, only logged in users can rate the page.
+- `ratingDocId` - ​​Doc ID of the page that will be evaluated, if the entered value is less than 1, the ID of the currently displayed web page will be automatically used.
+- `range` - ​​Rating scale range.
 
 ![](rating-form_app.png)
 
-The generated form in the page itself works by clicking on the stars. The range of asterisks is given by the parameter `Rozsah stupnice hodnotenia`. Once you click on a particular star, the page is rated and you cannot rate it again.
+The generated form on the page itself works by clicking on the stars. The range of stars is given by the parameter `Rozsah stupnice hodnotenia`. After clicking on a specific star, the page is rated and it is no longer possible to rate it again.
 
 ![](rating-form.png)
 
 ## Site rating
 
-You can add a rating page (or sta rating page) as an application or directly using code `!INCLUDE(/components/rating/rating_page.jsp, ratingDocId=70839, range=10)!`. Displays the rating of the web page without the form.
+You can add a page rating (or page rating score) as an application or directly using the code ```!INCLUDE(/components/rating/rating_page.jsp, ratingDocId=70839, range=10)!```. It displays the website rating without a form.
 
 ![](rating-page_app.png)
 
 Contains parameters:
-- `ratingDocId` - Doc ID of the page to be evaluated.
-- `range` - The range of the rating scale.
 
-Displays the statistics of the current page rank.
+- `ratingDocId` - ​​Doc ID of the page to be evaluated.
+- `range` - ​​Rating scale range.
+
+Displays statistics on the current page rating.
 
 ![](rating-page.png)
 
 ## Top users
 
-Top users (who have rated) can be added as an app or directly using code `!INCLUDE(/components/rating/rating_top_users.jsp, usersLength=10)!`.
+Top users (who rated) can be added as an application or directly using the code ```!INCLUDE(/components/rating/rating_top_users.jsp, usersLength=10)!```.
 
 Contains the parameter:
-- `usersLength` - Number of users viewed.
+
+- `usersLength` - ​​Number of users displayed.
 
 ![](rating-top-users_app.png)
 
-Displays the users with the most ratings.
+Displays users with the highest number of ratings.
 
 ![](rating-top-users.png)
 
-## Top pages
+## Top sites
 
-Top pages can be added as an app or directly using code `!INCLUDE(/components/rating/rating_top_pages.jsp, range=10, docsLength=10, period=7)!`.
+Top pages can be added as an application or directly using the code ```!INCLUDE(/components/rating/rating_top_pages.jsp, range=10, docsLength=10, period=7)!```.
 
 Contains the parameter:
-- `range` - The range of the rating scale.
-- `docsLength` - Number of pages viewed.
-- `period` - For the period (number of previous days).
+
+- `range` - ​​Rating scale range.
+- `docsLength` - ​​Number of pages viewed.
+- `period` - ​​For the period (number of previous days).
 
 ![](rating-top-pages_app.png)
 
-Displays the pages with the best ratings.
+Displays the best-rated pages.
 
 ![](rating-top-pages.png)

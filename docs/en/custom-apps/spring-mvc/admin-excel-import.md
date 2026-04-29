@@ -1,14 +1,14 @@
 # Spring MVC - import Excel file
 
-Often it is necessary to import an Excel file (format `xlsx`), this example extends [a sample file upload](admin-with-upload.md) o Import data from Excel file.
+It is often necessary to import a file in Excel format (format ```xlsx```), this example extends [file upload example](admin-with-upload.md) to import data from an Excel file.
 
 [Sample file](contact.xlsx) for import.
 
 # Backend
 
-The class that listens for a file upload event is similar to [file upload preview](admin-with-upload.md), it differs only in the subsequent call to the service for importing from an Excel file `springImportService.importFile(form.getDocument());`.
+The class that listens to the file upload event is similar to [file upload example](admin-with-upload.md), it only differs in the subsequent call to the service for importing from an Excel file ```springImportService.importFile(form.getDocument());```.
 
-The sample also includes an example of attribute transfer when using redirection `model.addAttribute("redirect", redirect);`.
+The sample also includes an example of attribute transfer when using the ```model.addAttribute("redirect", redirect);``` redirect.
 
 ```java
 package sk.iway.basecms.contact.excelimport;
@@ -29,7 +29,7 @@ import sk.iway.iwcm.admin.xls.exception.ExcelImportServiceException;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 import java.util.List;
 
 /**
@@ -92,13 +92,13 @@ public class ExcelUploadExampleListener extends AbstractUploadListener<Form> {
 }
 ```
 
-Import is done automatically by mapping the column in the Excel file to the attribute name `ContactEntity`. The first row in the Excel file therefore contains the values:
+The import is done automatically by mapping a column in the Excel file to the attribute name ```ContactEntity```. The first row in the Excel file therefore contains the values:
 
-`id name zip street city phone contact`
+```id name zip street city phone contact```
 
-Import processing class extends [AbstractExcelImportService](../../../javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html), which provides the import itself.
+Trieda pre spracovanie importu rozširuje [AbstractExcelImportService](../../../javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html), ktorý zabezpečuje samotný import.
 
-It is possible to override some of the methods if necessary, example in the method `beforeRow` generates a random phone number and modifies the format of the ZIP code cell, which although marked as Text in the Excel file is sometimes imported as a number.
+V prípade potreby je možné prepísať niektoré metódy, ukážka v metóde ```beforeRow``` generuje náhodné telefónne číslo a upravuje formát bunky PSČ, ktorá aj keď je v Excel súbore označená ako Text importuje sa niekedy ako číslo.
 
 ```java
 package sk.iway.basecms.contact.excelimport;
@@ -116,7 +116,8 @@ import sk.iway.basecms.contact.ContactEntity;
 import sk.iway.iwcm.admin.xls.AbstractExcelImportService;
 
 /**
- * Ukazkova service trieda pre import z Excel suboru do Spring DATA repozitara
+
+- Ukazkova service trieda pre import z Excel suboru do Spring DATA repozitara
  */
 @Service
 @RequestScope
@@ -166,7 +167,7 @@ public class ExcelImportService extends AbstractExcelImportService<ContactEntity
 
 # Frontend
 
-The frontend file is almost identical to [a demonstration of uploading a file](admin-with-upload.md), the difference is only in the displayed message of successful import `${success}` and the URL for submitting the form `@{/apps/contact/admin/excelimport/}`.
+The frontend file is almost identical to [file upload example](admin-with-upload.md), the only difference is in the displayed message of successful import ```${success}``` and the URL address for submitting the form ```@{/apps/contact/admin/excelimport/}```.
 
 ```html
 <script type="text/javascript">
@@ -224,6 +225,6 @@ The frontend file is almost identical to [a demonstration of uploading a file](a
 </section>
 ```
 
-## Notes on implementation
+## Implementation notes
 
-To convert a value from Excel to Entity is used `ConversionService` configured in `V9SpringConfig.conversionService()`. The goal was to use the same converter as is used between strings from the form submission in standard Spring. It provides conversion of string, number, binary value, etc. data types.
+To convert a value from Excel to Entity, ```ConversionService``` configured in ```V9SpringConfig.conversionService()``` is used. The goal was to use the same converter as is used between strings from form submissions in standard Spring. It provides conversion of data types string, number, binary value, etc.

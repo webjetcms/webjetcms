@@ -2,27 +2,33 @@
 
 When writing instructions for the OpenAI response API, follow these recommendations:
 
-1. **Be specific** Describe clearly and precisely what you expect from the answer. Avoid ambiguity.
+1. **Be specific**
+    Describe clearly and precisely what you expect from the response. Avoid ambiguity.
 
-2. **Use plain language** Formulate instructions clearly so that they are easily understood by both the system and the user.
+2. **Use simple language**
+    Formulate instructions clearly so that they are easily understood by both the system and the user.
 
-3. **Do not define the output format** The format of the output is handled by the implementation, which decides based on the request type and other parameters.
+3. **Do not define the output format**
+    The output format is taken care of by the implementation, which decides based on the request type and other parameters.
 
-4. **Give examples** Attach samples of the required input and output if possible.
+4. **Give examples**
+    Please attach samples of the desired input and output, if possible.
 
-5. **Avoid unnecessary details** Focus on the essential information that is important to the outcome.
+5. **Avoid unnecessary details**
+    Focus on essential information that is important for the outcome.
 
-6. **Specify the language of the answer** If the answer is to be in a specific language, make this explicit.
+6. **Specify the language of the response**
+    If the answer should be in a specific language, state this explicitly.
 
-## Example of correct instruction
+## Example of a correct instruction
 
-> Generate a list of three tips to improve SEO for a website in English in the form of a numbered list.
+> Generate a list of three tips for improving SEO for a website in Slovak in the form of a numbered list.
 
-By following these principles, you will ensure that the answers are relevant and usable.
+Following these guidelines will ensure that your answers are relevant and actionable.
 
-## Images
+## Pictures
 
-For instructions for generating and editing images, you need to insert a tag in the instructions `{userPrompt}` to insert a user-specified request. This tag is replaced by the entered text. Instruction examples:
+For instructions for generating and editing images, it is necessary to insert the tag `{userPrompt}` into the instructions to insert the specified user request. This tag is replaced by the specified text. Examples of instructions:
 
 Generate image
 
@@ -50,13 +56,13 @@ Edit image:
 
 ## HTML code improvements
 
-For advanced editing of HTML code it is necessary to get the modified code but also an explanation of what was modified. If the AI response contains a block at the beginning
+For advanced HTML code editing, it is necessary to obtain the edited code as well as an explanation of what was edited. If the response from the AI ​​contains a block at the beginning
 
-````text
+```text
   ```html
-````
+```
 
-so the content of this block is treated as HTML code, and everything after this block is displayed to the visitor in the assistant dialog as a response.
+so the content of this block is considered HTML code and everything that follows this block will be displayed to the visitor in the assistant dialog as a response.
 
 Example instruction:
 
@@ -72,17 +78,17 @@ Example instruction:
 }
 ```
 
-Note the defining `output_format`, which defines the creation of 2 sections with HTML code and explanatory notes on the modifications.
+Notice the definition of `output_format`, which defines the creation of 2 sections with HTML code and explanations of the edits.
 
 ## AI in the browser
 
-Writing instructions for AI in the browser is specific to [API options available](https://developer.chrome.com/docs/ai/built-in-apis). The instruction is divided into the API name and the subsequent configuration. In the reference to `MDM` documentation you will find detailed information on the configuration options.
+Writing instructions for AI in the browser is specific to the [available API capabilities](https://developer.chrome.com/docs/ai/built-in-apis). The instruction is divided into the API name and subsequent configuration. See the `MDM` documentation for detailed information on configuration capabilities.
 
-Although the API supports language settings, it usually only supports English language at the moment. You can add an option to the configuration `"translateOutputLanguage": "autodetect"` for subsequent translation. Value `autodetect` detects the language of the original text and uses it. Alternatively, you can specify a fixed value, e.g. `sk`, or the value `userLng` where the language is set according to the language of the currently logged in user.
+Although the API supports language settings, it currently only supports English. You can add the `"translateOutputLanguage": "autodetect"` option to your configuration to perform the translation afterwards. The `autodetect` value detects the language of the original text and uses it. You can also specify a fixed value, e.g. `sk`, or the `userLng` value where the language is set according to the language of the currently logged in user.
 
-### Summary of the text
+### Text summarization
 
-API [Summarizer](https://developer.mozilla.org/en-US/docs/Web/API/Summarizer) is used to summarize the entered text. Using the attribute `type` you can set the generation range.
+The [Summarizer](https://developer.mozilla.org/en-US/docs/Web/API/Summarizer) API is used to summarize the entered text. You can set the scope of the generation using the `type` attribute.
 
 ```JavaScript
 Summarizer:
@@ -97,7 +103,7 @@ Summarizer:
 
 ### Translator
 
-The API is used for translation [Translator](https://developer.mozilla.org/en-US/docs/Web/API/Translator_and_Language_Detector_APIs).
+The [Translator](https://developer.mozilla.org/en-US/docs/Web/API/Translator_and_Language_Detector_APIs) API is used for translation.
 
 ```JavaScript
 Translator:
@@ -107,7 +113,7 @@ Translator:
 }
 ```
 
-As a value to `sourceLanguage` it is possible to enter an expression `autodetect` to automatically detect the language of the text you enter, or `userLng` to set the language of the currently logged in user. The value `userLng` can also be entered in the field `targetLanguage`. So you can create a Translate to current language assistant where the source language is automatically detected and the target language is set according to the language of the logged in user.
+As a value in `sourceLanguage`, you can enter the expression `autodetect` to automatically detect the language of the entered text, or `userLng` to set the language of the currently logged in user. The value `userLng` can also be entered in the `targetLanguage` field. You can therefore create a Translate to Current Language assistant where the source language is automatically detected and the target language is set according to the language of the currently logged in user.
 
 ```JavaScript
 Translator:
@@ -119,7 +125,7 @@ Translator:
 
 ### Writing text
 
-To write new text, you can use [Writer](https://developer.chrome.com/docs/ai/built-in-apis).
+You can use [Writer](https://developer.chrome.com/docs/ai/built-in-apis) to write new text.
 
 ```JavaScript
 Writer:
@@ -133,7 +139,7 @@ Writer:
 
 ### Text editing
 
-To edit existing text, use [Rewriter](https://developer.chrome.com/docs/ai/built-in-apis). Using the attribute `tone` it is possible to change the formality of the text.
+To edit existing text, [Rewriter](https://developer.chrome.com/docs/ai/built-in-apis) is used. The `tone` attribute can be used to change the formality of the text.
 
 ```JavaScript
 Rewriter:
@@ -146,7 +152,7 @@ Rewriter:
 
 ### Advanced expressions
 
-For advanced expressions it is possible to use [LanguageModel API](https://developer.chrome.com/docs/ai/prompt-api) which allows you to formulate the request in natural language.
+For advanced expressions, you can use the [LanguageModel API](https://developer.chrome.com/docs/ai/prompt-api), which allows you to formulate a request in natural language.
 
 ```JavaScript
 LanguageModel:
@@ -162,11 +168,11 @@ LanguageModel:
 }
 ```
 
-## Replacement of expressions
+## Expression substitution
 
-In the instructions, special marks are replaced before use, you can use these to insert the data in the exact place.
+The instructions have special markers replaced before use, you can use them to insert data in the exact location.
 
-- `{userPrompt}` - inserts the text entered by the user from the input dialog (if the Require user input option is selected).
+- `{userPrompt}` - ​​inserts the user-entered text from the input dialog (if the Require user input option is selected).
 
 ```json
 {
@@ -175,9 +181,10 @@ In the instructions, special marks are replaced before use, you can use these to
    "returnFormat": "Return only generated image, without any other response. Image return as Base64."
 }
 ```
-- `{inputText}` - input text, the value of the field whose name is specified in the Source field in the Assistant settings.
-- `{language}` - the language of the last viewed web page may be different from the language of the currently logged-in user. For example, you are logged in in the Slovak interface, but you are editing the English version of a web page.
-- `{userLanguage}` - the language in which the user is logged in.
+
+- `{inputText}` - ​​input text, field value, whose name is specified in Source field in the assistant settings.
+- `{language}` - ​​the language of the last viewed web page may be different from the language of the currently logged in user. For example, you are logged in to the Slovak interface, but you are editing the English version of the web page.
+- `{userLanguage}` - ​​language in which the user is logged in.
 
 ```json
 {
@@ -195,9 +202,9 @@ In the instructions, special marks are replaced before use, you can use these to
 
 ## Generating PageBuilder blocks
 
-The following instruction allows you to generate [PageBuilder blocks for editor](../datatables/README.md#chat-mode), it needs to be set as a request type `Chat`, in which case it is also filled in correctly `{inputText}` when editing.
+The following instruction allows you to generate [PageBuilder blocks for the editor](../datatables/README.md#chat-mode), it must be set as a request type `Chat`, in which case `{inputText}` will also be correctly filled in when editing.
 
-For the setup we recommend the model `gemini-2.5-pro`, set the entity in the action `sk.iway.iwcm.doc.DocDetails`, set the source and destination fields to `data`. In advanced you need to enable the option Preserve HTML code and Require user input.
+For setup, we recommend the model `gemini-2.5-pro`, in the action set the entity `sk.iway.iwcm.doc.DocDetails`, set the source and target fields to `data`. In the advanced settings, you need to enable the Preserve HTML code and Require user input options.
 
 ```json
 {
@@ -332,6 +339,6 @@ For the setup we recommend the model `gemini-2.5-pro`, set the entity in the act
 }
 ```
 
-We obtained the above prompt by making the following request in the ChatGPT model ChatGPT 5 PRO, attaching a printed section from the documentation on [PageBuilder blocks](../../../frontend/page-builder/blocks.md).
+We obtained the above prompt by the following request in the ChatGPT model ChatGPT 5 PRO, attaching a printed part from the documentation about [PageBuilder blocks](../../../frontend/page-builder/blocks.md).
 
-I need you to help me to prepare a prompt for Chat GPT or another AI model. I am preparing a WebJET CMS where user can enter a request/prompt to create a web page. Example:Create a website for a hairdressing salon in bratislava, It is open every day from 8:00 to 15:00 and specializes in men's haircuts. They also do beard grooming/barber. It is located at 13 Hatallova Street. Phone 0903 123 456. The Bootstrap 5 framework is used for display. Don't generate any new CSS styles, use only CSS classes available in Bootstrap 5 like btn-primaries, colors and so on. The task is to create an HTML structure consisting of the following elements/elements: `<section>` - main building element, separating the sections, typical for the whole width of the screen `<div class="container">` - container for text parts `<div class="row">` - row contains col elements `<div class="col">` - the final text column, only here the user can edit the text, the editable text cannot be in another element because the user would not be able to change it. It can contain nested elements like P, TABLE, IMG etc. More information about the HTML code structure for the PageBuilder tool in WebJET CMS is in the attached PDF document. SUMMARY: your task is to prepare a structured JSON prompt for the AI meeting the above criteria. The user will attach a request for web page content to the prompt and the result will be HTML code.
+I need your help with preparing a prompt for Chat GPT or another AI model. I am preparing a WebJET CMS where the user can enter a request/prompt to create a website. Example: Create a website for a hair salon in Bratislava, It is open every day from 8:00 to 15:00 and specializes in men's haircuts. It also does beard/barber trimming. It is located at Hatallova 13. Phone 0903 123 456. The Bootstrap 5 framework is used for display. Do not generate any new CSS styles, use only CSS classes available in Bootstrap 5 such as btn-primary, colors, etc. The task is to create an HTML structure consisting of the following elements/building blocks: `<section>` - ​​main building block, separates individual sections, typical for the entire width of the screen `<div class="container">` - container for text parts `<div class="row">` - row contains col elements `<div class="col">` - final column with text, only here the user can edit the text, editable text cannot be in another element, because the user would not be able to change it. It can contain nested elements such as P, TABLE, IMG, etc. More information about the structure of the HTML code for the PageBuilder tool in WebJET CMS is in the attached PDF document. SUMMARY: your task is to prepare a structured JSON prompt for AI that meets the above criteria. The user will attach a request for the content of the web page to the prompt and the result will be HTML code.

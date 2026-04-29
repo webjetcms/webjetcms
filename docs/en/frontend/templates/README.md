@@ -1,15 +1,15 @@
-# The way the web page is displayed
+# How to display a web page
 
 A web page is usually defined not only by the text of a particular page itself, but also by common elements with other pages, such as a header, footer, or menu.
 
 ![](template_layout.png)
 
-Thus, the template determines the layout of the page objects. In the top part there is the header, on the left there is the menu, in the middle part there is the navigation bar and the text of the web page and at the bottom there is the footer.
+The template determines the layout of the page objects. The header is at the top, the menu is on the left, the navigation bar and the text of the web page are in the middle, and the footer is at the bottom.
 
-Individual objects like header, footer are technically also web pages in WebJET so that they can be easily edited. They are stored in the System tab in the list of web pages. The template then defines which web page is inserted as the header, which as the footer, etc.
+Individual objects such as headers and footers are technically also web pages in WebJET, so they can be easily edited. They are stored in the System tab in the web page list. The template then defines which web page is inserted as a header, which as a footer, etc.
 
 ![](disp_process.png)
 
-In addition, the template also defines technical properties such as the CSS styles used, the HTML (JSP) code file of the page, etc.
+In addition, the template also defines technical properties such as the CSS styles used, the file with the HTML (JSP) page code, etc.
 
-When the web page is displayed, the web pages defining the header, footer and menu are inserted into the html template at specified locations. Subsequently, the navigation bar and the text of the web page itself are inserted, thus creating the resulting web page sent to the web browser of the visitor of the web site.
+When a web page is displayed, web pages defining the header, footer, and menu are inserted into the HTML template at designated locations. The navigation bar and the web page text itself are then inserted, creating the resulting web page sent to the web site visitor's internet browser.

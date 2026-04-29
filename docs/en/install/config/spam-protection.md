@@ -1,42 +1,46 @@
 # Spam protection
 
-WebJET includes integrated SPAM protection, which limits the rate of requests and their number to avoid overloading the server. Such protection is also referred to as `Rate Limiting`, i.e. limiting the number of requests.
+WebJET includes integrated SPAM protection, which limits the speed and number of requests to prevent server overload. This protection is also referred to as `Rate Limiting`, or request limit.
 
-The protection is tied to the visitor's IP address, so the limits apply to each IP address separately. It is therefore necessary to have the visitor's IP address retrieval set up correctly. For example, if the application server is predefined before the `Load Balancer/Proxy` it is necessary to set the configuration variable `serverBeyoundProxy` to the value of `true` and on `Load Balancer/Proxy` set HTTP headers `x-forwarded-for` with the IP address of the visitor and `x-forwarded-proto` with the value of the protocol used `http/https`. You can verify the correctness of the IP address in [audit](../../sysadmin/audit/README.md) in the IP address column when you perform an action, such as logging in or submitting a form.
+The protection is tied to the visitor's IP address, so the limits apply to each IP address separately. Therefore, it is necessary to have the visitor's IP address acquisition set correctly. For example, if `Load Balancer/Proxy` is prefixed to the application server, it is necessary to set the configuration variable `serverBeyoundProxy` to the value `true` and to `Load Balancer/Proxy` set the HTTP headers `x-forwarded-for` with the visitor's IP address and `x-forwarded-proto` with the value of the protocol used `http/https`. You can verify the correctness of the IP address in [audit](../../sysadmin/audit/README.md) in the IP address column when performing an action, such as logging in or submitting a form.
 
-!> **Warning:** if you are using a cluster, the limiting happens separately on each application server/node of the cluster - data is not shared between nodes.
+!> **Warning:** if you are using a cluster, throttling happens separately on each application server/cluster node - data is not shared between nodes.
 
 ## Basic settings
 
-The following configuration variables are used to set the basic limiting of the number of requests:
-- `spamProtectionHourlyLimit` - The maximum number of requests from one IP address per hour, set to 20 by default.
-- `spamProtectionTimeout` - The minimum number of seconds between two requests from the same IP address, set to 30 seconds by default.
-- `spamProtectionIgnoreFirstRequests` - The number of first requests from an IP address that are not capped, set to 0 by default, i.e. no capping exception.
+The following configuration variables are used for the basic setting of limiting the number of requests:
 
-### Settings for module/application
+- `spamProtectionHourlyLimit` - ​​maximum number of requests from one IP address per hour, set to 20 by default.
+- `spamProtectionTimeout` - ​​minimum number of seconds between two requests from one IP address, set to 30 seconds by default.
+- `spamProtectionIgnoreFirstRequests` - ​​number of first requests from an IP address that are not limited, set to 0 by default, i.e. without any limitation exception.
 
-Limits can be modified specifically for certain modules/applications by adding `-appName` to the end of the configuration variable, e.g. `spamProtectionHourlyLimit-appName` or `spamProtectionTimeout-appName`. The values can be set for the following applications:
-- `dmail` - [bulk email](../../redactor/apps/dmail/form/README.md) - limits the number of registrations/unsubscriptions from the bulk email.
-- `form` - [forms](../../redactor/apps/form/README.md) and sending feedback from the administration homepage.
-- `forum` - [discussion forum](../../redactor/apps/forum/README.md), limits the number of posts added.
-- `HtmlToPdfAction` - generation of PDF documents.
-- `inquiry` - [survey](../../redactor/apps/inquiry/README.md), limits the number of votes in the poll.
-- `passwordSend` - [sending a forgotten password](../../redactor/admin/password-recovery/README.md), limits the number of times a forgotten password can be sent.
-- `qa` - [questions and answers](../../redactor/apps/qa/README.md), limits the addition of new questions.
-- `quiz` - [questionnaires](../../redactor/apps/quiz/README.md), limits the number of questionnaires sent.
-- `search` - [Search](../../redactor/apps/search/README.md), limits the number of searches.
-- `ThumbServlet` - [preview images](../../frontend/thumb-servlet/README.md), limits the number of times a new preview image is generated, the image is saved to disk and used for further requests.
-- `userform` - [new user registration](../../redactor/zaheslovana-zona/README.md), limits the number of new registrations and modifications to a user's profile in the password-protected zone.
+### Settings for the module/application
 
-By default, the following values are already adjusted:
-- `spamProtectionHourlyLimit-ThumbServlet` - number of requests for generation [image thumbnails](../../frontend/thumb-servlet/README.md), `/thumb` set to 300.
-- `spamProtectionTimeout-ThumbServlet` - set to `-2`, which means that limiting the spacing between the requirements for `/thumb` is not applied, this is because there can be several such images in the page at the same time and HTTP requests are executed in parallel.
-- `spamProtectionHourlyLimit-search` - The number of search requests through the search application, set to 200.
-- `spamProtectionTimeout-search` - value reduced to 10 to allow faster search/advance to the next page of results.
+Limits can be adjusted specifically for some modules/applications by adding `-appName` to the end of the configuration variable, e.g. `spamProtectionHourlyLimit-appName` or `spamProtectionTimeout-appName`. Values ​​can be set for the following applications:
+
+- `dmail` - ​​[bulk email](../../redactor/apps/dmail/form/README.md) - limits the number of registrations/unregistrations from bulk email.
+- `form` - ​​[forms](../../redactor/apps/form/README.md) and sending feedback from the administration homepage.
+- `forum` - ​​[discussion forum](../../redactor/apps/forum/README.md), limits the number of posts added.
+- `HtmlToPdfAction` - ​​generating PDF documents.
+- `inquiry` - ​​[poll](../../redactor/apps/inquiry/README.md), limits the number of votes in the poll.
+- `passwordSend` - ​​[sending a forgotten password](../../redactor/admin/password-recovery/README.md), limits the number of times a forgotten password can be sent.
+- `qa` - ​​[questions and answers](../../redactor/apps/qa/README.md), limits adding a new question.
+- `quiz` - ​​[questionnaires](../../redactor/apps/quiz/README.md), limits the number of questionnaires sent.
+- `search` - ​​[search](../../redactor/apps/search/README.md), limits the number of searches.
+- `ThumbServlet` - ​​[thumbnails](../../frontend/thumb-servlet/README.md), limits the number of times a new thumbnail image is generated, the images are saved to disk and used for subsequent requests.
+- `userform` - ​​[new user registration](../../redactor/password-protected-zone/README.md), limits the number of new registrations and user profile edits in the password-protected zone.
+
+The following values ​​are already adjusted by default:
+
+- `spamProtectionHourlyLimit-ThumbServlet` - ​​number of requests to generate [image thumbnails](../../frontend/thumb-servlet/README.md), `/thumb` set to 300.
+- `spamProtectionTimeout-ThumbServlet` - ​​set to the value `-2`, which means that the spacing limitation between requests does not apply for `/thumb`, this is because there can be multiple such images in the page at once and HTTP requests are made in parallel.
+- `spamProtectionHourlyLimit-search` - ​​number of search requests via the search application, set to 200.
+- `spamProtectionTimeout-search` - ​​value reduced to 10 to make it faster to perform another search/go to the next page of results.
 
 ## Exceptions
 
 The protection can be partially disabled by setting the following variables:
-- `spamProtectionDisabledIPs` - a comma-separated list of IP address beginnings (or a character `*` for all) for which spam protection is disabled.
 
-Reset status is possible in the application [Deleting data - Cache objects](../../sysadmin/data-deleting/README.md), where the list of the number of calls and intervals for all IP addresses is reset using the action Delete all cache objects.
+- `spamProtectionDisabledIPs` - ​​list of IP address beginnings separated by a comma (or `*` character for all) for which spam protection is disabled.
+
+The status can be reset in the [Data deletion - Cache objects] application (../../sysadmin/data-deleting/README.md), where the Delete all cache objects action also resets the list of call counts and intervals for all IP addresses.

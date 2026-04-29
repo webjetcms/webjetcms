@@ -247,9 +247,6 @@
         label[for=botFilterOut]::after {
             content: "\f00b" !important;
         }
-        div.dt-button-collection .dropdown-menu .btn-group:first-child {
-            display: none;
-        }
     </style>
     <div id="statsDataTable_extfilter">
         <div class="row datatableInit">
@@ -264,7 +261,7 @@
                 </div>
             </div>
             <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
-                <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+                <input type="text" class="webjet-dte-jstree-alldomains" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
             </div>
             <div class="col-auto ext-filter-out">
                 <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">

@@ -946,7 +946,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-x"></i>')
+                close: $('<button class="close btn-close-editor" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x"></i>')
             }
             dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {

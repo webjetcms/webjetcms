@@ -4,9 +4,9 @@ Ak ešte nemáte, nainštalujte si [VS Code s odporúčanými závislosťami a r
 
 V projekte používame [lombok](https://projectlombok.org), nainštalujte si rozšírenie do vášho vývojového prostredia - na web stránke kliknite na menu položku ```Install``` a v sekcii IDEs postupuje podla návodu.
 
-## Webpack build JS, CSS a PUG súborov
+## rspack build JS, CSS a PUG súborov
 
-Súbory pre administráciu sú zostavované cez webpack zo zdrojových ```js/scss/pug``` súborov. Pre prvotnú inštaláciu spustite v novom termináli:
+Súbory pre administráciu sú zostavované cez rspack zo zdrojových ```js/scss/pug``` súborov. Pre prvotnú inštaláciu spustite v novom termináli:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -23,7 +23,7 @@ npm install
 
 ten nainštaluje potrebné knižnice, licenciu na `Datatables Editor` a zostaví produkčnú verziu.
 
-Následne môžete spustiť **dev režim**, pri ktorom automaticky **webpack sleduje zmeny** v ```js/scss/pug``` súboroch a builduje ```dist``` adresár:
+Následne môžete spustiť **dev režim**, pri ktorom automaticky **rspack sleduje zmeny** v ```js/scss/pug``` súboroch a builduje ```dist``` adresár:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -46,7 +46,7 @@ cd src/main/webapp/admin/v9
 npm run prod
 ```
 
-## Build Java tried a spustenie Tomcatu
+## Build Java tried a spustenie Tomcat
 
 Kompilácia projektu:
 
@@ -54,15 +54,15 @@ Kompilácia projektu:
 gradlew compileJava - kompilacia projektu
 ```
 
-vrátane refreshu dependencies (WebJETu z artifactory):
+vrátane obnovenia dependencies (WebJETu z artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
 ```
 
-Spustenie / zastavenie Tomcatu, vytvorenie WAR archívu:
+Spustenie / zastavenie Tomcat, vytvorenie WAR archívu:
 
-!>**Upozornenie:** pred spustením gradle appRun buildnite jednorázovo dist adresár HTML/CSS súborov cez príkaz gradle npmbuild, alebo majte v samostatnom termináli pustený z adresára src/main/webapp/admin/v9 príkaz npm run watch.
+!>**Upozornenie:** pred spustením gradle appRun buildnite jednorázovo dist adresár HTML/CSS súborov cez príkaz gradle `npmbuild`, alebo majte v samostatnom termináli pustený z adresára src/main/webapp/admin/v9 príkaz npm run watch.
 
 ```shell
 gradlew appRun
@@ -90,7 +90,7 @@ Aktualizácia gradle wrapper
 
 WebJET je licencovaný podľa domén. Pre lokálnu prácu je potrebné do hosts súboru (na windows je to c:\windows\system32\drivers\etc\hosts) pridať riadok:
 
-```
+```txt
 127.0.0.1   iwcm.interway.sk
 ```
 

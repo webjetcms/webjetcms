@@ -1849,7 +1849,7 @@ export class DatatablesCkEditor {
 					data = data.replace(/&lt;article&gt;/gi, '');
 					data = data.replace(/&lt;\/article&gt;/gi, '');
 					e.data.dataValue = data;
-					//console.log("Vysledne data=", data);
+					//console.log("Vysledne GET data=", data);
 				},
 
 				'setData' : function(e)
@@ -1972,17 +1972,25 @@ export class DatatablesCkEditor {
 	}
 
 	setJson(json) {
+		//console.log("setJson, json=", json);
 		this.json = json;
 		//undefined je json ked sa nacita zoznam a da sa zmazat stranka
 		if (typeof json != "undefined") {
 			this.setCssStyle();
 			this.setFormData();
-			this.setData(json.data);
+			try {
+				this.ckEditorInstance._.value = json.data;
+			} catch (error) {
+				console.error("Error setting data to CKEditor instance:", error);
+			}
 			this.showEditorNote();
 			this.setStyleComboList(this.json.editorFields.styleComboList);
 
-			//toto musi byt posledne, inak sa zle nacitaval obsah stranky
-			this.setEditingMode(json);
+			//ckeditor is invisible, we must wait until it is visible
+			setTimeout(() => {
+				//toto musi byt posledne, inak sa zle nacitaval obsah stranky
+				this.setEditingMode(json);
+			}, 100);
 		}
 		setTimeout(() => {
 			this.resizeEditor(this);
@@ -2043,13 +2051,17 @@ export class DatatablesCkEditor {
 	}
 
 	setData(data) {
-		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
+		//console.log("Set data, instance=", this.ckEditorInstance, "useTimeout=", useTimeout, "data=", data);
 		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
-		this.ckEditorInstance.setData(data);
+		try {
+			this.ckEditorInstance.setData(data);
+		} catch (error) {
+			console.error("Error setting data to CKEditor instance:", error);
+		}
 	}
 
 	getData() {
-		//console.log("getData, data=", data, "this=", this);
+		//console.log("getData, this=", this);
 		let htmlCode = this.ckEditorInstance.getData();
 		if ("pageBuilder"===this.editingMode) {
 			//ziskaj HTML kod z iframe elementu
@@ -2196,16 +2208,17 @@ export class DatatablesCkEditor {
 			}
 		}
 
-		this.switchEditingMode(this.editingMode);
+		this.switchEditingMode(this.editingMode, false, json.data);
 	}
 
 	/**
 	 * Switch mode
 	 * @param {String} newEditingMode
 	 * @param {Boolean} userChange - true if this is user change and we would like to preserve HTML code between modes
+	 * @param {String} setData - if we want to set specific data when switching mode, otherwise it will be preserved from current editor content
 	 */
-	switchEditingMode(newEditingMode, userChange=false) {
-		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange);
+	switchEditingMode(newEditingMode, userChange=false, setData = null) {
+		//console.log("switchEditingMode to ", newEditingMode, " userChange=", userChange, "setData=", setData);
 		let fieldId = this.options.fieldid;
 		let ckEditorElement = $("#trEditor div.wysiwyg_textarea");
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
@@ -2236,7 +2249,8 @@ export class DatatablesCkEditor {
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			if (data == null) data = this.ckEditorInstance.getData();
+			if (setData != null) data = setData;
+			else if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				ck.setMode('wysiwyg');
@@ -2251,6 +2265,8 @@ export class DatatablesCkEditor {
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");
 		} else {
+			//console.log("switchEditingMode to", newEditingMode, "data=", data);
+
 			ckEditorElement.show();
 			pageBuilderElement.hide();
 			this.ckEditorInstance.setMode('wysiwyg');
@@ -2261,6 +2277,7 @@ export class DatatablesCkEditor {
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				var ck = this.ckEditorInstance;
 				setTimeout(()=>{
+					//console.log("forcing setData, data=", data);
 					ck.setData(data);
 				}, 500);
 			}
@@ -2300,7 +2317,9 @@ export class DatatablesCkEditor {
 		}
 
 		this.editorHeightLatest = 0;
-		this.resizeEditor(this);
+		setTimeout(() => {
+			this.resizeEditor(this);
+		}, 500);
 	}
 
 	setStyleComboList(sessionCssParsed) {
@@ -2381,35 +2400,39 @@ export class DatatablesCkEditor {
 	 */
 	resizeEditor(datatablesCkEditor) {
 		var that = this;
+		try {
 
-		//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
-		if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
-
-		var windowInnerHeight = $(that.myWindow).height(); //on phone height was not correct: that.myWindow.innerHeight;
-		var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
-		var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
-		var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));
-		var headerMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("margin-top"));
-		var footerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Footer").css("height"));
-
-		//console.log("id=", datatablesCkEditor.datatable.DATA.id, "windowInnerHeight=", windowInnerHeight, "dialogMarginTop=", dialogMarginTop, "dialogMarginBottom=", dialogMarginBottom, "headerHeight=", headerHeight, "footerHeight=", footerHeight);
-		//console.log("modal=", $("#"+datatablesCkEditor.datatable.DATA.id+"_modal"));
-
-		var editorHeight = windowInnerHeight - dialogMarginTop - dialogMarginBottom - headerHeight - headerMarginTop - footerHeight - 4; //4 je safe konstanta
-		if (editorHeight < 300) editorHeight = 300;
-
-		//console.log("Resizing editor, latest=", this.editorHeightLatest, " new=", editorHeight);
-
-		if (editorHeight != datatablesCkEditor.editorHeightLatest) {
 			//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
-			//console.log("RESIZING, editorHeight=", editorHeight);
-			this.ckEditorInstance.resize("99%", editorHeight);
-			datatablesCkEditor.editorHeightLatest = editorHeight;
+			if (typeof datatablesCkEditor == "undefined" || typeof datatablesCkEditor.datatable == "undefined" || datatablesCkEditor.datatable == null) return;
 
-			var pageBuilderElement = $(`#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
-			//console.log("pageBuilderElement=", pageBuilderElement, "id=", `#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
-			that.myWindow.pageBuilderElement = pageBuilderElement;
-			pageBuilderElement.css("height", (editorHeight)+"px");
+			var windowInnerHeight = $(that.myWindow).height(); //on phone height was not correct: that.myWindow.innerHeight;
+			var dialogMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-top"));
+			var dialogMarginBottom = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal > div.modal-dialog").css("margin-bottom"));
+			var headerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("height"));
+			var headerMarginTop = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Header").css("margin-top"));
+			var footerHeight = parseInt($("#"+datatablesCkEditor.datatable.DATA.id+"_modal div.DTE_Footer").css("height"));
+
+			//console.log("id=", datatablesCkEditor.datatable.DATA.id, "windowInnerHeight=", windowInnerHeight, "dialogMarginTop=", dialogMarginTop, "dialogMarginBottom=", dialogMarginBottom, "headerHeight=", headerHeight, "footerHeight=", footerHeight);
+			//console.log("modal=", $("#"+datatablesCkEditor.datatable.DATA.id+"_modal"));
+
+			var editorHeight = windowInnerHeight - dialogMarginTop - dialogMarginBottom - headerHeight - headerMarginTop - footerHeight - 4; //4 je safe konstanta
+			if (editorHeight < 300) editorHeight = 300;
+
+			//console.log("Resizing editor, latest=", this.editorHeightLatest, " new=", editorHeight);
+
+			if (editorHeight != datatablesCkEditor.editorHeightLatest) {
+				//console.log("this=", this, "datatablesCkEditor=", datatablesCkEditor);
+				//console.log("RESIZING, editorHeight=", editorHeight);
+				this.ckEditorInstance.resize("99%", editorHeight);
+				datatablesCkEditor.editorHeightLatest = editorHeight;
+
+				var pageBuilderElement = $(`#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
+				//console.log("pageBuilderElement=", pageBuilderElement, "id=", `#${datatablesCkEditor.options.fieldid}-pageBuilderIframe`);
+				that.myWindow.pageBuilderElement = pageBuilderElement;
+				pageBuilderElement.css("height", (editorHeight)+"px");
+			}
+		} catch (e) {
+			console.log("Error resizing editor:", e);
 		}
 	}
 

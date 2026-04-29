@@ -167,9 +167,10 @@ public class WebpagesService {
 	/**
 	 * Vrati fiktivny korenovy adresar, je potrebny pre zobrazenie v stromovej strukture
 	 * v editore ked je mozne vybrat aj korenovy adresar
+	 * @param isAllDomains - ak je true, bude nazov korenoveho adresara "Vsetky domeny", ak je false bude "Korenovy adresar"
 	 * @return
 	 */
-	public static GroupDetails getRootGroup() {
+	private static GroupDetails getRootGroup(boolean isAllDomains) {
 		GroupEditorField groupEditorField = new GroupEditorField();
 
 		//Set root parent group details into group editor field
@@ -179,11 +180,34 @@ public class WebpagesService {
 		GroupDetails groupDetails = new GroupDetails();
 		groupDetails.setGroupId(0);
 		Prop prop = Prop.getInstance();
-		groupDetails.setGroupName(prop.getText("stat_settings.group_id"));
+
+		if(isAllDomains) {
+			groupDetails.setGroupName(prop.getText("stat.stats.root_dirs.all"));
+		} else {
+			groupDetails.setGroupName(prop.getText("stat_settings.group_id"));
+		}
+
 		groupDetails.setFullPath("/");
 		groupDetails.setEditorFields(groupEditorField);
 
 		return groupDetails;
+	}
+
+	/**
+	 * Vrati fiktivny korenovy adresar, je potrebny pre zobrazenie v stromovej strukture
+	 * v editore ked je mozne vybrat aj korenovy adresar
+	 * @return
+	 */
+	public static GroupDetails getRootGroup() {
+		return getRootGroup(false);
+	}
+
+	/**
+	 * Vrati fiktivny korenovy adresar vsetkych domen, je potrebny pre zobrazenie v stromovej strukture.
+	 * @return
+	 */
+	public static GroupDetails getRootGroupAllDomains() {
+		return getRootGroup(true);
 	}
 
 	/**

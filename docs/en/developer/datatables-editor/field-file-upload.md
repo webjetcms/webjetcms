@@ -4,11 +4,11 @@ The field allows you to upload a file.
 
 ![](field-uploadFile.png)
 
-## Use of annotation
+## Using annotation
 
-Annotation is used as `DataTableColumnType.UPLOAD`.
+The annotation is used as ```DataTableColumnType.UPLOAD```.
 
-Full annotation example:
+Complete example of annotation:
 
 ```java
 @DataTableColumn(
@@ -21,21 +21,21 @@ private String file = "";
 
 ## Frontend
 
-To upload a new file, you can insert the file directly using `Drag&Drop`, or click on the box to bring up the system file picker.
+To upload a new file, you can insert the file directly using `Drag&Drop`, or by clicking on the field to bring up the system file selector.
 
-!>**Warning:** You can only insert one file at a time.
+!>**Warning:** You can only upload one file at a time.
 
-After the file is inserted, the file upload animation starts and the event is fired `WJ.AdminUpload.addedfile` to which you can listen.
+After inserting a file, the file upload animation starts and an event `WJ.AdminUpload.addedfile` is raised that you can listen to.
 
 ![](field-uploadFile-loading.png)
 
-When the file is successfully uploaded, the upload confirmation box will appear and the event will be fired `WJ.AdminUpload.success`.
+When the file is successfully uploaded, an upload confirmation will appear in the field and the `WJ.AdminUpload.success` event will be raised.
 
 ![](field-uploadFile-loaded.png)
 
-This file is uploaded as a temporary file and the key value is stored in an array, e.g. `QUfQEadIJ8B0V8t`. We can then work with this value on BE using the class `AdminUploadServlet`.
+This file is uploaded as a temporary file and the key value is stored in an array, e.g. `QUfQEadIJ8B0V8t`. We can then work with this value in BE using the `AdminUploadServlet` class.
 
-If you want to record another file, you can delete the already recorded one or interrupt the recording action by pressing the `X`.
+If you want to upload another file, you can delete the already uploaded file or interrupt the upload process using the `X` button.
 
 ## Backend
 

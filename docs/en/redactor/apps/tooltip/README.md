@@ -1,49 +1,51 @@
-# Tooltip
+# Hints
 
-In Tooltip, you can define help/explanation text for the specialized terms you display on a web page. They are usually displayed as help text in a "bubble" when the cursor passes over the technical term. Defining a Tooltip through the application allows you to globally edit the explanation of these technical terms in one place. Then when you edit it it changes in all uses at once.
+In the Tooltip application, you can define help text/explanation for technical terms that you display on your web page. They are usually displayed as help text in a "bubble" when you hover over the technical term. Defining a tooltip through the application allows you to globally edit the explanation of these technical terms in one place. Then, when you edit it, it changes in all uses at once.
 
 ![](webpage-tooltip.png)
 
-## Creating a tooltip
+## Creating a help
 
 ![](tooltip-dataTable.png)
 
-Click on the "Add" icon to display a dialog box for creating a tooltip.
+By clicking the "Add" icon, you will see a dialog box for creating a tooltip.
 
 In this window you define the following parameters:
-- Name - a unique identifier for the Tooltip/expert expression
-- Language version - SK / CZ / EN ...
-- Domain - option on which domain the Tooltip should be used
-- Text - text content of the tooltip
+
+- Name – a unique identifier for the given hint / technical term
+- Language version – SK / CZ / EN ...
+- Domain – choose which domain the hint should be used on
+- Text – textual content of the tooltip
 
 ![](tooltip-editor.png)
 
-The dialog for editing an existing tooltip looks the same.
+The dialog box for editing an existing help also looks the same.
 
-In the table you have a "Duplicate" button if you want to copy an existing tooltip and save it under a different name, for a different language version, or for a different domain.
+The "Duplicate" button is available in the table if you want to copy and save the existing help under a different name, for a different language version, or for a different domain.
 
-## Import of tooltips
+## Import help
 
-In the Import tab there is a form for uploading excel with tooltips. The format of the excel should be identical to the format you get when you export the current list to Excel. The export icon is located in the top left.
+The Import tab contains a form for uploading an Excel file with instructions. The Excel format should be identical to the format you get when exporting the current list to Excel. The export icon is located in the upper left.
 
 ![](tooltip-import-editor.png)
 
-## Inserting a tooltip into a page
+## Inserting help into a page
 
-You can create a bubble over a specialised expression directly in the editor by selecting the specialised expression and then clicking on the icon:
+You can create a bubble above a technical term directly in the editor by selecting the technical term and then clicking on the icon:
+
 - ![](editor-tooltip-icon.png ":no-zoom") Insert tooltip
 
-A dialog box opens, in the Tooltip (key) field, type the beginning of the specialized expression. The server will load a list of expressions containing the entered text, click the mouse to select the exact expression:
+A dialog box will open, enter the beginning of a technical term in the Tooltip field. A list of terms containing the entered text will be retrieved from the server, click with the mouse to select the exact term:
 
 ![](editor-tooltip-dialog.png)
 
-Then, the HTML code of the page will contain the type code:
+Subsequently, the HTML code of the page will contain code like this:
 
 ```html
 <p>Toto je <span class="wjtooltip" title="!REQUEST(wjtooltip:TestFinal)!">odborný výraz</span>.</p>
 ```
 
-which is processed on the server and the actual text is inserted. For a nice display of the "bubble", the following JavaScript code needs to be added in the template (or via application scripts, or in the worst case via the HTML code field in the header in the page editor in the Template tab):
+which is processed on the server and the current text is inserted. For a nice display of the "bubble", it is necessary to add the following JavaScript code to the template (or via the scripts application, or in the worst case via the HTML code field in the header in the page editor in the Template tab):
 
 ```javascript
 <script type="text/javascript">
@@ -55,4 +57,4 @@ which is processed on the server and the actual text is inserted. For a nice dis
 
 ![](webpage-tooltip.png)
 
-extension is used [Bootstrap Tooltip](https://getbootstrap.com/docs/4.0/components/tooltips/).
+The [Bootstrap Tooltip](https://getbootstrap.com/docs/4.0/components/tooltips/) extension is used.

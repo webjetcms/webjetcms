@@ -219,21 +219,21 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     checkFormSimpleData(I, DT, randomNumber, randomNumber2);
 
     //BUG: ked sa preplo zobrazenie stlpcov, tak sa nevykonala render funkcia
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click(locate('span.column-title').withText('Meno'));
     I.click("Mesto");
     I.click("Priezvisko");
     I.click("button.btn.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.amOnPage("/admin/v9/");
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");

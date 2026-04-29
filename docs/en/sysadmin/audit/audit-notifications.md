@@ -1,11 +1,11 @@
-# List of notifications
+# Notification list
 
-In the menu item Notification list you can set up email notifications for certain system events/errors. We recommend to set notification for events of the type `XSS` a `SQLERROR`.
+In the Notification List menu item, you can set up email notifications for certain events/system errors. We recommend setting up notifications for events of the `XSS` and `SQLERROR` types.
 
 ![](audit-notification.png)
 
-In the editor, you can also set the additional text that the error must contain to be sent to the specified email.
+In the editor, you can also set additional text that the error must contain in order to be sent to the specified email.
 
 ![](audit-notification-editor.png)
 
-The recipient's email will be used as the sender's email. If necessary, the sender name and email of all audit notification emails can be set using configuration variables `auditDefaultSenderName` a `auditDefaultSenderEmail`.
+The sender email will be the recipient's email. If necessary, you can set the sender name and email for all audit notification emails using the configuration variables `auditDefaultSenderName` and `auditDefaultSenderEmail`.

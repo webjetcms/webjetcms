@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.cron;
 import java.lang.reflect.Method;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 
 
 /**
@@ -27,12 +28,12 @@ class RunnableWrapper implements Runnable
 	private final boolean audit;
 	private final Long id;
 
-	public RunnableWrapper(Class<?> clazz, String[] args, boolean audit, Long id)
+	public RunnableWrapper(Class<?> clazz, CronTask task)
 	{
 		this.clazz = clazz;
-		this.args = args;
-		this.audit = audit;
-		this.id = id;
+		this.args = task.receiveArgs();
+		this.audit = task.getAudit();
+		this.id = task.getId();
 	}
 
 	@Override
@@ -40,6 +41,12 @@ class RunnableWrapper implements Runnable
 	{
 		try
 		{
+			int autoModeRandomDelay = ClusterRefresher.getAutoModeRandomDelay();
+			if (autoModeRandomDelay > 0)
+			{
+				Thread.sleep(autoModeRandomDelay);
+			}
+
 			Method main = clazz.getMethod("main", String[].class);
 			Object[] arguments = new Object[]{args};
 
@@ -48,7 +55,7 @@ class RunnableWrapper implements Runnable
 			{
 				for (String arg : args)
 				{
-					if (argsString.length()>0) argsString.append(' ');
+					if (argsString.isEmpty() == false) argsString.append(' ');
 					argsString.append(arg);
 				}
 			}
@@ -60,11 +67,16 @@ class RunnableWrapper implements Runnable
 			}
 			main.invoke(null, arguments);
 		}
+		catch (InterruptedException ie)
+		{
+			Thread.currentThread().interrupt();
+			sk.iway.iwcm.Logger.error(RunnableWrapper.class, "Cron task interrupted: " + clazz.getName(), ie);
+		}
 		catch (Exception e)
 		{
 			sk.iway.iwcm.Logger.println(RunnableWrapper.class, "---------FAILED TO LAUNCH A CRONTAB TASK-----------");
 			sk.iway.iwcm.Logger.println(RunnableWrapper.class, clazz.getName());
-			sk.iway.iwcm.Logger.error(e);
+			sk.iway.iwcm.Logger.error(RunnableWrapper.class, "Error while executing cron task: " + clazz.getName(), e);
 		}
 	}
 }

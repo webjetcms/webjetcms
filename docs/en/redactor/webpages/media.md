@@ -1,43 +1,45 @@
 # Media
 
-## Display in web page
+## Display on the website
 
 Media is used to associate related files/images/links to the current page.
 
-They are displayed in the media tab of the web page editor, where you can specify a Name, a Group (media can be sorted into multiple groups as needed), a link to the file/page, a thumbnail image (if needed), and a layout priority.
+They are displayed in the web page editor in the media tab, where you can enter a Name, group (media can be sorted into multiple groups according to your needs), a link to the file/page, a preview image (if necessary), and the sorting priority.
 
-The media can be used for a variety of purposes:
+Media can be used for various purposes:
+
 - list of related files to the page
 - list of related pages to the current page
 - list of audio/video files for the page (images, animations, videos)
 
 ![](media.png)
 
-In the page/template, you can get a list of media by page ID and media group in the Media application.
+In a page/template, it is possible to get a list of media by page ID and media group in the Media application.
 
-Note: the media app only displays media:
-- Referring to an existing file (if the file is deleted the media will automatically stop displaying).
-- Inserted before the date and time the web page was saved (after adding new media, save the web page to view it). This allows you to time the display of new media - simply add it to the web page, set the timed display for the future, and the added media will be displayed after the web page is published on time.
+Warning: the media application only displays media:
+
+- Referencing an existing file (if the file is deleted, the media will automatically stop displaying).
+- Inserted before the date and time the web page was saved (after adding new media, save the web page to view it). This allows you to time the display of new media - simply add it to the web page, set its time display to the future, and the added media will only be displayed after the web page is published at the time.
 
 ## Manage all media
 
-In the menu Web pages/Media/Manage all media you can search and manage all media **across all websites** in the currently displayed domain. When filtering, you can enter the name of the Web page, or the full path, or even the page ID (docid) directly.
+In the Web pages/Media/Manage all media menu, you can search and manage all media **across all web pages** in the currently displayed domain. When filtering, you can enter its name, or the full path, or even the page ID (docid) directly in the Web page field.
 
 ![](media-all.png)
 
-When editing/creating a new media, it is necessary to enter a media name and select a web page using the tree structure.
+When editing/creating a new media, it is necessary to enter the media name and select a website using the tree structure.
 
 ![](media-all-editor.png)
 
-View this option **required by law** "Media - Manage all media".
+Displaying this option **requires** the "Media - Manage all media" right.
 
-## Manage media groups
+## Media group management
 
-You can organize the media you enter into groups using Media Groups. For example, "Downloads" or "Related Links". They are managed in the menu Web pages/Media/Manage groups and **require the right** "Media - Group Management".
+Using media groups, you can organize your submitted media into groups. For example, "Downloads" or "Related Links". They are managed in the Web pages/Media/Group management menu and **require the right** "Media - Group management".
 
-Use the Media application to display the media of the web page according to the selected media group (or in the template, e.g. in the right menu or below the text of the web page).
+Using the Media application, you can then display the website's media according to the selected media group on the website (or in the template, e.g. in the right menu, or under the website text).
 
-A media group can have a restriction set to show the group only in a specific directory of web pages.
+A media group can have a restriction set to display the group only in a certain website directory.
 
 ![](media-groups.png)
 
@@ -45,4 +47,4 @@ A media group can have a restriction set to show the group only in a specific di
 
 All Media records are filtered by the currently selected domain.
 
-In the case of records from **Manage all media** the table name parameter is set to the value **documents** automatically in the background. To identify whether the datatable is called from this section, the url parameter `isCalledFromTable=true`.
+In the case of records from **All media management**, the table name parameter is set to **documents** automatically in the background. To identify whether the data table is being called from this section, the url parameter ```isCalledFromTable=true``` is provided.

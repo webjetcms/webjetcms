@@ -1,6 +1,6 @@
 # Automated testing
 
-For automated E2E testing the framework is used [CodeceptJS](https://codecept.io). Tests are written in JavaScript and practically control the browser in which the test is run. More information on why we chose this framework is in the section [Playwright + CodeceptJS](#playwright--codeceptjs).
+For automated E2E testing, the framework [CodeceptJS](https://codecept.io) is used. The tests are written in JavaScript and practically control the browser in which the test is run. More information on why we chose this framework is in the section [Playwright + CodeceptJS](#playwright--codeceptjs).
 
 ## Installation
 
@@ -9,7 +9,7 @@ cd src/test/webapp/
 npm install
 ```
 
-!>**Warning:** Before running the testing, you need to compile the JS/CSS admin part of WebJET:
+!>**Warning:** Before starting testing, it is necessary to compile the JS/CSS admin parts of WebJET:
 
 ```shell
 cd src/main/webapp/admin/v9/
@@ -23,13 +23,13 @@ and start the application server:
 gradlew appRun
 ```
 
-I recommend you to run each of the above commands in a separate Terminal (menu Terminal->New Terminal). You can switch between running terminals in the `Terminal`.
+I recommend running each of the above commands in a separate Terminal (Terminal->New Terminal menu). You can switch between running terminals in the ```Terminal``` window.
 
-## Start testing
+## Starting testing
 
-To start testing, use the following commands:
+You can start testing using the following commands:
 
-````shell
+```shell
 cd src/test/webapp/
 
 #spustenie vsetkych testov
@@ -40,9 +40,9 @@ npm run pause tests/components/gallery_test.js
 
 #Spustenie konkrétneho scenára s hodnotou ```@current``` v názve
 npm run current
-````
+```
 
-To run in firefox use the prefix `ff:` before the title:
+To run in Firefox, use the prefix ```ff:``` before the name:
 
 ```shell
 npm run ff:all
@@ -50,35 +50,35 @@ npm run ff:pause tests/components/gallery_test.js
 npm run ff:current
 ```
 
-Running on another URL with browser display and browser disabled `firefox`:
+Running on a different URL with browser view disabled and browser ```firefox```:
 
 ```shell
 CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npm run all
 ```
 
-**Remark:** in Firefox we had problems with the speed of the tests. Therefore, for this browser in the file `codecept.conf.js` sets the variable `autodeayEnabled` to the value of `true` and the add-on is activated `autodelay`. The latter delays the execution of functions `amOnPage,click,forceClick` about 200ms before and 300ms after the command is called. We also identified a strange behavior of the browser, which if it is not on the foreground then the tests stop working out of nowhere and display nonsensical errors. When running the test once, the test always executed correctly. We attribute this to some optimization of JavaScript code execution in the browser when it is not active. When run with the browser not displayed, everything is fine, so always use the setting to run all tests `CODECEPT_SHOW=false`.
+**Note:** We had problems with the speed of the tests in the Firefox browser. Therefore, for this browser, the ```autodeayEnabled``` variable is set to the value ```true``` in the ```codecept.conf.js``` file and the ```autodelay``` plugin is activated. It delays the execution of the ```amOnPage,click,forceClick``` functions by 200ms before and 300ms after the command is called. We also identified a strange behavior of the browser, which, if it is not in the foreground, the tests suddenly stop working and display meaningless errors. When running the test once, the test always ran correctly. We attribute this to some optimization of the execution of JavaScript code in the browser when it is not active. When running with the browser not displayed, everything is fine, so always use the ```CODECEPT_SHOW=false``` setting to run all tests.
 
 ### Codecept UI
 
-Codecept offers in beta a UI to view testing, you run it with the command:
+Codecept offers a beta version of a UI for displaying testing, you can launch it with the command:
 
 ```shell
 npm run codeceptjs:ui
 ```
 
-and then open the page in your browser `http://localhost:3001`.
+and then open the page ```http://localhost:3001``` in your browser.
 
-### HTML report generation
+### Generating an HTML report
 
-**Mochawesome**
+**Mocha awesome**
 
-In npm is set [plugin for generating HTML reports](https://codecept.io/reports/#html). You generate it by running the command:
+There is a [plugin for generating HTML reports](https://codecept.io/reports/#html) set up in npm. You can generate it by running the command:
 
 ```shell
 npm run codeceptjs --reporter mochawesome
 ```
 
-and an HTML report with the test result will be generated in the /build/test/report directory. For failed tests, a screenshot is also created. The setting is in [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) in section `mocha`.
+and an HTML report with the test result is generated in the /build/test/report directory. A screenshot is also created for failed tests. The setting is in [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) in the ```mocha``` section.
 
 **Allure**
 
@@ -88,7 +88,7 @@ The report can also be generated via [allure](allure.md) by running the test:
 npm run codeceptjs --plugins allure
 ```
 
-Once the test is complete, you can view the results by running `allure` server:
+Once the test is complete, you can view the results by running the ```allure``` server:
 
 ```shell
 allure serve ../../../build/test
@@ -96,40 +96,41 @@ allure serve ../../../build/test
 
 ## Playwright + CodeceptJS
 
-For testing is used [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
+[Playwright](https://github.com/microsoft/playwright/tree/master/docs) and [CodeceptJS](https://codecept.io/basics/) are used for testing.
 
 Why Playwright?
 
-- it is the 3rd generation of the testing framework (1st generation Selenium, 2nd generation Puppeteer, 3rd generation Playwright)
-- Microsoft bought the authors `Puppeteer` framework and they develop Playwright, so they have the experience
-- Supported by `chromium, firefox, webkit` (2021 May Windows update will switch Edge to Chromium Core)
+- it is the 3rd generation of testing framework (1st generation Selenium, 2nd generation Puppeteer, 3rd generation Playwright)
+- Microsoft bought the authors of the ```Puppeteer``` framework and they develop Playwright, so they have experience
+- supports ```chromium, firefox, webkit``` (May 2021 Windows Update will switch Edge to chromium core)
 - can emulate resolutions, user agent, DPI
 
 Why CodeceptJS?
 
-- Playwright as well as `Puppeteer` is a communication (low level) protocol for controlling the browser (its automation)
-- CodeceptJS is a testing framework that, among other things, can use Playwright
+- Playwright, like ```Puppeteer```, is a communication (low level) protocol for controlling the browser (its automation)
+- CodeceptJS is a testing framework that can be used by Playwright, among other things
 - test code is written in JavaScript
-- the code of the tests is very [understandable](https://codecept.io/playwright/#setup)
-- has advanced options [Locators](https://codecept.io/locators/#css-and-xpath) - search elements by text, css, xpath
-- has [GUI](https://codecept.io/ui/) (not yet tested) for writing and displaying test results
+- the test code is very [understandable](https://codecept.io/playwright/#setup)
+- has advanced [Locators](https://codecept.io/locators/#css-and-xpath) options - search for elements by text, css, xpath
+- has a [GUI](https://codecept.io/ui/) (not yet tested) for writing and displaying test results
 
 ### Configuration
 
-The basic configuration is in the file `codecept.conf.js`. Important attributes:
-- `url` (http://iwcm.interway.sk) - address (domain) of the server. You can change this via `--override` parameter and switch testing from DEV to TEST/PROD environment.
-- `output` (../../../build/test) - directory to which you will generate a screenshot in case of a failed test (default to `build/test` in the root directory)
-- `browser` (chromium) - the chosen browser to run the tests, can be `chromium, firefox, webkit`
-- `emulate` (commented) - [Emulation](https://github.com/Microsoft/playwright/blob/master/src/deviceDescriptors.ts) facilities
-- `screenshotOnFail` - enables/disables screenshot creation in case of a failed test
+The basic configuration is in the file ```codecept.conf.js```. Important attributes:
+
+- ```url``` (http://iwcm.interway.sk) - server address (domain). You can change it via the ```--override``` parameter and switch testing from DEV to TEST/PROD environment.
+- ```output``` (../../../build/test) - directory where a screenshot will be generated in case of a failed test (defaults to ```build/test``` in the root directory)
+- ```browser``` (chromium) - selected browser to run tests, can be ```chromium, firefox, webkit```
+- ```emulate``` (commented) - [emulation](https://github.com/Microsoft/playwright/blob/master/src/deviceDescriptors.ts) devices
+- ```screenshotOnFail``` - ​​enables/disables creating screenshots in case of a failed test
 
 ## Writing tests
 
-Tests are created in subdirectories tests, where they are divided according to the individual modules/applications of WebJET. They are written in JavaScript, so you can use all the possibilities that JavaScript offers.
+Tests are created in the tests subdirectories, where they are divided according to individual WebJET modules/applications. They are written in JavaScript, so you can use all the features that JavaScript offers.
 
 Example of a more complex test to test login [src/test/webapp/tests/admin/login.js](../../../../src/test/webapp/tests/admin/login.js):
 
-!>**Warning:** to `Feature` enter the value in the format `adresár.podadresár.meno-súboru` for correct display of tests in tree structure and easy tracing of the file according to `Feature` in the log file.
+!>**Warning:** in the ```Feature``` entry, enter a value in the format ```adresár.podadresár.meno-súboru``` for correct display of tests in the tree structure and easy retrieval of the file according to the ```Feature``` listed in the log file.
 
 ```javascript
 Feature('admin.login');
@@ -178,11 +179,11 @@ Scenario('uspesne prihlasenie', ({I}) => {
 });
 ```
 
-Note that in the demo I am intentionally using different locators/selectors (field name, text/label, CSS selector). This is one of the advantages of CodeceptJS. More about locator options is in [Documentation](https://codecept.io/locators/#css-and-xpath).
+Note that in the example I intentionally use different locators/selectors (field name, text/label, CSS selector). This is one of the advantages of CodeceptJS. More about the possibilities of Locators can be found in the [documentation](https://codecept.io/locators/#css-and-xpath).
 
 ### Locators
 
-The selectors that select an element on the page are well described in [official documentation](https://codecept.io/locators/).
+Locators (selectors) that select an element on a page are well described in the [official documentation](https://codecept.io/locators/).
 
 ```txt
 {permalink: /'foo'} matches <div id="foo">
@@ -192,9 +193,9 @@ The selectors that select an element on the page are well described in [official
 {class: 'foo'} matches <div class="foo">
 ```
 
-### Within
+### Inside
 
-Using the notation `within` you can restrict the element to which the following commands are applied:
+Using the ```within``` notation, you can limit the element to which the following commands will be applied:
 
 ```javascript
 within("div.breadcrumb-language-select", () => {
@@ -203,19 +204,20 @@ within("div.breadcrumb-language-select", () => {
 });
 ```
 
-at the same time, most commands also allow you to write a selector to the command, the above can also be written as:
+At the same time, most commands allow you to write a selector into the command, the above can also be written as:
 
 ```javascript
   I.click("Slovenský jazyk", "div.breadcrumb-language-select");
   I.click("Chorvátsky jazyk", "div.breadcrumb-language-select");
 ```
 
-### Playwright methods
+### Playwright's methods
 
-V [official documentation](https://codecept.io/helpers/Playwright/) is a list of all options `I` object. Short references:
+The [official documentation](https://codecept.io/helpers/Playwright/) lists all the ```I``` object options. Short links:
+
 - [pressKey](https://codecept.io/helpers/Playwright/#presskey)
 - [click](https://codecept.io/helpers/Playwright/#click)
-- [forceClick](https://codecept.io/helpers/Playwright/#forceclick) - a forced click without waiting for an event, must be used on custom `checkboxy` (otherwise it gets stuck there)
+- [forceClick](https://codecept.io/helpers/Playwright/#forceclick) - forced click without waiting for an event, must be used on custom ```checkboxy``` (otherwise it will loop there)
 - [see](https://codecept.io/helpers/Playwright/#see) / [dontSee](https://codecept.io/helpers/Playwright/#dontsee)
 - [seeElement](https://codecept.io/helpers/TestCafe/#seeelement) / [dontSeeElement](https://codecept.io/helpers/Detox/#dontseeelement)
 - [fillField](https://codecept.io/helpers/Playwright/#fillfield)
@@ -227,79 +229,89 @@ V [official documentation](https://codecept.io/helpers/Playwright/) is a list of
 
 ### WebJET additional features
 
-We have added several useful features for WebJET:
-- [I.formatDateTime(timestamp)](../../../../src/test/webapp/steps_file.js) - formats timestamp to date and time using library moment
+We have added several useful features to WebJET:
+
+- [I.formatDateTime(timestamp)](../../../../src/test/webapp/steps_file.js) - formats timestamp to date and time using moment library
 - [I.seeAndClick(selector)](../../../../src/test/webapp/steps_file.js) - waits for the element to be displayed and then clicks on it
-- [await I.clickIfVisible(selector)](../../../../src/test/webapp/custom_helper.js) - if the element is displayed click on it, if it is not displayed skip the step (do not throw an error)
-- [I.verifyDisabled(selector)](../../../../src/test/webapp/custom_helper.js) - verifies that the field is inactive
-- [I.wjSetDefaultWindowSize()](../../../../src/test/webapp/steps_file.js) - sets the default window size after changing it, is called automatically even after logging in the login sequence in [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js)
-- [Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)](../../../../src/test/webapp/codecept.conf.js) - will perform [visual comparison](#visual-testing)
-- `I.waitForTime(time)` - waiting until the specified time (timestamp).
-- `I.toastrClose()` - closing the window `toastr` notifications.
-- `clickCss(name, parent=null)` - performs a click just like `I.click` But `name` considered as CSS selector - execution is faster, no need to use wrapping to `{css: name}`.
-- `forceClickCss(name, parent=null)` - performs a click just like `I.forceClick` But `name` considered as CSS selector - execution is faster, no need to use wrapping to `{css: name}`.
+- [await I.clickIfVisible(selector)](../../../../src/test/webapp/custom_helper.js) - if the given element is visible, click on it, if it is not visible, skip the step (does not throw an error)
+- [I.verifyDisabled(selector)](../../../../src/test/webapp/custom_helper.js) - verifies if the given field is inactive
+- [I.wjSetDefaultWindowSize()](../../../../src/test/webapp/steps_file.js) - sets the default window size after changing it, is also called automatically after logging in in the login sequence in [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js)
+- [Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)](../../../../src/test/webapp/codecept.conf.js) - performs [visual comparison](#visual-testing)
+- `I.waitForTime(time)` - ​​waiting until the specified time (timestamp).
+- `I.toastrClose()` - ​​close the `toastr` notification window.
+- `clickCss(name, parent=null)` - ​​performs the click in the same way as `I.click` but treats `name` as a CSS selector - execution is faster, no need to use wrapping in `{css: name}`.
+- `forceClickCss(name, parent=null)` - ​​performs the click in the same way as `I.forceClick` but treats `name` as a CSS selector - execution is faster, no need to use wrapping in `{css: name}`.
 
-We have prepared special functions for the date table. They are implemented in [DT.js](../../../../src/test/webapp/pages/DT.js):
-- `DT.waitForLoader(name)` - waits for displaying and then hiding the "Processing" information in the datatable. It is used as `DT.waitForLoader("#forms-list_processing");`
-- `DT.filter(name, value, type=null)` - sets the value `value` in the text filter column `name` DATATables. If the attribute is also specified `type` sets the search type (e.g. Starts at, Ends at, Equals to).
-- `DT.filterSelect(name, value)` - sets the value `value` into the select field of the column filter `name` DATATables. It is used as `DT.filterSelect('cookieClass', 'Neklasifikované');`
-- `async I.getDataTableColumns(dataTableName)` - returns a DATA object with a datatable definition, used in automatic datatable testing
-- `async getDataTableId(dataTableName)` - returns datatable ID, calls JS function `dataTable.DATA.id`
+We have special functions for the datatable. They are implemented in [DT.js](../../../../src/test/webapp/pages/DT.js):
+
+- ```DT.waitForLoader(name)``` - ​​waits for the "Processing" information to be displayed and then hidden in the data table. Used as ```DT.waitForLoader("#forms-list_processing");```
+- ```DT.filter(name, value, type=null)``` - ​​sets the value ```value``` to the text filter of the column ```name``` of the data table. If the attribute ```type``` is also specified, the search type is set (e.g. Starts with, Ends with, Equals).
+- ```DT.filterSelect(name, value)``` - ​​sets the value ```value``` to the select field of the filter column ```name``` of the data table. Used as ```DT.filterSelect('cookieClass', 'Neklasifikované');```
+- ```async I.getDataTableColumns(dataTableName)``` - ​​returns a DATA object with a datatable definition, used in automatic datatable testing
+- ```async getDataTableId(dataTableName)``` - ​​returns the datatable ID, calls the JS function ```dataTable.DATA.id```
 - [async I.getTotalRows()](../../../../src/test/webapp/custom_helper.js) - returns the total number of records in the datatable
-- `DT.deleteAll(name = "datatableInit")` - deletes the currently displayed records, always use the `DT.filter` for filtering the necessary data.
+- ```DT.deleteAll(name = "datatableInit")``` - ​​deletes the currently displayed records, always use ```DT.filter``` before using to filter the necessary data.
 
-For Datatable Editor implemented in [DTE.js](../../../../src/test/webapp/pages/DTE.js):
-- `DTE.waitForLoader(name)` - waiting to be hidden `loadera` in the editor (save record)
-- `DTE.waitForEditor(name)` - waits for the editor to display, if name is defined, the datatable with the given name is used, by default `datatableInit`
-- `DTE.selectOption.(name, text)` - selects a value in the select box (in the correct way by displaying the options and then clicking on the option)
-- `DTE.save(name)` - clicks the Save button in the editor, if name is defined, the datatable with the given name is used, by default `datatableInit`
-- `DTE.cancel(name)` - clicks the close editor button, if name is defined, the datatable with the given name is used, by default `datatableInit`
-- `DTE.fillField(name, value)` - fills in a standard field, as opposed to calling `I.fillField` it is possible to `name` parameter to directly specify the name of the field on the backend/json definition.
-- `DTE.fillQuill(name, value)` - fills the value in the types field `QUILL`.
-- `DTE.fillCkeditor(htmlCode)` - sets the HTML code to the currently displayed CKEditor.
-- `DTE.fillCleditor(parentSelector, value)` - enters text into WYSIWYG `cleditor`. Value `parentSelector` - reference to the element in which the `cleditor` located (e.g. `#forum`), `value` - value to fill. **Warning:** it doesn't know the diacritics yet because of the use of `type` command. It is also possible to execute the following for a datatable [automated test](datatable.md).
-- `DTE.appendField(name, value)` - adds text to the field in the editor, solves the problem of using `I.appendField` which is not always done correctly in the editor.
+For the Datatable Editor implemented in [DTE.js](../../../../src/test/webapp/pages/DTE.js):
+
+- ```DTE.waitForLoader(name)``` - ​​waiting for ```loadera``` to be hidden in the editor (save the record)
+- ```DTE.waitForEditor(name)``` - ​​waits for the editor to be displayed, if name is defined, the datatable with the given name will be used, by default ```datatableInit```
+- ```DTE.selectOption.(name, text)``` - ​​selects a value in the select box (by displaying the options correctly and then clicking on the option)
+- ```DTE.save(name)``` - ​​clicks the Save button in the editor, if name is defined, the data table with the given name will be used, by default ```datatableInit```
+- ```DTE.cancel(name)``` - ​​clicks the close editor button, if name is defined, the datatable with the given name will be used, by default ```datatableInit```
+- ```DTE.fillField(name, value)``` - ​​fills in a standard field, unlike calling ```I.fillField```, it is possible to enter the field name directly in the backend/json definition into the ```name``` parameter.
+- ```DTE.fillQuill(name, value)``` - ​​fills the value in the type field ```QUILL```.
+- ```DTE.fillCkeditor(htmlCode)``` - ​​sets the HTML code to the currently displayed CKEditor.
+- ```DTE.fillCleditor(parentSelector, value)``` - ​​enters text into WYSIWYG ```cleditor```. Value ```parentSelector``` - reference to the element in which ```cleditor``` is located (e.g. ```#forum```), ```value``` - value to fill in. **Warning:** it does not yet know diacritics due to the use of the ```type``` command.
+It is also possible to perform an [automated test](datatable.md) for the datatable.
+
+- `DTE.appendField(name, value)` - ​​will complete the text of the field in the editor, solves the problem with using `I.appendField`, which does not always execute correctly in the editor.
 
 For JsTree (tree structure):
-- `I.jstreeClick(name)` - clicks on the selected text in jstree (important to use especially in web pages where the link with the same name as the directory is also in the list of pages)
-- `I.createFolderStructure(randomNumber)` - prepares a directory tree structure and two subdirectories for testing
-- `I.deleteFolderStructure(randomNumber)` - deletes the tree structure of the directory and the two subdirectories prepared via `I.createFolder`
+
+- ```I.jstreeClick(name)``` - ​​clicks on the selected text in the jstree (important to use especially in websites where there is a link with the same name as the directory in the page list)
+- ```I.createFolderStructure(randomNumber)``` - ​​prepares a directory tree structure and two subdirectories for testing
+- ```I.deleteFolderStructure(randomNumber)``` - ​​deletes the directory tree structure and two subdirectories prepared via ```I.createFolder```
 
 ```javascript
 //povodne ZLE riesenie s I.wait
 I.click("Pridať");
 ```
-- `I.jstreeNavigate(pathArray)` - in the field `pathArray` it is possible to define the names of individual nodes in the tree structure, which the function clicks on in turn, e.g. `I.jstreeNavigate( [ "English", "Contact" ] );`.
 
-To verify the values in the table, you can use the functions:
-- `DT.checkTableCell(name, row, col, value)` - verifies the value in the specified table (table ID) `value` in the specified row `row` and column `col`. Rows and columns start with 1.
-- `DT.checkTableRow(name, row, values)` - verifies in the specified table (table ID) in the specified row `row` values in the field `values`. The lines start with 1. For example. `DT.checkTableRow("statsDataTable", 1, ["13", "2 022", "30", "533", "229", "1"]);`.
+- ```I.jstreeNavigate(pathArray)``` - ​​in the field ```pathArray``` it is possible to define the names of individual nodes in the tree structure, which the function will click on sequentially, e.g. ```I.jstreeNavigate( [ "English", "Contact" ] );```.
 
-Functions implemented in `Document` facility:
-- `switchDomain(domain)` - switches the domain to the specified value.
-- `setConfigValue(name, value)` - sets a configuration variable with the specified name and value.
-- `resetPageBuilderMode()` - deletes the remembered editor mode (standard/PageBuilder).
-- `notifyClose` - will close `toastr` notification.
-- `notifyCheckAndClose(text)` - verifies the text in `toastr` notification and closes it.
-- `editorComponentOpen()` - opens the application settings in the page editor (window `editor_component.jsp`).
-- `editorComponentOk()` - clicks OK to save the application settings.
-- `scrollTo(selector)` - scrolls the content of the window to the specified element.
+To validate values ​​in a table, you can use the following functions:
 
-V `Document` object also includes functions for creating [screenshots](screenshots.md).
+- ```DT.checkTableCell(name, row, col, value)``` - ​​verifies the value ```value``` in the specified row ```row``` and column ```col``` in the specified table (table ID). Rows and columns start with the number 1.
+- ```DT.checkTableRow(name, row, values)``` - ​​verifies the values ​​in the field ```values``` in the specified table (table ID) in the specified row ```row```. The rows start with the number 1. For example ```DT.checkTableRow("statsDataTable", 1, ["13", "2 022", "30", "533", "229", "1"]);```.
 
-To test emails using [tempmail.plus](https://tempmail.plus) there is an object `TempMail`:
-- `login(name, emailDomain = "fexpost.com")` - login and account setup
-- `openLatestEmail()` - opens the latest email
-- `closeEmail()` - closes an open email and returns to the email list
-- `destroyInbox()` - deletes all emails in your inbox
+Functions implemented in the ```Document``` object:
+
+- ```switchDomain(domain)``` - ​​switches the domain to the specified value.
+- ```setConfigValue(name, value)``` - ​​sets a configuration variable with the specified name and value.
+- ```resetPageBuilderMode()``` - ​​clears the remembered editor mode (standard/PageBuilder).
+- `notifyClose` - ​​closes the `toastr` notification.
+- `notifyCheckAndClose(text)` - ​​validates the text in the `toastr` notification and closes it.
+- `editorComponentOpen()` - ​​opens the application settings in the page editor (window `editor_component.jsp`).
+- `editorComponentOk()` - ​​clicks the OK button to save the application settings.
+- `scrollTo(selector)` - ​​moves the window contents to the specified element.
+
+The ```Document``` object also contains functions for creating [screenshots](screenshots.md).
+
+For testing emails using [tempmail.plus](https://tempmail.plus) there is an object `TempMail`:
+
+- `login(name, emailDomain = "fexpost.com")` - ​​login and account setup
+- `openLatestEmail()` - ​​opens the latest email
+- `closeEmail()` - ​​closes the open email and returns to the email list
+- `destroyInbox()` - ​​deletes all emails in the mailbox
 
 ### Waiting for completion
 
-It is generally not recommended to use `I.wait` with a fixed period. The waiting time may be different on the local machine and in the CI/CD pipeline. Additionally, a fixed time may unnecessarily increase the time required to execute the test.
+It is generally not recommended to use ```I.wait``` with a fixed time. The time required to wait may be different on the local machine and in the CI/CD pipeline. Furthermore, a fixed time may unnecessarily increase the time required to execute the test.
 
-We recommend using the methods [waitFor\*](https://codecept.io/helpers/TestCafe/#waitforelement) especially `waitForElement`, `waitForText`, `waitForVisible` a `waitToHide`.
+We recommend using the [waitFor*](https://codecept.io/helpers/TestCafe/#waitforelement) methods, especially ```waitForElement```, ```waitForText```, ```waitForVisible``` and ```waitToHide```.
 
-It is preferable to use mainly `waitForText` where we can effectively replace `I.wait` and subsequent `I.see` for one command:
+It is advantageous to use mainly ```waitForText``` where we can effectively replace ```I.wait``` and subsequent ```I.see``` with one command:
 
 ```javascript
 //povodne ZLE riesenie s I.wait
@@ -314,7 +326,7 @@ I.waitForText("test-adresar-" + randomNumber, 10, container);
 
 ### Pause
 
-If you put a command somewhere in the test code `pause()`, the execution of the tests will stop and you will see an interactive console in the Terminal where you can run commands. This way you can prepare the test steps and then simply copy the commands into the JS test file.
+If you put the command ```pause()``` somewhere in the test code, the test execution will stop and you will see an interactive console in Terminal where you can run commands. This way you can prepare the test steps and then simply copy the commands into the JS file with the test.
 
 ```shell
  ...
@@ -327,11 +339,11 @@ If you put a command somewhere in the test code `pause()`, the execution of the 
  I.
 ```
 
-Pressing the TAB key twice will display a help (list of possible commands). You can enter these and watch what happens in the browser. Pressing the Enter key will advance the test to the next command. Entering `exit` the interactive terminal will be terminated and the test will continue automated further.
+Pressing the TAB key twice will display a help (a list of possible commands). You can enter them and watch what happens in the browser. Pressing the Enter key will advance the test to the next command. Entering ```exit``` will exit the interactive terminal and the test will continue automatically.
 
 ### Login
 
-In the file [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) login via extension is also defined [autologin](https://codecept.io/plugins/#autologin):
+In the file [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) login via the [autologin](https://codecept.io/plugins/#autologin) extension is also defined:
 
 ```javascript
 autoLogin: {
@@ -355,9 +367,9 @@ autoLogin: {
 }
 ```
 
-It is possible to define multiple users (repeating the admin attribute), e.g. a registered user, an administrator with limited rights, etc.
+It is possible to define multiple users (repeat the admin attribute), e.g. a registered user, an administrator with limited rights, etc.
 
-Logins can be inserted into the tests using `Before` functions:
+Login can be inserted into tests using the ```Before``` function:
 
 ```javascript
 Feature('gallery');
@@ -375,7 +387,7 @@ Scenario('zoznam fotografii', ({I}) => {
 
 ### Assert library
 
-An extension is available [codeceptjs-chai](https://www.npmjs.com/package/codeceptjs-chai) for calling assert functions:
+There is an extension [codeceptjs-chai](https://www.npmjs.com/package/codeceptjs-chai) available for calling assert functions:
 
 Basic use:
 
@@ -408,7 +420,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-If necessary, you can also use [assert](https://www.npmjs.com/package/assert) library. An example of use is in the test [gallery.js](../../../../src/test/webapp/tests/apps/gallery/gallery.js):
+If necessary, you can also use the [assert](https://www.npmjs.com/package/assert) library. An example of its use is in the [gallery.js](../../../../src/test/webapp/tests/apps/gallery/gallery.js) test:
 
 ```javascript
 const assert = require('assert');
@@ -418,7 +430,8 @@ assert.equal(+inputValueH, +area.h);
 
 ### Page objects
 
-To create universal test scenarios, the component `Pages` into which Page objects are generated via the `npx codeceptjs gpo`, a page object is created using `Dependency Injection` (similar to Angular).
+To create universal test scenarios, there is a folder `Pages` into which Page objects are generated
+via the `npx codeceptjs gpo` command, a page object is created using ```Dependency Injection``` (similar to Angular).
 
 ```javascript
 const { I } = inject();
@@ -429,7 +442,7 @@ module.exports = {
 }
 ```
 
-In order to use it in tests, you need to register it in `codecept.conf.js`.
+In order to be able to use it in tests, it needs to be registered in `codecept.conf.js`.
 
 ```javascript
 exports.config = {
@@ -459,7 +472,7 @@ Scenario('test-scenario', ({I, PageObject}) => {
 
 ### Browser detection
 
-If your tests behave differently in Firefox or Chromium, it is possible to use the browser validation features in the tests.
+If your tests behave differently in Firefox or Chromium, you can use the functions in your tests to verify the browser used.
 
 ```javascript
 if (Browser.isChromium()) {
@@ -479,11 +492,12 @@ if (Browser.isFirefox()) {
 }
 ```
 
-## Revocation of the right
+## Withdrawal of rights
 
-By calling the page address with the parameter `removePerm` it is possible to remove a specified right from a logged-in user on the fly (without saving changes in rights) if the user's login name starts with `tester`. It is possible to test the display of the page without the specified permission and verify the security of the REST service call.
+By calling the page address with the parameter ```removePerm```, it is possible to remove the specified right from the logged-in user at runtime (without saving changes to rights) if the user's login name begins with ```tester```. This makes it possible to test the display of the page without the specified right and thus verify the security of the REST service call.
 
-The revocation of the right is implemented in the function `DT.checkPerms(perms, url)` v [DT.js](../../../../src/test/webapp/pages/DT.js). Requires you to specify the right and the address of the page on which the right is being tested. Testo verifies the display of the notification `Prístup k tejto stránke je zamietnutý`. Optional parameter `datatableId` represents the ID/name of the table in the page (it is necessary to specify if there are multiple datatables in the page).
+The right is implemented in the function ```DT.checkPerms(perms, url)``` in [DT.js](../../../../src/test/webapp/pages/DT.js). It requires specifying the right and the address of the page on which the right is being tested. The test verifies the display of the notification ```Prístup k tejto stránke je zamietnutý```.
+ The optional parameter ```datatableId``` represents the ID/name of the table in the page (needs to be specified if there are multiple data tables in the page).
 
 Example of use:
 
@@ -498,9 +512,9 @@ Scenario('zoznam stranok', ({ I, DT }) => {
 });
 ```
 
-To the parameter `removePerm` it is also possible to specify multiple rights separated by a comma.
+It is also possible to enter multiple rights separated by commas in the ```removePerm``` parameter.
 
-For datatables, it is also possible to set the rights to [individual buttons](../datatables/README.md#buttons-by-rights) (add, edit, duplicate, delete). You can also test individually disabled rights. But to verify the rights on the backend, you need to test the REST service as well. By adding the expression `forceShowButton` to the parameter `removePerm` for a user with a login name starting with `tester` the buttons in the datatable will be displayed. It is thus possible to test the display of the error message from the REST service (that the record cannot be added/edited/deleted). An example is in `webpage-perms.js`:
+In datatables, it is also possible to set rights for [individual buttons](../datatables/README.md#buttons-by-rights) (add, edit, duplicate, delete). This way, you can also test individually disabled rights. However, to verify rights on the backend, it is also necessary to test the REST service. By adding the expression ```forceShowButton``` to the parameter ```removePerm``` for a user with a login name starting with ```tester```, the buttons in the datatable will be displayed. This way, it is possible to test the display of the error message from the REST service (that the record cannot actually be added/edited/deleted). An example is in ```webpage-perms.js```:
 
 ```javascript
 Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
@@ -549,18 +563,19 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
 
 **Technical information:**
 
-The revocation of the right is implemented in [ThymeleafAdminController.removePermissionFromCurrentUser](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). When you enter the URL parameter `removePerm` the rights of the currently logged in user are modified, including the Spring context.
+Removing permission is implemented in [ThymeleafAdminController.removePermissionFromCurrentUser](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). When specifying the URL parameter ```removePerm```, the permissions of the currently logged in user, including the Spring context, are modified.
 
 ## Visual testing
 
-The visual testing function should be used to verify displays that cannot be verified by text testing (e.g. correct position of the selection menu). It is used [plugin pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper) which can compare the reference screenshot with the current one and can also highlight changes.
+The visual testing feature should be used to verify a display that cannot be verified by testing the text (e.g. correct position of a selection menu). The [pixelMatchHelper plugin](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper) is used, which can compare a reference screenshot with the current one and highlight changes.
 
-To simplify use, we have prepared a function `Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)` which will ensure the necessary steps. It has parameters:
-- `selector` - `selector` the element from which the snapshot is to be taken (it is not taken from the whole screen, but only from the specified element)
-- `screenshotFileName` - the image file name, it will automatically be compared with the same image name in the directory `src/test/webapp/screenshots/base`. For filename use prefix `autotest-` for better tracking of the created image
-- `width` (optional) - browser window width
-- `height` (optional) - browser window height
-- `tolerance` (optional) - the degree of tolerance of differences to the reference image (0-100)
+To simplify use, we have prepared a function ```Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)``` that will take care of the necessary steps. It has the following parameters:
+
+- ```selector``` - ​​```selector``` of the element to be captured (not the entire screen, but only the specified element)
+- ```screenshotFileName``` - ​​image file name, automatically compared with the same image name in the ```src/test/webapp/screenshots/base``` directory. Use the prefix ```autotest-``` for the file name to better locate the created image
+- ```width``` (optional) - browser window width
+- ```height``` (optional) - browser window height
+- ```tolerance``` (optional) - tolerance level for differences to the reference image (0-100)
 
 Example of use:
 
@@ -568,40 +583,40 @@ Example of use:
 await Document.compareScreenshotElement("#insertScriptTable_wrapper", "autotest-insert-script-settings.png", 1280, 270);
 ```
 
-There will probably not be a reference image the first time you run it. But the test will create the current image and save it in the directory `build/test` (so we recommend prefixing the image name with autotest- so that the image can be easily found among screenshots of bugs from testing). If you want to use the image as a reference, copy it to the `src/test/webapp/screenshots/base`. Then the next time you run it, the reference image will be compared with the web page.
+The first time you run the test, there will probably be no reference image. However, the test will create a current image and save it in the ```build/test``` directory (therefore, we recommend prefixing the image name with the text autotest - so that the image can be easily found among the screenshots of errors from testing). If you want to use the image as a reference, copy it to the ```src/test/webapp/screenshots/base``` directory. Then, the next time you run the test, the reference image will be compared with the web page.
 
-Identified differences are generated into images in the directory `src/test/webapp/screenshots/diff` for easy error verification. The test will also declare an error like any other test scenario when differences are identified.
+The identified differences are generated into images in the ```src/test/webapp/screenshots/diff``` directory for easy error verification. The test will also report an error when identifying differences like any other test scenario.
 
 Example of display error (wrong position of selection menu) - reference base image:
 
 ![](autotest-insert-script-settings.png)
 
-incorrect display in the page:
+incorrect display on the page:
 
 ![](autotest-insert-script-settings-error.png)
 
-the resulting comparison with the highlighting of the difference area (pink colour):
+resulting comparison with highlighting the different area (pink color):
 
 ![](autotest-insert-script-settings-diff.png)
 
-**Notes on implementation**
+**Implementation Notes**
 
-Image comparison is encapsulated in a function `Document.compareScreenshotElement` implemented in `Document.js`. When the window is resized, it performs the resizing and returns the window to the default size after creating a screenshot by calling the function `I.wjSetDefaultWindowSize()` (this is also called after each login for consistency).
+The image comparison is encapsulated in the function ```Document.compareScreenshotElement``` implemented in ```Document.js```. When specifying the window size, it performs a resizing and after creating a screenshot, it returns the window to its original size by calling the function ```I.wjSetDefaultWindowSize()``` (this is also called after each login for consistency).
 
 ## Best practices
 
-To run the tests successfully and repeatedly, we recommend the following points:
+For successful and repeated test runs, we recommend following these points:
 
 ### Nomenclature
 
-- you start the scenario with the function `Feature('xxx');` where xxx is the name of the test file. If an error occurs you can easily find the corresponding test file.
+- you start the scenario with the function ```Feature('xxx');``` where xxx is the name of the test file. If an error occurs, you can easily find the appropriate test file.
 
 ### Test data
 
 - prepare and delete your test data
-- all created objects must contain text `autotest` for identifying objects created by an automated test
-- we recommend to use the call `I.getRandomText()` to obtain a unique suffix, a usage seen e.g. in [group-internal.js](../../../../src/test/webapp/tests/webpages/group-internal.js) where variables are defined and are filled in `Before` function
-- it is ideal if you create the test data in a separate scenario and also delete it in a separate scenario. So if a test fails, the data deletion is done anyway.
+- all created objects must contain the text ```autotest``` to identify objects created by an automated test
+- we recommend using the ```I.getRandomText()``` call to get a unique suffix, its use can be seen e.g. in [group-internal.js](../../../../src/test/webapp/tests/webpages/group-internal.js) where variables are defined and filled in the ```Before``` function
+- it is ideal if you create test data in a separate scenario and also delete it in a separate scenario. So if a test fails, the data will be deleted anyway.
 
 ```javascript
 var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
@@ -622,9 +637,9 @@ Before(({ I, login }) => {
 
 ### Selectors
 
-It is important to use the correct selectors, text/element can appear multiple times in the page and then the test randomly crashes. Use ready-made features like `I.jstreeClick(name)` for tree structure and functions starting with DT./DTE. for datatable and editor e.g. `DTE.selectOption(name, text)` or `DT.filterSelect(name, value)`.
+It is important to use correct selectors, text/element can be found multiple times in the page and then the test randomly fails. Use ready-made functions like ```I.jstreeClick(name)``` for the tree structure and functions starting with DT./DTE. for the datatable and editor e.g. ```DTE.selectOption(name, text)``` or ```DT.filterSelect(name, value)```.
 
-We recommend to try the selector in the JS console of the browser using jQuery, for example:
+We recommend testing the selector in the browser's JS console using jQuery, for example:
 
 ```javascript
 //tlacidlo na pridanie zaznamu
@@ -640,9 +655,9 @@ $("div.tree-col .btn.btn-sm.buttons-create.btn-success.buttons-divider")
 
 ### Timing
 
-Timing of execution is very important, on a different computer or server the test may run at a different speed. It is necessary to wait correctly for asynchronous calls to the server to complete. Similarly, waiting for a dialog box to open, data to be saved, and so on can be a problem.
+Execution timing is very important, on another computer or server the test may run at a different speed. It is necessary to wait correctly for the completion of asynchronous calls to the server. Similarly, there may be a problem with waiting for a dialog box to open, data to be saved, etc.
 
-Do not use fixed time type `I.wait(1)` but use calls `I.waitFor...` or our `DT.waitFor...`. More in the section [Waiting for completion](#waiting-for-completion) a [WebJET additional features](#webjet-additional-features).
+Do not use fixed time like ```I.wait(1)``` but use ```I.waitFor...``` or our ```DT.waitFor...``` calls. More information can be found in the [Waiting for completion](#waiting-for-completion) and [WebJET additional functions](#webjet-additional-functions) sections.
 
 Typical examples:
 
@@ -659,23 +674,23 @@ DTE.waitForEditor
 DTE.waitForLoader
 ```
 
-**Every call**, `I.click('Uložiť');` has to wait for saving via `DTE.waitForLoader`.
+**Every call**, ```I.click('Uložiť');``` must wait for storage via ```DTE.waitForLoader```.
 
-### Scenario length
+### Script length
 
-Try to keep individual scenarios short, don't combine unrelated parts into one scenario. However, you can prepare test data and reuse it in multiple scenarios (this will save time creating and deleting data between scenarios).
+Try to keep each scenario short, don't combine unrelated parts into one scenario. However, you can prepare test data and reuse it in multiple scenarios (this will save time creating and deleting data between scenarios).
 
-The script can also be run independently using `--grep` parameter see [Start testing](#start-of-testing).
+The scenario can also be run separately using the ```--grep``` parameter, see [Starting testing](#starting-testing).
 
 ### Debugging
 
-You can run the test with the parameter `-p pauseOnFail` if an error occurs, the interactive console will automatically be displayed. In it you can check the browser's status and possibly try a correction command, which you can then translate into a test.
+You can run the test with the parameter ```-p pauseOnFail```, if an error occurs, an interactive console will automatically appear. In it, you can verify the browser status and possibly try a correction command, which you can then also implement in the test.
 
-For this reason, do not use `After` function in the scenario, because it will be executed before the interactive console is invoked after the error and the browser window will no longer be in the same state.
+For this reason, do not use the ```After``` function in a scenario, as it will be executed before the interactive console is invoked after an error and the browser window will no longer be in the same state.
 
-## Deleting the database
+## Deleting a database
 
-The database grows with the use of tests, as both directories and web pages are moved to the trash after deletion. It is important to delete this data from the database once a quarter. You can use the following SQL statement:
+The database grows with the use of tests, as directories and web pages are moved to the trash after deletion. It is important to delete this data from the database once a quarter. You can use the following SQL command:
 
 ```sql
 DELETE FROM emails_campain WHERE subject LIKE '%-autotest%';
@@ -707,15 +722,17 @@ DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
 UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);
 DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%autotest%' OR media_title_sk LIKE 'image test%' OR media_title_sk LIKE '%onerror=alert%' OR media_title_sk LIKE 'media%');
 OPTIMIZE TABLE media;
+DELETE FROM _properties_ WHERE prop_key LIKE '%autotest%';
+OPTIMIZE TABLE _properties_;
 ```
 
-If you want to change the passwords in the test database across the board, use:
+To change passwords across the board in the test database, use:
 
 ```sql
 UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
 ```
 
-In the penetration test database, users need to disable the menu item for editing administrators, use the following SQL:
+In the penetration testing database, it is necessary to disable the menu item for editing administrators for users, use the following SQL:
 
 ```sql
 INSERT INTO `user_disabled_items` (`user_id`, `item_name`)
@@ -727,7 +744,7 @@ VALUES
 UPDATE _conf_ SET value='' WHERE name='adminEnableIPs';
 ```
 
-For a clean database on which you want to run `baseTest` needs to be set:
+For a clean database on which you want to run `baseTest` you need to set:
 
 ```sql
 INSERT INTO _conf_ VALUES ('templatesUseDomainLocalSystemFolder', 'true', NULL);
@@ -888,7 +905,7 @@ VALUES
 
 ## Testing REST services
 
-CodeceptJS also supports [testing of REST services](https://codecept.io/helpers/REST/). The setting is in `codecept.conf.js`:
+CodeceptJS also supports [testing REST services](https://codecept.io/helpers/REST/). The settings are in ```codecept.conf.js```:
 
 ```javascript
 exports.config = {
@@ -903,7 +920,7 @@ exports.config = {
 }
 ```
 
-Example of calling REST services and testing the returned state, login and JSON object:
+Example of calling REST services and testing the returned state, login, and JSON object:
 
 ```javascript
 Before(({ I }) => {

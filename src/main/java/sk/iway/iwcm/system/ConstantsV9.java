@@ -70,6 +70,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("multigroupRedirectSlavesToMaster", false, Constants.MOD_EDITOR, "Pri ulozeni stranky vo viacerych priecinkoch nastavuje sposob zobrazenia slave stranok. Pri hodnote true su presmerovane na master, pri hodnote slave su zobrazene ako samostatne stranky.");
 
 		Constants.setBoolean("clusterHostnameTrimFromEnd", false, "cluster", "Rezim ziskania hostname pre cluster. Ak je hodnota true, tak sa hostname ziskava ako 16 znakov od konca, inak 16 znakov od zaciatku.");
+		Constants.setInt("clusterAutoRandomDelay", 10000, "cluster;performance", "Maximalny nahodny delay v milisekundach pridany v auto cluster rezime pri starte CRON uloh a ClusterRefresher. Hodnota 0 vypne nahodny delay.");
 
 		Constants.setBoolean("attrAlwaysCleanOnSave", false, Constants.MOD_EDITOR, "Po nastaveni na true sa vzdy pri ulozeni stranky premaze zoznam atributov");
 

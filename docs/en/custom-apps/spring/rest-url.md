@@ -1,20 +1,22 @@
-# REST service provisioning
+# Securing REST services
 
 ## URL rules
 
-When preparing REST services, please observe the following URL prefixes:
-- `/rest` - publicly available REST service
-- `/rest/private` or `/private/rest` - rest service, requiring login
-- `/admin/rest` - rest service requiring administrator login
+When preparing REST services, please adhere to the following URL prefixes:
 
-For `websocket` it is necessary to use the prefix `/websocket/` otherwise they may not browse the web correctly `firewall`. We recommend using the following prefixes:
-- `/websocket/` - publicly available `websocket`
-- `/websocket/private/` - `websocket` requiring a login
-- `/websocket/admin/` - `websocket` requiring administrator login
+- ```/rest``` - ​​publicly available REST service
+- ```/rest/private``` or ```/private/rest``` - rest service requiring login
+- ```/admin/rest``` - ​​rest service requiring administrator login
 
-## Control of rights
+For ```websocket``` it is necessary to use the prefix ```/websocket/``` otherwise they may not correctly navigate through the ```firewall``` website. We recommend using the following prefixes:
 
-Checking the permissions on individual REST services/methods needs to be done using annotation:
+- ```/websocket/``` - ​​publicly available ```websocket```
+- ```/websocket/private/``` - ​​```websocket``` requiring login
+- ```/websocket/admin/``` - ​​```websocket``` requiring administrator login
+
+## Rights check
+
+Checking the rights on individual REST services/methods needs to be done using the annotation:
 
 ```java
 //prihalseny pouzivatel
@@ -29,11 +31,11 @@ Checking the permissions on individual REST services/methods needs to be done us
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat&menuUsers')")
 ```
 
-URL prefixes and annotations are **mandatory** to ensure that the system **double check**.
+URL prefixes and annotations are **required** to ensure **double checking** in the system.
 
 ## CSRF token
 
-When calling REST administration services `/admin/rest/*` CSRF token setup is required. This is [available as standard](../../developer/frameworks/thymeleaf.md#layoutservice) in the object `window.csrfToke` and is automatically set for all calls through the library `jQuery` v `app.js`:
+When calling the REST administration services ```/admin/rest/*```, a CSRF token is required. It is [available by default](../../developer/frameworks/thymeleaf.md#layoutservice) in the ```window.csrfToke``` object and is automatically set for all calls via the ```jQuery``` library in ```app.js```:
 
 ```JavaScript
 $.ajaxSetup({
@@ -43,13 +45,13 @@ $.ajaxSetup({
 });
 ```
 
-Exceptions are calls containing an expression in the URL `/html` or `html/` where it is assumed to return HTML code instead of a JSON object.
+An exception is calls containing the expression ```/html``` or ```html/``` in the URL address, where HTML code is expected to be returned instead of a JSON object.
 
-By setting the configuration variable `logoffRequireCsrfToken` to the value of `true` it is possible to activate the CSRF token requirement for user logout (from both administration and customer area).
+By setting the configuration variable `logoffRequireCsrfToken` to the value `true`, it is possible to activate the requirement of a CSRF token for user logout (from both the administration and customer zones).
 
 ### Inserting a token in a web page
 
-The CSRF token can be embedded in the text of a web page using a macro `!CSRF_INPUT!` which inserts the complete HTML field, or by using `!CSRF_TOKEN!` which will insert the value of the CSRF token.
+The CSRF token can be inserted into the text of a web page using the macro `!CSRF_INPUT!`, which inserts a complete HTML field, or using `!CSRF_TOKEN!`, which inserts the value of the CSRF token.
 
 ```html
 <form action="/logoff.do?forward=/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html" method="post">
@@ -63,7 +65,7 @@ The CSRF token can be embedded in the text of a web page using a macro `!CSRF_IN
 </form>
 ```
 
-Alternatively, you can use the class API directly [CSRF](../../../../src/webjet8/java/sk/iway/iwcm/system/stripes/CSRF.java) for generating the value `public static String getCsrfToken(HttpSession session, boolean saveToSession)` or the entire HTML field `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. To add HTTP headers for all AJAX calls via `jQuery` you can use the following code:
+Alternatively, you can directly use the [CSRF] class API (../../../../src/main/java/sk/iway/iwcm/system/stripes/CSRF.java) to generate the value `public static String getCsrfToken(HttpSession session, boolean saveToSession)` or the entire HTML field `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. To add an HTTP header for all AJAX calls via `jQuery`, you can use the following code:
 
 ```html
 <script>
@@ -77,7 +79,7 @@ $.ajaxSetup({
 
 ### URL protection
 
-CSRF protection can be activated on any URL, for example `/private/rest` by setting the configuration variable `csrfRequiredUrls` in which you enter on a new line the beginnings of the URLs for which CSRF protection should be required. A format with characters is also supported `%` for contains and `!` for ends on. Example:
+CSRF protection can be activated for any URL, for example `/private/rest` by setting the configuration variable `csrfRequiredUrls` in which you enter on a new line the beginnings of the URLs for which CSRF protection should be required. The format with the characters `%` for contains and `!` for ends with is also supported. Example:
 
 ```
 /private/rest
