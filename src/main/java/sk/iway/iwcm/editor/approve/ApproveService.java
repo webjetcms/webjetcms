@@ -208,7 +208,7 @@ public class ApproveService {
 				if(groupApprover==null || !groupApprover.isAdmin() || !groupApprover.isAuthorized()) continue;
 
                 //Mode of approve
-                mode = entity.getApproveMode();
+				mode = entity.getApproveMode();
 
 				//Is currentUser (current logged) also groupApprover ?
 				if(groupApprover.getUserId() == currentUser.getUserId()) {
@@ -223,7 +223,7 @@ public class ApproveService {
 					//Can do anything on his own
 					else if(mode == UsersDB.APPROVE_NONE) isLevel2Approver = true;
 				} else {
-					///No, currentUser is not group approver
+					//No, currentUser is not group approver
 
 					//
 					if (mode == UsersDB.APPROVE_LEVEL2) level2GroupApprovers.put(Integer.valueOf(groupApprover.getUserId()), groupApprover);
@@ -346,7 +346,7 @@ public class ApproveService {
 		StringBuilder approveEmails = new StringBuilder();
 		for (UserDetails approveUser : approveByTable.values()) {
 			if(Tools.isEmail(approveUser.getEmail())) {
-				if(approveEmails.length() > 0) approveEmails.append(",");
+				if(approveEmails.isEmpty() == false) approveEmails.append(",");
 				approveEmails.append(approveUser.getEmail());
 			}
 		}
@@ -357,7 +357,7 @@ public class ApproveService {
 	public String getApproveUserNames() {
 		StringBuilder approveEmails = new StringBuilder();
 		for (UserDetails approveUser : approveByTable.values()) {
-			if(approveEmails.length() > 0) approveEmails.append(",");
+			if(approveEmails.isEmpty() == false) approveEmails.append(",");
 			approveEmails.append(approveUser.getFullName());
 		}
 
@@ -372,14 +372,14 @@ public class ApproveService {
 			if(Tools.isEmail(approveUser.getEmail())) {
 				//There is no need send notify to approver, who approve action (hi did it)
 				if(currentUser.getUserId() == approveUser.getUserId()) continue;
-				if(notifyEmails.length() > 0) notifyEmails.append(",");
+				if(notifyEmails.isEmpty() == false) notifyEmails.append(",");
 				notifyEmails.append(approveUser.getEmail());
 			}
 		}
 
 		//Add author email
 		if (Tools.isEmail(authorEmail)) {
-			if(notifyEmails.length() > 0) notifyEmails.append(",");
+			if(notifyEmails.isEmpty() == false) notifyEmails.append(",");
 			notifyEmails.append(authorEmail);
 		}
 
@@ -502,7 +502,7 @@ public class ApproveService {
 
 			StringBuilder message = new StringBuilder(prop.getText("approve.page.approvedToNextLevel.editorText", docHistory.getTitle(), approverNames)).append("<br>\n");
 			message.append(prop.getText("approve.dir")).append(": ").append(groupsDB.getGroupNamePath(docHistory.getGroupId())).append("<br><br>\n");
-			message.append(prop.getText("approve.url")).append(":<br>\n");
+			message.append(prop.getText("approve.url")).append(":<br>\n"); //NOSONAR
 			message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
 			message.append(notes).append("<br>\n");
 			UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());
@@ -659,17 +659,11 @@ public class ApproveService {
 	 */
     public void sendWebpageApproveRequestEmail(DocBasic editedDoc, int historyId, int senderUserId, String comment, DocDetailsRepository docDetailsRepository) {
 
-        if (approveByTable == null || approveByTable.isEmpty()) return;
+        if (approveByTable == null || approveByTable.isEmpty() || editedDoc == null) return;
 
-		String title = null;
-		int docId = -1;
-		int groupId = -1;
-
-		if(editedDoc != null) {
-			title = editedDoc.getTitle();
-			docId = editedDoc.getDocId();
-			groupId = editedDoc.getGroupId();
-		}
+		String title = editedDoc.getTitle();
+		int docId = editedDoc.getDocId();
+		int groupId = editedDoc.getGroupId();
 
 		if (title == null || docId < 0 || groupId < 0) return;
 
@@ -689,15 +683,13 @@ public class ApproveService {
 
 		message.append(senderUser.getFullName()).append(" &lt;").append(senderUser.getEmail()).append("&gt;");
 
-		if (editedDoc != null) {
-			//test if this is a new document - for new one there will be only one record
-			DocBasic historyDoc = null;
-			int historyCount = (new SimpleQuery()).forInt("SELECT COUNT(*) FROM documents_history WHERE doc_id = ?", editedDoc.getDocId());
-			if (historyCount > 1) {
-				historyDoc = docDetailsRepository.findById( editedDoc.getDocId() );
-			}
-			message.append(getDiff(editedDoc, historyDoc, prop));
+		//test if this is a new document - for new one there will be only one record
+		DocBasic historyDoc = null;
+		int historyCount = (new SimpleQuery()).forInt("SELECT COUNT(*) FROM documents_history WHERE doc_id = ?", editedDoc.getDocId());
+		if (historyCount > 1) {
+			historyDoc = docDetailsRepository.findById( editedDoc.getDocId() );
 		}
+		message.append(getDiff(editedDoc, historyDoc, prop));
 
 		String subject = prop.getText("approve.subject") + ": " + title;
 		SendMail.send(senderUser.getFullName(), senderUser.getEmail(), getApproveUserEmails(), subject, message.toString(), request);
@@ -716,7 +708,7 @@ public class ApproveService {
 		StringBuilder approveByUsersEmail = new StringBuilder();
 		for (UserDetails u : approveByTable.values()) {
 			if (Tools.isEmail(u.getEmail())) {
-				if (approveByUsersEmail.length()>0) approveByUsersEmail.append(",");
+				if (!approveByUsersEmail.isEmpty() == false) approveByUsersEmail.append(",");
 				approveByUsersEmail.append(u.getEmail());
 			}
 		}
@@ -909,12 +901,12 @@ public class ApproveService {
 				dto = groupSchedulerDtoRepository.save(dto);
 
 				sendGroupApproveNotification(false, dto, approveNote);
-			} else { return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.failed")); }
+			} else { return new Pair<>(Boolean.FALSE, prop.getText("approve.group.failed")); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
 			// this PAGE need level 2 approve BUT before that check, that action is doing level 1 aprover, if not, then current user cant approve this action, because he is not level 1 approver
 			if (canApproveFirstLevel == false) {
 				// Current user is not level 1 approver, so he can't approve this action -> aka move it to lvl 2
-				return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
+				return new Pair<>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
 			}
 
 			// Route to level-2 approvers
@@ -935,7 +927,7 @@ public class ApproveService {
 				// Notify author that request moved to next level
 				String groupName = Tools.replace(dto.getGroupName(), "[DELETE] ", "");
 				String subject = prop.getText("approve.group.approvedToNextLevel.subject", groupName);
-				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
+				String url = Tools.getBaseHref(request) + "/admin/v9/webpages/web-pages-list/?groupid=" + dto.getGroupId() + "&scheduleId=" + dto.getId();
 
 				StringBuilder message = new StringBuilder(prop.getText("approve.group.approvedToNextLevel.text", groupName, approverNames)).append("<br><br>\n\n");
 				message.append(prop.getText("approve.url")).append(":<br>\n");
@@ -946,14 +938,14 @@ public class ApproveService {
 					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
 				}
 
-				return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
+				return new Pair<>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
 			}
 		} else {
 			// Current user cannot approve this
-			return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
+			return new Pair<>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
 		}
 
-		return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.group.success")); // Indicate success
+		return new Pair<>(Boolean.TRUE, prop.getText("approve.group.success")); // Indicate success
 	}
 
 	/**
@@ -985,7 +977,7 @@ public class ApproveService {
 
 					sendGroupApproveNotification(true, dto, approveNote);
 				} else {
-					return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.failed"));
+					return new Pair<>(Boolean.FALSE, prop.getText("approve.group.delete.failed"));
 				}
 
 			} else if("reject".equals(approveAction)) {
@@ -997,12 +989,12 @@ public class ApproveService {
 				dto = groupSchedulerDtoRepository.save(dto);
 
 				sendGroupApproveNotification(false, dto, approveNote);
-			} else { return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.failed")); }
+			} else { return new Pair<>(Boolean.FALSE, prop.getText("approve.group.delete.failed")); }
 		} else if (approveByTableLevel2.isEmpty() == false) {
 			// this PAGE need level 2 approve BUT before that check, that action is doing level 1 aprover, if not, then current user cant approve this action, because he is not level 1 approver
 			if (canApproveFirstLevel == false) {
 				// Current user is not level 1 approver, so he can't approve this action -> aka move it to lvl 2
-				return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
+				return new Pair<>(Boolean.FALSE, prop.getText("approve.group.cant_approve"));
 			}
 
 			// Route to level-2 approvers
@@ -1022,7 +1014,7 @@ public class ApproveService {
 
 				// Notify author that request moved to next level
 				String subject = prop.getText("approve.delete.subject") + " " + dto.getGroupName();
-				String url = Tools.getBaseHref(request) + "/admin/approve_group.jsp?scheduleid=" + dto.getId();
+				String url = Tools.getBaseHref(request) + "/admin/v9/webpages/web-pages-list/?groupid=" + dto.getGroupId() + "&scheduleId=" + dto.getId();
 				StringBuilder message = new StringBuilder(prop.getText("approve.group.approvedToNextLevel.text", dto.getGroupName(), approverNames)).append("<br><br>\n\n");
 				message.append(prop.getText("approve.url")).append(":<br>\n");
 				message.append("<a href='").append(url).append("'>").append(url).append("</a><br><br>\n");
@@ -1032,14 +1024,14 @@ public class ApproveService {
 					SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);
 				}
 
-				return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
+				return new Pair<>(Boolean.TRUE, prop.getText("approve.page.approvedToNextLevel", approverNames)); // Indicate success of lvl 1 -> send request to lvl 2
 			}
 		} else {
 			// Current user cannot approve this
-			return new Pair<Boolean, String>(Boolean.FALSE, prop.getText("approve.group.delete.cant_approve"));
+			return new Pair<>(Boolean.FALSE, prop.getText("approve.group.delete.cant_approve"));
 		}
 
-		return new Pair<Boolean, String>(Boolean.TRUE, prop.getText("approve.group.delete.success")); // Indicate success
+		return new Pair<>(Boolean.TRUE, prop.getText("approve.group.delete.success")); // Indicate success
 	}
 
 	/**
@@ -1051,7 +1043,7 @@ public class ApproveService {
 	public void sendGroupApproveRequestEmail(GroupSchedulerDto dto, GroupDetails originalGroup, String comment) {
 		if (approveByTable == null || approveByTable.isEmpty()) return;
 
-		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-group/?scheduleId=" + dto.getId();
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/web-pages-list/?groupid=" + dto.getGroupId() + "&scheduleId=" + dto.getId();
 		String diff = getDiffForEmail(GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtoToGroup(dto), originalGroup, prop).toString();
 
 		if(originalGroup == null) {
@@ -1095,9 +1087,9 @@ public class ApproveService {
 					message.append(": ");
 				}
 
-				String adminlogChanges = new BeanDiffPrinter(diff).toString(prop);
-				adminlogChanges = ResponseUtils.filter(adminlogChanges);
-				if(addNewLines) adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
+				String adminlogChanges = new BeanDiffPrinter(diff).toHtmlTable(prop);
+				//adminlogChanges = ResponseUtils.filter(adminlogChanges);
+				//if(addNewLines) adminlogChanges = Tools.replaceRegex(adminlogChanges, "(?m)^", "<br>\n", true);
 				message.append( adminlogChanges );
 			}
 		}
@@ -1112,7 +1104,7 @@ public class ApproveService {
 	public void sendGroupApproveDelRequestEmail(GroupSchedulerDto dto, long scheduleId) {
 		if (approveByTable == null || approveByTable.isEmpty()) return;
 
-		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/approve-del-group/?scheduleId=" + scheduleId;
+		String url = Tools.getBaseHref(request) + "/admin/v9/webpages/web-pages-list/?groupid=" + dto.getGroupId() + "&scheduleId=" + dto.getId() + "&act=delete";
 		String groupName = Tools.replace(dto.getGroupName(), "[DELETE] ", "");
 
 		StringBuilder message = new StringBuilder("<b>").append(prop.getText("approve.group.delete.ask")).append(":</b><br>\n");

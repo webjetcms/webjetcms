@@ -328,7 +328,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 }
 
                 // If we gonna add createEmptyWebPage, we DONT WANT to ask for doc permission - only group permission
-                EditorFacade.setDoNotCheckApproving(groupDetails.getGroupId());
+                EditorFacade.setSkipApproving(groupDetails.getGroupId());
             } else {
                 // NEED approve BUT its edit so do not save entity
             }

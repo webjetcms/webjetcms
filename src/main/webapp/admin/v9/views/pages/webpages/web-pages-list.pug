@@ -88,7 +88,23 @@ block content
                                 url: "/admin/v9/webpages/approve-group/?scheduleId=" + schedulerId,
                                 title: "[[\#{approve.group.page.title}]]",
                                 width: 800,
-                                height: 600
+                                height: 600,
+                                buttons: [
+                                    {
+                                        title: "[[\#{approve.page.approve}]]",
+                                        cssClass: 'btn-success me-2',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                        }
+                                    },
+                                    {
+                                        title: "[[\#{approve.page.reject}]]",
+                                        cssClass: 'btn-danger',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                        }
+                                    }
+                                ]
                             });
                         }
                     }
@@ -110,7 +126,7 @@ block content
                     defaultVisibility: false,
                     tabs: [
                         { url: '', title: '[[\#{sync.docs}]]', active: true },
-                        { url: 'folder', title: '[[\#{sync.dirs}]]' }
+                        { url: 'folder', title: '[[\#{webpages.tab.folders}]]' }
                     ]
                 });
 
@@ -577,6 +593,11 @@ block content
                     $("#tree-doc-id").on("blur", function() {
                         $(this).removeClass("focused");
                     })
+
+                    var scheduleId = WJ.urlGetParam("scheduleId");
+                    if (scheduleId != null) {
+                        window.approveGroup(scheduleId, WJ.urlGetParam("act")==="delete");
+                    }
 
                 }, 5);
 

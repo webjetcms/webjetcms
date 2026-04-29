@@ -111,8 +111,8 @@ public class EditorFacade {
 		int historyId = editorService.saveEditedDoc(entity);
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
-		// when doNotCheckApproving is false, we do not want to add scheduler record
-        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isDoNotCheckApproving(entity.getGroupId()));
+		// when skipApproving is false, we do not want to add scheduler record
+        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
 
 		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
 		GroupDetails group = entity.getGroup();
@@ -417,19 +417,28 @@ public class EditorFacade {
 		return groupsService.recoverGroupFromTrash(entity, currentUser);
 	}
 
-	public static final void setDoNotCheckApproving(int groupId) {
+	/**
+	 * For new group which will be approved skip default webpage approving check
+	 * @param groupId
+	 */
+	public static final void setSkipApproving(int groupId) {
 		Cache cache = Cache.getInstance();
-		String key = "doNotCheckApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
+		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
 		cache.removeObject(key);
 		cache.setObject(key, true, 2);
 	}
 
-	public static final boolean isDoNotCheckApproving(int groupId) {
+	/**
+	 * Check if group is being approved and skip approvement check for default webpage
+	 * @param groupId
+	 * @return
+	 */
+	public static final boolean isSkipApproving(int groupId) {
 		Cache cache = Cache.getInstance();
-		String key = "doNotCheckApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
+		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
 		Object o = cache.getObject(key);
-		if (o != null && o instanceof Boolean) {
-			return (Boolean) o;
+		if (o instanceof Boolean b) {
+			return b;
 		}
 		return false;
 	}

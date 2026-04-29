@@ -772,6 +772,9 @@ div.DTE_Bubble_Background {
     div.modal-dialog {
         margin-top: 8px;
         margin-bottom: auto;
+        &.modal-fullscreen {
+            margin: 0px;
+        }
     }
 
     .modal-content {

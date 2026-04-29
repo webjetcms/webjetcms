@@ -54,3 +54,7 @@ block content
             document.getElementById('approveAction').value = status;
             document.querySelector("button[type='submit']").click();
         }
+        window.domReady.add(function () {
+            WJ.selectMenuItem("/admin/v9/webpages/web-pages-list/");
+            WJ.setTitle("[[\#{approve.del.group.page.title}]]");
+        });

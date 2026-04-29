@@ -258,11 +258,12 @@ public class EditorService {
 			if(!editedDoc.getEditorFields().isRequestPublish()) editedDoc.setAvailable(false);
 		}
 
-		boolean doNotCheckApproving = EditorFacade.isDoNotCheckApproving(editedDoc.getGroupId());
+		//when creating new folder which is approving, skip redundand approve of the page
+		boolean skipApproving = EditorFacade.isSkipApproving(editedDoc.getGroupId());
 
 		// Load approve hash table data
 		// If current user is approver, set selfApprover = true
-		if (editedDoc.getEditorFields().isRequestPublish() && doNotCheckApproving == false) {
+		if (editedDoc.getEditorFields().isRequestPublish() && skipApproving == false) {
 			approveService.loadApproveTables(editedDoc.getGroupId());
 
 			//If approver is needed BUT it's not selfApprove (currentUser isn't approver),
@@ -326,7 +327,7 @@ public class EditorService {
 			editedHistory.setActual(editedDoc.getEditorFields().isRequestPublish());
 
 			//Set ApprovedBy value, that indicate approve status
-			if (approveService.needApprove() && doNotCheckApproving == false) {
+			if (approveService.needApprove() && skipApproving == false) {
 				//Need approve
 				editedHistory.setApprovedBy(-1);
 			} else {
@@ -348,7 +349,7 @@ public class EditorService {
 				}
 			}
 
-			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove() && doNotCheckApproving == false)
+			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove() && skipApproving == false)
 				editedHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 			else
 				editedHistory.setAwaitingApprove(null);
@@ -370,7 +371,7 @@ public class EditorService {
 			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
 		}
 
-		if(doNotCheckApproving == false) {
+		if(skipApproving == false) {
 			/*Odoslanie schvalovani a notifikacii*/
 			approveService.sendEmails(editedDoc, historyId, docRepo);
 		}
@@ -432,7 +433,7 @@ public class EditorService {
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
 		}
 
-		if(EditorFacade.isDoNotCheckApproving(group.getGroupId())) {
+		if(EditorFacade.isSkipApproving(group.getGroupId())) {
 			editedDoc.setAvailable(false);
 		}
 
