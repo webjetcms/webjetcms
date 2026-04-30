@@ -9,13 +9,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.css.CssDto;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -49,6 +48,8 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrRepository;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.approve.ApproveService;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
@@ -257,9 +258,12 @@ public class EditorService {
 			if(!editedDoc.getEditorFields().isRequestPublish()) editedDoc.setAvailable(false);
 		}
 
+		// when creating new folder which is approving, skip redundand approve of the page
+		boolean skipApproving = EditorFacade.isSkipApproving(editedDoc.getGroupId());
+
 		// Load approve hash table data
 		// If current user is approver, set selfApprover = true
-		if (editedDoc.getEditorFields().isRequestPublish()) {
+		if (editedDoc.getEditorFields().isRequestPublish() && skipApproving == false) {
 			approveService.loadApproveTables(editedDoc.getGroupId());
 
 			//If approver is needed BUT it's not selfApprove (currentUser isn't approver),
@@ -323,7 +327,7 @@ public class EditorService {
 			editedHistory.setActual(editedDoc.getEditorFields().isRequestPublish());
 
 			//Set ApprovedBy value, that indicate approve status
-			if (approveService.needApprove()) {
+			if (approveService.needApprove() && skipApproving == false) {
 				//Need approve
 				editedHistory.setApprovedBy(-1);
 			} else {
@@ -345,11 +349,13 @@ public class EditorService {
 				}
 			}
 
-			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove())
+			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove() && skipApproving == false)
 				editedHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 			else
 				editedHistory.setAwaitingApprove(null);
 
+			// This is not delete action, so set isDelete to false
+			editedHistory.setIsDelete(false);
 
 			//Save edited history
 			historyRepo.save(editedHistory);
@@ -365,8 +371,11 @@ public class EditorService {
 			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
 		}
 
-		/*Odoslanie schvalovani a notifikacii*/
-		approveService.sendEmails(editedDoc, historyId, docRepo);
+		if(skipApproving == false) {
+			/*Odoslanie schvalovani a notifikacii*/
+			approveService.sendEmails(editedDoc, historyId, docRepo);
+		}
+
 		dt.diff("after sendApproveNotifyEmail");
 
 		if(isNewPage || wasApproved || disableHistory) {
@@ -422,6 +431,10 @@ public class EditorService {
 			editedDoc.setEventDateString("");
 			editedDoc.setEventTimeString("");
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
+		}
+
+		if(EditorFacade.isSkipApproving(group.getGroupId())) {
+			editedDoc.setAvailable(false);
 		}
 
 		editedDoc.setDocId(-1);
@@ -625,14 +638,7 @@ public class EditorService {
 
 		//Delete needs to be approved
 		if(prop.getText("approveAction.err.cantApprove").equals(result)) {
-			StringBuilder approversString = new StringBuilder();
-			for(UserDetails approver : approveService.getApprovers()) {
-				if(!approversString.isEmpty()) approversString.append(", ");
-				approversString.append(approver.getFullName());
-			}
-			NotifyBean info = new NotifyBean(prop.getText("editor.approve.notifyTitle"), prop.getText("editor.approveDeleteRequestGet")+": "+approversString.toString(), NotifyBean.NotifyType.INFO, 60000);
-            addNotify(info);
-
+            addNotify( new NotifyBean(prop.getText("editor.approve.notifyTitle"), approveService.getApproverNotifBody("editor.approveDeleteRequestGet"), NotifyBean.NotifyType.INFO, 60000) );
 			return true;
 		}
 
@@ -1442,16 +1448,16 @@ public class EditorService {
 	 * Perform insert/update webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveAction method
 	 * @return
 	 */
-	public boolean approveAction() {
-		return approveService.approveAction(historyRepo, docRepo, this);
+	public boolean approveDocAction() {
+		return approveService.approveDocAction(historyRepo, docRepo, this);
 	}
 
 	/**
 	 * Perform delete webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveDelAction method
 	 * @return
 	 */
-	public boolean approveDelAction() {
-		return approveService.approveDelAction(historyRepo, docRepo, this);
+	public boolean approveDocDelAction() {
+		return approveService.approveDocDelAction(historyRepo, docRepo, this);
 	}
 
 	/**
@@ -1463,7 +1469,7 @@ public class EditorService {
 	 * @param publishEvents
 	 * @return Return "success" or other string taht represend some sort of error taht occured
 	 */
-	protected String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
+	public String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";
@@ -1660,7 +1666,7 @@ public class EditorService {
 		//Convert DocDetail to DocHistory entity (this new entity will be inserted)
 		DocHistory docHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(docDetails);
 
-		//General setting - !! there MUST be set "[DELETE]" as delete prefix, that indicates delete intend
+		//General setting -  "[DELETE]" prefix in no more required BUT its good to have it for better orientation in history records
 		docHistory.setTitle("[DELETE] " + docHistory.getTitle());
 		docHistory.setData(prop.getText("approve.delete.doctext"));
 		docHistory.setDataAsc("[DELETE]");
@@ -1679,6 +1685,9 @@ public class EditorService {
 		//Mark docHistory as waiting for approve (need's approve by approver)
 		docHistory.setApprovedBy(-1);
 		docHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
+
+		// This is delete action so set
+		docHistory.setIsDelete(true);
 
 		return docHistory;
 	}

@@ -5,7 +5,7 @@ block content
     div.row
         div.col-md-4.tree-col
 
-                include ../../partials/folder-tree
+            include ../../partials/folder-tree
 
         div.col-md-8.datatable-col
 
@@ -69,6 +69,7 @@ block content
                 let groupsInitialJson = [(${groupsInitialJson})];
                 let webpagesInitialJson = [(${webpagesInitialJson})];
                 let hasPagesToApprove = [(${hasPagesToApprove})];
+                let hasGroupsToApprove = [(${hasGroupsToApprove})];
                 let hasSystemTab = [(${hasSystemTab})];
                 let hasTrashTab = [(${hasTrashTab})];
                 let showTab = "[(${showTab})]";
@@ -77,6 +78,75 @@ block content
 
                 //we need to reload webpages after jstree reload into selected element, when user click from System tab to Active tab
                 let reloadWebpagesAfterJstree = false;
+
+                window.approveGroup = function (schedulerId, isDelete) {
+                    if(schedulerId !== undefined && schedulerId !== null) {
+                        if(isDelete === "true" || isDelete === true) {
+                            WJ.openIframeModal( {
+                                url: "/admin/v9/webpages/approve-del-group/?scheduleId=" + schedulerId,
+                                title: "[[\#{approve.del.group.page.title}]]",
+                                width: 800,
+                                height: 600,
+                                buttons: [
+                                    {
+                                        title: "[[\#{approve.page.delete}]]",
+                                        cssClass: 'btn-success me-2',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
+                                        }
+                                    },
+                                    {
+                                        title: "[[\#{approve.page.reject}]]",
+                                        cssClass: 'btn-danger',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
+                                        }
+                                    }
+                                ],
+                                buttonTitleKey: "button.close",
+                                okclick: function() {
+                                    WJ.closeIframeModal();
+                                }
+
+                            });
+                        } else {
+                            WJ.openIframeModal( {
+                                url: "/admin/v9/webpages/approve-group/?scheduleId=" + schedulerId,
+                                title: "[[\#{approve.group.page.title}]]",
+                                width: 800,
+                                height: 600,
+                                buttons: [
+                                    {
+                                        title: "[[\#{approve.page.approve}]]",
+                                        cssClass: 'btn-success me-2',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
+                                        }
+                                    },
+                                    {
+                                        title: "[[\#{approve.page.reject}]]",
+                                        cssClass: 'btn-danger',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
+                                        }
+                                    }
+                                ],
+                                buttonTitleKey: "button.close",
+                                okclick: function() {
+                                    WJ.closeIframeModal();
+                                }
+                            });
+                        }
+                    }
+                };
 
                 WJ.headerTabs({
                     id: 'pages',
@@ -90,9 +160,17 @@ block content
                     ]
                 });
 
+                WJ.headerSubTabs({
+                    defaultVisibility: false,
+                    tabs: [
+                        { url: '', title: '[[\#{sync.docs}]]', active: true },
+                        { url: 'folder', title: '[[\#{webpages.tab.folders}]]' }
+                    ]
+                });
+
                 window.domReady.add(function () {
 
-                    if (hasPagesToApprove === false) {
+                    if (hasPagesToApprove === false && hasGroupsToApprove === false) {
                         $("#pills-waiting-tab").parent().hide();
                     }
                     if (hasSystemTab === false) {
@@ -160,7 +238,8 @@ block content
                                 //POZOR: tu je otocene docId a historyId v objekte, kedze docId sa moze opakovat a vznikal problem s jednoznacnym ID
                                 TABLE.row("#"+row[0].id).data(dataBeforeFetch);
 
-                                if(dataBeforeFetch.title != undefined && dataBeforeFetch.title.startsWith("[DELETE]"))
+                                // dataBeforeFetch.isDelete is enough, leaving [delete] check just in case (maybe someone imported into DB old records without isDelete field)
+                                if(dataBeforeFetch.title != undefined && (dataBeforeFetch.isDelete || dataBeforeFetch.title.startsWith("[DELETE]") ))
                                     window.open("/admin/approve_delete.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);
                                 else
                                     window.open("/admin/approve.jsp?docid="+dataBeforeFetch.historyId+"&historyid="+dataBeforeFetch.docId);
@@ -198,6 +277,17 @@ block content
                         { id: 'fields', title: '[[\#{editor.tab.fields}]]' },
                         { id: 'history', title: '[[\#{editor.tab.history}]]', content: '<div class="groupHistoryPlaceholder"><div>' }
                     ];
+
+                    window.WJ.DataTable.mergeColumns(
+                        groupColumns,
+                        {
+                            name: "groupName",
+                            renderFormat: "dt-format-text",
+                            renderFormatLinkTemplate: "javascript:approveGroup('{{schedulerId}}', '{{isDelete}}')",
+                            renderFormatPrefix: "<i class='ti ti-pencil'></i> ",
+                            className: "required" //remove dt-row-edit
+                        }
+                    );
 
                     groupsDatatable = WJ.DataTable({
                         id: 'groups-datatable',
@@ -542,6 +632,11 @@ block content
                         $(this).removeClass("focused");
                     })
 
+                    var scheduleId = WJ.urlGetParam("scheduleId");
+                    if (scheduleId != null) {
+                        window.approveGroup(scheduleId, WJ.urlGetParam("act")==="delete");
+                    }
+
                 }, 5);
 
                 //Check if actual PATH include recusive param and if yes, remove this param from PATH and return new edited PATH
@@ -703,6 +798,12 @@ block content
                 $('#pills-pages a[data-wj-toggle="tab"]').on('click', function (e) {
                     let id = e.target.id;
 
+                    if ("pills-waiting-tab" == id) {
+                        $("ul#pills-pages_sub").parent().show()
+                    } else {
+                        $("ul#pills-pages_sub").parent().hide()
+                    }
+
                     //only accept pills-system-tab or pills-trash-tab
                     if (id == "pills-folders-tab" || id == "pills-system-tab" || id == "pills-trash-tab") {
 
@@ -824,6 +925,22 @@ block content
 
                     showHideTableButtons(id);
                     showHideTreeCol(id);
+                });
+
+                $('#pills-pages_sub a[data-wj-toggle="tab"]').on('click', function (e) {
+                    let id = e.target.id;
+
+                    if("pills-waiting-tab" === id) {
+                        $("#datatableInit_wrapper").show();
+                        $("#groups-datatable_wrapper").hide();
+                    } else {
+                        $("#datatableInit_wrapper").hide();
+                        $("#groups-datatable_wrapper").show();
+
+                        groupsDatatable.hideButtons(["create", "edit", "remove", "celledit", "duplicate"]);
+                        groupsDatatable.setAjaxUrl("/admin/rest/groups/toapprove");
+                        groupsDatatable.ajax.reload();
+                    }
                 });
 
                 function showHideTreeCol(id) {

@@ -408,7 +408,7 @@ Scenario('TEXT answer with image content - OpenRouter', async ({I, DTE}) => {
 });
 
 async function testGeneratingImageAlt(I, DTE, providerId) {
-        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
     DTE.waitForEditor();
     DTE.waitForCkeditor();
 

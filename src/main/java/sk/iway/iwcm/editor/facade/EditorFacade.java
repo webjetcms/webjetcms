@@ -10,10 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
@@ -109,7 +113,8 @@ public class EditorFacade {
 		int historyId = editorService.saveEditedDoc(entity);
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
-        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId());
+		// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
+        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
 
 		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
 		GroupDetails group = entity.getGroup();
@@ -266,10 +271,9 @@ public class EditorFacade {
 	 * Vytvori web stranku
 	 * @param group - adresar v ktorom ma byt vytvorena
 	 * @param title - volitelny titulok stranky, ak je NULL vytvori sa podla mena adresara
-	 * @param available - urci, ci stranka na byt ihned zobrazitelna (true), alebo nie (false)
 	 * @return
 	 */
-	public DocDetails createEmptyWebPage(GroupDetails group, String title, boolean available) {
+	public DocDetails createEmptyWebPage(GroupDetails group, String title) {
 		DocDetails doc;
         if (group.getDefaultDocId()>0 && title==null) doc = getDocForEditor(group.getDefaultDocId(), -1, group.getGroupId());
         else doc = getDocForEditor(-1, -1, group.getGroupId());
@@ -413,5 +417,42 @@ public class EditorFacade {
 	 */
 	public boolean recoverGroupFromTrash(GroupDetails entity, Identity currentUser) {
 		return groupsService.recoverGroupFromTrash(entity, currentUser);
+	}
+
+	/**
+	 * For new group which will be approved skip default webpage approving check
+	 * @param groupId
+	 */
+	public static final void setSkipApproving(int groupId) {
+		Cache cache = Cache.getInstance();
+
+		String key = getSkipApprovingCacheKey(groupId);
+		cache.removeObject(key);
+		cache.setObject(key, true, 2);
+	}
+
+	/**
+	 * Check if group is being approved and skip approvement check for default webpage
+	 * @param groupId
+	 * @return
+	 */
+	public static final boolean isSkipApproving(int groupId) {
+		Cache cache = Cache.getInstance();
+		String key = getSkipApprovingCacheKey(groupId);
+		Object o = cache.getObject(key);
+		if (o instanceof Boolean b) {
+			return b;
+		}
+		return false;
+	}
+
+	private static String getSkipApprovingCacheKey(int groupId) {
+		int currentUserId = -1;
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null) {
+			currentUserId = rb.getUserId();
+		}
+		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId() + "_" + currentUserId;
+		return key;
 	}
 }

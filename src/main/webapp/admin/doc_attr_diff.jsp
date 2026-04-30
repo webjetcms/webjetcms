@@ -17,7 +17,7 @@ DocDetails historyDetails = docDB.getDoc(docId, historyId);
 
 if ("true".equals(Tools.getRequestParameter(request, "new"))==false) docDetails = docDB.getDoc(docId);
 
-StringBuilder diff = sk.iway.iwcm.editor.service.ApproveService.getDiff(historyDetails, docDetails, prop);
+StringBuilder diff = sk.iway.iwcm.editor.approve.ApproveService.getDiff(historyDetails, docDetails, prop);
 %>
 <div style="padding: 10px; font-family: Arial, Helvetica, sans-serif; font-size: 12px;">
     <%= diff.toString() %>

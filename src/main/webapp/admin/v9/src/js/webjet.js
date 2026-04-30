@@ -125,6 +125,7 @@ const WJ = (() => {
      * - closeButtonPosition = pozicia tlacidla na zatvorenie, prazdne - male X v hlavicke, close-button-over - male X v hlavicke ponad content (nevytvara samostatny riadok), pridanim nopadding sa zrusi horny padding hlavicky
      * - okclick = callback po kliknuti na tlacidlo potvrdit
      * - onload = callback po nacitani okna, ako parameter dostane event.detail obsahujuci property window s odkazom na okno v iframe
+     * - buttons = pole buttonov v modal-footer: [{title, cssClass, onClick}], ak nie je zadane zobrazi sa default button Potvrdiť
      */
     function openIframeModal(options) {
 
@@ -155,9 +156,28 @@ const WJ = (() => {
         if (title === "") $('#modalIframe .modal-header h5').hide();
         else $('#modalIframe .modal-header h5').show();
 
+        //nastav footer buttons - custom alebo default
+        const $defaultButtons = $('#modalIframe div.modal-footer-default-buttons');
+        const $customButtons = $('#modalIframe div.modal-footer-custom-buttons');
+        $customButtons.empty();
+        if (typeof options.buttons != "undefined" && options.buttons != null && options.buttons.length > 0) {
+            $defaultButtons.hide();
+            options.buttons.forEach(function(btn) {
+                const $btn = $('<button class="btn ' + btn.cssClass + '" tabindex="0"><span>' + btn.title + '</span></button>');
+                if (typeof btn.onClick === 'function') {
+                    $btn.on('click', btn.onClick);
+                }
+                $customButtons.append($btn);
+            });
+            $customButtons.show();
+        } else {
+            $customButtons.hide();
+            $defaultButtons.show();
+        }
+
         //nastav button title
         const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
-        $('#modalIframe div.modal-footer button.btn-primary span').text(buttonTitle);
+        $defaultButtons.find('button.btn-primary span').text(buttonTitle);
 
         //console.log('modalIframe=', modalIframe);
         modalIframeOptions = options;
@@ -167,7 +187,7 @@ const WJ = (() => {
             _showIframeModal();
 
             //console.log("modalIframeShow, modalIframe=", modalIframe);
-            $('#modalIframe button.btn-primary').on('click', (e) => {
+            $('#modalIframe div.modal-footer-default-buttons button.btn-primary').on('click', (e) => {
                 //console.log("Klik na btn-prinary, e=", e);
                 let success = _modalOkClick();
                 if (false === success) return;
@@ -184,9 +204,58 @@ const WJ = (() => {
                     modalIframeOptions.onload(event.detail);
                 }
             });
+
+            //drag & drop - chytenie za hlavicku a presuvanie okna
+            if ($("html").hasClass("in-iframe") == false && window.location.href.indexOf("showOnlyEditor=true") == -1) {
+                $("#modalIframe .modal-header").addClass("modal-header-draggable");
+                $("body").on("mousedown.modalIframeDrag", "#modalIframe .modal-header", function(mousedownEvt) {
+                    //allow interaction with buttons in header
+                    if ($(mousedownEvt.target).closest("button").length > 0) return;
+                    var $draggable = $(this);
+                    var x = mousedownEvt.pageX - $draggable.offset().left,
+                        y = mousedownEvt.pageY - $draggable.offset().top;
+                    var $modalContent = $("#modalIframe div.modal-content");
+                    $("#modalIframe").addClass("modal-iframe-dragging");
+                    $("body").on("mousemove.modalIframeDraggable", function(mousemoveEvt) {
+                        $modalContent.offset({
+                            "left": mousemoveEvt.pageX - x,
+                            "top": mousemoveEvt.pageY - y
+                        });
+                    });
+                    $("body").one("mouseup.modalIframeDrag", function() {
+                        $("body").off("mousemove.modalIframeDraggable");
+                        $("#modalIframe").removeClass("modal-iframe-dragging");
+                    });
+                });
+            }
+
+            //maximize / minimize okna
+            $('#modalIframe div.modal-header div.dialog-buttons .maximize, #modalIframe div.modal-header div.dialog-buttons .minimize').on("click", function() {
+                var $modalDialog = $('#modalIframe div.modal-dialog');
+                var isMaximizing = !$modalDialog.hasClass("modal-fullscreen");
+                $modalDialog.toggleClass("modal-fullscreen");
+                if (isMaximizing) {
+                    //fullscreen - uvolni inline max-width a height, CSS prevezme
+                    $modalDialog.css('max-width', '');
+                    $('#modalIframe div.modal-body').css('height', '');
+                    $('#modalIframeIframeElement').css({'width': '100%', 'height': '100%'}).removeAttr('width').removeAttr('height');
+                    //reset pozicia po maximalizacii
+                    $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
+                } else {
+                    //restore max-width, height a iframe dimensions z options
+                    const borderWidth = 2;
+                    $modalDialog.css('max-width', (modalIframeOptions.width + borderWidth) + 'px');
+                    $('#modalIframe div.modal-body').css('height', modalIframeOptions.height + 'px');
+                    $('#modalIframeIframeElement').css({'width': '', 'height': ''}).attr('width', modalIframeOptions.width).attr('height', modalIframeOptions.height);
+                }
+            });
         } else {
             _showIframeModal();
         }
+
+        //reset fullscreen state and position when opening
+        $('#modalIframe div.modal-dialog').removeClass("modal-fullscreen");
+        $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
 
         let $modalIframe = $("#modalIframe");
         $modalIframe.removeClass("close-button-over");
@@ -211,6 +280,12 @@ const WJ = (() => {
 
         let $modalIframe = $("#modalIframe");
         $modalIframe.find(".modal-body .modal-body-content").html("");
+        //reset fullscreen a polohu
+        $modalIframe.find("div.modal-dialog").removeClass("modal-fullscreen");
+        $modalIframe.find("div.modal-content").css({"left": "auto", "top": "auto"});
+        //zrus pripadny prebiehajuci drag
+        $("body").off("mousemove.modalIframeDraggable");
+        $modalIframe.removeClass("modal-iframe-dragging");
 
         if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
     }
@@ -994,6 +1069,43 @@ const WJ = (() => {
         if (config.noBorderBottom===true) breadcrumb.addClass("no-border-bottom");
     }
 
+    function _createTabItem(data, urlPrefix) {
+        let li = $(`<li class="nav-item" role="presentation"></li>`);
+
+        let idNoHash = urlPrefix ? (data.url ? urlPrefix + "-" + data.url : (data.id ? urlPrefix + "-" + data.id : urlPrefix)) : data.url;
+        if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
+        let href = "#pills-"+idNoHash;
+        //ak je to URL nepridavaj #pills-
+        if (idNoHash.indexOf("/")==0) {
+            href = idNoHash;
+        }
+        if (typeof data.id != "undefined") {
+            idNoHash = data.id;
+        }
+
+        //if it is URL remove chars as /,?,= and replace with dash for id
+        idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
+
+        let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
+        if (urlPrefix) anchor.data("sub-url", data.url);
+        if (data.url.indexOf("javascript:")==0) {
+            anchor.attr("href", data.url);
+        } else {
+            anchor.attr("href", href);
+        }
+        if (href.indexOf("#")==0) {
+            //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
+            anchor.attr("data-wj-toggle", "tab");
+            anchor.attr("role", "presentation");
+        }
+
+        if (typeof data.active != "undefined" && data.active===true) {
+            anchor.addClass("active");
+        }
+        li.append(anchor);
+        return li;
+    }
+
     function headerTabs(config) {
         //console.log("headerTabs, config=", config);
 
@@ -1002,39 +1114,8 @@ const WJ = (() => {
         let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
 
         config.tabs.forEach(function(data, index) {
-            let li = $(`<li class="nav-item" role="presentation"></li>`);
-
-            let idNoHash = data.url;
-            if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
-            let href = "#pills-"+idNoHash;
-            //ak je to URL nepridavaj #pills-
-            if (idNoHash.indexOf("/")==0) {
-                href = idNoHash;
-            }
-            if (typeof data.id != "undefined") {
-                idNoHash = data.id;
-            }
-
-            //if it is URL remove chars as /,?,= and replace with dash for id
-            idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
-
-            let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
-            if (data.url.indexOf("javascript:")==0) {
-                anchor.attr("href", data.url);
-            } else {
-                anchor.attr("href", href);
-            }
-            if (href.indexOf("#")==0) {
-                //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
-                anchor.attr("data-wj-toggle", "tab");
-                anchor.attr("role", "presentation");
-            }
-
-            if (typeof data.active != "undefined" && data.active===true) {
-                anchor.addClass("active");
-            }
-            li.append(anchor);
-            ul.append(li);
+            const tabItem = _createTabItem(data);
+            ul.append(tabItem);
         });
 
         //wrap UL with md-tabs div
@@ -1044,6 +1125,81 @@ const WJ = (() => {
         tabs.append(ul);
         $("body").addClass("ly-submenu-active");
         window.initSubmenuTabsClick();
+    }
+
+    function headerSubTabs(config) {
+        let tabs = $("div.ly-header div.ly-submenu");
+
+        let parentId = tabs.find("ul.nav").first().attr("id");
+        let subId = parentId ? parentId + "_sub" : "pills-sub";
+
+        //store original URLs on parent tabs so we can use them for sub-tab URL construction
+        tabs.find("ul.nav").first().find("a.nav-link").each(function() {
+            if (typeof $(this).data("original-url") === "undefined") {
+                $(this).data("original-url", $(this).attr("href"));
+            }
+        });
+
+        function _getParentActiveUrl() {
+            let activeParent = tabs.find("ul.nav").first().find("a.nav-link.active");
+            let parentActiveUrl = activeParent.data("original-url") || activeParent.attr("href") || "";
+            if (parentActiveUrl.indexOf("#pills-")==0) parentActiveUrl = parentActiveUrl.substring(7);
+            else if (parentActiveUrl.indexOf("#")==0) parentActiveUrl = parentActiveUrl.substring(1);
+            return parentActiveUrl;
+        }
+
+        function _updateSubTabUrls() {
+            let parentActiveUrl = _getParentActiveUrl();
+            ul.find("a.nav-link").each(function() {
+                let subUrl = $(this).data("sub-url");
+                let combinedId = subUrl ? parentActiveUrl + "-" + subUrl : parentActiveUrl;
+                let href = "#pills-" + combinedId;
+                $(this).attr("href", href);
+                $(this).attr("id", "pills-" + combinedId + "-tab");
+            });
+        }
+
+        let ul = $(`<ul class="nav" id="${subId}" role="tablist"></ul>`);
+
+        let parentActiveUrl = _getParentActiveUrl();
+
+        config.tabs.forEach(function(data, index) {
+            ul.append(_createTabItem(data, parentActiveUrl));
+        });
+
+        //wrap UL with md-tabs div
+        ul = $("<div class='md-tabs md-tabs-dropdown md-sub-tabs'></div>").append(ul);
+
+        if (config.defaultVisibility === false) {
+            ul.css("display", "none");
+        }
+
+        tabs.append(ul);
+        window.initSubmenuTabsClick();
+
+        //toggle body class for layout offset when sub-tabs are shown/hidden
+        function _updateSubTabsBodyClass() {
+            if (ul.css("display") !== "none") {
+                $("body").addClass("ly-sub-tabs-active");
+            } else {
+                $("body").removeClass("ly-sub-tabs-active");
+            }
+        }
+        new MutationObserver(_updateSubTabsBodyClass).observe(ul[0], { attributes: true, attributeFilter: ['style'] });
+        _updateSubTabsBodyClass();
+
+        //update sub tab URLs when parent tab changes
+        tabs.find("ul.nav").first().on("click", "a.nav-link", function() {
+            setTimeout(function() {
+                //skip if sub tabs are hidden
+                if (ul.closest(".md-sub-tabs").is(":hidden")) return;
+                _updateSubTabUrls();
+                //click on active or first sub tab
+                let activeSubTab = ul.find("a.nav-link.active");
+                if (activeSubTab.length === 0) activeSubTab = ul.find("a.nav-link").first();
+                if (activeSubTab.length > 0) activeSubTab.trigger("click");
+            }, 0);
+        });
     }
 
     const htmlToTextRegex = /(<([^>]+)>)/ig;
@@ -1508,6 +1664,9 @@ const WJ = (() => {
         },
         headerTabs: (config) => {
             return headerTabs(config);
+        },
+        headerSubTabs: (config) => {
+            return headerSubTabs(config);
         },
         htmlToText: (html) => {
             return htmlToText(html);
