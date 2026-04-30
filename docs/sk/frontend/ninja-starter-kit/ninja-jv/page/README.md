@@ -72,7 +72,7 @@ Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:url" content="${ninja.page.url}" />
-<link rel="canonical" href="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.urlCanonical}" />
 ```
 
 ## Doména *String*

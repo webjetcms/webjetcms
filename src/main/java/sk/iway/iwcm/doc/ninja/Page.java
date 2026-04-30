@@ -88,6 +88,16 @@ public class Page {
         return getUrlDomain() +""+ getUrlPath();
     }
 
+    public String getUrlCanonical() {
+        String url = getUrl();
+        Map<String, String[]> params = getUrlParameters();
+        String[] pageParams = params.get("page");
+        if(pageParams != null && pageParams.length > 0){
+            url += "?page="+pageParams[0];
+        }
+        return url;
+    }
+
     public String getUrlDomain(){
         return Tools.getBaseHref(ninja.getRequest());
     }

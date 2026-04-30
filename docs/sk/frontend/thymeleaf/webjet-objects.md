@@ -145,5 +145,5 @@ Príklady použitia:
     <span data-th-text="${docDetails.title}">Titulok stránky</span>
     <body data-th-class="${docDetails.fieldA}">
     <meta name="author" data-th-content="${ninja.temp.group.author}" />
-    <link rel="canonical" data-th-href="${ninja.page.url}" />
+    <link rel="canonical" data-th-href="${ninja.page.urlCanonical}" />
 ```

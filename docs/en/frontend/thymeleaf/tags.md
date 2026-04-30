@@ -10,7 +10,7 @@ For a list of available attributes when displaying a web page, see [a separate c
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
 <body data-th-class="${docDetails.fieldA}">
 <meta name="author" data-th-if="${!#strings.isEmpty(ninja.temp.group.author)}" data-th-content="${ninja.temp.group.author}" />
-<link data-th-href="${ninja.page.url}" rel="canonical" />
+<link data-th-href="${ninja.page.urlCanonical}" rel="canonical" />
 <link data-th-href="${base_css_link}" rel="stylesheet" type="text/css"/>
 
 <article data-iwcm-write="doc_data"/>

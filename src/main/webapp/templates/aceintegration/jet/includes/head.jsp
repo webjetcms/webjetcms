@@ -23,7 +23,7 @@
 <meta property="og:locale" content="${ninja.temp.lngIso}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.urlCanonical}" />
 
 <% if (request.getSession().isNew() && PathFilter.getOrigPath(request).startsWith("/files")) { %><script>document.cookie = 'JSESSIONID=<%=session.getId()%>; path=/;';</script><% } %>
 
