@@ -154,7 +154,7 @@ public class GroupEditorField extends BaseEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/group-scheduler?groupId={groupId}&selectType=changeHistory"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.editor.rest.GroupSchedulerDto"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "2,desc"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "1,desc"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-removeColumns", value = "whenToPublish,datePublished")
             }

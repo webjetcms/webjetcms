@@ -103,7 +103,7 @@ public class GroupsDB extends DB
 	 *@return                 The instance value
 	 *@deprecated - pouzite verziu getInstance(boolean forceRefresh)
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public static GroupsDB getInstance(jakarta.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
 		//try to get it from server space
@@ -578,7 +578,7 @@ public class GroupsDB extends DB
 
 		List<GroupDetails> p_groups = new ArrayList<>();
 
-		if (editableGroups != null && editableGroups.length() > 0)
+		if (editableGroups != null && editableGroups.isEmpty() == false)
 		{
 			StringTokenizer st = new StringTokenizer(editableGroups, ",");
 			String id;
@@ -934,7 +934,12 @@ public class GroupsDB extends DB
 	 * @return
 	 */
 	public boolean setGroup(GroupDetails group, boolean publishEvents) {
-		return setGroup(group, publishEvents, true);
+		if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate") && group.getGroupId() < 1) {
+			// Do not add scheduler, it will be created later when adding blank webpage (it will set defaultDocId for group), otherwise there will be duplicate scheduler records for new group
+			return setGroup(group, publishEvents, false);
+		} else {
+			return setGroup(group, publishEvents, true);
+		}
 	}
 
 	/**
@@ -2444,7 +2449,7 @@ public class GroupsDB extends DB
 	 *@return    The groups value
 	 *@deprecated - pouzivajte verziu getGroupsAll
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public List<GroupDetails> getGroups()
 	{
 		List<GroupDetails> arlist = new ArrayList<>();
@@ -2807,7 +2812,7 @@ public class GroupsDB extends DB
 
 				for (GroupDetails element : subGroups)
 				{
-					if (groups.length() > 0)
+					if (groups.isEmpty() == false)
 						groups.append(',');
 					groups.append(element.getGroupId());
 					//refresh cache
@@ -2862,7 +2867,7 @@ public class GroupsDB extends DB
 				{
 					g.setFullPath(groupsDB.getPath(g.getGroupId()));
 
-					if (groups.length() > 0)
+					if (groups.isEmpty() == false)
 						groups.append(',').append(g.getGroupId());
 					else
 						groups.append(g.getGroupId());
@@ -3674,19 +3679,19 @@ public class GroupsDB extends DB
 	 */
 	public List<String> getUserRootDomainNames(Identity user)
 	{
-		String editableGroups = user.getEditableGroups();
+		StringBuilder editableGroups = new StringBuilder(user.getEditableGroups());
 
 		if (Tools.isNotEmpty(user.getEditablePages())) {
 			List<DocDetails> pages = DocDB.getMyPages(user);
 			for (DocDetails doc : pages) {
 				if (doc.getGroupId() > 0) {
-					editableGroups += "," + doc.getGroupId();
+					editableGroups.append(",").append(doc.getGroupId());
 				}
 			}
 		}
 
 		List<String> ret = new ArrayList<>();
-		for(GroupDetails gd : getRootGroups(editableGroups))
+		for(GroupDetails gd : getRootGroups(editableGroups.toString()))
 		{
 			if(Tools.isNotEmpty(gd.getDomainName()) && ret.contains(gd.getDomainName()) == false)
 				ret.add(gd.getDomainName());
@@ -4262,8 +4267,8 @@ public class GroupsDB extends DB
 			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
 			String templatesDirName = propSystem.getText("config.templates_dir");
 
-			List<GroupDetails> groups = getGroups(localSystemGroup.getGroupId());
-			for (GroupDetails group : groups) {
+			List<GroupDetails> systemGroups = getGroups(localSystemGroup.getGroupId());
+			for (GroupDetails group : systemGroups) {
 				if (templatesDirName.equalsIgnoreCase(group.getGroupName())) {
 					return group;
 				}
