@@ -3,6 +3,7 @@ package sk.iway.iwcm.editor.approve;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,6 +12,7 @@ import sk.iway.iwcm.editor.service.EditorService;
 
 @Controller
 @RequestMapping("/admin")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
 public class ApproveController {
     private final EditorService editorService;
 

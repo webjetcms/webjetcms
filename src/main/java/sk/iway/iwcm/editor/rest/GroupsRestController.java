@@ -293,7 +293,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 && entity.getEditorFields().getPublishDate().getTime() > Tools.getNow()) {
             isScheduledForPublication = true;
 
-            if(needApproval) throw new IllegalStateException("Cant schedule for publication when approval is needed.");
+            if(needApproval) {
+                throwError("Cant schedule for publication when approval is needed.");
+                return entity;
+            }
 
             try {
                 //groupDetails musime naklonovat lebo je z cache a pre futureSchedule ho nemozeme zmenit

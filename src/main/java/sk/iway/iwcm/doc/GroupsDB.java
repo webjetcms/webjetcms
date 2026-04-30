@@ -928,21 +928,22 @@ public class GroupsDB extends DB
 	}
 
 	/**
-	 * Ulozenie adresara, ak je nastavene doNotPublishEvents na true nie su vyvolane udalosti
+	 * Ulozenie adresara
 	 * @param group
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @return
 	 */
 	public boolean setGroup(GroupDetails group, boolean publishEvents) {
-
-		if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate") && group.getGroupId() < 1) {
-			// Do not add scheduler , it will be crated later when adding blank webpage
-			return setGroup(group, publishEvents, false);
-		} else {
-			return setGroup(group, publishEvents, true);
-		}
+		return setGroup(group, publishEvents, true);
 	}
 
+	/**
+	 * Ulozenie adresara
+	 * @param group
+	 * @param publishEvents  ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
+	 * @param addGroupSchedulerRecord - ak true, tak sa pri editacii existujuceho adresara vytvori zaznam v GroupSchedulerDetails pre moznost zobrazenia zmeny v GroupScheduleri
+	 * @return
+	 */
 	public boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord)
 	{
 		if (publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_START)).publishEvent();

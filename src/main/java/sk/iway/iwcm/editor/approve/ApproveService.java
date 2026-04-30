@@ -708,7 +708,7 @@ public class ApproveService {
 		StringBuilder approveByUsersEmail = new StringBuilder();
 		for (UserDetails u : approveByTable.values()) {
 			if (Tools.isEmail(u.getEmail())) {
-				if (!approveByUsersEmail.isEmpty() == false) approveByUsersEmail.append(",");
+				if (approveByUsersEmail.isEmpty() == false) approveByUsersEmail.append(",");
 				approveByUsersEmail.append(u.getEmail());
 			}
 		}

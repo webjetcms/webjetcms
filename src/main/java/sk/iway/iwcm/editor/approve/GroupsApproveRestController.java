@@ -52,8 +52,7 @@ public class GroupsApproveRestController extends DatatableRestControllerV2<Group
     public Page<GroupDetails> getAllItems(Pageable pageable) {
         Page<GroupSchedulerDto> historyList = new DatatablePageImpl<>(repository.findAll(getToApproveConditions(getUser().getUserId())));
 
-        List<GroupDetails> groupDetailsList = new ArrayList<>();
-        groupDetailsList = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtosToGroupDetailsList(historyList.getContent());
+        List<GroupDetails> groupDetailsList = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtosToGroupDetailsList(historyList.getContent());
 
         return new DatatablePageImpl<>(groupDetailsList);
     }

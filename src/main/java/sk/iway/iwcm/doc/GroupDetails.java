@@ -369,7 +369,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 	@DataTableColumnNested
 	private GroupEditorField editorFields = null;
 
-	// achedulerId and isDelete used only for GroupSchedulerDto mapping
+	// schedulerId and isDelete used only for GroupSchedulerDto mapping
 
 	@Transient
 	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)

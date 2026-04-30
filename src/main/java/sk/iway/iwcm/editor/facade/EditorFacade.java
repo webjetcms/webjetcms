@@ -14,6 +14,8 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
@@ -423,7 +425,8 @@ public class EditorFacade {
 	 */
 	public static final void setSkipApproving(int groupId) {
 		Cache cache = Cache.getInstance();
-		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
+
+		String key = getSkipApprovingCacheKey(groupId);
 		cache.removeObject(key);
 		cache.setObject(key, true, 2);
 	}
@@ -435,11 +438,21 @@ public class EditorFacade {
 	 */
 	public static final boolean isSkipApproving(int groupId) {
 		Cache cache = Cache.getInstance();
-		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId();
+		String key = getSkipApprovingCacheKey(groupId);
 		Object o = cache.getObject(key);
 		if (o instanceof Boolean b) {
 			return b;
 		}
 		return false;
+	}
+
+	private static String getSkipApprovingCacheKey(int groupId) {
+		int currentUserId = -1;
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null) {
+			currentUserId = rb.getUserId();
+		}
+		String key = "skipApproving_" + groupId + "_" + CloudToolsForCore.getDomainId() + "_" + currentUserId;
+		return key;
 	}
 }
