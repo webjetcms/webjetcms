@@ -277,8 +277,6 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
 
     await goOnEmailUrl(I, Document);
 
-    Document.screenshotElement("div.approve-group-page", "/redactor/webpages/approve/approve-group-page.png");
-
     I.say("Try to approve as non-approver - should be denied");
     I.waitForElement( locate("h5").withText("Schvaľovanie priečinka"), 10 );
     I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
@@ -298,6 +296,9 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
     I.switchTo("#modalIframeIframeElement");
     I.fillField("#note", "Good job, approving.");
     I.switchTo();
+
+    Document.screenshot("/redactor/webpages/approve/approve-group-page.png");
+
     I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
 
     I.switchTo("#modalIframeIframeElement");
