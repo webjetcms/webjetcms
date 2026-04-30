@@ -2868,9 +2868,8 @@ public class GroupsDB extends DB
 					g.setFullPath(groupsDB.getPath(g.getGroupId()));
 
 					if (groups.isEmpty() == false)
-						groups.append(',').append(g.getGroupId());
-					else
-						groups.append(g.getGroupId());
+						groups.append(',');
+					groups.append(g.getGroupId());
 
 					if(foundSystemDir == false && "System".equalsIgnoreCase(g.getGroupName())) foundSystemDir = true;
 				}
