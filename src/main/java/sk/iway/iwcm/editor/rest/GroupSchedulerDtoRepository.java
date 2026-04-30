@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +23,8 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
 
     //find all pending approval records for a group (awaiting_approve IS NOT NULL)
     java.util.List<GroupSchedulerDto> findByGroupIdAndAwaitingApproveIsNotNull(Integer groupId);
+
+    java.util.List<GroupSchedulerDto> findAll(Specification<GroupSchedulerDto> spec);
 
     //secure lookup during approve action - only records that are actually pending approval
     Optional<GroupSchedulerDto> findByIdAndAwaitingApproveIsNotNull(Long id);

@@ -93,6 +93,8 @@ block content
                                         cssClass: 'btn-success me-2',
                                         onClick: function() {
                                             $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
                                         }
                                     },
                                     {
@@ -100,9 +102,16 @@ block content
                                         cssClass: 'btn-danger',
                                         onClick: function() {
                                             $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
                                         }
                                     }
-                                ]
+                                ],
+                                buttonTitleKey: "button.close",
+                                okclick: function() {
+                                    WJ.closeIframeModal();
+                                }
+
                             });
                         } else {
                             WJ.openIframeModal( {
@@ -116,6 +125,8 @@ block content
                                         cssClass: 'btn-success me-2',
                                         onClick: function() {
                                             $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
                                         }
                                     },
                                     {
@@ -123,9 +134,15 @@ block content
                                         cssClass: 'btn-danger',
                                         onClick: function() {
                                             $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                            $("#modalIframe .modal-footer-custom-buttons").hide();
+                                            $("#modalIframe .modal-footer-default-buttons").show();
                                         }
                                     }
-                                ]
+                                ],
+                                buttonTitleKey: "button.close",
+                                okclick: function() {
+                                    WJ.closeIframeModal();
+                                }
                             });
                         }
                     }

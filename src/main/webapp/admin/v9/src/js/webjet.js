@@ -173,10 +173,11 @@ const WJ = (() => {
         } else {
             $customButtons.hide();
             $defaultButtons.show();
-            //nastav button title
-            const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
-            $defaultButtons.find('button.btn-primary span').text(buttonTitle);
         }
+
+        //nastav button title
+        const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
+        $defaultButtons.find('button.btn-primary span').text(buttonTitle);
 
         //console.log('modalIframe=', modalIframe);
         modalIframeOptions = options;

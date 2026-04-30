@@ -537,7 +537,7 @@ Scenario('Stay logged as NON-Approver and try approve delete - must be refused '
     I.waitForVisible("#modalIframe", 10);
     I.waitForElement( locate("h5").withText("Vymazanie priečinka"), 10 );
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Na schválenie/zamietnutie vymazania tohto priečinka nemáte práva", 5);
+    I.waitForText("Na schválenie/zamietnutie tohto priečinka nemáte práva", 5);
     I.switchTo();
 });
 
