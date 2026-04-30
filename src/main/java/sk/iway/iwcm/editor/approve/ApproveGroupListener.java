@@ -65,6 +65,11 @@ public class ApproveGroupListener {
                 return;
             }
 
+            // Check if current user has rights to view/approve this change
+            if (!checkApproveRights(model, prop, approveService, dto)) {
+                return;
+              }
+
             // ziskanie objektu a vlozenie do modelu
             Form form = new Form();
             form.setScheduleId(dto.getId());
@@ -112,6 +117,11 @@ public class ApproveGroupListener {
                 } else {
                     prepareResponseModel(model, result.getSecond(), null);
                 }
+                return;
+            }
+
+             // Check if current user has rights to view/approve this change
+            if (!checkApproveRights(model, prop, approveService, dto)) {
                 return;
             }
 
@@ -172,5 +182,25 @@ public class ApproveGroupListener {
         model.addAttribute("form", null);
         model.addAttribute("diff", null);
         model.addAttribute("diffLabel", null);
+    }
+
+     /**
+      * Check if current user has rights to view/approve this group change.
+      * If user doesn't have rights, sets error message and returns false.
+      * @param model the model to set error message on
+      * @param prop the prop instance
+      * @param approveService the approve service to check permissions
+      * @param dto the group scheduler dto
+      * @return true if user has rights, false otherwise
+      */
+     private boolean checkApproveRights(ModelMap model, Prop prop, ApproveService approveService, GroupSchedulerDto dto) {
+        if (approveService.canApprove(dto.getGroupId()) == false) {
+            model.addAttribute("errMsg", prop.getText("approve.group.cant_approve"));
+            model.addAttribute("form", null);
+            model.addAttribute("diff", null);
+            model.addAttribute("diffLabel", null);
+            return false;
+        }
+        return true;
     }
 }

@@ -534,11 +534,8 @@ Scenario('Stay logged as NON-Approver and try approve delete - must be refused '
 
     await goOnEmailUrl(I, Document);
 
-    checkDeleteApprovalPage(I);
-    I.fillField("#note", "I dont want to delete this, rejecting.");
-    I.switchTo();
-    I.clickCss("#modalIframe .modal-footer button.btn-success");
-
+    I.waitForVisible("#modalIframe", 10);
+    I.waitForElement( locate("h5").withText("Vymazanie priečinka"), 10 );
     I.switchTo("#modalIframeIframeElement");
     I.waitForText("Na schválenie/zamietnutie vymazania tohto priečinka nemáte práva", 5);
     I.switchTo();

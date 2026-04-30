@@ -837,6 +837,11 @@ public class ApproveService {
 
 	/******************** GROUP / FOLDER APPROVE LOGIC ********************************/
 
+	public boolean canApprove(int groupId) {
+		loadApproveTables(groupId);
+		return needApprove() == false || selfApproved || canApproveFirstLevel;
+	}
+
 	/**
 	 * Approve or reject a pending folder edit change stored as a GroupSchedulerDto record.
 	 * Request param "zamietni" presence indicates rejection (no change to folder), absence indicates approval (folder is updated).
