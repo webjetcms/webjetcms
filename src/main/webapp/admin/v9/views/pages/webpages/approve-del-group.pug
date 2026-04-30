@@ -4,9 +4,6 @@ block content
 
     .approve-del-group-page
 
-        div.dt-header-row.clearfix.push-content-down
-            h2(data-th-text="#{approve.del.group.page.title}") Schvaľování zmien adresára
-
         .alert.alert-danger(data-th-if="${errMsg!=null}")
             span(data-th-utext="${errMsg}") After save ERR message
 
@@ -37,7 +34,7 @@ block content
 
                 button.btn.btn-primary(type="submit", hidden)
 
-                .form-group.mb-3.text-end
+                .form-group.mb-3.text-end.hide-in-iframe
                     button.btn.btn-success.me-2(
                         type="button",
                         onclick="submitForm('approve')"

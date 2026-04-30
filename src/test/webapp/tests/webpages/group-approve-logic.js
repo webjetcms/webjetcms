@@ -21,6 +21,8 @@ Before(({ I, TempMail }) => {
         emailDomain = TempMail.getTempMailDomain();
         newFolderName += randomNumber;
     }
+    I.switchTo();
+    I.closeOtherTabs();
 });
 
 /**
@@ -39,9 +41,11 @@ function setUserEmail(login, email, I, DT, DTE) {
  * Navigates to the test folder in the jstree and opens its editor.
  */
 function openCreatedFolder(I, DT, DTE, folderName) {
+    I.switchTo();
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "Group_approving", folderName]);
+
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
 }
@@ -57,6 +61,10 @@ async function openApprovalLinkFromEmail(I, Document, TempMail, emailAccount) {
     I.clickCss("#info a");
     await Document.waitForTab();
     I.switchToNextTab();
+    I.waitForVisible("#modalIframe", 10);
+    I.wait(1);
+    I.switchTo("#modalIframeIframeElement");
+    I.wait(1);
 }
 
 /**
@@ -94,6 +102,7 @@ function checkPermissions(I, checked) {
 
 async function goOnEmailUrl(I, Document) {
     I.say("Open approval link from email");
+    I.switchTo();
     I.waitForElement("#info a", 5);
     I.clickCss("#info a");
     await Document.waitForTab();
@@ -109,21 +118,32 @@ function openFolderHistoryTab(I, DT) {
 }
 
 /**
+ * Verifies a row in the diff HTML table by title, old value and new value.
+ */
+function checkDiffTableRow(I, title, oldValue, newValue) {
+    I.seeElement({xpath: `//table//tbody/tr[td[1][normalize-space()='${title}'] and td[2][normalize-space()='${oldValue}'] and td[3][normalize-space()='${newValue}']]`});
+}
+
+/**
  * Verifies the diff fields displayed on the approval page.
  */
 function checkApprovalDiff(I, oldName, newName, fieldA, fieldB, fieldC, fieldD) {
-    I.seeInField("#diff", "Názov priečinku: " + oldName + " -> " + newName);
-    I.seeInField("#diff", "Pole A:  -> " + fieldA);
-    I.seeInField("#diff", "Pole B:  -> " + fieldB);
-    I.seeInField("#diff", "Pole C:  -> " + fieldC);
-    I.seeInField("#diff", "Pole D:  -> " + fieldD);
-    I.seeInField("#diff", "Prístupný iba pre:  -> Bankári, Blog (4,802)");
+    I.say("checkApprovalDiff()");
+
+    checkDiffTableRow(I, "Názov priečinku", oldName, newName);
+    checkDiffTableRow(I, "Pole A", "", fieldA);
+    checkDiffTableRow(I, "Pole B", "", fieldB);
+    checkDiffTableRow(I, "Pole C", "", fieldC);
+    checkDiffTableRow(I, "Pole D", "", fieldD);
+    checkDiffTableRow(I, "Prístupný iba pre", "", "Bankári, Blog (4,802)");
 }
 
 /**
  * Edits a folder as non-approver: changes name, enables permissions, fills custom fields, saves.
  */
 function editFolderWithAllChanges(I, DT, DTE, Document, currentFolderName, newName, fieldA, fieldB, fieldC, fieldD) {
+    I.say("editFolderWithAllChanges()");
+
     openCreatedFolder(I, DT, DTE, currentFolderName);
 
     I.fillField("#DTE_Field_groupName", newName);
@@ -142,6 +162,7 @@ function editFolderWithAllChanges(I, DT, DTE, Document, currentFolderName, newNa
  * Requests folder deletion as non-approver and verifies the approval notification.
  */
 function requestFolderDeletion(I, DT, DTE, Document, folderName) {
+    I.say("requestFolderDeletion()");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "Group_approving", folderName]);
@@ -158,16 +179,26 @@ function requestFolderDeletion(I, DT, DTE, Document, folderName) {
  * Closes current tab, reopens the approval link from email, and verifies the already-processed message.
  */
 async function reopenEmailLinkAndCheckMessage(I, Document, expectedMessage) {
+    I.say("reopenEmailLinkAndCheckMessage()");
     I.closeCurrentTab();
     await goOnEmailUrl(I, Document);
+    I.waitForVisible("#modalIframe", 10);
+    I.wait(1);
+    I.switchTo("#modalIframeIframeElement");
+    I.wait(1);
     I.waitForText(expectedMessage, 5);
+    I.switchTo();
 }
 
 /**
  * Verifies the delete approval page heading is shown and no diff is displayed.
  */
 function checkDeleteApprovalPage(I) {
-    I.seeElement( locate("h2").withText("Vymazanie priečinka") );
+    I.say("checkDeleteApprovalPage()");
+    I.switchTo();
+    I.seeElement( locate("h5").withText("Vymazanie priečinka") );
+    I.switchTo("#modalIframeIframeElement");
+    I.waitForElement("#note", 5);
     I.dontSeeElement("#diff");
 }
 
@@ -249,9 +280,12 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
     Document.screenshotElement("div.approve-group-page", "/redactor/webpages/approve/approve-group-page.png");
 
     I.say("Try to approve as non-approver - should be denied");
-    I.seeElement( locate("h2").withText("Schvaľovanie priečinka") );
-    I.clickCss("form.approve-group-footer button.btn-success");
+    I.waitForElement( locate("h5").withText("Schvaľovanie priečinka"), 10 );
+    I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Na schválenie/zamietnutie tohto priečinka nemáte práva", 5);
+    I.switchTo();
 
     I.say("Relogin as approver (admin) and approve the folder");
     I.relogin("admin");
@@ -259,10 +293,16 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
     await TempMail.openLatestEmail();
     await goOnEmailUrl(I, Document);
 
-    I.seeElement( locate("h2").withText("Schvaľovanie priečinka") );
+    I.waitForElement( locate("h5").withText("Schvaľovanie priečinka") );
+
+    I.switchTo("#modalIframeIframeElement");
     I.fillField("#note", "Good job, approving.");
-    I.clickCss("form.approve-group-footer button.btn-success");
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.switchTo();
 
     I.say("Re-open the same approval link - should show already approved");
     await reopenEmailLinkAndCheckMessage(I, Document, "Priečinok už bol schválený používateľom: Tester Playwright");
@@ -343,19 +383,22 @@ Scenario('Go check email and reject request for edit ', async ({I, DT, DTE, Docu
     I.see("Žiadosť o schválenie priečinka: " + newFolderName);
     I.see("Žiadam Vás o schválenie priečinka:");
     I.see("Zmenené polia priečinka:");
-    I.see("Názov priečinku: " + newFolderName + " -> " + newFolderName + "_edited");
-    I.see("Pole A: -> AAA");
-    I.see("Pole B: -> BBB");
-    I.see("Pole C: -> CCC");
-    I.see("Pole D: -> DDD");
-    I.see("Prístupný iba pre: -> Bankári, Blog (4,802)");
+    checkDiffTableRow(I, "Názov priečinku", newFolderName, newFolderName + "_edited");
+    checkDiffTableRow(I, "Pole A", "", "AAA");
+    checkDiffTableRow(I, "Pole B", "", "BBB");
+    checkDiffTableRow(I, "Pole C", "", "CCC");
+    checkDiffTableRow(I, "Pole D", "", "DDD");
+    checkDiffTableRow(I, "Prístupný iba pre", "", "Bankári, Blog (4,802)");
 
     I.say("Try to reject as non-approver (tester2) - should be denied");
     await goOnEmailUrl(I, Document);
 
-    I.seeElement( locate("h2").withText("Schvaľovanie priečinka") );
-    I.clickCss("form.approve-group-footer button.btn-danger");
+    I.seeElement( locate("h5").withText("Schvaľovanie priečinka") );
+    I.clickCss("#modalIframe .modal-footer button.btn-danger");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Na schválenie/zamietnutie tohto priečinka nemáte práva", 5);
+    I.switchTo();
 
     I.say("Relogin as approver (admin) and reject the change with a note");
     I.relogin("admin");
@@ -364,11 +407,16 @@ Scenario('Go check email and reject request for edit ', async ({I, DT, DTE, Docu
     await goOnEmailUrl(I, Document);
 
     I.say("Verify diff is displayed on the approval page");
+    I.switchTo("#modalIframeIframeElement");
     checkApprovalDiff(I, newFolderName, newFolderName + "_edited", "AAA", "BBB", "CCC", "DDD");
 
     I.fillField("#note", "Its bad, NOT approving.");
-    I.clickCss("form.approve-group-footer button.btn-danger");
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer button.btn-danger");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.switchTo();
 
     I.say("Re-open the same approval link - should show already rejected");
     await reopenEmailLinkAndCheckMessage(I, Document, "Priečinok už bol zamietnutý používateľom: Tester Playwright");
@@ -416,8 +464,12 @@ Scenario('Edit folder again as NON-approver and APPROVE the change ', async ({I,
     checkApprovalDiff(I, newFolderName, newFolderName + "_edited_2", "AAA_2", "BBB_2", "CCC_2", "DDD_2");
 
     I.fillField("#note", "Now its good, approving.");
-    I.clickCss("form.approve-group-footer button.btn-success");
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer button.btn-success");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.switchTo();
 
     I.say("Verify all changes were applied after approval");
     openCreatedFolder(I, DT, DTE, newFolderName);
@@ -484,19 +536,28 @@ Scenario('Stay logged as NON-Approver and try approve delete - must be refused '
 
     checkDeleteApprovalPage(I);
     I.fillField("#note", "I dont want to delete this, rejecting.");
-    I.clickCss("form.approve-del-group-footer button.btn-success");
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer button.btn-success");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Na schválenie/zamietnutie vymazania tohto priečinka nemáte práva", 5);
+    I.switchTo();
 });
 
-Scenario('Log as approver and reject deletion request - then check that folder was NOT deleted ', async ({I, DT, DTE, Document, TempMail}) => {
+Scenario('Log as approver and reject deletion request - then check that folder was NOT deleted', async ({I, DT, DTE, Document, TempMail}) => {
     I.relogin("admin");
 
     await openApprovalLinkFromEmail(I, Document, TempMail, testerEmail);
 
     checkDeleteApprovalPage(I);
     I.fillField("#note", "I dont want to delete this, rejecting.");
-    I.clickCss("form.approve-del-group-footer button.btn-danger");
+
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer button.btn-danger");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 5);
+    I.switchTo();
 
     I.say("Check that link does not work anymore after rejection");
     await reopenEmailLinkAndCheckMessage(I, Document, "Zmazanie priečinka už bolo zamietnuté používateľom: Tester Playwright");
@@ -535,8 +596,13 @@ Scenario('Again request for delete and this time approve it ', async ({I, DT, DT
 
     checkDeleteApprovalPage(I);
     I.fillField("#note", "Approving delete.");
-    I.clickCss("form.approve-del-group-footer button.btn-success");
+
+    I.switchTo();
+    I.clickCss("#modalIframe .modal-footer button.btn-success");
+
+    I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 5);
+    I.switchTo();
 
     I.say("Verify that folder was deleted");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
@@ -568,6 +634,8 @@ Scenario('Destroy both email inboxes', async ({I, DT, DTE, Document, TempMail}) 
 });
 
 Scenario('revert users emails @screenshot', async ({I, DT, DTE, TempMail}) => {
+    I.closeOtherTabs();
+    I.switchTo();
     I.relogin("admin");
     setUserEmail("tester", "tester@balat.sk", I, DT, DTE);
     setUserEmail("tester2", "tester2@balat.sk", I, DT, DTE);

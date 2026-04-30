@@ -71,7 +71,7 @@ public class BeanDiffPrinter
 		}
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("<table class=\"datatableInit table dataTable diff-table\" border=\"1\" cellspacing=\"0\"><thead><tr>");
+		sb.append("<table id=\"diffTable\" class=\"datatableInit table dataTable diff-table\" border=\"1\" cellspacing=\"0\"><thead><tr>");
 		sb.append("<th>").append(Tools.escapeHtml(prop.getText("editor.form.tf.name"))).append("</th>");
 		if (hasOriginal) {
 			sb.append("<th>").append(Tools.escapeHtml(prop.getText("admin.conf_import.stara_hodnota"))).append("</th>");

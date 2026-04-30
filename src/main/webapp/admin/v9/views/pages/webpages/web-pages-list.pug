@@ -82,7 +82,28 @@ block content
                 window.approveGroup = function (schedulerId, isDelete) {
                     if(schedulerId !== undefined && schedulerId !== null) {
                         if(isDelete === "true" || isDelete === true) {
-                            window.open("/admin/v9/webpages/approve-del-group/?scheduleId=" + schedulerId, '_blank');
+                            WJ.openIframeModal( {
+                                url: "/admin/v9/webpages/approve-del-group/?scheduleId=" + schedulerId,
+                                title: "[[\#{approve.del.group.page.title}]]",
+                                width: 800,
+                                height: 600,
+                                buttons: [
+                                    {
+                                        title: "[[\#{approve.page.delete}]]",
+                                        cssClass: 'btn-success me-2',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-success').trigger('click');
+                                        }
+                                    },
+                                    {
+                                        title: "[[\#{approve.page.reject}]]",
+                                        cssClass: 'btn-danger',
+                                        onClick: function() {
+                                            $('#modalIframeIframeElement').contents().find('button.btn-danger').trigger('click');
+                                        }
+                                    }
+                                ]
+                            });
                         } else {
                             WJ.openIframeModal( {
                                 url: "/admin/v9/webpages/approve-group/?scheduleId=" + schedulerId,
