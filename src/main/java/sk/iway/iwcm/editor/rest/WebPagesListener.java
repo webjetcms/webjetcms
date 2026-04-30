@@ -47,6 +47,7 @@ import sk.iway.iwcm.users.UsersDB;
  * - optimalizacia rychlosti zobrazenia
  */
 @Component
+@SuppressWarnings("java:S6813")
 public class WebPagesListener {
 
     @Autowired
@@ -147,12 +148,11 @@ public class WebPagesListener {
 
                 if ("pills-system-tab".equals(showTab)) {
                     rootGroups = rootGroups.stream().filter(g->{
-                        if (g instanceof GroupsJsTreeItem) {
-                            GroupsJsTreeItem gjs = (GroupsJsTreeItem) g;
+                        if (g instanceof GroupsJsTreeItem gjs) {
                             if (gjs.getGroup().getFullPath().startsWith(trash.getFullPath())) return false;
                         }
                         return true;
-                    }).collect(Collectors.toList());
+                    }).collect(Collectors.toList()); //NOSONAR
                 }
 
                 List<JsTreeItem> expandedGroups = expandGroupsLastFolder(rootGroups, lastGroupId, user, showPages, click, request);
@@ -165,7 +165,7 @@ public class WebPagesListener {
                     //use first group as rootGroupDetails
                     List<GroupDetails> onlyRootGroupList = new ArrayList<>();
                     if (lastGroup != null) onlyRootGroupList.add(lastGroup); //user doesnt' have edit rights to group, so it's null
-                    else if (rootGroups.get(0) instanceof GroupsJsTreeItem) onlyRootGroupList.add(((GroupsJsTreeItem)rootGroups.get(0)).getGroup());
+                    else if (rootGroups.get(0) instanceof GroupsJsTreeItem gjs) onlyRootGroupList.add(gjs.getGroup());
 
                     rootGroupDetails = new DatatablePageImpl<>(onlyRootGroupList);
                     if (onlyRootGroupList.isEmpty()==false) {
@@ -294,8 +294,7 @@ public class WebPagesListener {
         groupsOriginal.addAll(groups);
 
         for (JsTreeItem item : groupsOriginal) {
-            if (item instanceof GroupsJsTreeItem) {
-                GroupsJsTreeItem gitem = (GroupsJsTreeItem)item;
+            if (item instanceof GroupsJsTreeItem gitem) {
 
                 if (position == 0 && Tools.isEmpty(gitem.getParent())) {
                      gitem.setParent("#");
@@ -320,8 +319,7 @@ public class WebPagesListener {
                     expandGroups(groups, parentGroups, lastGroupId, position+1, user, showPages, click, request);
                 }
             }
-            if (item instanceof DocumentsJsTreeItem) {
-                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;
+            if (item instanceof DocumentsJsTreeItem ditem) {
                 if (position == 0 && Tools.isEmpty(ditem.getParent())) {
                      ditem.setParent("#");
                 }

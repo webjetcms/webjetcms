@@ -2750,7 +2750,7 @@ public class UpdateDatabase
 		if (isAllreadyUpdated(note)) return;
 
 		try {
-			DB.execute("UPDATE documents_history SET is_delete = 1 WHERE title LIKE '[DELETE]%' AND data_asc = '[DELETE]'");
+			DB.execute("UPDATE documents_history SET is_delete = 1 WHERE title LIKE '[DELETE]%' AND data_asc LIKE '[DELETE]'");
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}

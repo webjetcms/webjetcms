@@ -23,6 +23,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Listener for approve-group.pug and approve-del-group.pug pages. Handles loading initial data for approval, as well as processing approval form submission.
+ */
 @Component
 public class ApproveGroupListener {
 

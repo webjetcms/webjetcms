@@ -258,7 +258,7 @@ public class EditorService {
 			if(!editedDoc.getEditorFields().isRequestPublish()) editedDoc.setAvailable(false);
 		}
 
-		//when creating new folder which is approving, skip redundand approve of the page
+		// when creating new folder which is approving, skip redundand approve of the page
 		boolean skipApproving = EditorFacade.isSkipApproving(editedDoc.getGroupId());
 
 		// Load approve hash table data

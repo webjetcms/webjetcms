@@ -113,7 +113,7 @@ public class EditorFacade {
 		int historyId = editorService.saveEditedDoc(entity);
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
-		// when skipApproving is false, we do not want to add scheduler record
+		// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
         multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
 
 		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
