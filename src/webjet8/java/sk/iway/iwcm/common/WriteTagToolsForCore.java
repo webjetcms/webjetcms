@@ -78,7 +78,7 @@ public class WriteTagToolsForCore {
         return replacedText;
     }
 
-    public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request)
+    public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request) //NOSONAR
     {
         if (Constants.getBoolean("spamProtection") == false)
             return (text);
@@ -220,7 +220,7 @@ public class WriteTagToolsForCore {
                                 StringBuffer labelText = new StringBuffer();
                                 replacedText = updateLabelClassInvalid(replacedText, id, labelText);
 
-                                if (labelText.length()>0)
+                                if (labelText.isEmpty()==false)
                                 {
                                     writeText = Tools.replace(writeText, "<li>"+id, "<li>"+labelText.toString());
                                 }
@@ -233,7 +233,7 @@ public class WriteTagToolsForCore {
                             int formStart = replacedText.lastIndexOf("<form", start);
                             if (formStart > 0)
                             {
-                                replacedText = new StringBuilder().append(replacedText.substring(0, formStart)).append("<link type='text/css' media='screen' rel='stylesheet' href='/components/form/check_form.css'></link>" + prop.getText("spamprotectiondisable.formmailErrorNotify", writeText)).append(replacedText.substring(formStart));
+                                replacedText = new StringBuilder().append(replacedText.substring(0, formStart)).append("<link type='text/css' media='screen' rel='stylesheet' href='/components/form/check_form.css' />" + prop.getText("spamprotectiondisable.formmailErrorNotify", writeText)).append(replacedText.substring(formStart));
                             }
                         }
 
