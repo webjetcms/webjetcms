@@ -270,7 +270,7 @@ export function getScrollbarWidth() {
 }
 
 /**
- * Pokusi sa ziskat hodnotu v editore podla stlpca dt-row-edit, ked nenajde vrati prazdnu hodnotu
+ * Pokusi sa ziskat hodnotu v editore podla stlpca dt-row-edit alebo dt-row-title, ked nenajde vrati prazdnu hodnotu
  * @param {*} EDITOR
  * @param {*} row - riadok z DT alebo NULL pre ziskanie zaznamu priamo z DTE
  * @returns
@@ -283,7 +283,7 @@ export function getTitle(EDITOR, row = null) {
         //skus najst property, ktora sa pouziva na kliknutie
         $.each(EDITOR.TABLE.DATA.columns, function (key, col) {
             //console.log("key=", key, "col=", col, "row=", row);
-            if (typeof col.className != "undefined" && col.className?.indexOf("dt-row-edit")!=-1) {
+            if (typeof col.className != "undefined" && (col.className?.indexOf("dt-row-edit")!=-1 || col.className?.indexOf("dt-row-title")!=-1)) {
                 if (col.data.indexOf(".")!=-1) {
                     //hlbsi objekt
                     title = WJ.getJsonProperty(row, col.data);

@@ -1,4 +1,4 @@
-Feature('webpages.groups-approve-logic');
+Feature('webpages.group-approve-logic');
 
 // Shared state variables initialized in Before hook
 var randomNumber;
@@ -496,6 +496,8 @@ Scenario('Edit folder AS APPROVER - no approval needed ', async ({I, DT, DTE, Do
     I.fillField("#DTE_Field_groupName", newFolderName + "_edited_3");
 
     DTE.save();
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
 
     I.say("Verify no approval notification toast was shown");
     I.dontSeeElement("div.toast-container div.toast");
@@ -521,6 +523,10 @@ Scenario('Edit folder AS APPROVER - no approval needed ', async ({I, DT, DTE, Do
 Scenario('Delete folder as NON-Approver - requires approval ', async ({I, DT, DTE, Document, TempMail}) => {
     I.say("Try to delete folder as non-approver - should require approval");
     I.relogin("tester2");
+
+    //delete old emails because of possible multiple email notifications from previous tests
+    await TempMail.login(testerEmail);
+    await TempMail.destroyInbox();
 
     requestFolderDeletion(I, DT, DTE, Document, newFolderName + "_edited_3");
 });
