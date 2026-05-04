@@ -202,10 +202,10 @@
 			</table>
 
 			<%if((long) freeCharacters < 1) {%>
-				<p style="color: #ff4b58"><iwcm:text key="components.translation_engine.no_free_characters.msg"/></p>
+				<p style="color: #E00028"><iwcm:text key="components.translation_engine.no_free_characters.msg"/></p>
 			<% } %>
 		<% } else { %>
-			<h2 style="color: #ff4b58"><iwcm:text key="components.translation_engine.not_found"/></h2>
+			<h2 style="color: #E00028"><iwcm:text key="components.translation_engine.not_found"/></h2>
 			<p><iwcm:text key="components.translation_engine.not_found.msg"/></p>
 		<% } %>
 
@@ -227,7 +227,7 @@
 		<div>
 			<p id="undo_wait" style="width:100%; display: none;"><iwcm:text key="components.syncDirAction.title"/></p>
 			<p id="undo_succ" style="width:100%; color: #00be9f; display: none;"><iwcm:text key="components.clone-structure.undo-sync-succesfull"/></p>
-			<p id="undo_fail" style="width:100%; color: #ff4b58; display: none;"><iwcm:text key="components.clone-structure.undo-sync-fail"/></p>
+			<p id="undo_fail" style="width:100%; color: #E00028; display: none;"><iwcm:text key="components.clone-structure.undo-sync-fail"/></p>
 		</div>
 	</div>
 </div>

@@ -19,6 +19,7 @@
       - [Backend](/developer/frameworks/charts/backend/README.md)
       - [Frontend](/developer/frameworks/charts/frontend/README.md)
       - [Spoločné JS funkcie](/developer/frameworks/charts/frontend/statjs.md)
+      - [Štatistiky pomocou grafov](/developer/frameworks/charts/stats-by-charts/README.md)
     - [Preklady v JavaScript súboroch](/developer/frameworks/jstranslate.md)
     - [jsTree](/developer/jstree/README.md)
     - Používané knižnice
@@ -56,6 +57,7 @@
 - Testovanie
     - [Testovanie](/developer/testing/README.md)
     - [Preklady textov](/developer/testing/i18n.md)
+    - [Testovanie prístupnosti](/developer/testing/a11y.md)
     - [Automatické testovanie DataTables](/developer/testing/datatable.md)
     - [DataTables - testovanie importu](/developer/testing/datatable-import.md)
     - [Generovanie screenshotov dokumentácie](/developer/testing/screenshots.md)

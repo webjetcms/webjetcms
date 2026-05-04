@@ -1,10 +1,10 @@
 # Spring configuration
 
-Before programming it is necessary to configure the loading `Spring` classes and repositories. It is necessary to create a file `SpringConfig.java` for configuration `Spring` a `JpaDBConfig.java` for configuring repositories. You create them in package `sk.iway.INSTALL_NAME` to be loaded and initialized by WebJET at startup. The value `INSTALL_NAME` replace with the value of the conf. variable `installName`.
+Before programming, you need to configure the loading of ```Spring``` classes and repositories. You need to create files ```SpringConfig.java``` for the configuration of ```Spring``` and ```JpaDBConfig.java``` for the configuration of the repositories. You will create them in the package ```sk.iway.INSTALL_NAME``` so that WebJET will load and initialize them at startup. Replace the value of ```INSTALL_NAME``` with the value of the conf. variable ```installName```.
 
-## Spring settings
+## Spring setup
 
-In class `SpringConfig` should be set in the annotation `@ComponentScan` packages containing `Spring` Classes.
+In class ```SpringConfig``` it is necessary to set in annotation ```@ComponentScan``` packages that contain ```Spring``` classes.
 
 ```java
 package sk.iway.basecms;
@@ -22,9 +22,9 @@ public class SpringConfig {
 }
 ```
 
-## JPA settings
+## JPA setup
 
-In class `JpaDBConfig` (technically it doesn't matter what it's called, but it must be in the package that is set in `SpringConfig` in section `@ComponentScan`) is similarly needed in the annotation `@EnableJpaRepositories.basePackages` set packages containing `Spring DATA` repositories. Do `emf.setPackagesToScan` it is necessary to add `packages` Containing `JPA` entities (usually these are the same `packages`).
+In class ```JpaDBConfig``` (technically it doesn't matter what it's called, but it must be in the package that is set in ```SpringConfig``` in section ```@ComponentScan```), it is similarly necessary to set packages containing ```Spring DATA``` repositories in annotation ```@EnableJpaRepositories.basePackages```. In ```emf.setPackagesToScan``` it is necessary to add `packages` containing `JPA` entities (usually they are the same `packages`).
 
 ```java
 package sk.iway.basecms;
@@ -110,9 +110,9 @@ public class JpaDBConfig {
 }
 ```
 
-## SpringSecurity Settings
+## Setting up SpringSecurity
 
-If you need to adjust the settings for `SpringSecurity` you can in your class `SpringConfig` Implement `sk.iway.iwcm.system.spring.ConfigurableSecurity`. In the method `configureSecurity(HttpSecurity http)` you have an available object `HttpSecurity` where you can add the necessary settings:
+If you need to modify the settings for ```SpringSecurity```, you can implement ```sk.iway.iwcm.system.spring.ConfigurableSecurity``` in your ```SpringConfig``` class. In the ```configureSecurity(HttpSecurity http)``` method, you have an object ```HttpSecurity``` available in which you can add the necessary settings:
 
 ```java
 import sk.iway.iwcm.system.spring.ConfigurableSecurity;

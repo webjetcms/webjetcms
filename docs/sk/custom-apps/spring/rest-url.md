@@ -65,7 +65,7 @@ CSRF token je možné vložiť do textu web stránky pomocou makra `!CSRF_INPUT!
 </form>
 ```
 
-Prípadne môžete využiť priamo API triedy [CSRF](../../../../src/webjet8/java/sk/iway/iwcm/system/stripes/CSRF.java) pre generovanie hodnoty `public static String getCsrfToken(HttpSession session, boolean saveToSession)` alebo celého HTML poľa `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. Pre pridanie HTTP hlavičky pre všetky AJAX volania cez `jQuery` môžete použiť nasledovný kód:
+Prípadne môžete využiť priamo API triedy [CSRF](../../../../src/main/java/sk/iway/iwcm/system/stripes/CSRF.java) pre generovanie hodnoty `public static String getCsrfToken(HttpSession session, boolean saveToSession)` alebo celého HTML poľa `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. Pre pridanie HTTP hlavičky pre všetky AJAX volania cez `jQuery` môžete použiť nasledovný kód:
 
 ```html
 <script>

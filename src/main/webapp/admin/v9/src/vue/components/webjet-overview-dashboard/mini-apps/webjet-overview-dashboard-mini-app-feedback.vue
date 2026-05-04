@@ -2,11 +2,13 @@
     <div :class="'overview-logged feedback'">
         <div class="overview-logged__head">
             <div class="overview-logged__head__icon">
-                <i class="ti ti-message-2 fs-4"></i>
+                <i class="ti ti-message-2 fs-4" aria-hidden="true"></i>
             </div>
             <span> {{ this.$WJ.translate('admin.welcome.feedback.title.js') }}</span>
             <div class="overview-logged__head__more">
-                <i @click="showModal()" v-tooltip:top="this.$WJ.translate('admin.welcome.feedback.sendButton.js')" class="ti ti-writing"></i>
+                <button @click="showModal()" :aria-label="this.$WJ.translate('admin.welcome.feedback.sendButton.js')" v-tooltip:top="this.$WJ.translate('admin.welcome.feedback.sendButton.js')" class="btn btn-outline p-0">
+                    <i class="ti ti-writing" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
 

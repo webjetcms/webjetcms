@@ -22,8 +22,8 @@ import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.EditorException;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,7 +119,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@ExceptionHandler(TransactionSystemException.class)
@@ -166,7 +166,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@ExceptionHandler(EditorException.class)
@@ -180,7 +180,7 @@ public class DatatableExceptionHandlerV2
 
 		response.setError(message);
 		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@ExceptionHandler(Exception.class)
@@ -197,7 +197,7 @@ public class DatatableExceptionHandlerV2
 		response.setError(message);
 		//log stack trace because this is unexpected exception
 		Logger.error(DatatableExceptionHandlerV2.class, "handleException: " + ex.getMessage(), ex);
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	private String prepareMessage(String message, Exception ex) {
@@ -229,7 +229,7 @@ public class DatatableExceptionHandlerV2
 	 */
 	private String getErrorMessage(ConstraintViolation<?> violation) {
 
-		//{javax.validation.constraints.NotBlank.message}
+		//{jakarta.validation.constraints.NotBlank.message}
 		String key = violation.getMessageTemplate();
 		if (key != null && key.length()>3) {
 			if (key.startsWith("{") && key.endsWith("}") && key.length()>3) key = key.substring(1, key.length()-1);

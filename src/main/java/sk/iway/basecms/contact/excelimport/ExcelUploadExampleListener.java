@@ -16,7 +16,7 @@ import sk.iway.iwcm.admin.xls.exception.ExcelImportServiceException;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 import java.util.List;
 
 /**

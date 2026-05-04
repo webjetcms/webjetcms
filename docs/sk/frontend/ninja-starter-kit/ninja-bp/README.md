@@ -115,7 +115,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.urlCanonical}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
 
 <%-- <% if (ninja.amp.enabled) { %> --%>
 <c:if test="${requestScope.doc_temp_name == 'Blog template'}">

@@ -3,13 +3,21 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">&nbsp;</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" data-toggle="tooltip" data-th-title="\#{button.cancel}"><i class="ti ti-x"></i></button>
+        <div class="dialog-buttons">
+          <button type="button" class="btn btn-outline-secondary maximize" data-toggle="tooltip" data-th-title="\#{datatables.modal.maximize.js}"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-outline-secondary minimize" data-toggle="tooltip" data-th-title="\#{datatables.modal.minimize.js}"><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-close" data-bs-dismiss="modal" data-toggle="tooltip" data-th-title="\#{button.cancel}"><i class="ti ti-x"></i></button>
+        </div>
       </div>
       <div class="modal-body">
+        <div class="modal-body-content"></div>
         <iframe src='about:blank' id="modalIframeIframeElement"></iframe>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" tabindex="0"><i class="ti ti-check"></i> <span>[[\#{button.submit}]]</span></button>
+        <div class="modal-footer-default-buttons">
+          <button class="btn btn-primary" tabindex="0"><i class="ti ti-check"></i> <span>[[\#{button.submit}]]</span></button>
+        </div>
+        <div class="modal-footer-custom-buttons"></div>
       </div>
     </div>
   </div>

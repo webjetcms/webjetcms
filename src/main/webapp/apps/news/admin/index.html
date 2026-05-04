@@ -69,7 +69,7 @@
                     });
                     newsDataTable = wpdInstance.createDatatable();
 
-                    $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupIdFilterSelect"></select></div>');
+                    $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label for="groupIdFilterSelect">[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupIdFilterSelect"></select></div>');
                     setGroupIdFilterSelect(data);
 
                     $("#groupIdFilterSelect").on("change", function() {

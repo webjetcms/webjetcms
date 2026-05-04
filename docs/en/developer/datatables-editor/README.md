@@ -4,16 +4,16 @@
 
 ## Tabs in the editor
 
-The WebJET version of the Editor has implemented card support. Each card must have a unique `id`, which is used in the columns definition in the editor section to set the tab to which the field will be moved. If the value `tab` in the columns definition is not set the field is moved to the first tab.
+The WebJET version of the Editor has implemented tab support. Each tab must have a unique ``id``, which is set in the columns definition in the editor section to the tab to which the field will be moved. If the value ```tab``` in the columns definition is not set, the field will be moved to the first tab.
 
-Optionally, it can `tabs` the definition to contain the attribute `content` with HTML code that is inserted into the card. In this case, it must no longer contain fields from `columns` Definitions. At the same time, the indentations are removed from the defined card and `before` element with grey band, the content of the tab is full width and any indentation needs to be solved in custom CSS.
+Optionally, the ```tabs``` definition can contain an attribute ```content``` with HTML code that is inserted into the card. In this case, it must no longer contain fields from the ```columns``` definition. At the same time, the indentation and the ```before``` element with a gray band are removed from the card defined in this way, the card content is full-width and any indentation needs to be addressed in custom CSS.
 
 Possible attributes:
-- `selected` defines the default tab displayed, it should only be set on one tab.
-- `className` allows you to add CSS style to the tab switcher. CSS styles are predefined `hide-on-create` to hide the card when creating a new record, and `hide-on-edit` to hide the tab when editing an existing record, `hide-on-duplicate` to hide the card when duplicating.
-- `perms` allows to not display the tab if the user does not have the specified right (note, the character `.` in the law is taken as a sign of `_`). The rights in the JavaScript object are checked `nopermsJavascript`.
-- `hideOnCreate` by setting it to `true` hides the tab when creating a new record.
-- `hideOnEdit` by setting it to `true` hides the tab when editing an existing record.
+- ```selected``` defines the default tab displayed, it should only be set on one tab.
+- ```className``` allows you to add CSS style to the tab switcher. The predefined CSS styles are ```hide-on-create``` for hiding the tab when creating a new record and ```hide-on-edit``` for hiding the tab when editing an existing record, `hide-on-duplicate` for hiding the tab when duplicating.
+- ```perms``` allows not to display the card if the user does not have the specified right (note, the character ```.``` in the right is superseded by the character ```_```). The rights in the JavaScript object ```nopermsJavascript``` are checked.
+- ```hideOnCreate``` setting to ```true``` hides the tab when creating a new record.
+- ```hideOnEdit``` setting to the value ```true``` hides the tab when editing an existing record.
 
 ```javascript
 let tabs = [
@@ -53,7 +53,7 @@ galleryTable = WJ.DataTable( {
 });
 ```
 
-To switch tabs, you can activate `listener`:
+To toggle the taboo, you can activate ```listener```:
 
 ```javascript
 window.addEventListener('WJ.DTE.tabclick', function (e) {
@@ -62,7 +62,7 @@ window.addEventListener('WJ.DTE.tabclick', function (e) {
 }, false);
 ```
 
-If you need to have **tab to the full height of the window** it is possible to set the CSS style `.dte-tab-autoheight`. If necessary, it is possible via the data attribute `data-dt-autoheight-offset` set the size offset (if the window already contains another element). If you need the window to be scrollable (it may contain a large object) don't forget to set `style="overflow:scroll;"`.
+If you need to have a **tab that fills the window**, you can set the CSS style ```.dte-tab-autoheight``` to the tab. If necessary, you can set the size offset via the data attribute ```data-dt-autoheight-offset``` (if the window already contains another element). If you need the window to be scrollable (it can contain a large object), don't forget to set ```style="overflow:scroll;"```.
 
 ```javascript
 var tabs = [
@@ -83,9 +83,9 @@ var tabs = [
 ];
 ```
 
-## Configuration options for the columns object
+## Columns object configuration options
 
-Sample DT Editor configuration options (within columns definition)
+Sample DT Editor configuration options (within the columns definition)
 
 ```javascript
 let columns = [
@@ -138,26 +138,28 @@ let columns = [
 
 ## Events
 
-In addition to [standard events](https://editor.datatables.net/reference/event/) the following events are added from the Datatable in WebJET:
-- `WJ.DTE.open` - called when the editor window is opened, in `details` object will transfer `dte` editor's object.
-- `WJ.DTE.opened` - called after the window is opened (the window is already displayed), in `details` object will transfer `dte` the editor's object, his `id` and the type of action (`edit,create,remove`) v `action`.
-- `WJ.DTE.close` - called when the editor window is closed, in `details` object will transfer `dte` editor's object.
-- `WJ.DTE.forceReload` - is invoked when the REST service returns a request to restore the datatable. It will refresh itself, this event is sent for the possibility of updating e.g. JS tree
-- `WJ.DTE.tabclick` - is called after clicking on tab in the editor
-- `WJ.DTE.submitclick` - is invoked after clicking on the save editor button
-- `WJ.DTE.closeclick` - is called after clicking on the close button of the editor window
-- `WJ.DTE.xhrfetch` - is invoked after the data is loaded into the editor when called via fetchOnEdit, the editor window is still in the DOM tree and the standard events do not work `dt.opened`
-- `WJ.DTE.resize` - is invoked when the window is resized (click on the maximize/minimize button)
+In addition to the [standard events](https://editor.datatables.net/reference/event/) from Datatable, the following events have been added to WebJET:
+
+- ```WJ.DTE.open``` - ​​called when opening the editor window, in the ```details``` object, the ```dte``` editor object is transferred.
+- ```WJ.DTE.opened``` - ​​called after opening the window (the window is already displayed), in the ```details``` object, ```dte``` the editor object is transferred, its ```id``` and the action type (```edit,create,remove```) in the ```action```.
+- ```WJ.DTE.close``` - ​​called when closing the editor window, in the ```details``` object, the ```dte``` editor object is transferred.
+- ```WJ.DTE.forceReload``` - ​​is called when the REST service returns a request to refresh the data table. It refreshes itself, this event is sent for the possibility of updating e.g. JS tree
+- ```WJ.DTE.tabclick``` - ​​is called after clicking on a tab in the editor
+- ```WJ.DTE.submitclick``` - ​​is called after clicking the editor save button
+- ```WJ.DTE.closeclick``` - ​​is called after clicking the close button of the editor window
+- ```WJ.DTE.xhrfetch``` - ​​is called after loading data into the editor when called via fetchOnEdit, the editor window is still in the DOM tree and standard events ```dt.opened``` do not work
+- ```WJ.DTE.resize``` - ​​is called when the window is resized (clicking the maximize/minimize button)
 
 ## Styling
 
-For specific cases, you need to set the CSS style for the field (className annotation):
-- `todo` - the field will appear orange indicating that it is not yet functional
-- `DTE_Field_Has_Checkbox` - reduces the offset between the field and the next checkbox (it is set per field, not per checkbox)
+For specific cases, it is necessary to set a CSS style for the field (className annotation):
+
+- ```todo``` - ​​the field will be displayed in orange indicating that it is not yet functional
+- ```DTE_Field_Has_Checkbox``` - ​​reduces the indentation between the field and the next checkbox (set on the field, not the checkbox)
 
 ## Special buttons
 
-If you need to have special buttons in the editor instead of the standard Save button you can use the option when configuring the Datatable `editorButtons`:
+If you need to have special buttons in the editor instead of the standard Save button, you can use the ```editorButtons``` option when configuring the Datatable:
 
 ```javascript
 webpagesDatatable = WJ.DataTable({
@@ -200,7 +202,7 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-Similarly, to add a new record, custom buttons can be set using `createButtons` with the option not to close the editor after saving the record:
+Similarly, for adding a new record, you can set custom buttons using `createButtons` with the option of not closing the editor after saving the record:
 
 ```javascript
 filePropertiesTable = WJ.DataTable({
@@ -235,13 +237,14 @@ filePropertiesTable = WJ.DataTable({
 
 ## Code samples
 
-### Dynamic change of values in the selection field
+### Dynamically changing values ​​in a selection field
 
-Sometimes it is necessary to dynamically change the values in the select box based on changes in previous fields. An example is in the file [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) where is the solution to:
-- change select box values when loading the editor
-- change of values when changing the previous field
+Sometimes it is necessary to dynamically change the values ​​in the select box based on changes in previous fields. An example is in the file [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) where the solution is to:
 
-In the sample case, this is a change of field values `forward` based on the value selected in the select box `templatesGroupId`. In addition, the currently set value in the field is also preserved. `forward` so that the returned possible values do not contain the currently set value.
+- change select box values ​​when loading the editor
+- change values ​​when changing the previous field
+
+In the example case, the values ​​of the field ```forward``` are changed based on the value selected in the select box ```templatesGroupId```. In addition, the currently set value in the field ```forward``` is also preserved to prevent the possible values ​​returned from not containing the currently set value.
 
 ```javascript
 let tabs = [
@@ -303,7 +306,7 @@ window.domReady.add(function () {
 });
 ```
 
-REST service is added to an existing class [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
+The REST service is added to the existing class [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
 
 ```java
 @RequestMapping("/forwards/")
@@ -313,9 +316,9 @@ public List<LabelValue> getForwards(@RequestParam(required = false) Integer temp
 }
 ```
 
-### Getting the JSON object before editing
+### Getting a JSON object before editing
 
-Getting the JSON object before editing (it is possible to modify the data for the editor)
+Getting a JSON object before editing (it is possible to modify the data for the editor)
 
 ```javascript
 webpagesDatatable.EDITOR.on( 'initEdit', function( e, node, data, items, type ){
@@ -325,11 +328,11 @@ webpagesDatatable.EDITOR.on( 'initEdit', function( e, node, data, items, type ){
 });
 ```
 
-### Program editor opening
+### Opening the editor programmatically
 
-For correct programmatic opening of the editor it is necessary to use the WebJET API. This will ensure the correct display of letters and buttons. Parameter `row` Is **jQuery selector** line, similar to the [original API](https://editor.datatables.net/reference/api/edit\(\)). Easiest by using the record ID selector `#ID`.
+To open the editor correctly programmatically, you need to use the WebJET API. This will ensure that the sheets and buttons are displayed correctly. The parameter ```row``` is a **jQuery selector** of the row, similar to the [original API](https://editor.datatables.net/reference/api/edit()). The easiest way is to use the selector by record ID ```#ID```.
 
-Feature `wjEditFetch` also performs any row data refresh (if the option is set `fetchOnEdit`) and the execution of the set `onEdit` functions. Call `wjEdit` opens the editor with the already loaded data and does not do any special operations. If you have a modified function `onEdit` it is always necessary to use the call `wjEdit`, otherwise a jam will occur.
+The ```wjEditFetch``` function also performs any possible row data refresh (if the ```fetchOnEdit``` option is set) and executes the set ```onEdit``` function. The ```wjEdit``` call opens the editor with already loaded data and does not perform any special operations. If you have modified the ```onEdit``` function, it is always necessary to use the ```wjEdit``` call, otherwise a loop will occur.
 
 ```javascript
 //API
@@ -340,9 +343,9 @@ TABLE.wjEdit = function(row) {...}
 webpagesDatatable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
 ```
 
-### Conditional display of the input field
+### Conditional display of an input field
 
-If you need to conditionally display an input field based on a different value, you can use the API call `field("meno").hide()`. The preview hides/shows the field when the editor is opened based on a different value in the JSON data:
+If you need to conditionally display an input field based on a different value, you can use the API call ```field("meno").hide()```. The example hides/shows the field when the editor is opened based on a different value in the JSON data:
 
 ```javascript
 groupsDatatable.EDITOR.on('open', function (e, type) {
@@ -361,4 +364,5 @@ groupsDatatable.EDITOR.on('open', function (e, type) {
 ### API functions
 
 Other API functions you can use:
-- `TABLE.wjUpdateOptions(url=null, callback=null)` - executes the REST service call again `/all` to get the latest `json.options` dials and updates them in the datatable filters and in the editor (even when the editor is open). Optionally, it is possible to specify the URL and any `callback` called after updating the dials.
+
+- ```TABLE.wjUpdateOptions(url=null, callback=null)``` - ​​re-executes the REST service call ```/all``` to get the current ```json.options``` code lists and updates them in the data table filters and in the editor (even if the editor is open). Optionally, you can specify a URL address and a possible ```callback``` called after updating the code lists.

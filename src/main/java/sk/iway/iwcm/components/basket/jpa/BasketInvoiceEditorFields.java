@@ -3,7 +3,7 @@ package sk.iway.iwcm.components.basket.jpa;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -71,7 +71,7 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
 			)
 		}
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String body;
 
     //AUTH TOKEN  - for getting iframe of invoice_email.jsp

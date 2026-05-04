@@ -28,13 +28,14 @@ if (window != window.top) {
 
 window.initSubmenuTabsClick = function() {
     //handle tabs click - we need also to execute link so it cant be BS tabs
-    var $tabs = $(".ly-submenu .md-tabs li");
-    if ($tabs.hasClass("binded")) return;
+    var $tabs = $(".ly-submenu .md-tabs li").not(".binded");
+    if ($tabs.length === 0) return;
     $tabs.addClass("binded");
     $tabs.on("click", "a", function(e) {
+
         let $this = $(this);
         let isActive = $this.hasClass("active");
-        let href = $this.attr("href");
+
         $this.parents(".md-tabs").find("li a.active").removeClass("active");
 
         if (isActive) {
@@ -48,7 +49,7 @@ window.initSubmenuTabsClick = function() {
             $this.addClass("active");
             $this.closest('ul').removeClass("open");
             //hide menu
-            $("div.js-sidebar-toggler").trigger("click");
+            $(".js-sidebar-toggler").trigger("click");
         }
     });
 }
@@ -211,7 +212,7 @@ function initClosure() {
     });
 
     //sidebar toogler responsive
-    $("div.js-sidebar-toggler").on("click", function(e) {
+    $(".js-sidebar-toggler").on("click", function(e) {
         $("div.ly-sidebar").toggleClass("active");
         $("div.ly-page-wrapper").toggleClass("active");
         $(this).children("i").toggleClass("ti-x");
@@ -404,6 +405,13 @@ function initClosure() {
                                 WJ.dispatchEvent("WJ.treeInitialJson.selectedNode", window.selectedNode);
                             }, 100);
                         }
+                    }
+
+                    if (itemsRemaining.length==0) {
+                        //fire finished event
+                        setTimeout(()=> {
+                            WJ.dispatchEvent("WJ.treeInitialJson.done", window.selectedNode);
+                        }, 200);
                     }
 
                     //console.log("items:", items, "itemsRemaining:", itemsRemaining);
@@ -664,6 +672,43 @@ function initClosure() {
     window.jstree.on('loaded.jstree', function () {
         window.jsTreeDocumentOpener.next();
         window.jsTreeFolderOpener.next();
+    });
+
+    window.addEventListener('WJ.treeInitialJson.done', (e) => {
+        //scroll to selected item
+        var $selected = somStromcek.find('.jstree-clicked');
+        if ($selected.length === 0) return;
+
+        var el = $selected[0];
+        var $scrollContainer = somStromcek.closest('.tree-col');
+        var scrollbar = null;
+
+        if ($scrollContainer.length > 0) {
+            var scrollContentElement = $scrollContainer.find('.scroll-content')[0];
+
+            // Use custom scrollbar only when the library and target element are available.
+            if (typeof Scrollbar !== 'undefined' && scrollContentElement) {
+                scrollbar = Scrollbar.get(scrollContentElement);
+            }
+        }
+
+        if (scrollbar) {
+            var selectedTop = $selected.offset().top - $scrollContainer.offset().top + scrollbar.scrollTop;
+            var containerHeight = $scrollContainer.height();
+            if (selectedTop > containerHeight - 50) {
+                scrollbar.scrollTop = selectedTop - containerHeight / 2;
+            }
+        } else {
+            //we can use center here, because when the element is on bottom it will scroll whole window
+            el.scrollIntoView({block: 'nearest'});
+            var scrollParent = el.parentElement;
+            while (scrollParent && scrollParent !== document.body) {
+                var style = getComputedStyle(scrollParent);
+                if (/(auto|scroll)/.test(style.overflow + style.overflowY)) break;
+                scrollParent = scrollParent.parentElement;
+            }
+            if (scrollParent) scrollParent.scrollTop += 100;
+        }
     });
 
     window.jstree.on('after_open.jstree', function () {

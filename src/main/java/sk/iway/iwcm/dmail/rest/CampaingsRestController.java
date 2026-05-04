@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +104,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
             //Delete previous temporaly saved emails
             emailsRepository.deleteByCampainIdAndDomainId((long)-user.getUserId(), CloudToolsForCore.getDomainId());
         } else {
-            entity = campaingsRepository.getById(id);
+            entity = campaingsRepository.getReferenceById(id);
         }
 
         processFromEntity(entity, ProcessItemAction.GETALL);

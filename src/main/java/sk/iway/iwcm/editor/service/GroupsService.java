@@ -5,13 +5,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
@@ -23,10 +22,13 @@ import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 
 /**
  * service class for groups operations
@@ -36,11 +38,13 @@ import sk.iway.iwcm.system.datatable.NotifyBean;
 public class GroupsService extends NotifyService {
 
     private GroupSchedulerDtoRepository groupSchedulerDtoRepository;
+	private ApproveService approveService;
     private Prop prop;
 
     @Autowired
-    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, HttpServletRequest request) {
+    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, ApproveService approveService, HttpServletRequest request) {
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
+		this.approveService = approveService;
         this.prop = Prop.getInstance(request);
     }
 
@@ -52,7 +56,21 @@ public class GroupsService extends NotifyService {
 	 * @param currentUser
 	 * @return
 	 */
-    public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
+	public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
+		return recoverGroupFromTrash(group, currentUser, true);
+	}
+
+	/**
+	 * Recover group from trash.
+	 * It will try to find last parent group from history and use it as recover location.
+	 * If no history is found, group will be recovered to root.
+	 * publishEvents parameter is used to control if ON_RECOVER and AFTER_RECOVER events should be published.
+	 * @param group
+	 * @param currentUser
+	 * @param publishEvents
+	 * @return
+	 */
+    public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser, boolean publishEvents) {
 
 		if (isInTrash(group) == false) return false; //Group is not in trash
 
@@ -64,6 +82,11 @@ public class GroupsService extends NotifyService {
 			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
 			addNotify(info);
 			return false;
+		}
+
+		//publish before recover event
+		if (publishEvents) {
+			(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_RECOVER)).publishEvent();
 		}
 
 		int parentGroupId = 0;
@@ -78,6 +101,15 @@ public class GroupsService extends NotifyService {
 				parentGroupId = latestGroupHistory.getParentGroupId();
 				parentGroupPath = parentGroup.getFullPath();
 			}
+		}
+
+		//Check perms - by parent group
+		approveService.loadApproveTables(parentGroupId);
+		if (approveService.needApprove() && !approveService.isSelfApproved()) {
+			//No right
+			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.failed_folder"), prop.getText("editor.recover.notify_folder.no_right"), NotifyBean.NotifyType.WARNING, 60000);
+			addNotify(info);
+			return false;
 		}
 
 		//Set folder derent to root
@@ -141,6 +173,12 @@ public class GroupsService extends NotifyService {
 		//Refresh
 		DocDB.getInstance(true);
 		GroupsDB.getInstance(true);
+
+		// Get newly recovered group
+		group = GroupsDB.getInstance().getGroup(group.getGroupId());
+
+		//publish recover event
+		if(group != null && publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.AFTER_RECOVER, currentUser)).publishEvent();
 
         return true;
 	}

@@ -13,10 +13,10 @@ Scenario('key generation and swagger', ({ I, DTE, Document }) => {
     I.moveCursorTo("div.toast-title");
     Document.screenshot("/custom-apps/spring/api-key-notification.png");
 
-    I.amOnPage("/admin/swagger-ui/#/webpages-rest-controller/");
+    I.amOnPage("/admin/swagger-ui/index.html#/WebpagesRestController");
     I.wait(10);
-    I.clickCss("span[data-path='/admin/rest/web-pages/edit/{id}'] a");
+    I.click(locate("button.opblock-summary-control").withText("/admin/rest/web-pages/{id}"));
     I.wait(2);
 
-    Document.screenshot("/custom-apps/spring/swagger.png");
+    Document.screenshot("/custom-apps/spring/swagger.png", 1280, 1200);
 });

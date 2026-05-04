@@ -387,7 +387,7 @@ async function checkVerifyEmail_Two_Phase_1(I, TempMail) {
 
     let text = await I.grabTextFrom( TempMail.getContentSelector() );
     if(text.includes("Pre aktiváciu účtu kliknite na nasledovný odkaz:")) {
-        authLink = ( text.split("Pre aktiváciu účtu kliknite na nasledovný odkaz:")[1] ).split(" ").join("");
+        authLink = ( text.split("Pre aktiváciu účtu kliknite na nasledovný odkaz:")[1] ).split(" ").join("").trim();
 
         if(authLink === undefined || authLink === null || authLink.length < 1) {
             //Problem .... link is empty

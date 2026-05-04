@@ -22,6 +22,16 @@ module.exports = function () {
       return process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
     },
 
+    /**
+     * Opens a web page using JS code to prevent problems with referer. Before this call you need to be on some admin page.
+     * @param {String} url
+     */
+    async amOnPageAsync(url) {
+      await this.executeScript((url) => {
+        window.location.href=url;
+      }, url);
+    },
+
     // Define custom steps here, use 'this' to access default methods of I.
     // It is recommended to place a general 'login' function here.
     fillAreaField(area, generateRandomNum) {
@@ -42,6 +52,99 @@ module.exports = function () {
     seeAndClick(name) {
       this.see(name);
       this.click(name);
+    },
+
+    /**
+     * Dispatches mouse events on an element specified by selector and optional text and position.
+     * @param {*} selector - CSS selector to find the element(s)
+     * @param {*} text - Optional text to match within the element(s)
+     * @param {*} position - Optional position {x, y} to click within the element
+     * @param {*} buttonName - Mouse button name: left, right, middle
+     * @returns {Promise<boolean>} - Returns true if the event was dispatched successfully
+     */
+    dispatchMouseEvent(selector, text = null, position = null, buttonName = 'left') {
+      return this.executeScript((root, args) => {
+        const options = args && typeof args.selector !== 'undefined' ? args : root;
+        const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+        const { selector, text, position, buttonName } = options;
+
+        //sync clicked element to ckeditor
+        const syncSelectionWithElement = (targetElement) => {
+          const editableRoot = targetElement.closest('[contenteditable="true"]');
+
+          if (!editableRoot) {
+            return;
+          }
+
+          editableRoot.focus();
+
+          const selection = window.getSelection();
+          if (!selection) {
+            return;
+          }
+
+          const range = document.createRange();
+          range.selectNode(targetElement);
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        };
+
+        const normalizeText = (value) => (value || '').replace(/\s+/g, ' ').trim();
+        const elements = Array.from(scope.querySelectorAll(selector));
+        const element = text == null
+          ? elements[0]
+          : elements.find((item) => normalizeText(item.textContent) === normalizeText(text));
+
+        const buttonConfig = {
+          left: {
+            button: 0,
+            buttons: 1,
+            events: ['mousedown', 'mouseup', 'click'],
+          },
+          middle: {
+            button: 1,
+            buttons: 4,
+            events: ['mousedown', 'mouseup', 'auxclick'],
+          },
+          right: {
+            button: 2,
+            buttons: 2,
+            events: ['mousedown', 'mouseup', 'contextmenu'],
+          },
+        };
+
+        const activeButton = buttonConfig[buttonName] || buttonConfig.left;
+
+        if (!element) {
+          throw new Error(`Element not found for selector: ${selector}, text: ${text}`);
+        }
+
+        syncSelectionWithElement(element);
+
+        const rect = element.getBoundingClientRect();
+        const offsetX = position && typeof position.x === 'number' ? position.x : rect.width / 2;
+        const offsetY = position && typeof position.y === 'number' ? position.y : rect.height / 2;
+        const clientX = rect.left + offsetX;
+        const clientY = rect.top + offsetY;
+
+        activeButton.events.forEach((type) => {
+          element.dispatchEvent(new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            view: window,
+            button: activeButton.button,
+            buttons: activeButton.buttons,
+            clientX,
+            clientY,
+            screenX: window.screenX + clientX,
+            screenY: window.screenY + clientY,
+          }));
+        });
+
+        return true;
+      }, { selector, text, position, buttonName });
     },
 
     /**
@@ -339,9 +442,9 @@ module.exports = function () {
       this.dtWaitForLoader();
       this.click(container+" button.buttons-settings");
       this.click(container+" button.buttons-colvis");
-      this.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      this.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
-      this.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+      this.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
       this.dtWaitForLoader();
     },
 

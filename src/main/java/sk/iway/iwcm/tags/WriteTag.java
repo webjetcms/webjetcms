@@ -8,11 +8,11 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyTagSupport;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.context.ApplicationContext;
@@ -26,10 +26,12 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.doc.DebugTimer;
@@ -700,12 +702,12 @@ public class WriteTag extends BodyTagSupport
 									if (htmlCode == null) {
 										WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);
 										request.getRequestDispatcher(includeFileName).include(request, respWrapper);
-										if (respWrapper.redirectURL != null) {
-											response.sendRedirect(respWrapper.redirectURL);
+										if (respWrapper.getRedirectURL() != null) {
+											response.sendRedirect(respWrapper.getRedirectURL());
 											return;
 										}
 
-										htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
+										htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
 									}
 
 									htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);
@@ -774,6 +776,21 @@ public class WriteTag extends BodyTagSupport
 										content.append("<div class=\"inlineComponentEditButtonsTop\">").append(buttonsTopString).append("</div>");
 
 										request.removeAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);
+									}
+
+									// wrap legacy JSP component output with wrapper div (Spring components are wrapped in WebjetComponentResolver)
+									if (isSpringComponent == false) {
+										PageParams wrapperPageParams = new PageParams(pageParams);
+										String[] wrapperDiv = WebjetComponentAbstract.buildWrapperDiv(
+											wrapperPageParams.getValue("wrapperClass", null),
+											wrapperPageParams.getValue("wrapperId", null),
+											wrapperPageParams.getValue("wrapperTitle", null),
+											wrapperPageParams.getValue("wrapperAriaLabel", null)
+										);
+										if (wrapperDiv != null) {
+											htmlCode.insert(0, wrapperDiv[0]);
+											htmlCode.append(wrapperDiv[1]);
+										}
 									}
 
 									content.append(htmlCode);

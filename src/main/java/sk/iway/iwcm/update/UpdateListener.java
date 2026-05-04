@@ -1,6 +1,6 @@
 package sk.iway.iwcm.update;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

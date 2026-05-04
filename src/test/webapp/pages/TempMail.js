@@ -14,12 +14,8 @@ module.exports = {
     /**
      * If you change TempMail provider, run this SQL to update users in database:
      *
-     * UPDATE users SET email = REPLACE(email, '@fexpost.com', '@mailsac.com') WHERE email LIKE '%@fexpost.com';
-     * UPDATE users SET email = REPLACE(email, '@mailsac.com', '@noopmail.com') WHERE email LIKE '%@mailsac.com';
-     * UPDATE users SET email = REPLACE(email, '@noopmail.com', '@tempverify.com') WHERE email LIKE '%@noopmail.com';
-     * UPDATE users SET email = REPLACE(email, '@tempverify.com', '@noopmail.com') WHERE email LIKE '%@tempverify.com';
-     *
-     * UPDATE form_attributes SET value = REPLACE(value, '@fexpost.com', '@noopmail.com') WHERE value LIKE '%@fexpost.com';
+     * UPDATE users SET email = REPLACE(email, '@mailsac.com', '@fexpost.com') WHERE email LIKE '%@mailsac.com';
+     * UPDATE form_settings SET recipients = REPLACE(recipients, '@mailsac.com', '@fexpost.com') WHERE recipients LIKE '%@mailsac.com';
      *
      * @returns TempMail provider implementation
      */

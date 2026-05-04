@@ -409,20 +409,20 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.wait(1);
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Prehľadávať");
     I.click("Povoliť prístup len pre skupinu používateľov");
     I.click("Priradiť stránku k hromadnému emailu");
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     //prehladavat
     I.see("Newsletter", container);
@@ -450,9 +450,9 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 });
 
 Scenario('Overenie vyhladania po nacitani', ({ I, DT }) => {
@@ -997,17 +997,17 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.clickCss(container+" button.buttons-settings");
     I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Značky", container+" div.colvisbtn_wrapper");
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.see("News", container);
     I.see("McGregor sales force", container);
@@ -1025,9 +1025,9 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 });
 
 Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {

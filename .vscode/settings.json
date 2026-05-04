@@ -38,17 +38,12 @@
     "gitPrefix.pattern": ".*/(\\d+)-.*",
     "coverage-gutters.coverageBaseDir": "docs/codecoverage-report/",
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
-    "terminal.integrated.shellIntegration.enabled": false,
 
     "spellright.language": [
-        "cs_CZ",
-        "en_US",
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,
-    "spellright.documentTypes": [
-        "markdown"
-    ],
+    "spellright.documentTypes": [],
     "spellright.suggestionsInHints": false,
     "spellright.ignoreRegExpsByClass": {
         "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
@@ -80,9 +75,27 @@
             "text": "Ensure commit messages are relevant to the changes made."
         }
     ],
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/build/**",
+        "**/bin/**",
+        "**/null/**",
+        "**/logs/**"
+    ],
     "chat.tools.terminal.autoApprove": {
-        "git rev-parse": true
+        "./gradlew": true,
+        "git rev-parse": true,
+        "git merge-base": true,
+        "uniq": true,
+        "awk": true,
+        "read": true,
+        "npm install": true,
+        "npm audit": true,
+        "npx codeceptjs": true,
+        "npm run pause": true
     },
+    "chat.agent.maxRequests": 150,
     "cSpell.language": "en,sk",
     "cSpell.enabledFileTypes": {
         "*": false,

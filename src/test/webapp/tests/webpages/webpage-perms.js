@@ -152,6 +152,8 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nedá sa zmazať");
     DTE.save();
+
+    I.forceClickCss("div.toast-container .toast-close-button");
     I.dontSee("Nemáte právo na editáciu web stránky");
 
     //over, ze sa neda editovat adresar na ktory nemam prava
@@ -166,8 +168,10 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     });
     I.wait(1);
     I.scrollTo("#groups-datatable_wrapper");
-    I.click("Úvodná stránka", "#groups-datatable_wrapper td.dt-row-edit a");
-    DT.waitForLoader();
+
+    I.clickCss("#groups-datatable_wrapper td.sorting_1");
+    I.clickCss("#groups-datatable_wrapper button.buttons-edit");
+
     I.see("K tomuto adresáru nemáte prístupové práva")
     I.wait(2);
     I.toastrClose();
@@ -206,7 +210,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.see("Na tento priečinok nemáte prístupvé práva. Skúste o úroveň nižšie.");
     DTE.cancel();*/
 
-    //over, ze sa neda zmazat
+    I.say("over, ze sa neda zmazat");
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka"]);
     I.executeScript(function() {
         try {
@@ -219,10 +223,12 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.seeElement("#groups-datatable_modal");
     DTE.save(); //zmazat
     I.wait(3);
-    I.seeElement("#groups-datatable_modal"); //zmazanie sa nepodarilo, dialog zostal otvoreny
+
+    I.say("zmazanie sa nepodarilo, dialog zostal otvoreny");
+    I.seeElement("#groups-datatable_modal");
     DTE.cancel();
 
-    //over vytvorenie noveho adresara
+    I.say("over vytvorenie noveho adresara");
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť"]);
     I.click(DT.btn.tree_add_button);
     DTE.waitForEditor("groups-datatable");
@@ -234,7 +240,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     I.jstreeWaitForLoader();
 
-    //skus zmazanie
+    I.say("skus zmazanie");
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť", folder_name]);
     I.click('.tree-col .dt-header-row .buttons-remove');
     DTE.waitForEditor("groups-datatable");
@@ -324,9 +330,9 @@ Scenario('tester2 nema pravo na System a Kos', ({ I }) => {
     I.seeElement(locate('.nav-link').withText("Aktívne"));
     I.dontSeeElement(locate('.nav-link').withText("Systémové"));
     I.dontSeeElement(locate('.nav-link').withText("Zmazané"));
-    
+
     I.click(locate('.nav-link').withText("Aktívne"));
-    
+
     I.dontSee("Prístup na adresár zamietnutý");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

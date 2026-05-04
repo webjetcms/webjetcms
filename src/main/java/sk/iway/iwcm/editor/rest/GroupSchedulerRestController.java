@@ -3,20 +3,20 @@ package sk.iway.iwcm.editor.rest;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @Datatable
@@ -42,13 +42,27 @@ public class GroupSchedulerRestController extends DatatableRestControllerV2<Grou
         //else if selectType is "changeHistory", get all records by groupId and whenToPublish is less that actual Date or is NULL
         if(selectType.equals("plannedChanges")) {
             page = new DatatablePageImpl<>(repository.findAllByGroupIdAndWhenToPublishIsNotNull(pageable, groupId));
+
+            processFromEntity(page, ProcessItemAction.GETALL);
+
             return page;
         } else if(selectType.equals("changeHistory")) {
             page = new DatatablePageImpl<>(repository.findAllByGroupIdAndWhenToPublishIsNull(pageable, groupId));
+
+            processFromEntity(page, ProcessItemAction.GETALL);
+
             return page;
         }
 
         return null;
+    }
+
+    @Override
+    public GroupSchedulerDto processFromEntity(GroupSchedulerDto entity, ProcessItemAction action) {
+        GroupSchedulerEditorFields gsef = new GroupSchedulerEditorFields();
+        Long actual = entity.getGroupId() != null ? repository.findActualUsedGroupScheduler(entity.getGroupId()) : null;
+        gsef.fromGroupScheduler(entity, actual, getProp());
+        return entity;
     }
 
     @Override

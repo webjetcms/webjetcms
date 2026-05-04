@@ -47,9 +47,17 @@ Scenario('zoznam fotografii', ({ I, DT, DTE, Document }) => {
 Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
-    I.click('dsc04068.jpeg');
-    DTE.waitForEditor('galleryTable');
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.jstreeWaitForLoader();
+
+    var name = "dsc04068.jpeg";
+    I.waitForText(name, 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText(name));
+    DTE.waitForEditor("galleryTable");
+
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.waitForElement("#zoom");
     I.fillField("#zoom", "65");
     I.wait(2);
     I.fillField("#x", "276");
@@ -89,5 +97,46 @@ Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
 
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     Document.screenshotElement('img', '/frontend/thumb-servlet/noip-4.png');
+});
 
+Scenario('gallery structure', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/apps/gallery/");
+    Document.screenshot("/redactor/apps/gallery/structure.png", null, null, "#SomStromcek");
+    I.clickCss(".tree-col button.buttons-edit");
+    DTE.waitForEditor("galleryDimensionDatatable");
+
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-basic-tab.png`);
+
+    I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-sizes-tab.png`);
+
+    I.clickCss("#pills-dt-galleryDimensionDatatable-watermark-tab");
+    Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content', `/redactor/apps/gallery/dir-watermark-tab.png`);
+
+    DTE.cancel();
+
+    I.click("button.buttons-jstree-settings");
+    I.waitForElement("#jstree-settings-showrealname", 10);
+    I.checkOption("#jstree-settings-showrealname");
+    I.clickCss("#jstree-settings-submit");
+
+    I.jstreeWaitForLoader();
+    //open tree so on screenshots there will be real names visible below jstreesettings dialog
+    I.jstreeClick("apps");
+    I.jstreeClick("o-spolocnosti");
+    I.jstreeClick("test");
+    I.jstreeClick("watermark");
+    I.jstreeClick("filter-changed");
+    I.click("button.buttons-jstree-settings");
+
+    I.executeScript(() => {
+        //move jstree down so it will be visible on screenshots
+        document.getElementById("SomStromcek").style.marginTop = "80px";
+    });
+
+    Document.screenshot(`/redactor/apps/gallery/jstree-settings.png`);
+
+    //reset settings
+    I.uncheckOption("#jstree-settings-showrealname");
+    I.clickCss("#jstree-settings-submit");
 });

@@ -123,9 +123,17 @@ Linky / odkazy na ďalšie stránky vkladáte podobne ako odkaz na dokument/súb
 
 ## Tlačidlá
 
-Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CSS štýl obsahujúci výraz `btn-` alebo CSS štýl má nastavenú hodnotu `display` obsahujúcu `block`, teda aj napríklad `inline-block` zobrazí sa po kliknutí na takýto odkaz v editore okno nastavenia tlačidla. V ňom je možné jednoducho zmeniť text tlačidla a nastaviť odkaz po kliknutí. Môžete prípadne aj zmeniť farbu pozadia, písma a zaoblenie rohov, štandardne ale tieto hodnoty neodporúčame meniť - mali by byť nastavené podľa CSS štýlov web stránky.
+Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CSS štýl obsahujúci výraz `btn` (nastaviteľné cez konfiguračnú premennú `ckeditor_button_baseClass`) zobrazí sa po kliknutí na takýto odkaz v editore okno nastavenia tlačidla. V ňom je možné jednoducho zmeniť text tlačidla a nastaviť odkaz po kliknutí, štýl tlačidla a podobne.
 
 ![](link_dialog_button.png)
+
+V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, titulok, popis pre čítačky (aria-label) a podobne.
+
+![](link_dialog_button_advanced.png)
+
+Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Ten vložíte kliknutím na menu výberové menu pre vloženie formuláru a následne možnosť Tlačidlo. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+
+![](wjformbutton.png)
 
 ## Vkladanie obrázkov
 
@@ -272,6 +280,18 @@ Karta obsahuje parametre:
 - Zobrazenie na zariadeniach, slúžiaci na nastavenie [podmieneného zobrazenia aplikácia](../../../custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) na zariadeniach typu tablet, telefón alebo štandardný počítač. Ak nie je zvolená žiadna možnosť, zobrazí sa aplikácia na všetkých zariadeniach (rovnako ako keď sú zvolené všetky možnosti).
 - Prihlásený používateľ - umožňuje nastaviť zobrazenie aplikácie podľa stavu prihlásenia návštevníka web sídla - zobrazenie vždy, len ak je používateľ prihlásený, alebo ak nie je prihlásený. V editore stránok sa aplikácia zobrazí vždy, ale v náhľade, alebo zobrazení stránky sa zobrazí podľa nastavenej hodnoty.
 - Čas vyrovnávacej pamäte (minúty) - slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti pre jej rýchlejšie zobrazenie. Napríklad zoznam noviniek sa nemení často a ich načítanie je náročné na databázový server, je teda vhodné nastaviť napríklad hodnotu 30. Ak je prihlásený administrátor, vyrovnávacia pamäť sa nepoužije a vždy sa zobrazia aktuálne údaje.
+
+**Štýl** - sekcia obsahuje nastavenia pre obalenie výstupu aplikácie do `div` kontajnera. Môžete tak nastaviť napríklad odsadenie aplikácie v stránke, šírku alebo rôzne štýly zobrazenia, ale aj informácie pre čítačku pre slabozrakých návštevníkov:
+
+- CSS trieda - výber CSS tried z preddefinovaného zoznamu (napr. `container`, `mt-2`, `w-100`). Zoznam dostupných tried je nastaviteľný cez konfiguračnú premennú `appWrapperClasses` (čiarkou oddelený zoznam). Konfiguračná premenná podporuje dva formáty zápisu:
+  - jednoduchý formát - len názov CSS triedy, napr. `container,mt-2,w-100` - názov triedy sa zobrazí priamo v editore.
+  - formát s prekladovým kľúčom - `prekladový_kľúč:css_trieda`, napr. `apps.wrapper.container:container` - v editore sa zobrazí preložený text podľa jazyka administrácie (napr. "Kontajner (container)"), ale do HTML sa vloží len hodnota CSS triedy. Prekladový kľúč sa vyhľadá v prekladových textoch.
+  - oba formáty je možné kombinovať v jednom zozname, napr. `apps.wrapper.container:container,mt-2,apps.wrapper.w-75:w-75`.
+- ID - nastavenie HTML `id` atribútu pre obaľovací `div` element.
+- Titulok - nastavenie HTML `title` atribútu pre obaľovací `div` element.
+- `Aria Label` - nastavenie `aria-label` atribútu pre obaľovací `div` element, ktorý slúži na zlepšenie prístupnosti pre čítačky obrazovky.
+
+Ak je nastavená niektorá z týchto hodnôt, výstup aplikácie sa automaticky obalí do `div` elementu so zadanými atribútmi. V náhľade aplikácie v editore sa zobrazia informácie o nastavených atribútoch.
 
 ## Pred pripravené bloky
 

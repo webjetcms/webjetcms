@@ -1,341 +1,351 @@
-# Changelog version 2025
+# List of changes version 2025
 
 ## 2025.52/SNAPSHOT
 
-> **WebJET CMS 2025.52/SNAPSHOT** brings an improved version of the tool **Page Builder** for the creation of **complex web pages**. In blocks it is possible **search and filter** based on tags, so you can easily find the appropriate block to insert into the page. New features have been added such as **column division**, **inserting multiple sections at once** a **button to add a new section still displayed** to quickly expand the page content.
+> **WebJET CMS 2025.52/SNAPSHOT** brings an improved version of the **Page Builder** tool for creating **complex websites**. Blocks can be **searched and filtered** based on tags, so you can easily find the right block to insert into your page. New features have been added such as **column splitting**, **inserting multiple sections at once** and **always-on button to add a new section** for quickly expanding page content.
 >
-> Support **PICTURE element** allows you to display **different images according to screen resolution** visitor, thus improving the visual experience on different devices. In addition, it is possible to embed **custom icons** defined in a common SVG file, which brings more flexibility in design.
+> Support for the **PICTURE element** allows you to display **different images based on the visitor's screen resolution**, improving the visual experience on different devices. Additionally, it is possible to insert **custom icons** defined in a common SVG file, which brings greater design flexibility.
 >
-> A new tool for **creation of forms** makes it easy to create **multi-step forms** with the possibility of programmatic validation of individual steps and the possibility of **confirmation of the validity of the email address** using the code sent. This avoids the forms being filled in by various robots.
+> The new **form creation** tool allows you to easily create **multi-step forms** with the option of programmatic validation of individual steps and the option of **confirming the validity of the email address** using the sent code. This way you avoid filling out forms with various bots.
 
-!> Warning: version `2025.52` is technically identical to the version `2026.0` and can be fully interchanged.
+!> Warning: version `2025.52` is technically identical to version `2026.0` and can be fully replaced.
 
 ### Groundbreaking changes
 
-- Updated libraries `commons-lang,displaytag`, more in [section for the programmer](#for-the-programmer) (#58153).
-- Changed behaviour of the Blocks icon in Page Builder mode - [text blocks integrated](frontend/page-builder/blocks.md) to the folder `content` similar to the blocks for `section, container, column` (#58165).
-- Modified processing **uploading files**, more in `multipart/form-data` section for the programmer[ (#57793-3).](#pre-programátora) Recommended&#x20;
-- check the functionality of all form&#x73;**&#x20;due to modifications in their processing, for more information see&#x20;**&#x66;or the programmer[ (#58161).](#pre-programátora) Website
+- Updated libraries `commons-lang,displaytag`, more in [programmer section](#programmer section) (#58153).
+- Changed behavior of Blocks icon in Page Builder mode - [text blocks integrated](frontend/page-builder/blocks.md) to folder `content` similar to blocks for `section, container, column` (#58165).
+- Modified **file upload** processing `multipart/form-data`, more in [programmer section](#programmer section) (#57793-3).
+- We recommend **checking the functionality of all forms** due to adjustments to their processing, more information in the [for programmers](#for-programmers) section (#58161).
 
-### Added the ability to insert&#x20;
+### Websites
 
-- &#x20;element that displays `PICTURE` image by screen resolution[ visitor. So you can view different images on your mobile phone, tablet or computer (#58141).](frontend/setup/ckeditor.md#picture-element) Added the ability to insert&#x20;
+- Added the ability to insert a `PICTURE` element that displays [image based on screen resolution](frontend/setup/ckeditor.md#picture-element) of the visitor. So you can display different images on a mobile phone, tablet or computer (#58141).
 
 ![](frontend/setup/picture-element.png)
 
-- custom icons[ defined in the common SVG file (#58181).](frontend/setup/ckeditor.md#svg-ikony) Added transfer of actual HTML code when switching the editor mode to Standard/HTML/Page Builder. So you can easily edit a Page Builder page in HTML code and view the edits again in Page Builder mode (#58145).
+- Added the ability to insert [custom icons](frontend/setup/ckeditor.md#svg-icons) defined in a shared SVG file (#58181).
 
 ![](frontend/setup/svgicon.png)
 
-- Added Delete Element context menu to easily delete a button, link, paragraph, form, section, etc. Just right click on the element to see the context menu (#osk233).
-- Page Builder - modified stylesheet generation when using the pencil tool. Only changed values are generated to the CSS style, they are highlighted in the dialog by blue border of the input field (#58145).
-- Page Builder - added calling option&#x20;
-- custom JavaScript file[ with support functions for code editing. Added ability to edit settings like selectors for elements, colors, etc (#58141).](frontend/page-builder/blocks.md#podporný-javascript-kód) Page Builder - modified anchor generation for tabs so that the anchor name is generated according to the tab name - originally it was generated non-semantically as&#x20;
-- &#x20;(#112).`autotabs-x-y`Page Builder - added option to set column width to&#x20;
-- &#x20;for automatic content customization (#114).`auto`Page Builder - added option to prepare&#x20;
-- text blocks[ directly to the folder ](frontend/page-builder/blocks.md), they are inserted instead of the original blocks read from web pages from the Templates folder. The web designer prepares them together with other types of Page Builder blocks. Allows quick insertion of frequently used text sections, buttons, etc (#58165 `content`Page Builder - when inserting a new block, the Library tab is defaulted instead of Basic to make it easier to select a block from the prepared list (#58165).
-- Page Builder - added the ability to split a column into two parts using the new Split Column function. You invoke it by clicking the + in the yellow bar, selecting Block, and then selecting Split Column in the Basic tab. The function allows you to quickly split a column without having to insert a new column and move the contents (#58165).
-- Page Builder - added the ability to insert a block that contains multiple sections or other elements - all sections are marked after inserting (#58173).
-- Page Builder - supplemented&#x20;
-- Block ID[ to the attribute ](frontend/page-builder/blocks.md#block-id) for the ability to search for block usage in web pages via the administration search (#58193 `data-pb-id`Page Builder - the list of favorite blocks is stored separately for each user, so that everyone can manage their own list of favorite blocks (#58193).
-- Page Builder - added a permanently displayed icon to add a new section at the bottom of the page, making it easier to add new sections to the page (#58173).
-- Page Builder - modified toolbar design for better visibility on different backgrounds (#58165).
+- Added transfer of current HTML code when switching editor mode Standard/HTML/Page Builder. This allows you to easily edit a Page Builder page in HTML code and view the edits again in Page Builder mode (#58145).
+- Added context menu Delete Element, with which you can easily delete a button, link, paragraph, form, section, etc. Just right-click on the element to display the context menu (#osk233).
+- Page Builder - modified generation of styles when using the pencil tool. Only changed values ​​are generated in the CSS style, they are highlighted in the dialog box by a blue border around the input field (#58145).
+- Page Builder - added ability to call [custom JavaScript file](frontend/page-builder/blocks.md#support-javascript-code) with support functions for editing code. Added ability to edit settings like selectors for elements, colors, etc. (#58141).
+- Page Builder - modified anchor generation for tabs so that the anchor name is generated according to the tab name - it was originally generated non-semantically as `autotabs-x-y` (#112).
+- Page Builder - added option to set column width to `auto` for automatic content adjustment (#114).
+- Page Builder - added option to prepare [text blocks](frontend/page-builder/blocks.md) directly into the `content` folder, they are inserted instead of the original blocks read from web pages from the Templates folder. The web designer prepares them together with other types of Page Builder blocks. Allows for quick insertion of frequently used text parts, buttons, etc. (#58165).
+- Page Builder - when inserting a new block, the default is the Library tab instead of Basic to make it easier to select a block from the prepared list (#58165).
+- Page Builder - added the ability to split a column into two parts using the new Split Column function. You can access it by clicking on the + in the yellow bar, selecting the Block option, and then selecting the Split Column option in the Basic tab. The function allows you to quickly split a column without having to insert a new column and move the content (#58165).
+- Page Builder - added option to insert a block that contains multiple sections or other elements - all sections will be selected after insertion (#58173).
+- Page Builder - added [Block ID](frontend/page-builder/blocks.md#block-id) to the `data-pb-id` attribute to enable searching for block usage on websites via search in the administration (#58193).
+- Page Builder - the list of favorite blocks is saved separately for each user, so everyone can manage their own list of favorite blocks (#58193).
+- Page Builder - added a persistent icon for adding a new section at the bottom of the page, making it easier to add new sections to a page (#58173).
 
 ![](redactor/webpages/pagebuilder-plusbutton.png)
 
-- Page Builder - added option&#x20;
+- Page Builder - modified toolbar design for better visibility on different backgrounds (#58165).
 
 ![](redactor/webpages/pagebuilder.png)
 
-- filter blocks[ by name and tags (#58173).](frontend/page-builder/blocks.md#názov-a-značky-bloku) Supplemented by&#x20;
+- Page Builder - added option to [filter blocks](frontend/page-builder/blocks.md#block-name-and-tags) by name and tags (#58173).
 
 ![](redactor/webpages/pagebuilder-library.png)
 
-- content change detection[ and notification of unsaved changes when you close the browser window. Changes are detected 5 seconds after the web page is opened. (#112).](redactor/webpages/working-in-editor/README.md#detekcia-zmeny-obsahu-stránky) Added option to set default values for tables in CKEditor via configuration variables, more in&#x20;
-- CKEditor settings section[ (#58189).](frontend/setup/ckeditor.md#konfiguračné-premenné) Added the ability to insert&#x20;
-- button[ - element ](frontend/setup/ckeditor.md#button). You can so easily insert different action `button` buttons (#58201).`call to action`Style -&#x20;
-- choice of style[ defined for the element e.g. ](frontend/examples/template-bare/README.md#list-of-styles-for-editor) or `p.paragraph-green,p.paragraph-red-border,p.paragraph-yellow-background` allows you to set multiple styles at the same time. Repeatedly selecting an already set style will remove that style (#OSK140).`section.test-section,section.test-section-green`Edited text for future publication of the page on&#x20;
-- Schedule a page change after this dat&#x65;**, selecting this option will also change the save button to text&#x20;**&#x53;chedul&#x65;**&#x20;for clarity for the user (#58253).**&#x41;dded list of changed fields (#58077) to the web site approval application.
-- Applications
+- Added [content change detection](redactor/webpages/working-in-editor/README.md#content-change-detection-page) and notification of unsaved changes when closing the browser window. Changes will start to be detected 5 seconds after opening the web page. (#112).
+- Added the ability to set default values ​​for tables in CKEditor via configuration variables, more in [CKEditor settings section](frontend/setup/ckeditor.md#configuration-variables) (#58189).
+- Added the option to insert [button](frontend/setup/ckeditor.md#button) - element `button`. You can easily insert various action `call to action` buttons (#58201).
+- Style - [style selection](frontend/examples/template-bare/README.md#style-list-for-editor) defined for an element e.g. `p.paragraph-green,p.paragraph-red-border,p.paragraph-yellow-background` or `section.test-section,section.test-section-green` allows you to set multiple styles at the same time. Selecting an already set style again will remove this style (#OSK140).
+- Changed the text for publishing a page in the future to **Schedule page change after this date**, when this option is selected, the save button will also change to the text **Schedule** for clearer information for the user (#58253).
+- Added a list of changed fields to the website approval request (#58077).
 
 ![](redactor/webpages/approve/approve-form.png)
 
-### Redesigned application properties settings in the editor from the old code in&#x20;
+### Applications
 
-&#x20;at `JSP` Application. Apps also automatically get the ability to set `Spring` display on devices[. The design is consistent with the rest of the WebJET CMS and data tables (#58073).](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) News
-- [Form easily](redactor/apps/news/README.md)
+Redesigned application properties settings in the editor from the old code in `JSP` to `Spring` applications. Applications automatically also gain the ability to set [display on devices](custom-apps/appstore/README.md#conditional-display-applications). The design is consistent with the rest of the WebJET CMS and data tables (#58073).
+
+- [News] (redactor/apps/news/README.md)
 
 ![](redactor/apps/news/editor-dialog.png)
 
-- [Forms](redactor/apps/formsimple/README.md)
+- [Form Simple](redactor/apps/formsimple/README.md)
 
 ![](redactor/apps/formsimple/editor-dialog-items.png)
 
-### A new way to create forms that can include&#x20;
+### Forms
 
-- more steps[ with advanced features. In the list of forms you can create a new form, to which you can then add individual items and possibly multiple steps. The form item tab is visible in the form detail of the Multistep form type (#58161).](redactor/apps/multistep-form/README.md) List of forms - the whole section has been redesigned from technology&#x20;
+- A new way to create forms that can contain [multi-steps](redactor/apps/multistep-form/README.md) with advanced features. In the forms list, you can create a new form, to which you can then add individual items and possibly multiple steps. The form item tab is visible in the form details of the Multi-Step Form type (#58161).
 
 ![](redactor/apps/multistep-form/real-form.png)
 
-- &#x20;to standard `Vue.js` for better integration into WebJET CMS and simplified editing (#58161).`Html + JavaScript`List of forms - enables the creation of a form that is automatically of type&#x20;
-- multi-step form[ (#58161).](redactor/apps/multistep-form/README.md) List of forms - allows setting parameters/attributes of all form types directly in the form editor (#58161).
-- List of forms - the note field allows you to insert formatted text, so you can better record additional information to the form (#58161).
-- Form Detail - added option to display all logged in user data, data is also exported to Excel (#58161).
-- Authentication code - added option to submit form after entry&#x20;
-- authentication code[ sent to the email address. This way you can better protect your forms from SPAM (#58161).](redactor/apps/form/README.md#nastavenie-potvrdenia-zaslaným-kódom) Redirections
+- List of forms - the entire section has been converted from `Vue.js` technology to standard `Html + JavaScript` for better integration into WebJET CMS and easier editing (#58161).
+- List of forms - enabled creation of a form that is automatically of type [multistep form](redactor/apps/multistep-form/README.md) (#58161).
+- List of forms - enabled setting of parameters/attributes of all form types directly in the form editor (#58161).
+- List of forms - the note field allows you to insert formatted text, so you can better record additional information about the form (#58161).
+- Form detail - added option to display all data of the logged-in user, data is also exported to Excel (#58161).
+- Verification code - added option to submit form only after entering [verification code](redactor/apps/form/README.md#setting-up-confirmation-by-sent-code) sent to email address. This way you can better protect forms from SPAM (#58161).
 
 ![](redactor/apps/form/form-step-email-verification-2.png)
 
-### Added the ability to end the redirection at a specified time and the ability to enter a note with information about what the redirection is for. Redirects that are no longer temporarily valid are displayed in red (#58105).
+### Redirections
 
-- Ecommerce
+- Added the ability to expire a redirect at a specified time and the ability to enter a note with information about what the redirect is for. Redirects that are no longer valid will be displayed in red (#58105).
 
 ![](redactor/webpages/redirects/path-editor.png)
 
-### New section&#x20;
+### E-commerce
 
-- Methods of delivery[, as a separate table, replaces the original configuration of available delivery methods, which was located directly in the application settings ](redactor/apps/eshop/delivery-methods/README.md) e-commerc&#x65;**. It is also possible to set a price for each delivery method, which will be automatically added to the order when the option is selected. Set delivery methods are also automatically reflected in the options when the customer creates an order. Delivery by mail and personal pickup are ready, we plan to add integration to delivery companies in the future (#58061).**&#x53;ecurity
+- The new section [Delivery Methods] (redactor/apps/eshop/delivery-methods/README.md), as a separate table, replaces the original configuration of available delivery methods, which was located directly in the settings of the **e-commerce** application. For each delivery method, it is also possible to set a price, which will be automatically added to the order when the option is selected. The set delivery methods will also be automatically reflected in the options when creating an order by the customer. Delivery by mail and personal pickup are ready, in the future we plan to add integration with delivery companies (#58061).
 
 ![](redactor/apps/eshop/delivery-methods/datatable.png)
 
-### Added support for enabling only&#x20;
+### Safety
 
-- one active logi&#x6E;**&#x20;per user. You enable the mode by setting the configuration variable&#x20;**&#x20;to the value of `sessionSingleLogon`. A new login will cancel the previously active `true` (#58121).`session`Unsupported library removed&#x20;
-- commons-lang[, replaced by a new library ](https://mvnrepository.com/artifact/commons-lang/commons-lang) commons-lang3[, v ](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3) is an update script for editing source code (#58153).`update-2023-18.jsp`Added list&#x20;
-- My active logins[ on the administration splash screen, which shows all active logins to administration under your user account and the option to exit them. Also added the ability to send an email to a logged in administrator (#58125).](redactor/admin/welcome.md#moje-aktívne-prihlásenia) Captcha - by setting a configuration variable&#x20;
+- Added support for allowing only **one active login** per user. To enable the mode, set the configuration variable `sessionSingleLogon` to the value `true`. Upon a new login, the previous active `session` will be canceled (#58121).
+- Removed unsupported library [commons-lang](https://mvnrepository.com/artifact/commons-lang/commons-lang), replaced with new library [commons-lang3](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3), in `update-2023-18.jsp` there is an update script for editing source codes (#58153).
+- Added [My active logins] list (redactor/admin/welcome.md#moje-aktivne-prihlaženia) on the administration home screen, which displays all active logins to the administration under your user account and the option to end them. Also added the option to send an email to the logged in administrator (#58125).
 
-![](redactor/admin/sessions.png)
+![](editor/admin/sessions.png)
 
-- &#x20;to the value of `captchaType` Captcha can be turned off completely. It will not be displayed even if the template of the displayed web page has SPAM protection disabled. In this case, however, it is necessary to correctly check that the SPAM protection of the template is turned off in the eventual processing/verification code of the Captcha response, for forms this check is ensured. You can use the call `none` to verify the mode and disable spam protection (#54273-78).`Captcha.isRequired(component, request)`Updated library for&#x20;
-- sending emails[ z ](install/config/README.md#sending-emails) at `com.sun.mail:javax.mail:1.6.2` due to support for new SMTP server authentication mechanisms such as `com.sun.mail:jakarta.mail:1.6.8` and added configuration variable `NTLMv2` to force the use of the authorization mechanism - e.g. set to `smtpAuthMechanism` for enforcement `NTLM` authorisation instead of using `NTLM` Authorization (#58153 `BASIC`Modified exception logging when HTTP connection is interrupted (e.g. when closing the browser, going to another web page, etc.). Such exceptions will not be logged to avoid space occupation errors. This applies to exceptions of the type&#x20;
-- &#x20;and exception names defined via the configuration variable `IOExceptio`, by default `clientAbortMessages` (#58153).`response already,connection reset by peer,broken pipe,socket write error`Other minor changes
-
-### Search - modified loading of template list when searching for web pages. All templates are loaded regardless of their availability in folders, so that when editing a web page, the template is not available (#58073).
-- HTTP headers - added the ability to set a header longer than 255 characters, for example to set&#x20;
-- &#x20;(`Content-Security-Policy`#82[)](https://github.com/webjetcms/webjetcms/issues/82) Configuration - modified method of deleting a configuration variable. After deleting, the original value is automatically set from&#x20;
-
-![](admin/settings/response-header/editor.png)
-
-- to be the same as it will be after the server restart. In the original solution, the variable was just deleted, but its value remained set internally until the server restart (#57849).`Constants`Configuration - added option to set&#x20;
-- HTTP header name[ to get the IP address of the visitor via the configuration variable ](sysadmin/pentests/README.md#Configuration) (#58237).`xForwardedForHeader`Security - added the ability to configure blocked file/directory paths via a variable&#x20;
-- . By default, URLs that contain the phrase in the name are blocked `pathFilterBlockedPaths`. More can be added as needed (#PR103).`.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn`Tags - modified tags displayed, in case of duplication of values. Comparison is without the influence of diacritics and upper/lower case letters&#x20;
-- #115[.](https://github.com/webjetcms/webjetcms/issues/115) Mirroring - added option to display flag image instead of text in&#x20;
-
-![](redactor/webpages/perex-duplicity-values.png)
-
-- page language switcher[ (#54273-79).](redactor/apps/docmirroring/README.md#vytvorenie-odkazu-na-jazykové-mutácie-v-hlavičke-stránky) Change password - added option to set name and email address from which email is sent with link to change password via configuration variables&#x20;
-- &#x20;a `passwordResetDefaultSenderEmail` (#58125 `passwordResetDefaultSenderName`Statistics - added summary numbers of views and visits in TOP pages (#PR136).
-- News - renamed the Arrange by Priority value to Arrange by Order of Order (Priority) to align with the value in the editor (#57667-16).
-- Form easily - added option to set value&#x20;
-- &#x20;to insert the form e.g. in the footer of the page (#57667-16).`useFormDocId`News / News templates - moved field&#x20;
-- &#x20;from the News app to the News Template to set the property directly in the news template. Original value `contextClasses` from News will still work, but it can no longer be set in the UI (#58245).`contextClasses`Document Manager - added option&#x20;
-- edit the metadata of the historical version of the document[ in the document manager (#58241).](redactor/files/file-archive/README.md#úprava-historickej-verzie-dokumentu-v-manažéri) Bulk email - modified auditing of campaign changes. If a group is added it doesn't audit the entire recipient list (it was wasting a lot of records in the audit), only the list of changed groups is written. When manually adding emails, both name and email address (#58249) are still audited.
-- Users - when importing, if a column in Excel does not contain a password field, a random password will be generated for new users. If the status Approved user is not specified in Excel, it is set to&#x20;
-- &#x20;(#58253 `true`MultiWeb - added domain display in sidebar (#58317-0).
-- MultiWeb - added the ability to set the redirect domain to be able to specify&#x20;
-- &#x20;prefix (#58317-0 `https://`MultiWeb - added rights control for media groups and tags (#58317-0).
-- List of forms - settings&#x20;
-- the processor of the forms[, using an autocomplete field that offers a class implementing ](custom-apps/apps/multistep-forms/README.md) (#58313 `FormProcessorInterface`Dialers - added removal of spaces at the beginning and end of the string type field in the dialer data (#OSK233).
-- Error correction
-
-### Tags - fixed folder duplication in View for when saving tags, removed folder selection from other domains since tags are already separated by domain (#58121).
-- Web pages - fixed hard space insertion after hyphens to apply only to page text and not to attributes or HTML tags (#OSK235).
-- Datatables - corrected event processing&#x20;
-- &#x20;for selected filter table input fields (#58313).`Enter`Datatables - fixed filtering when multiple&#x20;
-- &#x20;tables on the page interacted with each other when filtering (#58313 `serverSide:false`Ecommerce - corrected sending email notification when order status changes (#58313).
-- Ecommerce - corrected automatic order status setting after payment change (#58313).
-- Documentation
-
-### Updated all screenshots in the Czech version of the documentation (#58113).
-
-- For the programmer
-
-### Free fields - added the ability to specify custom columns for label and value at&#x20;
-- links to the dial[. Allows more flexible setting of which property from the code list is used as displayed text and which is used as a stored value (#PR108).](frontend/webpages/customfields/README.md#číselník) Deleted unused files&#x20;
-- , if you use them in your project take them from `/admin/spec/gallery_editor_perex_group.jsp,/admin/spec/perex_group.jsp` older versions[ WebJET CMS (#58073).](https://github.com/webjetcms/webjetcms/tree/release/2025.40/src/main/webapp/admin/spec) Slightly modified API in&#x20;
-- NewsActionBean[, especially the setting ](../../src/webjet8/java/sk/iway/iwcm/components/news/NewsActionBean.java) which are now of the type `groupIds`. You can use `List<GroupDetails>` for the setting with the value ID field (#58073 `setGroupIds(int[] groupIds)`Fixed ability to insert quotes in application parameters (#58117).
-- Prepared containers for all supported database servers in WebJET CMS for easy running in VS Code. They are located in the folder&#x20;
-- &#x20;(#58137).`.devcontainer/db`E-commerce - due to changes in the implementation process&#x20;
-- delivery method&#x73;**&#x20;the file needs to be modified using an update script&#x20;**&#x20;above the section `update-2023-18.jsp` (#58061).`basket`E-commerce - renamed annotation&#x20;
-- &#x20;at `@PaymentMethod` a `@FieldsConfig` at `@PaymentFieldMapAttr` to unify annotations between payments and delivery methods (#58061).`@FieldMapAttr`E-commerce - in the process of implementation&#x20;
-- delivery method&#x73;**&#x20;to the file&#x20;**&#x20;There are a few changes that you have to implement manually. These changes are too complex to be added using the update script `order_form.jsp` (#58061).`update-2023-18.jsp`Navigation bar - added option to use custom generator implementation&#x20;
-- navigation bar[. Via the configuration variable ](redactor/apps/navbar/README.md) it is possible to set the name of the class implementing `navbarDefaultType` (#PR101).`NavbarInterface`Unsupported library removed&#x20;
-- commons-lang[, replaced by a new library ](https://mvnrepository.com/artifact/commons-lang/commons-lang) commons-lang3[, v ](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3) is an update script for editing source code (#58153).`update-2023-18.jsp`Updated library&#x20;
-- displaytag[ to version ](https://mvnrepository.com/artifact/com.github.hazendaz/displaytag) (#58153).`2.9.0`Modified file upload processing&#x20;
-- . In Spring applications, for the file array, use instead of `multipart/form-data` directly `org.apache.commons.fileupload.FileItem`, which will be set automatically. It is no longer necessary to use a call type `org.springframework.web.multipart.MultipartFile` to retrieve the file. `entity.setDocument(MultipartWrapper.getFileStoredInRequest("document", request))` Warning:**&#x20;all occurrences need to be replaced&#x20;**&#x20;For `CommonsMultipartFile` in your code, also invalidate URL parameters in the Spring application for forced processing. The expression `MultipartFile` replace with `data-th-action="@{${request.getAttribute('ninja').page.urlPath}(\_\_forceParse=1,\_\_setf=1)}"`. You can use `data-th-action="${request.getAttribute('ninja').page.urlPath}"` to update files (#57793-3).`/admin/update/update-2023-18.jsp`Added option to create&#x20;
-- project file copies[ Spring application. Just create your own version of the file in the folder ](frontend/customize-apps/README.md) similar to what is used for JSP files. WebJET CMS first looks for the file in the project folder and if it is not found it uses the standard file from `/apps/INSTALL_NAME/` Folder (#58073).`/apps/`Added option to set&#x20;
-- name for CSS style[ in CSS file via comment ](frontend/examples/template-bare/README.md). The name appears in the list of styles in the editor (#58209).`/* editor title: Style Name */`Editor - modified dialog for settings&#x20;
-- &#x20;\- cancelled color and size settings, `a.btn` only CSS classes are used[ as well as pr ](frontend/setup/ckeditor.md#button) (#57657-16).`button`Data tables - option to display only icons without order for&#x20;
-- &#x20;if we add a class to the column `rowReorder` (#58161).`icon-only`Data tables - new options for selecting rows in the table&#x20;
-- &#x20;a `toggleSelector`, more in `toggleStyle` data tables section[ (#58161).](developer/datatables/README.md#možnosti-konfigurácie) Data tables - new custom option&#x20;
-- render[ functions using annotation ](developer/datatables-editor/datatable-columns.md). Allows you to display composite values from multiple fields in a column and so on (#58161).`@DataTableColumn(...renderFunction = "renderStepName")`Data tables - added option&#x20;
-- redirect the user[ to another page after saving the record by calling the method ](developer/datatables/restcontroller.md#redirection-after-saving) (#58161).`setRedirect(String redirect)`Forms - Modified display of the list of forms, deleted class&#x20;
-- , replaced by the class `FormAttributesDB`. Forms settings changed from table `FormService` to the table `form_attributes`. We recommend that you check the functionality of all forms on the website (#58161) after the update.`form_settings`Forms - create new table&#x20;
-- &#x20;as a replacement for the table `form_settings` where the form properties are stored. Individual attributes (settings) are now stored in separate columns as one record per row. The data has been converted to the new table using `form_attributes` (#58161).`UpdateDatabase.java`Switching to a new table&#x20;
-- &#x20;for form properties in `form_settings` files. You need to run the update script `.jsp`, which will adjust the necessary `update-2025-0.jsp` (#58161).`.jsp`List of forms - setting parameters/attributes of all form types redirected from the table&#x20;
-- &#x20;to the new table `form_attributes` (#58161).`form_settings`Data tables - added BE support for&#x20;
-- where it is possible to change the order of records directly in the data table using drag&drop (#58161).`row-reorder`Events - added event&#x20;
-- Updating codes in text[ for the possibility of editing codes in the text of the page type ](developer/backend/events.md#updating-codes-in-the-text) et al (#54273-63).`!CUSTOM_CODE!`Data tables - added&#x20;
-- Spring events[ for the ability to edit data in customer installations (#54273-63).](developer/backend/events-datatable.md) Testing
-
-### Supplemented script&#x20;
-
-- rm-same-images.sh[ to remove the same images when creating new screenshots (#58113).](../../src/test/webapp/rm-same-images.sh) 2025.40
-
-![meme](_media/meme/2026-0.jpg ":no-zoom")
-
-## WebJET CMS 2025.40
-
-> **&#x20;brings an integrated&#x20;** &#x41;I Assistant**which makes working with content much easier. Allows you to automatically&#x20;**&#x63;orrect gramma&#x72;**,&#x20;**&#x74;ranslat&#x65;**&#x20;texts, design headlines, summarize articles and generate&#x20;**&#x69;llustrative picture&#x73;**&#x20;directly in the editor. This makes content creation&#x20;**&#x66;aster, more accurate and more creativ&#x65;**&#x20;than ever before.**&#x53;ignificant changes also concern&#x20;
->
-> brand&#x73;**&#x20;a&#x20;**&#x6E;ews templates**that have been reworked into&#x20;**&#x73;eparate database table&#x73;**&#x20;with support for separation by domain. This brings higher&#x20;**&#x63;larity, easier administratio&#x6E;**&#x20;and the ability to efficiently customize content for multiple sites. The user environment was&#x20;**&#x6F;ptimised for smaller screen&#x73;**&#x20;- the system automatically adjusts the window display and maximises usable space.**&#x4F;n a technical level, the obsolete Struts Framework has been removed. This makes WebJET CMS more powerful, more stable,&#x20;
->
-> Safe&#x72;**&#x20;and ready for further development of modern web solutions.**&#x47;roundbreaking changes
-
-### Removed from&#x20;
-
-- , you need to make an update `Struts Framework` files, Java classes and edit file `JSP`, more in `web.xml` section for the programmer[ (#57789).](#pre-programátora) If you are using Tomcat application server version 9.0.104 and above, you need to&#x20;
-- update settings[ parameter ](install/versions.md#changes-when-switching-to-tomcat-90104) at `maxPartCount` element (#54273-70).`<Connector`Tags - split by domains - at startup, a copy of tags for each domain is created (if splitting data by domains is used - configuration variable set&#x20;
-- ). Tag IDs for the website and gallery are being updated. You need to manually check the tag IDs for all news apps and other apps that contain tag IDs - the update will try to fix them, but we recommend checking the IDs. See the section for the programmer for more information. (#57837).`enableStaticFilesExternalDir=true`News -&#x20;
-- news templates[ converted from a definition via translation keys to a custom database table. When WebJET starts, the records are converted from the original format. They are separated by domain, if they contain a domain alias they are created only in the corresponding domain (#57937).](frontend/templates/news/README.md) Security - stricter control of administration URLs - it is necessary that the URL in the administration has a character at the end&#x20;
-- , the incorrect address is `/` or `/admin/v9/webpages/web-pages-list`, correct `/apps/quiz/admin` or `/admin/v9/webpages/web-pages-list/`. It is necessary for the programmer to check the URL definitions in the files `/apps/quiz/admin/` (#57793).`modinfo.properties`AI Assistant
-
-### In today's world, artificial intelligence is all around us and of course, WebJET as a modern content management system does not want to be left behind. That's why we are proud to present the new version of WebJET CMS, where we have integrated&#x20;
-
-advanced AI tools[.](redactor/ai/README.md) These features make it easy to create and edit content - from correcting grammar, to translating text, to designing captions, to generating illustrative images.
-
-![](redactor/ai/datatables/ckeditor-assistants.png)
-
-YouTube video player
-
-<div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="Web pages" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
-
-### AB Testing - added option&#x20;
-- show AB version[ according to the status of the logged-in user - the non-logged-in user will see the A version and the logged-in user will see the B version. You activate the mode by setting the configuration variable ](redactor/apps/abtesting/README.md) to the value of `ABTestingForLoggedUser` (#57893).`true`Page Builder
-- [ - modified visual to better fit the current WebJET CMS design (#57893).](redactor/webpages/pagebuilder.md) Allowed to display pages containing&#x20;
-
-![](redactor/webpages/pagebuilder-style.png)
-
-- &#x20;in the URL from the system folders, so that such a technical page does not get in the way of your standard web pages (#57657-8 `404.html`Tags - split tag display by the currently selected domain, so you can have tags separately for each domain in WebJET (#57837).
-- Cloning structure - added information about the configured translator and how many free characters are left for translation (#57881).
-- Structure mirroring - option to delete added&#x20;
-- &#x20;values for the selected folder (recursive). Make it easy to undo/redo page mirroring (#57881).`sync_id`Mirroring - adding a new section&#x20;
-
-![](redactor/apps/clone-structure/clone_structure_set_translator.png)
-
-- mirroring[ to track and manage linked folders and pages after mirroring actions (#57941).](redactor/webpages/mirroring/README.md) When selecting an image or video file in the page editor, only the appropriate file types are displayed in the explorer, the others are filtered (#57921).
-
-![](redactor/webpages/mirroring/groups_datatable.png)
-
-- Templates
-
-### New section added&#x20;
-
-- News templates[ to manage and administer newsletter templates (#57937).](frontend/templates/news/README.md) User interface
-
-![](frontend/templates/news/news-temps-datatable.png)
-
-### When using a small monitor (window height less than 760 pixels), the window is automatically displayed full screen and the header and footer are shrunk (the window title is in a smaller font). This will increase the amount of information displayed, which is especially needed in the web page section. This is used for windows using the CSS class&#x20;
-
-- , which are the actual website, photo gallery, image editor and users (#57893).`modal-xl`Added option in the editor to click on the image icon at the beginning of the field to display it in a new tab.
-
-![](redactor/webpages/pagebuilder.png)
-
-- Applications
-
-![](developer/datatables-editor/field-type-elfinder.png)
-
-### Added option to show the application only to logged in/not logged in user. Mode is set in the tab&#x20;
-
-- View application settings[ in the site editor (#57893).](redactor/webpages/working-in-editor/README.md#karta-zobrazenie) Redesigned application properties settings in the editor from the old code in&#x20;
-
-![](custom-apps/appstore/common-settings-tab.png)
-
-&#x20;at `JSP` Application. Apps also automatically get the ability to set `Spring` display on devices[. The design is consistent with the rest of the WebJET CMS and data tables (#57409).](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) Carousel Slider
-- [Emoticons](redactor/apps/carousel_slider/README.md)
-- [Forum/Discussion](redactor/apps/emoticon/README.md)
-- [Questions and answers](redactor/apps/forum/README.md)
-- [Users](redactor/apps/qa/README.md)
-- [Impressive presentation](redactor/apps/user/README.md)
-- [Restaurant menu](redactor/apps/app-impress_slideshow/README.md)
-- [Slider](redactor/apps/restaurant-menu/README.md)
-- [Slit slider](redactor/apps/slider/README.md)
-- [Social icons](redactor/apps/app-slit_slider/README.md)
-- [Video](redactor/apps/app-social_icon/README.md)
-- [Menu](redactor/apps/video/README.md)
-
-![](redactor/apps/app-slit_slider/editor-items.png)
-
-### If&#x20;
-
-- website menu[ does not have a root folder specified (the value is set to 0), the root folder for the currently displayed web page is automatically used. This is convenient if you are displaying menus in multiple languages where each is a root folder - you don't need to have menus/headers for each language separately, just one common one (#57893).](redactor/apps/menu/README.md) Statistics
-
-### In the sections&#x20;
-
-- traffic[ added summary number of Views, Visits and Number of different users for easy overview of total traffic for the selected period (#57929).](redactor/apps/stat/README.md#návštevnosť) In the sections&#x20;
-
-![](redactor/apps/stat/stats-page.png)
-
-- erroneous pages[ added filtering by bots (applied only to newly recorded data) and sum count in footer. Need to edit the page ](redactor/apps/stat/README.md#erroneous-pages) in your project by adding an object `404.jsp` to call `request` (#58053).`StatDB.addError(statPath, referer, request);`Optional fields
-
-![](redactor/apps/stat/error-page.png)
-
-### Added support for new types&#x20;
-
-- optional fields[:](frontend/webpages/customfields/README.md) Choosing a website folder
-  - [ (#57941).](frontend/webpages/customfields/README.md#výber-priečinku-webových-stránok) Choosing a website
-  - [ (#57941).](frontend/webpages/customfields/README.md#výber-webovej-stránky) Security
-
-![](frontend/webpages/customfields/webpages-doc-null.png)
-
-Fixed a possible vulnerability in Safari with a special URL pointing to a file archive combined with a nice 404 page (#57657-8).![](frontend/webpages/customfields/webpages-group-null.png)
+- Captcha - by setting the configuration variable `captchaType` to the value `none`, Captcha can be completely disabled. It will not be displayed even if the template of the displayed web page has SPAM protection disabled. In such a case, however, it is necessary to correctly check the disabling of SPAM protection of the template also in the possible code for processing/verifying the Captcha response, this check is provided for forms. You can use the call `Captcha.isRequired(component, request)` to verify the mode and disable spam protection (#54273-78).
+- Updated the [sending emails] library (install/config/README.md#sending-emails) from `com.sun.mail:javax.mail:1.6.2` to `com.sun.mail:jakarta.mail:1.6.8` to support new SMTP server authentication mechanisms such as `NTLMv2` and added a configuration variable `smtpAuthMechanism` to force the use of an authorization mechanism - set it to `NTLM` for example to force `NTLM` authorization instead of `BASIC` authorization (#58153).
+- Modified logging of exceptions when HTTP connection is interrupted (e.g. when closing the browser, going to another web page, etc.). Such exceptions are not written to the log to avoid a space allocation error. This applies to exceptions of type `IOExceptio` and exception names defined via the configuration variable `clientAbortMessages`, by default `response already,connection reset by peer,broken pipe,socket write error` (#58153).
 
 ### Other minor changes
 
-- Change Audit - Search - the Type field is alphabetized (#58093).
+- Search - modified loading of the template list when searching for web pages. All templates are loaded regardless of their availability in folders, so that a template is not available when editing a web page (#58073).
+- HTTP headers - added option to set header longer than 255 characters, for example for setting `Content-Security-Policy` ([#82](https://github.com/webjetcms/webjetcms/issues/82))
 
-### Ecommerce - added option to set&#x20;
-- root folder
-- &#x20;with the list of products using the configuration variable [if the automatic search by the inserted product list application (#58057) is not satisfied.](redactor/apps/eshop/product-list/README.md) Ecommerce - application for setting up payment methods moved from folder `basketAdminGroupIds` to standard&#x20;
-- &#x20;(#58057 `/apps/eshop/admin/payment-methods/`Ecommerce - when an order is deleted, its items and payments are also deleted from the database (#58070).`/apps/basket/admin/payment-methods/`Server monitoring - current values - added database server type (MariaDB, Microsoft SQL, Oracle, PostgreSQL) (#58101).
-- Translator - at the translator&#x20;
-- &#x20;the handling of returned error messages has been improved, to identify the problem more accurately (#57881).
-- Translator - added support for implementing multiple translators and their automatic processing/use (#57881).`DeepL`Translator - added automatic&#x20;
-- auditing the number of characters consumed
-- &#x20;in every translation. In the audit record type [ shall be entered in the column ](admin/setup/translation.md) records the amount of credits consumed during the translation. The number of available characters is also audited, the result is cached and updated again in 5 minutes at the earliest (#57965).`TRANSLATION`Explorer - optimized loading, fixed duplicate library reading `EntityID` (#57997).
-- Error correction`jQuery UI`Data Tables - corrected options setting in the external filter selection menu (#57657-8).
+![](admin/settings/response-header/editor.png)
 
-### Cloning structure - fixed validation of specified folder ids and added error message (#57941).
-- Gallery - added support for selecting a gallery folder, in the Gallery application in a web page, when using domain aliases, and editing a gallery entry with a domain alias (#57657-11).
-- Web pages - fixed displaying the list of pages when displaying folders as tables (#57657-12).
-- Charts - fixed displaying a large number of legends in charts, automatically use scrolling in legends (#58093).
-- Documentation
-- Added documentation for setup and use&#x20;
+- Configuration - modified way to delete a configuration variable. After deletion, the original value from `Constants` is automatically set to the same value as it will be after a server restart. In the original solution, the variable was only deleted, but its value remained internally set until the server restart (#57849).
+- Configuration - added option to set [HTTP header name](sysadmin/pentests/README.md#configuration) to get visitor's IP address via configuration variable `xForwardedForHeader` (#58237).
+- Security - added the ability to configure blocked file/directory paths via the `pathFilterBlockedPaths` variable. By default, URLs that contain the term `.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn` in the name are blocked. It is possible to add more as needed (#PR103).
+- Tags - modified displayed tags, in case of duplicate values. Comparison is without the influence of diacritics and upper/lower case [#115](https://github.com/webjetcms/webjetcms/issues/115).
 
-### two-step verification/authorisation
-- &#x20;(#57889).[For the programmer](redactor/admin/logon.md#two-step-verification) Cancelled class&#x20;
+![](redactor/webpages/perex-duplicity-values.png)
 
-### which was used in imports from&#x20;
+- Mirroring - added option to display flag image instead of text in [page language switcher](redactor/apps/docmirroring/README.md#creating-a-link-to-language-mutations-in-the-page-header) (#54273-79).
+- Password change - added option to set the name and email address from which the email with a link to change the password is sent via configuration variables `passwordResetDefaultSenderEmail` and `passwordResetDefaultSenderName` (#58125).
+- Statistics - added summary numbers of views and visits to TOP pages (#PR136).
+- News - renamed value sort by priority to sort by Sort order (priority) to align with value in editor (#57667-16).
+- Easy form - added option to set the value `useFormDocId` for inserting the form, e.g. in the footer of the page (#57667-16).
+- News / News Templates - moved field `contextClasses` from News application to News Template so that the property is set directly in the news template. The original value `contextClasses` from News will still work, but it can no longer be set in the user interface (#58245).
+- Document Manager - added option [edit historical document version metadata](redactor/files/file-archive/README.md#edit-historical-document-version-in-manager) in the document manager (#58241).
+- Bulk email - adjusted auditing of changes in the campaign. If a group is added, the entire list of recipients is not audited (there were unnecessarily many records in the audit), only the list of changed groups is written. When manually adding emails, both the name and email address are still audited (#58249).
+- Users - when importing, if the column in Excel does not contain a password field, a random password will be generated for new users. If the Approved User status is not specified in Excel, it will be set to the value `true` (#58253).
+- MultiWeb - added domain display in the sidebar (#58317-0).
+- MultiWeb - added option to set redirection domain to allow entering `https://` prefix (#58317-0).
+- MultiWeb - added rights control for media groups and brands (#58317-0).
+- List of forms - setting up [form handler](custom-apps/apps/multistep-forms/README.md), using the autocomplete field provided by classes implementing `FormProcessorInterface` (#58313).
+- Codebooks - added removal of spaces at the beginning and end of string fields in codebook data (#OSK233).
 
-- &#x20;format in `ImportXLSForm` spec/import\_xls.jsp`XLS`. Technically the class is not needed, just delete the reference in the JSP and modify the form to a standard HTML form (#57789).[Improved update script ](../../src/main/webapp/admin/spec/import_xls.jsp) for File Archive - can update standard changes and add necessary changes to your version&#x20;
-- &#x20;and auxiliary classes (#57789).`/admin/update/update-2023-18.jsp`Class `FileArchivatorBean` replaced by an object&#x20;
-- , class `org.apache.struts.action.ActionMessage` Replaced by `String` (#57789).`ActionMessages`Cancelled framework `List<String>`, tags&#x20;
-- &#x20;substituted for the corresponding `Struts`, beware `<logic:present/iterate/...` For `<iwcm:present/iterate/...`.`<bean:write`In the Java code, due to the removal of `<iwcm:beanWrite` the following changes:
-- &#x20;substituted for `Struts` substituted for&#x20;
-  - `ActionMessage` Returns `String`
-  - `ActionMessages` instead of `List<String>`
-  - `BasicLdapLogon.logon` Replaced by `List<String>` Amcharts - added support for specifying a function to transform text in category labels for a chart type `ActionMessages`
-  - `org.apache.struts.util.ResponseUtils.filter` (#58093).`sk.iway.iwcm.tags.support.ResponseUtils.filter`
-- Amcharts - added support for specifying a function to transform the text in the legend of a chart type `PIE` (#58093).
-- Amcharts - added option to hide tooltip when value is `LINE` or&#x20;
-- &#x20;in the chart type `null` (#58093).`0`You can use a script to convert both JSP and Java files `LINE`. If you specify a value as the path&#x20;
+### Bug fixes
 
-&#x20;replacement shall also be made in `/admin/update/update-2023-18.jsp` files. The problem is running the project if it contains errors. But you can folder `java` renamed to `../java/*.java` to run a clean WebJET. You can then use the update script. This scans and updates the folder `src/main/java` Also `src/main/java-update`.`../java/*.java`In the file `../java-update/*.java` initialization is no longer required&#x20;
+- Tags - fixed folder duplication in Show for when saving a tag, removed folder selection from other domains as tags are already separated by domain (#58121).
+- Web pages - fixed inserting a hard space after hyphens so that it only applies to the page text and not to attributes or HTML tags (#OSK235).
+- Datatables - fixed handling of the `Enter` event for selected input fields of table filters (#58313).
+- Datatables - fixed filtering where multiple `serverSide:false` tables on a page were affecting each other when filtering (#58313).
+- E-commerce - fixed sending email notifications when changing order status (#58313).
+- E-commerce - fixed automatic setting of order status after changing payments (#58313).
 
-, delete the entire `WEB-INF/web.xml` a section containing `Apache Struts` a `<servlet>` Containing `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>`.`<servlet-mapping>`Split tags by domain (if the configuration variable is set `<servlet-name>action</servlet-name>`), so that you can easily have separate tags for each domain. When WebJET starts, it copies the existing tags for all defined domains. It will skip tags that are set to display only in a specific folder, where according to the first folder it will set the domain for the tag. Updates the tags for News, that is, for the application&#x20;
-- &#x20;where it searches for the expression `enableStaticFilesExternalDir=true` a `/components/news/news-velocity.jsp` where it tries to update the tag ID according to the domain of the web page. The information is written to the history and a record is created in Audit detailing how the `perexGroup` replaced, example:`perexGroupNot`For the first `INCLUDE` tags with ID 625 and 626 were removed because they do not show up in the folder/domain - they were set to show only for a specific folder. In the second&#x20;
+### Documentation
+
+- Updated all screenshots in the Czech version of the documentation (#58113).
+
+### For the programmer
+
+- Free fields - added the ability to specify custom columns for label and value when [linking to a codebook](frontend/webpages/customfields/README.md#codebook). Allows for more flexible settings of which property from the codebook will be used as the displayed text and which as the stored value (#PR108).
+- Deleted unused files `/admin/spec/gallery_editor_perex_group.jsp,/admin/spec/perex_group.jsp`, if you use them in your project, take them from [older version](https://github.com/webjetcms/webjetcms/tree/release/2025.40/src/main/webapp/admin/spec) WebJET CMS (#58073).
+- Slightly modified API in [NewsActionBean](../../src/main/java/sk/iway/iwcm/components/news/NewsActionBean.java), mainly `groupIds` settings which are now of type `List<GroupDetails>`. You can use `setGroupIds(int[] groupIds)` for settings with an ID field of values ​​(#58073).
+- Fixed the ability to insert quotes into application parameters (#58117).
+- Ready-made containers for all supported database servers in WebJET CMS for easy launch in VS Code. They are located in the `.devcontainer/db` folder (#58137).
+- E-commerce - due to changes in the implementation process of **delivery methods**, it is necessary to edit the file using the update script `update-2023-18.jsp` above the section `basket` (#58061).
+- E-commerce - renamed annotation `@PaymentMethod` to `@FieldsConfig` and `@PaymentFieldMapAttr` to `@FieldMapAttr` to unify annotations between payments and delivery methods (#58061).
+- E-commerce - During the **delivery methods** implementation process, several changes were added to the `order_form.jsp` file that you must implement manually. These changes are too complex to be implemented using the `update-2023-18.jsp` update script (#58061).
+- Navigation bar - added the ability to use your own implementation of the [navigation bar] generator (redactor/apps/navbar/README.md). The name of the class implementing `navbarDefaultType` can be set via the configuration variable `NavbarInterface` (#PR101).
+- Removed unsupported library [commons-lang](https://mvnrepository.com/artifact/commons-lang/commons-lang), replaced with new library [commons-lang3](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3), in `update-2023-18.jsp` there is an update script for editing source codes (#58153).
+- Updated the [displaytag](https://mvnrepository.com/artifact/com.github.hazendaz/displaytag) library to version `2.9.0` (#58153).
+- Fixed handling of `multipart/form-data` file uploads. In Spring applications, instead of `org.apache.commons.fileupload.FileItem`, use `org.springframework.web.multipart.MultipartFile` directly for the file field, which will be set automatically. It is no longer necessary to use a call like `entity.setDocument(MultipartWrapper.getFileStoredInRequest("document", request))` to get the file. **Warning:** you need to replace all occurrences of `CommonsMultipartFile` with `MultipartFile` in your code, and also remove URL parameters in the Spring application for forced processing. Replace the expression `data-th-action="@{${request.getAttribute('ninja').page.urlPath}(\_\_forceParse=1,\_\_setf=1)}"` with `data-th-action="${request.getAttribute('ninja').page.urlPath}"`. You can use `/admin/update/update-2023-18.jsp` to update files (#57793-3).
+- Added the ability to create [project copies of files](frontend/customize-apps/README.md) for Spring applications. Just create your own version of the file in the `/apps/INSTALL_NAME/` folder, similar to what is used for JSP files. WebJET CMS first looks for the file in the project folder and if it is not found, it uses the standard file from the `/apps/` folder (#58073).
+- Added the option to set [CSS style name](frontend/examples/template-bare/README.md) in the CSS file via the `/* editor title: Style Name */` comment. The name will be displayed in the style list in the editor (#58209).
+- Editor - modified dialog for settings `a.btn` - ​​canceled color and size settings, [only CSS classes are used now](frontend/setup/ckeditor.md#button) same as `button` (#57657-16).
+- Data tables - option to display only the icon without a sequence for `rowReorder` if we add the class `icon-only` to the given column (#58161).
+- Data tables - new options for selecting rows in the `toggleSelector` and `toggleStyle` tables, more in the [data tables section](developer/datatables/README.md#configuration-options) (#58161).
+- Datatables - new custom [render](developer/datatables-editor/datatable-columns.md) function option using the `@DataTableColumn(...renderFunction = "renderStepName")` annotation. This will allow you to display composite values ​​from multiple fields in a column, etc. (#58161).
+- Data tables - added option to [redirect user](developer/datatables/restcontroller.md#redirect-after-save) to another page after saving a record by calling the `setRedirect(String redirect)` method (#58161).
+- Forms - Modified form list display, class `FormAttributesDB` removed, replaced with class `FormService`. Form settings changed from table `form_attributes` to table `form_settings`. We recommend verifying the functionality of all forms on the website after the update (#58161).
+- Forms - creating a new table `form_settings` to replace the table `form_attributes`, where form properties are stored. Individual attributes (settings) are now stored in separate columns as one record per row. The data was converted to the new table using `UpdateDatabase.java` (#58161).
+- Switch to a new table `form_settings` for form properties in `.jsp` files. You need to run the update script `update-2025-0.jsp`, which will edit the necessary `.jsp` (#58161).
+- List of forms - setting parameters/attributes of all form types redirected from table `form_attributes` to new table `form_settings` (#58161).
+- Data tables - added BE support for `row-reorder`, where it is possible to change the order of records directly in the data table using drag&drop (#58161).
+- Events - added event [Update codes in text](developer/backend/events.md#update-codes-in-text) for the ability to edit codes in the text of the page like `!CUSTOM_CODE!` and the like (#54273-63).
+- Data tables - added [Spring events](developer/backend/events-datatable.md) for data editing in customer installations (#54273-63).
+
+### Testing
+
+- Added script [rm-same-images.sh](../../src/test/webapp/rm-same-images.sh) to remove identical images when creating new screenshots (#58113).
+
+![meme](_media/meme/2026-0.jpg ":no-zoom")
+
+## 2025.40
+
+> **WebJET CMS 2025.40** brings an integrated **AI Assistant** that makes working with content much easier. It allows you to automatically **correct grammar**, **translate** texts, suggest headlines, summarize articles, and generate **illustration images** directly in the editor. This makes content creation **faster, more accurate, and more creative** than ever before.
+>
+> Significant changes also concern **tags** and **news templates**, which have been reworked into **separate database tables** with support for separation by domain. This brings greater **transparency, easier management** and the ability to effectively adapt content for multiple websites. The user interface has been **optimized for smaller screens** – the system automatically adjusts the display of windows and maximizes usable space.
+>
+> On a technical level, the outdated Struts Framework has been removed. This makes WebJET CMS more powerful, stable, **more secure** and ready for further development of modern web solutions.
+
+### Groundbreaking changes
+
+- Removed `Struts Framework`, it is necessary to update `JSP` files, Java classes and edit file `web.xml`, more in [programmer section](#programmer section) (#57789).
+- If you are using the Tomcat application server version 9.0.104 and higher, you need to [update the settings](install/versions.md#changes-when-upgrading-to-tomcat-90104) the `maxPartCount` parameter to the `<Connector` element (#54273-70).
+- Tags - split by domain - at startup a copy of tags is created for each domain (if data split by domain is used - configuration variable `enableStaticFilesExternalDir=true` is set). Tag IDs for web pages and gallery are updated. It is necessary to manually check tag IDs for all news applications and other applications that contain tag IDs - the update will try to fix them, but we recommend checking the IDs. More information in the programmer section. (#57837).
+- News - [news templates](frontend/templates/news/README.md) converted from definition via translation keys to own database table. When WebJET starts, records from original format are converted. They are separated by domains, if they contain domain alias they are created only in the respective domain (#57937).
+- Security - stricter control of administration URL addresses - it is necessary that the URL address in the administration has the character `/` at the end, the incorrect address is `/admin/v9/webpages/web-pages-list` or `/apps/quiz/admin`, the correct one is `/admin/v9/webpages/web-pages-list/` or `/apps/quiz/admin/`. It is necessary for the programmer to check the URL address definitions in the `modinfo.properties` files (#57793).
+
+### AI Assistant
+
+In today's world, artificial intelligence is all around us, and of course, WebJET, as a modern content management system, does not want to be left behind. That is why we are proud to present a new version of WebJET CMS, where we have integrated [advanced AI tools](redactor/ai/README.md).
+
+![](redactor/ai/datatables/ckeditor-assistants.png)
+
+These features will make it easier for you to create and edit content - from grammar correction, text translations, subtitle suggestions, to generating illustrative images.
+
+<div class="video-container">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+### Website
+
+- AB Testing - added option [show AB version](redactor/apps/abtesting/README.md) according to the logged-in user status - A version will be displayed to a non-logged-in user and B version to a logged-in user. You activate the mode by setting the configuration variable `ABTestingForLoggedUser` to the value `true` (#57893).
+- [Page Builder](redactor/webpages/pagebuilder.md) - modified visuals to better fit the current WebJET CMS design (#57893).
+
+![](redactor/webpages/pagebuilder-style.png)
+
+- Allowed to display pages containing `404.html` in the URL address from system folders so that such a technical page does not interfere with your standard web pages (#57657-8).
+- Tags - split display of tags by currently selected domain, so you can have tags separately for each domain in WebJET (#57837).
+- Structure cloning - added information about the configured translator and how many free characters remain for translation (#57881).
+- Structure mirroring - added option to delete `sync_id` values ​​for selected folder (recursively). To easily cancel/reset page mirroring (#57881).
+
+![](redactor/apps/clone-structure/clone_structure_set_translator.png)
+
+- Mirroring - added a new section [mirroring](redactor/webpages/mirroring/README.md) to track and manage linked folders and pages after mirroring actions (#57941).
+
+![](redactor/webpages/mirroring/groups_datatable.png)
+
+- When selecting an image or video file in the page editor, only suitable file types are displayed in the explorer, the others are filtered (#57921).
+
+### Templates
+
+- Added a new section [News Templates](frontend/templates/news/README.md) for managing and administering news templates (#57937).
+
+![](frontend/templates/news/news-temps-datatable.png)
+
+### User interface
+
+- When using a small monitor (window height less than 760 points), the window will automatically be displayed to the entire screen and the header and footer will be reduced (the window title is in a smaller font). This will increase the amount of information displayed, which is especially necessary in the web page section. It is used for windows using the CSS class `modal-xl`, which are the current web pages, photo gallery, image editor and users (#57893).
+
+![](redactor/webpages/pagebuilder.png)
+
+- Added the option to click on the image icon at the beginning of the field in the editor to display it in a new tab.
+
+![](developer/datatables-editor/field-type-elfinder.png)
+
+### Applications
+
+- Added option to display the application only to logged in/not logged in users. The mode is set in the [Application Display Settings] tab (redactor/webpages/working-in-editor/README.md#display-tab) in the page editor (#57893).
+
+![](custom-apps/appstore/common-settings-tab.png)
+
+Redesigned application properties settings in the editor from the old code in `JSP` to `Spring` applications. Applications automatically also get the ability to set [display on devices](custom-apps/appstore/README.md#conditional-display-applications). The design is consistent with the rest of the WebJET CMS and data tables (#57409).
+
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Emoticons](redactor/apps/emoticon/README.md)
+- [Forum/Discussion](redactor/apps/forum/README.md)
+- [Questions and Answers](redactor/apps/qa/README.md)
+- [Users](redactor/apps/user/README.md)
+- [Impressive Slideshow](redactor/apps/app-impress_slideshow/README.md)
+- [Restaurant Menu](redactor/apps/restaurant-menu/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Social Icons](redactor/apps/app-social_icon/README.md)
+- [Video] (redactor/apps/video/README.md)
+
+![](editor/apps/app-slit_slider/editor-items.png)
+
+### Menu
+
+- If [website menu](redactor/apps/menu/README.md) does not have a root folder specified (the value is set to 0), the root folder for the currently displayed web page will be automatically used. This is useful if the menu is displayed in multiple language mutations where each is a root folder - you don't need to have separate menus/headers for each language, just one common one (#57893).
+
+### Statistics
+
+- In the [visitors] section (redactor/apps/stat/README.md#visitors) added the total number of Views, Visits and Number of different users for an easy overview of the total visitor traffic for the selected period (#57929).
+
+![](redactor/apps/stat/stats-page.png)
+
+- In the [error pages] section (redactor/apps/stat/README.md#error-pages) added filtering by bots (applies only to newly recorded data) and a total count in the footer. You need to edit the page `404.jsp` in your project by adding the object `request` to the call to `StatDB.addError(statPath, referer, request);` (#58053).
+
+![](redactor/apps/stat/error-page.png)
+
+### Optional fields
+
+- Added support for new types of [optional fields](frontend/webpages/customfields/README.md):
+  - [Selecting a website folder](frontend/webpages/customfields/README.md#selecting-a-webpages-folder) (#57941).
+  - [Website Selection](frontend/webpages/customfields/README.md#website-selection) (#57941).
+
+![](frontend/webpages/customfields/webpages-doc-null.png)
+
+![](frontend/webpages/customfields/webpages-group-null.png)
+
+### Safety
+
+- Fixed a possible vulnerability in Safari when a special URL pointing to a file archive is combined with a nice 404 page (#57657-8).
+
+### Other minor changes
+
+- Change Audit - Search - Type field is sorted alphabetically (#58093).
+- E-commerce - added option to set [root folder](redactor/apps/eshop/product-list/README.md) with product list using configuration variable `basketAdminGroupIds`, if automatic search by embedded application product list is not suitable (#58057).
+- E-commerce - payment method setup application moved from the `/apps/eshop/admin/payment-methods/` folder to the standard `/apps/basket/admin/payment-methods/` (#58057).
+- E-commerce - after deleting an order, its items and payments are also deleted from the database (#58070).
+- Server monitoring - current values ​​- added database server type (MariaDB, Microsoft SQL, Oracle, PostgreSQL) (#58101).
+- Compiler - the processing of returned error messages has been improved for the `DeepL` compiler, for more accurate problem identification (#57881).
+- Compiler - added support for implementing multiple compilers and their automatic processing/use (#57881).
+- Translator - added automatic [auditing of the number of consumed characters](admin/setup/translation.md) for each translation. The amount of credits consumed during the translation is written to the audit record of type `TRANSLATION` in the column `EntityID`. The number of available characters is also audited, the result is cached and updated again in 5 minutes (#57965).
+- Explorer - optimized loading, fixed duplicate reading of library `jQuery UI` (#57997).
+
+### Bug fixes
+
+- Data tables - fixed setting options in the external filter selection menu (#57657-8).
+- Structure cloning - fixed validation of entered folder ids and added error message output (#57941).
+- Gallery - added support for selecting a gallery folder, in the Gallery application on the website, when using domain aliases and editing a gallery entry with a domain alias (#57657-11).
+- Websites - fixed page list display when viewing folders as a table (#57657-12).
+- Charts - fixed display of a large number of legends in charts, scrolling in legends is automatically used (#58093).
+
+### Documentation
+
+- Added documentation for setting up and using [two-step verification/authorization](redactor/admin/logon.md#two-step-verification) (#57889).
+
+### For the programmer
+
+- Removed class `ImportXLSForm`, which was used in imports from `XLS` format in [spec/import_xls.jsp](../../src/main/webapp/admin/spec/import_xls.jsp). Technically the class is not needed, just delete the reference in the JSP and modify the form to a standard HTML form (#57789).
+- Improved update script `/admin/update/update-2023-18.jsp` for File Archive - can update standard changes and add necessary changes to your version `FileArchivatorBean` and helper classes (#57789).
+- Class `org.apache.struts.action.ActionMessage` replaced by object `String`, class `ActionMessages` replaced by `List<String>` (#57789).
+- Framework `Struts` removed, tags `<logic:present/iterate/...` replaced with corresponding `<iwcm:present/iterate/...`, beware `<bean:write` for `<iwcm:beanWrite`.
+- The following changes have been made to the Java code due to the removal of `Struts`:
+  - `ActionMessage` replaced by `String`
+  - `ActionMessages` replaced by `List<String>`
+  - `BasicLdapLogon.logon` returns `List<String>` instead of `ActionMessages`
+  - `org.apache.struts.util.ResponseUtils.filter` replaced by `sk.iway.iwcm.tags.support.ResponseUtils.filter`
+- Amcharts - added support for specifying a function to transform text in category labels for a chart of type `PIE` (#58093).
+- Amcharts - added support for specifying a function to transform text in the chart legend of type `LINE` (#58093).
+- Amcharts - added option to hide tooltip when value is `null` or `0` in chart type `LINE` (#58093).
+
+You can use the `/admin/update/update-2023-18.jsp` script to convert both JSP and Java files. If you specify the path value `java`, the replacement will also be performed in the `../java/*.java` files. The problem is running the project if it contains errors. However, you can rename the `src/main/java` folder to `src/main/java-update` so that it can run pure WebJET. Then you can use the update script. It scans and updates the `../java/*.java` and `../java-update/*.java` folders.
+
+In file `WEB-INF/web.xml`, initialization of `Apache Struts` is no longer needed, delete the entire `<servlet>` section containing `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` and `<servlet-mapping>` containing `<servlet-name>action</servlet-name>`.
+
+- Split tags by domains (if the configuration variable `enableStaticFilesExternalDir=true` is set), so that it is easy to have separate tags for each domain. When WebJET is started, it copies existing tags for all defined domains. It skips tags that are set to display only in a specific folder, where it sets the domain for the tag according to the first folder. It updates tags for News, i.e. for the application `/components/news/news-velocity.jsp` where it searches for the expression `perexGroup` and `perexGroupNot` and tries to update the tag IDs according to the domain of the given website. The information is written to the history and a record is created in the Audit with details of how `INCLUDE` was replaced, example:
 
 ```txt
 UPDATE:
@@ -351,362 +361,379 @@ new code:
 INCLUDE(/components/news/news-velocity.jsp, groupIds="24", alsoSubGroups="false", publishType="new", order="date", ascending="false", paging="false", pageSize="1", offset="0", perexNotRequired="false", loadData="false", checkDuplicity="true", contextClasses="", cacheMinutes="0", template="news.template.dlazdica-3", perexGroup="1438+1439", perexGroupNot="1440")
 ```
 
-&#x20;the signs have been changed `INCLUDE` on the newly created `INCLUDE` a `3+645` For `1438+1439`.`794`| perex\_group\_id | perex\_group\_name | domain\_id | available\_groups |
-| -------------- | -------------------- | --------- | ---------------- |
-| 3 | next perex group | 1 | NULL |
-| 645 | deletedPerexGroup | 1 | NULL |
-| 794 | calendar-events | 1 | NULL |
-| 1438 | next perex group | 83 | NULL |
-| 1439 | deletedPerexGroup | 83 | NULL |
-| 1440 | calendar-events | 83 | NULL |`1440`Before the update was triggered, only records existed in the database&#x20;
+For the first `INCLUDE`, tags with IDs 625 and 626 were removed, because they are not displayed in the given folder/domain - they were set to be displayed only for a certain folder. In the second `INCLUDE`, tags `3+645` were changed to the newly created `1438+1439` and `794` to `1440`.
 
-which set&#x20;
+| perex_group_id | perex_group_name      | domain_id | available_groups |
+|----------------|-----------------------|-----------|------------------|
+| 3              | another perex group  | 1         | NULL             |
+| 645            | deletedPerexGroup     | 1         | NULL             |
+| 794            | event-calendar     | 1         | NULL             |
+| 1438           | another perex group  | 83        | NULL             |
+| 1439           | deletedPerexGroup     | 83        | NULL             |
+| 1440           | event-calendar     | 83        | NULL             |
 
-. Records `3, 645 a 794` arose during the update for `domain_id=1`.`1438, 1439 a 1440`Data tables - added support for editing `domain_id=83` local JSON data
-- &#x20;(#57409).[Data tables - added extension ](developer/datatables-editor/field-datatable.md#local-json-data) Row Reorder
-- &#x20;for the ability to arrange the list using the function [ (#57409).](https://datatables.net/extensions/rowreorder/) Datatables - Added setting option `Drag&Drop` Footers for sum of values
-- &#x20;(#57929).[Applications - added the ability to use local JSON data to set application items, for example items for ](developer/datatables/README.md#footer-for-sum-of-values) impressive presentation
-- &#x20;(#57409).[2025.18](redactor/apps/app-impress_slideshow/README.md) View Full Version&#x20;
+Before the update was run, only `3, 645 a 794` records existed in the database, which set `domain_id=1`. The `1438, 1439 a 1440` records were created during the update for `domain_id=83`.
+
+- Data tables - added support for editing [local JSON data](developer/datatables-editor/field-datatable.md#local-json-data) (#57409).
+- Data tables - added [Row Reorder](https://datatables.net/extensions/rowreorder/) extension to allow list ordering using the `Drag&Drop` function (#57409).
+- Datatables - Added option to set [Footnotes for sum of values](developer/datatables/README.md#footnotes-for-sum-of-values) (#57929).
+- Applications - added the ability to use local JSON data to set application items, for example items for [impress slideshow](redactor/apps/app-impress_slideshow/README.md) (#57409).
 
 ![](redactor/apps/app-impress_slideshow/editor-items.png)
 
 ## 2025.18
 
-> &#x20;brings a completely redesigned module **E-commerce** with support **payment gateway GoPay** and an improved order list. Application **News calendar** has been separated as **standalone application** and at the same time we have redesigned the settings of several applications in the page editor. **Document Manager** (formerly File Archive) has passed **visual and functional reboot** including new tools for managing, exporting and importing documents.**The system has also been improved&#x20;**&#x42;ulk email
+> Version **2025.18** brings a completely redesigned **E-commerce** module with support for **GoPay payment gateway** and an improved order list. The **News Calendar** application has been separated as a **standalone application** and we have also redesigned the settings of several applications in the page editor to a new design. The **Document Manager** (originally File Archive) has undergone a **visual and functional reboot**, including new tools for managing, exporting and importing documents.
 >
-> &#x20;with new options for the sender and a more convenient choice of recipients. **Reservations** have gained new opportunities as **overbooking** creating bookings back in time and sending notifications to specific emails for each booking object.**We have optimized the number of files in&#x20;**&#x45;xplore
+> The **Bulk Email** system has also been improved with new options for the sender and more convenient selection of recipients. **Reservations** have gained new options such as **overbooking**, creating reservations retroactively, and sending notifications to specific emails for each reservation object.
 >
-> leading to **faster loading** and added new information to **Server monitoring**.**Groundbreaking changes**News Calendar app separated into a separate app, if you use News Calendar you need to edit the path&#x20;
+> We've optimized the number of files in **Explorer**, leading to **faster loading**, and added new information to **Server Monitoring**.
 
-### &#x20;at&#x20;
+### Groundbreaking changes
 
-- &#x20;(#57409 `/components/calendar/news_calendar.jsp`Modified Spring and JPA initialization, see the programmer's section (#43144) for more information.`/components/news-calendar/news_calendar.jsp`Redesigned backend part of ecommerce application, more in the section for programmer (#57685).
-- Data tables
-- When the numeric value filter is set to from-to, the field is enlarged to better display the entered value, similar to what the date field does (#57685).
+- News Calendar application separated into a separate application, if you use the news calendar you need to edit the path `/components/calendar/news_calendar.jsp` to `/components/news-calendar/news_calendar.jsp` (#57409).
+- Modified Spring and JPA initialization, more information in the programmer section (#43144).
+- Redesigned backend part of the e-commerce application, more in the programmer section (#57685).
 
-### The File Archive application has been converted into a Spring application. For more information, see the programmer's section (#57317).
+### Data tables
 
-- The E-Commerce application was on&#x20;
-- &#x20;partly remodeled. For more information see the section for the programmer (#56609).
-- Document Manager (File Archive)`BE`List of files
+- When setting a numeric value filter from-to, the field will be enlarged to better display the entered value, similar to what a date field does (#57685).
+- The File Archive application has been converted to a Spring application. For more information, see the developer section (#57317).
+- The E-commerce application has been reworked in part. For more information, see the developer section (#56609).
 
-### &#x20;redesigned with the addition of new logic compared to the old version. Read more in&#x20;
+### Document Manager (File Archive)
 
-- **Archive files** (#57317).[Category Manager](redactor/files/file-archive/README.md) repaired and redesigned. Read more in&#x20;
+- **File list** redesigned with new logic compared to the old version. Read more in the [File archive](redactor/files/file-archive/README.md) (#57317).
 
-![](redactor/files/file-archive/datatable_allFiles.png)
+![](editor/files/file-archive/datatable_allFiles.png)
 
-- **Category Manager** (#57317).[Product Manager](redactor/files/file-archive/category-manager.md) has been added as a new section. Read more in&#x20;
-- **Product Manager** (#57317).[Exporting master files](redactor/files/file-archive/product-manager.md) has been modified to offer wider file export options and improve the clarity of the listings. Read more in&#x20;
-- **Exporting master files** (#57317).[Importing master files](redactor/files/file-archive/export-files.md) has been corrected and modified to work with the extended export options. Read more in&#x20;
+- **Category Manager** fixed and redesigned. Read more in the [Category Manager](redactor/files/file-archive/category-manager.md) (#57317).
+- **Product Manager** has been added as a new section. Read more in the [Product Manager](redactor/files/file-archive/product-manager.md) section (#57317).
+- **Main file export** has been modified to offer broader file export options and improve the clarity of the listings. For more information, see [Main file export](redactor/files/file-archive/export-files.md) (#57317).
 
 ![](redactor/files/file-archive/export_all.png)
 
-- **Importing master files** (#57317).[Indexing](redactor/files/file-archive/import-files.md) documents in search engines like&#x20;
-- **&#x20;modified to not index old/historical versions of documents and documents out of date (HTTP header set&#x20;**). Indexing of these documents can be enabled in the editor in the document manager (#57805).`Google`Applications`X-Robots-Tag=noindex, nofollow`Redesigned application properties settings in the editor from the old code in&#x20;
+- **Import of main files** has been fixed and modified to work with advanced export options. For more information, see [Import of main files](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexing** documents in search engines of type `Google` has been modified to not index old/historical versions of documents and documents outside the validity date (HTTP header `X-Robots-Tag=noindex, nofollow` set). Indexing of these documents can be enabled in the editor in the document manager (#57805).
 
-### &#x20;at&#x20;
+### Applications
 
-&#x20;Application. Apps also automatically get the ability to set `JSP` display on devices`Spring`. The design is consistent with the rest of the WebJET CMS and data tables (#57409).[Survey](custom-apps/appstore/README.md#conditional-application-view) Banner system
-- [Date and time, Date and name day](redactor/apps/inquiry/README.md)
-- [ - merged into one common application](redactor/apps/banner/README.md)
-- [Questionnaires](redactor/apps/app-date/README.md) Bulk e-mail
-- [Calendar of events](redactor/apps/quiz/README.md)
-- [News calendar](redactor/apps/dmail/form/README.md)
-- [Site Map](redactor/apps/calendar/README.md)
-- [Media](redactor/apps/news-calendar/README.md)
-- [Related sites](redactor/apps/sitemap/README.md)
-- [Rating](redactor/webpages/media.md)
-- [Reservations](redactor/apps/related-pages/README.md)
-- [Accelerated loading of application data in the editor - data is loaded directly from the server, no need to make a REST service call (#57673).](redactor/apps/rating/README.md)
-- [Modified visual - application title moved to main window when inserted into the page (instead of the original Application title) to increase the size of the application setup area (#57673).](redactor/apps/reservation/reservation-app/README.md)
+Redesigned application properties settings in the editor from the old code in `JSP` to `Spring` applications. Applications automatically also get the ability to set [display on devices](custom-apps/appstore/README.md#conditional-display-applications). The design is consistent with the rest of the WebJET CMS and data tables (#57409).
+
+- [Survey](redactor/apps/inquiry/README.md)
+- [Banner system](redactor/apps/banner/README.md)
+- [Date and time, Date and name days](redactor/apps/app-date/README.md) - merged into one common application
+- [Questionnaires](redactor/apps/quiz/README.md)
+- [Bulk email](redactor/apps/dmail/form/README.md)
+- [Event Calendar](redactor/apps/calendar/README.md)
+- [News Calendar](redactor/apps/news-calendar/README.md)
+- [Sitemap](redactor/apps/sitemap/README.md)
+- [Media] (redactor/webpages/media.md)
+- [Related pages](redactor/apps/related-pages/README.md)
+- [Rating] (redactor/apps/rating/README.md)
+- [Reservations](redactor/apps/reservation/reservation-app/README.md)
 
 ![](redactor/apps/dmail/form/editor.png)
 
-- Added application screenshots in Czech language for most applications (#57785).
-- Bulk e-mail
+- Accelerated loading of application data in the editor - data is inserted directly from the server, no need to make a REST service call (#57673).
+- Modified visual - the application name when inserting into a page has been moved to the main window (instead of the original Applications title) to increase the size of the application settings area (#57673).
 
 ![](redactor/apps/menu/editor-dialog.png)
 
-- Moved Web page field
+- Added screenshots of applications in the Czech language version for most applications (#57785).
 
-### &#x20;- now located in front of the field&#x20;
-- **Subject** so that when you select a page, the subject is automatically filled in according to the name of the selected web page (#57541).**Modifying the order in the Groups tab** - email groups are now shown before user groups (#57541).
-- **New options for sender name and email** - if the configuration variables are&#x20;
-- **&#x20;a&#x20;** &#x20;set, the following values are used. If they are blank, the system will automatically fill in the name and email of the currently logged in user. (#57541)`dmailDefaultSenderName`With these variables it is possible to set `dmailDefaultSenderEmail` fixed values
-  - &#x20;(e.g. company name) for all **Campaigns**, regardless of who is logged in.[Bulk email - optimizing recipient list creation - tab ](redactor/apps/dmail/campaings/README.md) groups
+### Bulk email
+
+- **Moved Web Page field** – now located before the **Subject** field so that after selecting a page, the subject is automatically filled in based on the name of the selected web page (#57541).
+- **Adjust order in Groups tab** - email groups are now displayed before user groups (#57541).
+- **New options for sender name and email** - if the `dmailDefaultSenderName` and `dmailDefaultSenderEmail` configuration variables are set, these values ​​will be used. If empty, the system will automatically fill in the name and email of the currently logged in user. (#57541)
+  - Using these variables, it is possible to set **fixed values** (e.g. company name) for all [campaigns](redactor/apps/dmail/campaings/README.md), regardless of who is logged in.
 
 ![](redactor/apps/dmail/campaings/editor.png)
 
-- &#x20;moved to the dialog box. After selecting a group of recipients, you can immediately see them in the Recipients tab and can easily edit them, no need to save the email first to view the recipients (#57537).[Unsubscribe - when you directly enter your email to unsubscribe (not by clicking on the link in the email), a confirmation email is sent to the email address you entered. In it you need to click on the unsubscribe link. The original version did not check the validity/ownership of the email address in any way, and it was possible to unsubscribe from someone else's email (#57665).](redactor/apps/dmail/campaings/README.md#pridanie-zo-skupiny) News calendar
+- Bulk email - optimization of recipient list creation - [groups] tab (redactor/apps/dmail/campaings/README.md#add-from-groups) moved to dialog box. After selecting a recipient group, you can immediately see them in the Recipients tab and easily edit them, it is no longer necessary to save the email first to view recipients (#57537).
 
-![](redactor/apps/dmail/campaings/users.png)
+![](editor/apps/dmail/campaings/users.png)
 
-- News Calendar separated as a separate app, originally it was an option in the Calendar app (#57409).
+- Unsubscribe - when you directly enter an email to unsubscribe (not click on the link in the email), a confirmation email is sent to the entered email address. In it, you need to click on the link to unsubscribe. The original version did not check the validity/ownership of the email address in any way and it was also possible to unsubscribe from someone else's email (#57665).
 
-### Displays a calendar linked to the news list with the option to filter news by the selected date in the calendar.
+### News calendar
 
-- Server monitoring
-- Added table with information about database connections and memory occupied (#54273-61).
+- News calendar separated as a separate application, originally it was an option in the Calendar application (#57409).
+- Displays a calendar linked to the news list with the option to filter news by a selected date in the calendar.
 
 ![](redactor/apps/news-calendar/news-calendar.png)
 
-### Added information about the version of libraries&#x20;
+### Server monitoring
 
-- &#x20;in the Server Monitoring-Actual Values section (#57793).
-- Reservations`Spring (Core, Data, Security)`Support for overbooking
+- Added table with information about database connections and occupied memory (#54273-61).
+- Added information about the `Spring (Core, Data, Security)` library version to the Server Monitoring-Current Values ​​section (#57793).
 
-### &#x20;- allows administrators to create multiple reservations&#x20;
-- **&#x20;on the same date (#57405).** &#x49;mproved import validation`overbooking` - it is now possible to import&#x20;
-- **booking** well into the past, or to create [ data import reservations (#57405).](redactor/apps/reservation/reservations/README.md) Support for adding bookings to the past`overbooking` - allows administrators to create reservations in the past (#57389).
-- **To&#x20;** &#x72;eservation objects
-- &#x20;a column has been added [Emails for notifications](redactor/apps/reservation/reservation-objects/README.md) which for each valid email entered (separated by a comma) will send an email if the reservation has been added and approved (#57389).**Booking confirmation notifications and other system notifications can be set to the sender's name and email using configuration variables&#x20;**&#x20;(#57389).
-- New application added `reservationDefaultSenderName,reservationDefaultSenderEmail` Reservation of days
-- , for booking all-day objects for a specific interval using the integrated calendar (#57389).[Gallery](redactor/apps/reservation/day-book-app/README.md) Added support for&#x20;
+### Reservations
+
+- **Overbooking Support** – allows administrators to create multiple `overbooking` reservations for the same date (#57405).
+- **Improved validation during import** – it is now possible to import [reservations](redactor/apps/reservation/reservations/README.md) into the past, or create `overbooking` reservations when importing data (#57405).
+- **Support for adding reservations to the past** – allows administrators to create reservations in the past (#57389).
+- A column **Emails for notifications** has been added to [reservation objects](redactor/apps/reservation/reservation-objects/README.md), which for each valid email entered (separated by a comma) will send an email if the reservation has been added and approved (#57389).
+- For reservation confirmation notifications and other system notifications, it is possible to set the sender's name and email using the configuration variables `reservationDefaultSenderName,reservationDefaultSenderEmail` (#57389).
+- Added new application [Day Reservation](redactor/apps/reservation/day-book-app/README.md), for booking all-day objects for a certain interval using the integrated calendar (#57389).
 
 ![](redactor/apps/reservation/day-book-app/app-table_B.png)
 
-### change folder
+### Gallery
 
-- &#x20;image, which allows **move image** when editing or duplicating to another folder. This is useful when duplicating, when you can directly set a new folder where you want to duplicate the image. If you specify a folder manually and it doesn't exist, it will automatically be created and its properties will be set according to the nearest existing parent folder (#57885).[Ecommerce](redactor/apps/gallery/README.md#) !>&#x20;
+- Added support for **changing the folder** of an image, which allows you to [move the image](redactor/apps/gallery/README.md#) when editing or duplicating to another folder. This is especially useful when duplicating, when you can immediately set a new folder where you want to duplicate the image. If you specify the folder manually and it does not exist, it will be automatically created and its properties will be set according to the nearest existing parent folder (#57885).
 
-### Warning:
+### E-commerce
 
-&#x20;due to the database update, the first start of the server may take longer - values for the number of items and price are calculated in the database for faster loading of the order list.**Added card&#x20;**&#x50;ersonal information
-- &#x20;to the order list - contains detailed information about **delivery address** as well as **contact information** all in one place (#57685).**Added card&#x20;**&#x4F;ptional fields
-- &#x20;to the order list - **optional fields** as needed for implementation (#57685).[Export of order list - columns total price with VAT and number of items (#57685) added.](frontend/webpages/customfields/README.md) Order form - added option to define available list of countries via configuration variable&#x20;
-- &#x20;(#57685).
-- Modified card data display `basketInvoiceSupportedCountries` Personal data
-- &#x20;in the list of orders, their logical division into parts for better overview (#57685).**Columns have been added to the order list&#x20;**&#x4E;umber of items
-- , **Price without VAT** a **Price with VAT**. Values are automatically recalculated when order items are changed (#57685).**Added the ability to view the product web page by clicking on the icon in the item list, the product will also be displayed in the Preview tab when opening the item editor (#57685).**&#x49;n the order list, redesigned country selection via the selection field, which offers only countries defined by a constant&#x20;
-- &#x20;(#57685).
-- New version `basketInvoiceSupportedCountries` configurations of payment methods
+!> **Warning:** Due to database updates, the first server start may take longer - values ​​for the number of items and price are calculated into the database for faster loading of the order list.
+
+- Added **Personal Information** tab to the order list - contains detailed information about **delivery address** as well as **contact information** all in one place (#57685).
+- Added **Optional Fields** tab to the order list - [optional fields](frontend/webpages/customfields/README.md) as needed for implementation (#57685).
+- Export of order list - added columns total price including VAT and number of items (#57685).
+- Order form - added option to define available list of countries via configuration variable `basketInvoiceSupportedCountries` (#57685).
+- Modified display of data from the **Personal data** tab in the order list, logically dividing it into sections for better overview (#57685).
+- The columns **Number of items**, **Price excluding VAT** and **Price including VAT** have been added to the order list. The values ​​are automatically recalculated when changing order items (#57685).
+- Added the option to view the product's website by clicking on the icon to the item list, the product will also be displayed in the Preview tab when opening the item editor (#57685).
+- In the order list, the country selection via the selection field has been redesigned, which only offers countries defined by the constant `basketInvoiceSupportedCountries` (#57685).
 
 ![](redactor/apps/eshop/invoice/editor_personal-info.png)
 
-- &#x20;and integration to payment gateways. Data is separated by domain. We have added support for [payment gateway GoPay](redactor/apps/eshop/payment-methods/README.md), which also means accepting payment cards, supporting [, payments via internet banking, ](https://www.gopay.com), `Apple/Google Pay` etc. In addition, payments by bank transfer and cash on delivery are supported. For each type of payment it is also possible to set a price, which will be automatically added to the order when the option is selected. The set payment methods are also automatically reflected in the options when the customer creates an order.`PayPal`New Order List application with a list of orders of the currently logged in user. By clicking on an order, you can view the order detail and download it in PDF format (#56609).`Premium SMS`Other minor changes
+- New version of [payment method configuration](redactor/apps/eshop/payment-methods/README.md) and integration with payment gateways. Data is separated by domain. We have added support for [GoPay payment gateway](https://www.gopay.com), which also means acceptance of payment cards, support for `Apple/Google Pay`, payments via internet banking, `PayPal`, `Premium SMS` etc. In addition, payments by transfer and cash on delivery are supported. For each payment type, it is also possible to set a price, which will be automatically added to the order when the option is selected. The set payment methods will also be automatically reflected in the options when the customer creates an order.
 
 ![](redactor/apps/eshop/payment-methods/datatable.png)
 
-- Administration search - customized interface&#x20;
+- New Order List application with a list of orders of the currently logged in user. By clicking on an order, you can view the order details and download it in PDF format (#56609).
 
-### &#x20;a&#x20;
+### Other minor changes
 
-- &#x20;(#57561 `RestController`Explorer - faster loading and lower server load by reducing the number of files/server requests (#56953).`Service` - added support for&#x20;
-- hiding parent folders
-- `dt-tree-dir-simple` in the displayed tree structure by attribute [ (#57885).](developer/datatables-editor/field-json.md#možnosti-classname) Error correction`data-dt-field-hideRootParents`Bulk email - added duplication of recipient list when duplicating a campaign (#57533).
+- Search in administration - modified interface to custom `RestController` and `Service` (#57561).
+- Explorer - faster loading and lower server load by reducing the number of files/requests to the server (#56953).
+- `dt-tree-dir-simple` - ​​added support for [hiding parent folders](developer/datatables-editor/field-json.md#classname-options) in the displayed tree structure with the `data-dt-field-hideRootParents` attribute (#57885).
 
-### Data tables - import - modified logic&#x20;
-- Skip erroneous entries
-- &#x20;when importing so that generic errors are also handled with this option&#x20;**&#x20;and ensured that the import was completed without interruption. These errors are then displayed to the user via a notification during import (#57405).**&#x46;iles - fixed file/folder size calculation in explorer footer and when showing folder detail (#57669 `Runtime`Navigation - fixed tab navigation in mobile view (#57673).
-- Autocomplete - corrected error in type field&#x20;
-- , where the first value obtained in the case of&#x20;
-- &#x20;was not correct (#57317).`Autocomplete`For the programmer`jstree`!>&#x20;
+### Bug fixes
 
-### Warning:
+- Mass email - when duplicating a campaign, duplication of the recipient list has been added (#57533).
+- Data tables - import - modified logic **Skip bad records** during import so that this option also handles generic errors `Runtime` and ensures that the import completes without interruption. These errors are then displayed to the user via a notification during the import (#57405).
+- Files - fixed calculation of file/folder sizes in the explorer footer and when viewing folder details (#57669).
+- Navigation - fixed tabbed navigation in mobile view (#57673).
+- Autocomplete - fixed bug with field type `Autocomplete`, where the first value obtained in case of `jstree` was not correct (#57317).
 
-&#x20;modified Spring and JPA initialization, follow **instructions in the installation section**.[Other changes:](install/versions.md#changes-in-the-transition-to-the-20250-snapshot) Added option to perform&#x20;
+### For the programmer
 
-additional HTML/JavaScript code
+!> **Warning:** Spring and JPA initialization modified, follow [instructions in the installation section](install/versions.md#changes-when-upgrading-to-20250-snapshot).
 
-- &#x20;in Spring application with annotation [ by setting the attribute ](custom-apps/appstore/README.md#additional-html-code) (#57409).`@WebjetAppStore`Added field type in datatable editor `customHtml = "/apps/calendar/admin/editor-component.html"` IMAGE\_RADIO
-- &#x20;to select one of the options using the image (#57409).[Added field type ](developer/datatables-editor/standard-fields.md#image_radio) For&#x20;
-- file upload`UPLOAD` in the datatable editor (#57317).[When initializing ](developer/datatables-editor/field-file-upload.md) nested datatables
-- &#x20;added option to edit [ object by specifying a JavaScript function in the attribute ](developer/datatables-editor/field-datatable.md) Annotation (#57317).`columns`Added support for getting sender name and email for various email notifications using `data-dt-field-dt-columns-customize` (#57389).
-- Added option to set root folder for `SendMail.getDefaultSenderName(String module, String fallbackName), getDefaultSenderEmail(String module, String fallbackEmail)` field of type JSON
-- &#x20;in both ID and path format: [ or ](developer/datatables-editor/field-json.md).`@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")`Running background tasks is only done after complete initialization, including `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "26")` (#43144).
-- Added option to set `Spring` all HikariCP properties
-- &#x20;(#54273-61).[Added check to see if the database driver supports sequence setup (#54273-61).](install/setup/README.md#vytvorenie-db-schémy) Modified function&#x20;
-- if you are listening to change the card we recommend to use event type&#x20;
-- where in `WJ.headerTabs` you get the card that was clicked (#56845-20250325 `$('#pills-tabsFilter a[data-wj-toggle="tab"]').on('click', function (e) {`Converted Document Manager (File Archive) to Spring application. If you are using the original version and want to keep it, you need to add back the files `e` a&#x20;
-- &#x20;and the necessary classes from `/components/file_archiv/file_archiv.jsp` older version of WebJET CMS`components/file_archiv/editor_component.jsp`.[Document Manager (File Archive) - modified API ](https://github.com/webjetcms/webjetcms/tree/release/2025.0/src/webjet8/java/sk/iway/iwcm/components/file_archiv) Returns&#x20;
-- , you can use `FileArchivatorBean.getId()/getReferenceId()/saveAndReturnId()` for including `Long` Values. Delete unused methods, transfer them to your classes if needed. We do not recommend modifying WebJET classes, create new classes of type `getFileArchiveId()` in your project where you add methods. If we have deleted the whole class you are using (e.g. `int`), you can add it directly to your project (#57317).`FileArchivatorProjectDB`Added automatic setting of column filtering to value `FileArchivatorAction`, if the value is&#x20;
-- &#x20;(unset) and it is a column that is nested, such as `false` Columns (#57685).`null`Added option `editorFields` of special arrangement
-- &#x20;by overwriting the method [ (#57685).](developer/datatables/restcontroller.md#usporiadanie) Added option in annotation `DatatableRestControllerV2.addSpecSort(Map<String, String> params, Pageable pageable)` set attribute&#x20;
-- &#x20;which will determine `@DataTableColumn` columns for arrangement`orderProperty`, e.g. [. Convenient for ](developer/datatables/restcontroller.md#Arrangement) classes that can aggregate data from multiple columns (#57685).`orderProperty = "contactLastName,deliverySurName"`For an array type `EditorFields` with set&#x20;
-- &#x20;added tree structure of parent folders for better `dt-tree-dir-simple` tree structure display`data-dt-field-root` (before, folders were displayed only from the specified root folder). Added the ability to define a list of folders that will not appear in the tree structure using a configuration variable set to [.](developer/datatables-editor/field-json.md) Selection `data-dt-field-skipFolders` editable field
-- &#x20;modified so that when a new record is added, that record is automatically selected in the field (#57757).[Redesigned e-commerce application on ](developer/datatables-editor/field-select-editable.md) parts. Since new classes are already being used, you must:
-- make use of the update script `BE` for basic updating of your JSP files
-  - as the type is now used `/admin/update/update-2023-18.jsp` instead of&#x20;
-  - , you must additionally adjust all comparisons of these values. Type `BigDecimnal` is not compared classically using `float` but by means of `BigDecimal` you need to remove file calls or add back any files that were removed because they were not used`<, =, >`Testing`BigDecimal.compareTo( BigDecimal )`
-  - Media - added test for embedding media in a web page if the user does not have the right to all media (#57625).
+Other changes:
 
-### Web pages - added test for creating a new page with publishing in the future (#57625).
+- Added the ability to execute [additional HTML/JavaScript code](custom-apps/appstore/README.md#additional-html-code) in a Spring application with the `@WebjetAppStore` annotation by setting the `customHtml = "/apps/calendar/admin/editor-component.html"` attribute (#57409).
+- Added field type [IMAGE_RADIO](developer/datatables-editor/standard-fields.md#image_radio) in datatable editor for selecting one of the options using an image (#57409).
+- Added field type `UPLOAD` for [file upload](developer/datatables-editor/field-file-upload.md) in the datatable editor (#57317).
+- When initializing a [nested datatable](developer/datatables-editor/field-datatable.md) added the ability to edit the `columns` object by specifying a JavaScript function in the `data-dt-field-dt-columns-customize` attribute of the annotation (#57317).
+- Added support for getting the sender's name and email for various email notifications using `SendMail.getDefaultSenderName(String module, String fallbackName), getDefaultSenderEmail(String module, String fallbackEmail)` (#57389).
+- Added the ability to set the root folder for [JSON type field](developer/datatables-editor/field-json.md) in both ID and path format: `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")` or `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "26")`.
+- Background tasks will only be started after complete initialization including `Spring` (#43144).
+- Added option to set [all HikariCP properties](install/setup/README.md#creating-db-schema) (#54273-61).
+- Added check whether the database driver supports setting sequences (#54273-61).
+- Modified function `WJ.headerTabs`, if you are listening for a card change, we recommend using an event of type `$('#pills-tabsFilter a[data-wj-toggle="tab"]').on('click', function (e) {`, where in `e` you will get the card that was clicked (#56845-20250325).
+- Redesigned Document Manager (File Archive) application to Spring application. If you are using the original version and want to keep it, you need to add back the `/components/file_archiv/file_archiv.jsp` and `components/file_archiv/editor_component.jsp` files and the necessary classes from [older version of WebJET CMS](https://github.com/webjetcms/webjetcms/tree/release/2025.0/src/main/java/sk/iway/iwcm/components/file_archiv).
+- Document Manager (File Archive) - modified API `FileArchivatorBean.getId()/getReferenceId()/saveAndReturnId()` returns `Long`, you can use `getFileArchiveId()` to return `int` value. Deleted unused methods, if needed, transfer them to your classes. We do not recommend modifying WebJET classes, create new classes of type `FileArchivatorProjectDB` in your project where you will add the methods. If we deleted the entire class that you are using (e.g. `FileArchivatorAction`), you can directly add it to your project (#57317).
+- Added automatic setting of column filtering to the value `false`, in case the value is `null` (not set) and it is a column that is nested, such as `editorFields` columns (#57685).
+- Added [special ordering](developer/datatables/restcontroller.md#ordering) option by overriding the `DatatableRestControllerV2.addSpecSort(Map<String, String> params, Pageable pageable)` method (#57685).
+- Added option in annotation `@DataTableColumn` to set attribute `orderProperty` which specifies [columns for arrangement](developer/datatables/restcontroller.md#arrangement), e.g. `orderProperty = "contactLastName,deliverySurName"`. Useful for `EditorFields` classes that can aggregate data from multiple columns (#57685).
+- For a field of type `dt-tree-dir-simple` with `data-dt-field-root` set, the tree structure of parent folders has been supplemented for better [display of the tree structure](developer/datatables-editor/field-json.md) (previously, folders were displayed starting from the specified root folder). Added the ability to define a list of folders that will not be displayed in the tree structure using a configuration variable set to `data-dt-field-skipFolders`.
+- [Editable field](developer/datatables-editor/field-select-editable.md) modified so that after adding a new record, this record is automatically selected in the field (#57757).
+- Redesigned the E-commerce application to the `BE` part. Since new classes are already used, for proper functioning you must:
+  - use the update script `/admin/update/update-2023-18.jsp` for a basic update of your JSP files
+  - since the type `BigDecimnal` is now used instead of `float`, you also need to adjust all comparisons of these values. The type `BigDecimal` is not compared classically with `<, =, >` but with `BigDecimal.compareTo( BigDecimal )`
+  - you must remove file calls, or add back all files that were removed because they were not used
+
+### Testing
+
+- Media - added test for inserting media in a web page if the user does not have rights to all media (#57625).
+- Websites - added test for creating a new website with future publishing (#57625).
 - Gallery - added watermark test with image comparison, added rights check test (#57625).
-- Web pages - added test for optional fields when creating a web page (#57625).
-- Allure - jUnit test results added to the common Allure report (#57801).
-- 2025.0.52
-- Corrected version of the original version 2025.0.
+- Websites - added test for optional fields when creating a website (#57625).
+- Allure - added jUnit test results to the common Allure report (#57801).
 
 ![meme](_media/meme/2025-18.jpg ":no-zoom")
 
-## Security - disabled redirection to external URLs after logging in via the login form.
+## 2025.0.52
 
-> Data Tables - Fixed error displaying selection fields when enabling Edit mode in grid view (#57657-16).
-- Data tables - corrected saving a new record via keyboard shortcut&#x20;
-- &#x20;\- after saving, the returned values are set back to the editor to correctly set the record ID for further editing (#57657-16).
-- Forms - modified field name generation to not contain a period (#57657-16).`CTRL+S`Bulk email - modified the buttons to start/stop sending bulk email to be easier to understand&#x20;
-- &#x20;a&#x20;
-- &#x20;(#54273-81 `play`Bulk email - corrected storage in Oracle database, subject field set as mandatory (#54273-81).`stop`Bulk Email - Domain Limits - fixed loading limits for domains from database (#54273-81).
-- Bulk email - fixed user ID setting when adding a group if there are multiple users with the same email (#58217).
-- Spam protection - fixed bug checking the time range between form submissions/searches (#57657-16).
-- Web pages - fixed tree structure when moving items through&#x20;
-- &#x20;in case of descending order setting (#MF-1199).
-- Website - fixed folder search in the Trash tab (#58081 `Drag&Drop`Web pages - corrected sending notification of approval/disapproval of a page if there is no approver with notification, added list of changes in various fields of a web page (#58007).
-- 2025.0.50
-- Corrected version of the original version 2025.0.
+> A patch version of the original version 2025.0.
 
-## Security - fixed the ability to log in if the password contains diacritics.
+- Security - prohibited redirection to external URLs after logging in via the login form.
+- Data tables - fixed error in displaying selection fields when enabling Edit mode in grid view (#57657-16).
+- Data tables - fixed saving a new record via the keyboard shortcut `CTRL+S` - ​​after saving, the returned values ​​are set back to the editor to correctly set the record ID for further editing (#57657-16).
+- Forms - modified field name generation so that it does not contain a dot (#57657-16).
+- Mass email - modified buttons for starting/stopping mass email sending to better understandable `play` and `stop` (#54273-81).
+- Mass email - fixed saving in Oracle database, subject field set as mandatory (#54273-81).
+- Mass email - Domain limits - fixed loading of limits for domains from the database (#54273-81).
+- Mass email - fixed setting user ID when adding a group if there are multiple users with the same email (#58217).
+- Spam protection - fixed bug in checking the time interval between form/search submissions (#57657-16).
+- Websites - fixed tree structure arrangement when moving items over `Drag&Drop` in case of descending arrangement setting (#MF-1199).
+- Websites - fixed folder search in Trash tab (#58081).
+- Websites - fixed sending notification about page approval/disapproval if there is no approver with notification, added list of changes in various website fields (#58007).
 
-> Security - Fixed possible vulnerability in page synchronization (#55193-7).
-- Security - added the ability to configure blocked file/directory paths via a variable&#x20;
-- . By default, URLs that contain the phrase in the name are blocked&#x20;
-- . More can be added as needed (#PR103 `pathFilterBlockedPaths`Banner system - fixed YouTube video banner display (#55193-7).`.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./`Data tables - corrected display of advanced export options (#58113).
-- Calendar of Events - fixed saving of the description field where HTML code was not allowed to be saved (#58113).
+## 2025.0.50
+
+> A patch version of the original version 2025.0.
+
+- Security - fixed login option if password contains diacritics.
+- Security - fixed a possible vulnerability in page synchronization (#55193-7).
+- Security - added the ability to configure blocked file/directory paths via the `pathFilterBlockedPaths` variable. By default, URLs that contain the term `.DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./` in the name are blocked. It is possible to add more as needed (#PR103).
+- Banner system - fixed YouTube video banner display (#55193-7).
+- Data tables - fixed display of advanced export options (#58113).
+- Event Calendar - fixed saving of the description field where saving HTML code was not allowed (#58113).
 - News - fixed exclusion of main pages for specified root folder (#57657-15).
-- Websites - PageBuilder - corrected UI language to the language of the logged-in user (not the language of the website) (#58133).
-- Web pages - modified the ability to embed HTML code in the folder and web page name. Enabled embedding secure HTML code in the web page name (
-- ) without modifying it, it works in the navigation bar, news and so on. For calling&#x20;
-- &#x20;value is returned with the HTML code removed, since it is assumed to be inserted into the `AllowSafeHtmlAttributeConverter` Signs. If you need to get the caption with HTML code you can use the call `${ninja.page.seoTitle}`. The folder is replaced by the `title` for the entity `${ninja.page.seoTitleHtml}`, whereas the sign `/` is used to separate individual folders (#54273-75 `&#47;`Web pages - fixed display of PageBuilder mode set directly in the page template (#57657-15).`/`PDF - corrected duplication of absolute path to&#x20;
-- &#x20;folder with fonts at the specified URL in the variable&#x20;
-- &#x20;(#58185).`fonts`Oracle/Microsoft SQL - fixed SQL errors and data types in basic tests/tables, used clean databases with `pdfBaseUrl` basic data
-- &#x20;(#58185).[2025.0.40](developer/testing/README.md#deleting-the-database) Corrected version of the original version 2025.0.
+- Websites - PageBuilder - fixed user interface language to the language of the logged in user (not the language of the website) (#58133).
+- Websites - modified option to insert HTML code into folder and website names. Inserting safe HTML code (`AllowSafeHtmlAttributeConverter`) into website names without editing is allowed, it works in the navigation bar, news, etc. For the `${ninja.page.seoTitle}` call, a value with removed HTML code is returned, since it is assumed to be inserted into the `title` tag. If you need to get the title with HTML code as well, you can use the `${ninja.page.seoTitleHtml}` call. For folders, the `/` character is replaced with the `&#47;` entity, since the `/` character is used to separate individual folders (#54273-75).
+- Websites - fixed display of PageBuilder mode set directly in the page template (#57657-15).
+- PDF - fixed duplication of absolute path to `fonts` font folder when specified URL in variable `pdfBaseUrl` (#58185).
+- Oracle/Microsoft SQL - fixed SQL errors and data types in basic tests/tables, used clean databases with [basic data](developer/testing/README.md#delete-databases) (#58185).
 
-## !>&#x20;
+## 2025.0.40
 
-> Warning:
+> A patch version of the original version 2025.0.
 
-&#x20;possible change in the behaviour of fields of type&#x20;**&#x20;for bulleted list in data tables (#54273-72).**&#x50;DF - corrected path settings to `quill` fonts folder. You need to specify the full path on the server disk (#57657).
-- Updated library `fonts` to version 1.11.0.
-- Initialization - added file existence check `Apache Commons BeanUtils` to not write an error on the public nodes of the cluster when starting WebJET (#54273-68).
-- Security - added expression control `autoupdate.xml` for URL parameters to prevent an XSS attack (#54273-68).
-- Field type `onwebkit` (small HTML editor used in Banners, Gallery...) - fixed duplication&#x20;
-- &#x20;element if it contains a CSS class or other attribute (#54273-69).`QUILL`Security - in the annotation `P` allowed attribute insertion&#x20;
-- &#x20;For `@AllowSafeHtmlAttributeConverter` a `alt,title` for elements `img` (#54273-69).`class`Security - updated library `a,img,div,span,p,h1,h2,h3,h4,h5,h6,i,b,strong,em` to version&#x20;
-- &#x20;(#54273-69).`hibernate-validator`Security - fixed possible vulnerability in AB testing.`6.2.5.Final`Security - corrected unnecessary reading&#x20;
-- &#x20;in JSON object&#x20;
-- .`dataAsc`Security - reduced amount of text when logging an error `DocBasic` when the web server is overwhelmed/attacked (#BVSSLA-34).
-- Administration - added the ability to insert `Session has already been invalidated` additional CSS/JavaScript
-- &#x20;file to the administration part, e.g. for custom CSS styles for [Quill field](custom-apps/apps/customize-admin.md) (#54273-69).[Data tables - for Oracle and Microsoft SQL disabled the option to sort by columns containing long text (](developer/datatables-editor/standard-fields.md#quill)) - these database systems do not support ordering when using this data type. The attribute must in&#x20;
-- &#x20;have an annotation `ntext/clob`, which disables the ordering option for the specified column for the specified database. For MariaDB and PostgreSQL, ordering is still supported (#54273-70 `Entite`Data Tables - corrected search if you select "Starts at" in one field and "Ends at" in another field, for example (#54273-70).`@Lob`Data Tables / Administration Lookups - special characters (e.g. quotes) allowed for lookups in data tables (#54273-70).
-- Forms - hid unnecessary button to create a new record in the list of completed forms (#54273-70).
-- Form easy - corrected setting of required fields in form items (#57657-12).
-- Web pages - added the ability to insert HTML code into folder names such as&#x20;
-- &#x20;\- in the list of web pages, the HTML code is not executed for security reasons, but in applications such as the Menu and Navigation Bar, the HTML code is displayed correctly and executed. An important condition is that the code must contain a closing tag&#x20;
-- . The HTML code is also removed from the automatically generated URL. Only safe HTML code allowed in the class `WebJET<sup>TM</sup>` (#54273-70 `</...>`Website - fixed media tab display for old users who did not have media management rights (#57657-10).`AllowSafeHtmlAttributeConverter`Data tables - for fields of type small HTML editor (
-- )&#x20;
-- modified behaviour for bulleted list`quill` (HTML tag **). The original editor set for this case to&#x20;** &#x20;element attribute `ul` and failed to use directly `li` element instead of `data-list="bullet"` element. The new behaviour uses the correct HTML tag `ul` and removes an unnecessary attribute `ol` (#54273-72 `ul`Gallery - fixed display of perex groups if there are more than 30 in gallery and image editor - displayed as selection box. Fixed loading and saving of groups in image editor (#57657-9).`data-list="bullet"`Explorer - fixed uploading the whole folder with subfolders to&#x20;
-- &#x20;via Explorer - correct creation&#x20;
-- &#x20;a `/images/gallery` Figures (#57657-11).`o_`Gallery - fixed sharing icon display in gallery type `s_` (#57657-11).
-- Gallery - fixed display of folder list when using domain aliases (displaying only folders from currently selected domain) (#57657-11 `PrettyPhoto`Gallery - fixed watermark retrieval for galleries using the domain alias (#57657-11).
-- File Upload - modified processing of files uploaded via&#x20;
-- . The modified version will allow you to restart the server and then after restoring&#x20;
-- &#x20;process the file correctly. Added warning display if the file is of an unauthorized type (#PR75).`/XhrFileUpload`Gallery - cancelled URL setting when displaying photos in gallery type `session` for easier use of the back button in the browser (#57657-12).
-- News - Fixed display settings for main pages from folders (#57657-12).`PrettyPhoto`PDF - fixed user logout error when generating PDF if PDF contains images embedded via&#x20;
-- &#x20;prefix (#57657-13).
-- 2025.0.23`/thumb`Corrected version of the original version 2025.0.
+!> **Warning:** possible change in behavior of fields of type `quill` for bulleted list in data tables (#54273-72).
 
-## Error correction
+- PDF - fixed setting of path to `fonts` font folder. Full path on server disk must be specified (#57657).
+- Updated library `Apache Commons BeanUtils` to version 1.11.0.
+- Initialization - added check for the existence of the file `autoupdate.xml` to prevent an error when starting WebJET on public cluster nodes (#54273-68).
+- Security - added checking of the expression `onwebkit` in URL parameters to prevent XSS attacks (#54273-68).
+- Field type `QUILL` (small HTML editor used in Banners, Gallery...) - fixed duplication of `P` element if it contains a CSS class or other attribute (#54273-69).
+- Security - in the annotation `@AllowSafeHtmlAttributeConverter` allowed insertion of attributes `alt,title` for `img` and `class` for elements `a,img,div,span,p,h1,h2,h3,h4,h5,h6,i,b,strong,em` (#54273-69).
+- Security - updated library `hibernate-validator` to version `6.2.5.Final` (#54273-69).
+- Security - fixed a possible vulnerability in AB testing.
+- Security - fixed unnecessary reading of `dataAsc` in JSON object `DocBasic`.
+- Security - reduced the amount of text when logging the `Session has already been invalidated` error when the web server is overwhelmed/attacked (#BVSSLA-34).
+- Administration - added the ability to insert [additional CSS/JavaScript](custom-apps/apps/customize-admin.md) file into the administration section, e.g. for custom CSS styles for [Quill type fields](developer/datatables-editor/standard-fields.md#quill) (#54273-69).
+- Data tables - for Oracle and Microsoft SQL, the ability to sort by columns containing long text is disabled (`ntext/clob`) - these database systems do not support sorting when using this data type. The attribute must have the annotation `Entite`, which disables the sorting option for the given column for the listed databases. For MariaDB and PostgreSQL, sorting is still supported (#54273-70).
+- Data tables - fixed searching if you select the "Starts with" option in one field and "Ends with" in another field, for example (#54273-70).
+- Data tables / administration search - special characters (e.g. quotes) allowed for searching in data tables (#54273-70).
+- Forms - hidden unnecessary button to create a new record in the list of completed forms (#54273-70).
+- Easy form - fixed setting of required fields in form items (#57657-12).
+- Websites - added the ability to insert HTML code into folder names such as `WebJET<sup>TM</sup>` - ​​in the list of websites, the HTML code will not be executed for security reasons, but in applications such as the Menu and navigation bar, the HTML code will be displayed correctly and executed. An important condition is that the code contains the closing tag `</...>`. The HTML code is also removed from the automatically generated URL address. Only safe HTML code allowed in the class `AllowSafeHtmlAttributeConverter` (#54273-70) is allowed.
+- Websites - fixed displaying the media tab for old users who did not have the right to manage media (#57657-10).
+- Data tables - for fields of type small HTML editor (`quill`) **modified behavior for bulleted list** (HTML tag `ul`). The original editor set the `data-list="bullet"` attribute on the `li` element for this case and could not directly use the `ul` element instead of the `ol` element. The new behavior uses the correct HTML tag `ul` and removes the unnecessary attribute `data-list="bullet"` (#54273-72).
+- Gallery - fixed displaying perex groups if there are more than 30 in the gallery and image editor - displayed as a selection field. Fixed loading and saving groups in the image editor (#57657-9).
+- Explorer - fixed uploading of entire folder with subfolders to `/images/gallery` via Explorer - correct creation of `o_` and `s_` images (#57657-11).
+- Gallery - fixed display of the share icon in the gallery of type `PrettyPhoto` (#57657-11).
+- Gallery - fixed display of folder list when using domain aliases (displaying only folders from the currently selected domain) (#57657-11).
+- Gallery - fixed watermark retrieval for galleries using domain alias (#57657-11).
+- File upload - modified processing of files uploaded via `/XhrFileUpload`. The modified version will allow restarting the server and then processing the file correctly after restoring `session`. Added warning display if the file is of an unauthorized type (#PR75).
+- Gallery - removed URL address setting when displaying photos in the gallery type `PrettyPhoto` for easier use of the browser's back button (#57657-12).
+- News - fixed setting for displaying main pages from folders (#57657-12).
+- PDF - fixed user logout error when generating PDF if PDF contains images inserted via `/thumb` prefix (#57657-13).
 
-> Data Tables - fixed incorrect display of tabs that should not be displayed when creating a new record (e.g. in templates) (#57533).
+## 2025.0.23
 
-### Data tables - added limit of number of records when displaying all. The value is the same as the maximum number of rows for export, it is set in the configuration variable&#x20;
-- &#x20;(#57657-2).
-- Data tables - corrected number of records on page when page contains navigation tabs (#57725-1 `datatablesExportMaxRows`Data Tables - corrected Duplicate heading instead of Edit when duplicating a record, modified duplicate button icon (#57725-3).
-- Data tables - unified name&#x20;
-- &#x20;columns from the original&#x20;
-- &#x20;to a unified `ID`. For `ID, Id, id` no need to set `ID` attribute, the key is automatically used `DataTableColumnType.ID`. Some translation keys deleted as not needed (#49144)`title`Image editor - when editing an image from a remote server, added notification about the need to download the image to the local server (#57657-2 `datatables.id.js`Web pages - corrected the insertion of the block containing the application (#57657-2).
-- Website - supplemented&#x20;
-- &#x20;object when inserting an application into a new web page (#57389).
-- Web pages - pages in the trash will no longer appear in the Unapproved tab, if the approver clicks on the link in the email an error Page is in trash will appear so that a page that has been deleted in the meantime is not accidentally approved (#54273-62).`ninja`Web pages - approvals - corrected list loading in the Unapproved tab when using the database server&#x20;
-- &#x20;(#54273-62).
-- Web site - fixed cluster nodes updating when tags change (#57717 `Oracle`Web pages - fixed displaying the list of pages if the user has the right to only selected web pages (#57725-4).
-- Web pages - domain switcher added even if no configuration variable is set&#x20;
-- &#x20;but only&#x20;
-- &#x20;(#57833).`enableStaticFilesExternalDir`Applications - corrected display of the translation keys tab when using the component `multiDomainEnabled` (#54273-57).
-- Applications - added support for inserting a new line via keyboard shortcut `editor_component_universal.jsp` into a simple text editor such as the one used in Questions and Answers (#57725-1).
-- Dialers - moved dialer selection directly to the data table toolbar (#49144 `SHIFT+ENTER`New - moved section selection directly to the data table toolbar (#49144).
+> A patch version of the original version 2025.0.
+
+### Bug fixes
+
+- Data tables - fixed incorrect display of cards that should not be displayed when creating a new record (e.g. in templates) (#57533).
+- Data tables - added limit on the number of records when displaying all. The value is the same as the maximum number of rows for export, set in the configuration variable `datatablesExportMaxRows` (#57657-2).
+- Data tables - fixed number of records per page when page contains navigation tabs (#57725-1).
+- Data tables - fixed title Duplicate instead of Edit when duplicating a record, modified icon of the duplicate button (#57725-3).
+- Data tables - unified name of `ID` column from original `ID, Id, id` to unified `ID`. For `DataTableColumnType.ID` it is not necessary to set `title` attribute, key `datatables.id.js` will be used automatically. Some translation keys deleted as they are not needed (#49144)
+- Image editor - when editing an image from a remote server, a notification about the need to download the image to the local server has been added (#57657-2).
+- Web pages - fixed insertion of a block containing an application (#57657-2).
+- Web pages - added `ninja` object when inserting an application into a new web page (#57389).
+- Web pages - pages in the trash will no longer appear in the Unapproved tab, if the approver clicks on the link in the email, the error Page is in the trash will be displayed, to avoid accidentally approving a page that has been deleted in the meantime (#54273-62).
+- Web pages - approval - fixed loading of the list in the Unapproved tab when using the `Oracle` database server (#54273-62).
+- Websites - fixed cluster node update when changing tags (#57717).
+- Web pages - fixed display of page list if user has rights only to selected web pages (#57725-4).
+- Web pages - added domain switcher even if the configuration variable `enableStaticFilesExternalDir` is not set but only `multiDomainEnabled` (#57833).
+- Applications - fixed display of translation keys tab when using the `editor_component_universal.jsp` component (#54273-57).
+- Applications - added support for inserting a new line via the keyboard shortcut `SHIFT+ENTER` to the simple text editor used e.g. in Questions and Answers (#57725-1).
+- Dialpads - moved dialpad selection directly to the data table toolbar (#49144).
+- News - moved section selection directly to the data table toolbar (#49144).
 - Login - fixed login error when password expires (#54273-57).
 - Login - fixed login in multiweb installation (#54273-57).
-- GDPR - corrected display of the Database Cleanup tab on use&#x20;
-- &#x20;Database (#54273-57).
-- File archive - corrected display of icons in date and time dialog (#54273-57).`Oracle/PostgreSQL`Security - updated library&#x20;
-- &#x20;to version&#x20;
-- , supplemented by exceptions in `Swagger UI`.`5.20.0`Update - added deletion of unnecessary files when updating an unpacked version (#57657-4).`dependency-check-suppressions.xml`Multiweb - supplemented control&#x20;
-- &#x20;domain when a visitor registers for a web site (#57657-4).
-- Users - added the ability to also select the Root Folder in the User Rights in the Upload Files to Directories section (54273-60 `ID`Users - modified rights settings - simplified rights settings for administrators and registered users (no longer necessary to select the Users right as well), corrected duplicate entries, modified grouping in the Templates section (#57725-4).
-- Explorer - added better reporting on ZIP archive creation error (#56058).
-- Statistics - fixed creation of table for click statistics in the temperature map.
-- Translator - implementation of intelligent delay for translator&#x20;
-- &#x20;as protection against error&#x20;
-- which caused a translation outage (#57833).`DeepL`Cloning structure - fixed unwanted interleaving of application implementations `HTTP 429: too many requests`, when automatically translating the page body (#57833).
-- Cloning structure - added translation of perex annotation to automatic page translation (#57833 `!INCLUDE(...)!`Explorer - fixed folder and file property settings rights (#57833).
-- Server monitoring - fixed report about configuration variable settings for Applications, WEB pages and SQL queries (#57833).
-- Introduction - corrected display of the requirement for two-step verification when integrating via&#x20;
-- &#x20;(#57833).
-- Cloning/mirroring structure - fixed folder URL settings (removing diacritics and spaces) (#57657-7 `IIS`Gallery - missing tags added (#57837).
-- Tags - corrected the folder settings of an existing tag in the View For section (#57837).
-- Security
-- Updated library&#x20;
+- GDPR - fixed display of the Database Cleanup tab when using the `Oracle/PostgreSQL` database (#54273-57).
+- File archive - fixed display of icons in date and time dialog (#54273-57).
+- Security - updated library `Swagger UI` to version `5.20.0`, added exceptions in `dependency-check-suppressions.xml`.
+- Update - added deletion of unnecessary files when updating the unpacked version (#57657-4).
+- Multiweb - added check for `ID` domain when registering a website visitor (#57657-4).
+- Users - added option to also select Root folder in user rights in the Upload files to directories section (54273-60).
+- Users - modified rights settings - simplified rights settings for administrators and registered users (it is no longer necessary to select the Users right), corrected duplicate items, modified grouping in the Templates section (#57725-4).
+- Explorer - added better reporting when creating a ZIP archive (#56058).
+- Statistics - fixed creation of table for click statistics in heatmap.
+- Compiler - implementation of intelligent delay for the `DeepL` compiler as protection against the `HTTP 429: too many requests` bug that caused translations to fail (#57833).
+- Structure cloning - fixed unwanted translation of application implementation `!INCLUDE(...)!`, when automatically translating the page body (#57833).
+- Structure cloning - added translation of perex annotations to automatic page translation (#57833).
+- Explorer - fixed folder and file properties setting rights (#57833).
+- Server Monitoring - fixed message about setting configuration variable for Applications, WEB pages and SQL queries (#57833).
+- Introduction - fixed display of two-step verification requirement when integrating via `IIS` (#57833).
+- Cloning/mirroring structure - fixed setting of folder URL (removal of diacritics and spaces) (#57657-7).
+- Gallery - added missing tags (#57837).
+- Tags - fixed folder setting of existing tag in Show for section (#57837).
 
-### &#x20;to version 5.4.1 to fix vulnerabilities&#x20;
+### Safety
 
-- .`Apache POI`2025.0`CVE-2025-31672`In the version&#x20;
+- Updated library `Apache POI` to version 5.4.1 to fix vulnerabilities `CVE-2025-31672`.
 
 ## 2025.0
 
-> &#x20;we brought **new administration design** for even better clarity and user experience.**One of the main changes is the transfer of&#x20;**&#x73;econd level menu
+> In version **2025.0** we have introduced a **new administration design** for even better clarity and user comfort.
 >
-> &#x20;to **tabs in the page header**, which simplifies navigation. In the website we also **merged folder and website tabs** to keep everything in one place. If the header does not contain tabs, the tables are automatically adjusted and displayed **extra line**.**Please provide feedback via&#x20;**&#x46;eedback form
+> One of the main changes is moving the **second level menu** to **tabs in the page header**, making navigation easier. We've also **merged folder and website tabs** on websites to keep everything in one place. If the header doesn't have tabs, tables will automatically adjust to display an **extra row**.
 >
-> if you identify when using the new version **any display problem**. You can also add a reminder **screenshot** to help us identify and resolve any deficiencies more quickly.**Thank you for your cooperation and help in improving WebJET CMS!**&#x47;roundbreaking changes
+> Please provide feedback via the **Feedback form** if you identify **any display issues** while using the new version. You can also include a **screenshot** with your comment, which will help us identify and resolve any issues more quickly.
 >
-> Web pages - inline editing cancelled. The ability to edit the page directly in view mode has been removed as it used an older version of the editor that is no longer supported. As an alternative it is possible to activate&#x20;
+> Thank you for your cooperation and help in improving WebJET CMS!
 
-### toolbar
+### Groundbreaking changes
 
-- &#x20;displayed in the top right corner of the website. This panel provides quick access to the web page editor, folder or template. You can turn it off or on using the configuration variable [. Once activated, it will start to appear on the web page after entering the Web Pages section in the administration (#57629).](redactor/webpages/editor.md#nástrojový-panel) Login - set for administrators `disableWebJETToolbar` password change request
+- Web pages - inline editing removed. The ability to directly edit a page in view mode has been removed, as it used an older version of the editor, which is no longer supported. As an alternative, you can activate the [toolbar](redactor/webpages/editor/README.md#toolbar) displayed in the upper right corner of the web page. This panel allows quick access to the web page, folder or template editor. You can disable or enable it using the configuration variable `disableWebJETToolbar`. After activation, it will start to appear on the web page after entering the Web pages section in the administration (#57629).
 
 ![](redactor/webpages/webjet-toolbar.png)
 
-- &#x20;once a year. The value can be modified in the configuration variable [, setting it to 0 disables the check (#57629).](sysadmin/pentests/README.md#pravidlá-hesiel) Introduction - added requirement to activate two-factor authentication to increase login security. Prompt is not displayed if authentication is handled via `passwordAdminExpiryDays` or if the translation key is&#x20;
-- &#x20;set to empty (#57629).`LDAP`Design`overview.2fa.warning`In the version&#x20;
+- Login - [requirement for password change](sysadmin/pentests/README.md#password-rules) set for administrators once a year. The value can be adjusted in the configuration variable `passwordAdminExpiryDays`, setting it to 0 disables the check (#57629).
+- Introduction - added a requirement to enable two-factor authentication to increase the security of login data. The prompt is not displayed if authentication is handled via `LDAP` or if the translation key `overview.2fa.warning` is set to an empty value (#57629).
 
-### 2025.0
+### Design
 
-&#x20;we brought an improved **administration design** which is clearer and more efficient.**Modified login dialogue** - new background and moving the login dialog to the right side. At&#x20;
+In version **2025.0** we have introduced an improved **administration design** that is clearer and more efficient.
 
-**Login** it is possible to use not only the login name but **already have an email address**. **Clearer header** - the name of the current page or section is now displayed directly in the header.![](redactor/admin/logon.png)
+**Modified login dialog** – new background and moving the login dialog to the right side. **For login**, you can use not only your username but also **your email address**.
 
-**New navigation in the left menu** - under items are no longer part of the left menu, but are displayed&#x20;
+![](redactor/admin/logon.png)
 
-**as cards at the top** Pages. **Merged tabs in the Websites section** - Switching folder types and web page types are now displayed in a common section, simplifying navigation. ![](redactor/admin/welcome.png)
+**Clearer header** – the name of the current page or section is now displayed directly in the header.
 
-**Choosing a domain** has been moved to the bottom of the left menu. **Reorganised menu items**:![](redactor/webpages/domain-select.png)
+**New navigation in the left menu** - sub-items are no longer part of the left menu, but appear **as tabs at the top** of the page.
 
-**SEO** moved to section&#x20;
+![](editor/admin/welcome.png)
 
-- **Views**.**GDPR and Scripts** moved to section&#x20;
-- **Templates**.**Gallery** is now in the section&#x20;
-- **Files**.**Some item names have been modified to better describe their function.**&#x57;eb pages
-- Added the ability to set increment order for folders in a configuration variable&#x20;
+**Merged tabs in the Websites section** – switching between folder types and website types is now displayed in a common section, making navigation easier. **Domain selection** has been moved to the bottom of the left menu.
+  ![](redactor/webpages/domain-select.png)
 
-### &#x20;and web pages in the configuration variable&#x20;
+**Reorganized menu items**:
 
-- . The default values are 10 (#57667-0).`sortPriorityIncrementGroup`Testing`sortPriorityIncrementDoc`Standard password for&#x20;
+- **SEO** moved to the **Reports** section.
+- **GDPR and Scripts** moved to the **Templates** section.
+- **Gallery** is now in the **Files** section.
+- Some item names have been adjusted to better reflect their function.
 
-### &#x20;tests are obtained from&#x20;
+### Website
 
-- &#x20;variable `e2e` (#57629).`ENV`Error correction`CODECEPT_DEFAULT_PASSWORD`Web pages - inserting links to a file in PageBuilder (#57649).
+- Added the ability to set the sort order increment for folders in the `sortPriorityIncrementGroup` configuration variable and web pages in the `sortPriorityIncrementDoc` configuration variable. Default values ​​are 10 (#57667-0).
 
-### Web pages - added link information (file type, size) to the Auxiliary caption attribute&#x20;
-- &#x20;(#57649).
-- Web pages - corrected order of web pages when used `alt` in tree structure (#57657-1).
-- Web pages - when duplicating a web page/folder, the value is set `Drag&Drop` in the Order of Arrangement field for inclusion at the end of the list. The value&#x20;
-- &#x20;can also be entered manually to obtain a new value for the order of the arrangement (#57657-1 `-1`Websites - importing web pages - fixed media group settings when importing pages containing media. When importing, all Media Groups (even unused ones) are automatically created due to the fact that the media group set for the media application is also translated when importing pages `-1` in the page (which may also contain the media ID of a group outside the imported pages) (#57657-1).
-- Firefox - reduced version of the set `/components/media/media.jsp` at&#x20;
-- because Firefox puts a significant load on the processor when using newer versions. Optimised CSS style reading `Tabler Icons` (#56393-19).`3.0.1`The rest of the list of changes to the changes is identical to the version `vendor-inline.style.css` 2024.52
+### Testing
 
-.[](CHANGELOG-2024.md)
+- The default password for `e2e` tests is obtained from the `ENV` variable `CODECEPT_DEFAULT_PASSWORD` (#57629).
+
+### Bug fixes
+
+- Websites - inserting file links in PageBuilder (#57649).
+- Websites - added link information (file type, size) to the Auxiliary caption attribute `alt` (#57649).
+- Websites - fixed setting of website sorting order when using `Drag&Drop` in the tree structure (#57657-1).
+- Web pages - when duplicating a web page/folder, the value `-1` is set in the Sort order field to be placed at the bottom of the list. You can also enter the value `-1` manually to get a new sort order value (#57657-1).
+- Websites - import websites - fixed media group settings when importing pages containing media. All media groups (even unused ones) are automatically created during import because the media group set for the media application `/components/media/media.jsp` in the page is also translated when importing pages (it may also contain the media group ID outside the imported pages) (#57657-1).
+- Firefox - downgraded `Tabler Icons` to `3.0.1`, as Firefox is significantly more CPU intensive when using newer versions. Optimized CSS reading of `vendor-inline.style.css` (#56393-19).
+
+The remaining changelog is consistent with version [2024.52](CHANGELOG-2024.md).
 
 ![meme](_media/meme/2025-0.jpg ":no-zoom")

@@ -2,20 +2,18 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -102,7 +100,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text sk"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongSk;
 
     @Size(max = 1000)
@@ -127,7 +125,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text cz"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongCz;
 
     @Size(max = 1000)
@@ -152,7 +150,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text en"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEn;
 
     @Size(max = 1000)
@@ -177,7 +175,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text de"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongDe;
 
     @Size(max = 1000)
@@ -202,7 +200,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text pl"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongPl;
 
     @Size(max = 1000)
@@ -227,7 +225,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text ru"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongRu;
 
     @Size(max = 1000)
@@ -252,7 +250,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text hu"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongHu;
 
     @Size(max = 1000)
@@ -277,7 +275,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text hr"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongCho;
 
     @Size(max = 1000)
@@ -302,7 +300,7 @@ public class GalleryEntity {
             tab = "description",
             renderFormat = "dt-format-text esp"
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEsp;
 
     @Lob
@@ -313,11 +311,11 @@ public class GalleryEntity {
             title = "components.gallery.author",
             sortAfter = "imageSource"
         )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String author;
 
     @Column(name = "upload_datetime")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             tab = "metadata",
             title = "components.gallery.metadata.uploadDateTime",

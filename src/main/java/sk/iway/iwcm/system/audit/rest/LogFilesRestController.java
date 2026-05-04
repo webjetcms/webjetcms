@@ -1,7 +1,5 @@
 package sk.iway.iwcm.system.audit.rest;
 
-import java.io.File;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,8 +33,7 @@ public class LogFilesRestController extends DatatableRestControllerV2<LogFileBea
     }
 
     @GetMapping("/log-dir")
-    public String getLogDir() {
-        File logDir = new File(System.getProperty("catalina.base"),"logs");
-        return logDir.getAbsolutePath();
+    public String getLogDirPath() {
+        return LogLevelsService.getLogDir().getAbsolutePath();
     }
 }

@@ -361,7 +361,8 @@ Scenario("New select filter using permGroups", async ({I, DT}) => {
 
      DT.filterSelect("editorFields.permGroups", "forTestA");
 
-     I.see("Nenašli sa žiadne vyhovujúce záznamy", "div.dt-scroll-body");
+     I.see("Záznamy 1 až 1 z 1", "div.dt-footer-row");
+     I.see("tester.allgroups", "td.dt-row-edit");
 
      DT.filterContains("login", "testLogin");
 
@@ -529,3 +530,23 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
 //TODO: dalsie testy, overenie jednotlivych kariet, overenie prihlasenia vytvoreneho pouzivatela
 
 //TODO: test vnorenej datatabulky schvalovania
+
+Scenario("Check editableGroups rights", async ({I, DTE}) => {
+     I.say('Check that user can see all groups in jsTree even when he can edit only some of them in case that he has RIGHT perms_users.edit_admins');
+     I.relogin("redaktor");
+     I.amOnPage("/admin/v9/users/user-list/?id=9");
+     DTE.waitForEditor();
+     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
+     I.waitForVisible("#editorAppDTE_Field_editorFields-editableGroups");
+
+     I.say("Check I cans ee all domain fodlers");
+     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-vue-jstree-add");
+     I.waitForVisible("#jsTree");
+     I.seeElement( locate("#jsTree a.jstree-anchor").withText("demo.webjetcms.sk") );
+     I.seeElement( locate("#jsTree a.jstree-anchor").withText("test23.tau27.iway.sk") );
+     I.seeElement( locate("#jsTree a.jstree-anchor").withText("mirroring.tau27.iway.sk") );
+
+     I.say("Check I can see sub-folders in diff domain");
+     I.click(locate('.jstree-node.jstree-closed').withText('test23.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));
+     I.click(locate('.jstree-node.jstree-closed').withText('test23').find('.jstree-icon.jstree-ocl'));
+});

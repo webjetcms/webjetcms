@@ -372,6 +372,7 @@ image/x-xcf xcf
 image/x-xfig fig
 image/x-xpixmap xpm
 image/x-xwindowdump xwd
+image/webp webp
 inode/blockdevice
 inode/chardevice
 inode/directory

@@ -11,7 +11,7 @@ import sk.iway.iwcm.components.insertScript.InsertScriptDB;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Date;
 import java.util.List;

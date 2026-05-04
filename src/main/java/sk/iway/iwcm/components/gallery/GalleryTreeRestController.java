@@ -1,27 +1,28 @@
 package sk.iway.iwcm.components.gallery;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.admin.jstree.JsTreeRestController;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
-
-import java.util.*;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * GalleryTreeRestController
@@ -75,54 +76,17 @@ public class GalleryTreeRestController extends JsTreeRestController<GalleryDimen
         String virtualPath = original.getVirtualPath();
 
         //check perms
-        if (checkPathAccess(result, virtualPath)==false) {
+        if (galleryTreeService.checkPathAccess(result, virtualPath) == false) {
             return;
         }
 
-        Optional<GalleryDimension> firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());
-        if (firstByPath.isPresent()) {
-            try {
-                GalleryDimension galleryDimension = firstByPath.get();
-                String originalPath = galleryDimension.getPath();
-                String newPath = item.getParent() + "/" + galleryDimension.getNameFromPath(); //NOSONAR
-
-                if (checkPathAccess(result, newPath)==false) {
-                    return;
-                }
-
-                galleryDimension.setPath(newPath);
-                repository.save(galleryDimension);
-
-                IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));
-                boolean renamed = file.renameTo(new IwcmFile(Tools.getRealPath(newPath)));
-                result.put("result", renamed);
-
-                if (!renamed) {
-                    result.put("error", getProp().getText("java.GroupsTreeRestController.move.renamed_failed"));
-                    // Vraciam do povodneho adresaru aj DB entitu
-                    galleryDimension.setPath(originalPath);
-                    repository.save(galleryDimension);
-                }
-
-                //update all gallery items
-                new SimpleQuery().execute("UPDATE gallery SET image_path=? WHERE image_path=?", newPath, virtualPath);
-
-                return;
-            } catch (Exception e) {
-                Logger.error(GalleryTreeRestController.class, e);
-                result.put("result", false);
-                result.put("error", getProp().getText("java.GroupsTreeRestController.move.save_failed"));
-                return;
-            }
-        }
-
-        result.put("result", true);
+        galleryTreeService.findAndMoveGalleryFolder(virtualPath, item.getParent(), result, true);
     }
 
     @Override
     protected void save(Map<String, Object> result, GalleryDimension item) {
         String path = item.getPath();
-        if (checkPathAccess(result, path)==false) {
+        if (galleryTreeService.checkPathAccess(result, path) == false) {
             return;
         }
 
@@ -132,7 +96,7 @@ public class GalleryTreeRestController extends JsTreeRestController<GalleryDimen
     @Override
     protected void delete(Map<String, Object> result, GalleryDimension item) {
         String virtualPath = item.getPath();
-        if (checkPathAccess(result, virtualPath)==false) {
+        if (galleryTreeService.checkPathAccess(result, virtualPath) == false) {
             return;
         }
 
@@ -157,21 +121,6 @@ public class GalleryTreeRestController extends JsTreeRestController<GalleryDimen
         }
 
         result.put("result", true);
-    }
-
-    private boolean checkPathAccess(Map<String, Object> map, String virtualPath) {
-        if (!virtualPath.startsWith("/images")) {
-            map.put("result", false);
-            map.put("error", getProp().getText("java.GalleryTreeRestController.directory_id_not_in_images", virtualPath));
-            return false;
-        }
-        Identity user = getUser();
-        if (user == null || user.isFolderWritable(virtualPath) == false) {
-            map.put("result", false);
-            map.put("error", getProp().getText("components.gallery.folderIsNotEditable", virtualPath));
-            return false;
-        }
-        return true;
     }
 
     private void galleryDimensionCreateUpdate(Map<String, Object> result, GalleryDimension item) {

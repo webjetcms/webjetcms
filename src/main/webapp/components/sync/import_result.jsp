@@ -11,7 +11,7 @@
 <%@page import="sk.iway.iwcm.components.ImportExport"%>
 <%@page import="java.nio.charset.Charset"%>
 <%@page import="java.io.StringWriter"%>
-<%@page import="org.apache.commons.fileupload.FileItem"%>
+<%@page import="org.apache.commons.fileupload2.core.FileItem"%>
 <%@page import="java.util.Map"%>
 <%@ page import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.users.UsersDB" %>

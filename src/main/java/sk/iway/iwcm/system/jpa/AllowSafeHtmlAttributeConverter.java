@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.jpa;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
@@ -16,7 +16,7 @@ import sk.iway.iwcm.Tools;
  * ponechane je len zakladne HTML formatovanie
  *
  * pouzitie: k fieldu ktory ma mat povoleny HTML kod zadajte anotaciu
- * @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+ * @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
  */
 @Converter(autoApply = false)
 public class AllowSafeHtmlAttributeConverter implements AttributeConverter<String, String>

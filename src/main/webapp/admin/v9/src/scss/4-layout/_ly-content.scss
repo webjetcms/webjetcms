@@ -25,6 +25,6 @@ html.in-iframe, html.in-iframe-show-table {
 }
 
 .screenshotHighlight {
-    outline: 1px solid #FF4B58;
-    box-shadow: 0 0 12px #FF4B58;
+    outline: 1px solid $danger;
+    box-shadow: 0 0 12px $danger;
 }

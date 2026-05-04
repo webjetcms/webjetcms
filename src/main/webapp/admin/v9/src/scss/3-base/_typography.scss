@@ -1,35 +1,13 @@
 @charset "UTF-8";
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {}
-
-h1 {}
-h2 {}
-h3 {}
-h4 {}
-h5 {}
-h6 {}
-
-p {}
-
-b {}
-strong {}
-i {}
-em {}
-mark {}
-del {}
-small {}
-sub {}
-sup {}
-
-hr {}
-
-center {}
-
 .ti {
    font-size: 1.1rem;
+   //fix chrome vs firefox text rendering differences by using inline-flex instead of inline-block
+   display: inline-flex;
+   line-height: 1;
+}
+
+.DTE_Header button > .ti {
+   //fix chrome vs firefox text rendering differences by using inline-flex instead of inline-block
+   vertical-align: middle;
 }

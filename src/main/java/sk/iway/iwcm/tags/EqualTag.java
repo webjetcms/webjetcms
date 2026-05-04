@@ -20,7 +20,7 @@
  */
 package sk.iway.iwcm.tags;
 
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspException;
 
 import sk.iway.iwcm.tags.support.CustomCompareTagBase;
 

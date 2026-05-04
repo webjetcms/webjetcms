@@ -8,15 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.css.CssDto;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -50,6 +48,8 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrRepository;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.approve.ApproveService;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
@@ -109,6 +109,8 @@ public class EditorService {
 	private boolean pageSavedToPublic = false;
 	//po ulozeni nastavene na true, ak sa stranka ulozila ako pracovna kopia
 	private boolean pageSavedAsWorkVersion = false;
+
+	public static final String DOT_HTML_EXT = ".html";
 
 	@Autowired
     public EditorService(DocDetailsRepository docRepo, DocHistoryRepository historyRepo, DocAtrRepository docAtrRepository,
@@ -256,9 +258,12 @@ public class EditorService {
 			if(!editedDoc.getEditorFields().isRequestPublish()) editedDoc.setAvailable(false);
 		}
 
+		// when creating new folder which is approving, skip redundand approve of the page
+		boolean skipApproving = EditorFacade.isSkipApproving(editedDoc.getGroupId());
+
 		// Load approve hash table data
 		// If current user is approver, set selfApprover = true
-		if (editedDoc.getEditorFields().isRequestPublish()) {
+		if (editedDoc.getEditorFields().isRequestPublish() && skipApproving == false) {
 			approveService.loadApproveTables(editedDoc.getGroupId());
 
 			//If approver is needed BUT it's not selfApprove (currentUser isn't approver),
@@ -322,7 +327,7 @@ public class EditorService {
 			editedHistory.setActual(editedDoc.getEditorFields().isRequestPublish());
 
 			//Set ApprovedBy value, that indicate approve status
-			if (approveService.needApprove()) {
+			if (approveService.needApprove() && skipApproving == false) {
 				//Need approve
 				editedHistory.setApprovedBy(-1);
 			} else {
@@ -344,11 +349,13 @@ public class EditorService {
 				}
 			}
 
-			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove())
+			if (!editedHistory.getEditorFields().isRequestPublish() && approveService.needApprove() && skipApproving == false)
 				editedHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 			else
 				editedHistory.setAwaitingApprove(null);
 
+			// This is not delete action, so set isDelete to false
+			editedHistory.setIsDelete(false);
 
 			//Save edited history
 			historyRepo.save(editedHistory);
@@ -364,8 +371,11 @@ public class EditorService {
 			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
 		}
 
-		/*Odoslanie schvalovani a notifikacii*/
-		approveService.sendEmails(editedDoc, historyId, docRepo);
+		if(skipApproving == false) {
+			/*Odoslanie schvalovani a notifikacii*/
+			approveService.sendEmails(editedDoc, historyId, docRepo);
+		}
+
 		dt.diff("after sendApproveNotifyEmail");
 
 		if(isNewPage || wasApproved || disableHistory) {
@@ -421,6 +431,10 @@ public class EditorService {
 			editedDoc.setEventDateString("");
 			editedDoc.setEventTimeString("");
 			if (Constants.getBoolean("editorNewDocDefaultAvailableChecked") == false) editedDoc.setAvailable(false);
+		}
+
+		if(EditorFacade.isSkipApproving(group.getGroupId())) {
+			editedDoc.setAvailable(false);
 		}
 
 		editedDoc.setDocId(-1);
@@ -624,14 +638,7 @@ public class EditorService {
 
 		//Delete needs to be approved
 		if(prop.getText("approveAction.err.cantApprove").equals(result)) {
-			StringBuilder approversString = new StringBuilder();
-			for(UserDetails approver : approveService.getApprovers()) {
-				if(!approversString.isEmpty()) approversString.append(", ");
-				approversString.append(approver.getFullName());
-			}
-			NotifyBean info = new NotifyBean(prop.getText("editor.approve.notifyTitle"), prop.getText("editor.approveDeleteRequestGet")+": "+approversString.toString(), NotifyBean.NotifyType.INFO, 60000);
-            addNotify(info);
-
+            addNotify( new NotifyBean(prop.getText("editor.approve.notifyTitle"), approveService.getApproverNotifBody("editor.approveDeleteRequestGet"), NotifyBean.NotifyType.INFO, 60000) );
 			return true;
 		}
 
@@ -729,6 +736,110 @@ public class EditorService {
 	}
 
 	/**
+	 * Computes and assigns a unique virtual path for a page.
+	 *
+	 * <p>This method is primarily intended for brand-new pages (with {@code docId == -1}
+	 * and an empty virtual path), but it can also be used when changing the title or
+	 * group of an existing page. It replicates the same uniqueness loop used by
+	 * {@link #setVirtualPath(DocDetails, GroupsDB, DocDB)} and stores the resulting
+	 * value into {@link DocDetails#setVirtualPath(String)} on the supplied
+	 * {@code editedDoc} instance.</p>
+	 *
+	 * <p>The return value is the {@code docId} of an existing page whose virtual path
+	 * conflicts with the one being computed, or {@code -1} if the computed virtual path
+	 * is unique.</p>
+	 *
+	 * @param editedDoc document being created or edited; its virtual path will be updated in place
+	 * @param groupsDB  groups data access object used to resolve domain and group paths
+	 * @return {@code docId} of the conflicting document, or {@code -1} if no conflict was found
+	 */
+	public static int computeVirtualPathForNewPage(DocDetails editedDoc, GroupsDB groupsDB) {
+		int virtualPathConflictDocId = -1;
+		String domain = groupsDB.getDomain(editedDoc.getGroupId());
+
+		//nastavime ako treba
+		String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
+		DocDetails doc = new DocDetails();
+		doc.setDocId(editedDoc.getDocId());
+		doc.setTitle(editedDoc.getTitle());
+		doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
+		doc.setVirtualPath(editedDoc.getVirtualPath());
+		doc.setGroupId(editedDoc.getGroupId());
+		String virtualPath = DocDB.getURL(doc, groupDiskPath);
+		String ending = virtualPath.endsWith("/") ? "/" : DOT_HTML_EXT;
+		String editorPageExtension = Constants.getString("editorPageExtension");
+
+		String lastVirtualPath = null;
+		for (long i = 2; i < 1000; i++) {
+
+			//set big number to avoid infinite loop
+			if (i>990) i = Tools.getNow(); //NOSONAR
+
+			if(virtualPath != null && virtualPath.length() > 255) {
+				String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
+				vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
+				virtualPath = vpTmp;
+			}
+
+			int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
+			Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
+
+			if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
+
+			//lebo moze kolidovat uz z hora
+			if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
+
+			doc.setTitle(editedDoc.getTitle() + " " + i);
+			doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
+
+			if ("/".equals(editorPageExtension)) {
+				//nastav cistu, handluje sa to nastavenim title s cislom vyssie
+				doc.setVirtualPath("");
+			}
+			else {
+				if (editedDoc.getVirtualPath().endsWith(DOT_HTML_EXT)) {
+					doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), DOT_HTML_EXT, "-" + i + DOT_HTML_EXT));
+					ending = "-" + i + DOT_HTML_EXT;
+				} else if (editedDoc.getVirtualPath().endsWith("/")) {
+					doc.setVirtualPath(editedDoc.getVirtualPath() + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
+				} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(DOT_HTML_EXT)==false) {
+					//url without last slash and without .html like /aaa/bbb
+					doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + DOT_HTML_EXT);
+					ending = i + DOT_HTML_EXT;
+				} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
+					ending = DOT_HTML_EXT;
+				}
+			}
+
+			virtualPath = DocDB.getURL(doc, groupDiskPath);
+
+			if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
+				long fixedI = i - 100;
+				if (fixedI < 2) fixedI = 2;
+				//virtualPath is not changing, it is probably main page of folder, add number to the end
+				if (virtualPath.contains(DOT_HTML_EXT)) {
+					//add number before .html
+					virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(DOT_HTML_EXT)) + "-" + fixedI + DOT_HTML_EXT;
+				} else if (virtualPath.endsWith("/")) {
+					//add number before last slash
+					virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/"; //NOSONAR
+				} else {
+					virtualPath = virtualPath + "-" + fixedI; //NOSONAR
+				}
+			} else {
+				if (i>100) lastVirtualPath = virtualPath;
+			}
+		}
+
+		editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
+
+		Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+
+		return virtualPathConflictDocId;
+	}
+
+	/**
 	 * Nastavi stranke URL adresu (virtual_path), ak uz nejaka ina stranka takuto URL ma, tak prida cislo 1,2,3... na koniec URL adresy
 	 * @param editedDoc
 	 */
@@ -746,83 +857,8 @@ public class EditorService {
 			}
 
 			if (mustGenerateVirtualPath || Tools.isEmpty(editedDoc.getVirtualPath()) || editedDoc.getVirtualPath().indexOf('/') == -1) {
-				//nastavime ako treba
-				String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), editedDoc.getGroupId());
-				DocDetails doc = new DocDetails();
-				doc.setDocId(editedDoc.getDocId());
-				doc.setTitle(editedDoc.getTitle());
-				doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
-				doc.setVirtualPath(editedDoc.getVirtualPath());
-				doc.setGroupId(editedDoc.getGroupId());
-				String virtualPath = DocDB.getURL(doc, groupDiskPath);
-				String ending = virtualPath.endsWith("/") ? "/" : ".html";
-				String editorPageExtension = Constants.getString("editorPageExtension");
-
-				String lastVirtualPath = null;
-				for (long i = 2; i < 1000; i++) {
-
-					if (i>990) i = Tools.getNow();
-
-					if(virtualPath != null && virtualPath.length() > 255) {
-						String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
-						vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
-						virtualPath = vpTmp;
-					}
-
-					int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
-					Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
-
-					if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
-
-					//lebo moze kolidovat uz z hora
-					if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;
-
-					doc.setTitle(editedDoc.getTitle() + " " + i);
-					doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + " " + i);
-
-					if ("/".equals(editorPageExtension)) {
-						//nastav cistu, handluje sa to nastavenim title s cislom vyssie
-						doc.setVirtualPath("");
-					}
-					else {
-						if (editedDoc.getVirtualPath().endsWith(".html")) {
-							doc.setVirtualPath(Tools.replace(editedDoc.getVirtualPath(), ".html", "-" + i + ".html"));
-							ending = "-" + i + ".html";
-						} else if (editedDoc.getVirtualPath().endsWith("/")) {
-							doc.setVirtualPath(editedDoc.getVirtualPath() + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) && editedDoc.getVirtualPath().endsWith("/")==false && editedDoc.getVirtualPath().contains(".html")==false) {
-							//url without last slash and without .html like /aaa/bbb
-							doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
-							ending = i + ".html";
-						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
-							ending = ".html";
-						}
-					}
-
-					virtualPath = DocDB.getURL(doc, groupDiskPath);
-
-					if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
-						long fixedI = i - 100;
-						if (fixedI < 2) fixedI = 2;
-						//virtualPath is not changing, it is probably main page of folder, add number to the end
-						if (virtualPath.contains(".html")) {
-							//add number before .html
-							virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
-						} else if (virtualPath.endsWith("/")) {
-							//add number before last slash
-							virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
-						} else {
-							virtualPath = virtualPath + "-" + fixedI;
-						}
-					} else {
-						if (i>100) lastVirtualPath = virtualPath;
-					}
-				}
-
-				editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
-
-				Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
+				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB);
+				if (virtualPathConflictDocId < 1) virtualPathConflictDocId = virtualPathConflictDocIdDoc;
 			}
 			else if ("cloud".equals(Constants.getInstallName())) {
 				//tiket 15910 - kontrola specialnych znakov v URL
@@ -957,7 +993,7 @@ public class EditorService {
 				doc.setData(Tools.replace(doc.getData(), "'" + oldLinkURL2 + "#", "'" + newLinkURL + "#"));
 				doc.setData(Tools.replace(doc.getData(), "\"" + oldLinkURL2 + "#", "\"" + newLinkURL + "#"));
 				//doc.setData(Tools.replace(doc.getData(), " " + oldLinkURL2 + "#", " " + newLinkURL + "#"));
-			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(".html") == false) {
+			} else if (oldLinkURL.length() > 2 && oldLinkURL.endsWith(DOT_HTML_EXT) == false) {
 				//ak je linka bez koncoveho /, toto to vyriesi
 				oldLinkURL2 = oldLinkURL + "/";
 
@@ -1412,16 +1448,16 @@ public class EditorService {
 	 * Perform insert/update webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveAction method
 	 * @return
 	 */
-	public boolean approveAction() {
-		return approveService.approveAction(historyRepo, docRepo, this);
+	public boolean approveDocAction() {
+		return approveService.approveDocAction(historyRepo, docRepo, this);
 	}
 
 	/**
 	 * Perform delete webpage action (aka waiting docHistory) by approve/reject throu calling ApproveSrvice.approveDelAction method
 	 * @return
 	 */
-	public boolean approveDelAction() {
-		return approveService.approveDelAction(historyRepo, docRepo, this);
+	public boolean approveDocDelAction() {
+		return approveService.approveDocDelAction(historyRepo, docRepo, this);
 	}
 
 	/**
@@ -1433,7 +1469,7 @@ public class EditorService {
 	 * @param publishEvents
 	 * @return Return "success" or other string taht represend some sort of error taht occured
 	 */
-	protected String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
+	public String deleteWebpageLogic(int delDocId, ApproveService approveService, boolean publishEvents) {
 		//If id is -1, try get id from request, if id is still -1 return eeror message
 		if(delDocId == -1) delDocId = Tools.getIntValue(request.getParameter("docid"), -1);
 		if(delDocId == -1) return "There's no provided docId to by used for delete.";
@@ -1470,54 +1506,54 @@ public class EditorService {
 			GroupDetails trashGroupDetails = disableHistory == false ? groupsDB.getCreateGroup(trashDirName) : null;
 
 			if (trashGroupDetails==null || navbarNoHref.startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()))  {
-					//Permanent DOC delete
-					docRepo.deleteById(Long.valueOf(delDocId));
+				//Permanent DOC delete
+				docRepo.deleteById(Long.valueOf(delDocId));
 
-					//Every docHistory record awaiting for approve is canceled (DOC is deleted so changes waiting for approve are irelevant)
-					historyRepo.updateAwaitingApprove("", delDocId);
+				//Every docHistory record awaiting for approve is canceled (DOC is deleted so changes waiting for approve are irelevant)
+				historyRepo.updateAwaitingApprove("", delDocId);
 
-					//Check, if DOC is main in the folder
-                    if (group.getDefaultDocId() == delDocId)  {
-                        List<DocDetails> pages = docDB.getDocByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, true);
-                        if (pages.size() > 0) {
-                            docDetails = pages.get(0);
+				//Check, if DOC is main in the folder
+                if (group.getDefaultDocId() == delDocId)  {
+                    List<DocDetails> pages = docDB.getDocByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, true);
+                    if (pages.size() > 0) {
+                        docDetails = pages.get(0);
 
-                            if (docDetails != null) {
-                                group.setDefaultDocId(docDetails.getDocId());
-                                group.setSyncStatus(1);
-                                groupsDB.setGroup(group);
-                            } else {
-                                group.setDefaultDocId(0);
-                                group.setSyncStatus(1);
-                                groupsDB.setGroup(group);
-                            }
+                        if (docDetails != null) {
+                            group.setDefaultDocId(docDetails.getDocId());
+                            group.setSyncStatus(1);
+                            groupsDB.setGroup(group);
+                        } else {
+                            group.setDefaultDocId(0);
+                            group.setSyncStatus(1);
+                            groupsDB.setGroup(group);
                         }
                     }
-                    //Set for ApproveDelAction (proof of succesfull delete)
-                    if (request!=null) request.setAttribute("deleteSuccess", "yes");
+                }
+                //Set for ApproveDelAction (proof of succesfull delete)
+                if (request!=null) request.setAttribute("deleteSuccess", "yes");
 
-					//delete doc from multigroup mapping
-					MultigroupMappingDB.deleteSlaveDocFromMapping(delDocId);
+				//delete doc from multigroup mapping
+				MultigroupMappingDB.deleteSlaveDocFromMapping(delDocId);
 
-                    //14.8.2012 pridany Admin log stranka bola vymazana uplne (z kosa)
-                    Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: "+delDocId+"): Stranka bola uplne zmazana (z kosa)", delDocId, 0);
+                //14.8.2012 pridany Admin log stranka bola vymazana uplne (z kosa)
+                Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID: "+delDocId+"): Stranka bola uplne zmazana (z kosa)", delDocId, 0);
 
-					List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
-					if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
-						List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).collect(Collectors.toList());
+				List<MultigroupMapping> slaveMappingList = MultigroupMappingDB.getSlaveMappings(delDocId);
+				if(slaveMappingList != null && slaveMappingList.isEmpty()==false) {
+					List<Long> slaveIds = slaveMappingList.stream().map(x->Long.valueOf(x.getDocId())).toList();
 
-						//Delete all connections from multigroup table
-						MultigroupMappingDB.deleteSlaves(delDocId);
+					//Delete all connections from multigroup table
+					MultigroupMappingDB.deleteSlaves(delDocId);
 
-						//Perform HARD (permanent) delete of slave pages
-						docRepo.deleteByDocIdIn(slaveIds);
+					//Perform HARD (permanent) delete of slave pages
+					docRepo.deleteByDocIdIn(slaveIds);
 
-						for (Long slaveId : slaveIds) {
-							DocDB.getInstance().updateInternalCaches(slaveId.intValue());
-						}
-
-						Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID's : " + StringUtils.collectionToDelimitedString(slaveIds, ",") + "): Slave stranky boli uplne zmazane (hard delete)", delDocId, 0);
+					for (Long slaveId : slaveIds) {
+						DocDB.getInstance().updateInternalCaches(slaveId.intValue());
 					}
+
+					Adminlog.add(Adminlog.TYPE_PAGE_DELETE, "(DocID's : " + StringUtils.collectionToDelimitedString(slaveIds, ",") + "): Slave stranky boli uplne zmazane (hard delete)", delDocId, 0);
+				}
             } else {
                 //failsafe na zle zmazane polozky (take co v kosi boli volakedy a zle sa zmazali)
 
@@ -1534,12 +1570,24 @@ public class EditorService {
 				if(buf != null) ids = buf.toString();
 
 				if (ids != null) {
-					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")");
+					new SimpleQuery().execute("UPDATE groups SET parent_group_id=? WHERE group_id IN (" + ids + ")", trashGroupDetails.getGroupId());
 					GroupsDB.getInstance(true);
 				}
 
                 //presun to do trash adresara
                 Logger.println(EditorService.class,"presuvam do trash adresara");
+
+				Integer maxHistoryId = historyRepo.findMaxHistoryId(delDocId);
+				if(maxHistoryId == null || maxHistoryId < 1) {
+					// page does not have any history record, add default one so it can be recovered from trash
+					DocHistory defaultHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(docDetails);
+					defaultHistory.setSaveDate(new Date(now));
+					defaultHistory.setActual(true);
+					defaultHistory.setApprovedBy(0);
+					defaultHistory.setAwaitingApprove(null);
+					defaultHistory.setPublicable(false);
+					historyRepo.save(defaultHistory);
+				}
 
 				//Soft delete, move to thash folder
 				docRepo.moveToTrash(false, trashGroupDetails.getGroupId(), delDocId);
@@ -1618,7 +1666,7 @@ public class EditorService {
 		//Convert DocDetail to DocHistory entity (this new entity will be inserted)
 		DocHistory docHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(docDetails);
 
-		//General setting - !! there MUST be set "[DELETE]" as delete prefix, that indicates delete intend
+		//General setting -  "[DELETE]" prefix in no more required BUT its good to have it for better orientation in history records
 		docHistory.setTitle("[DELETE] " + docHistory.getTitle());
 		docHistory.setData(prop.getText("approve.delete.doctext"));
 		docHistory.setDataAsc("[DELETE]");
@@ -1638,6 +1686,9 @@ public class EditorService {
 		docHistory.setApprovedBy(-1);
 		docHistory.setAwaitingApprove("," + approveService.getApproveUserIds() + ",");
 
+		// This is delete action so set
+		docHistory.setIsDelete(true);
+
 		return docHistory;
 	}
 
@@ -1648,63 +1699,69 @@ public class EditorService {
 	 * @param recoverDocId
 	 */
 	public void recoverWebpageFromTrash(int recoverDocId) {
-		if(recoverDocId <1) throw new RuntimeException("recoverDocId is not valid");
-
-		//Try get DocDetails object by id, if not present return error message
-		Optional<DocDetails> docDetailsOpt = docRepo.findById(Long.valueOf(recoverDocId));
-		if(!docDetailsOpt.isPresent()) throw new RuntimeException("DocDetails doesn't exists.");
-		DocDetails docDetailsToRecover = docDetailsOpt.get();
-
-		//To check perms and approve for this action
-		checkPermissions(currentUser, docDetailsToRecover, true);
-
-		//Find last actual (if posible) history id (so we know wehre to recover page)
-		Integer historyId = null;
-		Optional<Integer> historyIdOpt = historyRepo.findMaxHistoryId(recoverDocId, true); //(actual history id)
-		if(historyIdOpt.isPresent())
-			historyId = historyIdOpt.get();
-		else historyId = historyRepo.findMaxHistoryId(recoverDocId); //(any history id)
-
-		if(historyId == null) {
-			//There is no history
-			NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            addNotify(info);
-			return;
-		} else {
-			Optional<Integer> destGroupId = historyRepo.findGroupIdById(Long.valueOf(historyId));
-			if(!destGroupId.isPresent()) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            	addNotify(info);
-				return;
-			}
-			GroupDetails destGroup = groupsDB.getGroup(destGroupId.get());
-			if(destGroup == null) {
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000);
-            	addNotify(info);
-				return;
-			}
-
-			//Check perms
-			approveService.loadApproveTables(destGroup.getGroupId());
-			if(approveService.needApprove() == false || approveService.isSelfApproved()) {
-				//Have right
-				docDetailsToRecover.setGroupId(destGroup.getGroupId());
-				docDetailsToRecover.setAvailable(true);
-				docRepo.save(docDetailsToRecover);
-			} else {
-				//No right
-				NotifyBean info = new NotifyBean(prop.getText("editor.recover.notifyTitle"), prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000);
-				addNotify(info);
-				return;
-			}
-		}
-
-		//Refresh
-		DocDB.getInstance(true);
-		GroupsDB.getInstance(true);
-
-		//Success
-		NotifyBean info = new NotifyBean(prop.getText("editor.recover.notify_title.success_page"), prop.getText("editor.recover.notify_body.success_page", docDetailsToRecover.getTitle(), docDetailsToRecover.getFullPath()), NotifyBean.NotifyType.SUCCESS, 60000);
-		addNotify(info);
+		recoverWebpageFromTrash(recoverDocId, true);
 	}
+
+	/**
+	 * Recover webpage from trash folder:
+	 * - set groupId from history (latest where actual=1 or latest)
+	 * - set available from history (latest where actual=1 or latest)
+	 * @param recoverDocId
+	 * @param publishEvents - if true, publish ON_RECOVER and AFTER_RECOVER events, if false, do not publish any events
+	 */
+    public void recoverWebpageFromTrash(int recoverDocId, boolean publishEvents) {
+        if(recoverDocId < 1) throw new RuntimeException("recoverDocId is not valid");
+
+        //Try get DocDetails object by id, if not present throw error
+        DocDetails docDetailsToRecover = docRepo.findById(Long.valueOf(recoverDocId)).orElseThrow(() -> new RuntimeException("DocDetails doesn't exists."));
+
+        //Check permissions for this action
+        checkPermissions(currentUser, docDetailsToRecover, true);
+
+        //Find last actual (if possible) history id (so we know where to recover page)
+        Integer historyId = historyRepo.findMaxHistoryId(recoverDocId, true)
+                .orElseGet(() -> historyRepo.findMaxHistoryId(recoverDocId)); // any history id if there is no actual one
+
+        String notifyTitle = prop.getText("editor.recover.notifyTitle");
+        if(historyId == null) {
+            //There is no history
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
+
+        DocDetails recoveredDoc = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(
+                historyRepo.findById(historyId.longValue()).orElseThrow(() -> new RuntimeException("History doesn't exists."))
+        );
+		recoveredDoc.setDocId(recoverDocId); // ensure doc_id is always correct
+
+        if(recoveredDoc.getGroup() == null) {
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_history"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
+
+        //Check approve permissions for target group
+        approveService.loadApproveTables(recoveredDoc.getGroupId());
+        if(approveService.needApprove() == true && approveService.isSelfApproved() == false) {
+            //No right
+            addNotify(new NotifyBean(notifyTitle, prop.getText("editor.recover.notify.no_right"), NotifyBean.NotifyType.WARNING, 60000));
+            return;
+        }
+
+        //Publish recover event after successful permission check
+        if (publishEvents) (new WebjetEvent<DocDetails>(recoveredDoc, WebjetEventType.ON_RECOVER)).publishEvent();
+
+        docRepo.save(recoveredDoc);
+
+        if (publishEvents) (new WebjetEvent<DocDetails>(recoveredDoc, WebjetEventType.AFTER_RECOVER)).publishEvent();
+
+        //Audit log - page recovered from trash
+        Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, "(DocID: " + recoverDocId + "): Stranka bola obnovena z kosa", recoverDocId, 0);
+
+        //Refresh caches
+        DocDB.getInstance(true);
+        GroupsDB.getInstance(true);
+
+        //Success
+        addNotify(new NotifyBean(prop.getText("editor.recover.notify_title.success_page"), prop.getText("editor.recover.notify_body.success_page", recoveredDoc.getTitle(), recoveredDoc.getFullPath()), NotifyBean.NotifyType.SUCCESS, 60000));
+    }
 }

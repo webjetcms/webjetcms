@@ -38,7 +38,7 @@ Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.see(userName);
     I.see(userSurname);
-    I.click(TempMail.getContentSelector()+" > p > a");
+    I.click(TempMail.getContentSelector()+" a");
     I.wait(2);
     I.switchToNextTab();
 
@@ -79,14 +79,14 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     DT.filterContains("email", "webjetcmsdmail");
     I.dontSee('Nenašli sa žiadne vyhovujúce záznamy');
     let lineColor = await getFontColor(I, 1,1);
-    I.assertEqual(lineColor, "rgb(255, 75, 88)");
+    I.assertEqual(lineColor, "rgb(224, 0, 40)");
 
     I.say("Checking confirmation email");
     await TempMail.login("webjetcmsdmailsimple");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.wait(2);
-    I.click( TempMail.getContentSelector()+" > p > a");
+    I.click( TempMail.getContentSelector()+" a");
 
     I.switchToNextTab();
     I.waitForElement(locate(".modal-content > .modal-header > .modal-title").withText("Newsletter"), 10);

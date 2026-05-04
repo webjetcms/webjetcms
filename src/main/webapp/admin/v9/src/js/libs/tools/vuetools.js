@@ -95,7 +95,7 @@ export class VueTools {
             return Vue.defineAsyncComponent(() =>
                 import(/* webpackChunkName: "vueCropper" */ '../../../vue/components/vue-cropper.vue')
             );
-        } else if ('webjet-dte-jstree'===name) {
+        } else if ('webjet-dte-jstree' === name || 'webjet-dte-jstree-alldomains' === name) {
             return Vue.defineAsyncComponent(() =>
                 import(/* webpackChunkName: "webjetDteJstree" */ '../../../vue/components/webjet-dte-jstree/webjet-dte-jstree.vue')
             );

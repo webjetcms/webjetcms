@@ -31,13 +31,12 @@ module.exports = {
         }
 
         let url = 'https://mailsac.com/inbox/'+name+'%40'+emailDomain;
-        /*await I.executeScript((url) => {
+        await I.executeScript((url) => {
             window.location.href=url;
         }, url);
-        I.wait(5);
-        */
+        I.wait(4);
 
-        I.amOnPage(url);
+        //I.amOnPage(url);
         I.waitForElement("div.inbox span.help-block", 10);
 
         I.switchTo();
@@ -48,15 +47,37 @@ module.exports = {
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */
-    openLatestEmail(unblockLinksAndImages = true){
+    openLatestEmail(){
         I.say('Otvaram najnovsi mail');
         I.refreshPage();
         I.waitForElement("table.inbox-table td.inbox-subject-td", 240);
         I.clickCss("table.inbox-table tr:nth-of-type(2) td.inbox-subject-td");
         I.waitForElement("table.inbox-table tr:nth-of-type(2) td.active", 10);
         I.wait(1);
-        if (unblockLinksAndImages === true) I.click(locate("a.btn").withText("Unblock links and images"));
-        I.switchToNextTab();
+        I.executeScript(() => {
+            //all links in div.ng-scope have removed href and target, add href by link text and add target="_blank"
+            const links = document.querySelectorAll("div.ng-scope a");
+            links.forEach(link => {
+                const href = link.textContent.trim();
+                link.setAttribute("href", href);
+                const dataHref = link.getAttribute("data-href");
+                if (dataHref) {
+                    link.setAttribute("href", dataHref);
+                }
+                link.setAttribute("target", "_blank");
+            });
+            //we sending links as div.link with data-href attribute, so we need to change them back to links
+            const divLinks = document.querySelectorAll("div.link");
+            divLinks.forEach(divLink => {
+                const href = divLink.getAttribute("id");
+                const link = document.createElement("a");
+                link.setAttribute("href", href);
+                link.setAttribute("target", "_blank");
+                link.textContent = divLink.textContent;
+                divLink.parentNode.replaceChild(link, divLink);
+            });
+        });
+        I.wait(1);
     },
 
     /**
@@ -73,8 +94,6 @@ module.exports = {
      * Je potrebné zavolať TempMail.login() predtým
      */
     closeEmail(){
-        //because of Unblock links we need to go back and delete last email
-        I.switchToPreviousTab();
         I.click(locate("button").withText("Close"));
     },
 
@@ -110,11 +129,11 @@ module.exports = {
     },
 
     getContentSelector() {
-        return "div#info"; //TODO: check if correct
+        return "div.email-body";
     },
 
     getSubjectSelector() {
-        return "div.subject"; //TODO: check if correct
+        return "div.subject";
     },
 
     /**
@@ -123,5 +142,13 @@ module.exports = {
      */
     getTempMailDomain() {
         return "@mailsac.com";
+    },
+
+    checkAttachments(attachmentsNames = []) {
+        I.say("Checking attachments in email");
+        /*attachmentsNames.forEach(attachmentName => {
+            I.seeElement( locate("div.attachments").find( locate("a").withText(attachmentName) ) );
+        });*/
+        I.see(attachmentsNames.length + " attachments", "td.active span.ng-binding.ng-scope");
     }
 }

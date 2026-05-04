@@ -1,6 +1,6 @@
 # Předpoklady a verze
 
-WebJET vyžaduje `Java 17` a `Tomcat 9`.
+Aktuální verze WebJET CMS vyžaduje `Java 17` a `Tomcat 11`.
 
 Základní projekt ve formátu gradle naleznete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
 
@@ -13,13 +13,14 @@ ext {
 ```
 
 Přičemž aktuálně existují následující verze WebJET:
-- `2026.0-jakarta` - stabilizovaná verze 2026.0 pro aplikační server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2026.0-jakarta-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře s využitím `Jakarta namespace`. Vyžaduje Tomcat 11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
+- `2026.0-jakarta` - stabilizovaná verze 2026.0 pro aplikační server Tomcat 11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
 - `2026.0` - stabilizovaná verze 2026.0, nepřibývají do ní denní změny.
 - `2025.0-jakarta-SNAPSHOT` - stabilizovaná verze 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
 - `2025.0-SNAPSHOT` - stabilizovaná verze 2025.52, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - `2025.0.52` - stabilizovaná verze 2025.0.52 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.0.50` - stabilizovaná verze 2025.0.50 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
 - `2025.40` - stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
 - `2025.0.40` - stabilizovaná verze 2025.0.40 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
@@ -83,7 +84,7 @@ V [Tomcat od verze 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http
 
 ## Změny při přechodu na Jakarta verzi
 
-Verze určená pro `jakarta namespace`, vyžaduje aplikační server Tomcat 10/11, používá Spring verze 7. Průlomové změny:
+Verze určená pro `jakarta namespace`, vyžaduje aplikační server Tomcat 11, používá Spring verze 7. Průlomové změny:
 - URL adresy - pro URL adresy Spring zavedl přesné shody, pokud REST služba definuje URL adresu s lomítkem na konci, musí být takto použita. Je rozdíl v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
 - Ve Spring DATA repozitářích pro `IN/NOTIN query` je třeba přidat `@Query`, jinak nebude korektně SQL vytvořeno, příklad:
 
@@ -106,23 +107,19 @@ V `build.gradle` je třeba aktualizovat `gretty` konfiguraci a přidat nastaven�
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring

@@ -4,10 +4,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 
 public class Page {
@@ -32,6 +33,19 @@ public class Page {
         //also remove HTML if present in title
         seoTitle = Tools.html2text(seoTitle);
         return seoTitle;
+    }
+
+    public String getCanonical(){
+        String canonical = "";
+        if(doc!=null){
+            canonical = doc.getFieldQ();
+            if(Tools.isEmpty(canonical)){
+                DocDB docDB = DocDB.getInstance();
+                String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
+                return docLink;
+            }
+        }
+        return canonical;
     }
 
     public String getSeoTitleHtml() {

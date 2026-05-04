@@ -1,72 +1,78 @@
-# Ecommerce
+# E-commerce
 
-Through the E-shop application you can create and manage a simple e-shop. Within the application you define individual products and their attributes (e.g. size, colour), delivery methods or payment. The application records the list of received orders, allows you to set their status with the possibility of notifying changes in the order to the customers email.
+You can create and manage a simple e-commerce store using the E-shop application. Within the application, you define individual products and their attributes (e.g. size, color), delivery methods, or payments. The application records a list of received orders, allows you to set their status with the option of notifying customers of changes in the order via email.
 
 ## Application settings
 
 ### Settings tab:
-- **Directory**: Enter the path to the directory.
-- **Arrange by**: Select an ordering criterion, for example "Priority".
-  - **Ascending**: Define whether to arrange in ascending order.
-- **Pagination**: Specifies whether paging is enabled.
-- **Number of items on the page**: Enter the number of items on the page, for example `15`.
-- **Pagination position**: Select where to display the pagination, for example "Above and below products".
-- **Thumbnail image width**: Specify the width of the thumbnail image in pixels, for example `190`.
-- **Height of the preview image**: Specify the height of the thumbnail image in pixels, for example `190`.
-- **View category selection**: Define whether to display the category selection.
-- **Show arrangement option**: Enable the option to arrange products.
-- **Test mode (no order can be created)**: Activation of test mode.
-- **Product catalogue (without shopping cart)**: Catalogue view without purchase option.
-- **Secret key for the service "verified by customers" (heureka.sk)**: Enter the secret key for the service.
 
-#### Method of delivery:
-- **Enter the delivery method**: Please fill in the available delivery methods.
-  - When pressing **Add** can be filled in: **Price without VAT**, **Currency**, **Tax**, **Price with VAT**, **Old price with VAT**
+- **Directory**: Enter the path to the directory.
+- **Sort by**: Select a sorting criterion, such as "Priority".
+  - **Ascending**: Define whether to sort in ascending order.
+- **Paging**: Determines whether paging is enabled.
+- **Number of items per page**: Enter the number of items per page, for example `15`.
+- **Pagination Position**: Choose where you want the pagination to appear, for example, "Above and below products."
+- **Preview Image Width**: Enter the width of the preview image in pixels, for example `190`.
+- **Preview Image Height**: Enter the height of the preview image in pixels, for example `190`.
+- **Show category selection**: Define whether to show the category selection.
+- **Show sorting option**: Enable the product sorting option.
+- **Test mode (cannot create order)**: Activate test mode.
+- **Product catalog (without shopping cart)**: View the catalog without the option to purchase.
+- **Secret key for the "customer-verified" service (heureka.sk)**: Enter the secret key for the service.
+
+#### Delivery method:
+
+- **Enter delivery method**: Fill in the available delivery methods.
+  - When pressing **Add** you can fill in: **Price excluding VAT**, **Currency**, **Tax**, **Price including VAT**, **Old price including VAT**
 
 ![](editor.png)
 
 ### Visual Style tab:
-- Option to choose from two styles for display.
+
+- Option to choose from two display styles.
 
 ![](editor-style.png)
 
 ### Order list:
 
-When displayed, it can be filtered by:
+When viewing, you can filter by:
 - **Status**
-- **Issued / sent**
+- **Issued / Sent**
 - **Name**
-- **E-mail**
+- **Email**
 - **Number**
 
 ![](editor-list.png)
 
-### Item card:
-- **Name of the website**: Enter the name of the web page.
-- **Product description**: Enter product description.
-- **View label**: Enable product label display.
+### Item tab:
 
-#### Add a variant:
-- **Variant name**: Enter the name of the product variant.
-- **Variant values**: Enter the available variant values.
+- **Website Name**: Enter the name of the website.
+- **Product Description**: Enter a product description.
+- **Show label**: Enable displaying the product label.
+
+#### Add variant:
+
+- **Variant Name**: Enter the name of the product variant.
+- **Variant Values**: Enter the available variant values.
 
 #### Product information:
-- **Price without VAT**
+
+- **Price excluding VAT**
 - **Currency**
 - **Tax**
-- **Price with VAT**
+- **Price incl. VAT**
 - **Old price with VAT**
 - **EAN**
-- **Producer**
+- **Manufacturer**
 
 ![](editor-items.png)
 
 ## Allowed countries
 
-For dynamic setting of allowed countries where goods can be shipped there is a constant `basketInvoiceSupportedCountries`. The constant contains a comma-separated list of `ccTLD` identifiers.
+The constant `basketInvoiceSupportedCountries` is used to dynamically set the allowed countries where goods can be shipped. The constant contains a comma-separated list of `ccTLD` identifiers.
 
-**Example**, for the permit countries Slovakia, Czech Republic and Poland the constant must be set as `.sk,.cz,.pl`.
+**Example**, to enable the countries Slovakia, Czech Republic and Poland, the constant must be set as `.sk,.cz,.pl`.
 
-## View application
+## View the application
 
 ![](basket.png)

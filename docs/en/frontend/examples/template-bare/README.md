@@ -1,125 +1,133 @@
 # Bare template
 
-Basic sample template for WebJET CMS using [Thymeleaf templates](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README) written in the format [PugJS](http://docs.webjetcms.sk/v2022/#/developer/frameworks/pugjs). It is based on [Start Bootstrap - Bare](https://startbootstrap.com/template/bare/).
+A basic sample template for WebJET CMS using [Thymeleaf templates](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README) written in [PugJS](http://docs.webjetcms.sk/v2022/#/developer/frameworks/pugjs) format. It is based on [Start Bootstrap - Bare](https://startbootstrap.com/template/bare/).
 
-We recommend to use it as a basis for ANY new template for WebJET CMS.
+We recommend using it as the basis for ANY new template for WebJET CMS.
 
-You can get the source code of the template in [WebJET CMS github repository](https://github.com/webjetcms/templates-bare).
+You can get the template source code in the [WebJET CMS github repository](https://github.com/webjetcms/templates-bare).
 
 ![](barepage.png)
 
 ## Use in WebJET CMS
 
-Download the template and place it in the folder `templates/bare/bootstrap-bare/` (if you are using gradle project so of course still to `src/main/webapp`). If you place it in a different folder you need to edit the paths in the source codes, just search for that string in the files and edit the path.
+Download the template and place it in the ```templates/bare/bootstrap-bare/``` folder (of course, if you are using a gradle project, also in ```src/main/webapp```). If you place it in another folder, you will need to edit the paths in the source code, just search for this string in the files and edit the path.
 
-All the paths that you write in `.pug/.scss/.js` files you use including the prefix `/templates/bare/....` that is, as if for use in WebJET. If you run the local version via `npm run start`, but the paths have a prefix `/` (since the root folder is actually `dist`). In the file `node_scripts/bs-config.js` redirection is set, if you change the path to the template don't forget to edit it in this file as well.
+All paths that you write in ```.pug/.scss/.js``` files are used including the prefix ```/templates/bare/....```, i.e. as if for use in WebJET. If you run the local version via ```npm run start```, the paths have the prefix ```/``` (since the root folder is actually ```dist```). Redirection is set in the ```node_scripts/bs-config.js``` file, if you change the path to the template, don't forget to edit it in this file as well.
 
-In the terminal, navigate to the folder `src/main/webapp/templates/bare/bootstrap-bare` and generate `dist` version of the command:
+In the terminal, go to the ```src/main/webapp/templates/bare/bootstrap-bare``` folder and generate the ```dist``` version with the command:
 
 ```sh
 npm install
 npm run build
 ```
 
-Before creating a new domain/site structure in WebJET CMS, we recommend to create templates first.
+Before creating a new domain/site structure in WebJET CMS, we recommend creating templates first.
 
 ### Template group
 
-Create a new template group called `Bare`, set the fields:
-- `Priečinok` set to `/templates/bare/bootstrap-bare` (or to the folder where you have the template)
-- `Typ editora stránok` set to `Page Builder`.
+Create a new template group called ```Bare```, set the fields:
+
+- Set ```Priečinok``` to ```/templates/bare/bootstrap-bare``` (or to the folder where your template is located)
+- Set ```Typ editora stránok``` to the value ```Page Builder```.
 
 ![](tempgroup-editor.png)
 
-In the Metadata tab, set:
-- `Autor, Copyright, Developer, Generator` to your data (used in the template)
+In the metadata tab, set:
+
+- ```Autor, Copyright, Developer, Generator``` for your data (used in the template)
 
 ![](tempgroup-editor-metadata.png)
 
 ### Template
 
-Create a new template `Bare - Hlavná šablóna`, set the fields:
-- `Názov šablóny` to the value of `Bare - Hlavná šablóna`
-- `HTML Šablóna` to the value of `bare/bootstrap-bare/dist/index.html` (if you don't see the dist folder in the selection, make sure you have generated `dist` version after downloading the template).
+Create a new template ```Bare - Hlavná šablóna```, set the fields:
+
+- ```Názov šablóny``` to the value ```Bare - Hlavná šablóna```
+- ```HTML Šablóna``` to the value ```bare/bootstrap-bare/dist/index.html``` (if you don't see the dist folder in the selection, check if you generated the ```dist``` version after downloading the template).
 
 ![](temp-editor.png)
 
 In the Style tab, set
 
-- `Hlavný CSS štýl` to the value of `/templates/bare/bootstrap-bare/dist/css/ninja.min.css`.
+- ```Hlavný CSS štýl``` to the value ```/templates/bare/bootstrap-bare/dist/css/ninja.min.css```.
 
 ![](temp-editor-style.png)
 
-### Structure of web pages
+### Website structure
 
-If you haven't created a new domain/site structure yet, now **create a new domain** and set its template `Bare - Hlavná šablóna`:
-- click on Web pages-List of web pages
-- click on the icon `+` to add a new folder
-- Enter Folder Name `Slovensky`
-- enter the name of the menu item `sk`
-- enter the value in the URL address `sk`
-- set the Parent Folder to the root folder (the value `/`)
-- set the domain
+If you haven't created a new domain/site structure yet, **create a new domain** now and set its template ```Bare - Hlavná šablóna```:
+
+- click on Websites-List of websites
+- click on the ```+``` icon to add a new folder
+- enter Folder Name ```Slovensky```
+- enter the Name of the menu item ```sk```
+- enter the value ```sk``` in the URL address
+- set Parent folder to root folder (value ```/```)
+- set up a domain
 
 ![](group-editor.png)
 
 In the Template tab:
-- in the Template for website field, select `Bare - Hlavná šablóna`
+
+- in the Website Template field, select ```Bare - Hlavná šablóna```
 
 ![](group-editor-temp.png)
 
-If you already have a domain/site structure in place, we recommend that you edit the existing folders - in the Folder Template tab, set `Bare - Hlavná šablóna` and turn on the option `Aplikovať na všetky existujúce podpriečinky a podstránky`. Also set this in the tab `Systém` to existing folders.
+If you already have a domain/site structure created, we recommend editing the existing folders - in the Folder Template tab, set ```Bare - Hlavná šablóna``` and enable the ```Aplikovať na všetky existujúce podpriečinky a podstránky``` option. Also set this in the ```Systém``` tab for existing folders.
 
-### Header and footer adjustment
+### Setting the header and footer
 
-Go to Web Pages - List of Web Pages, click the System tab, and navigate to the Headers folder. Open the page `Základná hlavička` in the editor. In the Template tab, check that the page uses a template `Bare - Hlavná šablóna` (if not, set and save the page and reopen it in the editor). Delete everything in the page and then add the Page Builder block `Header-menu`.
+Go to the Websites - Website List section, click the System tab and go to the Headers folder. Open the ```Základná hlavička``` page in the editor. In the Template tab, check that the page uses the ```Bare - Hlavná šablóna``` template (if not, set it up and save the page and reopen it in the editor). Delete everything on the page and then add the Page Builder block ```Header-menu```.
 
 You will see 3 columns:
-- WebJET logo - you can change it for a suitable logo for your site
-- Application menu - probably does not have the root folder set correctly, click on the pencil icon in the application and in the application settings window change `Koreňový adresár` to your domain directory. However, you have not yet created a site structure so the application will not display anything yet.
-- Language switching - displays the language switcher `SK - EN` If you do not use the language mutations, you can delete the application.
+
+- WebJET logo - you can change this to a suitable logo for your site
+- Menu application - probably does not have the root folder set correctly, click on the pencil icon in the application and in the application settings window change ```Koreňový adresár``` to your domain directory. However, you do not have a page structure created yet, so the application will not display anything yet.
+- Language mutation switch - displays the language mutation switch ```SK - EN```, if you do not use language mutations, you can delete the application.
 
 ![](header-editor.png)
 
-Follow a similar procedure for setting the footer (page `Základná pätička`), delete everything and insert the block `footer-footer`. In addition to the standard text columns where you can easily edit the text to suit your needs, the footer of the app includes:
-- Login to `newslettra` (bulk email) - a simplified version with only a field for entering the email is used. The simplified registration form registers to all email groups that have the option enabled `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`.
-- GDPR cookies - application for setting cookies, their list is taken from the GDPR-Cookie Manager application in which you set the list of cookies that the website uses. You can import [basic list of cookies](cookies.xlsx).
+Proceed similarly to set up the footer (page ```Základná pätička```), delete everything and insert the block ```footer-footer```. In addition to the standard text columns where you can easily edit the text according to your needs, the application footer contains:
 
-Go to Template-List and set the header/footer to the template `Bare - Hlavná šablóna` (in the Template tab, set the Header and Footer fields).
+- Login to ```newslettra``` (bulk email) - a simplified variant with only an email input field is used. The simplified registration form registers to all email groups that have the ```Povoliť pridávanie/odoberanie zo skupiny samotným používateľom``` and ```Vyžadovať potvrdenie e-mailovej adresy``` options enabled.
+- GDPR cookies - an application for setting cookies, it takes their list from the GDPR-Cookie Manager application in which you set the list of cookies that the website uses. You can import [basic list of cookies] (cookies.xlsx).
 
-Note: the template contains a menu in the header, so leave the Main and Side Navigation items blank in the template settings.
+Go to Templates-template list and set the header/footer to the ```Bare - Hlavná šablóna``` template (in the Template tab, set the Header and Footer fields).
 
-### Setting language mutations
+Note: the template includes a menu in the header, so leave the Main and Side Navigation items empty in the template settings.
 
-The template is ready for language mutations, it uses the Structure Mirroring application. We recommend to create root folders in the list of web pages (Folders tab) `Slovensky` a `English`.
+### Setting up language mutations
 
-Set the field to the folders `URL adresa` to the value of `sk` or `en`, set the same way `Názov položky v menu` to the value of `sk` or `en` (this item appears in the header in the language switcher) and in the Template tab the field `Jazyk` to the appropriate value. Then follow the instructions for [mirroring adjustment](http://docs.webjetcms.sk/v2022/#/redactor/apps/docmirroring/README).
+The template is ready for language mutations, uses the Structure Mirroring application. We recommend creating root folders ```Slovensky``` and ```English``` in the website list (Folders tab).
 
-For the second language version, make copies of the header/footer, add a prefix for automatic use in the respective language version `EN-` to the page title (e.g. page `Default Hlavička` duplicate to `EN-Default Hlavička`). In the page, edit the application settings (root folder for the menu application).
+Set the ```URL adresa``` field to the value ```sk``` or ```en```, also set the ```Názov položky v menu``` to the value ```sk``` or ```en``` (this item will appear in the header in the language switcher) and in the Template tab the ```Jazyk``` field to the appropriate value. Then follow the instructions for [setting up mirroring](http://docs.webjetcms.sk/v2022/#/redactor/apps/docmirroring/README).
+
+For the second language mutation, create copies of the header/footer, to automatically use them in the respective language version, add the prefix ```EN-``` to the page name (e.g. duplicate the page ```Default Hlavička``` to ```EN-Default Hlavička```). Edit the application settings on the page (root folder for the menu application).
 
 ### Creating pages
 
-The template contains several ready-made blocks, you can add them in the page simply via PageBuilder.
+The template contains several ready-made blocks, you can easily add them to your page via PageBuilder.
 
 ## For the web designer
 
-Study the points below if you want to edit the template code (HTML, CSS, JavaScript).
+Please review the points below if you want to edit the template code (HTML, CSS, JavaScript).
 
 ### Tree structure
 
 All template files are located in the src folder, which contains the following structure:
-- `assets` - images, icons and fonts, we recommend to follow the suggested structure of subfolders. In the folder `images` there are sample images for PageBuilder blocks.
-- `js` - JavaScript files, the main file is `ninja.js`.
-- `pug` - HTML code of templates in the format [PugJS](https://pugjs.org/).
-  - `includes` - Shared blocks between templates (e.g. a header shared between the main page template and a subpage).
-  - `pagebuilder` - blocks for [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). In blocks we recommend to use as much as possible the possibility of `include`. Do `container` insert existing blocks `column` blocks and into `section` Existing `container` Blocks. When changing `column` block, the change will also be reflected in `container` a `section` blocks.
-- `scss` - CSS styles in format for [Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/)
 
-Design templates are compiled from pug format to HTML format for use via [Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README). For prototyping using `npm run start` we recommend to follow the option `include` blocks for PageBuilder into templates. This way, you can verify the page view and the content at the same time as you verify the block view. Ideally, you will use all the blocks on one page in the prototype. This makes it easy to visually verify their functionality and display when changing CSS styles or HTML code.
+- ```assets``` - ​​images, icons and fonts, we recommend following the suggested subfolder structure. The ```images``` folder contains sample images for PageBuilder blocks.
+- ```js``` - ​​JavaScript files, the main file is ```ninja.js```.
+- ```pug``` - ​​HTML template code in [PugJS](https://pugjs.org/) format.
+  - ```includes``` - ​​shared blocks between templates (e.g. header shared between main page template and subpages).
+  - ```pagebuilder``` - ​​blocks for [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). In blocks, we recommend using the ```include``` option as much as possible. Insert existing ```column``` blocks into ```container``` blocks and existing ```container``` blocks into ```section```. When changing the ```column``` block, the change will also be reflected in the ```container``` and ```section``` blocks.
+- ```scss``` - ​​CSS styles in [Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/) format
 
-### Generating dist version
+Design templates are compiled from pug format to HTML format for use via [Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README). For prototyping using ```npm run start```, we recommend using the ```include``` option for PageBuilder blocks in templates. This way you can simultaneously verify the display of the page with content and also verify the display of blocks. Ideally, you will use all blocks on one page in the prototype. This way you can easily visually verify their functionality and display when changing CSS styles or HTML code.
 
-`dist` to generate the directory, use the following commands:
+### Generating a dist version
+
+```dist``` adresár vygenerujete nasledovnými príkazmi:
 
 ```sh
 #vygenerovanie dist adresara
@@ -132,31 +140,32 @@ npm run build
 npm run start
 ```
 
-individual `npm` scripts are defined in [package.json](https://github.com/webjetcms/templates-bare/blob/master/package.json) in the elements `scripts` and made of `node_scripts/*.js` Directory:
-- `npm run build` - generates a complete `dist` Directory.
-- `npm run build:assets` - re-generates files from the directory `assets` (images, font icons).
-- `npm run build:pug` - re-generates HTML files from the source pug files.
-- `npm run build:scripts` - re-generates JavaScript files from the src directory.
-- `npm run build:scss` - generates css files from source `scss` files.
-- `npm run clean` - erases `dist` Directory.
-- `npm run start` - starts prototyping mode - generates `dist` directory, tracks changes to the files and opens the browser with the prototype version.
-- `npm run start:debug` - starts the prototyping mode with `debug` Browser mode.
+individual ```npm``` scripts are defined in [package.json](https://github.com/webjetcms/templates-bare/blob/master/package.json) in the ```scripts``` element and executed from the ```node_scripts/*.js``` directory:
 
-Configuration for prototyping mode `browser-sync` is located in the file [node-scripts/bs-config.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/bs-config.js). There is possibly a need to modify the path for replacing the addresses of fonts/images that are linked with the full URL in the CSS files (since during prototyping the URL of the pages differs from the address in the final version via WebJET CMS).
+- ```npm run build``` - ​​generates a complete ```dist``` directory.
+- ```npm run build:assets``` - ​​regenerates files from directory ```assets``` (images, font icons).
+- ```npm run build:pug``` - ​​regenerates HTML files from source pug files.
+- ```npm run build:scripts``` - ​​regenerates JavaScript files from the src directory.
+- ```npm run build:scss``` - ​​generates css files from source ```scss``` files.
+- ```npm run clean``` - ​​deletes the ```dist``` directory.
+- ```npm run start``` - ​​starts prototyping mode - generates a ```dist``` directory, tracks changes in files and opens a browser with the prototype version.
+- ```npm run start:debug``` - ​​starts prototyping mode with ```debug``` browser mode.
 
-### JavaScript file processing
+The configuration for prototyping mode ```browser-sync``` is located in the file [node-scripts/bs-config.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/bs-config.js). There, it may be necessary to adjust the path for replacing font/image addresses that are linked to the full URL in CSS files (since during prototyping the URL of the pages differs from the address in the final version via WebJET CMS).
 
-To be able to use npm modules directly in the file [ninja.js](https://github.com/webjetcms/templates-bare/blob/master/src/js/ninja.js) is used [browserify](https://www.npmjs.com/package/browserify) with extension [esmify](https://www.npmjs.com/package/esmify). The processing is in the file [render-scripts.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/render-scripts.js).
+### Processing JavaScript files
 
-The reason is that all JavaScript libraries used in a web page can be managed via npm (i.e. easily updated).
+In order to be able to use npm modules directly in the [ninja.js](https://github.com/webjetcms/templates-bare/blob/master/src/js/ninja.js) file, [browserify](https://www.npmjs.com/package/browserify) with the [esmify](https://www.npmjs.com/package/esmify) extension is used. The processing is in the [render-scripts.js](https://github.com/webjetcms/templates-bare/blob/master/node_scripts/render-scripts.js) file.
 
-In the file `ninja.js` so you can use `import/require` to import the necessary libraries for displaying the page.
+The reason is so that all JavaScript libraries used in the website can be managed via npm (i.e. easily updated).
 
-You can then use [npm-check-updates](https://www.npmjs.com/package/npm-check-updates) for version control and easy updates.
+So in the file ```ninja.js``` you can use ```import/require``` to import the necessary libraries to display the page.
 
-### List of styles for editor
+You can then use [npm-check-updates](https://www.npmjs.com/package/npm-check-updates) to check versions and easily update.
 
-In the editor, you can add the necessary CSS styles in addition to the basic Paragraph and Heading 1-6 formatting elements. For the sake of complexity `ninja.min.css` these are written to a file `src/scss/editor.scss` which is generated to `dist/css/editor.css`.
+### Editor style list
+
+In the editor, in addition to the basic formatting elements Paragraph and Heading 1-6, it is possible to add the necessary CSS styles. Due to the complexity of ```ninja.min.css```, these are written to the file ```src/scss/editor.scss``` which is generated in ```dist/css/editor.css```.
 
 ![](editor-stylecombo.png)
 
@@ -194,15 +203,15 @@ table {
 }
 ```
 
-If the cursor is in a table, the style options for the table are also displayed in the Style selection box:
+If the cursor is in a table, the Style selection box also displays the table style options:
 
 ![](editor-stylecombo-table.png)
 
-When using multiple CSS styles at once (e.g. `btn btn-primary`) are all applied to the currently selected element. Styles that are applied only to an element do not appear in the selection box unless the element is selected or the cursor is present.
+When using multiple CSS styles at once (e.g. ```btn btn-primary```), all of them are applied to the currently selected element. Styles that apply only to an element will not appear in the selection box unless the element is selected or the cursor is in it.
 
-If `editor.css` you do not also insert into the template design, so its styles are not applied when displaying the web page. Thus, by default, it is only used as a list of style definitions.
+Unless you include ```editor.css``` in the template design, its styles are not applied when the web page is displayed. By default, it is only used as a list of style definitions.
 
-If you want, you can also define the style displayed in the selection box in the editor directly in other files. However, the style defined in this way must contain a comment as the first `/* editor */`. The example is in the file `src/scss/3-base/_link.scss`:
+If you want, you can define the style displayed in the editor's selection box directly in other files. However, the style defined in this way must contain the first comment ```/* editor */```. An example is in the file ```src/scss/3-base/_link.scss```:
 
 ```css
 a {
@@ -215,9 +224,9 @@ a {
 }
 ```
 
-in the selection box, the option to set the CSS style is then displayed `btn more-info` on the A element. The advantage of using this is that you have the definition for both the editor and the styles themselves in one place.
+The selection field will then display the option to set the CSS style ```btn more-info``` on the A element. The advantage of this usage is that you have the definition for the editor and the styles themselves in one place.
 
-When applying a CSS style that has no HTML tag set, the style is applied to the parent element where the cursor is located. If you want to apply the style only to the selected text (selector), you need to define it for the HTML tag `span`:
+When applying a CSS style that does not have any HTML tag set, the style is applied to the parent element that the cursor is in. If you want to apply the style only to the selected text (selection), you need to define it for the HTML tag ```span```:
 
 ```css
 span.more-info {
@@ -228,7 +237,7 @@ span.more-info {
 }
 ```
 
-You can then select the text and apply this style only to the selected text. If it did not have an HTML tag `span` would be applied to the parent element, i.e. typically to the whole paragraph - `p`.
+then it is possible to select text and apply this style only to the selected text. If it did not have the HTML tag ```span``` it would be applied to the parent element, i.e. typically the entire paragraph - ```p```.
 
 If you don't like the default style name in the selection box, you can change it by adding a comment:
 
@@ -241,7 +250,7 @@ span.more-info {
 }
 ```
 
-possibly in abbreviated form directly with a comment at the end of the style definition line:
+or in abbreviated form directly with a comment at the end of the style definition line:
 
 ```css
 span.more-info { /* Nice Editor Title */
@@ -251,7 +260,7 @@ span.more-info { /* Nice Editor Title */
 }
 ```
 
-Applying multiple styles at once is also supported. It is used if an element is also defined in CSS:
+Applying multiple styles at once is also supported. It is used if the element is also defined in the CSS:
 
 ```css
 p.paragraph-green {
@@ -265,9 +274,9 @@ p.paragraph-yellow-background {
 }
 ```
 
-the user can choose any combination of these styles per element `p`. If the style is already applied to the element, selecting it again will remove the style. This makes it easy to apply multiple styles at once.
+The user can select any combination of these styles on the `p` element. If a style is already applied to the element, selecting it again will remove the style. This makes it easy to apply multiple styles at once.
 
-If you want the selection menu to display titles in your style, you can add a CSS stylesheet definition for the editor to the page header in Page Builder mode:
+If you want the drop-down menu to display names in your style, you can add a CSS definition of the editor style files to the page header in Page Builder mode:
 
 ```html
 <script>
@@ -278,19 +287,19 @@ If you want the selection menu to display titles in your style, you can add a CS
 </script>
 ```
 
-we recommend adding only the minimal styling necessary for styling names.
+We recommend adding only the minimum style needed to style the titles.
 
 ## Creating PageBuilder blocks
 
-If you need to create a new block for PageBuilder follow this guide.
+If you need to create a new block for PageBuilder, follow these instructions.
 
 ### Folder structure
 
-The blocks are located in `scr/pug/pagebuilder` and are in subfolders `column,container,section` by block type. They are then organized according to their meaning; you can name the folders any way you want. They will then appear under that folder name in the block library.
+The blocks are located in ```scr/pug/pagebuilder``` and are in subfolders ```column,container,section``` according to the block type. They are then organized according to their meaning, you can name the folders as you wish. They will then appear in the block library under this folder name.
 
-We recommend to proceed from the bottom, i.e. first create blocks in `column` folder, then use include to insert them into `container` and this subsequently into `section`.
+We recommend proceeding from the bottom, i.e. first create blocks in the ```column``` folder, then insert them into ```container``` using include, and then into ```section```.
 
-For example, the file `src/pagebuilder/column/card/card.pug`:
+For example, the file ```src/pagebuilder/column/card/card.pug```:
 
 ```javascript
 .col-md-6
@@ -301,7 +310,7 @@ For example, the file `src/pagebuilder/column/card/card.pug`:
             a.btn.btn-primary(href='#') Go somewhere
 ```
 
-File `src/pug/pagebuilder/container/cards/cards.pug`
+file ```src/pug/pagebuilder/container/cards/cards.pug```
 
 ```pugjs
 .container
@@ -311,31 +320,32 @@ File `src/pug/pagebuilder/container/cards/cards.pug`
 
 ```
 
-File `src/pug/pagebuilder/section/cards/cards.pug`
+file ```src/pug/pagebuilder/section/cards/cards.pug```
 
 ```pugjs
 section
     include ../../container/cards/cards
 ```
 
-the advantage of such a procedure is that if you modify something in `column` pug file, it will manifest itself through the use of `include` command change even in `container` also in `section` Version.
+The advantage of this procedure is that if you modify something in the ```column``` pug file, the change will be reflected in both the ```container``` and ```section``` versions thanks to the use of the ```include``` command.
 
 ### Generating PageBuilder block previews
 
-If you edit the pug block file for PageBuilder you can generate preview images by calling the address `/components/grideditor/phantom/generator.jsp`. Use the following settings:
-- Width: 1000
-- Height: 600
-- zoom: 1
-- docid: 383
-- JSP template: `/templates/bare/bootstrap-bare/dist/index.html`
+If you edit the pug file of the PageBuilder block, you can generate preview images by calling the address ```/components/grideditor/phantom/generator.jsp```. Use the following settings:
 
-The preview images are generated in the same structure as the pug block files. They are also generated into `dist` folder. In the build process, the images are copied in the script `render-assets.js`. When manually changing the image, you can only run this script with the command:
+- width: 1000
+- height: 600
+- zoom: 1
+- doc: 383
+- JSP template: ```/templates/bare/bootstrap-bare/dist/index.html```
+
+Preview images are generated in the same structure as the pug block files. They are also generated in the ```dist``` folder. During the build process, the images are copied in the ```render-assets.js``` script. When changing the image manually, you can only run this script with the command:
 
 ```sh
 npm run build:assets
 ```
 
-Generation requires installed [PhantomJS](https://phantomjs.org/download.html), the location and setting of conf. variables is in the file `localconf.jsp`.
+Generation requires [PhantomJS](https://phantomjs.org/download.html) to be installed, the location and setting of config variables is in the file ```localconf.jsp```.
 
 ## Copyright and License
 

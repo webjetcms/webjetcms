@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Rest controller pre datatabulku zobrazenia parametrov aplikacie (v appstore)
@@ -68,7 +68,20 @@ public class ComponentsService {
             result.put("title", dataTableColumnsFactory.getTitle());
 
             //add options for selects
-            result.put("options", bean.getAppOptions(componentRequest, request));
+            Map<String, List<OptionDto>> options = bean.getAppOptions(componentRequest, request);
+            if (bean instanceof sk.iway.iwcm.components.WebjetComponentAbstract) {
+                Map<String, List<OptionDto>> baseOptions = ((sk.iway.iwcm.components.WebjetComponentAbstract) bean).getBaseAppOptions(request);
+                if (baseOptions != null && !baseOptions.isEmpty()) {
+                    if (options == null) {
+                        options = baseOptions;
+                    } else {
+                        for (Map.Entry<String, List<OptionDto>> entry : baseOptions.entrySet()) {
+                            options.putIfAbsent(entry.getKey(), entry.getValue());
+                        }
+                    }
+                }
+            }
+            result.put("options", options);
 
             String componentPath = null;
             if (bean.getClass().isAnnotationPresent(WebjetAppStore.class)) {

@@ -1,6 +1,6 @@
 package sk.iway.iwcm.system.spring.webjet_component.dialect;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.model.IAttribute;

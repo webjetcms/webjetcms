@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.criteria.Predicate;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -280,10 +280,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
         if (isFormAccessible(formName, user)==false) return null;
 
+        FormColumns formColumns = new FormColumns();
         E entity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());
 
         Map<String, String> itemNames = new HashMap<>();
         if(formItemsRepository!= null && entity instanceof FormsEntity fe) {
+            formColumns.setFormType(fe.getFormType());
             if(FORM_TYPE.MULTISTEP.value.equals(fe.getFormType())) {
 
                 int index = 1;
@@ -323,7 +325,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
             columns.add(new LabelValue(columnNames[1], columnNames[0]));
         }
-        FormColumns formColumns = new FormColumns();
+
         formColumns.setColumns(columns);
         formColumns.setCount(formsRepository.countAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId()));
 

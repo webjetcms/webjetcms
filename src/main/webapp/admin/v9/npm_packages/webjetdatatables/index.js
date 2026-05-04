@@ -245,7 +245,7 @@ export const dataTableInit = options => {
         multipleSeparator: " + "
     };
 
-    const DIALOG_BUTTONS = '<div class="dialog-buttons"><span class="show-help" onclick="WJ.showHelpWindow()"><i class="ti ti-help" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"></i></span><span class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i></span><span class="minimize"><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></span></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button class="btn btn-outline-secondary maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button class="btn btn-outline-secondary minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -703,11 +703,12 @@ export const dataTableInit = options => {
                 if (typeof col.ai != "undefined") col.editor.ai = col.ai;
                 if (typeof col.entityDecode != "undefined") col.editor.entityDecode = col.entityDecode;
 
-                if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
+                if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type || "duration" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";
                     if ("date" === col.editor.type) defaultFormat = "L";
                     if ("timehm" === col.editor.type) defaultFormat = "HH:mm";
                     if ("timehms" === col.editor.type) defaultFormat = "HH:mm:ss";
+                    if ("duration" === col.editor.type) defaultFormat = "HH:mm:ss";
                     col.editor.type = "datetime"; //musime nastavit takto, aby sa date spravalo rovnako ako datetime len malo iny format
                     col.editor.format = col.editor.format || defaultFormat;
                     col.editor.displayFormat = col.editor.format;
@@ -945,7 +946,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-x"></i>')
+                close: $('<button class="close btn-close-editor" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x"></i>')
             }
             dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {
@@ -1028,6 +1029,11 @@ export const dataTableInit = options => {
             shown = true;
             fullyShown = false;
 
+            var modalContainer = "body";
+            var isInModalDialog = false;
+            if ($(dte.TABLE.header()[0]).parents(".modal-body-content").length > 0) isInModalDialog = true;
+            //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
+            if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
@@ -1044,9 +1050,16 @@ export const dataTableInit = options => {
                 .one('hidden', function () {
                     shown = false;
                 })
-                .appendTo( 'body' );
+                .appendTo( modalContainer );
 
             modal.show();
+            window.modal = modal;
+
+            if (isInModalDialog) {
+                var backdrop = modal._backdrop._element;
+                //move backdrop element into modelContainer
+                $(backdrop).appendTo(modalContainer);
+            }
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {
@@ -1104,11 +1117,14 @@ export const dataTableInit = options => {
         let originalDateTimeSetFunction = $.fn.dataTable.Editor.fieldTypes.datetime.set;
         $.fn.dataTable.Editor.fieldTypes.datetime.set = function (conf, val) {
             val = ""+val;
-            //console.log("Fixed typeof val=", typeof val, " val=", val);
+
+            if ("dt-format-duration" === conf.renderFormat) {
+                conf._input.val(dtConfig.renderDuration(val, "editor", null, null));
+                return;
+            }
+
             originalDateTimeSetFunction(conf, val);
         }
-
-
 
         //datovy typ JSON a Datatable
         //console.log("Idem inicializovat JSON, TABLE=", TABLE, " DATA=", DATA);
@@ -1528,7 +1544,7 @@ export const dataTableInit = options => {
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
-                        tabsHtml += '<li class="nav-item' + classNameAppend + '">';
+                        tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
                         tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
@@ -1777,7 +1793,8 @@ export const dataTableInit = options => {
                     $('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]').tooltip({
                         placement: 'top',
                         trigger: 'hover',
-                        html: true
+                        html: true,
+                        delay: { "show": 300, "hide": 0 }
                     });
 
                     $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
@@ -1796,7 +1813,8 @@ export const dataTableInit = options => {
                 $('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]').tooltip({
                     placement: 'top',
                     trigger: 'hover',
-                    html: true
+                    html: true,
+                    delay: { "show": 300, "hide": 0 }
                 });
 
                 if (editorWasOpened === false) {
@@ -2066,13 +2084,16 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true"/>
+                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true" aria-label="${WJ.translate('datatables.button.celledit.js')}" />
                         <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
                 className: 'custom-control form-switch buttons-select-cel',
                 attr: {
-                    title: WJ.translate('datatables.button.celledit.js'),
+                    title: "", //set to empty because arua is on input checkbox
+                    "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
-                    "data-dtbtn": "celledit"
+                    "data-dtbtn": "celledit",
+                    "aria-label": "",
+                    "aria-controls": ""
                 },
                 action: function (e, node, el) {
                     //console.log("action, el=", el, "disbled=", $(el).hasClass("is-disabled"));
@@ -2502,7 +2523,8 @@ export const dataTableInit = options => {
 
                     $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
                         placement: 'top',
-                        trigger: 'hover'
+                        trigger: 'hover',
+                        delay: { "show": 300, "hide": 0 }
                     });
 
                     $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
@@ -2670,6 +2692,13 @@ export const dataTableInit = options => {
                     type: "num",
                     render: function (td, type, rowData, row) {
                         return dtConfig.renderDate(td, type, rowData, row, "HH:mm:ss");
+                    }
+                },
+                {
+                    targets: "dt-format-duration",
+                    type: "num",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderDuration(td, type, rowData, row);
                     }
                 },
                 {
@@ -3679,8 +3708,28 @@ export const dataTableInit = options => {
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
-        new bootstrap.Tooltip($(".btn-export-dialog"));
-        new bootstrap.Tooltip($(".btn-import-dialog"));
+        var $exportButtons = $(".btn-export-dialog");
+        if ($exportButtons.length > 0) {
+            $exportButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for export buttons
+                    console.error("Failed to initialize tooltip for .btn-export-dialog:", e);
+                }
+            });
+        }
+        var $importButtons = $(".btn-import-dialog");
+        if ($importButtons.length > 0) {
+            $importButtons.each(function(index, element) {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    // Log unexpected initialization errors for import buttons
+                    console.error("Failed to initialize tooltip for .btn-import-dialog:", e);
+                }
+            });
+        }
     }, 500);
 
     //bindni upozornenie o konflikte editacie zaznamu viacerymi pouzivatelmi
@@ -3759,7 +3808,8 @@ export const dataTableInit = options => {
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility span[data-toggle*="tooltip"]').tooltip({
                 placement: 'top',
                 trigger: 'hover',
-                html: true
+                html: true,
+                delay: { "show": 300, "hide": 0 }
             });
 
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').wrapAll( "<div class='colvisbtn_wrapper' />");
@@ -3798,6 +3848,7 @@ export const dataTableInit = options => {
     dtWJ.bindOnResize(TABLE, DATA);
     dtWJ.bindDialogDragDrop(TABLE);
     dtWJ.bindColumnReorder(TABLE);
+    dtWJ.iframeHideParentFooterOnEditorOpen(TABLE);
 
     TABLE.setAjaxUrl = function(newUrl) {
         try {

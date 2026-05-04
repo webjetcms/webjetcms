@@ -1,9 +1,9 @@
 package sk.iway.iwcm.components.forms;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -19,6 +19,9 @@ public class FormsEntity extends FormsEntityBasic {
         title = "components.form.form_type.title", tab = "basic", sortAfter = "formName"
     )
     private String formType;
+
+    @Column(name = "duration")
+    private Long duration;
 
     @Transient
     @DataTableColumnNested
@@ -38,5 +41,13 @@ public class FormsEntity extends FormsEntityBasic {
 
     public void setFormType(String formType) {
         this.formType = formType;
+    }
+
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
     }
 }

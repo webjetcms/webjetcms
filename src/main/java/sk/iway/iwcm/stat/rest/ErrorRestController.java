@@ -5,11 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.support.MutableSortDefinition;
-import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+
+import sk.iway.iwcm.system.datatable.PagedListHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,17 +45,7 @@ public class ErrorRestController extends DatatableRestControllerV2<ErrorDTO, Lon
 
         List<ErrorDTO> items = columnsToItems(StatTableDB.getErrorPages(Constants.getInt("datatablesExportMaxRows", 1000), filter.getDateFrom(), filter.getDateTo(), filter.getUrl(), getRequest().getParameter("searchErrorMessage"), getRequest().getParameter("searchCount"), filter.getFilterBotsOut()));
 
-        PagedListHolder<ErrorDTO> holder = new PagedListHolder<>(items);
-
-        // Set the sort order on the PagedListHolder
-        if (pageable.getSort() != null) {
-            Sort sort = pageable.getSort();
-            holder.setSort(new MutableSortDefinition(sort.iterator().next().getProperty(), true, sort.iterator().next().getDirection() == Sort.Direction.ASC));
-            holder.resort();
-        }
-
-        holder.setPageSize(pageable.getPageSize());
-        holder.setPage(pageable.getPageNumber());
+        PagedListHolder<ErrorDTO> holder = new PagedListHolder<>(items, pageable);
 
         DatatablePageImpl<ErrorDTO> pageImpl = new DatatablePageImpl<>(holder.getPageList(), pageable, items.size());
 

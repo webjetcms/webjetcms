@@ -1,13 +1,14 @@
-# Customising applications
+# Customizing apps
 
-If you need to modify an existing application (e.g. a banner), never do it directly in the original JSP file, as your changes may be overwritten when you update.
+If you need to modify an existing application (e.g. a banner), never do it directly in the original JSP file, as your changes may be overwritten when updated.
 
-To modify a file `/components/search/search.jsp`, first make a copy of the file named `/components/INSTALL_NAME/search/search.jsp`.
+To modify the file `/components/search/search.jsp`, first make a copy of the file named `/components/INSTALL_NAME/search/search.jsp`.
 
-Value `INSTALL_NAME` is the name of the installation, in the configuration in the item named `installName`. You can make modifications to the file without worrying about overwriting the file when updating. In the page can remain `!INCLUDE(...)!` of the original application, WebJET performs an automatic path replacement:
+The value `INSTALL_NAME` is the installation name, in the configuration in the item named `installName`. You can make modifications in the file created in this way without worrying about overwriting the file during the update. The page can remain `!INCLUDE(...)!` of the original application, WebJET will perform automatic path replacement:
+
 - `/components/INSTALL_NAME/search/search.jsp`
 - `/components/search/search.jsp`
 
-The search for the correct file will be done automatically. The first one found according to the order given will be used.
+The search for the correct file will be done automatically. The first one found in the specified order will be used.
 
-Similarly for Spring applications in the folder `/apps/INSTALL_NAME/`, e.g. `/apps/file-archive/mvc/file-archive.html` copy to `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` and adjust to your needs.
+It works similarly for Spring applications in the `/apps/INSTALL_NAME/` folder, e.g. copy `/apps/file-archive/mvc/file-archive.html` to `/apps/INSTALL_NAME/file-archive/mvc/file-archive.html` and modify according to your needs.

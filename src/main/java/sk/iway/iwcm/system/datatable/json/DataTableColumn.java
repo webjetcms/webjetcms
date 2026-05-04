@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Transient;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -490,6 +490,17 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("timehms");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.DURATION) {
+            renderFormat = "dt-format-duration";
+            addClassName("dt-style-date");
+            addClassName("dt-style-time");
+
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("duration");
         }
 
         if (dataTableColumnType == DataTableColumnType.OPEN_EDITOR) {

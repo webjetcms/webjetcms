@@ -1,6 +1,6 @@
 package sk.iway.iwcm.doc;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Interface for custom navbar implementations.

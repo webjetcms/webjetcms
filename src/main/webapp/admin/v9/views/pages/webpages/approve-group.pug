@@ -1,0 +1,64 @@
+extends ../../partials/layout
+
+block content
+
+    .approve-group-page.pt-3
+
+        .alert.alert-danger(data-th-if="${errMsg!=null}")
+            span(data-th-utext="${errMsg}") After save ERR message
+
+        .alert.alert-success(data-th-if="${succMsg!=null}")
+            span(data-th-utext="${succMsg}") After save SUCC message
+
+        div(data-th-if="${form!=null}")
+            form.approve-group-footer(method="post", data-th-action="@{/admin/v9/webpages/approve-group/}", data-th-object="${form}", enctype="multipart/form-data")
+
+                .form-group.pb-3
+                    label.form-label(for="note" data-th-text="#{approve.reject.notes}")
+                    textarea.form-control(
+                        id="note",
+                        data-th-field="*{note}"
+                    )
+
+                input.form-control(
+                    type="hidden",
+                    id="approveAction",
+                    data-th-field="*{approveAction}"
+                )
+
+                input.form-control(
+                    type="hidden",
+                    id="scheduleId",
+                    data-th-field="*{scheduleId}"
+                )
+
+                button.btn.btn-primary(type="submit", hidden)
+
+                .form-group.mb-3.text-end.hide-in-iframe
+                    button.btn.btn-success.me-2(
+                        type="button",
+                        onclick="submitForm('approve')"
+                        data-th-text="#{approve.page.approve}"
+                    ) APPROVE
+                    button.btn.btn-danger(
+                        type="button",
+                        onclick="submitForm('reject')"
+                        data-th-text="#{approve.page.reject}"
+                    ) REJECT
+
+        .pb-3.approve-group-diff(data-th-if="${diff!=null}")
+            label.form-label(data-th-if="${diffLabel!=null}" for="diff" data-th-text="${diffLabel}")
+            div(
+                id="diff"
+                data-th-utext="${diff}"
+            )
+
+    script.
+        function submitForm(status) {
+            document.getElementById('approveAction').value = status;
+            document.querySelector("button[type='submit']").click();
+        }
+        window.domReady.add(function () {
+            WJ.selectMenuItem("/admin/v9/webpages/web-pages-list/");
+            WJ.setTitle("[[\#{approve.group.page.title}]]");
+        });

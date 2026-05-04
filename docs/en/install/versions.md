@@ -1,8 +1,8 @@
-# Assumptions and versions
+# Prerequisites and versions
 
-WebJET requires `Java 17` a `Tomcat 9`.
+The current version of WebJET CMS requires `Java 17` and `Tomcat 11`.
 
-The basic project in gradle format can be found at [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
+The base project in gradle format can be found on [github webjetcms/basecms](https://github.com/webjetcms/basecms).
 
 In gradle projects, just specify the version in build.gradle:
 
@@ -12,64 +12,68 @@ ext {
 }
 ```
 
-Currently there are the following versions of WebJET:
-- `2026.0-jakarta` - Stabilized version 2026.0 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
-- `2026.0` - Stabilized version 2026.0, no daily changes are added.
-- `2025.0-jakarta-SNAPSHOT` - stabilized version 2025.52 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
-- `2025.0-SNAPSHOT` - stabilized version 2025.52, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
-- `2025.0.52` - Stabilized version 2025.0.52 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
-- `2025.0.50` - Stabilized version 2025.0.50 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
-- `2025.40-jakarta` - stabilized version 2025.40 for Tomcat 10/11 application server using `Jakarta namespace`, no daily shifts are added to it.
-- `2025.40` - Stabilized version 2025.40, no daily changes are added.
-- `2025.0.40` - Stabilized version 2025.0.40 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
-- `2025.18` - Stabilized version 2025.18, no daily changes are added.
-- `2025.0.23` - Stabilized version 2025.0.23 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
-- `2025.0` - Stabilized version 2025.0, no daily changes are added.
-- `2024.52` - Stabilized version 2024.52, no daily changes are added.
-- `2024.0.52` - Stabilized version 2024.0.52 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.0.47` - Stabilized version 2024.0.47 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.40` - Stabilized version 2024.40, no daily changes are added.
-- `2024.0-SNAPSHOT` - regularly updated version from the master repository version 2024.0 compiled with Java version 17.
-- `2024.18` - Stabilized version 2024.18, no daily changes are added.
-- `2024.0.34` - Stabilized version 2024.0.34 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.0.21` - Stabilized version 2024.0.21 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.0.17` - Stabilized version 2024.0.17 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.0.9` - Stabilized version 2024.0.9 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.0` - Stabilized version 2024.0 (technically identical to 2023.52-java17), no daily changes added, compiled with Java version 17.
-- `2023.52-java17` - Stabilized version 2023.52, no daily changes added, compiled with Java version 17.
-- `2023.52` - Stabilized version 2023.52, no daily changes are added.
-- `2023.40-SNAPSHOT-java17` - regularly updated version from the master repository version 2023.40 compiled with Java version 17.
-- `2023.40-SNAPSHOT` - regularly updated version from the master repository version 2023.40.
-- `2023.40` - Stabilized version 2023.40, no daily changes are added.
-- `2023.18-SNAPSHOT-java17` - regularly updated version from the master repository version 2023.18 compiled with Java version 17.
-- `2023.18-SNAPSHOT` - regularly updated version from the master repository version 2023.18.
-- `2023.18` - Stabilized version 2023.18, no daily changes are added.
-- `2023.0-SNAPSHOT` - regularly updated version from the master repository version 2023.0, due to API changes this version ends before the release of version 2023.18 to avoid unexpected API changes in projects.
-- `2023.0` - Stabilized version 2023.0, no daily changes are added.
-- `2022.0-SNAPSHOT` - regularly updated version from the master repository.
-- `2022.52` - stabilized version 2022.52, no daily changes are added.
-- `2022.40` - stabilized version 2022.40, no daily changes are added.
-- `2022.18` - stabilized version 2022.18, no daily changes are added.
-- `2022.0` - Stabilized version 2022.0, no daily changes are added.
-- `2021.0-SNAPSHOT` - regularly updated version from the master repository.
-- `2021.52` - Stabilized version 2021.52, no daily changes are added.
-- `2021.40` - Stabilized version 2021.40, no daily changes are added.
-- `2021.13` - Stabilized version 2021.13, no daily changes are added.
+Currently, the following versions of WebJET exist:
 
-For version numbers:
-- `YEAR.0.x` - Corrected version, **no new properties are added to it**, during the year it corrects the bugs found in WebJET CMS. The libraries used are updated only within `minor` Versions. If a library patch requires a change in `major` version cannot be incorporated into this version as it may carry the risk of changes in `API`.
-- `YEAR.0-SNAPSHOT` - development version which **includes new features** and bug fixes from version `YEAR.0.x`.
-- `YEAR.WEEK` - **stabilized version** from that week which is created from `SNAPSHOT` versions after successful multiple testing. Fixes for other bugs will be incorporated into the next version, no patch will be created `YEAR.WEEK.x` but the new `YEAR.WEEK` with a new number. In case of a bug in such a version, it is therefore necessary to count on moving to the next stable version `YEAR.WEEK` or to `YEAR.0-SNAPSHOT` version.
+- `2026.0-jakarta-SNAPSHOT` - ​​regularly updated version from the main repository using `Jakarta namespace`. Requires Tomcat 11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
+- `2026.0-SNAPSHOT` - ​​updated version from `hotfix/2026.0` with fixes from version `2026.0` for Tomcat9/Java 17.
+- `2026.0-jakarta` - ​​stabilized version 2026.0 for the Tomcat 11 application server using `Jakarta namespace`, no daily changes are added to it.
+- `2026.0` - ​​stabilized version 2026.0, no daily changes are added to it.
+- `2025.0-jakarta-SNAPSHOT` - ​​stable version 2025.52 using `Jakarta namespace`. Requires Tomcat 10/11, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
+- `2025.0-SNAPSHOT` - ​​stabilized version 2025.52, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.0.52` - ​​stabilized version 2025.0.52 with bug fixes compared to version 2025.0 (without adding improvements from the SNAPSHOT version).
+- `2025.0.50` - ​​stabilized version 2025.0.50 with bug fixes compared to version 2025.0 (without adding improvements from the SNAPSHOT version).
+- `2025.40-jakarta` - ​​stabilized version 2025.40 for the Tomcat 10/11 application server using `Jakarta namespace`, no daily changes are added to it.
+- `2025.40` - ​​stabilized version 2025.40, no daily changes are added to it.
+- `2025.0.40` - ​​stabilized version 2025.0.40 with bug fixes compared to version 2025.0 (without adding improvements from the SNAPSHOT version).
+- `2025.18` - ​​stabilized version 2025.18, no daily changes are added to it.
+- `2025.0.23` - ​​stabilized version 2025.0.23 with bug fixes compared to version 2025.0 (without adding improvements from the SNAPSHOT version).
+- `2025.0` - ​​stabilized version 2025.0, no daily changes are added to it.
+- `2024.52` - ​​stabilized version 2024.52, no daily changes are added to it.
+- `2024.0.52` - ​​stabilized version 2024.0.52 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.0.47` - ​​stabilized version 2024.0.47 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.40` - ​​stabilized version 2024.40, no daily changes are added to it.
+- `2024.0-SNAPSHOT` - ​​regularly updated version from the master repository version 2024.0 compiled with Java version 17.
+- `2024.18` - ​​stabilized version 2024.18, no daily changes are added to it.
+- `2024.0.34` - ​​stabilized version 2024.0.34 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.0.21` - ​​stabilized version 2024.0.21 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.0.17` - ​​stabilized version 2024.0.17 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.0.9` - ​​stabilized version 2024.0.9 with bug fixes compared to version 2024.0 (without adding improvements from the SNAPSHOT version).
+- `2024.0` - ​​stabilized version 2024.0 (technically identical to 2023.52-java17), no daily changes added, compiled with Java version 17.
+- `2023.52-java17` - ​​stabilized version 2023.52, no daily changes added, compiled with Java version 17.
+- `2023.52` - ​​stabilized version 2023.52, no daily changes are added to it.
+- `2023.40-SNAPSHOT-java17` - ​​regularly updated version from the master repository version 2023.40 compiled with Java version 17.
+- `2023.40-SNAPSHOT` - ​​regularly updated version from the master repository version 2023.40.
+- `2023.40` - ​​stabilized version 2023.40, no daily changes are added to it.
+- `2023.18-SNAPSHOT-java17` - ​​regularly updated version from the master repository version 2023.18 compiled with Java version 17.
+- `2023.18-SNAPSHOT` - ​​regularly updated version from the master repository version 2023.18.
+- `2023.18` - ​​stabilized version 2023.18, no daily changes are added to it.
+- `2023.0-SNAPSHOT` - ​​regularly updated version from the master repository version 2023.0, due to API changes this version ends before the release of version 2023.18 to avoid unexpected API changes in projects.
+- `2023.0` - ​​stabilized version 2023.0, no daily changes are added to it.
+- `2022.0-SNAPSHOT` - ​​regularly updated version from the master repository.
+- `2022.52` - ​​stabilized version 2022.52, no daily changes are added to it.
+- `2022.40` - ​​stabilized version 2022.40, no daily changes are added to it.
+- `2022.18` - ​​stabilized version 2022.18, no daily changes are added to it.
+- `2022.0` - ​​stabilized version 2022.0, no daily changes are added to it.
+- `2021.0-SNAPSHOT` - ​​regularly updated version from the master repository.
+- `2021.52` - ​​stabilized version 2021.52, no daily changes are added to it.
+- `2021.40` - ​​stabilized version 2021.40, no daily changes are added to it.
+- `2021.13` - ​​stabilized version 2021.13, no daily changes are added to it.
 
-View Full Version `YEAR.0.x` is therefore not fundamentally changed, it contains corrections of errors (unless the correction requires a fundamental change). It is suitable for use by a customer who wants to have a stable version of WebJET without adding new features during the year.
+The following applies to version numbers:
 
-But at the same time, the version does not have to be `YEAR.0.x` the safest. If the library used in WebJET needs to be updated and it contains major changes, we cannot make this change in `YEAR.0.x` version, as it would break compatibility.
+- `YEAR.0.x` - ​​a correction version, **no new features**, during the year, errors found in WebJET CMS are corrected. Used libraries are updated only within the `minor` version, if necessary. If a library correction requires a change in the `major` version, it cannot be incorporated into this version, as this may carry the risk of changes in `API`.
+- `YEAR.0-SNAPSHOT` - ​​development version which **contains new features** and bug fixes from version `YEAR.0.x`.
+- `YEAR.WEEK` - ​​**stabilized version** from a given week that is created from the `SNAPSHOT` version after successful multiple testing. Fixes for other bugs will be incorporated into the next version, not a fix `YEAR.WEEK.x` but a new `YEAR.WEEK` with a new number will be created. In the event of an error in such a version, it is therefore necessary to count on a transition to the next stable version `YEAR.WEEK` or to the `YEAR.0-SNAPSHOT` version.
 
-It is therefore true that `YEAR.0.x` Is **most stable** in terms of changes and `YEAR.0-SNAPSHOT` Is **safest** in terms of vulnerabilities.
+The `YEAR.0.x` version is therefore not fundamentally changed, it contains bug fixes (if the fix does not require a fundamental change). It is suitable for use by a customer who wants to have a stable version of WebJET without adding new features during the year.
 
-## Changes when moving to Tomcat 9.0.104+
+At the same time, the `YEAR.0.x` version may not be the most secure. If it is necessary to update a library used in WebJET and it contains major changes, we cannot make this change in the `YEAR.0.x` version, because compatibility would be broken.
 
-V [Tomcat from version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) the control of the number of parameters is changed at `multipart` HTTP request. It is therefore necessary to set/increase the parameter `maxPartCount` at `<Connector` elements with file `tomcat/conf/server.xml` to a value of at least 100, example:
+So `YEAR.0.x` is **the most stable** in terms of changes and `YEAR.0-SNAPSHOT` is **the most secure** in terms of vulnerabilities.
+
+## Changes when migrating to Tomcat 9.0.104+
+
+In [Tomcat since version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) the parameter count check for `multipart` HTTP request has been changed. Therefore, it is necessary to set/increase the parameter `maxPartCount` on the `<Connector` element with the file `tomcat/conf/server.xml` to a value of at least 100, example:
 
 ```xml
     <Connector port="8080" protocol="HTTP/1.1"
@@ -81,10 +85,11 @@ V [Tomcat from version 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/
     />
 ```
 
-## Changes when switching to Jakarta version
+## Changes when switching to the Jakarta version
 
-Version for `jakarta namespace`, requires Tomcat 10/11 application server, uses Spring version 7. Breakthrough changes:
-- URLs - Spring has introduced exact matches for URLs, if a REST service defines a URL with a slash at the end, it must be used as such. There is a difference in the URL `/admin/rest/service` a `/admin/rest/service/`.
+Version intended for `jakarta namespace`, requires Tomcat 11 application server, uses Spring version 7. Breaking changes:
+
+- URLs - Spring has implemented exact matches for URLs, if a REST service defines a URL with a trailing slash, it must be used as such. There is a difference between URLs `/admin/rest/service` and `/admin/rest/service/`.
 - In Spring DATA repositories for `IN/NOTIN query` it is necessary to add `@Query`, otherwise the SQL will not be created correctly, example:
 
 ```java
@@ -100,29 +105,25 @@ Version for `jakarta namespace`, requires Tomcat 10/11 application server, uses 
   List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
 ```
 
-To search the code, you can use the file search `*Repository.java` and search for a regular expression `\(.*List[^)]*\)`, `\(.*Long[\][^)]*\)`, `\(.*Integer[\][^)]*\)`. We recommend to execute the code, display the error in the log and use the generated SQL to `Query` Values. The only problem is the type checking, where `EclipseLink` can't identify that it should check the field/list and not directly the data type.
+To search in the code, you can use the search in files `*Repository.java` and search for the regular expression `\(.*List[^)]*\)`, `\(.*Long\[\][^)]*\)`, `\(.*Integer\[\][^)]*\)`. We recommend executing the code, displaying an error in the log, and using the generated SQL to `Query` value. The only problem is the type checking, where `EclipseLink` cannot identify that it is supposed to check an array/list and not directly a data type.
 
-V `build.gradle` need to be updated `gretty` configuration and add compilation settings `options.compilerArgs += ['-parameters']`:
+In `build.gradle` you need to update the `gretty` configuration and add the `options.compilerArgs += ['-parameters']` compilation setting:
 
 ```gradle
 plugins {
-    id 'org.gretty' version "4.1.6"
+    id 'org.gretty' version "5.0.1"
 }
 
 configurations {
-    grettyRunnerTomcat10 {
-        // gretty uses old version of commons-io
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
+    grettyRunnerTomcat11 {
     }
 }
 
 gretty {
-    servletContainer = 'tomcat10'
+    servletContainer = 'tomcat11'
 }
 
 tasks.withType(JavaCompile) {
-    options.failOnError = false
     //prevent warning messages during compile
     options.compilerArgs += ['-Xlint:none']
     //needed for Spring
@@ -130,9 +131,20 @@ tasks.withType(JavaCompile) {
 }
 ```
 
-## Changes in the transition to 2025.0-SNAPSHOT
+add an exception for `log4j-core` to the `configurations` element:
 
-View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), you therefore need to add the configuration to your `build.gradle` file:
+```gradle
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+```
+
+## Changes when moving to 2025.0-SNAPSHOT
+
+Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), so you need to add the configuration to your `build.gradle` file:
 
 ```gradle
 repositories {
@@ -155,17 +167,18 @@ repositories {
 }
 ```
 
-Unfortunately GitHub Packages are not publicly available, so you need to set up a login `gpr.user` a `gpr.api-key` in the file `gradle.properties` or via `ENV` Variables. We will provide login details on request.
+Unfortunately, GitHub Packages are not publicly available, so you need to set the credentials `gpr.user` and `gpr.api-key` in the `gradle.properties` file or via the `ENV` variables. We will provide you with the credentials upon request.
 
-!> **Warning:** modified initialization of Spring and JPA:
-- JPA entities are in `package sk.iway.INSTALL-NAME` do not initialize automatically, a gradual transition to Spring DATA is assumed. If you need `@Entity` initialize set configuration variable `jpaAddPackages` to the necessary value - for example `sk.iway.INSTALL-NAME`. Only classes containing an annotation are initialized `@Entity` or `@Converter`.
-- In `web.xml` initialization is no longer required `Apache Struts`, delete the entire `<servlet>` a section containing `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` Containing `<servlet-name>action</servlet-name>`.
-- Modified Spring initialization order - initialization of WebJET classes is done before customer classes `SpringConfig`.
-- Modified initialization `Swagger` - if the configuration variable is not set `swaggerEnabled` to the value of `true` nor does it perform a scan of Java classes at startup.
+!> **Warning:** modified Spring and JPA initialization:
 
-## Changes in the transition to 2024.0-SNAPSHOT
+- JPA entities are not initialized automatically in `package sk.iway.INSTALL-NAME`, a gradual transition to Spring DATA is expected. If you need to initialize `@Entity`, set the configuration variable `jpaAddPackages` to the required value - for example `sk.iway.INSTALL-NAME`. Only classes containing the annotation `@Entity` or `@Converter` are initialized.
+- In `web.xml`, the initialization of `Apache Struts` is no longer needed, delete the entire `<servlet>` section containing `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` and `<servlet-mapping>` containing `<servlet-name>action</servlet-name>`.
+- Adjusted Spring initialization order - WebJET class initialization is performed before customer classes `SpringConfig`.
+- Modified initialization `Swagger` - ​​if the configuration variable `swaggerEnabled` is not set to the value `true` or a Java class scan is not performed at startup.
 
-Similarly for [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms) version needs to be added to the `dependencies` block part `implementation("sk.iway:webjet:${webjetVersion}:libs")`:
+## Changes when moving to 2024.0-SNAPSHOT
+
+Similar to the [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms) version, you need to add the `implementation("sk.iway:webjet:${webjetVersion}:libs")` section to the `dependencies` block:
 
 ```gradle
 dependencies {
@@ -176,7 +189,7 @@ dependencies {
 }
 ```
 
-The following libraries that are not used in the standard installation have been deleted, if your project needs them, please add them to your `build.gradle` file:
+The following libraries have been removed, which are not used in the standard installation, if your project needs them, add them to your `build.gradle` file:
 
 ```gradle
 dependencies {
@@ -206,16 +219,16 @@ dependencies {
 }
 ```
 
-In the section `configurations` delete the expressions:
+In the `configurations` section, delete the expressions:
 
 ```gradle
 all*.exclude group: 'xml-apis', module: 'xml-apis'
 all*.exclude group: 'javax.xml.stream', module: 'stax-api'
 ```
 
-## Changes when moving to GitHub/Maven Central version
+## Changes when switching to GitHub/Maven Central version
 
-- V [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms) the name of the packages is changed from `sk.iway` at `com.webjetcms` and a section is added `libs` which combines all the original `sk.iway` type dependencies `struts,daisydiff,jtidy`. V `build.gradle` edit:
+- In [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms) the package name is changed from `sk.iway` to `com.webjetcms` and a `libs` part is added, which combines all the original `sk.iway` dependencies of type `struts,daisydiff,jtidy`. In `build.gradle`, edit:
 
 ```gradle
 repositories {
@@ -241,23 +254,24 @@ dependencies {
 }
 ```
 
-## Changes in the transition to 2023.18-SNAPSHOT/2023.40
-- In your project, delete the file `src/main/webapp/WEB-INF/struts-config.xml` to use the current WebJET file (from the jar file).
+## Changes when migrating to 2023.18-SNAPSHOT/2023.40
+
+- In your project, delete the file `src/main/webapp/WEB-INF/struts-config.xml` to use the current file from WebJET (from the jar file).
 
 ## Changes when moving to Java 17
 
-There are a few changes that need to be made to your project when moving to Java version 17. Project [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) has prepared `branch`, `release/webjet-2023-18-java17` with a sample finish. V [this commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535) the complete list of changes is visible.
+When upgrading to Java version 17, you need to make a few changes to your project. The [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) project has `branch`, ```release/webjet-2023-18-java17``` ready with sample edits. A complete list of changes can be seen in [this commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535).
 
 The simplified procedure is as follows:
 
-Update `gradle-wrapper` to version 8 (from the original version 6), we recommend upgrading to version 7 first and then to version 8 (upgrading directly to version 8 may result in an error):
+Updating `gradle-wrapper` to version 8 (from the original 6), we recommend first updating to version 7 and then to 8 (upgrading directly to version 8 may result in an error):
 
 ```sh
 gradlew.bat wrapper --gradle-version 7.4.2
 gradlew.bat wrapper --gradle-version 8.1.1
 ```
 
-After updating the gradle, you will not be able to compile the project, you also need to edit the file `build.gradle`, in which a number of `plugins`. An important change is the transition of WebJET CMS in version `java17` to the standard version `eclipselink` with the WebJET primary key generator setup.
+After updating gradle, you will not be able to compile the project, you also need to edit the ```build.gradle``` file, in which several ```plugins``` are also updated. An important change is the transition of WebJET CMS in version ```java17``` to the standard version ```eclipselink``` with the WebJET primary key generator setting.
 
 ```groovy
 plugins {
@@ -308,9 +322,9 @@ gretty {
 }
 ```
 
-Then we recommend to restart your development environment, in case of VS Code perform the action `Java: Clean Java Language Server Workspace` to completely delete temporary files.
+We then recommend restarting your development environment, or in the case of VS Code, performing the ```Java: Clean Java Language Server Workspace``` action to completely delete temporary files.
 
-If you are running multiple installations of WebJET on a single Tomcat server, it is possible that older versions may not be fully compatible with Java 17:
+If you are running multiple WebJET installations on a single Tomcat server, it is possible that older versions will not be fully compatible with Java 17. For errors like:
 
 ```txt
 [ERROR] ContextLoader - Context initialization failed <java.lang.IllegalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.SpringSecurityConf>java.lang.Ill
@@ -319,15 +333,15 @@ egalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.
 Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protected final java.lang.Class java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain) throws java.lang.ClassFormatError accessible: module java.base does not "opens java.lang" to unnamed module @4c6e3350
 ```
 
-set the following for Tomcat `JAVA_OPTS`:
+set the following for Tomcat ```JAVA_OPTS```:
 
 ```txt
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
 ```
 
-### Update from Java version 8
+### Updating from Java version 8
 
-If you were still running Tomcat with Java version 8 you may have problems with missing libraries (these are also needed for Java 11). If you get an error in the log `java.lang.NoClassDefFoundError: javax/activation/DataSource`:
+If you were running Tomcat with Java version 8, you may encounter problems with missing libraries (they are also required for Java 11). If you see the error ```java.lang.NoClassDefFoundError: javax/activation/DataSource``` in the log:
 
 ```txt
 java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[...].StandardContext[]]
@@ -335,14 +349,14 @@ java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException:
     Caused by: java.lang.NoClassDefFoundError: javax/activation/DataSource
 ```
 
-it is necessary to add to each installation of WebJET CMS to the folder `WEB-INF/lib` copied libraries from [of this ZIP archive](lib-java11.zip) and delete files (if any):
+It is necessary to copy the libraries from [this ZIP archive](lib-java11.zip) to each WebJET CMS installation into the ```WEB-INF/lib``` folder and delete the files (if they exist):
 
 ```txt
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
 
-If you have been using the WebJET version `8.0-8.6` - older than `08/2019`, or you get the following error on startup:
+If you were using WebJET version `8.0-8.6` - ​​older than `08/2019`, or you will see the following error at startup:
 
 ```txt
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
@@ -359,17 +373,17 @@ java.lang.NullPointerException
 	at sk.iway.iwcm.system.jpa.WebJETPersistenceProvider.createEntityManagerFactory(WebJETPersistenceProvider.java:32)
 ```
 
-the library needs to be updated `eclipselink` and the Java initialization class, download the update archive [jpa-wj82.zip](jpa-wj82.zip) and unzip it in the root folder of the web application. Overwrite the file `eclipselink.jar` a `WebJETJavaSECMPInitializer.class`.
+It is necessary to update the `eclipselink` library and the Java initialization class, download the update archive [jpa-wj82.zip](jpa-wj82.zip) and extract it in the root folder of the web application. Overwrite the `eclipselink.jar` and `WebJETJavaSECMPInitializer.class` files.
 
-## Changes on update to 2023.18
+## Changes in the 2023.18 update
 
-View Full Version `2023.18` changes the API and the way distribution archives are generated. The main changes to the API are in the use of generic objects of type `List/Map` instead of specific implementations `ArrayList/Hashtable`. Therefore, you need to recompile your classes and modify the JSP files.
+Version ```2023.18``` changes the API and the way distribution archives are generated. The main API changes are the use of generic objects of type ```List/Map``` instead of specific implementations ```ArrayList/Hashtable```. Therefore, you need to recompile your classes and modify your JSP files.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/sfu5b_S7Q8Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/sfu5b_S7Q8Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-V `build.gradle` it is necessary to delete the part:
+In ```build.gradle``` it is necessary to delete the part:
 
 ```
     implementation("sk.iway:webjet:${webjetVersion}:struts")
@@ -377,21 +391,21 @@ V `build.gradle` it is necessary to delete the part:
     implementation("sk.iway:webjet:${webjetVersion}:jtidy")
 ```
 
-Also check the file `src/main/resources/logback.xml` in which the date and time format in `ConsoleAppender` (deleted `,SSS`, if you need to log even hundredths of a second use `.SSS`):
+Also check the file `src/main/resources/logback.xml` where you need to adjust the date and time format in `ConsoleAppender` (deleted `,SSS`, if you need to log hundredths of a second, use `.SSS`):
 
 ```xml
     <pattern>[%X{installName}][%c{1}][%p][%X{userId}] %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
 ```
 
-To simplify the update, you can use the script `/admin/update/update-2023-18.jsp` for checking and repairing JSP files. Customer Java classes need to be recompiled and bugs need to be fixed due to API changes.
+To simplify the upgrade, you can use the ```/admin/update/update-2023-18.jsp``` script to check and fix JSP files. Custom Java classes need to be recompiled and errors fixed due to API changes.
 
-Several Java classes and packages and the corresponding JSP file are cleaned/deleted. To support the deleted parts in projects, you need to either use the appropriate WebJET NET product or bring them into the project from the version 8 source code.
+Several Java classes and packages and the corresponding JSP files have been cleaned/deleted. To support the deleted parts in projects, it is necessary to use either the corresponding WebJET NET product or transfer them to the project from the version 8 source code.
 
-More information is in [the list of changes](../CHANGELOG-2023.md#removing-dependency-on-version-8).
+More information can be found in the [changelog](../CHANGELOG-2023.md#removing-dependencies-on-version-8).
 
-## Changes compared to version 8.8
+## Changes since version 8.8
 
-V `build.gradle` it is necessary to delete expressions compared to version 8.8:
+In ```build.gradle```, compared to version 8.8, it is necessary to delete the following expressions:
 
 ```gradle
     compile("sk.iway:webjet:${webjetVersion}:swagger-ui")
@@ -404,7 +418,7 @@ V `build.gradle` it is necessary to delete expressions compared to version 8.8:
     exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 ```
 
-and in the section `configurations` modify the exceptions as follows:
+and in the ```configurations``` section, edit the exceptions as follows:
 
 ```gradle
 configurations {
@@ -412,6 +426,7 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
     all*.exclude group: 'javax.xml.stream', module: 'stax-api'
@@ -427,7 +442,7 @@ configurations {
 }
 ```
 
-Due to the transition from `log4j` at `logback` delete file `src/main/resources/log4j.properties` and add the file `src/main/resources/logback.xml`:
+To move from ```log4j``` to ```logback```, delete the file ```src/main/resources/log4j.properties``` and add the file ```src/main/resources/logback.xml```:
 
 ```xml
 <configuration>
@@ -470,11 +485,11 @@ Due to the transition from `log4j` at `logback` delete file `src/main/resources/
 
 ## Editing the generated archive
 
-If you need to adjust for deployment `WAR` archive, you can use the following tips:
+If you need to modify the ```WAR``` archive for deployment, you can use the following tips:
 
-**Other web.xml file**
+**Another web.xml file**
 
-If you need to deploy a different `web.xml` file as you use during development you can take advantage of the options offered by [gradle war](https://docs.gradle.org/current/userguide/war_plugin.html) role in `build.gradle`:
+If you need to deploy a different ```web.xml``` file than you use during development, you can use the options offered by the [gradle war](https://docs.gradle.org/current/userguide/war_plugin.html) task in ```build.gradle```:
 
 ```
 war {
@@ -485,7 +500,7 @@ war {
 
 **Modified logging**
 
-WebJET writes log files using [slf4j/logback](https://logback.qos.ch/manual/configuration.html). This allows you to search for an additional configuration file, e.g. `logback-test.xml` to be used primarily (if any). In it you can have logging set up for development. In the file `logback.xml` you will be set for deployment. When creating `WAR` archive additional `logback-test.xml` v `build.gradle` you skip:
+WebJET writes log files using [slf4j/logback](https://logback.qos.ch/manual/configuration.html). This also allows you to search for an additional configuration file, e.g. ```logback-test.xml```, which will be used primarily (if it exists). In it you can have logging set up for development. In the file ```logback.xml``` you will have the settings for deployment. When creating the ```WAR``` archive, you omit the additional ```logback-test.xml``` in ```build.gradle```:
 
 ```
 war {
@@ -498,7 +513,7 @@ war {
 
 ### Setting up social login
 
-If you use social login (e.g. Facebook) in your project, you need to add a library to the project gradle `socialauth`. It is not included in the distribution by default because it is rarely used and also contains a potential vulnerability. You add the library in a file `build.gradle`:
+If you use social login (e.g. Facebook) in your project, you need to add the ```socialauth``` library to your gradle project. It is not included in the distribution by default because it is rarely used and contains a potential vulnerability. You add the library in the ```build.gradle``` file:
 
 ```gradle
 // https://mvnrepository.com/artifact/org.brickred/socialauth
@@ -507,7 +522,7 @@ implementation group: 'org.brickred', name: 'socialauth', version: '4.15'
 
 ### Separate web.xml file for deployment
 
-If you need a different web.xml file for version deployment to environments than for standard development, you can use the settings options [tasks of war](https://docs.gradle.org/current/userguide/war_plugin.html) v `build.gradle` where it is possible to attach a different `web.xml` File:
+If you need a different web.xml file for deployment versions on environments than for standard development, you can use the [war task](https://docs.gradle.org/current/userguide/war_plugin.html) settings in ```build.gradle``` where you can attach a different ```web.xml``` file:
 
 ```
 war {
@@ -518,16 +533,17 @@ war {
 
 ## Changes to the database schema
 
-New columns are added to several tables when version 2021 is enabled:
-- `_properties_` - column added `update_date`, column `id` set as `autoincrement`
-- `crontab` - added task\_name column
-- `_conf_prepared_` - set column `date_prepared` for the possibility to insert `NULL` Value.
+When you enable version 2021, new columns are added to several tables:
+
+- ```_properties_``` - ​​added column ```update_date```, column ```id``` set as ```autoincrement```
+- ```crontab``` - ​​added task_name column
+- ```_conf_prepared_``` - ​​set column ```date_prepared``` for the ability to insert ```NULL``` value.
 
 ### MariaDB - utf8mb4 and InnoDB support
 
-WebJET is used by default `storage engine InnoDB`, this is set in the configuration variable `mariaDbDefaultEngine`, which in WebJET 8 has the value `MyISAM` and in the new WebJET value `InnoDB`. When using `InnoDB` it is possible to use the charset `utf8mb4` with full support `uft8` coding (emoticons). By default `MyISAM` encoding is used in the tables `utf8`, which in MySQL/MariaDB is only 3 bytes and thus does not support all characters (different emoticons).
+WebJET uses ```storage engine InnoDB``` by default, this is set in the configuration variable ```mariaDbDefaultEngine```, which in WebJET 8 has the value ```MyISAM``` and in the new WebJET the value ```InnoDB```. When using ```InnoDB```, it is possible to use the charset ```utf8mb4``` with full support for ```uft8``` encoding (emoticons). By default, ```MyISAM``` tables use the encoding ```utf8```, which in MySQL/MariaDB is only 3 bytes and therefore does not support all characters (various emoticons).
 
-You can use the following SQL statements to create a new database schema and user:
+To create a new database schema and user, you can use the following SQL commands:
 
 ```sql
 CREATE DATABASE xxx_web DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci;
@@ -536,9 +552,9 @@ GRANT ALL PRIVILEGES ON xxx_web.* TO `xxx_web`@`%`;
 FLUSH PRIVILEGES;
 ```
 
-## Rollback of changes
+## Rollback changes
 
-Changes to the database schema are backwards compatible with version 8.8, by default there is no need to revert schema changes. However, if you need to revert the changes, use the following SQL statements:
+Changes to the database schema are backward compatible with version 8.8, by default there is no need to revert the schema changes. However, if you need to revert the changes, use the following SQL commands:
 
 MySQL / Microsoft SQL:
 

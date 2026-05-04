@@ -1,45 +1,46 @@
 # News templates
 
-News templates manage the design templates (HTML code) for the application [News](../../../redactor/apps/news/README.md). All actions are supported, including export and import. To access the section you need the right News - edit templates.
+News templates manage design templates (HTML code) for the [News] application (../../../redactor/apps/news/README.md). All actions are supported, including export and import. To access the section, you need the News - edit templates right.
 
 ![](news-temps-datatable.png)
 
-The section replaces the original way of defining news templates using translation keys that started with a prefix `news.template.`.
+The section replaces the original way of defining news templates using translation keys that started with the prefix `news.template.`.
 
 ![](news-temps-translation-keys.png)
 
-!> **Warning:** the first time you start **automatically** convert translation keys with prefix `news.template.` to the news templates in the table.
+!> **Warning:** upon first launch, translation keys with the prefix `news.template.` are **automatically** converted to news templates in the table.
 
 ## Editor
 
 The following fields are available:
-- **Template name** - mandatory field with **Unique** name of the news template
-- **Template image** - field for selecting the illustration image of the displayed news (for better orientation when selecting the template in the news application)
-- **Templating tool** - choice of templating tool (only supported so far `Velocity`)
-- **Insert classes into Velocity template** - field for inserting the name of the class that will be available in the template, e.g. to display the discussion it is necessary to add the class `sk.iway.iwcm.forum.ForumDB`. You can separate classes with a comma or a new line. In the code you can then use e.g. `$ForumDB.isActive($doc.getDocId())` to access the methods of the class.
+
+- **Template name** - required field with a **unique** name for the news template
+- **Template image** - field for selecting an illustrative image of the displayed news (for better orientation when selecting a template in the news application)
+- **Template tool** - select a template tool (only `Velocity` supported so far)
+- **Insert classes into Velocity template** - field for inserting the name of the class that will be available in the template, e.g. to display the discussion, you need to add the class `sk.iway.iwcm.forum.ForumDB`. You can separate the classes with a comma or a new line. In the code, you can then use e.g. `$ForumDB.isActive($doc.getDocId())` to access the class methods.
 - **HTML code** - template code
-- **Pagination location** - place where pagination is inserted
-- **HTML pagination code** - paging code
+- **Pagination location** - the place where the pagination will be inserted
+- **HTML pagination code** - pagination code
 
 ![](news-temps-editor.png)
 
-## Inserting the code
+## Code insertion
 
-When creating or editing a newsletter template, you have the option to use a menu of ready-made codes. These codes are used to make your work easier and will be displayed after **right click** into the field **HTML code** or **HTML pagination code**, which will bring up the menu window. Each section has its own sub-section, where the ready codes are already offered.
+When creating or editing a newsletter template, you have the option to use a menu of ready-made codes. These codes are used to make your work easier and are displayed after **right-clicking** on the **HTML code** or **HTML pagination code** field, which will bring up a window with a menu. Each section also has its own sub-section, where there are already ready-made code menus.
 
 ![](news-temps-editor-2.png)
 
-After clicking on the offered code, the selected code will be inserted into the field above which you have right-clicked to call the action. This way you can easily create a template.
+After clicking on the offered code, the selected code will be inserted into the field above which you invoked the action by right-clicking. This way you can easily create a template.
 
 ![](news-temps-editor-3.png)
 
-!> **Warning:** offer for fields **HTML code** a **HTML pagination code** differs.
+!> **Note:** the menu for the **HTML Code** and **HTML Pagination Code** fields is different.
 
 ## Code examples
 
-News templates used by [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) for display, so it is possible to define cycles, conditions and other program code. Templates with one, two and three columns are ready. We recommend that templates are only edited by users who know what they are doing and know the syntax `Velocity Engine`. We recommend starting from the prepared templates and modifying them if necessary. The standard editor should not have the right to edit the newsletter templates, they should just use them.
+News templates use the [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) for display, so it is possible to define cycles, conditions and other program code. Templates with one, two and three columns are ready. We recommend that templates be edited only by users who know what they are doing and are familiar with the `Velocity Engine` syntax. We recommend that you use ready-made templates and only modify them if necessary. The standard editor should not have the right to edit news templates, he should only use them.
 
-Some examples of working with advanced objects:
+A few examples of working with advanced objects:
 
 ```velocity
 //nastavenie premennej podla pageParams objektu:
@@ -113,7 +114,7 @@ $totalPages
 #if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
 ```
 
-If you need to display the date when the web page was first saved, set the conf. variable `editorAutoFillPublishStart` to the value of `true`. Once set, the editor will automatically fill the Start Date field in the Perex tab of the editor with the current date. This date can also be changed manually if necessary. You can then use the following objects in the template:
+If you need to display the date the web page was first saved, set the conf. variable `editorAutoFillPublishStart` to the value `true`. After setting, the editor will automatically fill in the Start Date field in the Perex tab in the editor with the current date. This date can also be changed manually if necessary. You can then use the following objects in the template:
 
 ```velocity
 //datum a cas posledneho ulozenia
@@ -140,4 +141,4 @@ vc.put("pageParams", new PageParams(getRequest()));
 vc.put("dateTool", new DateTool());
 ```
 
-If you need, you can add additional classes to the template using the field **Insert classes into Velocity template** in the newsletter template editor.
+If you need to, you can add additional classes to the template using the **Insert classes into Velocity template** field in the news template editor.

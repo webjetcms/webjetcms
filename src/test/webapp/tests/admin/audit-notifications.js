@@ -5,15 +5,19 @@ const auditEvent = `UPDATE:
 id: ${docId}
 date_created: `;
 var email = null;
+var username = null;
 
 Before(({ I, login, TempMail }) => {
     login('admin');
 
-    if (email == null) email = 'auditnotification'+TempMail.getTempMailDomain();
+    if (username == null) username = 'auditnotification.' + I.getRandomTextShort();
+    if (email == null) email = username+TempMail.getTempMailDomain();
 });
 
 Scenario('Test for Event Notification and Cache Handling in Audit Notifications', async ({ I, DT, DTE, TempMail}) => {
-    await TempMail.login('auditnotification');
+    var startDate = I.formatDateTime(new Date());
+
+    await TempMail.login(username);
     await TempMail.destroyInbox();
     savePage(I, DTE);
     await verifyEmailNotification(I, TempMail, false);
@@ -29,6 +33,15 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
     DTE.save();
 
     savePage(I, DTE);
+
+    //verify audit log entry
+    I.amOnPage('/admin/v9/apps/audit-search/');
+    I.fillField('.dt-filter-from-createDate', startDate);
+    I.pressKey('Escape');
+    DT.filterSelect('logType', "SENDMAIL");
+    DT.filterContains('description', email);
+    I.see("email from:" + email);
+
     await verifyEmailNotification(I, TempMail, true);
 });
 
@@ -52,7 +65,7 @@ function savePage(I, DTE) {
 }
 
 async function verifyEmailNotification(I, TempMail, expectNotification){
-    await TempMail.login('auditnotification');
+    await TempMail.login(username);
     if (expectNotification) I.waitForText('Notifikácia akcie:SAVEDOC', 20);
 
     if (!await TempMail.isInboxEmpty())

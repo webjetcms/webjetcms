@@ -125,19 +125,27 @@ const WJ = (() => {
      * - closeButtonPosition = pozicia tlacidla na zatvorenie, prazdne - male X v hlavicke, close-button-over - male X v hlavicke ponad content (nevytvara samostatny riadok), pridanim nopadding sa zrusi horny padding hlavicky
      * - okclick = callback po kliknuti na tlacidlo potvrdit
      * - onload = callback po nacitani okna, ako parameter dostane event.detail obsahujuci property window s odkazom na okno v iframe
+     * - buttons = pole buttonov v modal-footer: [{title, cssClass, onClick}], ak nie je zadane zobrazi sa default button Potvrdiť
      */
     function openIframeModal(options) {
 
         const iframe = $('#modalIframeIframeElement');
-        iframe.attr('src', options.url);
-        iframe.attr('width', options.width);
-        iframe.attr('height', options.height);
+        if (typeof options.url != "undefined" && options.url != null) {
+            iframe.attr('src', options.url);
+            iframe.attr('width', options.width);
+            iframe.attr('height', options.height);
+            iframe.show();
+        } else {
+            iframe.hide();
+        }
 
         let closeAfterSave = options.closeAfterSave;
         if(closeAfterSave == undefined || closeAfterSave == null) closeAfterSave = true;
 
         //nastav height aj na modal-body, inak ho renderovalo o par px vyssie ako iframe
-        $('#modalIframe div.modal-body').css('height', options.height + 'px');
+        var $modalBody = $('#modalIframe div.modal-body');
+        $modalBody.css('height', options.height + 'px');
+        $modalBody.css('overflow', "")
 
         //nastav velkost
         const borderWidth = 2;
@@ -148,9 +156,28 @@ const WJ = (() => {
         if (title === "") $('#modalIframe .modal-header h5').hide();
         else $('#modalIframe .modal-header h5').show();
 
+        //nastav footer buttons - custom alebo default
+        const $defaultButtons = $('#modalIframe div.modal-footer-default-buttons');
+        const $customButtons = $('#modalIframe div.modal-footer-custom-buttons');
+        $customButtons.empty();
+        if (typeof options.buttons != "undefined" && options.buttons != null && options.buttons.length > 0) {
+            $defaultButtons.hide();
+            options.buttons.forEach(function(btn) {
+                const $btn = $('<button class="btn ' + btn.cssClass + '" tabindex="0"><span>' + btn.title + '</span></button>');
+                if (typeof btn.onClick === 'function') {
+                    $btn.on('click', btn.onClick);
+                }
+                $customButtons.append($btn);
+            });
+            $customButtons.show();
+        } else {
+            $customButtons.hide();
+            $defaultButtons.show();
+        }
+
         //nastav button title
         const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
-        $('#modalIframe div.modal-footer button.btn-primary span').text(buttonTitle);
+        $defaultButtons.find('button.btn-primary span').text(buttonTitle);
 
         //console.log('modalIframe=', modalIframe);
         modalIframeOptions = options;
@@ -160,7 +187,7 @@ const WJ = (() => {
             _showIframeModal();
 
             //console.log("modalIframeShow, modalIframe=", modalIframe);
-            $('#modalIframe button.btn-primary').on('click', (e) => {
+            $('#modalIframe div.modal-footer-default-buttons button.btn-primary').on('click', (e) => {
                 //console.log("Klik na btn-prinary, e=", e);
                 let success = _modalOkClick();
                 if (false === success) return;
@@ -177,13 +204,63 @@ const WJ = (() => {
                     modalIframeOptions.onload(event.detail);
                 }
             });
+
+            //drag & drop - chytenie za hlavicku a presuvanie okna
+            if ($("html").hasClass("in-iframe") == false && window.location.href.indexOf("showOnlyEditor=true") == -1) {
+                $("#modalIframe .modal-header").addClass("modal-header-draggable");
+                $("body").on("mousedown.modalIframeDrag", "#modalIframe .modal-header", function(mousedownEvt) {
+                    //allow interaction with buttons in header
+                    if ($(mousedownEvt.target).closest("button").length > 0) return;
+                    var $draggable = $(this);
+                    var x = mousedownEvt.pageX - $draggable.offset().left,
+                        y = mousedownEvt.pageY - $draggable.offset().top;
+                    var $modalContent = $("#modalIframe div.modal-content");
+                    $("#modalIframe").addClass("modal-iframe-dragging");
+                    $("body").on("mousemove.modalIframeDraggable", function(mousemoveEvt) {
+                        $modalContent.offset({
+                            "left": mousemoveEvt.pageX - x,
+                            "top": mousemoveEvt.pageY - y
+                        });
+                    });
+                    $("body").one("mouseup.modalIframeDrag", function() {
+                        $("body").off("mousemove.modalIframeDraggable");
+                        $("#modalIframe").removeClass("modal-iframe-dragging");
+                    });
+                });
+            }
+
+            //maximize / minimize okna
+            $('#modalIframe div.modal-header div.dialog-buttons .maximize, #modalIframe div.modal-header div.dialog-buttons .minimize').on("click", function() {
+                var $modalDialog = $('#modalIframe div.modal-dialog');
+                var isMaximizing = !$modalDialog.hasClass("modal-fullscreen");
+                $modalDialog.toggleClass("modal-fullscreen");
+                if (isMaximizing) {
+                    //fullscreen - uvolni inline max-width a height, CSS prevezme
+                    $modalDialog.css('max-width', '');
+                    $('#modalIframe div.modal-body').css('height', '');
+                    $('#modalIframeIframeElement').css({'width': '100%', 'height': '100%'}).removeAttr('width').removeAttr('height');
+                    //reset pozicia po maximalizacii
+                    $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
+                } else {
+                    //restore max-width, height a iframe dimensions z options
+                    const borderWidth = 2;
+                    $modalDialog.css('max-width', (modalIframeOptions.width + borderWidth) + 'px');
+                    $('#modalIframe div.modal-body').css('height', modalIframeOptions.height + 'px');
+                    $('#modalIframeIframeElement').css({'width': '', 'height': ''}).attr('width', modalIframeOptions.width).attr('height', modalIframeOptions.height);
+                }
+            });
         } else {
             _showIframeModal();
         }
 
+        //reset fullscreen state and position when opening
+        $('#modalIframe div.modal-dialog').removeClass("modal-fullscreen");
+        $("#modalIframe div.modal-content").css({"left": "auto", "top": "auto"});
+
         let $modalIframe = $("#modalIframe");
         $modalIframe.removeClass("close-button-over");
         $modalIframe.removeClass("nopadding");
+        $modalIframe.find(".modal-body .modal-body-content").html("");
         if (typeof options.closeButtonPosition != "undefined") {
             if (options.closeButtonPosition.indexOf("close-button-over")!=-1) $modalIframe.addClass("close-button-over");
             if (options.closeButtonPosition.indexOf("nopadding")!=-1) $modalIframe.addClass("nopadding");
@@ -200,6 +277,15 @@ const WJ = (() => {
         iframe.attr('src', "about:blank");
         modalIframe.hide();
         $('.modal-backdrop').removeClass('modalIframeShown');
+
+        let $modalIframe = $("#modalIframe");
+        $modalIframe.find(".modal-body .modal-body-content").html("");
+        //reset fullscreen a polohu
+        $modalIframe.find("div.modal-dialog").removeClass("modal-fullscreen");
+        $modalIframe.find("div.modal-content").css({"left": "auto", "top": "auto"});
+        //zrus pripadny prebiehajuci drag
+        $("body").off("mousemove.modalIframeDraggable");
+        $modalIframe.removeClass("modal-iframe-dragging");
 
         if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
     }
@@ -241,6 +327,63 @@ const WJ = (() => {
         if (height > windowHeight) height = windowHeight;
         if (height > 300) options.height = height;
         openIframeModal(options);
+    }
+
+    /**
+     * Open modal with current context/JS/CSS objects. Used for dynamically load datatables into dialog.
+     * @see passkey.pug for example of usage
+     * @param {JSON} options
+     */
+    function openModal(options) {
+        let url = options.url;
+        options.url = null;
+
+        //verify window height and adjust it
+        var height = options.height || 600;
+        var headerHeight = 32;
+        var footerHeight = 47;
+        var windowHeight = $(window).height() - 40 - headerHeight - footerHeight;
+        if (height > windowHeight) height = windowHeight;
+        if (height < 300) height = 300;
+        options.height = height;
+
+        var width = options.width || 900;
+        var windowWidth = $(window).width() - 80;
+        if (width > windowWidth) width = windowWidth;
+        if (width < 300) width = 300;
+        options.width = width;
+
+        openIframeModal(options);
+
+        var $modalBody = $('#modalIframe div.modal-body');
+        $modalBody.css('overflow', "auto")
+
+        //load URL into modal-body-content DIV
+        $.ajax({
+            url: url,
+            success: function(data) {
+                let htmlCode = data;
+
+                let $modalIframe = $("#modalIframe");
+                const container = $modalIframe.find(".modal-body .modal-body-content")[0];
+                container.innerHTML = htmlCode;
+                // Znovu vytvor každý script element
+                container.querySelectorAll("script").forEach(oldScript => {
+                    const newScript = document.createElement("script");
+                    [...oldScript.attributes].forEach(a => newScript.setAttribute(a.name, a.value));
+
+                    let scriptContent = oldScript.textContent;
+                    //wrap scriptContent into anonymous function so variables will have scope
+                    scriptContent = "(function() {\n" + scriptContent + "\n})();";
+
+                    newScript.textContent = scriptContent;
+                    oldScript.replaceWith(newScript);
+                });
+
+                //fire domready events
+                window.domReady.fire();
+            },
+        });
     }
 
     function _showIframeModal() {
@@ -926,6 +1069,43 @@ const WJ = (() => {
         if (config.noBorderBottom===true) breadcrumb.addClass("no-border-bottom");
     }
 
+    function _createTabItem(data, urlPrefix) {
+        let li = $(`<li class="nav-item" role="presentation"></li>`);
+
+        let idNoHash = urlPrefix ? (data.url ? urlPrefix + "-" + data.url : (data.id ? urlPrefix + "-" + data.id : urlPrefix)) : data.url;
+        if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
+        let href = "#pills-"+idNoHash;
+        //ak je to URL nepridavaj #pills-
+        if (idNoHash.indexOf("/")==0) {
+            href = idNoHash;
+        }
+        if (typeof data.id != "undefined") {
+            idNoHash = data.id;
+        }
+
+        //if it is URL remove chars as /,?,= and replace with dash for id
+        idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
+
+        let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
+        if (urlPrefix) anchor.data("sub-url", data.url);
+        if (data.url.indexOf("javascript:")==0) {
+            anchor.attr("href", data.url);
+        } else {
+            anchor.attr("href", href);
+        }
+        if (href.indexOf("#")==0) {
+            //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
+            anchor.attr("data-wj-toggle", "tab");
+            anchor.attr("role", "presentation");
+        }
+
+        if (typeof data.active != "undefined" && data.active===true) {
+            anchor.addClass("active");
+        }
+        li.append(anchor);
+        return li;
+    }
+
     function headerTabs(config) {
         //console.log("headerTabs, config=", config);
 
@@ -934,36 +1114,8 @@ const WJ = (() => {
         let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
 
         config.tabs.forEach(function(data, index) {
-            let li = $(`<li class="nav-item" role="presentation"></li>`);
-
-            let idNoHash = data.url;
-            if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
-            let href = "#pills-"+idNoHash;
-            //ak je to URL nepridavaj #pills-
-            if (idNoHash.indexOf("/")==0) {
-                href = idNoHash;
-            }
-            if (typeof data.id != "undefined") {
-                idNoHash = data.id;
-            }
-
-            let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
-            if (data.url.indexOf("javascript:")==0) {
-                anchor.attr("href", data.url);
-            } else {
-                anchor.attr("href", href);
-            }
-            if (href.indexOf("#")==0) {
-                //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
-                anchor.attr("data-wj-toggle", "tab");
-                anchor.attr("role", "presentation");
-            }
-
-            if (typeof data.active != "undefined" && data.active===true) {
-                anchor.addClass("active");
-            }
-            li.append(anchor);
-            ul.append(li);
+            const tabItem = _createTabItem(data);
+            ul.append(tabItem);
         });
 
         //wrap UL with md-tabs div
@@ -973,6 +1125,81 @@ const WJ = (() => {
         tabs.append(ul);
         $("body").addClass("ly-submenu-active");
         window.initSubmenuTabsClick();
+    }
+
+    function headerSubTabs(config) {
+        let tabs = $("div.ly-header div.ly-submenu");
+
+        let parentId = tabs.find("ul.nav").first().attr("id");
+        let subId = parentId ? parentId + "_sub" : "pills-sub";
+
+        //store original URLs on parent tabs so we can use them for sub-tab URL construction
+        tabs.find("ul.nav").first().find("a.nav-link").each(function() {
+            if (typeof $(this).data("original-url") === "undefined") {
+                $(this).data("original-url", $(this).attr("href"));
+            }
+        });
+
+        function _getParentActiveUrl() {
+            let activeParent = tabs.find("ul.nav").first().find("a.nav-link.active");
+            let parentActiveUrl = activeParent.data("original-url") || activeParent.attr("href") || "";
+            if (parentActiveUrl.indexOf("#pills-")==0) parentActiveUrl = parentActiveUrl.substring(7);
+            else if (parentActiveUrl.indexOf("#")==0) parentActiveUrl = parentActiveUrl.substring(1);
+            return parentActiveUrl;
+        }
+
+        function _updateSubTabUrls() {
+            let parentActiveUrl = _getParentActiveUrl();
+            ul.find("a.nav-link").each(function() {
+                let subUrl = $(this).data("sub-url");
+                let combinedId = subUrl ? parentActiveUrl + "-" + subUrl : parentActiveUrl;
+                let href = "#pills-" + combinedId;
+                $(this).attr("href", href);
+                $(this).attr("id", "pills-" + combinedId + "-tab");
+            });
+        }
+
+        let ul = $(`<ul class="nav" id="${subId}" role="tablist"></ul>`);
+
+        let parentActiveUrl = _getParentActiveUrl();
+
+        config.tabs.forEach(function(data, index) {
+            ul.append(_createTabItem(data, parentActiveUrl));
+        });
+
+        //wrap UL with md-tabs div
+        ul = $("<div class='md-tabs md-tabs-dropdown md-sub-tabs'></div>").append(ul);
+
+        if (config.defaultVisibility === false) {
+            ul.css("display", "none");
+        }
+
+        tabs.append(ul);
+        window.initSubmenuTabsClick();
+
+        //toggle body class for layout offset when sub-tabs are shown/hidden
+        function _updateSubTabsBodyClass() {
+            if (ul.css("display") !== "none") {
+                $("body").addClass("ly-sub-tabs-active");
+            } else {
+                $("body").removeClass("ly-sub-tabs-active");
+            }
+        }
+        new MutationObserver(_updateSubTabsBodyClass).observe(ul[0], { attributes: true, attributeFilter: ['style'] });
+        _updateSubTabsBodyClass();
+
+        //update sub tab URLs when parent tab changes
+        tabs.find("ul.nav").first().on("click", "a.nav-link", function() {
+            setTimeout(function() {
+                //skip if sub tabs are hidden
+                if (ul.closest(".md-sub-tabs").is(":hidden")) return;
+                _updateSubTabUrls();
+                //click on active or first sub tab
+                let activeSubTab = ul.find("a.nav-link.active");
+                if (activeSubTab.length === 0) activeSubTab = ul.find("a.nav-link").first();
+                if (activeSubTab.length > 0) activeSubTab.trigger("click");
+            }, 0);
+        });
     }
 
     const htmlToTextRegex = /(<([^>]+)>)/ig;
@@ -1127,7 +1354,8 @@ const WJ = (() => {
 
             var conf = {
                 placement: 'top',
-                trigger: 'hover'
+                trigger: 'hover',
+                delay: { "show": 300, "hide": 0 }
             };
             if (customClass != null) conf.customClass = customClass;
 
@@ -1220,9 +1448,9 @@ const WJ = (() => {
     function selectMenuItem (href) {
         //oznaci menu polozku podla zadaneho href atributu
         $(".md-large-menu__wrapper .md-large-menu__item").removeClass("md-large-menu__item--open md-large-menu__item--active");
-        $("div.menu-wrapper div.md-main-menu--open").removeClass("md-main-menu--open");
-        $("div.menu-wrapper div.md-main-menu__item--open").removeClass("md-main-menu__item--open md-main-menu__item--active");
-        $("div.menu-wrapper div.md-main-menu__item__sub-menu__item--active").removeClass("md-main-menu__item__sub-menu__item--active");
+        $(".menu-wrapper div.md-main-menu--open").removeClass("md-main-menu--open");
+        $(".menu-wrapper div.md-main-menu__item--open").removeClass("md-main-menu__item--open md-main-menu__item--active");
+        $(".menu-wrapper div.md-main-menu__item__sub-menu__item--active").removeClass("md-main-menu__item__sub-menu__item--active");
 
         var $this = $("a[href='"+href+"']");
 
@@ -1346,6 +1574,9 @@ const WJ = (() => {
         openIframeModalDatatable: options => {
             return openIframeModalDatatable(options);
         },
+        openModal: options => {
+            return openModal(options);
+        },
         openElFinder: (options) => {
             return openElFinder(options);
         },
@@ -1433,6 +1664,9 @@ const WJ = (() => {
         },
         headerTabs: (config) => {
             return headerTabs(config);
+        },
+        headerSubTabs: (config) => {
+            return headerSubTabs(config);
         },
         htmlToText: (html) => {
             return htmlToText(html);

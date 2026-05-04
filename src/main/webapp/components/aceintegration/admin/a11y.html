@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessible Page Title - Clear & Descriptive</title>
+    <style type="text/css">
+        a {
+            font-size: 42px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to content link for keyboard users -->
+    <a href="#main-content" style="position: absolute; left: -10000px;">Skip to main content</a>
+
+    <header>
+        <nav aria-label="Main Navigation">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="main-content">
+        <h1>Welcome to the Accessible Page</h1>
+        <p>This is a paragraph providing context. Text has high contrast.</p>
+
+        <img src="/admin/v9/dist/images/logo-cms.svg" alt="A descriptive, concise text alternative for the image.">
+
+        <button onclick="alert('Actioned')">Interactive Button</button>
+
+        <h2>Section Title</h2>
+        <p>Content here...</p>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Accessible Site</p>
+    </footer>
+</body>
+</html>

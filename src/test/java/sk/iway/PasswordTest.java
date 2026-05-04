@@ -1,7 +1,9 @@
 package sk.iway;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -44,5 +46,71 @@ class PasswordTest {
                 fail("An exception occurred: " + e.getMessage());
             }
         }
+    }
+
+    @Test
+    void testGenerateStrongPassword() {
+        String password = Password.generateStrongPassword();
+
+        assertNotNull(password);
+        assertFalse(password.isEmpty());
+
+        // Check format: XXXXXX-XXXXXX-XXXXXX (3 parts separated by dash)
+        String[] parts = password.split("-");
+        assertEquals(3, parts.length);
+        assertEquals(6, parts[0].length());
+        assertEquals(6, parts[1].length());
+        assertEquals(6, parts[2].length());
+
+        // Check total length (18 chars + 2 dashes)
+        assertEquals(20, password.length());
+    }
+
+    @Test
+    void testGenerateStrongPasswordContainsRequiredCharTypes() {
+        String password = Password.generateStrongPassword();
+
+        // Remove dashes for character analysis
+        String passwordWithoutDashes = password.replace("-", "");
+
+        boolean hasDigit = false;
+        boolean hasLowerCase = false;
+        boolean hasUpperCase = false;
+        boolean hasSpecialChar = false;
+
+        for (char c : passwordWithoutDashes.toCharArray()) {
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (Character.isLowerCase(c)) {
+                hasLowerCase = true;
+            } else if (Character.isUpperCase(c)) {
+                hasUpperCase = true;
+            } else {
+                hasSpecialChar = true;
+            }
+        }
+
+        assertTrue(hasDigit, "Password should contain at least one digit");
+        assertTrue(hasLowerCase, "Password should contain at least one lowercase letter");
+        assertTrue(hasUpperCase, "Password should contain at least one uppercase letter");
+        assertTrue(hasSpecialChar, "Password should contain at least one special character");
+    }
+
+    @Test
+    void testGenerateStrongPasswordNoConfusableChars() {
+        String password = Password.generateStrongPassword();
+
+        assertFalse(password.contains("o"), "Password should not contain letter 'o' (can be confused with 0)");
+        assertFalse(password.contains("O"), "Password should not contain letter 'O' (can be confused with 0)");
+        assertFalse(password.contains("l"), "Password should not contain letter 'l' (can be confused with 1)");
+        assertFalse(password.contains("L"), "Password should not contain letter 'L' (can be confused with 1)");
+    }
+
+    @Test
+    void testGenerateStrongPasswordMultipleCallsProduceDifferentPasswords() {
+        String password1 = Password.generateStrongPassword();
+        String password2 = Password.generateStrongPassword();
+
+        assertNotEquals(password1, password2, "Multiple calls should produce different passwords");
     }
 }

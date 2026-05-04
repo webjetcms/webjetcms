@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.basket.payment_methods.rest;
 
 import java.math.BigDecimal;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 

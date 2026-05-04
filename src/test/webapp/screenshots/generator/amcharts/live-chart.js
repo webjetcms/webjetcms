@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('screenshot live chart from server monitoring', async ({I, Document}) => { 
+Scenario('screenshot live chart from server monitoring', async ({I, Document}) => {
     I.amOnPage("/apps/server_monitoring/admin/records/");
 
     await I.executeScript(function(){

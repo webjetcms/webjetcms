@@ -2,8 +2,8 @@ package sk.iway.iwcm.doc;
 
 import sk.iway.iwcm.Logger;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 /**
  * Konvertuje databazovy typ int groupId na GroupDetails objekt a naopak, priklad pouzitia:

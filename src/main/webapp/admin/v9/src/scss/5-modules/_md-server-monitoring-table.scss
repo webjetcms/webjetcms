@@ -1,22 +1,15 @@
 .server-monitoring-table-header {
     font-family: $secondary-font-family;
     font-weight: 700;
+    padding-left: 2px;
+    margin-top: 18px !important;
+    margin-bottom: 18px;
 }
 
 .monitoring-table {
     width: 100%;
-    background-color: #edeff6;
-    border-radius: 10px;
-    tr:first-child {
-        td {
-            padding-top: 25px;
-        }
-    }
-    tr:last-child {
-        td {
-            padding-bottom: 25px;
-        }
-    }
+    background-color: $nice-gray;
+    border-radius: $border-radius;
     td {
         padding: 15px;
     }
@@ -24,7 +17,7 @@
         padding: 10px !important;
         font-family: $base-font-family;
         &:not(:last-child) {
-            border-bottom: 1px solid #e2e4eb;
+            border-bottom: 1px solid $nice-gray-100;
         }
     }
 }
@@ -70,7 +63,7 @@
             width: 0;
             min-width: 1%;
             max-width: 100%;
-            background-color: #40eab7;
+            background-color: $success;
             height: 10px;
             border-radius: 40px;
             margin-top: 10px;

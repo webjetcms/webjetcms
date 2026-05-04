@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.forum.rest;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;

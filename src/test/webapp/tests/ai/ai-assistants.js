@@ -94,16 +94,17 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 Scenario('ai buttons usage', async ({I, DTE}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
 
     I.clickCss("#pills-dt-datatableInit-perex-tab");
 
     I.say("Check buttons");
-    I.seeElement( locate(".DTE_Field_Name_htmlData").find( locate(btnAiAssistants) ) );
-    I.seeElement( locate(".DTE_Field_Name_perexPlace").find( locate(btnAiAssistants) ) );
-    I.seeElement( locate(".DTE_Field_Name_perexImage").find( locate(btnAiAssistants) ) );
+    I.seeElement( locate(".DTE_Field_Name_htmlData").find( btnAiAssistants) );
+    I.seeElement( locate(".DTE_Field_Name_perexPlace").find( btnAiAssistants) );
+    I.seeElement( locate(".DTE_Field_Name_perexImage").find( btnAiAssistants) );
 
     I.say("Test AI toast");
-    I.click( locate(".DTE_Field_Name_htmlData").find( locate(btnAiAssistants) ) );
+    I.click( locate(".DTE_Field_Name_htmlData").find(btnAiAssistants) );
     I.waitForVisible("#toast-container-ai");
 
     within("div#toast-container-ai", () => {
@@ -117,7 +118,7 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     I.click( locate("#toast-container-ai").find(".toast-close-button") );
     I.waitForInvisible("#toast-container-ai", 10);
 
-    I.click( locate(".DTE_Field_Name_perexImage").find( locate(btnAiAssistants) ) );
+    I.click( locate(".DTE_Field_Name_perexImage").find( btnAiAssistants) );
     I.waitForVisible("#toast-container-ai");
     within("div#toast-container-ai", () => {
         I.dontSeeElement( locate(btnAiAction).withText("Vytvoriť zhrnutie") );
@@ -407,7 +408,7 @@ Scenario('TEXT answer with image content - OpenRouter', async ({I, DTE}) => {
 });
 
 async function testGeneratingImageAlt(I, DTE, providerId) {
-        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + pageId);
     DTE.waitForEditor();
     DTE.waitForCkeditor();
 

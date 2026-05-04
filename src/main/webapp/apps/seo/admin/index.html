@@ -59,7 +59,7 @@
         async function createAmcharts() {
             window.initAmcharts().then(module => {
 
-                $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+                $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie_Donut), success: function(result) {
                     pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{components.seo.seBots}]]', "bots-pieVisits", result);
                     ChartTools.createAmchart(pieChartVisits);
                 }});
@@ -77,7 +77,7 @@
         async function getDataAndUpdateAmcharts() {
             WJ.showLoader();
 
-            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie_Donut), success: function(result) {
                 pieChartVisits.chartData = result;
                 ChartTools.updateChart(pieChartVisits);
             }});
@@ -103,7 +103,7 @@
             let rootDir = $('#rootDir').val();
             let searchDateValue = ChartTools.getDateRange(null);
 
-            if(chartType == ChartTools.ChartType.Pie) {
+            if(chartType == ChartTools.ChartType.Pie_Donut) {
                 tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;
                 tmpDefURL += "&rootDir=" + rootDir;
             } else if(chartType == ChartTools.ChartType.Line) {
@@ -127,7 +127,7 @@
         <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
         <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
         <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
-            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+            <input type="text" class="webjet-dte-jstree-alldomains" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
         </div>
     </div>
 </div>

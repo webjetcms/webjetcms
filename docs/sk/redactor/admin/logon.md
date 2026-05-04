@@ -2,6 +2,8 @@
 
 ## Prihlásenie
 
+### Prihlásenie menom a heslom
+
 Do administrácie WebJET CMS sa prihlásite na adrese ```https://vasa-domena.sk/admin/```. Zobrazí sa prihlasovacia obrazovka:
 
 ![](logon.png)
@@ -15,6 +17,66 @@ Podľa nastavenia systému môže uplynúť platnosť vášho hesla, alebo nemus
 ![](logon-weak-password.png)
 
 Zadajte nové heslo tak, aby spĺňalo požadované kritéria.
+
+### Použiť prístupový kľúč
+
+**Prístupový kľúč** (angl. *PassKey*) je moderná metóda prihlásenia, ktorá nahrádza tradičné heslo. Využíva asymetrické šifrovanie (štandard WebAuthn/FIDO2) – do systému sa ukladá iba verejná časť kľúča, súkromná zostáva uložená vo vašom zariadení. Prístupový kľúč je viazaný na konkrétnu doménu, čo zabraňuje phishingovým útokom.
+
+![](passkey-logon.png)
+
+#### Výhody oproti heslu
+
+- **Vyššia bezpečnosť** – na serveri nie je uložené žiadne heslo, ktoré by mohlo uniknúť pri bezpečnostnom incidente.
+- **Odolnosť voči phishingu** – kľúč funguje iba na adrese, pre ktorú bol vytvorený, na podvrhnutej stránke sa nepoužije.
+- **Žiadne zabudnuté heslo** – prihlásenie funguje biometriou (odtlačok prsta, rozpoznanie tváre) alebo PIN-om zariadenia.
+- **Rýchle prihlásenie** – nie je potrebné zadávať meno, heslo ani kód z autentifikátora.
+
+#### Ako sa prihlásiť prístupovým kľúčom
+
+Na prihlasovacej stránke kliknite na tlačidlo **Použiť prístupový kľúč**. Následne vás prehliadač vyzve na overenie totožnosti pomocou biometrie alebo PIN-u vášho zariadenia.
+
+![](passkey-logon-button.png)
+
+**Windows (Windows Hello)**
+
+Systém zobrazí výzvu `Windows Hello`. Overte sa odtlačkom prsta, rozpoznaním tváre alebo zadaním PIN-u zariadenia. Po úspešnom overení budete automaticky prihlásený.
+
+**macOS / iOS (Touch ID / Face ID)**
+
+Systém zobrazí výzvu `Touch ID` alebo `Face ID`. Priložte prst na snímač alebo pozerajte do kamery. Po úspešnom overení budete automaticky prihlásený.
+
+**Mobilné zariadenie (Android / iOS)**
+
+Systém zobrazí výzvu na odomknutie zariadenia (odtlačok prsta, tvár alebo PIN). Po úspešnom overení budete automaticky prihlásený.
+
+#### Pridanie nového prístupového kľúča
+
+Prístupový kľúč pridáte po prihlásení kliknutím na vaše **meno v pravej hornej časti** hlavičky administrácie
+
+![](passkeys-userselect.png)
+
+a výberom položky **Prístupový kľúč**.
+
+![](passkey-menu.png)
+
+Zobrazí sa správca prístupových kľúčov.
+
+![](passkey-table.png)
+
+Nový prístupový kľúč pridáte kliknutím na ikonu <button class="btn btn-sm btn-success"><span><i class="ti ti-plus"></i></span></button>
+
+1. Do poľa **Názov nového prístupového kľúča** zadajte pomenovanie (napr. Môj notebook), aby ste kľúče ľahko rozlíšili.
+2. Kliknite na tlačidlo **Pridať**.
+3. Prehliadač vás vyzve na overenie totožnosti biometriou alebo PIN-om zariadenia.
+4. Po úspešnom overení sa kľúč zobrazí v zozname zaregistrovaných kľúčov.
+
+![](passkey-register.png)
+
+Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a kliknutím na ikonu koša. Verejný kľúč sa ale takto odstráni len v databáze WebJET CMS, samotný privátny kľúč zostáva uložený vo vašom zariadení. Ak sa chcete uistiť, že kľúč už nebude možné použiť, musíte ho odstrániť aj z nastavení vášho zariadenia (napríklad v nastavení `Windows Hello` alebo `Apple heslách`).
+
+!>**Upozornenie:** Prístupový kľúč je viazaný na konkrétne zariadenie a prehliadač. Ak sa chcete prihlasovať z viacerých zariadení, zaregistrujte ho na každom zariadení zvlášť, alebo využite cloud synchronizačnú službu na prenos kľúčov medzi zariadeniami (napríklad iCloud kľúčenka, `Google Password Manager`).
+
+Možnosť prihlasovania prístupovým kľúčom môžete vypnúť nastavením konfiguračnej premennej `password_passKeyEnabled` na hodnotu `false`.
 
 ## Odhlásenie
 

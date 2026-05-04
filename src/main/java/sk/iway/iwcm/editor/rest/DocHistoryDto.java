@@ -40,6 +40,9 @@ public class DocHistoryDto {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "history.disapprovedBy")
     private String historyDisapprovedByName;
 
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "history.approveDate")
+    private Date historyApproveDate;
+
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="editor.dateStart")
     private Date publishStartDate;
 

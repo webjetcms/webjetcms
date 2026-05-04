@@ -148,6 +148,8 @@ Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
     const fields_volitelne = ["text - A", "select - B", "autocomplete - D", "docsIn_67_null - G", "enumeration_2 - H", "Multi select - J"];
     const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D", "Pole G", "Pole H", "Pole J"];
 
+    setEnumerationMapping(I, DT, DTE, "enumeration_2");
+
     //
     I.say("Test on Volitelne polia folder - as jstree click");
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
@@ -176,7 +178,7 @@ Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
 
 async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     if (pageUrl != null) I.amOnPage(pageUrl);
-    const columnLabelSelector = "#datatableInit_wrapper tr:nth-child(1) > th > span.dt-column-title";
+    const columnLabelSelector = "#datatableInit_wrapper tr:nth-child(1) > th > .dt-column-header span.dt-column-title";
     const filterSelector =      "#datatableInit_wrapper tr:nth-child(2) > th";
 
     if (showColumns) {
@@ -266,6 +268,7 @@ Scenario('custom-fields advanced set default values', ({ I, DT, DTE }) => {
 function openFieldsTabForPage(I, DT, DTE, id) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + id);
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
 }
@@ -292,15 +295,21 @@ function setEnumerationMapping(I, DT, DTE, mapping) {
     DT.filterEquals("key", "temp-3.editor.field_h.type");
     I.click("temp-3.editor.field_h.type", "#datatableInit_wrapper");
     DTE.waitForEditor();
+    I.wait(1);
     DTE.fillField("fieldA", mapping);
+    //sometimes it will be not filled properly, so do it again
+    DTE.fillField("fieldA", mapping);
+    I.wait(1);
     DTE.save();
     DT.waitForLoader();
+
+    I.waitForText(mapping, 10, ".dt-style-text-wrap .datatable-column-width");
+
     //wait to cluster sync
     I.wait(10);
 }
 
 function setCustomFields(I, DTE) {
-    I.wait(10); //wait for prop reload
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
     DTE.waitForEditor();
     I.wait(2);

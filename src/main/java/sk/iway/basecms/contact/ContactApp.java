@@ -1,8 +1,8 @@
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -111,7 +111,7 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String edit(@RequestParam("id") long id, Model model, HttpServletRequest request) {
-        ContactEntity contact = contactRepository.getById(id);
+        ContactEntity contact = contactRepository.getReferenceById(id);
         model.addAttribute("entity", contact);
 
         //pridaj do modelu moznosti pre select country

@@ -14,12 +14,14 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.say("set and check virtual path without slash at end");
     I.click("News 2");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2");
     DTE.save();
 
     I.click("News 2");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2");
     DTE.cancel();
@@ -28,6 +30,7 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.say("set same virtual path for second page");
     I.click("News duplikat");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2");
     DTE.save();
@@ -39,6 +42,7 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.say("verify virtual path for second page");
     I.click("News duplikat");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2-2.html");
     DTE.cancel();
@@ -47,12 +51,14 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.say("regenerate virtual path for second page");
     I.click("News duplikat");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_virtualPath", "");
     DTE.save();
 
     I.click("News duplikat");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2.html");
     DTE.cancel();
@@ -79,6 +85,7 @@ Scenario('Verify asterisk URL address', ({ I, DT, DTE }) => {
     I.say("set virtual path");
     I.click("Test hviezdičky");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/test-hviezdicky/*");
     DTE.save();
@@ -87,6 +94,7 @@ Scenario('Verify asterisk URL address', ({ I, DT, DTE }) => {
     I.say("verify virtual path");
     I.click("Test hviezdičky");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/test-hviezdicky/*");
     DTE.cancel();

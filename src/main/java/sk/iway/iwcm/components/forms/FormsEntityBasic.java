@@ -3,16 +3,14 @@ package sk.iway.iwcm.components.forms;
 import java.util.Date;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -77,7 +75,7 @@ public class FormsEntityBasic {
     private String data;
 
     @Column(name = "create_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formslist.createDate", tab = "basic",
         editor = {
             @DataTableColumnEditor(
@@ -88,7 +86,7 @@ public class FormsEntityBasic {
     private Date createDate;
 
     @Column(name = "last_export_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title="formlist.export.lastExportDate", tab = "basic",
         editor = {
             @DataTableColumnEditor(
@@ -100,7 +98,7 @@ public class FormsEntityBasic {
 
     @Lob
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="formslist.note", tab = "basic")
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String note;
 
     @Lob
@@ -130,7 +128,7 @@ public class FormsEntityBasic {
     private int domainId;
 
     @Column(name = "double_optin_confirmation_date")
-    @Temporal(TemporalType.TIMESTAMP)
+    //deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     private Date doubleOptinConfirmationDate;
 
     @Column(name = "double_optin_hash")

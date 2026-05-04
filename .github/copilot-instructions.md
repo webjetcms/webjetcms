@@ -12,7 +12,7 @@
 
 ## CHANGELOG
 
-- For every PR there should be description in /docs/sk/CHANGELOG-2025.md file in Slovak language. Find the appropriate section in ## 2025-SNAPSHOT part and use this template for your change:
+- For every PR there should be description in /docs/sk/CHANGELOG-2026.md file in Slovak language. Find the appropriate section in ## 2026-SNAPSHOT part and use this template for your change:
   - `<short description of the change> (#<pull request number>)`
 - Check file /docs/sk/ROADMAP.md for planned changes. If you find your change there, check item as done and add `(#<pull request number>)` to the end of the line.
 

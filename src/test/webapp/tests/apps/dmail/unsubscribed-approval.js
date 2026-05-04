@@ -175,8 +175,8 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
 async function handleTempMailSubmission(I, TempMail, login) {
     await TempMail.login(login);
     TempMail.openLatestEmail();
-    I.waitForElement( TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 10);
-    const url = await I.grabAttributeFrom(TempMail.getContentSelector() + ' > p > a[href*="newsletter/odhlasenie"]', 'href');
+    I.waitForElement( TempMail.getContentSelector() + ' a[href*="newsletter/odhlasenie"]', 10);
+    const url = await I.grabAttributeFrom(TempMail.getContentSelector() + ' a[href*="newsletter/odhlasenie"]', 'href');
     I.amOnPage(url.replace("https", "http"));
 }
 

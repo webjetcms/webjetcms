@@ -11,8 +11,8 @@ import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -266,9 +266,9 @@ public class Ninja {
             Logger.error(Ninja.class, e);
         }
 
-        if (Tools.isEmpty(respWrapper.redirectURL))
+        if (Tools.isEmpty(respWrapper.getRedirectURL()))
         {
-            return respWrapper.strWriter.getBuffer().toString();
+            return respWrapper.getStrWriter().getBuffer().toString();
         }
 
         return "";

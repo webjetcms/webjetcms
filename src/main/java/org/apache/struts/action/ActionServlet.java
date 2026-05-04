@@ -1,7 +1,7 @@
 package org.apache.struts.action;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 
 import sk.iway.iwcm.Logger;
 

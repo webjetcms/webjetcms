@@ -1,27 +1,29 @@
-# Links to social networks
+# Social media links
 
-Insert icons into the page with links to social networks Facebook, Twitter, Instagram, LinkedIn, Flickr, etc.
+Inserts icons with links to social networks Facebook, Twitter, Instagram, LinkedIn, Flickr, etc. into the page.
 
 ## Application settings
 
-The setup includes tabs:
+The settings include the following tabs:
+
 - **Basic**
 - **Style**
 
 ### Tab - Basic
 
-In the tab, you can enter the address of your page for each social network. For empty fields, the social network icon will not appear.
+In the tab, you can enter the address of your page for each social network. For empty fields, the social network icon will not be displayed.
 
 ![](editor-base.png)
 
-### Card - Style
+### Tab - Style
 
 In the tab you can set:
-- **Visual style** - icon displays
-- **Alignment of icons** - left, centre, right
+
+- **Visual style** - icon views
+- **Icon alignment** - left, center, right
 
 ![](editor-style.png)
 
-## View application
+## View the application
 
 ![](app-social_icon.png)

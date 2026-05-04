@@ -1,7 +1,7 @@
 package sk.iway.iwcm.doc;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 

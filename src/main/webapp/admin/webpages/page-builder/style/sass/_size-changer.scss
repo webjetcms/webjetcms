@@ -10,6 +10,11 @@
     background-color: $color-column;
     border-bottom-right-radius: $size-changer-radius;
 
+    button {
+        border: 0px;
+        background-color: transparent;
+    }
+
     &__down,
     &__up,
     &__number {

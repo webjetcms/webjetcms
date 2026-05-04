@@ -1,6 +1,6 @@
 package sk.iway.iwcm.test;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import net.sourceforge.stripes.mock.MockHttpServletRequest;
 

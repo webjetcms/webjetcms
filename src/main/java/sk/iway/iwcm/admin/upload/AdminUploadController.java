@@ -1,6 +1,6 @@
 package sk.iway.iwcm.admin.upload;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.springframework.http.MediaType;

@@ -1,7 +1,7 @@
 package sk.iway.iwcm.doc;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;

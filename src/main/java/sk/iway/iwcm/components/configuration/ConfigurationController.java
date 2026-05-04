@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @Datatable
@@ -48,7 +48,7 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
         if (null == user) {
             return null;
         }
-        return new PageImpl<>(configurationService.getAll(user));
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(configurationService.getAll(user));
     }
 
     @Override

@@ -1,6 +1,6 @@
 package sk.iway.aceintegration;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.doc.NavbarInterface;
 

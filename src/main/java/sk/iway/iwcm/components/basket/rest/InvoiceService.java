@@ -40,7 +40,7 @@ public class InvoiceService {
 
         if(entity.getId() != null && entity.getId() > 0) {
             //Update
-            BasketInvoicePaymentEntity originalPayment = bipr.getById(entity.getId());
+            BasketInvoicePaymentEntity originalPayment = bipr.getReferenceById(entity.getId());
             BigDecimal toSubstract = Tools.isTrue(originalPayment.getConfirmed()) ? originalPayment.getPayedPrice() : BigDecimal.ZERO;
             //Full price to pay (with updated price) cant be bigger than price to pay
             BigDecimal priceOvervalue = totalPayedPrice.subtract(toSubstract).add(entity.getPayedPrice());

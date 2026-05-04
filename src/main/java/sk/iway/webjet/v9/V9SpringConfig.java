@@ -2,7 +2,7 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -55,6 +55,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.system.jpa",
     "sk.iway.iwcm.system.jpaconverters",
     "sk.iway.iwcm.system.ntlm",
+    "sk.iway.iwcm.system.spring.passkey",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.users",
     "sk.iway.iwcm.xls",
@@ -150,7 +151,11 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.upload",
     "sk.iway.iwcm.components.basket.delivery_methods.rest",
     "sk.iway.iwcm.components.multistep_form",
-    "sk.iway.iwcm.components.form_settings.rest"
+    "sk.iway.iwcm.components.form_settings.rest",
+    "sk.iway.iwcm.components.apphtmlbox",
+    "sk.iway.iwcm.components.appinquirysimple",
+    "sk.iway.iwcm.components.appmap",
+    "sk.iway.iwcm.components.apptestimonials"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

@@ -4,17 +4,17 @@ Použité technológie:
 
 - [Spring REST + Spring DATA](spring.md)
 - [thymeleaf.org](thymeleaf.md) - šablónovací systém napojený na Java backend
-- ```webpack+node``` pre kompilovanie html/PUG/JS súborov
-- datatables.net + [editor](https://editor.datatables.net) - základná práca a editácia tabuľkových dát, napojené na Spring cez DatatablesRestControllerV2 - príklad v [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- ```rspack+node``` pre kompilovanie html/PUG/JS súborov
+- datatables.net + [editor](https://editor.datatables.net) - základná práca a editácia tabuľkových dát, napojené na Spring cez DatatablesRestControllerV2 - príklad v [GalleryRestController.java](../../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 - [pugjs.org](pugjs.md) - ```preprocessor``` pre generovanie HTML kódu stránok
-- [Vue.js](vue.md) - dostupné ako ```window.Vue```, krátka ukážka vo [foto galerii](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [Vue.js](vue.md) - dostupné ako ```window.Vue```, krátka ukážka vo [foto galerii](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 
 Celý postup generovania web stránky v ```/admin/v9/``` je nasledovný:
 
 ```mermaid
 graph TD;
-    src/views/pages/app/gallery.pug-->webpack
-    webpack-->dist/views/apps/gallery.html
+    src/views/pages/app/gallery.pug-->rspack
+    rspack-->dist/views/apps/gallery.html
     dist/views/apps/gallery.html-->Thymeleaf
     Thymeleaf-->ThymeleafAdminController.java/LayoutService.java
     ThymeleafAdminController.java/LayoutService.java-->prehliadac
@@ -63,11 +63,21 @@ window.domReady.add(function () {
 }, 10);
 ```
 
-## Webpack
+## Rspack
 
-Skladanie a kompilácia ```pug/js/css``` sa vykonáva pomocou [webpack](https://webpack.js.org/).
+Skladanie a kompilácia ```pug/js/css``` sa vykonáva pomocou [Rspack](https://rspack.dev/) (cez `npm` skripty v `admin/v9/package.json`).
 
-JS a CSS súbory sa ukladajú po skompilovaní do ```dist``` priečinka. Z neho sú do PUG vkladané s využitím zoznamu z ```htmlWebpackPlugin.files```. Zároveň sa predvolene vkladajú len skripty, ktoré nezačínajú na prefix ```pages_```. Súbor s týmto prefixom sa vloží len v prípade, že sa jeho meno zhoduje s menom pug súboru.
+Najčastejšie používané príkazy:
+
+- ```npm run dev``` - vývojový build cez `rspack.config.dev.js`
+- ```npm run watch``` - vývojový build vo `watch` režime + automatické obnovenie stránky po zmene súborov
+- ```npm run watch:plain``` - čistý `rspack --watch` bez live reload servera
+- ```npm run prod``` - produkčný build cez `rspack.config.prod.js`
+- ```npm run analyze``` - vygeneruje report veľkosti balíkov do `dist/bundle-report.html`
+
+JS a CSS súbory sa po skompilovaní ukladajú do ```dist``` priečinka. PUG šablóny sa renderujú cez vlastný renderer v súbore ```pug.render.js```, ktorý prekladá stránky z ```views/pages/*.pug``` do ```dist/views/*.html```.
+
+Do PUG sa vkladajú assety zo zoznamu ```files.js``` a ```files.css``` (kompatibilne cez objekt `htmlWebpackPlugin.files`). Zároveň sa predvolene vkladajú len skripty, ktoré nezačínajú na prefix ```pages_```. Súbor s týmto prefixom sa vloží len v prípade, že sa jeho meno zhoduje s menom pug súboru.
 
 ```javascript
 // Outpul all script files
@@ -81,6 +91,8 @@ each js in WPF.js
     - if (js.indexOf("pages_")==-1 || js.indexOf("pages_"+filename+".")!=-1)
         script(type='text/javascript', src=js)
 ```
+
+V režime ```watch``` sa zároveň sledujú aj všetky ```*.pug``` súbory. Pri zmene konkrétnej stránky sa prekompiluje len daná stránka, pri zmene zdieľaných častí (layout/mixins/partials) sa prekompilujú všetky stránky.
 
 Ak teda potrebujete pre niektorú stránku v administrácii vložiť špeciálny JavaScript súbor vytvorte ho v priečinku ```src/main/webapp/admin/v9/src/js/pages/```, ak predpokladáte použitie viacerých samostatných JS súborov kombinovaných do jedného celku vytvorte si aj podpriečinok. Príkladom je ```src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js``` ktorý je v podpriečinku ```web-pages-list``` a v skripte ```web-pages-list.js``` sa importuje trieda z ```preview.js```.
 

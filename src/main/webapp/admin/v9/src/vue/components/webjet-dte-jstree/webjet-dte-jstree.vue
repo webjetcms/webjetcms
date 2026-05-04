@@ -114,8 +114,9 @@
                 if (that.$props.dataTable.DATA.jsonField != null && "function"==(typeof that.$props.dataTable.DATA.jsonField.getItem)) {
                     item = that.$props.dataTable.DATA.jsonField.getItem(that.$props, data);
                 } else {
-                    if (that.click.indexOf("dt-tree-group")==0) item = data.node.original.groupDetails;
-                    else if (that.click.indexOf("dt-tree-page")==0) {
+                    if (that.click.indexOf("dt-tree-group")==0) {
+                        item = data.node.original.groupDetails;
+                    } else if (that.click.indexOf("dt-tree-page")==0) {
                         item = data.node.original.docDetails;
                         //kopirujeme virtualPath z node do DocDetails objektu, kedze ta hodnota sa potom pouziva, nemusime na backende modifikovat DocDetails objekt
                         if (that.click.indexOf("alldomains")!=-1) item.fullPath = data.node.original.virtualPath;
@@ -153,6 +154,10 @@
                 //zmen hodnotu v textarea, aby sme to videli a firni event, aby sa to dalo pocuvat
                 if (that.click.indexOf("dt-tree-dir-simple")!=-1) {
                         window.$(textInputId).val(that.$root.data[0].virtualPath).change();
+
+                        // Dispatch custom event with new value, so it can be listened on by other components if needed
+                        //its vue component so standard event listener on input will not work
+                        WJ.dispatchEvent("WJ.jstree-simple.change", {textInputId: textInputId, value: that.$root.data[0].virtualPath});
                 } else if (that.click.indexOf("dt-tree-groupid-root")!=-1 || that.click.indexOf("dt-tree-groupid")!=-1 || that.click.indexOf("dt-tree-pageid")!=-1) {
                     setTimeout(function() {
                         //console.log("input=", textInputId);
@@ -184,6 +189,9 @@
                 } else {
                     window.$(textInputId).val(JSON.stringify(that.$root.data, undefined, 4)).change();
                 }
+
+                // console.log("emmiting event WJ.jstree.change, item=", {textInputId: textInputId, item: item});
+                WJ.dispatchEvent("WJ.jstree.change", {textInputId: textInputId, item: item});
             },
             _validateGroupPageClick(that, data) {
                 //If group is marked with this icon (no permitted group) after click on it open node and do not select it
@@ -203,11 +211,13 @@
                     WJ.notifyError("Vyberte adresár", null, 5000);
                     return false;
                 }
+
                 //alebo ci sa vybrala stranka ked sa mala
                 if (that.click.indexOf("dt-tree-page")==0 && typeof(data.node.original.docDetails)=="undefined") {
                     WJ.notifyError("Vyberte web stránku", null, 5000);
                     return false;
                 }
+
                 return true;
             },
             _validateDuplicity(that, data) {

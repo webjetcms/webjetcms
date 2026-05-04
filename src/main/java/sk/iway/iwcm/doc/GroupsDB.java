@@ -20,8 +20,8 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -103,8 +103,8 @@ public class GroupsDB extends DB
 	 *@return                 The instance value
 	 *@deprecated - pouzite verziu getInstance(boolean forceRefresh)
 	 */
-	@Deprecated
-	public static GroupsDB getInstance(javax.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
+	@Deprecated(forRemoval = true)
+	public static GroupsDB getInstance(jakarta.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
 		//try to get it from server space
 		if (force_refresh == false)
@@ -151,7 +151,7 @@ public class GroupsDB extends DB
 	 *@param  servletContext  Description of the Parameter
 	 *@param  serverName      Description of the Parameter
 	 */
-	private GroupsDB(javax.servlet.ServletContext servletContext, String serverName)
+	private GroupsDB(jakarta.servlet.ServletContext servletContext, String serverName)
 	{
 		Logger.println(this,"GroupsDB: constructor [" + Constants.getInstallName()+"]");
 		this.serverName = serverName;
@@ -578,7 +578,7 @@ public class GroupsDB extends DB
 
 		List<GroupDetails> p_groups = new ArrayList<>();
 
-		if (editableGroups != null && editableGroups.length() > 0)
+		if (editableGroups != null && editableGroups.isEmpty() == false)
 		{
 			StringTokenizer st = new StringTokenizer(editableGroups, ",");
 			String id;
@@ -928,12 +928,28 @@ public class GroupsDB extends DB
 	}
 
 	/**
-	 * Ulozenie adresara, ak je nastavene doNotPublishEvents na true nie su vyvolane udalosti
+	 * Ulozenie adresara
 	 * @param group
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
 	 * @return
 	 */
-	public boolean setGroup(GroupDetails group, boolean publishEvents)
+	public boolean setGroup(GroupDetails group, boolean publishEvents) {
+		if (Constants.getBoolean("groupCreateBlankWebpageAfterCreate") && group.getGroupId() < 1) {
+			// Do not add scheduler, it will be created later when adding blank webpage (it will set defaultDocId for group), otherwise there will be duplicate scheduler records for new group
+			return setGroup(group, publishEvents, false);
+		} else {
+			return setGroup(group, publishEvents, true);
+		}
+	}
+
+	/**
+	 * Ulozenie adresara
+	 * @param group
+	 * @param publishEvents  ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
+	 * @param addGroupSchedulerRecord - ak true, tak sa pri editacii existujuceho adresara vytvori zaznam v GroupSchedulerDetails pre moznost zobrazenia zmeny v GroupScheduleri
+	 * @return
+	 */
+	public boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord)
 	{
 		if (publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_START)).publishEvent();
 
@@ -1090,12 +1106,15 @@ public class GroupsDB extends DB
 			}
 
 			//groups_scheduler(history)
-			int userId = -1;
-			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-			if(rb != null)
-				userId = rb.getUserId();
 
-			GroupPublisher.addRecord(newGroup, null, userId);
+			if(addGroupSchedulerRecord) {
+				int userId = -1;
+				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+				if(rb != null)
+					userId = rb.getUserId();
+
+				GroupPublisher.addRecord(newGroup, null, userId);
+			}
 			//GroupPublisher.addRecord(newGroup, null);
 
 			StringBuilder logMessage = new StringBuilder();
@@ -2430,7 +2449,7 @@ public class GroupsDB extends DB
 	 *@return    The groups value
 	 *@deprecated - pouzivajte verziu getGroupsAll
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public List<GroupDetails> getGroups()
 	{
 		List<GroupDetails> arlist = new ArrayList<>();
@@ -2688,16 +2707,19 @@ public class GroupsDB extends DB
 				int tempId = actualGroup.getTempId();
 				TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
 				DocDB docDB = DocDB.getInstance();
-				List<DocDetails> temps = docDB.getDocByGroup(Constants.getInt("tempGroupId"));
-				if (temps!=null && temp!=null)
-				{
-					String tempName = DB.internationalToEnglish(temp.getTempName());
-					for (DocDetails doc : temps)
+				GroupDetails templatesGroup = GroupsDB.getInstance().getTemplatesGroup();
+				if (templatesGroup != null) {
+					List<DocDetails> temps = docDB.getDocByGroup(templatesGroup.getGroupId());
+					if (temps!=null && temp!=null)
 					{
-						if (DB.internationalToEnglish(doc.getTitle()).equalsIgnoreCase(tempName))
+						String tempName = DB.internationalToEnglish(temp.getTempName());
+						for (DocDetails doc : temps)
 						{
-							newPageDocIdTemplate = -doc.getDocId();
-							break;
+							if (DB.internationalToEnglish(doc.getTitle()).equalsIgnoreCase(tempName))
+							{
+								newPageDocIdTemplate = -doc.getDocId();
+								break;
+							}
 						}
 					}
 				}
@@ -2790,7 +2812,7 @@ public class GroupsDB extends DB
 
 				for (GroupDetails element : subGroups)
 				{
-					if (groups.length() > 0)
+					if (groups.isEmpty() == false)
 						groups.append(',');
 					groups.append(element.getGroupId());
 					//refresh cache
@@ -2845,10 +2867,9 @@ public class GroupsDB extends DB
 				{
 					g.setFullPath(groupsDB.getPath(g.getGroupId()));
 
-					if (groups.length() > 0)
-						groups.append(',').append(g.getGroupId());
-					else
-						groups.append(g.getGroupId());
+					if (groups.isEmpty() == false)
+						groups.append(',');
+					groups.append(g.getGroupId());
 
 					if(foundSystemDir == false && "System".equalsIgnoreCase(g.getGroupName())) foundSystemDir = true;
 				}
@@ -3252,7 +3273,7 @@ public class GroupsDB extends DB
 		if (Tools.isNotEmpty(user.getEditableGroups(true)))
 		{
 			GroupsDB groupsDB = GroupsDB.getInstance();
-			String parentGroups = "," + groupId + "," + groupsDB.getParents(groupId)+",";
+			String parentGroups = "," + groupId + "," + groupsDB.getParents(groupId) + ",";
 			StringTokenizer st = new StringTokenizer(user.getEditableGroups(true), ",");
 			String id;
 			int i_id;
@@ -3657,19 +3678,19 @@ public class GroupsDB extends DB
 	 */
 	public List<String> getUserRootDomainNames(Identity user)
 	{
-		String editableGroups = user.getEditableGroups();
+		StringBuilder editableGroups = new StringBuilder(user.getEditableGroups());
 
 		if (Tools.isNotEmpty(user.getEditablePages())) {
 			List<DocDetails> pages = DocDB.getMyPages(user);
 			for (DocDetails doc : pages) {
 				if (doc.getGroupId() > 0) {
-					editableGroups += "," + doc.getGroupId();
+					editableGroups.append(",").append(doc.getGroupId());
 				}
 			}
 		}
 
 		List<String> ret = new ArrayList<>();
-		for(GroupDetails gd : getRootGroups(editableGroups))
+		for(GroupDetails gd : getRootGroups(editableGroups.toString()))
 		{
 			if(Tools.isNotEmpty(gd.getDomainName()) && ret.contains(gd.getDomainName()) == false)
 				ret.add(gd.getDomainName());
@@ -4232,5 +4253,28 @@ public class GroupsDB extends DB
 			}
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * Returns GroupDetails of /System/Templates folder. For multidomain returns domain specific Templates folder, otherwise returns group with id from config tempGroupId
+	 * @return
+	 */
+	public GroupDetails getTemplatesGroup() {
+		//try to find it in localSystemGroup
+		GroupDetails localSystemGroup = getLocalSystemGroup();
+		if (localSystemGroup != null) {
+			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+			String templatesDirName = propSystem.getText("config.templates_dir");
+
+			List<GroupDetails> systemGroups = getGroups(localSystemGroup.getGroupId());
+			for (GroupDetails group : systemGroups) {
+				if (templatesDirName.equalsIgnoreCase(group.getGroupName())) {
+					return group;
+				}
+			}
+		}
+
+		GroupDetails tempGroup = getGroup(Constants.getInt("tempGroupId"));
+		return tempGroup;
 	}
 }

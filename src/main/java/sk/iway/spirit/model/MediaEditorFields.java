@@ -3,7 +3,7 @@ package sk.iway.spirit.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -69,7 +69,7 @@ public class MediaEditorFields extends BaseEditorFields {
 
             if(tmp[0] != -1) {
                 for(int i = 0; i < tmp.length; i++) {
-                    newGroups.add(repo.getById(Long.valueOf(tmp[i])));
+                    newGroups.add(repo.getReferenceById(Long.valueOf(tmp[i])));
                 }
             }
         }

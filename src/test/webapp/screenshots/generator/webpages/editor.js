@@ -305,6 +305,15 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
     Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button.png');
 
     I.switchTo();
+
+    I.click(locate("div.cke_dialog_container a.cke_dialog_tab").withText("Rozšírené"));
+    Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button_advanced.png');
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=153671");
+    DTE.waitForEditor();
+    I.switchTo(".cke_wysiwyg_frame.cke_reset");
+    I.click(locate("button.btn").withText("normal button"));
+    Document.screenshot('/redactor/webpages/working-in-editor/wjformbutton.png');
 });
 
 Scenario('webjet-toolbar', ({ I, Document }) => {

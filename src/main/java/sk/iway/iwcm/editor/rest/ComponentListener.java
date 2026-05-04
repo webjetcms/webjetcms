@@ -2,7 +2,7 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

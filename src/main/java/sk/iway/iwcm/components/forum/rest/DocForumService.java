@@ -16,10 +16,10 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -88,7 +88,7 @@ public class DocForumService {
 		List<LabelValue> icons = new ArrayList<>();
 
         icons.add(new LabelValue("<i class=\"ti ti-circle-check\" style=\"color: #00be9f;\"></i> " + prop.getText("apps.forum.icon.confirmed"), "confirmed:true"));
-        icons.add(new LabelValue("<i class=\"ti ti-circle-x\" style=\"color: #ff4b58;\"></i> " + prop.getText("apps.forum.icon.non_confirmed"), "confirmed:false"));
+        icons.add(new LabelValue("<i class=\"ti ti-circle-x\" style=\"color: #E00028;\"></i> " + prop.getText("apps.forum.icon.non_confirmed"), "confirmed:false"));
         icons.add(new LabelValue("<i class=\"ti ti-lock\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.non_active"), "active:false"));
         icons.add(new LabelValue("<i class=\"ti ti-lock-open\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.active"), "active:true"));
         icons.add(new LabelValue("<i class=\"ti ti-trash\" style=\"color: #fabd00;\"></i> " + prop.getText("apps.forum.icon.deleted"), "deleted:true"));

@@ -2,11 +2,13 @@
     <div :class="'overview-logged bookmark'">
         <div class="overview-logged__head">
             <div class="overview-logged__head__icon">
-                <i class="ti ti-bookmarks fs-4"></i>
+                <i class="ti ti-bookmarks fs-4" aria-hidden="true"></i>
             </div>
             <span> {{ this.$WJ.translate('admin.welcome.bookmarks.title.js') }}</span>
             <div class="overview-logged__head__more">
-                <i @click="showModal()" v-tooltip:top="this.$WJ.translate('button.add')" class="ti ti-plus"></i>
+                <button @click="showModal()" :aria-label="this.$WJ.translate('button.add')" v-tooltip:top="this.$WJ.translate('button.add')" class="btn btn-outline p-0">
+                    <i class="ti ti-plus" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
 
@@ -19,8 +21,9 @@
                         @click="deleteBookmark(index)"
                         class="float-end btn btn-sm buttons-selected buttons-remove buttons-divider"
                         v-tooltip:left="$WJ.translate('button.delete')"
+                        :aria-label="$WJ.translate('button.delete')"
                     >
-                      <span><i class="ti ti-trash fs-6"></i></span>
+                      <span><i class="ti ti-trash fs-6" aria-hidden="true"></i></span>
                     </button>
                 </li>
             </ul>

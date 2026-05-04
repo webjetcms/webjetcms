@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,7 +66,7 @@ public class RestaurantMenuRestController extends DatatableRestControllerV2<Rest
     public Page<RestaurantMenuEntity> searchItem(Map<String, String> params, Pageable pageable, RestaurantMenuEntity search) {
         RestaurantMenuService.processParams(params);
 
-        return new PageImpl<>(  //Return new page 4.
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(  //Return new page 4.
             RestaurantMenuService.sortMenu( //Sort this list 3.
                 new ArrayList<RestaurantMenuEntity>( //Create new list, because Page.getContent() returns unmodifiable list 2.
                     super.searchItem(params, null, search).getContent() //Call super to get data 1.

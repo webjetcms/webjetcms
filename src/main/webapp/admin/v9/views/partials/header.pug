@@ -4,8 +4,8 @@ div.ly-container.container
 
     div.header-link-group
 
-        .btn.btn-sm.btn-outline-secondary.js-sidebar-toggler
-            i.ti.ti-menu-2
+        button.btn.btn-sm.btn-outline-secondary.js-sidebar-toggler(type="button" data-th-aria-label="\#{menu.top.navigation}" aria-label="Toggle navigation")
+            i.ti.ti-menu-2(aria-hidden="true")
 
         .header-title
 
@@ -13,54 +13,49 @@ div.ly-container.container
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();")
-                i.ti.ti-help
+            a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();" tabindex="0" role="button")
+                i.ti.ti-help(aria-hidden="true")
                 |   <span data-th-text="\#{menu.top.help}">Pomocnik</span>
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-bs-toggle="tooltip")
-                i.ti.ti-search.notext
-
-            .btn.btn-sm.btn-outline-secondary.js-tasks-toggler(style="display:none")
-                i.ti.ti-list-check.todo
-
-            .btn.btn-sm.btn-outline-secondary.js-message-toggler(style="display:none")
-                i.ti.ti-message.todo
-
-            .btn.btn-sm.btn-outline-secondary.js-notifications-toggler(style="display:none")
-                i.ti.ti-bell.todo
+            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-th-aria-label="\#{components.search.title}" data-bs-toggle="tooltip")
+                i.ti.ti-search.notext(aria-hidden="true")
 
         div.header-link-group
 
             div.dropdown
                 button.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(id="dropdownMenuUser" data-bs-toggle="dropdown" aria-expanded="false")
-                    i.ti.ti-user
+                    i.ti.ti-user(aria-hidden="true")
                     <span data-th-text="${layout.user.fullName}" style="padding-left: 3px;">WebJET User</span>
 
                 ul.dropdown-menu(aria-labelledby="dropdownMenuUser")
                     li
                         a.dropdown-item(data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
-                            i.ti.ti-user
+                            i.ti.ti-user(aria-hidden="true")
                             <span data-th-text="\#{components.forum.bb.profile}" data-th-remove="tag">Profil</span>
                     li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
                         a.dropdown-item(onclick="WJ.openPopupDialog('/admin/2factorauth.jsp')")
-                            i.ti.ti-device-mobile-message
+                            i.ti.ti-device-mobile-message(aria-hidden="true")
                             <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
+                    li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
+                        a.dropdown-item.passkey(onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
+                            i.ti.ti-fingerprint(aria-hidden="true")
+                            <span data-th-text="\#{passkey.manage.title}" data-th-remove="tag">PassKey</span>
                     li(data-th-if="${layout.hasPermission('cmp_form')}")
                         a.dropdown-item(onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-                            i.ti.ti-key
+                            i.ti.ti-key(aria-hidden="true")
                             <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
                     li
                         a.dropdown-item(href="javascript:document.adminLogoffForm.submit()")
-                            i.ti.ti-logout
+                            i.ti.ti-logout(aria-hidden="true")
                             <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
                 |
 
         div.header-link-group(style="margin-left: 4px;")
 
-            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(href="javascript:document.adminLogoffForm.submit()" data-th-title="\#{menu.logout}" data-bs-toggle="tooltip")
-                i.ti.ti-logout.notext
+            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(href="javascript:document.adminLogoffForm.submit()" data-th-title="\#{menu.logout}" data-th-aria-label="\#{menu.logout}" data-bs-toggle="tooltip")
+                i.ti.ti-logout.notext(aria-hidden="true")
 
     form(data-th-action="${layout.getConstant('adminLogoffLink')}" method="post" name="adminLogoffForm" style="display:none;")
         input(type="hidden" data-th-name="${layout.csrfParameterName}" data-th-value="${layout.csrfToken}")

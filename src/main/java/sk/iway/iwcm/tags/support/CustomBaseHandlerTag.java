@@ -23,8 +23,8 @@ package sk.iway.iwcm.tags.support;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.BodyTagSupport;
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.tagext.BodyTagSupport;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -130,9 +130,9 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
             this.triedJstlInit = true;
 
             try {
-                this.loopTagClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTag");
+                this.loopTagClass = RequestUtils.applicationClass("jakarta.servlet.jsp.jstl.core.LoopTag");
                 this.loopTagGetStatus = ((Class<?>)this.loopTagClass).getDeclaredMethod("getLoopStatus", (Class<?>[])null);
-                this.loopTagStatusClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTagStatus");
+                this.loopTagStatusClass = RequestUtils.applicationClass("jakarta.servlet.jsp.jstl.core.LoopTagStatus");
                 this.loopTagStatusGetIndex = ((Class<?>)this.loopTagStatusClass).getDeclaredMethod("getIndex", (Class<?>[])null);
                 this.triedJstlSuccess = true;
             } catch (ClassNotFoundException | NoSuchMethodException ex) {}

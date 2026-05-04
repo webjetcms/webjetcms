@@ -79,12 +79,32 @@
             window.initAmcharts().then(module => {
 
                 $.ajax({url: getGraphUrl("pieVisits"), success: function(result) {
-                    pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{stat.top.pieChart}]]', "top-pieVisits", result['content']);
+
+                    const pieConfig = {
+                        yAxeName: "visits",
+                        xAxeName: "name",
+                        chartTitle: '[[#{stat.top.pieChart}]]',
+                        chartDivId: "top-pieVisits",
+                        chartData: result['content']
+                    };
+
+                    pieChartVisits = new ChartTools.PieChartForm(pieConfig);
+
                     ChartTools.createAmchart(pieChartVisits);
                 }});
 
                 $.ajax({url: getGraphUrl("lineVisits"), success: function(result) {
-                    lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.top.lineChart}]]', "top-lineVisits", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+
+                    const lineConfig = {
+                        yAxeNames: ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]),
+                        xAxeName: "dayDate",
+                        chartTitle: '[[#{stat.top.lineChart}]]',
+                        chartDivId: "top-lineVisits",
+                        chartData: ChartTools.convertDataForLineChart(result),
+                        dateType: ChartTools.DateType.Days
+                    };
+
+                    lineChartVisits = new ChartTools.LineChartForm(lineConfig);
                     ChartTools.createAmchart(lineChartVisits);
 
                     //After last load data
@@ -129,7 +149,7 @@
                 tmpDefURL = url + "/lineChartData?dayDate=" + searchDateValue;
                 tmpDefURL += "&rootDir=" + rootDir + "&filterBotsOut=" + filterBotsOut;
             } else if(chartDivId == "pieVisits") {
-                tmpDefURL += url + "/search/findByColumns?chartType=" + ChartTools.ChartType.Pie;
+                tmpDefURL += url + "/search/findByColumns?chartType=" + ChartTools.ChartType.Pie_Donut;
                 tmpDefURL += "&searchDayDate=" + searchDateValue;
                 tmpDefURL += "&searchRootDir=" + rootDir + "&searchFilterBotsOut=" + filterBotsOut;
             }
@@ -152,7 +172,7 @@
         <div class="col-auto dt-extfilter-title-dayDate" style="display: none;"></div>
         <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
         <div class="col-auto" data-th-title="#{components.stat.filter.showOnlyFromGroup}" data-toggle="tooltip">
-            <input type="text" class="webjet-dte-jstree" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
+            <input type="text" class="webjet-dte-jstree-alldomains" id="rootDir" value="-1" data-th-data-text="#{components.stat.stats.root_dirs.all}" data-th-data-text-empty="#{components.stat.stats.root_dirs.all}"/>
         </div>
         <div class="col-auto">
             <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">

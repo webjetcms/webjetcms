@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapperImpl;
@@ -67,7 +67,7 @@ public class EshopService {
 
 
 	public static EshopService getInstance() {
-		javax.servlet.ServletContext servletContext = Constants.getServletContext();
+		jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 		EshopService service = (EshopService) servletContext.getAttribute(EshopService.class.getName());
 		if(service == null) {
 			service = new EshopService(

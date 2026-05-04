@@ -721,6 +721,8 @@ DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
 UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);
 DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%autotest%' OR media_title_sk LIKE 'image test%' OR media_title_sk LIKE '%onerror=alert%' OR media_title_sk LIKE 'media%');
 OPTIMIZE TABLE media;
+DELETE FROM _properties_ WHERE prop_key LIKE '%autotest%';
+OPTIMIZE TABLE _properties_;
 ```
 
 Ak chcete plošne zmeniť heslá v testovacej databáze použite:

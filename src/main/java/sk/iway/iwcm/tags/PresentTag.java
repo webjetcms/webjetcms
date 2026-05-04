@@ -23,9 +23,9 @@ package sk.iway.iwcm.tags;
 import java.security.Principal;
 import java.util.StringTokenizer;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.JspException;
 
 import sk.iway.iwcm.tags.support.CustomConditionalTagBase;
 import sk.iway.iwcm.tags.support.CustomTagUtils;

@@ -34,18 +34,18 @@ import '../js/plugins/jquery.cookie.js';
 import '../js/plugins/modernizr-custom.js';
 import 'jstree';
 //import * as dtConfig from '../js/datatables-config.js';
-import Ninja from '../js/global-functions.js';
+import Ninja from '../js/global-functions.js'; //NOSONAR
 import AutoCompleter from '../js/autocompleter.js';
 
 import numeral from 'numeral';
-import numeralsk from 'numeral/locales/sk';
-import numeralcz from 'numeral/locales/cs';
-import numeralde from 'numeral/locales/de';
+import numeralsk from 'numeral/locales/sk'; //NOSONAR
+import numeralcz from 'numeral/locales/cs'; //NOSONAR
+import numeralde from 'numeral/locales/de'; //NOSONAR
 import moment from 'moment';
-import momentsk from 'moment/locale/sk';
-import momentcz from 'moment/locale/cs';
-import momentde from 'moment/locale/de';
-import Scrollbar from 'smooth-scrollbar';
+import momentsk from 'moment/locale/sk'; //NOSONAR
+import momentcz from 'moment/locale/cs'; //NOSONAR
+import momentde from 'moment/locale/de'; //NOSONAR
+import Scrollbar from 'smooth-scrollbar'; //NOSONAR
 import Quill from 'quill';
 import toastr from 'toastr';
 
@@ -74,12 +74,28 @@ import '../js/datatables-upload.js';
 //set backCompact for elfinder, when you update elfinder check, if it is still needed
 import './ui-config.js';
 
+//jquery-ui core modules (rspack needs explicit imports, webpack resolved them via AMD internally)
+import 'jquery-ui/ui/version';
+import 'jquery-ui/ui/widget';
+import 'jquery-ui/ui/plugin';
+import 'jquery-ui/ui/data';
+import 'jquery-ui/ui/disable-selection';
+import 'jquery-ui/ui/scroll-parent';
+import 'jquery-ui/ui/keycode';
+import 'jquery-ui/ui/position';
+import 'jquery-ui/ui/unique-id';
+import 'jquery-ui/ui/form-reset-mixin';
+import 'jquery-ui/ui/labels';
+//jquery-ui widgets
+import 'jquery-ui/ui/widgets/mouse';
 import 'jquery-ui/ui/widgets/draggable';
 import 'jquery-ui/ui/widgets/droppable';
+import 'jquery-ui/ui/widgets/menu';
 import 'jquery-ui/ui/widgets/autocomplete';
 //this is required for elfinder
 import 'jquery-ui/ui/widgets/selectable';
 import 'jquery-ui/ui/widgets/resizable';
+import 'jquery-ui/ui/widgets/checkboxradio';
 import 'jquery-ui/ui/widgets/controlgroup';
 import 'jquery-ui/ui/widgets/button';
 import 'jquery-ui/ui/widgets/slider';
@@ -122,17 +138,7 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
-const createPdfMake = () => {
-    return import(/* webpackChunkName: "pdfMake" */ 'pdfmake/build/pdfmake');
-};
-window.createPdfMake = createPdfMake;
-const createPdfFonts = () => {
-    return import(/* webpackChunkName: "pdfFonts" */ 'pdfmake/build/vfs_fonts');
-};
-window.createPdfFonts = createPdfFonts;
-
 import * as JSZip from 'jszip';
-
 window.JSZip = JSZip;
 
 import { dataTableInit } from '../../npm_packages/webjetdatatables/index';

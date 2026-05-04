@@ -1,6 +1,6 @@
 # Basic code
 
-The HTML code is split into multiple files to allow for common code to be inserted (e.g. header code in `head.jsp`) to different page types (`home-page.jsp/sub-page.jsp`).
+The HTML code is divided into multiple files to allow for the insertion of common code (e.g. header code in `head.jsp`) into different types of pages (`home-page.jsp/sub-page.jsp`).
 
 <!-- tabs:start -->
 
@@ -115,7 +115,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:locale" content="${ninja.temp.lngIso}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.urlCanonical}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
 
 <%-- <% if (ninja.amp.enabled) { %> --%>
 <c:if test="${requestScope.doc_temp_name == 'Blog template'}">
@@ -254,11 +254,12 @@ ${ninja.webjet.insertJqueryFake}
 </c:if>
 ```
 
+
 <!-- tabs:end -->
 
 ## Configuration file
 
-In the folder `/templates/.../` the following properties can be set:
+The following properties can be set in the `/templates/.../` folder:
 
 ```properties
 ninjaDebug=false
@@ -274,4 +275,4 @@ minBrowserVersion.EDGE=12
 minBrowserVersion.ANDROID_BROWSER=4
 ```
 
-all these properties can be influenced by the URL parameter or `request` attribute with the same name.
+All of these properties can be influenced by the URL parameter or `request` attribute with the same name when the page is displayed.

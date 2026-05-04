@@ -1,0 +1,69 @@
+<script data-th-inline="javascript">
+    // console.log("Initializing form stats table...");
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const urlFormName = urlParams.get('formName');
+    const urlItemFormId = urlParams.get('itemFormId');
+
+    if(urlFormName == null || urlFormName.length < 1 || urlItemFormId == null || urlItemFormId.length < 1) {
+        window.location.replace("/404.jsp");
+    }
+
+    let itemsColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemTabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity")})]*/ '';
+    let itemUrl = "/admin/rest/form-items";
+
+    // Loop itemTabs set selected to true id id === "stat"
+    itemTabs.forEach(tab => {
+        if(tab.id === "stat") {
+            tab.selected = true;
+        } else {
+            tab.selected = false;
+        }
+    });
+</script>
+
+<script data-th-inline="javascript">
+    let formItemsDataTable;
+
+    window.domReady.add(function () {
+        formItemsDataTable = WJ.DataTable({
+            url: WJ.urlAddParam(WJ.urlAddParam(itemUrl, "formName", urlFormName), "itemFormId", urlItemFormId),
+            columns: itemsColumns,
+            tabs: itemTabs,
+            id: "formItemsDataTable",
+            serverSide: true,
+            fetchOnCreate: true,
+            fetchOnEdit: true,
+            hideTable: true
+        });
+
+        formItemsDataTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
+            //console.log("DataTable submitSuccess event:", { e, json, data, action });
+
+            const event = new CustomEvent("stat-chart-update", {
+                detail: { id: urlItemFormId }
+            });
+            window.parent.dispatchEvent(event);
+        });
+
+        formItemsDataTable.EDITOR.on( 'open', function( e, mode, action ) {
+            $("#DTE_Field_useColorScheme_0").on("change", function() {
+                const useColorScheme = formItemsDataTable.EDITOR.field("useColorScheme").val()[0];
+                if(useColorScheme) {
+                    formItemsDataTable.EDITOR.field("colorScheme").enable();
+                } else {
+                    formItemsDataTable.EDITOR.field("colorScheme").disable();
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    #pills-dt-formItemsDataTable-basic-tab { display: none !important; }
+    #pills-dt-formItemsDataTable-advanced-tab { display: none !important; }
+</style>
+
+<table id="formItemsDataTable" class="datatableInit table"></table>

@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -167,9 +167,10 @@ public class WebpagesService {
 	/**
 	 * Vrati fiktivny korenovy adresar, je potrebny pre zobrazenie v stromovej strukture
 	 * v editore ked je mozne vybrat aj korenovy adresar
+	 * @param isAllDomains - ak je true, bude nazov korenoveho adresara "Vsetky domeny", ak je false bude "Korenovy adresar"
 	 * @return
 	 */
-	public static GroupDetails getRootGroup() {
+	private static GroupDetails getRootGroup(boolean isAllDomains) {
 		GroupEditorField groupEditorField = new GroupEditorField();
 
 		//Set root parent group details into group editor field
@@ -179,11 +180,34 @@ public class WebpagesService {
 		GroupDetails groupDetails = new GroupDetails();
 		groupDetails.setGroupId(0);
 		Prop prop = Prop.getInstance();
-		groupDetails.setGroupName(prop.getText("stat_settings.group_id"));
+
+		if(isAllDomains) {
+			groupDetails.setGroupName(prop.getText("stat.stats.root_dirs.all"));
+		} else {
+			groupDetails.setGroupName(prop.getText("stat_settings.group_id"));
+		}
+
 		groupDetails.setFullPath("/");
 		groupDetails.setEditorFields(groupEditorField);
 
 		return groupDetails;
+	}
+
+	/**
+	 * Vrati fiktivny korenovy adresar, je potrebny pre zobrazenie v stromovej strukture
+	 * v editore ked je mozne vybrat aj korenovy adresar
+	 * @return
+	 */
+	public static GroupDetails getRootGroup() {
+		return getRootGroup(false);
+	}
+
+	/**
+	 * Vrati fiktivny korenovy adresar vsetkych domen, je potrebny pre zobrazenie v stromovej strukture.
+	 * @return
+	 */
+	public static GroupDetails getRootGroupAllDomains() {
+		return getRootGroup(true);
 	}
 
 	/**
@@ -403,9 +427,12 @@ public class WebpagesService {
 		List<LabelValueDetails> list = new ArrayList<>();
 		list.add(new LabelValueDetails(prop.getText("groupedit.new_page_template.empty"), "-1"));
 		DocDB docDB = DocDB.getInstance();
-		List<DocDetails> pageTemps = docDB.getDocByGroup(Constants.getInt("tempGroupId"));
-		for (DocDetails pageTemp : pageTemps) {
-			list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+		GroupDetails templatesGroup = GroupsDB.getInstance().getTemplatesGroup();
+		if (templatesGroup != null) {
+			List<DocDetails> pageTemps = docDB.getDocByGroup(templatesGroup.getGroupId());
+			for (DocDetails pageTemp : pageTemps) {
+				list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));
+			}
 		}
 		return list;
 	}
@@ -957,11 +984,15 @@ public class WebpagesService {
 	private static List<LabelValue> getStatusIconOptions(GetAllItemsDocOptions options, Prop prop) {
 		List<LabelValue> icons = new ArrayList<>();
 
-		icons.add(new LabelValue("<i class=\"ti ti-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
+		if(Constants.getInt("systemPagesRecentPages") != options.getGroupId()) {
+			// Cant find searchDefaultPage because pages are not in real folder
+			icons.add(new LabelValue("<i class=\"ti ti-star\"></i> "+prop.getText("editor.main_site"), "searchDefaultPage"));
+		}
+
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin\"></i> "+prop.getText("webpages.icons.showInMenu"), "showInMenu:true"));
 		icons.add(new LabelValue("<i class=\"ti ti-map-pin-off\"></i> "+prop.getText("webpages.icons.notShowInMenu"), "showInMenu:false"));
 		icons.add(new LabelValue("<i class=\"ti ti-lock\"></i> "+prop.getText("webpages.icons.onlyForLogged"), "passwordProtected:notEmpty"));
-		icons.add(new LabelValue("<span style=\"color: #FF4B58\">"+prop.getText("webpages.icons.disabled")+"</span>", "available:false"));
+		icons.add(new LabelValue("<span style=\"color: #E00028\">"+prop.getText("webpages.icons.disabled")+"</span>", "available:false"));
 		icons.add(new LabelValue("<i class=\"ti ti-external-link\"></i> "+prop.getText("webpages.icons.externalLink"), "externalLink:notEmpty"));
 		icons.add(new LabelValue("<i class=\"ti ti-eye-off\"></i> "+prop.getText("webpages.icons.notSearchable"), "searchable:false"));
 

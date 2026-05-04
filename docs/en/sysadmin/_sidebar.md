@@ -1,25 +1,26 @@
- <div class="sidebar-section">Manual for operation</div>
+<div class="sidebar-section">Operation manual</div>
 
-- [:point\_left: Back to Home](/?back)
+- [:point_left: Back to Home](/?back)
 
 - Security
-  - [Safety tests](/sysadmin/pentests/README.md)
-  - [Vulnerability scanning of libraries](/sysadmin/dependency-check/README.md)
-  - [WebJET update](/sysadmin/update/README.md)
+  - [Security Tests](/sysadmin/pentests/README.md)
+  - [Library Vulnerability Check](/sysadmin/dependency-check/README.md)
+  - [WebJET Update](/sysadmin/update/README.md)
+  - [Responsible Vulnerability Disclosure](/sysadmin/responsible-disclosure/README.md)
 - Audit
   - [Audit](/sysadmin/audit/README.md)
-  - [List of notifications](/sysadmin/audit/audit-notifications.md)
+  - [Notifications List](/sysadmin/audit/audit-notifications.md)
   - [Changed pages](/sysadmin/audit/audit-changed-webpages.md)
-  - [Awaiting publication](/sysadmin/audit/audit-awaiting-publish-webpages.md)
-  - [Logging levels](/sysadmin/audit/audit-log-levels.md)
+  - [Awaiting to publish](/sysadmin/audit/audit-awaiting-publish-webpages.md)
+  - [Logging Levels](/sysadmin/audit/audit-log-levels.md)
   - [Log files](/sysadmin/audit/audit-log-files.md)
   - [Latest logs](/sysadmin/audit/memory-logging.md)
 - Operation
-  - [Server performance](/sysadmin/performance/README.md)
-  - [Server monitoring](/sysadmin/monitoring/README.md)
+  - [Server Performance](/sysadmin/performance/README.md)
+  - [Server Monitoring](/sysadmin/monitoring/README.md)
   - [Restart](/sysadmin/restart.md)
-  - [Exchange cluster node data](/sysadmin/monitoring/nodes-logic.md)
+  - [Cluster node data exchange](/sysadmin/monitoring/nodes-logic.md)
   - [Data deletion](/sysadmin/data-deleting/README.md)
   - [Setting the license number](/install/license/README.md)
 - Files
-  - [System backup](/sysadmin/files/backup/README.md)
+  - [System Backup](/sysadmin/files/backup/README.md)

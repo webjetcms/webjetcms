@@ -1,6 +1,6 @@
 package sk.iway.basecms.contact.upload;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

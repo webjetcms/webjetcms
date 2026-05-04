@@ -57,7 +57,7 @@ ant download
 Postup je nasledovný:
 
 - task ```prepareSrc```
-  - spojí zdrojové kódy aktuálnej a verzie 8 z ```/src/main/java```, ```/src/webjet8/java``` a ```/src/main/aspectj``` do ```src-utf8```
+  - spojí zdrojové kódy aktuálnej a verzie 8 z ```/src/main/java``` a ```/src/main/aspectj``` do ```src-utf8```
 - task ```delombok```
   - vykoná sa ```delombok``` - extrapolovanie lombok anotácií, keďže ```AspectJ``` má s lombok anotáciami problém
   - výsledok je v adresári ```/src-delombok/```

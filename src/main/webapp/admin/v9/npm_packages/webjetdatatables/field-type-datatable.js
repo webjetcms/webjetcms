@@ -15,8 +15,7 @@ export function typeDatatable() {
             let otherElementsHeight = 0;
             container.closest("div.panel-body").children("div.DTE_Field, div.form-group").each(function(index) {
                 let element = $(this);
-                if (element.hasClass("DTE_Field_Type_datatable")) return;
-                //console.log("Counting elements: ", element);
+                if (element.hasClass("DTE_Field_Type_datatable") || element.hasClass("DTE_Field_Type_hidden")) return;
                 otherElementsHeight += element.outerHeight(true);
             });
 
@@ -175,7 +174,7 @@ export function typeDatatable() {
                     //console.log("Returning json for localJson: ", json);
                     return json;
                 } else {
-                    console.log("Returning original value, datatable is not initialized", conf.originalValue);
+                    //console.log("Returning original value, datatable is not initialized", conf.originalValue);
                     //send original value, DT was not initialized
                     return(conf.originalValue);
                 }
@@ -423,6 +422,10 @@ export function typeDatatable() {
                 conf.autoLoadTimeout = setTimeout(function() {
                     //console.log("Auto loading datatable, firing tab click event");
                     onTabClickInit(null, conf);
+
+                    setTimeout(function () {
+                        resizeDatatable(conf);
+                    }, 2000);
                 }, 600);
             }
         },

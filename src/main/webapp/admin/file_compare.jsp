@@ -20,11 +20,7 @@ public boolean isTextFile(String file1) {
 
 public boolean isImageFile(String file1) {
 	if(file1==null) return false;
-	String[] imageFiles = {"jpg","jpeg","gif","png","bmp"};
-	for (String imageFile : imageFiles) {
-		if (file1.contains("."+imageFile)) return true;
-	}
-	return false;
+	return sk.iway.iwcm.common.ImageTools.isImage(file1);
 }
 
 public String diff(String file1,String file2)

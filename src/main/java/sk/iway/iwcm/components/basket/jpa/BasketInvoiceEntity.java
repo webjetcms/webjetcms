@@ -5,18 +5,16 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -83,7 +81,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	private String contactLastName;
 
     @Column(name="create_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.basket.invoice.date_created",
@@ -361,7 +359,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	// private String userLng;
 
 	// @Column(name="html_code")
-	// @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	// @jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	// private String htmlCode;
 
 	/**

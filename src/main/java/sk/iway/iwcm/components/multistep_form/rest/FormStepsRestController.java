@@ -3,15 +3,15 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +67,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
 
     @Override
     public FormStepEntity getOneItem(long id) {
-        FormStepEntity entity = (id == -1) ? new FormStepEntity() : formStepsRepository.getById(id);
+        FormStepEntity entity = (id == -1) ? new FormStepEntity() : formStepsRepository.getReferenceById(id);
         if(id < 1) entity.setFormName(MultistepFormsService.getFormName(getRequest()));
         // Copy value so it can be used during duplicate action
         entity.setIdForDuplication(entity.getId());
@@ -139,11 +139,11 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         multistepFormsService.updateStepsPositions(entity.getFormName());
     }
 
-    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML)
+    @GetMapping(value="/get-step", params={"form-name", "step-id"}, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, HttpServletRequest request) {
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
-        String contentTypeWithCharset = MediaType.TEXT_HTML + "; charset=" + encoding;
+        String contentTypeWithCharset = MediaType.TEXT_HTML_VALUE + "; charset=" + encoding;
 
         try {
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);

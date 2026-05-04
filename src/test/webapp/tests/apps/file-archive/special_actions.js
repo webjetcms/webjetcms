@@ -39,8 +39,8 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     // 3. Overenie ci sa spravne editovalo
     I.say('Phase 3 - Verify file version update in table');
     DT.filterEquals('virtualFileName', virtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", versionUploadFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", versionUploadFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
     //I.clickCss('button.buttons-select-all');
     I.clickCss('#fileArchiveDataTable_wrapper .buttons-edit');
     DTE.waitForEditor('fileArchiveDataTable');
@@ -64,8 +64,8 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     // 6. Overenie ci sa spravne editovalo
     I.say('Phase 6 - Verify file version update again');
     DT.filterEquals('virtualFileName', virtualFileName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", versionUploadFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", versionUploadFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
     //I.clickCss('button.buttons-select-all');
     I.clickCss('#fileArchiveDataTable_wrapper .buttons-edit');
     DTE.waitForEditor('fileArchiveDataTable');
@@ -88,9 +88,9 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     DT.filterEquals('virtualFileName', virtualFileName);
     DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
     await SL.setAsc();
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", versionUploadFileName]);
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(versionUploadFileName, 1)]);
-    DT.checkTableRow("fileArchiveDataTable", 3, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(versionUploadFileName, 2)]);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", versionUploadFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(versionUploadFileName, 1)]);
+    DT.checkTableRow("fileArchiveDataTable", 3, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(versionUploadFileName, 2)]);
     SL.checkOrderIds(['-1', '3', '2']);
     I.assertEqual(await SL.getBackgroundColor(1), SL.white);
     I.assertEqual(await SL.getBackgroundColor(2), SL.gray);
@@ -130,7 +130,7 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     // 12. Over v čakajúcich súboroch
     I.say("Phase 12 - Verify that the table contains the entry as red");
     DT.filterEquals('virtualFileName', virtualFileName);
-    SL.checkStatus(1, 3, ['star', 'map-pin', 'calendar-plus']);
+    SL.checkStatus(1, 4, ['star', 'map-pin', 'calendar-plus']);
     I.click(DT.btn.archive_edit_button);
     DTE.waitForEditor('fileArchiveDataTable');
     I.clickCss("#pills-dt-fileArchiveDataTable-waitingFiles-tab");
@@ -152,7 +152,7 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
     DTE.save("fileArchiveDataTable");
-    SL.checkStatus(1, 3, ['star', 'map-pin'], ['calendar-plus']);
+    SL.checkStatus(1, 4, ['star', 'map-pin'], ['calendar-plus']);
 
     // 15. Nahratie opäť novej verzie súboru v buducnosti
     I.say('Phase 15 - Upload another new version of the file in the future');
@@ -172,7 +172,7 @@ Scenario('Special file upload - Upload a new version', async ({ I, DTE, DT }) =>
     I.say("Phase16 - Verify that it will be uploaded");
     I.amOnPage(SL.fileArchive);
     DT.filterEquals('virtualFileName', virtualFileName);
-    SL.checkStatus(1, 3, ['star', 'map-pin'], ['calendar-plus']);
+    SL.checkStatus(1, 4, ['star', 'map-pin'], ['calendar-plus']);
     I.clickCss('button.buttons-select-all');
     I.click(DT.btn.archive_edit_button);
     DTE.waitForEditor('fileArchiveDataTable');
@@ -214,16 +214,16 @@ Scenario('Special file upload - Add to version history', async ({ I, DT, DTE }) 
     I.amOnPage(SL.fileArchive);
     DT.filterEquals('virtualFileName', virtualFileName);
     DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualFileName, "", "files/archiv/", addToHistoryFileName]);
-    DT.checkTableRow("fileArchiveDataTable", 2, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 1)]);
-    DT.checkTableRow("fileArchiveDataTable", 3, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 2)]);
-    DT.checkTableRow("fileArchiveDataTable", 4, ["", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 3)]);
-    DT.checkTableRow("fileArchiveDataTable", 5, ["", virtualFileName, "", "files/archiv/", addToHistoryFourthVersionFileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
-    SL.checkStatus(2, 3, ['star-off', 'map-pin']);
-    SL.checkStatus(3, 3, ['star-off', 'map-pin']);
-    SL.checkStatus(4, 3, ['star-off', 'map-pin']);
-    SL.checkStatus(5, 3, ['star-off', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualFileName, "", "files/archiv/", addToHistoryFileName]);
+    DT.checkTableRow("fileArchiveDataTable", 2, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 1)]);
+    DT.checkTableRow("fileArchiveDataTable", 3, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 2)]);
+    DT.checkTableRow("fileArchiveDataTable", 4, ["", "", virtualFileName, "", "files/archiv/", SL.getVersionName(addToHistoryFileName, 3)]);
+    DT.checkTableRow("fileArchiveDataTable", 5, ["", "", virtualFileName, "", "files/archiv/", addToHistoryFourthVersionFileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
+    SL.checkStatus(2, 4, ['star-off', 'map-pin']);
+    SL.checkStatus(3, 4, ['star-off', 'map-pin']);
+    SL.checkStatus(4, 4, ['star-off', 'map-pin']);
+    SL.checkStatus(5, 4, ['star-off', 'map-pin']);
 
     // 3. Overenie v Zozname verzií
     I.say('Phase 3 - Verify in List of Versions');
@@ -282,8 +282,8 @@ Scenario('Special file upload - Replace current file', async ({ I, DTE, DT }) =>
     // 3. Overenie ci sa spravne editovalo
     I.say('Phase 3 - Verify file version in the data table');
     DT.filterEquals('virtualFileName', virtualName);
-    DT.checkTableRow("fileArchiveDataTable", 1, ["", virtualName, "", "files/archiv/", fileName]);
-    SL.checkStatus(1, 3, ['star', 'map-pin']);
+    DT.checkTableRow("fileArchiveDataTable", 1, ["", "", virtualName, "", "files/archiv/", fileName]);
+    SL.checkStatus(1, 4, ['star', 'map-pin']);
 
     // 4. Overenie v prieskumnikovi
     I.say('Phase 4 - Verify file content in the file explorer');

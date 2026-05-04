@@ -23,6 +23,10 @@
         line-height: 24px;
     }
 
+    button {
+        border: 0px;
+    }
+
     &__header {
         position: relative;
         overflow: hidden;
@@ -43,6 +47,7 @@
             background-position: center;
             background-size: 20px auto;
             transition: opacity 0.3s ease-in-out;
+            background-color: transparent;
 
             &:hover {
                 opacity: 1;
@@ -96,7 +101,6 @@
             padding: 0 16px;
             font-size: 13px;
             font-weight: 600;
-            opacity: 0.8;
             text-align: center;
             border-radius: $modal-radius;
             transition: all 0.3s ease-in-out;
@@ -106,20 +110,27 @@
         &__button-close:hover,
         &__button-save:hover {
             cursor: pointer;
-            opacity: 1;
         }
 
         &__button-close {
             float: left;
-            border: 1px solid $nice-gray-300;
+            border: 1px solid $nice-gray-300 !important;
             background-color: transparent;
             color: $nice-black;
+
+            &:hover {
+                background-color: $secondary;
+                color: white;
+            }
         }
 
         &__button-save {
             float: right;
             background-color: $primary;
             color: white;
+            &:hover {
+                background-color: $primary-hover;
+            }
         }
 
         &__button-reset {
@@ -127,6 +138,10 @@
             background-color: transparent;
             color: $dark-60;
             font-weight: 400;
+            &:hover {
+                background-color: $secondary;
+                color: white;
+            }
         }
     }
 

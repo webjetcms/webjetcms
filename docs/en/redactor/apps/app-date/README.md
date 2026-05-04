@@ -1,15 +1,15 @@
 # Date
 
-The application will insert the current date, the name of the date, or the date of the last change to the web page.
+The application inserts the current date, name days associated with that day, or the date the website was last modified into the page.
 
 ## Application settings
 
-In this section it is possible to set:
-- The format of the application as it appears
+In this section you can set:
+- Application format as it will be displayed
 - For some formats, you can choose whether to display the date or time
 
 ![](editor.png)
 
-## View application
+## View the application
 
 ![](app-date.png)

@@ -3,8 +3,8 @@ package sk.iway.iwcm.components.qa.jpa;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -44,7 +44,7 @@ public class QuestionsAnswersEntity implements Serializable{
         },
 		tab = "answer"
     )
-	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String question;
 
 
@@ -133,7 +133,7 @@ public class QuestionsAnswersEntity implements Serializable{
         title="[[#{qa.form.answer}]]",
 		tab = "answer"
     )
-	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String answerToEmail;
 
 	@Column(name = "allow_publish_on_web")
@@ -161,11 +161,11 @@ public class QuestionsAnswersEntity implements Serializable{
         title="[[#{qa.form.answerWeb}]]",
 		tab = "answer"
     )
-	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String answer;
 
 	@Column(name = "question_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="[[#{qa.date}]]",
@@ -195,7 +195,7 @@ public class QuestionsAnswersEntity implements Serializable{
 	/*Hidden unused fields*/
 
 	@Column(name = "answer_date")
-	@Temporal(TemporalType.TIMESTAMP)
+	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
 		hidden = true,

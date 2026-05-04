@@ -1,38 +1,39 @@
-# Tooltip
+# Nápovedy
 
-V aplikácii Tooltip môžete definovať pomocný text/vysvetlenie pre odborné výrazy, ktoré zobrazujete na web stránke. Zvyčajne sa zobrazujú ako pomocný text v "bubline" po prechode kurzorom ponad odborný výraz. Definovanie Tooltip-u cez aplikáciu umožňuje na jednom mieste globálne upravovať vysvetlenie týchto odborných výrazov. Následne keď ho upravíte zmení sa vo všetkých použitiach naraz.
+V aplikácii Nápovedy (tooltip) môžete definovať pomocný text/vysvetlenie pre odborné výrazy, ktoré zobrazujete na web stránke. Zvyčajne sa zobrazujú ako pomocný text v "bubline" po prechode kurzorom ponad odborný výraz. Definovanie nápovedy cez aplikáciu umožňuje na jednom mieste globálne upravovať vysvetlenie týchto odborných výrazov. Následne keď ho upravíte zmení sa vo všetkých použitiach naraz.
 
 ![](webpage-tooltip.png)
 
-## Vytvorenie tooltip-u
+## Vytvorenie nápovedy
 
 ![](tooltip-dataTable.png)
 
 Kliknutím na ikonu „Pridať“ sa vám zobrazí dialógové okno pre vytvorenie tooltip-u.
 
 V tomto okne definujete nasledujúce parametre:
--	Názov – jednoznačný identifikátor pre daný Tooltip / odborný výraz
+
+-	Názov – jednoznačný identifikátor pre danú nápovedu / odborný výraz
 -	Jazyková verzia – SK / CZ / EN ...
--	Doména – voľba, na ktorej doméne sa má daný Tooltip použiť
+-	Doména – voľba, na ktorej doméne sa má daná nápoveda použiť
 -	Text – textový obsah tooltip-u
 
 ![](tooltip-editor.png)
 
-Rovnako vyzerá aj dialógové okno pre editáciu existujúceho tooltip-u.
+Rovnako vyzerá aj dialógové okno pre editáciu existujúcej nápovedy.
 
-V tabuľke máte k dispozícii tlačidlo „Duplikovať“, pokiaľ chcete existujúci tooltip skopírovať a uložiť pod iným názvom, pre inú jazykovú verziu, alebo pre inú doménu.
+V tabuľke máte k dispozícii tlačidlo „Duplikovať“, pokiaľ chcete existujúcu nápovedu skopírovať a uložiť pod iným názvom, pre inú jazykovú verziu, alebo pre inú doménu.
 
-## Import tooltip-ov
+## Import nápovedy
 
-V záložke Import sa nachádza formulár pre nahratie excelu s tooltip-mi. Formát excelu by mal byť totožný s formátom, ktorý získate pri exporte aktuálneho zoznamu do Excelu. Ikonka pre export sa nachádza v ľavej hornej časti.
+V záložke Import sa nachádza formulár pre nahratie excelu s nápovedami. Formát excelu by mal byť totožný s formátom, ktorý získate pri exporte aktuálneho zoznamu do Excelu. Ikonka pre export sa nachádza v ľavej hornej časti.
 
 ![](tooltip-import-editor.png)
 
-## Vloženie tooltip-u do stránky
+## Vloženie nápovedy do stránky
 
 Vytvorenie bubliny nad odborným výrazom je možné priamo v editore označením odborného výrazu a následným kliknutím na ikonu:
 
-- ![](editor-tooltip-icon.png ":no-zoom") Vložiť tooltip
+- ![](editor-tooltip-icon.png ":no-zoom") Vložiť nápovedu
 
 Otvorí sa dialógové okno, v poli Tooltip (kľúč) zadajte začiatok odborného výrazu. Zo servera sa načíta zoznam výrazov obsahujúcich zadaný text, kliknutím myšou vyberte presný výraz:
 

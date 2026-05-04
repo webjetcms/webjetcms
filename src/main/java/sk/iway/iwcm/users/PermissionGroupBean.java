@@ -8,18 +8,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -79,6 +79,24 @@ public class PermissionGroupBean extends ActiveRecordRepository implements Seria
 	String editablePages;
 
 	//***
+
+	@Column(name="all_editable_groups")
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN_TEXT,
+		title = "users.permission_group.allEditableGroups",
+		tab = "dirs",
+		sortAfter = "editorFields.editablePages"
+	)
+	Boolean allEditableGroups;
+
+	@Column(name="all_writable_folders")
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN_TEXT,
+		title = "users.permission_group.allWritableFolders",
+		tab = "dirs",
+		sortAfter = "editorFields.writableFolders"
+	)
+	Boolean allWritableFolders;
 
 	@JsonManagedReference(value="group")
 	@OneToMany(fetch = FetchType.LAZY, cascade=CascadeType.ALL, targetEntity=PermissionInPermissionGroupBean.class, mappedBy="group")

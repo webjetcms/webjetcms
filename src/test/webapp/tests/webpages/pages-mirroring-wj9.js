@@ -380,3 +380,34 @@ Scenario('vymazanie hlavneho sk priecinka z test priecinka', ({ I, DT, DTE }) =>
 Scenario('odhlasenie', ({ I }) => {
      I.logout();
 });
+
+Scenario("hreflang", ({ I, DT, DTE, Document }) => {
+     I.wjSetDefaultWindowSize();
+     Document.setConfigValue("structureMirroringConfig", "9811,9812,9813:mirroring.tau27.iway.sk");
+     Document.switchDomain("mirroring.tau27.iway.sk");
+
+     let url = process.env.CODECEPT_URL;
+     let protocol = "http";
+     if (url.startsWith("https")) {
+          protocol = "https";
+     }
+
+     //verify hreflang not shown on disabled page
+     I.amOnPage("/slovensky/kontakty/");
+     I.seeInSource('<link rel="alternate" hreflang="sk" href="'+protocol+'://mirroring.tau27.iway.sk/slovensky/kontakty/"');
+     I.dontSeeInSource('<link rel="alternate" hreflang="en"');
+
+     //verify href lang not shown on hidden folder
+     I.amOnPage("/slovensky/vstup/");
+     I.seeInSource('<link rel="alternate" hreflang="sk" href="'+protocol+'://mirroring.tau27.iway.sk/slovensky/vstup/"');
+     I.dontSeeInSource('<link rel="alternate" hreflang="en"');
+
+     //verify hreflang shown on translated page
+     I.amOnPage("/slovensky/domov/");
+     I.seeInSource('<link rel="alternate" hreflang="sk" href="'+protocol+'://mirroring.tau27.iway.sk/slovensky/domov/"');
+     I.seeInSource('<link rel="alternate" hreflang="en" href="'+protocol+'://mirroring.tau27.iway.sk/english/domov/"');
+});
+
+Scenario('odhlasenie 2', ({ I }) => {
+     I.logout();
+});

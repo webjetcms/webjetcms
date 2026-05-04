@@ -80,7 +80,7 @@ block content
         });
 
         function createDatatable(response) {
-            //console.log("success, response=", response);
+            //console.log("createDatatable, response=", response);
             if (typeof response.error !== 'undefined') {
                 WJ.notifyError(response.error);
                 return;
@@ -161,6 +161,27 @@ block content
             componentDatatable.EDITOR.on('open', function (e, mode, action) {
                 WJ.debugTimer("open");
 
+                // Get prepared object with fields and tabs to hide
+                let hiddenFieldsAndTabs = getHiddenFieldsAndTabs(response.data);
+                // console.log("hiddenFieldsAndTabs=", hiddenFieldsAndTabs);
+
+                // Hide fields
+                hiddenFieldsAndTabs.fields.forEach(function(field) {
+                    try {
+                        componentDatatable.EDITOR.field(field).hide();
+                    } catch (error) {
+                        // Ignore unknown fields to keep the editor open handler resilient.
+                    }
+                });
+
+                // Hide tabs
+                hiddenFieldsAndTabs.tabs.forEach(function(tab) {
+                    var tabElement = document.querySelector("li.nav-item a.nav-link#pills-dt-component-datatable-" + tab + "-tab");
+                    if (tabElement != null) {
+                        tabElement.style.display = "none";
+                    }
+                });
+
                 var foundParentTitle = false;
                 var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
                 //iterate over if and try to find one with iframe
@@ -183,6 +204,22 @@ block content
                                 $this.css("height", "521px");
                                 $this.find("iframe").attr("height", "521");
                             });
+                            setInterval(function() {
+                                // calculate iframe height based on content and set it to iframe and parent td
+                                $(".iframeFieldType").each(function(index, element) {
+                                    var $this = $(element);
+                                    var modalBody = $this.parents(".DTE_Body.modal-body.has-content");
+                                    if (modalBody.length > 0) {
+                                        var contentHeight = parseInt(modalBody.height()) + 1;
+                                        //console.log("contentHeight=", contentHeight);
+                                        if (contentHeight >= 520 && $this.height() !== contentHeight) {
+                                            //console.log("contentHeight changed=", contentHeight);
+                                            $this.css("height", contentHeight + "px");
+                                            $this.find("iframe").attr("height", contentHeight + "px");
+                                        }
+                                    }
+                                });
+                            }, 1000);
                         }
                     }
                 });
@@ -217,6 +254,47 @@ block content
             if (typeof window.appAfterInit === "function") {
                 window.appAfterInit(response, componentDatatable, componentPath, isInsert);
             }
+        }
+
+        /**
+         * Get fields and tabs to hide from appHideFields parameter
+         * appHideFields is a "+" separated string with field names and tab names with "tab_" prefix, for example: "field1+field2+tab_tab1+tab_tab2"
+         * @param data
+         * @returns {{fields: [], tabs: []}}
+         */
+        function getHiddenFieldsAndTabs(data) {
+            let result = {
+                fields: [],
+                tabs: []
+            };
+
+            if (typeof data === "undefined" || data == null) {
+                return result;
+            }
+
+            let appHideFields = data.appHideFields;
+            if (typeof appHideFields === "undefined" || appHideFields == null || appHideFields === "") {
+                return result;
+            }
+
+            let appHideFieldsArr = Array.isArray(appHideFields) ? appHideFields : appHideFields.split("+");
+
+            for (let field of appHideFieldsArr) {
+                let fieldName = String(field).trim();
+                if (fieldName !== "") {
+                    if (fieldName.startsWith("tab_") === true) {
+                        result.tabs.push(fieldName.substring(4)); //remove "tab_" prefix
+                    } else {
+                        result.fields.push(fieldName);
+                    }
+                }
+            }
+
+            // Keep lists stable and unique to avoid duplicate hide calls.
+            result.fields = [...new Set(result.fields)];
+            result.tabs = [...new Set(result.tabs)];
+
+            return result;
         }
 
         /**
@@ -260,9 +338,15 @@ block content
                 if(isLocalJson(column) && typeof fieldValue === "string") {
                     //It's json, decode it
                     //console.log("Decoding JSON data for column:", column.data, "value:", fieldValue);
-                    let decoded = decodeJSONData(fieldValue);
-                    //add ID and rowOrder to each item in the JSON array
-                    decoded = prepareJsonEditorData(decoded);
+                    let decoded = window.decodeJSONData(fieldValue);
+
+                    if (typeof window.prepareJsonEditorDataCustom === "function") {
+                        // CUSTOM
+                        decoded = window.prepareJsonEditorDataCustom(decoded);
+                    } else {
+                    // DEFAULT - add ID and rowOrder to each item in the JSON array
+                        decoded = prepareJsonEditorData(decoded);
+                    }
 
                     //console.log("decoded=", decoded);
                     if (decoded != null) {
@@ -290,7 +374,7 @@ block content
                 */
                 let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
 
-               //appGetComponentPath before appGetComponentCode ... so component code can obtain allready modified path
+                //appGetComponentPath before appGetComponentCode ... so component code can obtain allready modified path
                 if (typeof window.appGetComponentPath === "function") {
                     componentPath = window.appGetComponentPath(componentPath, componentDatatable);
                 } else {
@@ -349,7 +433,7 @@ block content
          * - simple one word without special characters
          * @param value value to add quotes
          */
-        function addQuotes(value) {
+        window.addQuotes = function(value) {
             if (value == null || value === "") return "";
             if (isNaN(value)===false) return value;
             if ("true"===value || "false"===value) return value;
@@ -407,7 +491,7 @@ block content
                             }
                         }
                         //base64 encode JSON data
-                        value = encodeJSONData(value);
+                        value = window.encodeJSONData(value);
                     } else {
                         //skip this column, it's datatable with separate REST service
                         continue;
@@ -457,7 +541,7 @@ block content
                         //console.log("key=", key, " id=", id);
 
                         if (id != null) {
-                            result.push(key + '=' + addQuotes(id));
+                            result.push(key + '=' + window.addQuotes(id));
                             continue;
                         }
                     } catch (e) {
@@ -473,10 +557,7 @@ block content
 
                 if (typeof value === "string") {
                     //same as in common.jsp addIncludeParameter
-                    value = value.replace(/"/gi, "\\\"");
-                    value = value.replace('<',"&lt;");
-                    value = value.replace('</',"&lt;/");
-                    value = value.replace('>',"&gt;");
+                    value = window.encodeEntities(value);
 
                     if (value === "" || value === "0") {
                         if ("device" === key || "cacheMinutes" === key || "showForLoggedUser" === key) {
@@ -485,17 +566,25 @@ block content
                         }
                     }
                 }
-                result.push(key + '=' + addQuotes(value));
+                result.push(key + '=' + window.addQuotes(value));
             }
             const includeParams = result.join(", ");
             //console.log(includeParams);
             return includeParams;
         }
 
+        window.encodeEntities = function(value) {
+            value = value.replace(/"/gi, "\\\"");
+            value = value.replace('<',"&lt;");
+            value = value.replace('</',"&lt;/");
+            value = value.replace('>',"&gt;");
+            return value;
+        };
+
         /**
         * For backward compatibility with JSON editor we can't use WJ.base64decode
         */
-        const decodeJSONData = function(inputData) {
+        window.decodeJSONData = function(inputData) {
             try {
                 // Uistite sa, že je vstup platný Base64 reťazec
                 if (!inputData) throw new Error("Input data is empty");
@@ -511,7 +600,7 @@ block content
         /**
         * For backward compatibility with JSON editor we can't use WJ.base64encode
         */
-        const encodeJSONData = function(inputData) {
+        window.encodeJSONData = function(inputData) {
             try {
                 // Uistite sa, že inputData nie je undefined alebo null
                 if (inputData === undefined || inputData === null || inputData === "") return "";

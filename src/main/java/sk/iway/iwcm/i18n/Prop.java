@@ -12,9 +12,9 @@ import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -258,6 +258,15 @@ public class Prop
 		String lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);
 		if (lng == null) lng = PageLng.getUserLng(request);
 
+		return getLngForJavascript(lng);
+	}
+
+	/**
+	 * Vrati jazyk pre JS subory pre ckeditor, elfinder a podobne kde sa napr. pre CZ pouziva hodnota CS
+	 * @param lng
+	 * @return
+	 */
+	public static String getLngForJavascript(String lng) {
 		if ("cz".equals(lng)) lng = "cs";
 		else if (Tools.isEmpty(lng)) lng = "sk";
 

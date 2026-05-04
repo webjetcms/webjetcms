@@ -199,10 +199,10 @@ Scenario('kontrola menu poloziek', ({I}) => {
     I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     I.amOnPage("/admin/v9/webpages/media/");
-    I.see("Média", "div.menu-wrapper");
+    I.see("Média", "nav.menu-wrapper");
 
     I.amOnPage("/admin/v9/webpages/media/#/");
-    I.see("Média", "div.menu-wrapper");
+    I.see("Média", "nav.menu-wrapper");
 });
 
 function addMediaAndCheck(I, DT, DTE) {
@@ -416,6 +416,7 @@ Scenario('Overenie editacie cez vsetky media a zobrazenie zmeny hned', ({I, DT, 
     //ak padne predchadzajuci test nastav datum stranky na aktualny
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=24008");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     DTE.save();
 
     I.amOnPage("/admin/v9/webpages/media/");

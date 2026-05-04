@@ -10,7 +10,7 @@ module.exports = {
     elfinder: '/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL2FyY2hpdg_E_E',
     elfinderLater: '/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL2FyY2hpdi9maWxlcy9hcmNoaXZfaW5zZXJ0X2xhdGVyL2ZpbGVzL2FyY2hpdg_E_E',
 
-    red: 'rgb(255, 75, 88)',
+    red: 'rgb(224, 0, 40)',
     black: 'rgb(19, 21, 27)',
     gray: 'rgb(243, 243, 246)',
     white: 'rgb(255, 255, 255)',
@@ -241,13 +241,13 @@ module.exports = {
     checkOrderIds(values) {
         I.say("checkOrderIds, values=" + values);
         values.forEach((value, index) => {
-            DT.checkTableCell("fileArchiveDataTable", index + 1, 13, value);
+            DT.checkTableCell("fileArchiveDataTable", index + 1, 14, value);
         });
     },
 
     async setAsc() {
         for (let i = 0; i < 3 && !await I.grabNumberOfVisibleElements('.dt-ordering-asc[aria-sort="ascending"]'); i++) {
-            I.clickCss('.dt-th-id > .dt-column-order');
+            I.clickCss('.dt-th-id > .dt-column-header > .dt-column-order');
         }
     },
 

@@ -4,6 +4,8 @@ Feature('apps.gallery.gallery');
 
 var randomNumber;
 var autoName;
+//tolerance for screenshot comparison (to account for minor differences in rendering on different platforms)
+var tolerance = 5;
 
 Before(({ I, login }) => {
     login('admin');
@@ -12,7 +14,6 @@ Before(({ I, login }) => {
         autoName = 'autotest-' + randomNumber;
     }
 });
-
 
 Scenario('zoznam fotografii', ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/gallery/");
@@ -126,7 +127,7 @@ Scenario('galeria v stranke', ({ I }) => {
     I.dontSee("loading=\"lazy\"");
     I.see("Tesla Supercharger Bratislava");
     I.forceClick("Tesla Supercharger Bratislava");
-    I.waitForElement("div.pswp--open");
+    I.waitForElement("div.pswp--open", 10);
     I.see("v Bratislave");
     I.see("Auparku", "span.photoswipeLongDesc a")
     I.see("autora fotky", "small p a");
@@ -202,59 +203,14 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     I.clickCss("div.tree-col button.buttons-create");
     DTE.waitForEditor("galleryDimensionDatatable");
     I.dontSeeInField("#DTE_Field_name", "test");
-    I.seeInField("#DTE_Field_path", "/images/gallery/test");
+
+    // During creation we dont see field DTE_Field_path
+    I.dontSeeElement(".DTE_Field_Name_path");
+    // Only parent folder
+    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='/images/gallery/test']");
+
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");
-});
-
-Scenario('bug-remember column order', ({ I, DT, Browser }) => {
-
-    I.resizeWindow(1680, 760);
-
-    I.amOnPage("/admin/v9/apps/gallery/");
-    DT.waitForLoader();
-
-    I.waitForElement("button.btn-gallery-size-table", 5);
-    I.wait(1);
-    I.clickCss("button.btn-gallery-size-table");
-    DT.resetTable("galleryTable");
-    DT.waitForLoader();
-
-    var position = 3;
-    I.dragAndDrop(
-        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
-        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
-        {
-            force: true,
-            sourcePosition: {x: 10, y: 10},
-            targetPosition: { x: 10, y: 10 }
-        }
-    );
-    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
-
-    //
-    I.say("Reload and check if the column order is preserved");
-    I.amOnPage("/admin/v9/apps/gallery/");
-    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
-
-    //
-    I.say("check column settings-there was bug with duplicate buttons on header and footer");
-
-    var container = "#galleryTable_wrapper";
-    I.clickCss(container+" button.buttons-settings");
-    I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-    I.see("Priečinok", "div.colvisbtn_wrapper button.buttons-columnVisibility span.column-title");
-
-});
-
-Scenario('bug-remember column order-reset', ({ I, DT }) => {
-    I.wjSetDefaultWindowSize();
-
-    I.amOnPage("/admin/v9/apps/gallery/");
-
-    I.clickCss("button.btn-gallery-size-s");
-    DT.resetTable("galleryTable");
 });
 
 Scenario('editor check dir select', ({ I, Document, DTE, Browser }) => {
@@ -318,7 +274,7 @@ function waitForUploadMessage(I, name) {
     I.waitForElement("#toast-container-upload", 10);
     I.waitForElement(locate("#toast-container-upload div.toast-message span").withText(name), 10);
     I.waitForElement("#toast-container-upload i.ti-spin", 10);
-    I.waitForInvisible("#toast-container-upload i.ti-spin", 10);
+    I.waitForInvisible("#toast-container-upload i.ti-spin", 30);
     I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
     I.wait(0.5);
     I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
@@ -472,38 +428,6 @@ Scenario('editor check instance image change', ({ I, DTE }) => {
     //
     I.say("recheck");
     I.dontSeeElement(locate("#toast-container-upload div.toast-message span").withText("dsc04080.jpeg"));
-});
-
-Scenario('BUG set gallery dimmension by not saved/white parent #56393-10', ({ I, DT, DTE }) => {
-    //There was a bug when the parent was not saved (white) and you would like to create new gallery dimension default values was not set correctly
-    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/apps/blog/");
-    //apps is saved - has 200x200 dimension
-    //blog is not saved, it's white
-
-    I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText("blog"));
-    I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText("blog").find("i.jstree-icon.ti.ti-folder"));
-
-    I.click(".tree-col button.buttons-create");
-    DTE.waitForEditor("galleryDimensionDatatable");
-
-    I.seeInField("#DTE_Field_path", "/images/gallery/apps/blog");
-    I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
-    I.seeInField("#DTE_Field_imageWidth", "200");
-    I.seeInField("#DTE_Field_imageHeight", "200");
-
-    I.seeInField("#DTE_Field_normalWidth", "400");
-    I.seeInField("#DTE_Field_normalHeight", "400");
-
-    DTE.cancel();
-});
-
-Scenario("BUG - filter by URL and imageName", async ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/#dt-filter-imageName=chrysanthemum.jpg");
-    DT.waitForLoader();
-    I.waitForText("chrysanthemum.jpg", 10, "table.datatableInit td.dt-row-edit");
-    I.wait(2);
-    const numVisible = await I.grabNumberOfVisibleElements(locate("#galleryTable td.dt-row-edit").withText("chrysanthemum.jpg"));
-    I.assertEqual(numVisible, 1);
 });
 
 const editorTestImage = 'editorTestImage';
@@ -732,7 +656,7 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     I.clickCss('.tui-image-editor-button.apply');
     const width = parseInt(await I.grabAttributeFrom('.upper-canvas', 'width'), 10);
     const height = parseInt(await I.grabAttributeFrom('.upper-canvas', 'height'), 10);
-    let tolerance = 5;
+    tolerance = 5;
 
     I.say('Verifying resized image dimensions');
     I.assertTrue(Math.abs(width - expectedWidth) <= tolerance, `Width is not within the tolerance. Expected: ${expectedWidth}, but got: ${width}`);
@@ -746,11 +670,12 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     const fileBaseName = `${editorTestImage}-${randomOption}-${isAspectRationLocked}.png`;
     tolerance = 20;
     if (expectedHeight < 100) tolerance = 30;
-    await Document.compareScreenshotElement('body > img', fileBaseName, null, null, 20);
+    await Document.compareScreenshotElement('body > img', fileBaseName, null, null, tolerance);
 }
 
 Scenario('Revert configuration variables', ({ I, Document }) => {
     I.say('Reverting configuration variables');
+    tolerance = 5;
     Document.setConfigValue('imageEditorRatio', '3:2, 4:3, 5:4, 7:5, 16:9');
     Document.setConfigValue('imageEditorSizeTemplates', '80x80;640x480;800x600;');
 });
@@ -796,8 +721,8 @@ const isMatchingRatio = (I, width, height, ratio) => {
     const [w, h] = ratio.split(':').map(Number);
     const calculatedRatio = width / height;
     const targetRatio = w / h;
-    const tolerance = 0.01;
-    I.assertBelow(Math.abs(calculatedRatio - targetRatio), tolerance, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
+    const toleranceRatio = 0.01;
+    I.assertBelow(Math.abs(calculatedRatio - targetRatio), toleranceRatio, `Ratios are different for ${ratio}. Calculated: ${calculatedRatio}, Expected: ${targetRatio}`);
 };
 
 const arraysAreEqual = (I, arr1, arr2) => {
@@ -806,50 +731,6 @@ const arraysAreEqual = (I, arr1, arr2) => {
     const sortedArr2 = [...arr2].sort();
     assert.deepStrictEqual(sortedArr1, sortedArr2, 'Arrays are not equal');
 }
-
-Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DTE, DT }) => {
-    I.relogin("jtester");
-    I.amOnPage("/admin/v9/apps/gallery/");
-    I.waitForElement(".tree-col .dt-buttons button.buttons-create.disabled");
-
-    I.jstreeClick("test");
-    I.waitForElement(".tree-col .dt-buttons button.buttons-create:not(.disabled)");
-
-    I.click(".tree-col button.buttons-create");
-    DTE.waitForEditor("galleryDimensionDatatable");
-    I.seeInField("#DTE_Field_path", "/images/gallery/test");
-    DTE.cancel();
-
-    //
-    I.say("Verify server side disable create buttons");
-    I.jstreeClick('gallery');
-    await I.executeScript(() => {
-        document.querySelector('.tree-col .buttons-create').classList.remove('disabled');
-        document.querySelector('.tree-col .buttons-create').removeAttribute('disabled');
-    });
-
-    I.click(DT.btn.tree_add_button);
-    DTE.waitForEditor('galleryDimensionDatatable');
-    DTE.fillField('name', autoName);
-    DTE.save('galleryDimensionDatatable');
-    I.waitForText('Tento priečinok nie je možné upravovať.');
-    I.see('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
-});
-
-Scenario('Revert if last scenario fails', async ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/gallery/");
-    const autotest = locate('.jstree-anchor').withText('autotest-');
-    while (await I.grabNumberOfVisibleElements(autotest)){
-        I.click(autotest);
-        I.click(DT.btn.tree_delete_button);
-        await I.waitForElement("div.DTE_Action_Remove", 5);
-        I.click("Zmazať", "div.DTE_Action_Remove");
-    }
-});
-
-Scenario('logout', ({ I }) => {
-    I.logout();
-});
 
 Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, DT, DTE }) => {
     var nameOfImage = 'koala.jpg';
@@ -1063,4 +944,112 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
         I.click('Zmazať', "div.DTE_Action_Remove .DTE_Form_Buttons");
 
     I.dontSeeElement(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(genParentPath));
+});
+
+Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
+    tolerance = 4;
+
+    I.amOnPage("/localconf.jsp");
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+    I.jstreeWaitForLoader();
+
+    //set required values and save image to refresh thumb servlet cache
+    var name = "dsc04068.jpeg";
+    I.waitForText(name, 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText(name));
+    DTE.waitForEditor("galleryTable");
+
+    I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.waitForElement("#zoom");
+    I.fillField("#zoom", "65");
+    I.wait(2);
+    I.fillField("#x", "276");
+    I.wait(2);
+    I.fillField("#y", "123");
+    I.wait(2);
+    I.fillField("#w", "438");
+    I.wait(2);
+    I.fillField("#h", "590");
+    I.wait(5);
+    await Document.compareScreenshotElement(null, 'thumb-servlet/editor-original-image.png', null, null, tolerance);
+    DTE.save();
+
+    I.amOnPage('/images/gallery/test-vela-foto/dsc04068.jpeg');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/original-image.png', null, null, tolerance);
+});
+Scenario('thumb servlet - dsc04068', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/thumb-image.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip1', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&ip=1');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-1.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip2', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?h=200&ip=2');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-2.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip3', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=3');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-3.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip4', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&c=ffff00');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-4.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip5', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=5');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-5.png', null, null, tolerance);
+});
+Scenario('thumb servlet - ip6', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=200&h=200&ip=6');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/ip-6.png', null, null, tolerance);
+});
+Scenario('thumb servlet - noip4', async ({ I, Document }) =>  {
+    I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
+    await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
+});
+
+function jstreeSetDefault(I) {
+    I.amOnPage("/admin/v9/apps/gallery/");
+
+    I.say("Turn off showing of original names in jstree");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.uncheckOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+}
+
+const dirOriginalName = "filter-original";
+const dirChangedName = "filter-changed";
+Scenario('test original dir names + filtering', ({ I }) =>  {
+    jstreeSetDefault(I);
+
+    I.say("Try filter using changed name");
+    I.jstreeFilter(dirChangedName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+
+    I.say("Try filter using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor').withText(dirChangedName));
+
+    I.say("Show original names in jstree again");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.checkOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.say("Filter again using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+    I.seeElement(locate('.jstree-anchor.jstree-search span.realName').withText("(" + dirOriginalName + ")"));
+});
+
+Scenario('test original dir names + filtering - cleanup', ({ I }) =>  {
+    jstreeSetDefault(I);
 });

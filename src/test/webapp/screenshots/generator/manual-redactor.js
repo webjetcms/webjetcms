@@ -19,7 +19,8 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.clickCss("#pills-system-tab");
     DT.waitForLoader();
-    Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1360, 300);
+    I.jstreeClick("Hlavičky");
+    Document.screenshot("/redactor/webpages/system-folder.png", 1360, 450);
 
     I.say("listy naposledy upravene a cakajuce na schvalenie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
@@ -35,7 +36,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     switch (confLng) {
         case 'sk':
@@ -52,7 +53,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     }
 
     I.click("button.btn.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.forceClick({ css: '#dtRecursiveSwitch' });
     I.moveCursorTo('#dtRecursiveSwitch');
@@ -62,7 +63,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     Document.screenshot("/redactor/datatables/dt-colvis.png");
     switch (confLng) {
@@ -79,16 +80,16 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
             throw new Error(`Unsupported language code: ${confLng}`);
     }
 
-    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
 
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForElement("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", 10);
+    I.waitForElement("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]", 10);
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
-    I.click("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu] button.dt-close-modal")
+    I.click("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu] button.dt-close-modal")
 
     I.say("specialne ikony");
     I.click("button.buttons-select-all");
@@ -482,7 +483,7 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshotElement("div.ly-header", "/redactor/admin/header-logoff.png");
 
     Document.screenshotElement("div.md-large-menu", "/redactor/admin/menu-main-sections.png");
-    Document.screenshotElement("div.menu-wrapper", "/redactor/admin/menu-items.png");
+    Document.screenshotElement("nav.menu-wrapper", "/redactor/admin/menu-items.png");
 
     Document.screenshotElement("div.js-domain-toggler", "/redactor/admin/domain-selector.png");
 

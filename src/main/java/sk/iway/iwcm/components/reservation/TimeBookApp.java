@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
@@ -105,7 +105,7 @@ public class TimeBookApp extends WebjetComponentAbstract {
         }
 
         if(Tools.isEmail(entity.getEmail()) == false) {
-            realErrors.add(new FieldError("entity", "email", Prop.getInstance(request).getText("javax.validation.constraints.Email.message")));
+            realErrors.add(new FieldError("entity", "email", Prop.getInstance(request).getText("jakarta.validation.constraints.Email.message")));
         }
 
         if(Tools.isEmpty(realErrors)) {
