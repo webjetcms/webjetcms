@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.video;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -9,8 +10,11 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -147,6 +151,21 @@ public class VideoApp extends WebjetComponentAbstract {
     )
     private Integer badge = 1;
 
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "components.video_player.ratioClass",
+        tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.tab.style"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
+                }
+            )
+        }
+    )
+    private String ratioClass = "embed-responsive embed-responsive-16by9 ratio ratio-16x9";
+
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
@@ -162,6 +181,29 @@ public class VideoApp extends WebjetComponentAbstract {
             }
         }));
         options.put("field", optionsMap);
+
+        String videoClasses = Constants.getString("videoClasses", "");
+        if (Tools.isNotEmpty(videoClasses)) {
+            Prop prop = Prop.getInstance(request);
+            List<OptionDto> ratioOptions = new ArrayList<>();
+            String[] tokens = Tools.getTokens(videoClasses, ",");
+            for (String token : tokens) {
+                String trimmed = token.trim();
+                if (Tools.isNotEmpty(trimmed)) {
+                    int colonIndex = trimmed.indexOf(':');
+                    if (colonIndex > 0) {
+                        String label = trimmed.substring(0, colonIndex).trim();
+                        String value = trimmed.substring(colonIndex + 1).trim();
+                        label = prop.getText(label);
+                        ratioOptions.add(new OptionDto(label, value, null));
+                    } else {
+                        ratioOptions.add(new OptionDto(trimmed, trimmed, null));
+                    }
+                }
+            }
+            addCurrentValueToOptions(ratioOptions, ratioClass);
+            options.put("ratioClass", ratioOptions);
+        }
 
         return options;
     }

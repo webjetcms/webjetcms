@@ -1,5 +1,6 @@
 <%@page import="sk.iway.iwcm.gallery.ImageInfo"%>
 <%@page import="sk.iway.iwcm.FileTools"%>
+<%@page import="sk.iway.iwcm.Constants"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %><%@page import="sk.iway.iwcm.PageParams,sk.iway.iwcm.Tools,org.json.JSONObject"%><%
@@ -44,6 +45,8 @@ int byline 		= pageParams.getIntValue("byline", -1);
 int badge 		= pageParams.getIntValue("badge", -1);
 int percentageWidth = pageParams.getIntValue("percentageWidth", 0);
 String align = pageParams.getValue("align", "left");
+String ratioClass = pageParams.getValue("ratioClass", "embed-responsive embed-responsive-16by9 ratio ratio-16x9");
+String videoItemClass = Constants.getString("videoItemClass", "embed-responsive-item");
 
 if (pageParams.getIntValue("width", -1)==-1 && percentageWidth==0)
 {
@@ -93,10 +96,10 @@ if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 
 	link = "http://www.youtube.com/v/" + file + "?version=3";
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\"embed-responsive embed-responsive-16by9 ratio ratio-16x9 video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\""+ ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	if(fullscreen > 0)  allowFullscreen = "allowfullscreen";
-	iframeVersion += "<iframe class=\"embed-responsive-item\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" width=\""+ width +"\" height=\""+ height +"\" src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
+	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" width=\""+ width +"\" height=\""+ height +"\" src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 
 	if(percentageWidth >0) {
 		iframeVersion += "</div>";
@@ -115,11 +118,11 @@ else if (file.indexOf("vimeo.com") != -1)
 	link = "http://www.vimeo.com/moogaloop.swf";
 
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\"embed-responsive embed-responsive-16by9 ratio ratio-16x9 clearfix video_align-"+align+" videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\""+ ratioClass +" clearfix video_align-"+align+" videoPlaceholder"+ videoCounter +" \" >";
 	}
 
 	if(fullscreen > 0)  allowFullscreen = "webkitallowfullscreen mozallowfullscreen allowfullscreen";
-	iframeVersion += "<iframe class=\"embed-responsive-item\" id=\"videoPlaceholder"+ videoCounter +"\" src=\"//player.vimeo.com/video/"+ file +"?autoplay="+autoplay+"&portrait="+portrait+"&title="+showinfo+"&badge="+badge+"&byline="+byline+"\" width=\""+ width +"\" height=\""+ height +"\" frameborder=\"0\" "+allowFullscreen+"></iframe>";
+	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" src=\"//player.vimeo.com/video/"+ file +"?autoplay="+autoplay+"&portrait="+portrait+"&title="+showinfo+"&badge="+badge+"&byline="+byline+"\" width=\""+ width +"\" height=\""+ height +"\" frameborder=\"0\" "+allowFullscreen+"></iframe>";
 
 	if(percentageWidth > 0) {
 		iframeVersion += "</div>";
@@ -134,7 +137,7 @@ else if (file.indexOf("facebook.com/") != -1) {
 	<%
 
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\"embed-responsive embed-responsive-16by9 ratio ratio-16x9 video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\""+ ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	String allowAutoplay = "";
 	String allowByline = "";
