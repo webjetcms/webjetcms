@@ -64,14 +64,7 @@ public class VideoApp extends WebjetComponentAbstract {
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title = "components.video_player.ratioClass",
-        tab = "basic",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
-                }
-            )
-        }
+        tab = "basic"
     )
     private String ratioClass = "embed-responsive embed-responsive-16by9 ratio ratio-16x9";
 
