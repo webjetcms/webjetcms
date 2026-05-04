@@ -176,23 +176,7 @@ public class VideoApp extends WebjetComponentAbstract {
 
         String videoClasses = Constants.getString("videoClasses", "");
         if (Tools.isNotEmpty(videoClasses)) {
-            Prop prop = Prop.getInstance(request);
-            List<OptionDto> ratioOptions = new ArrayList<>();
-            String[] tokens = Tools.getTokens(videoClasses, ",");
-            for (String token : tokens) {
-                String trimmed = token.trim();
-                if (Tools.isNotEmpty(trimmed)) {
-                    int colonIndex = trimmed.indexOf(':');
-                    if (colonIndex > 0) {
-                        String label = trimmed.substring(0, colonIndex).trim();
-                        String value = trimmed.substring(colonIndex + 1).trim();
-                        label = prop.getText(label);
-                        ratioOptions.add(new OptionDto(label, value, null));
-                    } else {
-                        ratioOptions.add(new OptionDto(trimmed, trimmed, null));
-                    }
-                }
-            }
+            List<OptionDto> ratioOptions = parseOptionsFromConfig(request, videoClasses);
             addCurrentValueToOptions(ratioOptions, ratioClass);
             options.put("ratioClass", ratioOptions);
         }
