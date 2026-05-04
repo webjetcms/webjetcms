@@ -39,12 +39,25 @@ public class Page {
         String canonical = "";
         if(doc!=null){
             canonical = doc.getFieldQ();
+
             if(Tools.isEmpty(canonical)){
                 DocDB docDB = DocDB.getInstance();
                 String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
-                return docLink;
+                canonical = docLink;
+            } else {
+                //if canonical is not empty, check if it contains http:// or https://, if not, add domain to it
+                if (canonical.contains("http://") == false && canonical.contains("https://") == false) {
+                    canonical = getUrlDomain() + canonical;
+                }
             }
         }
+
+        Map<String, String[]> params = getUrlParameters();
+        String[] pageParams = params.get("page");
+        if(pageParams != null && pageParams.length > 0){
+            canonical = Tools.addParameterToUrl(canonical, "page", pageParams[0]);
+        }
+
         return canonical;
     }
 
@@ -100,16 +113,6 @@ public class Page {
 
     public String getUrl(){
         return getUrlDomain() +""+ getUrlPath();
-    }
-
-    public String getUrlCanonical() {
-        String url = getUrl();
-        Map<String, String[]> params = getUrlParameters();
-        String[] pageParams = params.get("page");
-        if(pageParams != null && pageParams.length > 0){
-            url += "?page="+pageParams[0];
-        }
-        return url;
     }
 
     public String getUrlDomain(){

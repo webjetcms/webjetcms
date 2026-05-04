@@ -22,7 +22,7 @@
 <meta property="og:locale" content="${ninja.temp.lngIso}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
-<link rel="canonical" href="${ninja.page.urlCanonical}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
 
 <%--${ninja.temp.insertTouchIconsHtml}--%>
 <link rel="icon" href="${ninja.temp.basePathImg}favicon.ico" type="image/x-icon" />

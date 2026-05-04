@@ -14,7 +14,7 @@
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
 | ${ninja.page.perexPlace} | *String* | Perex miesto stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
-| ${ninja.page.canonical} | *String* | Kanonická URL adresa stránky (hodnota sa berie z voliteľného poľa Q alebo ak je prázdne, tak z URL adresy) |
+| ${ninja.page.canonical} | *String* | Kanonická URL adresa stránky (hodnota sa berie z voliteľného poľa Q alebo ak je prázdne, tak z URL adresy). Pridá do URL parameter `page` ak existuje pre zobrazenie správnej strany v zozname noviniek. |
 | ${ninja.abVariant} | *String* | Identifikátor reprezentujúci verziu stránka vo forme znaku a/b |
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
@@ -67,6 +67,7 @@ Použité v :ghost:<code>head.jsp</code>
 ```
 
 ## Odkaz na obrázok *String*
+
 Hľadá obrázok vo voliteľnom poli T :carousel_horse: `getFieldT()` (SEO obrázok), ak je pole prázdne, tak použije štandardný perex obrázok :carousel_horse: `getPerexImage()`.
 
 ```java
@@ -80,6 +81,7 @@ Použité v :ghost:<code>head.jsp</code>
 ```
 
 ## Url adresa *String*
+
 Url adresa webovej stránky bez parametrov skladaná z `${ninja.page.urlDomain}` + `${ninja.page.urlPath}`.
 
 ```java
@@ -93,7 +95,23 @@ Použité v :ghost:<code>head.jsp</code>
 <link rel="canonical" href="${ninja.page.canonical}" />
 ```
 
+## Kaninická URL adresa *String*
+
+Kanonická Url adresa webovej stránky vrátane domény. Ak v URL existuje parameter `page`, napr. v zozname noviniek, je k URL adrese pridaný. Možné je použiť voľné pole Q pre nastavenie vlastnej kanonickej adresy stránky.
+
+```java
+${ninja.page.canonical}
+```
+
+Použité v :ghost:<code>head.jsp</code>
+
+```html
+<meta property="og:url" content="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
+```
+
 ## Doména *String*
+
 Doména webovej stránky bez parametrov nastavená z `Tools.getBaseHref()`.
 
 ```java
@@ -113,6 +131,7 @@ Použité v :ghost:<code>debug-info.jsp</code>
 ```
 
 ## Virtuálna adresa *String*
+
 Virtuálna adresa webovej stránky bez domény a parametrov generovaná z `PathFilter.getOrigPath()`.
 
 ```java
@@ -126,6 +145,7 @@ Použité v :ghost:<code>debug-info.jsp</code>
 ```
 
 ## Parametre z URL adresy *Map*
+
 Parametre z URL adresy webovej stránky.
 
 ```java
@@ -141,6 +161,7 @@ Použité v :ghost:<code>debug-info.jsp</code>
 ```
 
 ## Nastavenie indexovania *String*
+
 Ak má webová stránka zaškrtnuté `Prehľadávateľné` v záložke Rozšírené údaje, tak vráti hodnotu `index, follow`, ak nie tak `nofollow`. Hodnotu zaškrtnutia vracia metóda :carousel_horse: `isSearchable()`.
 
 ```java
@@ -154,6 +175,7 @@ Použité v :ghost:<code>head.jsp</code>
 ```
 
 ## Všetky vlastnosti *DocDetails*
+
 Sprístupní celý :carousel_horse: docDetails - všetky vlastnosti webovej stránky.
 
 ```java
