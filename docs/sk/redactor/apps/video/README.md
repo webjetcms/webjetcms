@@ -25,6 +25,7 @@ YouTube video parametre:
   - Výška
 - Responzívna veľkosť (v percentách)
   - Šírka (%)
+- Pomer strán videa - výber pomeru strán pre responzívne zobrazenie videa (napr. 16:9, 4:3, 1:1, 21:9, 9:16)
 - Prehrať video po načítaní stránky
 - Zobraziť názov videa
 - Zobraziť YouTube logo
@@ -44,6 +45,7 @@ Vimeo video parametre:
   - Výška
 - Responzívna veľkosť (v percentách)
   - Šírka (%)
+- Pomer strán videa - výber pomeru strán pre responzívne zobrazenie videa (napr. 16:9, 4:3, 1:1, 21:9, 9:16)
 - Prehrať video po načítaní stránky
 - Zobraziť názov videa
 - Zobraziť autorov text na videu
@@ -61,6 +63,7 @@ Facebook video parametre:
 - Fixná veľkosť (v bodoch)
   - Šírka
 - Responzívna veľkosť (na celú šírku bloku)
+- Pomer strán videa - výber pomeru strán pre responzívne zobrazenie videa (napr. 16:9, 4:3, 1:1, 21:9, 9:16)
 - Prehrať video po načítaní stránky
 - Zobraziť názov videa
 - Zobraziť autorov text na videu
@@ -78,8 +81,25 @@ Serverové video parametre:
   - Výška
 - Responzívna veľkosť (v percentách)
   - Šírka (%)
+- Pomer strán videa - výber pomeru strán pre responzívne zobrazenie videa (napr. 16:9, 4:3, 1:1, 21:9, 9:16)
 
 ![](editor-video.png)
+
+## Konfigurácia
+
+Správa zobrazenia videa sa dá prispôsobiť nasledujúcimi konfiguračnými premennými:
+
+| Premenná | Popis | Predvolená hodnota |
+| --- | --- | --- |
+| `videoClasses` | Čiarkou oddelený zoznam dostupných pomerov strán v editore. Formát: `prekladový_kľúč:css_triedy` alebo len `css_triedy`. Prvá položka je predvolená hodnota. | 16:9, 4:3, 1:1, 21:9, 9:16 (Bootstrap 4+5 triedy) |
+| `videoItemClass` | CSS trieda pre vnútorný `<iframe>` element videa. Pre Bootstrap 4 použite `embed-responsive-item`, pre Bootstrap 5 môže byť prázdna. | `embed-responsive-item` |
+
+Príklad zmeny na vlastné CSS triedy (bez Bootstrap):
+
+```txt
+videoClasses=Pomer 16:9:video-wrapper-16x9,Pomer 4:3:video-wrapper-4x3
+videoItemClass=
+```
 
 ## Zobrazenie aplikácie
 
