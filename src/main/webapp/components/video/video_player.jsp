@@ -33,7 +33,7 @@ final int TYPE_HTML = 2;
 final int TYPE_FACEBOOK = 3;
 
 String width 	= pageParams.getValue("width", "" + defaultWidth);
-int height 		= pageParams.getIntValue("height", defaultHeight);
+String height 		= pageParams.getValue("height", "" + defaultHeight);
 int autoplay 	= pageParams.getIntValue("autoplay", -1);
 int controls 	= pageParams.getIntValue("controls", -1);
 int branding 	= pageParams.getIntValue("branding", -1);
@@ -47,6 +47,16 @@ int percentageWidth = pageParams.getIntValue("percentageWidth", 0);
 String align = pageParams.getValue("align", "left");
 String ratioClass = pageParams.getValue("ratioClass", "embed-responsive embed-responsive-16by9 ratio ratio-16x9");
 String videoItemClass = Constants.getString("videoItemClass", "embed-responsive-item");
+String widthType = pageParams.getValue("widthType", "responsive");
+
+String widthHeightParams = " width=\"" + width + "\" height=\"" + height + "\" ";
+
+if ("fixed".equals(widthType)) {
+	percentageWidth = 0;
+}
+if ("responsive".equals(widthType)) {
+	widthHeightParams = "";
+}
 
 if (pageParams.getIntValue("width", -1)==-1 && percentageWidth==0)
 {
@@ -99,7 +109,7 @@ if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 		iframeVersion += "<div class=\""+ ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	if(fullscreen > 0)  allowFullscreen = "allowfullscreen";
-	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" width=\""+ width +"\" height=\""+ height +"\" src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
+	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" "+widthHeightParams+"src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 
 	if(percentageWidth >0) {
 		iframeVersion += "</div>";
@@ -122,7 +132,7 @@ else if (file.indexOf("vimeo.com") != -1)
 	}
 
 	if(fullscreen > 0)  allowFullscreen = "webkitallowfullscreen mozallowfullscreen allowfullscreen";
-	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" src=\"//player.vimeo.com/video/"+ file +"?autoplay="+autoplay+"&portrait="+portrait+"&title="+showinfo+"&badge="+badge+"&byline="+byline+"\" width=\""+ width +"\" height=\""+ height +"\" frameborder=\"0\" "+allowFullscreen+"></iframe>";
+	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" src=\"//player.vimeo.com/video/"+ file +"?autoplay="+autoplay+"&portrait="+portrait+"&title="+showinfo+"&badge="+badge+"&byline="+byline+"\" "+widthHeightParams+"frameborder=\"0\" "+allowFullscreen+"></iframe>";
 
 	if(percentageWidth > 0) {
 		iframeVersion += "</div>";

@@ -50,7 +50,7 @@ public class VideoApp extends WebjetComponentAbstract {
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-center", value = "center"),
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-right", value = "right")
     }))
-    private String align = "left";
+    private String align = "center";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.width", tab = "basic")
     private Integer width = 425;
@@ -60,6 +60,20 @@ public class VideoApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.widthPercentage", tab = "basic")
     private Integer percentageWidth = 100;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "components.video_player.ratioClass",
+        tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+                }
+            )
+        }
+    )
+    private String ratioClass = "embed-responsive embed-responsive-16by9 ratio ratio-16x9";
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.autoplay", tab = "basic",
         editor = {
@@ -150,21 +164,6 @@ public class VideoApp extends WebjetComponentAbstract {
         }
     )
     private Integer badge = 1;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.SELECT,
-        title = "components.video_player.ratioClass",
-        tab = "basic",
-        editor = {
-            @DataTableColumnEditor(
-                attr = {
-                    @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.tab.style"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
-                }
-            )
-        }
-    )
-    private String ratioClass = "embed-responsive embed-responsive-16by9 ratio ratio-16x9";
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
