@@ -395,7 +395,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 					if(MODE_COMBINED.equals(mode))
 						combined.append(bean.getHref()).append(",");
 					else
-						write("<link "+type+" "+printId+" "+ linkMedia+" "+printCharset + " " + rel+" href=\""+bean.getHref()+"\" />"+getJspFileName(bean, pageContext)+"\n",pageContext, out);//write("<link type=\"text/css\""+linkMedia+" "+rel+" href=\""+bean.getHref()+"\"></link>"+getJspFileName(bean));
+						write("<link "+type+" "+printId+" "+ linkMedia+" "+printCharset + " " + rel+" href=\""+bean.getHref()+"\" />"+getJspFileName(bean, pageContext)+"\n",pageContext, out);
 				}
 				else
 					write("<style "+type+" >"+bean.getBody()+"</style>"+getJspFileName(bean, pageContext)+"\n",pageContext, out);

@@ -51,8 +51,7 @@ public abstract class AbstractIwcmAttributeModelProcessor extends AbstractAttrib
         IProcessableElementTag baseTag = null;
         for (int i = 0; i < model.size(); i++) {
             final ITemplateEvent event = model.get(i);
-            if (event instanceof IProcessableElementTag) {
-                IProcessableElementTag tag = (IProcessableElementTag) event;
+            if (event instanceof IProcessableElementTag tag) {
                 // nas base tag je vzdy prvy element tag
                 baseTag = tag;
                 break;
@@ -69,15 +68,7 @@ public abstract class AbstractIwcmAttributeModelProcessor extends AbstractAttrib
         if (model.size() > 0)
             model.add(modelFactory.createText("        "));
 
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("href", href);
-        attributes.put("rel", "stylesheet");
-        attributes.put("type", "text/css");
-
-        IOpenElementTag link = modelFactory.createOpenElementTag("link", attributes, AttributeValueQuotes.DOUBLE, false);
-        model.add(link);
-        model.add(modelFactory.createCloseElementTag("link"));
-        model.add(modelFactory.createText("\n"));
+        model.add(modelFactory.createText("<link rel=\"stylesheet\" href=\"" + href + "\" type=\"text/css\" />\n"));
     }
 
     protected static void addScriptTag(IModel model, IModelFactory modelFactory, String src) {
