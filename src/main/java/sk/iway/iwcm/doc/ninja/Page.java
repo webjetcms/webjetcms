@@ -46,7 +46,7 @@ public class Page {
                 canonical = docLink;
             } else {
                 //if canonical is not empty, check if it contains http:// or https://, if not, add domain to it
-                if (canonical.contains("http://") == false && canonical.contains("https://") == false) {
+                if (canonical.toLowerCase().startsWith("http") == false) {
                     canonical = getUrlDomain() + canonical;
                 }
             }

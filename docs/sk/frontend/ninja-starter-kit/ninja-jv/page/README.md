@@ -95,7 +95,7 @@ Použité v :ghost:<code>head.jsp</code>
 <link rel="canonical" href="${ninja.page.canonical}" />
 ```
 
-## Kaninická URL adresa *String*
+## Kanonická URL adresa *String*
 
 Kanonická Url adresa webovej stránky vrátane domény. Ak v URL existuje parameter `page`, napr. v zozname noviniek, je k URL adrese pridaný. Možné je použiť voľné pole Q pre nastavenie vlastnej kanonickej adresy stránky.
 
