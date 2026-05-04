@@ -14,7 +14,7 @@
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
 | ${ninja.page.perexPlace} | *String* | Perex miesto stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
-| ${ninja.page.canonical} | *String* | Kanonická URL adresa stránky (hodnota sa berie z voliteľného poľa Q alebo ak je prázdne, tak z URL adresy). Pridá do URL parameter `page`, ak existuje, pre zobrazenie správnej strany v zozname noviniek. |
+| ${ninja.page.canonical} | *String* | Kanonická URL adresa stránky (hodnota sa berie z voliteľného poľa Q alebo ak je prázdne, tak z URL adresy). Pridá do URL parameter `page`, ak existuje, pre zobrazenie správnej strany v zozname noviniek. Ako doménové meno použije vždy doménu nastavenú v priečinku stránky bez ohľadu na zobrazenie cez administračný/CMS server. |
 | ${ninja.abVariant} | *String* | Identifikátor reprezentujúci verziu stránka vo forme znaku a/b |
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.

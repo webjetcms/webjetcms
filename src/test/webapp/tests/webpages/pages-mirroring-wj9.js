@@ -386,11 +386,7 @@ Scenario("hreflang", ({ I, DT, DTE, Document }) => {
      Document.setConfigValue("structureMirroringConfig", "9811,9812,9813:mirroring.tau27.iway.sk");
      Document.switchDomain("mirroring.tau27.iway.sk");
 
-     let url = process.env.CODECEPT_URL;
-     let protocol = "http";
-     if (url.startsWith("https")) {
-          protocol = "https";
-     }
+     let protocol = Document.getProtocol();
 
      //verify hreflang not shown on disabled page
      I.amOnPage("/slovensky/kontakty/");

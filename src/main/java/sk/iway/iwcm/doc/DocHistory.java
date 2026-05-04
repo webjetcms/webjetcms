@@ -38,6 +38,7 @@ public class DocHistory extends DocBasic {
 			id = null;
 			Logger.debug(getClass(), "prePersist, id2="+id);
 		}
+		if (isDelete == null) isDelete = false;
     }
 
     @Id

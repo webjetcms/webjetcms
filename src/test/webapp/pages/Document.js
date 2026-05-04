@@ -352,5 +352,18 @@ module.exports = {
   getWebappPath() {
     var basePath = "/../../src/main/webapp";
     return basePath;
+  },
+
+  /**
+   * Returns protocol of the URL, either http or https
+   * @returns
+   */
+  getProtocol() {
+    let url = process.env.CODECEPT_URL;
+    let protocol = "http";
+    if (url.startsWith("https")) {
+      protocol = "https";
+    }
+    return protocol;
   }
 }

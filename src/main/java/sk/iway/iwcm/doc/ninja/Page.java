@@ -44,14 +44,20 @@ public class Page {
                 canonical = Tools.replace(canonical, "&amp;", "&");
             }
 
+            DocDB docDB = DocDB.getInstance();
+            String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
             if(Tools.isEmpty(canonical)){
-                DocDB docDB = DocDB.getInstance();
-                String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
                 canonical = docLink;
             } else {
                 //if canonical is not empty, check if it contains http:// or https://, if not, add domain to it
                 if (canonical != null && canonical.toLowerCase().startsWith("http") == false) {
-                    canonical = getUrlDomain() + canonical;
+                    //reuse domain from docLink, but only domain, without path
+                    int i = docLink.indexOf("/", 10);
+                    String domain = null;
+                    if (i > 0 && i < docLink.length() - 1) domain = docLink.substring(0, i);
+                    else domain = getUrlDomain();
+
+                    canonical = domain + canonical;
                 }
             }
         }
