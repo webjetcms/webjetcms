@@ -10,6 +10,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class Page {
     private Ninja ninja;
@@ -36,9 +37,12 @@ public class Page {
     }
 
     public String getCanonical(){
-        String canonical = "";
+        String canonical = null;
         if(doc!=null){
-            canonical = doc.getFieldQ();
+            if (doc.getFieldQ()!=null && doc.getFieldQ().contains("/")) {
+                canonical = ResponseUtils.filter(doc.getFieldQ());
+                canonical = Tools.replace(canonical, "&amp;", "&");
+            }
 
             if(Tools.isEmpty(canonical)){
                 DocDB docDB = DocDB.getInstance();
@@ -46,15 +50,17 @@ public class Page {
                 canonical = docLink;
             } else {
                 //if canonical is not empty, check if it contains http:// or https://, if not, add domain to it
-                if (canonical.toLowerCase().startsWith("http") == false) {
+                if (canonical != null && canonical.toLowerCase().startsWith("http") == false) {
                     canonical = getUrlDomain() + canonical;
                 }
             }
         }
 
+        if (Tools.isEmpty(canonical) || "-".equals(canonical)) canonical = getUrl();
+
         Map<String, String[]> params = getUrlParameters();
         String[] pageParams = params.get("page");
-        if(pageParams != null && pageParams.length > 0){
+        if(pageParams != null && pageParams.length > 0 && Tools.isNotEmpty(canonical)){
             canonical = Tools.addParameterToUrl(canonical, "page", pageParams[0]);
         }
 
