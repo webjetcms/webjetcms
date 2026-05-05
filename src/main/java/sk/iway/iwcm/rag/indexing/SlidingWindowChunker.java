@@ -14,17 +14,14 @@ import sk.iway.iwcm.Constants;
 @Component
 public class SlidingWindowChunker {
 
-    private static final int DEFAULT_CHUNK_SIZE = 500;
-    private static final int DEFAULT_OVERLAP = 100;
-
     /**
      * Split text into overlapping chunks.
      * @param text the full text to split
      * @return list of text chunks
      */
     public List<String> chunk(String text) {
-        int chunkSize = Constants.getInt("ragChunkSize", DEFAULT_CHUNK_SIZE);
-        int overlap = Constants.getInt("ragChunkOverlap", DEFAULT_OVERLAP);
+        int chunkSize = Constants.getInt("ragChunkSize");
+        int overlap = Constants.getInt("ragChunkOverlap");
         return chunk(text, chunkSize, overlap);
     }
 

@@ -31,8 +31,6 @@ import sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService;
 public class OpenAiEmbeddingProvider implements EmbeddingProvider {
 
     private static final String EMBEDDINGS_URL = "https://api.openai.com/v1/embeddings";
-    private static final String DEFAULT_MODEL = "text-embedding-3-small";
-    private static final int DEFAULT_DIMENSIONS = 1536;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Override
@@ -45,7 +43,7 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
             return List.of();
         }
 
-        if (Tools.isEmpty(model)) model = DEFAULT_MODEL;
+        if (Tools.isEmpty(model)) model = getDefaultModel();
 
         try {
             ObjectNode requestBody = MAPPER.createObjectNode();
@@ -82,12 +80,12 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
 
     @Override
     public int getDimensions(String model) {
-        return Constants.getInt("ragEmbeddingDimensions", DEFAULT_DIMENSIONS);
+        return Constants.getInt("ragEmbeddingDimensions");
     }
 
     @Override
     public String getDefaultModel() {
-        return Constants.getString("ragEmbeddingModel", DEFAULT_MODEL);
+        return Constants.getString("ragEmbeddingModel");
     }
 
     private List<float[]> parseEmbeddings(String responseBody) throws IOException {

@@ -327,7 +327,7 @@ function getAddIndexButton() {
         init: function (dt) {
             _initRowUnselectedVisibility(this, dt);
         },
-        className: "btn btn-sm btn-success",
+        className: "btn btn-sm btn-success btnAddIndex",
         attr: {
             title: conf ? conf.tooltip : "",
             "data-toggle": "tooltip"
@@ -347,7 +347,7 @@ function getRemoveIndexButton() {
         init: function (dt) {
             _initRowUnselectedVisibility(this, dt);
         },
-        className: "btn btn-sm btn-danger",
+        className: "btn btn-sm btn-danger btnRemoveIndex",
         attr: {
             title: conf ? conf.tooltip : "",
             "data-toggle": "tooltip"

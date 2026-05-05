@@ -32,8 +32,6 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
 
     Page<EmbeddingChunkEntity> findAllByEntityType(RagEntityType entityType, Pageable pageable);
 
-    Page<EmbeddingChunkEntity> findAllByEntityTypeAndEntityIdIn(RagEntityType entityType, List<Integer> entityIds,Pageable pageable);
-
     @Query("SELECT DISTINCT c.entityId FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.domainId = :domainId")
     List<Integer> findDistinctEntityIdsByEntityTypeAndDomainId(RagEntityType entityType, Integer domainId);
 }

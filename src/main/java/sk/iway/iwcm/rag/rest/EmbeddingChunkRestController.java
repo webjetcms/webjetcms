@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -57,45 +60,43 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
-
-        String entityType = Tools.getStringValue(getRequest().getParameter("entityType"), null);
-        if(entityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
-
-        RagEntityType ragEntityType = RagEntityType.fromString(entityType);
+        // Check if entityType is set and valid
+        RagEntityType ragEntityType = RagEntityType.fromString( getRequest().getParameter("entityType") );
         if(ragEntityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
 
-        Page<EmbeddingChunkEntity> page;
-
-        if(ragEntityType.equals(RagEntityType.DOCUMENT)) {
-            int rootDir = Tools.getIntValue(getRequest().getParameter("searchRootDir"), -1);
-            boolean includeSubfolders = Tools.getBooleanValue(getRequest().getParameter("includeSubfolders"), false);
-            Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
-            if(data == null || data.getSecond() == null || data.getSecond().isEmpty()) return new DatatablePageImpl<>( new ArrayList<>() );
-
-            page = chunkRepository.findAllByEntityTypeAndEntityIdIn(ragEntityType, data.getSecond(), pageable);
-        } else {
-            // No valid entityType provided, return empty page
-            return new DatatablePageImpl<>( new ArrayList<>() );
-        }
-
+        Page<EmbeddingChunkEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new EmbeddingChunkEntity(), pageable));
         processFromEntity(page, ProcessItemAction.GETALL);
-
         return page;
     }
 
     @Override
     public Page<EmbeddingChunkEntity> findByColumns(Map<String, String> params, Pageable pageable, EmbeddingChunkEntity search) {
-
-        // entityType is required
-        String entityType = Tools.getStringValue(params.get("entityType"), null);
-        if(Tools.isEmpty(entityType)) return new DatatablePageImpl<>( new ArrayList<>() );
-
-        // Check if entityType is valid
-        RagEntityType ragEntityType = RagEntityType.fromString(entityType);
+        // Check if entityType is set and valid
+        RagEntityType ragEntityType = RagEntityType.fromString( params.get("entityType") );
         if(ragEntityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
 
         return super.findByColumns(params, pageable, search);
     }
+
+    @Override
+    public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<EmbeddingChunkEntity> root, CriteriaBuilder builder) {
+        // By entity type - apply additional filtering
+        RagEntityType ragEntityType = RagEntityType.fromString( params.get("entityType") );
+        if(ragEntityType.equals(RagEntityType.DOCUMENT)) {
+            int rootDir = Tools.getIntValue(params.get("searchRootDir"), -1);
+            boolean includeSubfolders = Tools.getBooleanValue(params.get("includeSubfolders"), false);
+            Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
+
+            List<Integer> entityIds = data != null ? data.getSecond() : new ArrayList<>();
+            if(entityIds.isEmpty()) entityIds.add(-1); // to avoid error with empty list
+            predicates.add( builder.and(
+                root.get("entityId").in(entityIds)
+            ) );
+        }
+
+        super.addSpecSearch(params, predicates, root, builder);
+    }
+
 
     @Override
     public void getOptions(DatatablePageImpl<EmbeddingChunkEntity> page) {
