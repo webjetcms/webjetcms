@@ -28,7 +28,7 @@
             }
 
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
-                setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile"], []);
+                setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile", "ratioClass"], []);
             }
 
             const handleSizeFields = () => {
@@ -48,7 +48,7 @@
                 responsive.off("change").on("change", function () {
                     if ($(this).is(":checked")) {
                         if ($(facebook).is(":checked")) {
-                            setFieldsVisibility(["height", "width", "percentageWidth"], []);
+                            setFieldsVisibility(["height", "width"], ["percentageWidth"]);
                         } else {
                             $("#DTE_Field_percentageWidth").val(Number(defaultValue));
                             setFieldsVisibility(["height", "width"], ["percentageWidth"]);
@@ -68,7 +68,7 @@
 
             youtube.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["portrait", "byline", "badge", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
+                    setFieldsVisibility(["portrait", "byline", "badge", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "ratioClass", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file}]]");
                     $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
@@ -77,7 +77,7 @@
 
             vimeo.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["controls", "branding", "rel", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
+                    setFieldsVisibility(["controls", "branding", "rel", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "ratioClass", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_vimeo}]]");
                     $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
@@ -86,17 +86,16 @@
 
             facebook.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "videoFile"], ["file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "width", "height", "percentageWidth", "videoFile"], ["file", "widthType", "ratioClass", "autoplay", "showinfo", "fullscreen", "byline"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_facebook}]]");
                     $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidthFacebook}]]")
                     updateFields();
                 }
             });
 
-
             video.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "byline", "file"], ["width", "widthType", "videoFile"]);
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "byline", "file"], ["width", "widthType", "ratioClass", "videoFile"]);
                     $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
                 }

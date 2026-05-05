@@ -30,7 +30,7 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "webjet2022TransactionManager")
     public void save(PublicKeyCredentialUserEntity userEntity) {
         String webauthnId = userEntity.getId().toBase64UrlString();
         String username = userEntity.getName();
@@ -56,7 +56,7 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "webjet2022TransactionManager")
     public PublicKeyCredentialUserEntity findByUsername(String username) {
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
                 "PassKey JPA: findByUsername=" + username);
@@ -74,7 +74,7 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "webjet2022TransactionManager")
     public PublicKeyCredentialUserEntity findById(Bytes id) {
         String webauthnId = id.toBase64UrlString();
         Logger.debug(JpaPublicKeyCredentialUserEntityAdapter.class,
@@ -91,7 +91,7 @@ public class JpaPublicKeyCredentialUserEntityAdapter implements PublicKeyCredent
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "webjet2022TransactionManager")
     public void delete(Bytes id) {
         String webauthnId = id.toBase64UrlString();
         Logger.info(JpaPublicKeyCredentialUserEntityAdapter.class,

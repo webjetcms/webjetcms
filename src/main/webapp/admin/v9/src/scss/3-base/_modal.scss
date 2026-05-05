@@ -772,6 +772,9 @@ div.DTE_Bubble_Background {
     div.modal-dialog {
         margin-top: 8px;
         margin-bottom: auto;
+        &.modal-fullscreen {
+            margin: 0px;
+        }
     }
 
     .modal-content {
@@ -781,9 +784,11 @@ div.DTE_Bubble_Background {
             padding-top: 0px;
             padding-bottom: 0px;
             margin-top: 0px !important;
-            h5 {
+            h5.modal-title {
                 float: left;
                 text-align: left;
+                padding-top: 5px;
+                padding-bottom: 5px;
             }
             button {
                 position: absolute;
@@ -800,6 +805,51 @@ div.DTE_Bubble_Background {
 
                 &:hover {
                     color: $nice-black;
+                }
+            }
+            button.btn-close {
+                width: auto;
+                height: auto;
+            }
+            //kurzor pre drag&drop - grab na hlavicke, ale nie na tlacidlach
+            &.modal-header-draggable {
+                cursor: grab;
+                button, div.dialog-buttons button {
+                    cursor: pointer;
+                }
+            }
+            div.dialog-buttons {
+                position: absolute;
+                right: 11px;
+                top: 4px;
+
+                button {
+                    display: inline-block;
+                    position: static;
+                    cursor: pointer;
+                    color: $nice-gray-300;
+                    font-size: 6px;
+                    border: 1px solid $nice-gray-300;
+                    border-radius: $border-radius;
+                    padding: 5px 6px;
+                    margin-right: 4px;
+
+                    .ti {
+                        font-size: 18px;
+                        color: $secondary;
+                    }
+
+                    &:hover {
+                        color: $white;
+                        background-color: $secondary;
+                        .ti {
+                            color: $white;
+                        }
+                    }
+                }
+
+                button.minimize {
+                    display: none;
                 }
             }
         }
@@ -830,6 +880,31 @@ div.DTE_Bubble_Background {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    //kurzor pocas aktualneho tahanaia
+    &.modal-iframe-dragging,
+    &.modal-iframe-dragging * {
+        cursor: grabbing !important;
+        user-select: none;
+    }
+
+    div.modal-dialog.modal-fullscreen {
+        div.dialog-buttons {
+            button.maximize {
+                display: none;
+            }
+            button.minimize {
+                display: inline-block;
+            }
+        }
+        div.modal-body {
+            height: auto !important;
+            iframe {
+                width: 100% !important;
+                height: 100% !important;
             }
         }
     }
@@ -886,6 +961,39 @@ div.DTE_Bubble_Background {
         .md-tabs a.nav-link {
             padding-top: 2px;
             padding-bottom: 0px;
+        }
+    }
+}
+
+@media (max-width: $bp-tablet) or (max-height: 760px) {
+    //na nizkych obrazovkach zobraz #modalIframe ako maximalizovany, tlacidla max/min skry
+    #modalIframe {
+        div.modal-dialog {
+            margin: 0px;
+            width: 100%;
+            max-width: 100% !important;
+            height: 100%;
+            max-height: 100%;
+            left: 0px !important;
+            top: 0px !important;
+        }
+        div.modal-content {
+            height: 100%;
+            max-height: 100%;
+            border-radius: 0px;
+            left: 0px !important;
+            top: 0px !important;
+        }
+        div.modal-body {
+            height: auto !important;
+            iframe {
+                width: 100% !important;
+                height: 100% !important;
+            }
+        }
+        div.dialog-buttons button.maximize,
+        div.dialog-buttons button.minimize {
+            display: none !important;
         }
     }
 }
@@ -1138,21 +1246,18 @@ html.in-iframe-show-table {
             padding-top: 0px !important;
             padding-bottom: 0px !important;
             border: 0px;
-            button.btn-close {
-                position: absolute;
-                right: 24px;
-                top: 16px;
+            button {
                 z-index: 999;
-                border: 1px solid #868EA5;
-                padding: 0px 6px 9px 5px;
+                position: absolute;
+                top: 8px;
                 color: $secondary;
-
-                .ti {
-                    font-size: 18px;
-                }
-                &:hover {
-                    background-color: $nice-gray-300;
-                }
+                margin-top: 0px;
+            }
+            button.btn-close {
+                right: 0px;
+            }
+            button.btn.maximize, button.btn.minimize {
+                right: 40px;
             }
         }
     }

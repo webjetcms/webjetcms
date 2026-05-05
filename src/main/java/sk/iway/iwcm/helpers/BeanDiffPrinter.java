@@ -42,12 +42,76 @@ public class BeanDiffPrinter
 
 	public String toHtml()
 	{
-		return toString().replaceAll("\n", "<br />");
+		return toString().replace("\n", "<br />");
 	}
 
 	@Override
 	public String toString() {
 		return toString(null);
+	}
+
+	public String toHtmlTable() {
+		return toHtmlTable(null);
+	}
+
+	/**
+	 * Generates the diff as an HTML table. If the diff has an original object, the table has 3 columns
+	 * (property name, before value, after value). If it is a new record (no original), the table has
+	 * 2 columns (property name, value). Reuses toString(Prop) for all translation logic.
+	 */
+	public String toHtmlTable(Prop prop) {
+		String text = toString(prop);
+
+		if (prop == null) prop = Prop.getInstance();
+		boolean hasOriginal = diff.hasOriginal();
+
+		// toString returns a string starting with a space when there are no changes or an error occurred
+		if (text.startsWith(" ")) {
+			return Tools.escapeHtml(text.trim());
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("<table id=\"diffTable\" class=\"datatableInit table dataTable diff-table\" border=\"1\" cellspacing=\"0\"><thead><tr>");
+		sb.append("<th>").append(Tools.escapeHtml(prop.getText("editor.form.tf.name"))).append("</th>");
+		if (hasOriginal) {
+			sb.append("<th>").append(Tools.escapeHtml(prop.getText("admin.conf_import.stara_hodnota"))).append("</th>");
+		}
+		sb.append("<th>").append(Tools.escapeHtml(prop.getText("admin.conf_import.nova_hodnota"))).append("</th>");
+		sb.append("</tr></thead><tbody>");
+
+		// Each line in toString output is: "\nPropName: value" or "\nPropName: before -> after"
+		// The string starts with "\n" so split produces an empty first element — skip it
+		String[] lines = text.split("\n");
+		for (String line : lines) {
+			if (Tools.isEmpty(line)) continue;
+
+			int colonIdx = line.indexOf(": ");
+			String name;
+			String rest;
+			if (colonIdx >= 0) {
+				name = line.substring(0, colonIdx);
+				rest = line.substring(colonIdx + 2);
+			} else {
+				name = line;
+				rest = "";
+			}
+
+			sb.append("<tr><td>").append(Tools.escapeHtml(name)).append("</td>");
+			if (hasOriginal) {
+				// Split on first occurrence of " -> " to separate before and after
+				int arrowIdx = rest.indexOf(" -> ");
+				String before = arrowIdx >= 0 ? rest.substring(0, arrowIdx) : rest;
+				String after = arrowIdx >= 0 ? rest.substring(arrowIdx + 4) : "";
+				sb.append("<td>").append(Tools.escapeHtml(before)).append("</td>");
+				sb.append("<td>").append(Tools.escapeHtml(after)).append("</td>");
+			} else {
+				sb.append("<td>").append(Tools.escapeHtml(rest)).append("</td>");
+			}
+			sb.append("</tr>");
+		}
+
+		sb.append("</tbody></table>");
+		return sb.toString();
 	}
 
 	public String toString(Prop prop)
@@ -80,7 +144,12 @@ public class BeanDiffPrinter
 							if (field.isAnnotationPresent(DataTableColumn.class)) {
 								DataTableColumn dtcAnn = field.getAnnotation(DataTableColumn.class);
 								if (dtcAnn == null) continue;
-								translated.put(field.getName(), prop.getText( dtcAnn.title()) );
+
+								String titleKey = dtcAnn.title();
+								if(titleKey == null) titleKey = field.getName();
+								if(titleKey.startsWith("[[#{") && titleKey.endsWith("}]]")) titleKey = titleKey.substring(4, titleKey.length() - 3);
+
+								translated.put(field.getName(), prop.getText(titleKey) );
 								isDatatable = true;
 							} else {
 								String fieldName = field.getName();
@@ -195,7 +264,7 @@ public class BeanDiffPrinter
 					sb.append(groupName);
 				}
 			}
-			if (sb.length() > 0) {
+			if (sb.isEmpty() == false) {
 				value = sb.toString() + " (" + value + ")";
 			}
 		}

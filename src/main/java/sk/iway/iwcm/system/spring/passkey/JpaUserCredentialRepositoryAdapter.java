@@ -48,7 +48,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "webjet2022TransactionManager")
     public void save(CredentialRecord record) {
         String credId = record.getCredentialId().toBase64UrlString();
         String webauthnUserId = record.getUserEntityUserId().toBase64UrlString();
@@ -105,7 +105,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "webjet2022TransactionManager")
     public CredentialRecord findByCredentialId(Bytes credentialId) {
         String credId = credentialId.toBase64UrlString();
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
@@ -127,7 +127,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "webjet2022TransactionManager")
     public List<CredentialRecord> findByUserId(Bytes userId) {
         String webauthnUserId = userId.toBase64UrlString();
         Logger.debug(JpaUserCredentialRepositoryAdapter.class,
@@ -151,7 +151,7 @@ public class JpaUserCredentialRepositoryAdapter implements UserCredentialReposit
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "webjet2022TransactionManager")
     public void delete(Bytes credentialId) {
         String credId = credentialId.toBase64UrlString();
         Logger.info(JpaUserCredentialRepositoryAdapter.class,

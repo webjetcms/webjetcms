@@ -3436,7 +3436,63 @@
 
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
-                <void property="author"><string>copilot</string></void>
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>23.3.2026</string></void>
+                <void property="desc"><string>groups_scheduler - schvalovanie zmien adresarov (approve folders)</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD awaiting_approve VARCHAR(500) NULL;
+                        ALTER TABLE groups_scheduler ADD approved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD disapproved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD approve_date DATETIME NULL;
+                        ALTER TABLE groups_scheduler ADD is_delete TINYINT(1) NOT NULL DEFAULT 0;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD awaiting_approve NVARCHAR(500) NULL;
+                        ALTER TABLE groups_scheduler ADD approved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD disapproved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD approve_date DATETIME NULL;
+                        ALTER TABLE groups_scheduler ADD is_delete BIT NOT NULL DEFAULT 0;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD awaiting_approve NVARCHAR2(500) NULL;
+                        ALTER TABLE groups_scheduler ADD approved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD disapproved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD approve_date DATE NULL;
+                        ALTER TABLE groups_scheduler ADD is_delete NUMBER(1) DEFAULT 0 NOT NULL;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE groups_scheduler ADD awaiting_approve VARCHAR(500) NULL;
+                        ALTER TABLE groups_scheduler ADD approved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD disapproved_by INT NULL;
+                        ALTER TABLE groups_scheduler ADD approve_date TIMESTAMP NULL;
+                        ALTER TABLE groups_scheduler ADD is_delete BOOLEAN NOT NULL DEFAULT FALSE;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>26.03.2026</string></void>
+                <void property="desc"><string>documents_history - add is_delete column</string></void>
+                <void property="mysql"><string>ALTER TABLE documents_history ADD COLUMN is_delete TINYINT(1) NOT NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE documents_history ADD is_delete BIT NOT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE documents_history ADD is_delete NUMBER(1) DEFAULT 0 NOT NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE documents_history ADD COLUMN is_delete BOOLEAN NOT NULL DEFAULT FALSE</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>21.04.2026</string></void>
                 <void property="desc"><string>rag_index_queue - create table for RAG indexing queue</string></void>
                 <void property="mysql"><string>
@@ -3447,7 +3503,7 @@
                         action VARCHAR(20) NOT NULL,
                         domain_id INT DEFAULT 0 NOT NULL,
                         create_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        UNIQUE KEY uq_rag_queue (entity_type, entity_id, action)
+                        UNIQUE KEY uq_rag_queue (entity_type, entity_id, action, domain_id)
                     );
                 </string></void>
                 <void property="mssql"><string>
@@ -3459,7 +3515,7 @@
                         [domain_id] [INT] DEFAULT 0 NOT NULL,
                         [create_date] [DATETIME] DEFAULT GETDATE()
                     ) ON [PRIMARY];
-                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action);
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
                 </string></void>
                 <void property="oracle"><string>
                     CREATE TABLE rag_index_queue (
@@ -3482,7 +3538,7 @@
                                 END IF|
                             END|
                     ;
-                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action);
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
                 </string></void>
                 <void property="pgsql"><string>
                     CREATE SEQUENCE S_rag_index_queue START WITH 1;
@@ -3493,11 +3549,12 @@
                         action VARCHAR(20) NOT NULL,
                         domain_id INT DEFAULT 0 NOT NULL,
                         create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        UNIQUE (entity_type, entity_id, action)
+                        UNIQUE (entity_type, entity_id, action, domain_id)
                     );
                 </string></void>
             </object>
         </void>
+
 
     </object>
 </java>
