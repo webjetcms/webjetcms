@@ -1427,7 +1427,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 	public void setEventDate(long eventDate)
 	{
 		if (eventDate == 0) return;
-		this.eventDateDate = new Date(eventDate);
+		Date eventDateDate = new Date(eventDate); // musi byt ako samostatny objekt, pretoze v Tools.formatDate sa odpazi cas ked sa vola v setEventDateString  a nasetuje do this.eventDateDate, takze na dalsom riadku pri setEventTimeString je cas vzdy 00:00:00.
+		this.eventDateDate = eventDateDate;
 		setEventDateString(Tools.formatDate(eventDateDate));
 		setEventTimeString(Tools.formatTime(eventDateDate));
 	}
