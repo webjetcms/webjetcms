@@ -311,6 +311,16 @@ Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzor
 
 !> Upozornenie: ikona pre vkladanie špeciálnych znakov môže byť v niektorých prípadoch zmenená na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pre vkladanie [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázkov.
 
+## Vkladanie textu na ťažko dostupné miesta
+
+Niekedy je ťažké umiestniť kurzor napríklad za posledný odstavec, obrázok. Editor v takejto situácii zobrazuje tzv. magickú čiaru. Tá umožňuje vložiť prázdny text, obrázok, aplikáciu alebo blok, v prípade Page Builder po kliknutí umožní vložiť pripravený blok do stránky.
+
+![](wjmagicline.png)
+
+Podobne je niekedy problém vložiť kurzor za poslednú SVG ikonu, tučný text a podobne. V takom prípade za elementom editor zobrazuje ikonu pre presun kurzora na dané miesto. Niekedy sa presun nemusí podariť na prvé kliknutie, odporúčame vopred kliknúť kdekoľvek do textu a potom na ikonu pre presun kurzora.
+
+![](wjmagicline-append.png)
+
 ## Detekcia zmeny obsahu stránky
 
 Editor stránok obsahuje mechanizmus, ktorý detekuje zmeny obsahu stránky. Keď kliknete na tlačidlo Zrušiť na zatvorenie okna a zároveň boli vykonané zmeny v obsahu stránky, zobrazí sa vám dialógové okno s upozornením, že neboli uložené zmeny. Kliknutím na OK okno zatvoríte bez uloženia zmien, kliknutím na Zrušiť sa vrátite späť do editora stránky.
