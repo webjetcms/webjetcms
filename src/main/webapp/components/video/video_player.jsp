@@ -1,6 +1,4 @@
-<%@page import="sk.iway.iwcm.gallery.ImageInfo"%>
-<%@page import="sk.iway.iwcm.FileTools"%>
-<%@page import="sk.iway.iwcm.Constants"%>
+<%@page import="sk.iway.iwcm.gallery.ImageInfo,sk.iway.iwcm.FileTools,sk.iway.iwcm.Constants,sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %><%@page import="sk.iway.iwcm.PageParams,sk.iway.iwcm.Tools,org.json.JSONObject"%><%
@@ -45,11 +43,19 @@ int byline 		= pageParams.getIntValue("byline", -1);
 int badge 		= pageParams.getIntValue("badge", -1);
 int percentageWidth = pageParams.getIntValue("percentageWidth", 0);
 String align = pageParams.getValue("align", "left");
-String ratioClass = pageParams.getValue("ratioClass", "embed-responsive embed-responsive-16by9 ratio ratio-16x9");
+String ratioClass = pageParams.getValue("ratioClass", "embed-responsive-16by9 ratio ratio-16x9");
+String baseClass = Constants.getString("videoWrapperClass", "embed-responsive");
 String videoItemClass = Constants.getString("videoItemClass", "embed-responsive-item");
-String widthType = pageParams.getValue("widthType", "responsive");
+String widthType = pageParams.getValue("widthType", percentageWidth > 0 ? "responsive" : "fixed");
 
-String widthHeightParams = " width=\"" + width + "\" height=\"" + height + "\" ";
+String widthHeightParams = " width=\"" + ResponseUtils.filter(width) + "\" height=\"" + ResponseUtils.filter(height) + "\" ";
+if (ratioClass.contains("|")) {
+	String[] ratioClasses = ratioClass.split("\\|");
+	if (ratioClasses.length == 2) {
+		ratioClass = ratioClasses[0];
+		videoItemClass += " " + ratioClasses[1];
+	}
+}
 
 if ("fixed".equals(widthType)) {
 	percentageWidth = 0;
@@ -106,7 +112,7 @@ if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 
 	link = "http://www.youtube.com/v/" + file + "?version=3";
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\""+ ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\"" + baseClass + " " + ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	if(fullscreen > 0)  allowFullscreen = "allowfullscreen";
 	iframeVersion += "<iframe class=\""+ videoItemClass +"\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" "+widthHeightParams+"src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
@@ -128,7 +134,7 @@ else if (file.indexOf("vimeo.com") != -1)
 	link = "http://www.vimeo.com/moogaloop.swf";
 
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\""+ ratioClass +" clearfix video_align-"+align+" videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\"" + baseClass + " " + ratioClass +" clearfix video_align-"+align+" videoPlaceholder"+ videoCounter +" \" >";
 	}
 
 	if(fullscreen > 0)  allowFullscreen = "webkitallowfullscreen mozallowfullscreen allowfullscreen";
@@ -147,7 +153,7 @@ else if (file.indexOf("facebook.com/") != -1) {
 	<%
 
 	if(percentageWidth > 0) {
-		iframeVersion += "<div class=\""+ ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
+		iframeVersion += "<div class=\"" + baseClass + " " + ratioClass +" video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	String allowAutoplay = "";
 	String allowByline = "";
@@ -170,15 +176,18 @@ else if (file.indexOf("facebook.com/") != -1) {
 else if (file.indexOf(".mp4") != -1) {
 	type = TYPE_HTML;
 }
+
+baseClass = Tools.replace(baseClass, " ", ".");
+videoItemClass = Tools.replace(videoItemClass, " ", ".");
 %>
 <style>
-	.embed-responsive.videoPlaceholder<%=videoCounter%> {
+	.<%= baseClass %>.videoPlaceholder<%=videoCounter%> {
 		position: relative;
 		display: block;
 		width: <%=percentageWidth%>%;
 		overflow: hidden;
 	}
-	.embed-responsive .embed-responsive-item, .embed-responsive embed, .embed-responsive iframe, .embed-responsive object, .embed-responsive video {
+	.<%= baseClass %> .<%=videoItemClass %>, .<%= baseClass %> embed, .<%= baseClass %> iframe, .<%= baseClass %> object, .<%= baseClass %> video {
 		width: 100%;
 	}
 	.video_align-left{
@@ -261,5 +270,6 @@ else if (file.indexOf(".mp4") != -1) {
 		<script src="/components/video/videojs/video.js"></script>
 		<% request.setAttribute("videojsIncluded", true); %>
 	<% } %>
-<%}
+<%
+}
 %>

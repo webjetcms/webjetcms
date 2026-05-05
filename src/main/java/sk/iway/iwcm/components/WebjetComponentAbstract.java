@@ -153,7 +153,7 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
         for (String token : tokens) {
             String trimmed = token.trim();
             if (Tools.isNotEmpty(trimmed)) {
-                int colonIndex = trimmed.indexOf(':');
+                int colonIndex = trimmed.lastIndexOf(':');
                 if (colonIndex > 0) {
                     String label = trimmed.substring(0, colonIndex).trim();
                     String value = trimmed.substring(colonIndex + 1).trim();

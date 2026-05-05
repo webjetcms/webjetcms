@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.video;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +13,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
-import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;

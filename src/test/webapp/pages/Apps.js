@@ -87,8 +87,8 @@ module.exports = {
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
         }
         DTE.waitForEditor();
-        I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-        //I.click('.cke_wysiwyg_frame.cke_reset');
+        DTE.waitForCkeditor();
+
         this.switchEditor('html');
         I.click('.CodeMirror-code');
 
@@ -109,20 +109,17 @@ module.exports = {
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
         }
         DTE.waitForEditor();
-        //I.wait(5);
 
         this.openCurrentAppEditor(modalId, editIcon);
     },
 
     openCurrentAppEditor(modalId = "component-datatable_modal", editIcon = false) {
-        I.waitForElement(".cke_wysiwyg_frame.cke_reset");
-        I.wait(1);
+        DTE.waitForCkeditor();
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
         I.waitForElement("iframe.wj_component", 10);
-        I.wait(1);
+        I.wait(0.3);
 
         I.switchTo(locate("iframe.wj_component").first());
-        I.wait(5);
         I.waitForElement(".inlineComponentEdit", 30);
         if (editIcon)
             I.click(locate('.inlineComponentEdit .inlineComponentButton.cke_button').first());
@@ -131,7 +128,7 @@ module.exports = {
         I.switchTo();
         I.waitForInvisible('Čakajte prosím', 20);
         I.switchTo('.cke_dialog_ui_iframe');
-        I.wait(1);
+        I.wait(0.5);
         I.switchTo('#editorComponent');
         DTE.waitForModal(modalId);
     },
@@ -152,9 +149,7 @@ module.exports = {
             I.click(DT.btn.add_button);
         }
         DTE.waitForEditor();
-        //I.wait(5);
-        I.waitForElement(".cke_wysiwyg_frame.cke_reset");
-        I.wait(1);
+        DTE.waitForCkeditor();
 
         this.openAppForInsert(applicationName, applicationSelector);
 
@@ -171,14 +166,14 @@ module.exports = {
         I.waitForElement('#editorComponent', 10);
         I.switchTo('#editorComponent');
         I.waitForElement('#search', 10);
-        I.wait(1);
+        I.wait(0.3);
         I.fillField('#search', applicationName);
         I.waitForInvisible('div.promoApp', 20);
         I.waitForElement(applicationSelector, 10);
-        I.wait(1);
+        I.wait(0.3);
         I.clickCss(applicationSelector); //I.clickCss('div.menu-app[data-app-action^="sk.iway"]')
         I.waitForInvisible("div.appStore > div.block-header", 30);
-        I.wait(1);
+        I.wait(0.3);
         I.click(i18n.get("Add to page")); //I.clickCss('a.buy');
         DTE.waitForEditor("component-datatable");
     },
