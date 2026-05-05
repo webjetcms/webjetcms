@@ -66,7 +66,6 @@ Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) =
             //I.wait(20);
         },
         skipSwitchDomain: true,
-        extraWait: 2
     });
 });
 
@@ -327,7 +326,7 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
 }
 
 function selectEnumTypeLink(I, value) {
-    I.click( locate( "div.DTE_Field_Name_editorFields\\.childEnumTypeId > div > div > div.dropdown > button.dropdown-toggle") );
+    I.click( locate( "div.DTE_Field_Name_editorFields\\.childEnumTypeId > div > div > div.dropdown > button.dropdown-toggle") ); //NOSONAR
     I.waitForVisible("div.dropdown-menu.show");
     I.fillField(locate("div.dropdown-menu.show").find("input"), value);
     I.click( locate("div.dropdown-menu").find( locate("a.dropdown-item").withText(value) ) );

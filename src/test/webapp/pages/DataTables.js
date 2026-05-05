@@ -440,13 +440,13 @@ module.exports = {
 
             let field = requiredFields[0];
             if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, `${testingData[0]}${DUPLICATE_TEXT}`);
-            else I.fillField(`#DTE_Field_${field}`, `${testingData[0]}${DUPLICATE_TEXT}`);
+            else DTE.fillField(field, `${testingData[0]}${DUPLICATE_TEXT}`);
 
             I.see("Duplikovať", containerModal+"div.DTE_Form_Buttons");
             DTE.save(options.id);
 
             //over, ze sa modal zatvoril/zaznam sa ulozil
-            if (containerModal!="") I.dontSeeElement(containerModal);
+            if (containerModal != "") I.dontSeeElement(containerModal);
             else I.dontSeeElement('div.modal');
 
             // vyhladanie povodneho zaznamu
