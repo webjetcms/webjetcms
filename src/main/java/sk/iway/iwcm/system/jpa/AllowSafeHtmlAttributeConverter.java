@@ -68,7 +68,7 @@ public class AllowSafeHtmlAttributeConverter implements AttributeConverter<Strin
          .toFactory();
       String safeHTML = policy.sanitize(unsafeHtml);
       safeHTML = Tools.replace(safeHTML, Constants.NON_BREAKING_SPACE, "&nbsp;");
-      //alow + e.g. in webpage titles
+      //allow + as normal char, e.g. in webpage title
       safeHTML = Tools.replace(safeHTML, "&#43;", "+");
       return safeHTML;
    }
