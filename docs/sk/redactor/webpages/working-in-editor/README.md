@@ -313,7 +313,7 @@ Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzor
 
 ## Vkladanie textu na ťažko dostupné miesta
 
-Niekedy je ťažké umiestniť kurzor napríklad za posledný odstavec, obrázok. Editor v takejto situácii zobrazuje tzv. magickú čiaru. Tá umožňuje vložiť prázdny text, obrázok, aplikáciu alebo blok, v prípade Page Builder po kliknutí umožní vložiť pripravený blok do stránky.
+Niekedy je ťažké umiestniť kurzor napríklad za posledný odstavec alebo obrázok. Editor v takejto situácii zobrazuje tzv. pomocnú čiaru. Tá umožňuje vložiť prázdny text, obrázok, aplikáciu alebo blok. V prípade Page Builder po kliknutí umožní vložiť pripravený blok do stránky.
 
 ![](wjmagicline.png)
 
