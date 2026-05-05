@@ -686,7 +686,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
 
     I.say("isPublic: " + isPublic);
 
-    if(!isPublic) {
+    if(isPublic==false) {
         I.dontSee(pageName.toUpperCase());
         I.see("Chyba 404 - požadovaná stránka neexistuje");
     } else {
@@ -760,10 +760,11 @@ function approveDelete(I, pageName, hasSecondLevelApprove=false) {
 
     //Check page name
     within({frame :"#bodyFrameId"}, () => {
-    I.see(pageName.toUpperCase());
+        I.see(pageName.toUpperCase());
     });
     //Approve delete button
     within({frame : "#approveDelFormId"}, () => {
+        I.waitForElement("textarea[name=notes]", 10);
         I.fillField("textarea[name=notes]", "Suhlasim so zmazanim");
         I.clickCss("#tabMenu1 input.btn.green");
         if (hasSecondLevelApprove)

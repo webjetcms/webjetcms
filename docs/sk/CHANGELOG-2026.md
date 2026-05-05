@@ -57,6 +57,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/htmlbox/editor-block.png)
 
+- Video - pridaná možnosť nastaviť [CSS triedy pre pomer strán videa](redactor/apps/video/README.md#konfigurácia), možnosti zobrazené v aplikácii sa nastavujú cez konfiguračné premenné `videoClasses`, `videoWrapperClass` a `videoItemClass` (#osk496).
+
 ### Formuláre
 
 - Pridaná karta [Štatistika](redactor/apps/multistep-form/stat.md) pre zobrazenie odpovedí formulárov vo forme grafov (#58333).
