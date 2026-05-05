@@ -57,7 +57,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/htmlbox/editor-block.png)
 
-- Video - pridaná možnosť nastaviť CSS triedy pre pomer strán videa, možnosti zobrazené v aplikácii sa nastavujú cez konfiguračné premenné `videoClasses` a `videoItemClass` (#osk496).
+- Video - pridaná možnosť nastaviť [CSS triedy pre pomer strán videa](redactor/apps/video/README.md#konfigurácia), možnosti zobrazené v aplikácii sa nastavujú cez konfiguračné premenné `videoClasses`, `videoWrapperClass` a `videoItemClass` (#osk496).
 
 ### Formuláre
 

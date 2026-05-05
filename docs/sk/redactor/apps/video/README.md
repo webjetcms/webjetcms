@@ -85,6 +85,10 @@ Serverové video parametre:
 
 ![](editor-video.png)
 
+## Zobrazenie aplikácie
+
+![](video.png)
+
 ## Konfigurácia
 
 Správa zobrazenia videa sa dá prispôsobiť nasledujúcimi konfiguračnými premennými:
@@ -110,7 +114,3 @@ videoClasses=components.video_player.ratio-16x9:video-wrapper-16x9|video-iframe-
 videoWrapperClass=video-wrapper
 videoItemClass=video-item
 ```
-
-## Zobrazenie aplikácie
-
-![](video.png)
