@@ -88,6 +88,13 @@ public class OpenAiEmbeddingProvider implements EmbeddingProvider {
         return Constants.getString("ragEmbeddingModel");
     }
 
+    /**
+     * Parse the OpenAI embeddings API JSON response into a list of float arrays.
+     * Expects the standard response format with a "data" array containing "embedding" arrays.
+     * @param responseBody the raw JSON response body
+     * @return list of embedding vectors
+     * @throws IOException if JSON parsing fails
+     */
     private List<float[]> parseEmbeddings(String responseBody) throws IOException {
         List<float[]> embeddings = new ArrayList<>();
         JsonNode root = MAPPER.readTree(responseBody);

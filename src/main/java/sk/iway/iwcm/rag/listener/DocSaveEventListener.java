@@ -31,6 +31,12 @@ public class DocSaveEventListener {
         this.indexQueueService = indexQueueService;
     }
 
+    /**
+     * Handle document save, delete and recover events.
+     * On save/recover: adds the document to the indexing queue for re-indexing.
+     * On delete: adds the document to the queue for embedding removal.
+     * @param event the document event containing the DocDetails source
+     */
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'")
     public void handleDocEvent(final WebjetEvent<DocDetails> event) {
         if (Constants.getBoolean("ragSemanticSearchEnabled") == false) return;

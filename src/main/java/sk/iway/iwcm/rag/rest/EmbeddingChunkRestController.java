@@ -42,6 +42,11 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * REST controller for managing RAG embedding chunks via the admin datatable interface.
+ * Provides CRUD operations, document indexing actions, and statistics endpoints.
+ * Requires 'embeddingChunks' permission.
+ */
 @RestController
 @RequestMapping("/admin/rest/settings/embedding-chunks")
 @PreAuthorize("@WebjetSecurityService.hasPermission('embeddingChunks')")
@@ -120,6 +125,14 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return entity;
     }
 
+    /**
+     * Perform an indexing or deletion action on all documents in the specified folder.
+     * Adds matched document IDs to the RAG indexing queue.
+     * @param rootDir the root directory group ID (-1 for all domain documents)
+     * @param includeSubfolders whether to include documents from subfolders
+     * @param action the action to perform ("INDEX" or "DELETE")
+     * @return the number of documents queued, or -1 on error
+     */
     @PostMapping("/document-action")
     public int performDocumentAction(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
         int domainId = CloudToolsForCore.getDomainId();
@@ -136,6 +149,14 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return data.getSecond().size();
     }
 
+    /**
+     * Get statistics about document indexing status for the specified folder.
+     * Returns total groups, total documents, already indexed count, and currently queued count.
+     * @param rootDir the root directory group ID (-1 for all domain documents)
+     * @param includeSubfolders whether to include documents from subfolders
+     * @param action the action to check queue status for
+     * @return map with keys: totalGroups, totalDocuments, indexedDocuments, queuedDocuments
+     */
     @GetMapping("/document-stat")
     public Map<String, Object> getDocumentStat(@RequestParam("rootDir") int rootDir, @RequestParam("includeSubfolders") boolean includeSubfolders, @RequestParam("action") String action) {
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
@@ -166,6 +187,12 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         return response;
     }
 
+    /**
+     * Collect searchable document IDs from the specified folder (and optionally subfolders).
+     * @param rootDir the root directory group ID (-1 for all domain documents)
+     * @param includeSubfolders whether to include documents from subfolders
+     * @return pair of (total group count, list of document IDs), or null if folder not found
+     */
     private Pair<Integer, List<Integer>> getDocIds(int rootDir, boolean includeSubfolders) {
         DocDB docDB = DocDB.getInstance();
         GroupsDB groupDB = GroupsDB.getInstance();

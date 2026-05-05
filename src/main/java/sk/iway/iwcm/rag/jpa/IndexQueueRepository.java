@@ -12,6 +12,10 @@ import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Spring Data repository for {@link IndexQueueEntity}.
+ * Provides methods to query, insert, and delete RAG indexing queue entries.
+ */
 @Repository
 public interface IndexQueueRepository extends DomainIdRepository<IndexQueueEntity, Long> {
 

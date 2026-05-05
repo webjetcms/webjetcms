@@ -13,6 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
+/**
+ * Spring Data repository for {@link EmbeddingChunkEntity}.
+ * Provides JPA query methods for managing embedding chunks in the rag_embedding_chunks table.
+ * Note: the actual embedding vector column is managed via native SQL in {@link sk.iway.iwcm.rag.vectorstore.PgVectorStore}.
+ */
 @Repository
 public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingChunkEntity, Long> {
 
@@ -24,8 +29,6 @@ public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingCh
     @Modifying
     @Query("DELETE FROM EmbeddingChunkEntity c WHERE c.entityType = :entityType AND c.entityId = :entityId")
     void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId);
-
-    //Long countByStatus(EmbeddingChunkStatus status);
 
     @Query("SELECT DISTINCT c.entityType FROM EmbeddingChunkEntity c WHERE c.domainId = :domainId")
     List<RagEntityType> findDistinctEntityTypes(@Param("domainId") Integer domainId);

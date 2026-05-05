@@ -225,6 +225,11 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
+    /**
+     * {@inheritDoc}
+     * Fetches existing content hashes and their embedding vectors for an entity,
+     * allowing the indexer to skip re-embedding unchanged chunks.
+     * */
     @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel) {
         String dsName = RagJpaConfig.getRagDataSourceName();

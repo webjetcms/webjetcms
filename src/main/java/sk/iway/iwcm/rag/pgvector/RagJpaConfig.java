@@ -36,6 +36,9 @@ public class RagJpaConfig {
 
     private static final String RAG_DATASOURCE_NAME = "rag_jpa";
 
+    /**
+     * Create the JPA transaction manager for RAG entities.
+     */
     @Bean("ragTransactionManager")
     public PlatformTransactionManager transactionManager() {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
@@ -43,6 +46,10 @@ public class RagJpaConfig {
         return transactionManager;
     }
 
+    /**
+     * Create the JPA EntityManagerFactory for RAG entities.
+     * Uses the RAG datasource if available, otherwise falls back to the default 'iwcm' datasource.
+     */
     @Bean("ragEntityManager")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(RagJpaConfig.class, "loading RAG RagJpaConfig");

@@ -54,6 +54,12 @@ public class SemanticIndexService {
         this.queueRepository = queueRepository;
     }
 
+    /**
+     * Process all pending items in the RAG indexing queue.
+     * Items are fetched in batches of 500 and processed sequentially.
+     * Uses a cache-based flag to prevent concurrent execution.
+     * Failed items remain in the queue and are retried on the next run.
+     */
     public void processQueue() {
         // If vector store is not available, start initialization. If initialization fails, skip processing - next runs will retry initialization.
         if (vectorStore.isAvailable() == false && vectorStore.initializeSchema() == false) {
@@ -101,6 +107,12 @@ public class SemanticIndexService {
         }
     }
 
+    /**
+     * Route a queue item to the appropriate handler based on entity type and action.
+     * @param action the action to perform (INDEX or DELETE)
+     * @param entityType the type of entity being processed
+     * @param entityId the ID of the entity
+     */
     private void processEntity(RagIndexAction action, RagEntityType entityType, int entityId) {
         if (entityType == RagEntityType.DOCUMENT) {
             if (action == RagIndexAction.DELETE) {
