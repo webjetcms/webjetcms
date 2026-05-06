@@ -6,6 +6,7 @@ Before(({ I, login }) => {
 
 Scenario('p35: headings', async ({ I, a11y }) => {
     I.amOnPage('/apps/stat/admin/');
+    I.wait(1);
     //TODO: div.header-title should be H1
     await a11y.check();
 });
