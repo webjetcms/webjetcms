@@ -80,6 +80,7 @@ Scenario("p28: select-top-filter", async ({ I, DTE, a11y }) => {
 Scenario("p29: checkbox-access, p30: fieldset/legend", async ({ I, DTE, a11y }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=92");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-access-tab")
     await a11y.check();
     //TODO: fieldset/legend

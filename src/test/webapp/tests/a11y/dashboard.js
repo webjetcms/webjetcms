@@ -12,7 +12,7 @@ Scenario('dashboard', async ({ I, a11y }) => {
 Scenario("show all notification types", async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
 
-    I.executeScript(() => {
+    await I.executeScript(() => {
         const notificationTypes = [
             'success',
             'error',
@@ -34,6 +34,9 @@ Scenario("show all notification types", async ({ I, a11y }) => {
             WJ.notify(type, `This is a ${type} notification`, `This is sample text for a ${type} notification`, 0, buttons);
         });
     });
+
+    //wait for notifications to appear
+    I.wait(2);
 
     await a11y.check();
 });

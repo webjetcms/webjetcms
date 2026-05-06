@@ -446,7 +446,7 @@ const WJ = (() => {
             progressBar: true,
             positionClass: 'toast-container toast-top-right',
             containerId: containerId,
-            closeHtml: '<button class="btn btn-close toast-close-button"><i class="ti ti-x"></i></button>',
+            closeHtml: '<button class="btn btn-close toast-close-button" aria-label="'+WJ.translate('button.close')+'"><i class="ti ti-x"></i></button>',
         };
 
         if ("toast-container-webjet"!=containerId) {
@@ -1096,7 +1096,7 @@ const WJ = (() => {
         if (href.indexOf("#")==0) {
             //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
             anchor.attr("data-wj-toggle", "tab");
-            anchor.attr("role", "presentation");
+            anchor.attr("role", "tab");
         }
 
         if (typeof data.active != "undefined" && data.active===true) {

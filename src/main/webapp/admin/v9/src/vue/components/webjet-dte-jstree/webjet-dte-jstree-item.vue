@@ -1,9 +1,9 @@
 <template>
     <div>
         <div class="input-group">
-            <input type="text" class="form-control" v-bind:value="[grp.fullPath ? ((grp.domainName && grp.domainName != '' && click.indexOf('alldomains')!=-1 ? grp.domainName+':' : '')+grp?.fullPath?.replaceAll('&'+'#'+'47;', '/')) : grp?.virtualPath?.replaceAll('&'+'#'+'47;', '/')]" disabled="disabled" />
+            <input type="text" class="form-control" v-bind:value="[grp.fullPath ? ((grp.domainName && grp.domainName != '' && click.indexOf('alldomains')!=-1 ? grp.domainName+':' : '')+grp?.fullPath?.replaceAll('&'+'#'+'47;', '/')) : grp?.virtualPath?.replaceAll('&'+'#'+'47;', '/')]" disabled="disabled" :aria-label="labelText" />
 
-            <button @click="toggleModals" class="btn btn-outline-secondary  btn-vue-jstree-item-edit" type="button" v-tooltip:top="$WJ.translate('button.select')"><i class="ti ti-focus-2"></i></button>
+            <button @click="toggleModals" class="btn btn-outline-secondary  btn-vue-jstree-item-edit" type="button" :aria-label="$WJ.translate('button.select')" v-tooltip:top="$WJ.translate('button.select')"><i class="ti ti-focus-2"></i></button>
             <button @click="removeFolder" v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-group-null')==0 || click.indexOf('dt-tree-groupid-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
             <button @click="removePage" v-if="click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-page-null')==0 || click.indexOf('dt-tree-pageid-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
             <button @click="removeById" v-if="click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
@@ -31,8 +31,13 @@
             return {
                 jsonData: null,
                 readyToOpen: false,
-                group: null
+                group: null,
+                labelText: ''
             }
+        },
+        mounted() {
+            const label = document.querySelector(`label[for="${this.idKey}"]`);
+            if (label) this.labelText = label.textContent.trim();
         },
         watch: {
             readyToOpen(oldVal, newVal) {
