@@ -38,6 +38,7 @@ public class DocHistory extends DocBasic {
 			id = null;
 			Logger.debug(getClass(), "prePersist, id2="+id);
 		}
+		if (isDelete == null) isDelete = false;
     }
 
     @Id
@@ -64,6 +65,9 @@ public class DocHistory extends DocBasic {
 	//deprecated, not need anymore @Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "approve_date")
 	private Date approveDate;
+
+	@Column(name = "is_delete")
+	private Boolean isDelete;
 
 	@Transient
 	private String historyApprovedByName;

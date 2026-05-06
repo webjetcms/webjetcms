@@ -1,28 +1,28 @@
 # Code coverage
 
-> The code coverage measurement by tests expresses the percentage of code that is executed during test scenarios. The greater the percentage of code coverage by test scenarios, the lower the chance that the code contains undetected software bugs.
+> The test coverage measurement expresses the percentage of code that is executed during test scenarios. The higher the percentage of code coverage by test scenarios, the lower the chance that the code contains undetected software errors.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/vJkto5AcQeA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/vJkto5AcQeA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
 
-WebJET includes an integrated library [jacoco](https://github.com/jacoco/jacoco) which keeps track of which part of the code is executed during runtime and then generates a detailed report in HTML format. In it, you can drill down through each package down to the level of java classes and methods, highlighting in detail which parts of the code were executed during the tests and which were not.
+WebJET includes an integrated library [jacoco](https://github.com/jacoco/jacoco), which tracks which parts of the code are executed during runtime and then generates a detailed report in HTML format. In it, you can navigate through individual packages down to the level of Java classes and methods with detailed highlighting of which parts of the code were executed during the tests and which were not.
 
-Specificity is tracking code coverage by both tests and **during the standard application server runtime**, coverage is therefore measured during normal working hours and therefore **during the execution of automated e2e tests**.
+The specific feature is that the code coverage is monitored by tests even **during the standard run of the application server**, so coverage is measured during normal work and therefore also **during the execution of automated e2e tests**.
 
-For the part of the code that did not execute during the tests, we recommend adding additional test scenarios.
+We recommend adding additional test scenarios for the part of the code that was not executed during the tests.
 
 ![](jacoco.png)
 
-You can see [last generated test coverage status](http://docs.webjetcms.sk/latest/codecoverage-report/index.html).
+You can view the [last generated test coverage status](http://docs.webjetcms.sk/latest/codecoverage-report/index.html).
 
 ## Use
 
-In standard use in VS Code, it is automatically executed after the tasks `appStart` generates a report to `./build/jacoco/report/index.html`. If it is not generated (e.g. if you stop the task via `CTRL+C`) start `gradlew generateJacocoReport` to generate the report. For the task `appStartDebug` Is `jacoco` disabled because HotSwap wasn't working, but you can decide what's more important to you.
+In standard use in VS Code, a report is automatically generated in ```./build/jacoco/report/index.html``` after executing tasks ```appStart```. If it is not generated (e.g. if you stop the task via ```CTRL+C```), run ```gradlew generateJacocoReport``` to generate the report. For task ```appStartDebug```, ```jacoco``` is disabled because HotSwap was not working, but you can decide what is more important to you.
 
-In the terminal, you will see a link to open the report in a browser. This way you can easily see how well you are doing in covering the code of the respective services with tests while you are writing the tests.
+You will see a link in the terminal to open the report in your browser. This way, you can easily monitor your coverage of the code of the relevant services while writing tests.
 
-A script is also prepared `./ant/codecoverage.sh` for complete report generation. The script runs standard JUnit tests but also automated e2e tests. The task is used `appBeforeIntegrationTest` which starts the application server in the background so that automated tests can continue. The application server is stopped using the task `appAfterIntegrationTest`, which will also trigger the generation of HTML reports.
+A script ```./ant/codecoverage.sh``` is also prepared for complete report generation. The script runs standard JUnit tests as well as automated e2e tests. The task ```appBeforeIntegrationTest``` is used, which starts the application server in the background so that automated tests can continue. The application server is stopped using the task ```appAfterIntegrationTest```, which also starts the generation of HTML reports.
 
 ```shell
 #!/bin/sh
@@ -52,15 +52,15 @@ echo ">>>>>>>>>>> Stopping app server"
 gradlew appAfterIntegrationTest
 ```
 
-The result is a set of `build/jacoco/test.exec` with JUnit test results and `build/jacoco/appBeforeIntegrationTest.exec` with the results of the e2e/codeceptjs tests. The report is generated by combining the results from all `.exec` files in the folder `build/jacoco`.
+The result is a file ```build/jacoco/test.exec``` with the results of the JUnit tests and ```build/jacoco/appBeforeIntegrationTest.exec``` with the results of the e2e/codeceptjs tests. The report is generated by combining the results from all ```.exec``` files in the ```build/jacoco``` folder.
 
 ## Implementation details
 
-Extension of `jacoco` is added in `build.gradle` and is set for use in tests, but also for standard application server startup. Slightly increases the load on the CPU and memory, if necessary you can disable the extension by setting the attribute `enabled` at `false` v `tasks.appStart` a `tasks.appStartDebug`.
+The ```jacoco``` extension is added in ```build.gradle``` and is set for use in tests, but also during standard application server startup. It slightly increases the load on the processor and memory, if necessary, you can disable the extension by setting the ```enabled``` attribute to ```false``` in ```tasks.appStart``` and ```tasks.appStartDebug```.
 
-But such a setup has the advantage that during the developer's normal work a code coverage report is continuously generated and can be checked after each application server stop using the setup `finalizedBy tasks.generateJacocoReport`. To stop the application server by default, use `gradlew appStop`. If you stop the application server e.g. by `CTRL+C` you can generate the report manually by calling `gradlew generateJacocoReport`.
+However, such a setting has the advantage that during the developer's normal work, a code coverage report is continuously generated and can be checked after each application server stop using the ```finalizedBy tasks.generateJacocoReport``` setting. The application server is stopped by default using ```gradlew appStop```. If the application server is stopped, for example, using ```CTRL+C```, you can generate the report manually by calling ```gradlew generateJacocoReport```.
 
-Version used [jacoco](https://github.com/jacoco/jacoco/releases) is set in the variable `toolVersion`, by setting it to `+` the latest available version is automatically used.
+The version of [jacoco](https://github.com/jacoco/jacoco/releases) used is set in the variable ```toolVersion```, setting it to the value ```+``` will automatically use the latest available version.
 
 ```groovy
 plugins {
@@ -112,9 +112,9 @@ task('generateJacocoReport', type: JacocoReport) {
 }
 ```
 
-The key is the setting `afterEvaluate` for gretty. This activates `jacoco` also for tasks `appStart` and possibly also for `appStartDebug` because [the standard is jacoco](https://gretty-gradle-plugin.github.io/gretty-doc/Code-coverage-support.html) active only for the task `appBeforeIntegrationTest`.
+The key is to set ```afterEvaluate``` for gretty. This will enable ```jacoco``` for tasks ```appStart``` and possibly ```appStartDebug``` as [by default jacoco](https://gretty-gradle-plugin.github.io/gretty-doc/Code-coverage-support.html) is only enabled for task ```appBeforeIntegrationTest```.
 
-Task `generateJacocoReport` generates HTML report to the folder `./build/jacoco/report`. The terminal displays a link to open the file in the browser:
+The task ```generateJacocoReport``` generates an HTML report in the folder ```./build/jacoco/report```. It displays a link in the terminal to open the file in a browser:
 
 ```groovy
 gradlew generateJacocoReport
@@ -123,4 +123,6 @@ gradlew generateJacocoReport
 Jacoco report for server created: file:///Users/xxx/Documents/workspace/webjet/build/jacoco/report/index.html
 ```
 
-in the browser, you just need to open the above link `file:///Users/xxx/Documents/workspace/webjet/build/jacoco/report/index.html` to view the generated report.
+In your browser, all you need to do is open the link ```file:///Users/xxx/Documents/workspace/webjet/build/jacoco/report/index.html``` to view the generated report.
+
+

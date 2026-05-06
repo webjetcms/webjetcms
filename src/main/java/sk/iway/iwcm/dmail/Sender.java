@@ -22,6 +22,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -236,7 +237,8 @@ public class Sender extends TimerTask
 		}
 
 		timer = new Timer(true);
-		timer.schedule(this, 30000, Constants.getInt("dmailWaitTimeout"));
+		long initialDelay = 30000 + ClusterRefresher.getAutoModeRandomDelay();
+		timer.schedule(this, initialDelay, Constants.getInt("dmailWaitTimeout"));
 		Constants.getServletContext().removeAttribute(CONTEXT_NAME);
 		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);
 	}

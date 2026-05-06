@@ -187,6 +187,17 @@ module.exports = {
   },
 
   /**
+   * Force editorType mode
+   * @param {*} mode - pageBuilder, html, standard
+   */
+  setEditorMode(mode) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    I.executeScript(function (mode) {
+        window.WJ.setAdminSetting("editorTypeForced", mode);
+    }, mode);
+  },
+
+  /**
    * Close toastr notification
    */
   notifyClose() {
@@ -352,5 +363,18 @@ module.exports = {
   getWebappPath() {
     var basePath = "/../../src/main/webapp";
     return basePath;
+  },
+
+  /**
+   * Returns protocol of the URL, either http or https
+   * @returns
+   */
+  getProtocol() {
+    let url = process.env.CODECEPT_URL;
+    let protocol = "http";
+    if (url.startsWith("https")) {
+      protocol = "https";
+    }
+    return protocol;
   }
 }

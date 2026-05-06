@@ -43,9 +43,7 @@
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,
-    "spellright.documentTypes": [
-        "markdown"
-    ],
+    "spellright.documentTypes": [],
     "spellright.suggestionsInHints": false,
     "spellright.ignoreRegExpsByClass": {
         "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
@@ -91,7 +89,28 @@
         "git merge-base": true,
         "uniq": true,
         "awk": true,
-        "read": true
+        "read": true,
+        "npm install": true,
+        "npm audit": true,
+        "npx codeceptjs": true,
+        "npm run pause": true
     },
-    "chat.agent.maxRequests": 150
+    "chat.agent.maxRequests": 150,
+    "cSpell.language": "en,sk",
+    "cSpell.enabledFileTypes": {
+        "*": false,
+        "markdown": true
+    },
+    "cSpell.customDictionaries": {
+        "webjetcms": {
+            "name": "WebJET CMS",
+            "path": "${workspaceFolder}/.vscode/spellright.dict",
+            "scope": "user",
+            "addWords": true,
+        }
+    },
+    "cSpell.ignoreRegExpList": [
+        "/`[^`\\n]+`/g",
+        "/```[\\s\\S]*?```/g"
+    ],
 }

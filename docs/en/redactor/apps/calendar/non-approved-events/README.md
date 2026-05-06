@@ -1,19 +1,19 @@
-# Unauthorised events
+# Unapproved events
 
-The Calendar Events -> Unapproved Events section is used for the calendar approval/rejection process [events](../README.md) pending approval. The currently logged in user can only see/approve events that are pending approval and at the same time he is the approver. Who is approving the event is determined by [event type](../calendar-types/README.md).
+The Calendar Events -> Unapproved Events section is used for the approval/rejection process of calendar [events](../README.md) that are waiting for approval. The currently logged in user can only see/approve events that are waiting for approval and is their approver. Who approves the event is determined by the [event type](../calendar-types/README.md).
 
 ![](page.png)
 
-!>**Warning:** after the event has been approved/disapproved, the event is no longer **will not display** in the Unapproved Events section, so you won't be able to change your selection. However, the event will still be visible in the [List of events](../README.md).
+!>**Note:** once an event is approved/rejected, it will no longer **be displayed** in the Unapproved Events section, so you will not be able to change your choice. However, the event will still be visible in the [Event List](../README.md) section.
 
-## Event Approval
+## Event approval
 
-Event approval is triggered by the button ![](approve_button.png ":no-zoom"). After successful approval, an informative message will be displayed.
+Event approval is triggered by the ![](approve_button.png ":no-zoom") button. Upon successful approval, an informative message will be displayed.
 
 ![](approved_toast.png)
 
 ## Disapproval (rejection) of an event
 
-Event rejection is triggered by the button ![](reject_button.png ":no-zoom"). After a successful rejection, an informative message will be displayed.
+Rejecting an event is triggered by the ![](reject_button.png ":no-zoom" button). After successful rejection, an informative message is displayed.
 
 ![](rejected_toast.png)

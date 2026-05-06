@@ -1,4 +1,4 @@
-Feature('apps.app-inquiry-simple');
+Feature('apps.inquiry.app-inquiry-simple');
 
 var randomNumber;
 var inquiryName;

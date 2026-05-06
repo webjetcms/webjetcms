@@ -10,6 +10,7 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
@@ -58,8 +59,7 @@ public class DocPublishService {
 			if (publicableDocs != null && publicableDocs.size() > 0) {
 				//use good old for loop to avoid ConcurrentModificationException
 				for (DocBasic pdoc : publicableDocs) {
-					if (pdoc instanceof DocHistory) {
-						DocHistory doc = (DocHistory) pdoc;
+					if (pdoc instanceof DocHistory doc) {
 						//Is ready to by published
 						if(Tools.isTrue(doc.getPublicable()) && (doc.getPublishStart() > 0) && (now >= doc.getPublishStart())) {
 							copyDHtoD.add(doc);
@@ -67,12 +67,10 @@ public class DocPublishService {
 						}
 					}
 
-					if (pdoc instanceof DocDetails) {
-						DocDetails doc = (DocDetails) pdoc;
+					if (pdoc instanceof DocDetails doc) {
 						//Is ready to be disabled
 						if (doc.isPublicable()==false && doc.isDisableAfterEnd() && (doc.getPublishEnd()>0) && (now >= doc.getPublishEnd())) {
 							removeAfterEndList.add(doc);
-							continue;
 						}
 					}
 				}
@@ -118,7 +116,7 @@ public class DocPublishService {
 
 		Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
 
-		///Now is available
+		// Now is available
 		docDetails.setAvailable(true);
 		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
 
@@ -133,14 +131,29 @@ public class DocPublishService {
 		docDetails.setRootGroupL2(rootGroups[1]);
 		docDetails.setRootGroupL3(rootGroups[2]);
 
-		///Set publish after start to false
+		// Set publish after start to false
 		docDetails.setPublishAfterStart(false);
 
 		//Before save add audit param that signalize that webpage was published
+		//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
+		boolean createdRequestBean = false;
+		if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
+			SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
+			createdRequestBean = true;
+		}
 		RequestBean.addAuditValue("publishStatus", "Webpage was published");
 
 		//Perform update
-		ddr.save(docDetails);
+		try {
+			//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
+			//while the audit value is still in RequestBean (not deferred to outer transaction commit)
+			ddr.saveAndFlush(docDetails);
+		} finally {
+			RequestBean.removeAuditValue("publishStatus");
+			if (createdRequestBean) {
+				SetCharacterEncodingFilter.setCurrentRequestBean(null);
+			}
+		}
 
 		// vypublikovanie slave clankov z historie (multikategorie)
 		DocDetails masterDocDetails = null;

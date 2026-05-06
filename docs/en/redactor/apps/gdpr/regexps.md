@@ -1,11 +1,11 @@
 # Managing regular expressions
 
-The GDPR module includes a "Manage Regular Expressions" node, which is used to create and edit regular expressions for particular types of search data.
+The GDPR module contains a "Regular Expression Management" node, which is used to create and edit regular expressions for individual types of searched data.
 
 ![](regexp-datatable.png)
 
-In the upper left corner there is a series of buttons for creating/editing/duplicating/deleting regular expressions, exporting regular expressions to excel and importing them from excel.
+In the upper left corner there is a series of buttons for creating/editing/duplicating/deleting regular expressions, exporting regular expressions to Excel, and importing them from Excel.
 
-When creating,editing,duplicating a regular expression, the name and value of the regular expression are entered in the editor.
+When creating, editing, or duplicating a regular expression, the name and value of the regular expression are entered in the editor.
 
 ![](regexp-editor.png)

@@ -1,39 +1,42 @@
-# Library 'Translator'
+# 'Translator' library
 
-***
-
+---
 **Dependencies**
 
 - [StorageHandler](storage-handler.md)
 - [Tools](tools.md)
-- [jQuery Ajax](https://api.jquery.com/jquery.ajax/), *[Redirects to official documentation]*
-
-***
-
-The library is used to implement language translations in the system **WebJET**. It can be used in Javascript files, as well as directly in rendered HTML document, where the texts are inserted server-side.
+- [jQuery Ajax](https://api.jquery.com/jquery.ajax/), _[Redirects to official documentation]_
+---
+The library is used to implement language translations in the **WebJET** system.
+It can be used in Javascript files, as well as directly in a rendered HTML document, where texts are inserted server-side.
 
 ### Description of operation:
 
-When creating an instance of a class `Translator` is created in its constructor [StorageHandler](storage-handler.md) to which the storage key is set. In the DEV environment, the message in the js console will alert us to this fact `Store name was set successfully to: translate` Where `translate` is the name of the repository, which is set directly in the class constructor `Translator`.
+When an instance of the `Translator` class is created, a [StorageHandler](storage-handler.md) is created in its constructor, which is set to the storage key.
+In the DEV environment, we will be notified of this fact in the js console by the message `Store name was set successfully to: translate` where `translate` is the name of the repository,
+which is set directly in the constructor of the `Translator` class.
 
-Then the instance waits for the methods to be called [load()](#Retrieved-from), or [onBeforeLoad()](#onbeforeload), [onAfterLoad()](#shefterload)
+Then the instance waits for the [load()](#load), or [onBeforeLoad()](#onbeforeload), [onAfterLoad()](#onafterload) methods to be called.
 
-Method [load()](#Retrieved-from) checks for the existence of local (existing) translations:
-- If **do not exist**, it executes the API request and saves the translations to the repository and the instance is in the state `DONE & READY`.
-- If **exists**, it will check if the stored translations are up to date by comparing the last update date stored in the repository and the date we have access to in `window` in the variable `window.propertiesLastModified`
-  - If the dates are **differently**, the API request is executed and the obtained translations are stored in the repository and the instance is in the state `DONE & READY`.
-  - If the dates are **Same**, no further action is performed and the instance is in the state `DONE & READY`.
+The [load()](#load) method checks for the existence of local (already existing) translations:
+- If **they do not exist**, it executes an API request and saves the obtained translations to the repository and the instance is in the `DONE & READY` state.
+- If **they exist**, it checks whether the saved translations are up to date by comparing the last update date stored in the repository with the date,
+which we have access to in `window` in the variable `window.propertiesLastModified`
 
-Methods [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#shefterload) adds the function defined by us to the callback stack, which is executed as described in the method details [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#shefterload).
+  - If the dates are **different**, an API request is made and the obtained translations are saved to the repository and the instance is in state `DONE & READY`.
+  - If the dates are **the same**, then no further action is taken and the instance is in state `DONE & READY`.
 
-Method [translate()](#translate) takes an input argument (translation key) and tries to search the translation repository for a specific translation.
+The [onBeforeLoad()](#onbeforeload) and [onAfterLoad()](#onafterload) methods add the function we defined to the callback stack,
+which is executed as described in the details of the [onBeforeLoad()](#onbeforeload) and [onAfterLoad()](#onafterload) methods.
 
-- If the translation **exists**, so the method returns it as its result.
-- If the translation **does not exist**, or a non-valid translation key was inserted, the method returns the input key as its result.
+The [translate()](#translate) method takes an input argument (translation key) and attempts to search the translation repository for a specific translation based on it.
+
+- If the translation **exists**, the method returns it as its result.
+- If the translation **does not exist**, or an invalid translation key was entered, the method returns that input key as its result.
 
 ## Creating an instance:
 
-**WebJET** initializes the library in the file [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js).
+**WebJET** initializes the library in the [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js) file.
 
 ```javascript
 /* webjetTranslationService */
@@ -42,9 +45,10 @@ import {Translator} from "./libs/translator/translator";
 window.webjetTranslationService = new Translator();
 ```
 
-It then implements it in a file [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js), where using the function [load()](#Retrieved-from) load translations from the server if they don't exist locally yet or if there is an update.
+It is then implemented in the file [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js),
+where we use the function [load()](#load) to load translations from the server if they do not yet exist locally or if there is an update.
 
-Feature [load()](#Retrieved-from) checks itself for the currentness of the existing translations and decides whether to make a request to the API.
+The [load()](#load) function itself checks the currentness of existing translations and decides whether to make a request to the API.
 
 ```javascript
 // Spustenie načítania prekladov
@@ -56,8 +60,9 @@ window.webjetTranslationService.onAfterLoad(() => {
 ## Translations in code:
 
 ### Inline (directly in javascript files)
-
-In Javascript files, we use the function `WJ.translate()` which implements the method [translate()](#translate), so the method [translate()](#translate) from the library is never used directly unless there are implementations in other classes that will use the API from `Translate`.
+In Javascript files, we use the function `WJ.translate()`, which implements the [translate()](#translate) method,
+so we never use the [translate()](#translate) method from the library directly unless it is implemented in other classes,
+which will use the API from `Translate`.
 
 **In WebJET files we use:**
 
@@ -65,21 +70,23 @@ In Javascript files, we use the function `WJ.translate()` which implements the m
 const preklad = WJ.translate('translation.key'); // V premennej preklad máme preložený text alebo ak text neeixstuje, tak samotnú hodnotu kľúča
 ```
 
-### For full HTML page
+### For the entire HTML page
 
-**The implementation in WebJET CMS does not require this functionality because all translations are handled during page rendering.**
+**Implementation in WebJET CMS does not require this functionality, as all translations are handled during page rendering.**
 
-For translations directly in the rendered page, html data attributes are used **data-translator**, `data-translator="prekladový.kľúč"`.
+For translations directly in the rendered page, the html data attributes **data-translator** are used,
+`data-translator="prekladový.kľúč"`.
 
-The data attribute can be placed on any HTML tag but must be immediately on the tag that contains the text to be translated. If it is placed on an HTML tag that contains additional HTML code, that HTML code must also be included in the translation itself, otherwise the existing HTML will be replaced with the value from the translation.
+The data attribute can be placed on any HTML tag but must be immediately after the element that contains the translated text.
+If it is placed on an HTML tag that contains additional HTML code, this HTML code must also be included in the translation itself, otherwise the existing HTML will be replaced with the value from the translation.
 
-!>**Warning:**, *When setting the translated text, the function removes all existing events that are on the element and its descendants.*
+!>**Warning:**, _When setting the translated text, the function removes all existing events on the given element and its descendants._
 
 ```html
 <span data-translator="components.datatables.data.insertDate">Dátum vloženia</span>
 ```
 
-Then you need to add the translation function call to the HTML page.
+Next, you need to add a translation function call to the HTML page.
 
 ```javascript
 $(document).ready(() => {
@@ -105,16 +112,15 @@ or place at the bottom of the page
 </body>
 ```
 
-***
+---
+## API List
 
-## List of APIs
-
-**(Click to see the detail for the function)**
+**(Click to view feature details)**
 
 Methods:
-- [load()](#Retrieved-from)
+- [load()](#load)
 - [onBeforeLoad()](#onbeforeload)
-- [onAfterLoad()](#shefterload)
+- [onAfterLoad()](#onafterload)
 - [translate()](#translate)
 - [htmlTranslate()](#htmltranslate)
 
@@ -126,17 +132,16 @@ Setters:
 - [urlLoad](#urlload)
 - [urlUpdate](#urlupdate)
 
-A more detailed API can be found in [GIT repositories](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/translator#kni%C5%BEnica-translator)
+A more detailed API can be found in the [GIT repository](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/translator#kni%C5%BEnica-translator)
 
-***
-
+---
 ### Detailed description of functions
 
 #### load()
 
 The call makes a request to the API server.
 
-*URLs can be changed using [urlLoad](#urlload) a [urlUpdate](#urlupdate).*
+_URL addresses can be changed using [urlLoad](#urlload) and [urlUpdate](#urlupdate)._
 
 ```javascript
 /**
@@ -149,13 +154,13 @@ window.webjetTranslationService.load();
 
 #### onBeforeLoad()
 
-The method provides for adding callbacks that are executed immediately after the method is called [load()](#Retrieved-from).
+The method ensures the addition of callbacks that are executed immediately after the [load()](#load) method is called.
 
-Callbacks can be added arbitrarily, but always only before calling the above method.
+We can add callbacks as desired, but always only before calling the above method.
 
-Optional second attribute `rewrite` ensure if it is set to `TRUE` that only the last added callback is executed.
+The optional second attribute ``rewrite`` ensures that only the most recently added callback is executed when set to ``TRUE``.
 
-The method returns an instance of the class `Translator` and so it is possible to follow it using `DOT operátora` call other methods.
+The method returns an instance of the class ``Translator`` and so it is possible to call other methods after it using ``DOT operátora``.
 
 ```javascript
 /**
@@ -168,17 +173,16 @@ The method returns an instance of the class `Translator` and so it is possible t
 window.webjetTranslationService.onBeforeLoad(callback, rewrite = false);
 ```
 
-***
-
+---
 #### onAfterLoad()
 
-The method provides for the addition of callbacks that are executed upon successful receipt of data from the server API after a method call [load()](#Retrieved-from).
+The method ensures the addition of callbacks that are executed after successfully receiving data from the server API after calling the [load()](#load) method.
 
-Callbacks can be added arbitrarily, but always only before calling the above method.
+We can add callbacks as desired, but always only before calling the above method.
 
-Optional second attribute `rewrite` ensure if it is set to `TRUE` that only the last added callback is executed.
+The optional second attribute ``rewrite`` ensures that only the most recently added callback is executed when set to ``TRUE``.
 
-The method returns an instance of the class `Translator` and so it is possible to follow it using `DOT operátora` call other methods.
+The method returns an instance of the class ``Translator`` and so it is possible to call other methods after it using ``DOT operátora``.
 
 ```javascript
 /**
@@ -191,13 +195,12 @@ The method returns an instance of the class `Translator` and so it is possible t
 window.webjetTranslationService.onAfterLoad(callback, rewrite = false);
 ```
 
-***
-
+---
 #### translate()
 
 By calling this method, we get the translation in the currently used language based on the key.
 
-If the translation does not exist or an invalid key has been inserted, the method returns the value of this key.
+If the translation does not exist or an invalid key was entered, the method returns the value of that key.
 
 ```javascript
 /**
@@ -209,15 +212,17 @@ If the translation does not exist or an invalid key has been inserted, the metho
 window.webjetTranslationService.translate(translationFieldName);
 ```
 
-***
-
+---
 #### htmlTranslate()
 
-By calling this method at the bottom of the page or using `document.ready` that is, after the web render is complete, we ensure that all elements on the page that have the data attribute defined `data-translator` text values will be changed `innerHTML` based on the key specified in the data attribute `data-translator`.
+By calling this method at the end of the page
+or using ``document.ready``, so after the website render is complete, we will ensure that
+that all elements on the page that have the data attribute ``data-translator`` defined will be changed
+text values ​​``innerHTML`` based on the key specified in the data attribute ``data-translator``.
 
-!>**Warning:**, *When setting the translated text, the function removes all existing events that are on the element and its descendants.*
+!>**Warning:**, _When setting the translated text, the function removes all existing events on the given element and its descendants._
 
-[Click for more info on use](#for-the-whole-html-page)
+[Click for more usage info](#for-entire-html-page)
 
 ```html
 <span data-translator="components.datatables.data.insertDate">
@@ -238,13 +243,12 @@ By calling this method at the bottom of the page or using `document.ready` that 
 window.webjetTranslationService.htmlTranslate(scope = document);
 ```
 
-***
-
+---
 **getters**
 
 #### language
 
-Returns the language used by the app directly from the Store.
+Returns the language used by the application directly from the Store.
 
 ```javascript
 /**
@@ -256,11 +260,10 @@ Returns the language used by the app directly from the Store.
 const lang = window.webjetTranslationService.language;
 ```
 
-***
-
+---
 #### date
 
-Returns the last update date in timestamp format (milliseconds).
+Returns the date of the last update in timestamp format (milliseconds).
 
 ```javascript
 /**
@@ -272,14 +275,13 @@ Returns the last update date in timestamp format (milliseconds).
 const date = window.webjetTranslationService.date;
 ```
 
-***
-
+---
 **setters**
 
 #### urlLoad
 
-Specifying a new API address to retrieve available translations. The address must be changed before calling the method [load()](#Retrieved-from)
-
+Enter a new API address to retrieve available translations.
+The address must be changed before calling the [load()](#load) method.
 ```javascript
 /**
  * @description Zadanie novej API adresy pre načítanie dostupných prekladov.

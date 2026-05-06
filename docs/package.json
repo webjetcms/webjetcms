@@ -13,12 +13,12 @@
   "author": "InterWay, a. s.",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@webjetcms/deepmark": "^0.3.1",
+    "@webjetcms/deepmark": "^0.3.6",
     "fast-glob": "^3.3.3",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "properties": "^1.2.1",
-    "replace-in-file": "^8.3.0",
+    "replace-in-file": "^8.4.0",
     "xmlbuilder": "^15.1.1"
   },
   "devDependencies": {

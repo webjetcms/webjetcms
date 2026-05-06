@@ -131,7 +131,9 @@ V karte rozšírené je možné nastaviť ďalšie atribúty ako ID elementu, ti
 
 ![](link_dialog_button_advanced.png)
 
-Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+Podobne existuje dialógové okno pre tlačidlá (element `button`) aj s podporou SVG ikon. Ten vložíte kliknutím na menu výberové menu pre vloženie formuláru a následne možnosť Tlačidlo. Viac informácií je v [sekcii pre web dizajnéra](../../../frontend/setup/ckeditor.md#tlačidlo).
+
+![](wjformbutton.png)
 
 ## Vkladanie obrázkov
 
@@ -308,6 +310,16 @@ Môžu nastať prípady, keď budete potrebovať pri písaní napísať aj znaky
 Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzora. Špeciálne znaky sa vkladajú ako text, takže nemajú žiadne ďalšie nastavenia.
 
 !> Upozornenie: ikona pre vkladanie špeciálnych znakov môže byť v niektorých prípadoch zmenená na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pre vkladanie [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázkov.
+
+## Vkladanie textu na ťažko dostupné miesta
+
+Niekedy je ťažké umiestniť kurzor napríklad za posledný odstavec alebo obrázok. Editor v takejto situácii zobrazuje tzv. pomocnú čiaru. Tá umožňuje vložiť prázdny text, obrázok, aplikáciu alebo blok. V prípade Page Builder po kliknutí umožní vložiť pripravený blok do stránky.
+
+![](wjmagicline.png)
+
+Podobne je niekedy problém vložiť kurzor za poslednú SVG ikonu, tučný text a podobne. V takom prípade za elementom editor zobrazuje ikonu pre presun kurzora na dané miesto. Niekedy sa presun nemusí podariť na prvé kliknutie, odporúčame vopred kliknúť kdekoľvek do textu a potom na ikonu pre presun kurzora.
+
+![](wjmagicline-append.png)
 
 ## Detekcia zmeny obsahu stránky
 

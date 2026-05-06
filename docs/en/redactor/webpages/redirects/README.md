@@ -1,45 +1,47 @@
 # Redirections
 
-## Path diversions
+## Road rerouting
 
-Displays a list of existing redirects that will be executed if the specified URL does not exist. Redirects are created automatically when the URL of an existing page is changed or when the directory structure is changed.
+Displays a list of existing redirects that will be executed if the specified URL does not exist. Redirects are created automatically when the URL of an existing page changes or when the directory structure changes.
 
 ![](redirect-path.png)
 
-Click on the icon **Add** a new redirect can be defined. Redirection including parameters in the URL is also supported. First a match including parameters is searched for, if no match is found, the system will try to find a match without the specified parameters.
+By clicking on the **Add** icon, it is possible to define a new redirect. Redirects including parameters in the URL address are also supported. First, a match including parameters is searched for, if not found, the system tries to find a match without the specified parameters.
 
-Field value [redirection code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections) specifies the type of redirection, the most commonly used codes are:
+The value of the [redirect code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections) field determines the type of redirect, the following codes are most commonly used:
+
 - `301` permanent redirect, search engines should adjust the page address to this new value.
-- `302` temporary redirection.
+- `302` temporary redirect.
 
-You can also set the validity of the redirection for specific dates, by entering either the start or end or both dates. Redirects that are no longer temporally valid will appear in red in the table. In the note field, you can enter information about what the redirect is for.
+You can also set the validity of the redirect for certain dates, by entering either the start or end dates, or both. Redirects that are no longer valid will be displayed in red in the table. You can enter information about what the redirect is for in the note field.
 
 ![](path-editor.png)
 
 ### Redirects via regular expressions
 
-Using regular expressions, it is possible to set up more complex redirects of entire URL branches (e.g. after migrating an old site). Regular expression redirects are specified with a prefix `regexp:`.
+Regular expressions can be used to set up more complex redirects of entire URL branches (e.g. after migrating an old website). Redirects via regular expressions are specified with the prefix `regexp:`.
 
 The original URL can therefore be entered in the format `regexp:^\/thisiswhere\/oldfiles\/(.+)` which will be correctly translated to the new URL even with the execution/transfer of groups to the new URL in the form `/thisiswhere/myfilesmovedto/$1`
 
-Redirection is performed, e.g. `/thisiswhere/oldfiles/page.html` at `/thisiswhere/myfilesmovedto/page.html`.
+Redirecting, for example, `/thisiswhere/oldfiles/page.html` to `/thisiswhere/myfilesmovedto/page.html` will be performed.
 
-## Domain redirections
+## Domain redirects
 
-In the section **Domain redirections** you can define domain-wide redirection of requests (e.g. redirecting `domena.sk` at `www.domena.sk`).
+In the **Domain Redirections** section, you can define a redirection of requests for the entire domain (e.g. redirecting `domena.sk` to `www.domena.sk`).
 
 ![](redirect-domain.png)
 
 In the domain definition dialog box, you can enter the following values:
+
 - **Original domain** - the name of the domain you want to redirect, e.g. `domena.sk`.
-- **Target Domain** - the name of the domain to which you want to redirect the request, e.g. `www.domena.sk`, we recommend to enter also `http/s` prefix `https://www.domena.sk`.
-- **Original protocol** - Specifies the protocol for which the redirection is used:
-  - **empty value** - redirection is used regardless of the protocol.
-  - **http** - redirection is used only if the original protocol is `http` (set if you want to redirect the http version to a secure `https` version, in which case also enter a domain with the protocol in the Destination Domain field `https://` at the beginning).
-  - **https** - redirection is used only if the original protocol is `https`.
-  - **alias** - creates a domain alias - the value entered in the Original Domain field will be seen (and processed) internally by WebJET as the domain value in the Target Domain field. Use when e.g. migrating data from production to test, enter the value in the test environment as the original domain and enter the domain in production (without http prefix) as the target domain.
-- **Active** - redirection will only be used if this field is checked.
-- **Redirect parameters** - if checked, the parameters of the original HTTP request are added to the redirect, e.g. `?docid=4`.
-- **Redirect the path** - if checked, the path of the original HTTP request is added to the redirect, e.g. `/produkty/webjet/novinky.html`.
+- **Target domain** - the name of the domain to which you want to redirect the request, e.g. `www.domena.sk`, we recommend also entering `http/s` prefix `https://www.domena.sk`.
+- **Original protocol** - determines which protocol the redirection will be used for:
+  - **empty value** - redirection will be used regardless of the protocol.
+  - **http** - redirection will only be used if the original protocol is `http` (set if you want to redirect the http version to the secure `https` version, in which case also enter the domain with the `https://` protocol at the beginning in the Target domain field).
+  - **https** - redirection will only be used if the original protocol is `https`.
+  - **alias** - creates a domain alias - the value entered in the Original domain field will be seen (and processed) internally by WebJET as the domain value in the Target domain field. Use when, for example, you are migrating data from production to test, enter the value in the test environment as the original domain and enter the domain in production (without the http prefix) as the target domain.
+- **Active** - redirection will only be used if this box is checked.
+- **Redirect parameters** - if checked, the parameters of the original HTTP request will also be added to the redirect, e.g. `?docid=4`.
+- **Redirect path** - if checked, the path of the original HTTP request will also be added to the redirect, e.g. `/produkty/webjet/novinky.html`.
 
 ![](domain-editor.png)

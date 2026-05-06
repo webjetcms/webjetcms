@@ -187,6 +187,7 @@
     <defaultexcludes echo="false" add="**/tsconfig*"/>
     <defaultexcludes echo="false" add="**/typedoc.json"/>
     <defaultexcludes echo="false" add="**/webpack.config.js"/>
+    <defaultexcludes echo="false" add="**/rspack.config.js"/>
     <defaultexcludes echo="false" add="**/package.json"/>
     <defaultexcludes echo="false" add="**/tslint.json"/>
     <defaultexcludes echo="false" add="**/firebase.json"/>

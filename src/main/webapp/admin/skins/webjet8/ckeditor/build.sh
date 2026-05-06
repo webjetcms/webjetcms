@@ -8,7 +8,7 @@ java -version
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 #NASTAV NA ZACIATKU:
-sdk use java 11.0.16.1-tem
+sdk use java 11.0.30-tem
 
 echo "Switched to JAVA version:"
 java -version
@@ -54,3 +54,4 @@ cp -R -p ../../plugins/webjettooltip/icons $WJ_PATH/dist/plugins/webjettooltip
 cp -R -p ../../plugins/webjetpicture/icons $WJ_PATH/dist/plugins/webjetpicture
 cp -R -p ../../plugins/webjetformbutton/icons $WJ_PATH/dist/plugins/webjetformbutton
 rm -rf $WJ_PATH/dist/.vscode
+rm -rf $WJ_PATH/dist/.agents

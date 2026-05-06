@@ -15,7 +15,6 @@ Before(({ I, login }) => {
     }
 });
 
-
 Scenario('zoznam fotografii', ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
@@ -204,59 +203,14 @@ Scenario('novy priecinok', async({ I, DT, DTE }) => {
     I.clickCss("div.tree-col button.buttons-create");
     DTE.waitForEditor("galleryDimensionDatatable");
     I.dontSeeInField("#DTE_Field_name", "test");
-    I.seeInField("#DTE_Field_path", "/images/gallery/test");
+
+    // During creation we dont see field DTE_Field_path
+    I.dontSeeElement(".DTE_Field_Name_path");
+    // Only parent folder
+    I.seeElement(".DTE_Field_Name_parent .vueComponent input.form-control[value='/images/gallery/test']");
+
     let name = await I.grabValueFrom("#DTE_Field_name");
     I.assertEqual(name, "");
-});
-
-Scenario('bug-remember column order', ({ I, DT, Browser }) => {
-
-    I.resizeWindow(1680, 760);
-
-    I.amOnPage("/admin/v9/apps/gallery/");
-    DT.waitForLoader();
-
-    I.waitForElement("button.btn-gallery-size-table", 5);
-    I.wait(1);
-    I.clickCss("button.btn-gallery-size-table");
-    DT.resetTable("galleryTable");
-    DT.waitForLoader();
-
-    var position = 3;
-    I.dragAndDrop(
-        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
-        "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
-        {
-            force: true,
-            sourcePosition: {x: 10, y: 10},
-            targetPosition: { x: 10, y: 10 }
-        }
-    );
-    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
-
-    //
-    I.say("Reload and check if the column order is preserved");
-    I.amOnPage("/admin/v9/apps/gallery/");
-    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
-
-    //
-    I.say("check column settings-there was bug with duplicate buttons on header and footer");
-
-    var container = "#galleryTable_wrapper";
-    I.clickCss(container+" button.buttons-settings");
-    I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-    I.see("Priečinok", "div.colvisbtn_wrapper button.buttons-columnVisibility span.column-title");
-
-});
-
-Scenario('bug-remember column order-reset', ({ I, DT }) => {
-    I.wjSetDefaultWindowSize();
-
-    I.amOnPage("/admin/v9/apps/gallery/");
-
-    I.clickCss("button.btn-gallery-size-s");
-    DT.resetTable("galleryTable");
 });
 
 Scenario('editor check dir select', ({ I, Document, DTE, Browser }) => {
@@ -474,38 +428,6 @@ Scenario('editor check instance image change', ({ I, DTE }) => {
     //
     I.say("recheck");
     I.dontSeeElement(locate("#toast-container-upload div.toast-message span").withText("dsc04080.jpeg"));
-});
-
-Scenario('BUG set gallery dimmension by not saved/white parent #56393-10', ({ I, DT, DTE }) => {
-    //There was a bug when the parent was not saved (white) and you would like to create new gallery dimension default values was not set correctly
-    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/apps/blog/");
-    //apps is saved - has 200x200 dimension
-    //blog is not saved, it's white
-
-    I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText("blog"));
-    I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText("blog").find("i.jstree-icon.ti.ti-folder"));
-
-    I.click(".tree-col button.buttons-create");
-    DTE.waitForEditor("galleryDimensionDatatable");
-
-    I.seeInField("#DTE_Field_path", "/images/gallery/apps/blog");
-    I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
-    I.seeInField("#DTE_Field_imageWidth", "200");
-    I.seeInField("#DTE_Field_imageHeight", "200");
-
-    I.seeInField("#DTE_Field_normalWidth", "400");
-    I.seeInField("#DTE_Field_normalHeight", "400");
-
-    DTE.cancel();
-});
-
-Scenario("BUG - filter by URL and imageName", async ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/#dt-filter-imageName=chrysanthemum.jpg");
-    DT.waitForLoader();
-    I.waitForText("chrysanthemum.jpg", 10, "table.datatableInit td.dt-row-edit");
-    I.wait(2);
-    const numVisible = await I.grabNumberOfVisibleElements(locate("#galleryTable td.dt-row-edit").withText("chrysanthemum.jpg"));
-    I.assertEqual(numVisible, 1);
 });
 
 const editorTestImage = 'editorTestImage';
@@ -810,50 +732,6 @@ const arraysAreEqual = (I, arr1, arr2) => {
     assert.deepStrictEqual(sortedArr1, sortedArr2, 'Arrays are not equal');
 }
 
-Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DTE, DT }) => {
-    I.relogin("jtester");
-    I.amOnPage("/admin/v9/apps/gallery/");
-    I.waitForElement(".tree-col .dt-buttons button.buttons-create.disabled");
-
-    I.jstreeClick("test");
-    I.waitForElement(".tree-col .dt-buttons button.buttons-create:not(.disabled)");
-
-    I.click(".tree-col button.buttons-create");
-    DTE.waitForEditor("galleryDimensionDatatable");
-    I.seeInField("#DTE_Field_path", "/images/gallery/test");
-    DTE.cancel();
-
-    //
-    I.say("Verify server side disable create buttons");
-    I.jstreeClick('gallery');
-    await I.executeScript(() => {
-        document.querySelector('.tree-col .buttons-create').classList.remove('disabled');
-        document.querySelector('.tree-col .buttons-create').removeAttribute('disabled');
-    });
-
-    I.click(DT.btn.tree_add_button);
-    DTE.waitForEditor('galleryDimensionDatatable');
-    DTE.fillField('name', autoName);
-    DTE.save('galleryDimensionDatatable');
-    I.waitForText('Tento priečinok nie je možné upravovať.');
-    I.see('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
-});
-
-Scenario('Revert if last scenario fails', async ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/gallery/");
-    const autotest = locate('.jstree-anchor').withText('autotest-');
-    while (await I.grabNumberOfVisibleElements(autotest)){
-        I.click(autotest);
-        I.click(DT.btn.tree_delete_button);
-        await I.waitForElement("div.DTE_Action_Remove", 5);
-        I.click("Zmazať", "div.DTE_Action_Remove");
-    }
-});
-
-Scenario('logout', ({ I }) => {
-    I.logout();
-});
-
 Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, DT, DTE }) => {
     var nameOfImage = 'koala.jpg';
     I.amOnPage("/admin/v9/apps/gallery/");
@@ -1071,6 +949,8 @@ Scenario('Gallery - Feature - automatically create galleryDimension by saved ima
 Scenario('thumb servlet', async ({ I, DT, DTE, Document }) =>  {
     tolerance = 4;
 
+    I.amOnPage("/localconf.jsp");
+
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
     DT.waitForLoader();
     I.jstreeWaitForLoader();
@@ -1131,4 +1011,45 @@ Scenario('thumb servlet - ip6', async ({ I, Document }) =>  {
 Scenario('thumb servlet - noip4', async ({ I, Document }) =>  {
     I.amOnPage('/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00');
     await Document.compareScreenshotElement('img', 'thumb-servlet/noip-4.png', null, null, tolerance);
+});
+
+function jstreeSetDefault(I) {
+    I.amOnPage("/admin/v9/apps/gallery/");
+
+    I.say("Turn off showing of original names in jstree");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.uncheckOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+}
+
+const dirOriginalName = "filter-original";
+const dirChangedName = "filter-changed";
+Scenario('test original dir names + filtering', ({ I }) =>  {
+    jstreeSetDefault(I);
+
+    I.say("Try filter using changed name");
+    I.jstreeFilter(dirChangedName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+
+    I.say("Try filter using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor').withText(dirChangedName));
+
+    I.say("Show original names in jstree again");
+    I.clickCss(".tree-col button.buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.checkOption("#jstree-settings-showrealname");
+    I.clickCss("button#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.say("Filter again using original name");
+    I.jstreeFilter(dirOriginalName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(dirChangedName));
+    I.seeElement(locate('.jstree-anchor.jstree-search span.realName').withText("(" + dirOriginalName + ")"));
+});
+
+Scenario('test original dir names + filtering - cleanup', ({ I }) =>  {
+    jstreeSetDefault(I);
 });

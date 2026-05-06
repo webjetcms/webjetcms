@@ -94,7 +94,7 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
   - **Priorita**
   - **Názov**
   - **Dátum vytvorenie**
-- **Zoradiť strom smerom** - Prepínanie medzi smerom usporiadania stromu priečinkov. Výberom možnosti sa použije smer **Vzostupne (ASC)** a nezvolením možnosti sa použije smer **Zostupne (DESC)**.
+- **Zoradiť strom smerom** - Prepínanie medzi smerom usporiadania stromu priečinkov. Výberom možnosti sa použije smer **Vzostupne** a nezvolením možnosti sa použije smer **Zostupne**.
 
 ![](jstree-settings.png)
 

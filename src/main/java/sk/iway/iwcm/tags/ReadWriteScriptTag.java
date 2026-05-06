@@ -84,7 +84,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 		}
 		//Logger.debug(ReadWriteScriptTag.class, "mode: " + mode);
 
-		//TODO Pozor treba zmenit aj pri primamom volani triedy pri zmene
+		//Pozor treba zmenit aj pri primamom volani triedy pri zmene
 		if(Tools.isNotEmpty(rwdWriteBean.getSrc()) && rwdWriteBean.getSrc().toLowerCase().endsWith(".js"))
 			addContentFromClass(ScriptTypeEnum.JAVASCRIPT, rwdWriteBean, request, mode, out);
 		else if(rwdWriteBean.getType() != null && Tools.isNotEmpty(rwdWriteBean.getType()) && "text/javascript".equalsIgnoreCase(rwdWriteBean.getType()))
@@ -223,7 +223,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 	{
 		doPrint("doEndTag()");
 		setMode();
-		//TODO Pozor treba zmenit aj pri primamom volani triedy pri zmene
+		//Pozor treba zmenit aj pri primamom volani triedy pri zmene
 		if(Tools.isNotEmpty(src) && src.toLowerCase().endsWith(".js"))
 			addContent(ScriptTypeEnum.JAVASCRIPT);
 		else if(type != null && Tools.isNotEmpty(type) && "text/javascript".equalsIgnoreCase(type))
@@ -290,7 +290,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 		{
 			bean = listBeans.get(i);
 			// po vypisani tagu sa pri dalsom moze pouzit iny mod a skript by sa tak vypisal, co bolo zle
-			if("one_flush".equals(flush) && ("expanded".equals(bean.getMode()) || "combined".equals(bean.getMode())))
+			if("one_flush".equals(flush) && ("expanded".equals(bean.getMode()) || MODE_COMBINED.equals(bean.getMode())))
 			{
 				continue;
 			}
@@ -353,12 +353,11 @@ public class ReadWriteScriptTag extends BodyTagSupport
 		{
 			bean = listBeans.get(i);
 			// po vypisani tagu sa pri dalsom moze pouzit iny mod a skript by sa tak vypisal, co bolo zle
-			if("one_flush".equals(flush) && ("expanded".equals(bean.getMode()) || "combined".equals(bean.getMode())))
+			if("one_flush".equals(flush) && ("expanded".equals(bean.getMode()) || MODE_COMBINED.equals(bean.getMode())))
 			{
 				canRemoveAttribute = false;
 				continue;
 			}
-			//TODO vymazat z listu, nasetovat do atributu a nezmazat attribut
 
 			type = ""; rel = "";
 			if(Tools.isNotEmpty(bean.getType()))
@@ -396,7 +395,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 					if(MODE_COMBINED.equals(mode))
 						combined.append(bean.getHref()).append(",");
 					else
-						write("<link "+type+" "+printId+" "+ linkMedia+" "+printCharset + " " + rel+" href=\""+bean.getHref()+"\"></link>"+getJspFileName(bean, pageContext)+"\n",pageContext, out);//write("<link type=\"text/css\""+linkMedia+" "+rel+" href=\""+bean.getHref()+"\"></link>"+getJspFileName(bean));
+						write("<link "+type+" "+printId+" "+ linkMedia+" "+printCharset + " " + rel+" href=\""+bean.getHref()+"\" />"+getJspFileName(bean, pageContext)+"\n",pageContext, out);
 				}
 				else
 					write("<style "+type+" >"+bean.getBody()+"</style>"+getJspFileName(bean, pageContext)+"\n",pageContext, out);
@@ -544,7 +543,7 @@ public class ReadWriteScriptTag extends BodyTagSupport
 		if(pageContext == null)
 			return"";
 
-		String writePerfStat = ((HttpServletRequest)pageContext.getRequest()).getParameter("_writePerfStat");
+		String writePerfStat = pageContext.getRequest().getParameter("_writePerfStat");
 		if(Tools.isNotEmpty(writePerfStat) && "true".equals(writePerfStat))
 		{
 			String jspName = null;

@@ -221,6 +221,62 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     I.clickCss(".cke_dialog_ui_button_cancel");
 });
 
+Scenario('editor - magicline', async ({ I, DTE, Document, Apps, Browser }) => {
+
+    Document.setEditorMode("standard");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=150095");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    I.clickCss('#trEditor');
+    if (Browser.isFirefox()) I.wait(2);
+    I.clickCss('#trEditor');
+    I.pressKey('ArrowDown');
+
+    I.switchTo(".cke_wysiwyg_frame.cke_reset");
+
+        I.executeScript(function() {
+            document.body.dispatchEvent(new MouseEvent('mousemove', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX: 589,
+                clientY: 248
+            }));
+
+            setTimeout(function() {
+                document.getElementById("wjmagiclinePlus").dispatchEvent(new MouseEvent('mouseup', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                }));
+            }, 500);
+        });
+
+        I.wait(2);
+        Document.screenshot('/redactor/webpages/working-in-editor/wjmagicline.png');
+
+        I.pressKey("ArrowUp");
+
+        I.executeScript(function() {
+            document.elementFromPoint(507, 117).parentElement.dispatchEvent(new MouseEvent('mousemove', {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX: 507,
+                clientY: 117
+            }));
+        });
+
+        I.wait(2);
+        Document.screenshot('/redactor/webpages/working-in-editor/wjmagicline-append.png');
+
+    I.switchTo();
+
+    Document.resetPageBuilderMode();
+});
+
 Scenario('remove Pixabay image', ({ I, Document, i18n }) => {
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy90ZXN0LXN0YXZvdi9tYW51YWx0ZXN0cGFnZQ_E_E");
 
@@ -308,6 +364,12 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
 
     I.click(locate("div.cke_dialog_container a.cke_dialog_tab").withText("Rozšírené"));
     Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button_advanced.png');
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=153671");
+    DTE.waitForEditor();
+    I.switchTo(".cke_wysiwyg_frame.cke_reset");
+    I.click(locate("button.btn").withText("normal button"));
+    Document.screenshot('/redactor/webpages/working-in-editor/wjformbutton.png');
 });
 
 Scenario('webjet-toolbar', ({ I, Document }) => {

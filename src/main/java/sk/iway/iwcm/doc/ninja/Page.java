@@ -10,6 +10,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class Page {
     private Ninja ninja;
@@ -36,15 +37,39 @@ public class Page {
     }
 
     public String getCanonical(){
-        String canonical = "";
+        String canonical = null;
         if(doc!=null){
-            canonical = doc.getFieldQ();
+            if (doc.getFieldQ()!=null && doc.getFieldQ().contains("/")) {
+                canonical = ResponseUtils.filter(doc.getFieldQ());
+                canonical = Tools.replace(canonical, "&amp;", "&");
+            }
+
+            DocDB docDB = DocDB.getInstance();
+            String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
             if(Tools.isEmpty(canonical)){
-                DocDB docDB = DocDB.getInstance();
-                String docLink = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, ninja.getRequest());
-                return docLink;
+                canonical = docLink;
+            } else {
+                //if canonical is not empty, check if it contains http:// or https://, if not, add domain to it
+                if (canonical != null && canonical.toLowerCase().startsWith("http") == false) {
+                    //reuse domain from docLink, but only domain, without path
+                    int i = docLink.indexOf("/", 10);
+                    String domain = null;
+                    if (i > 0 && i < docLink.length() - 1) domain = docLink.substring(0, i);
+                    else domain = getUrlDomain();
+
+                    canonical = domain + canonical;
+                }
             }
         }
+
+        if (Tools.isEmpty(canonical) || "-".equals(canonical)) canonical = getUrl();
+
+        Map<String, String[]> params = getUrlParameters();
+        String[] pageParams = params.get("page");
+        if(pageParams != null && pageParams.length > 0 && Tools.isNotEmpty(canonical)){
+            canonical = Tools.addParameterToUrl(canonical, "page", pageParams[0]);
+        }
+
         return canonical;
     }
 

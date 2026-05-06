@@ -301,7 +301,7 @@ Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Doc
 
 function insertLink(I, link) {
     I.clickCss(".cke_button.cke_button__link.cke_button_off");
-    I.switchTo("#wjLinkIframe");
+    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjLinkIframe"));
     I.wait(1); //necessary static waiting
     I.waitForElement('#txtUrl', 10);
     I.fillField("#txtUrl", link);
@@ -320,7 +320,7 @@ async function validateThumb(I, elementText) {
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
     I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
     I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
-    I.switchTo('#wjImageIframeElement');
+    I.switchTo(locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find("table.cke_dialog #wjImageIframeElement"));
 
     I.waitForElement('#txtUrl', 10);
     I.wait(5);
@@ -390,6 +390,9 @@ Scenario('BUG: when you open PB doc and then empty NON PB it has PB content', ({
 });
 
 function checkStyleModal(docId, colSelector, isCustom, I, DTE, Apps) {
+
+    //to force codemirror render all items
+    I.resizeWindow(1280, 1800);
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
     I.closeOtherTabs();

@@ -1,35 +1,36 @@
-# Booking app
+# Reservations app
 
-With this application, it is possible to manage the reservation system. It is necessary to add this application to the page and then it is possible to use the form to select from the reservation objects (e.g. room, cottage, tennis court) and request a reservation. The administrator can approve individual requests.
+This application allows you to manage your booking system. You need to add this application to your website and then you can use the form to select from booking objects (e.g. room, cottage, tennis court) and request a reservation. The administrator can approve individual requests.
 
 ## Application settings
 
-In the editor you can select the type of display:
-- **List of reservations**
+In the editor, you can select the display type:
+
+- **Reservation List**
 - **List of reservation objects**
 
-Based on the selection, the content that will be displayed to the user will change.
+The content displayed to the user will change based on the selection.
 
-![Výber typu zobrazenia](editor.png)
+![Select display type](editor.png)
 
-### List of reservations
+### Reservation list
 
-In this tab you can view, create and edit reservations.
+In this tab, you can view, create, and edit reservations.
 
-[Go to List of reservations](../reservations/README.md)
+[Go to Reservations List](../reservations/README.md)
 
-![Zoznam rezervácií](reservation-list.png)
+![Reservation List](reservation-list.png)
 
 ### List of reservation objects
 
-In this tab you can edit and manage the objects that can be reserved.
+In this tab, you can edit and manage objects that can be reserved.
 
-[Go to List of reservation objects](../reservation-objects/README.md)
+[Go to Reservation Objects List](../reservation-objects/README.md)
 
-![Zoznam rezervačných objektov](reservation-object-list.png)
+![Reservation Object List](reservation-object-list.png)
 
-## View application
+## View the application
 
-This is what the app looks like when added to the page:
+This is what the app looks like after being added to the page:
 
-![Zobrazenie aplikácie](reservation-app.png)
+![View application](reservation-app.png)

@@ -76,7 +76,7 @@ public class CronFacade
 				try
 				{
 					Class<?> clazz = task.receiveClazz();
-					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task.receiveArgs(),task.getAudit(), task.getId()));
+					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task));
 					Logger.debug(WebjetDatabaseTaskSource.class, String.format("Cron task started {%s}: %s %s, with pattern %s", task.getId(), clazz.getName(), task.getParams(), task.receiveCronPattern()));
 				}
 				catch (Exception e)
@@ -120,6 +120,6 @@ public class CronFacade
 	 */
 	public synchronized void runSimpleTaskOnce(CronTask task) throws ClassNotFoundException
 	{
-		new Thread(new RunnableWrapper(task.receiveClazz(), task.receiveArgs(), task.getAudit(), task.getId())).start();
+		new Thread(new RunnableWrapper(task.receiveClazz(), task)).start();
 	}
 }

@@ -1,16 +1,16 @@
 # Settings
 
-| Settings | Type | Presets | Description |
-| ---------- | --------- | ------------- | ---------------------------- |
+| Setting | Type | Preset | Description |
+| --- | ----- | --- | ----- |
 | fireTime | *Integer* | 200 | Event call delay |
 | debug | *Boolean* | false | Debug mode |
 
-## Delayed event call *Integer*
+## Event call delay *Integer*
 
-All methods that are triggered by a monitor resize are called with a delay according to the set `fireTime`. Default is set to 200ms.
+All methods triggered by a change in monitor size will be called with a delay according to the set `fireTime`.
+By default it is set to 200ms.
 
-Example setup:
-
+Example of setting:
 ```javascript
 Nina.init({
     fireTime: 300
@@ -19,14 +19,13 @@ Nina.init({
 
 ## Debug mode *Boolean*
 
-Debug mode, which when set to `true` enable logging via `Nina.log("Hello world");`. Default is set to `false`, then the logs in the console will not be displayed.
+Debug mode, which when set to `true` will enable logging via `Nina.log("Hello world");`. By default it is set to `false`, in which case logs will not be written to the console.
 
 Example of switching on:
-
 ```javascript
 Nina.init({
     debug: true
 });
 ```
 
-!> **Warning:** If the parameter is set in the URL `NinjaDebug` at `true`, this debug mode is also forced on. For more information, see [Debug mode](/ninja-starter-kit/ninja-jv/debug/?id=debug-režim-boolean).
+!> **Warning:** If the parameter `NinjaDebug` is set to `true` in the URL, this debug mode will also be forced to be enabled. More information in the [Debug mode](/ninja-starter-kit/ninja-jv/debug/?id=debug-mode-boolean) section.

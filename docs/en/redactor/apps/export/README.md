@@ -1,21 +1,22 @@
-# Export of data
+# Data export
 
-The Data Export application allows you to export news/web pages from WebJET CMS in various JSON or XML/RSS formats. The export can be used in external web/mobile applications.
+The Data Export application allows you to create an export of news/web pages from WebJET CMS in various JSON or XML/RSS formats. The export can be used in external web/mobile applications.
 
 ![](exportDat-datatable.png)
 
-When creating/duplicating a new export, you must fill in the mandatory "URL address" field, which defines the address where the export will be available.
+When creating/duplicate a new export, it is necessary to fill in the mandatory "URL address" field, which defines the address at which the export will be available.
 
-The other fields are similar to the ones used when inserting a list of news items into a web page. They set the filtering and arrangement of the exported data list.
+The other fields are similar to those used when inserting a news list into a website. They set the filtering and sorting of the exported data list.
 
 ![](exportDat-editor.png)
 
 Data can be exported in the following formats:
-- JSON
-- XML (format for RSS reader)
-- `ud-ofngovcz` - export format for `Úradní desku` v [OpenData Czech Republic](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON format. When using it is necessary to define translation keys in CZ language `components.ud-ofngovcz.url` with the URL of the page and `components.ud-ofngovcz.ico` with the city ID number. The value for the Agenda field is taken from the tag (perex group), attachments from the media page.
 
-Sample export in json format:
+- JSON
+- XML ​​(format for RSS reader)
+- `ud-ofngovcz` - ​​export in format for `Úradní desku` in [OpenData ČR](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON format. When using it, it is necessary to define translation keys in the CZ language `components.ud-ofngovcz.url` with the URL address of the page and `components.ud-ofngovcz.ico` with the city ID number. The value for the Agenda field is taken from the tag (perex group), attachments from the page media.
+
+Example of export in json format:
 
 ```json
 [
@@ -113,7 +114,7 @@ Sample export in json format:
 ]
 ```
 
-Sample export in XML format (format for RSS reader):
+Example of export in XML format (format for RSS reader):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -151,11 +152,11 @@ Sample export in XML format (format for RSS reader):
 
 ## Custom export format
 
-If you need to export the data in another format, just create a file `/components/INSTALL_NAME/export/meno.jsp` Where `INSTALL_NAME` is the name of your installation (conf. variable `installName`). We recommend starting from existing JSP files and just modifying the necessary key values.
+If you need to export data in a different format, just create a file `/components/INSTALL_NAME/export/meno.jsp` where `INSTALL_NAME` is the name of your installation (config variable `installName`). We recommend using existing JSP files and only modifying the necessary key values.
 
-The created file is automatically offered as an export type option.
+The created file will automatically be offered as an export type option.
 
-For JSP files that contain in the name `rss` or `xml` (or if the export URL ends in) the HTTP header is set `Content-Type` at `text/xml`, for other cases it is set `application/json`. But if necessary, you can set a specific value in the JSP file right at the beginning by calling:
+For JSP files that contain `rss` or `xml` in the name (or if the export URL ends with) the HTTP header `Content-Type` is set to `text/xml`, for other cases it is set to `application/json`. However, if necessary, you can set a specific value right at the beginning of the JSP file by calling:
 
 ```java
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "application/ld+json");

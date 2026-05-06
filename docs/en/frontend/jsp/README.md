@@ -1,14 +1,14 @@
 # JSP templates
 
-Writing templates in [Java Server Pages](https://www.baeldung.com/jsp) is an older way of designing web pages. The main disadvantage compared to [Thymeleaf](../thymeleaf/README.md) it is impossible to view without WebJET CMS running, always use Thymeleaf for new projects.
+Writing templates in [Java Server Pages](https://www.baeldung.com/jsp) is an older way of preparing web page designs. The main disadvantage compared to [Thymeleaf](../thymeleaf/README.md) is the inability to display without running WebJET CMS, always use Thymeleaf for new projects.
 
-The following example illustrates the creation of a basic template consisting of a header, a navigation bar, a menu, the document itself, and a footer. The file is `/templates/tmp_generic.jsp`.
+The following example illustrates the creation of a basic template consisting of a header, navigation bar, menu, document itself, and footer. The file is `/templates/tmp_generic.jsp`.
 
-The HTML header is set `meta tag Content-type` at `text/html`, while the character encoding is not fixed in the page, but is obtained from `request` object according to the server settings.
+In the HTML code header, `meta tag Content-type` is set to `text/html`, while the character encoding is not fixed in the page, but is obtained from the `request` object according to the server settings.
 
-CSS style is loaded into the page `/css/page.css` and tests if there is an additional CSS style set in the template, if so, it is inserted as well.
+The CSS style `/css/page.css` is permanently loaded into the page and it is tested whether an additional CSS style is set in the template, if so, it is inserted as well.
 
-The objects used are practically the same as for [Thymeleaf](../thymeleaf/webjet-objects.md), but the format used is `<iwcm:write name="..."/>`. Brand `iwcm:write` prints the specified attribute stored in `HttpServletRequest` and at the same time executes the mark `!INCLUDE(...)!`, i.e. executes the application. Brand `iway:request` just inserts the attribute without executing the application. Tag `iwcm:combine` is used to combine (concatenate) multiple files into a single HTTP request.
+The objects used are practically the same as for [Thymeleaf](../thymeleaf/webjet-objects.md), but the format `<iwcm:write name="..."/>` is used. The `iwcm:write` tag prints the specified attribute stored in `HttpServletRequest` and also executes the `!INCLUDE(...)!` tag, i.e. executes the application. The `iway:request` tag only inserts the attribute without executing the application. The `iwcm:combine` tag is used to combine (join) multiple files into a single HTTP request.
 
 ```jsp
 <%

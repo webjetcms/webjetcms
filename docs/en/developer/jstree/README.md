@@ -1,10 +1,11 @@
 # jsTree
 
-Library [jsTree](https://www.jstree.com/) is jquery `plugin`, which displays tree structures in WebJET.
+The [jsTree](https://www.jstree.com/) library is a jQuery ```plugin``` that we use to display tree structures in WebJET.
 
-## Basic initialization in cooperation with Spring REST
+## Basic initialization in collaboration with Spring REST
 
-The WebJET implementation of jsTree is configured using a JSON object in `app.js`.
+The WebJET implementation of jsTree is configured using a JSON object in ```app.js```.
+
 
 Basic example:
 
@@ -130,39 +131,37 @@ script.
 
 ## Configuration
 
-The address of the called REST service is configured using HTML attributes `data-rest-url` a `data-rest-param-name` (the name of the parameter sent to the REST service).
+The address of the called REST service is configured using the HTML attributes ```data-rest-url``` and ```data-rest-param-name``` (the name of the parameter sent to the REST service).
 
-In the object `window.treeInitialJson` it is possible to set the initialization JSON data for the initial display of the tree structure. Thus, the first view will be faster as there is no need to call the REST service. Passing data to the backend is described in the section [thymeleaf](../frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
+In the ```window.treeInitialJson``` object, it is possible to set the initialization JSON data for the initial display of the tree structure. The first display will therefore be faster, since it is not necessary to call the REST service. Data transfer on the backend is described in the section [thymeleaf](../frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
 
 ### Creating a new REST controller
 
-New controller should expand the class [JsTreeRestController](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeRestController.java), implement abstract tree methods (menu items), `move` (BE implementation of item transfer) and `checkAccessAllowed` (user rights check by request).
+The new controller should extend the [JsTreeRestController](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeRestController.java) class, implement abstract methods tree (menu items), ```move``` (BE implementation of moving an item) and ```checkAccessAllowed``` (checking user rights using a request).
 
 ### Custom object types
 
-To the object `JsTreeItem` has been added `String customType`, for defining a custom type in customer implementations. The usage is the same as in the case of `Type` where we can compare `Enumy`, only in this case we compare `Stringy`, by the method of `equals`.
+```String customType``` was added to the ```JsTreeItem``` object, to define a custom type in customer implementations. The usage is the same as in the case of ```Type```, where we can compare ```Enumy```, only in this case we compare ```Stringy```, using the ```equals``` method.
 
 Use type
-
 ```java
 if (original.getType() == JsTreeItemType.GROUP) {
     // vlastny kod pre dany type
 }
 ```
 
-Use `customType`
-
+Using ```customType```
 ```java
 if ("custom-jstree-item".equals(original.getCustomType())) {
     // vlastny kod pre dany custom type
 }
 ```
 
-### Adjusting the display
+### Display adjustment
 
-The JS object is tested before the tree structure is displayed `window.jstreeCustomizeData`. If it exists, it is called. It can modify the received data before displaying it.
+Before displaying the tree structure, the JS object ```window.jstreeCustomizeData``` is tested. If it exists, it is called. It can modify the received data before displaying it.
 
-An example is the display of the ID and the order of arrangement in the list of web pages implemented in `src/js/pages/web-pages-list/jstreesettings.js`:
+An example is the display of ID and sorting order in a list of web pages implemented in ```src/js/pages/web-pages-list/jstreesettings.js```:
 
 ```javascript
     jstreeCustomizeData(data) {
@@ -176,11 +175,11 @@ An example is the display of the ID and the order of arrangement in the list of 
         data.forEach(function(item) {
             //console.log(item);
             if (typeof item.groupDetails != "undefined") {
-                if (idShow) item.text = `<span class="id">#${item.groupDetails.groupId}</span> ${item.text}`;
-                if (priorityShow) item.text = `${item.text} <span class="sortPriority">(${item.groupDetails.sortPriority})</span>`;
+                if (idShow) item.text = `<span class="id">#${item.groupDetails.groupId}</span> ${item.text}` ;
+                if (priorityShow) item.text = `${item.text} <span class="sortPriority">(${item.groupDetails.sortPriority})</span>` ;
             } else if (typeof item.docDetails != "undefined") {
-                if (idShow) item.text = `<span class="id">#${item.docDetails.docId}</span> ${item.text}`;
-                if (priorityShow) item.text = `${item.text} <span class="sortPriority">(${item.docDetails.sortPriority})</span>`;
+                if (idShow) item.text = `<span class="id">#${item.docDetails.docId}</span> ${item.text}` ;
+                if (priorityShow) item.text = `${item.text} <span class="sortPriority">(${item.docDetails.sortPriority})</span>` ;
             }
         });
     }
@@ -188,9 +187,9 @@ An example is the display of the ID and the order of arrangement in the list of 
 
 ![](../../redactor/webpages/jstree-settings.png)
 
-### Change the URL of a REST service
+### Changing the REST service URL
 
-The URL of the REST service is obtained from the data attribute `data-rest-url`, if you need to change it dynamically you can create a JavaScript function `window.getJstreeUrl`, which is used instead of the value in the data attribute:
+The REST service URL is obtained from the data attribute ```data-rest-url```, if you need to change it dynamically you can create a JavaScript function ```window.getJstreeUrl``` that will be used instead of the value in the data attribute:
 
 ```JavaScript
 var somStromcek = null;
@@ -209,21 +208,22 @@ window.getJstreeUrl = function() {
 
 ## Icons and CSS classes
 
-The icon is set using [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS classes by calling [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). The value is, for example `ti ti-folder-filled` or `ti ti-map-pin`.
+The icon is set using the [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS class by calling [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). The value is, for example, ```ti ti-folder-filled``` or ```ti ti-map-pin```.
 
-The API provides methods for setting HTML attributes on both the LI and A element using attributes [li\_attr and a\_attr](https://www.jstree.com/docs/json/). To easily add CSS classes, the API provides methods `JsTreeItem.addLiClass` a `JsTreeItem.addAClass`. So you can set CSS states `is-not-public` or `fa-is-internal`.
+The API provides methods for setting HTML attributes on both LI and A elements using the [li_attr and a_attr](https://www.jstree.com/docs/json/) attributes. To easily add a CSS class, the API provides the ```JsTreeItem.addLiClass``` and ```JsTreeItem.addAClass``` methods. This allows you to set CSS states ```is-not-public``` or ```fa-is-internal```.
 
-JsTree does not allow to display multiple icons in a row, which we need to display the status of directories and web pages, we add these as HTML code to the text using the method `JsTreeItem.addTextIcon`.
+JsTree does not allow displaying multiple icons in a row, which we need to display the status of directories and web pages, we add them as HTML code to the text using the ```JsTreeItem.addTextIcon``` method.
 
-Examples are in the classes [GroupsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/GroupsJsTreeItem.java) a [DocumentsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/DocumentsJsTreeItem.java).
+Examples are in the classes [GroupsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/GroupsJsTreeItem.java) and [DocumentsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/DocumentsJsTreeItem.java).
 
 ### How to use icons
 
 The use of icons has the following rules:
-- <i class="ti ti-folder-filled" role="presentation" ></i> / <i class="ti ti-map-pin" role="presentation" ></i> full page and folder icon = displayed in menu
-- <i class="ti ti-folder" role="presentation" ></i> / <i class="ti ti-map-pin-off" role="presentation" ></i> empty page and folder icon = not shown in menu
-- <i class="ti ti-lock" role="presentation" ></i> lock = only available for logged in visitor
-- <span style="color: #FF4B58">red colour</span> = unavailable for public (internal directory) or page with display disabled (in DT it is possible to use CSS class is-not-public per line)
-- **bold font** = main page of the directory (in DT it is possible to use CSS class `is-default-page`)
-- <i class="ti ti-external-link" ></i> out arrow = page is redirected
-- <i class="ti ti-eye-off" ></i> crossed out eye = page not searchable
+
+-<i class="ti ti-folder-filled" role="presentation"></i> /<i class="ti ti-map-pin" role="presentation"></i> full page and folder icon = displayed in the menu
+-<i class="ti ti-folder" role="presentation"></i> /<i class="ti ti-map-pin-off" role="presentation"></i> empty page and folder icon = not displayed in the menu
+-<i class="ti ti-lock" role="presentation"></i> lock = only available to logged in visitors
+- <span style="color: #E00028">red color</span> = unavailable to the public (internal directory) or page with disabled display (in DT it is possible to use the CSS class is-not-public per line)
+- **bold** = main page of the directory (in DT you can use the CSS class ```is-default-page```)
+-<i class="ti ti-external-link"></i> out arrow = page is redirected
+-<i class="ti ti-eye-off"></i> crossed out eye = page cannot be searched

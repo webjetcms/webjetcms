@@ -217,9 +217,10 @@ Scenario('attrs v stranke-multigroup', async ({I, DataTables, DT, DTE, Browser})
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=70950");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-attributes-tab");
     I.see("Výrobca", container);
-    I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner");
+    I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner"); //NOSONAR
 
     setAttr(attrMaster, I, Browser);
     DTE.save();
@@ -232,9 +233,10 @@ Scenario('attrs v stranke-multigroup', async ({I, DataTables, DT, DTE, Browser})
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=70951");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
     I.clickCss("#pills-dt-datatableInit-attributes-tab");
     I.see("Výrobca", container);
-    I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner");
+    I.see("Monitor", container+" div.DTE_Field_Name_editorFields\\.attrGroup div.filter-option-inner-inner"); //NOSONAR
 
     setAttr(attrSlave, I, Browser);
     DTE.save();

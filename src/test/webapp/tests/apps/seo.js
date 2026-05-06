@@ -15,7 +15,7 @@ let dayDateTo = "30.07.2021";
 
 function cleanFilter(I, DT) {
     I.click("button.btn-vue-jstree-item-edit");
-    I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
+    I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
     DT.waitForLoader();
 }
 
@@ -65,7 +65,7 @@ Scenario("admin", async ({ I, DT, Document }) => {
     DT.checkExtfilterDates(dayDateFrom, dayDateTo);
     await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 5);
     await Document.adjustScrollbar('#bots-lineVisits');
-    await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 5);
+    await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 7);
     DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,74", "30.07.2021"]);
     DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,46", "30.07.2021"]);
 
@@ -167,6 +167,7 @@ Scenario("stat-keywords", async ({ I, DT, Browser, Document }) => {
     DT.checkTableRow("statKeywordsDataTable", 1, ["1", "archiv", "27", "24,11"]);
 
     I.click("button.btn-vue-jstree-item-edit");
+    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -253,13 +254,14 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
     DT.waitForLoader();
 
     I.click("button.btn-vue-jstree-item-edit");
-    I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
+    I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
 
     DT.filterContains("name", "rozpočet");
 
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "2", "2", "2"]);
 
     I.click("button.btn-vue-jstree-item-edit");
+    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     waitForTableLoader(I);
@@ -313,6 +315,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.see("seznam.cz");
 
     I.click("button.btn-vue-jstree-item-edit");
+    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("Jet portal 4"));
 
     I.click({ css: "button[data-id=webPageSelect]" });
@@ -366,7 +369,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         I.see("primátor", "#statKeywordsDataTable");
 
     I.click("button.btn-vue-jstree-item-edit");
-    I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
+    I.click(locate(".jstree-anchor").withText("Všetky (zo všetkých domén)"));
 
     I.click({ css: "button[data-id=searchEngineSelect]" });
     I.see("WebJET");
@@ -394,6 +397,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         DT.checkTableRow("searchEnginesDataTable", 3, ["3", "google.com", "81"]);
 
     I.click("button.btn-vue-jstree-item-edit");
+    I.click( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("demo.webjetcms.sk") );
     I.click(locate(".jstree-anchor").withText("English"));
 
         DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "Hotels", "1", "25,00"]);

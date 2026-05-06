@@ -2,10 +2,6 @@ Feature('apps.video');
 
 Before(({ I, login }) => {
     login('admin');
-
-    if (typeof randomNumber == "undefined") {
-        randomNumber = I.getRandomText();
-    }
 });
 
 Scenario("Video - test zobrazovania", ({ I }) => {
@@ -21,9 +17,9 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
 
     const defaultParams = {
         "field": "logo_youtube_color",
-        "file": "https://www.youtube.com/watch?v=e-K-6Z_m-hg&amp;ab_channel=WebJETodInterWay",
+        "file": "https://www.youtube.com/watch?v=d-H7-skIor0",
         "widthType": "responsive",
-        "align": "left",
+        "align": "center",
         "width": "425",
         "height": "355",
         "percentageWidth": "100",
@@ -123,7 +119,7 @@ Scenario("Video - test zobrazovania v bannery", ({ I }) => {
     I.amOnPage("/en/apps/banner-system/classic_video_banner_yt.html");
     I.waitForElement('iframe[src*="youtube.com"]');
     within({frame: "#video"}, () => {
-        I.waitForElement(locate(".yt-core-attributed-string").withText('WebJET CMS - verzia 2023.18'), 10);
+        I.waitForElement(locate("a").withText('WebJET CMS - verzia 2023.18'), 10);
         I.dontSeeElement("div.ytp-error-content-wrap-subreason");
     });
 });

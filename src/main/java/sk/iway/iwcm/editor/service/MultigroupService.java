@@ -13,6 +13,7 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -94,11 +95,16 @@ public class MultigroupService {
 			Integer docId = me.getValue();
 			if(docId != null) {
 				Logger.debug(MultigroupService.class, "Saving slave doc: "+docId+" to group "+groupId);
+				//every group of master-slave mapping has its own syncId, so we need to get it for each slave doc
+				int syncId = -1;
 				if(docId < 0) {
 					masterDoc.setVirtualPath("");
 				} else {
 					masterDoc.setVirtualPath(docDB.getBasicDocDetails(docId, true).getVirtualPath());
+					//restore syncId for existing slave doc
+					syncId = DocMirroringServiceV9.getSyncId(docId);
 				}
+				masterDoc.setSyncId(syncId);
 
 				if (docIdOriginal == docId.intValue()) {
 					//keep virtual path for edited doc (slave)
@@ -138,8 +144,13 @@ public class MultigroupService {
 			}
 		}
 
+		//must be before DocDB.deleteDoc because DocDB.deleteDoc() will remove also the mapping
+		DocMirroringServiceV9.handleMultigroupMapping(editedDoc, toDelete, redirect, request);
+
 		// odstranime DocDetails pre zmazane slave mappingy
-		for(Integer docId : toDelete) { DocDB.deleteDoc(docId, request); }
+		for(Integer docId : toDelete) {
+			DocDB.deleteDoc(docId, request, false);
+		}
 
 		//ak sme nieco zmazali refreshneme DocDB
 		if(toDelete.isEmpty()==false)	{
@@ -157,6 +168,16 @@ public class MultigroupService {
 	 * @param docId
 	 */
 	public void setDefaultDocId(int groupId, int docId) {
+		setDefaultDocId(groupId, docId, false);
+	}
+
+	/**
+	 * Skontroluje a nastavi default docid adresara (ak je neplatne alebo nenastavene)
+	 * @param groupId
+	 * @param docId
+	 * @param addGroupSchedulerRecord - true, ak chceme pri zmene default docu pridat zaznam do GroupSchedulerDto
+	 */
+	public void setDefaultDocId(int groupId, int docId, boolean addGroupSchedulerRecord) {
 		//ak je to prva stranka v adresari a adresar nema defaultDoc, nastav
 		GroupDetails group = groupsDB.getGroup(groupId);
 		if (group != null) {
@@ -164,7 +185,7 @@ public class MultigroupService {
 
 			if ((group.getDefaultDocId() < 1 && group.getNavbar().indexOf("<a") == -1) || doc == null) {
 				group.setDefaultDocId(docId);
-				groupsDB.setGroup(group);
+				groupsDB.setGroup(group, true, addGroupSchedulerRecord);
 			}
 		}
 	}

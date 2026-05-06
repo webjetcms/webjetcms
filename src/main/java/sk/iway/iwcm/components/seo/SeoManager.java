@@ -91,7 +91,8 @@ public class SeoManager
 			}
 			catch (Exception ex)
 			{
-				sk.iway.iwcm.Logger.error(ex);
+				//on clustered MariaDB (Galera) concurrent UPDATE of the same bot row from multiple nodes can cause certification conflict / deadlock, losing one visit count is acceptable
+				Logger.debug(SeoManager.class, "addSearchEngineVisit failed for " + browserName + " (will count on next visit): " + ex.getMessage());
 			}
 			finally
 			{
