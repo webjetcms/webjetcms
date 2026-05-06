@@ -1,0 +1,68 @@
+extends ../../partials/layout
+
+block content
+
+    script
+        include embedding-logic.js
+
+    script.
+        var embeddingChunksDataTable;
+
+        var url = "/admin/rest/settings/embedding-chunks";
+        var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity')})];
+
+        WJ.headerTabs({
+            id: 'embedding-chunks',
+            tabs: getHeaderTabs()
+        });
+
+        WJ.breadcrumb({
+            id: 'embedding-chunks',
+            noBorderBottom: true,
+            tabs: [
+                { url: '#bonusFilter', title: '{filter}', active: false }
+            ]
+        });
+
+        document.querySelectorAll('#pills-embedding-chunks .nav-link').forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Wait a tick so the "active" class updates
+                setTimeout(() => {
+                    initPage();
+                }, 0);
+            });
+        });
+
+        window.domReady.add(function () {
+
+            embeddingChunksDataTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                serverSide: true,
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+            embeddingChunksDataTable.hideButtons(["create", "remove", "celledit", "import", "duplicate", "import"]);
+
+            var buttonCounter = 2;
+            embeddingChunksDataTable.button().add(buttonCounter++, getAddIndexButton());
+            embeddingChunksDataTable.button().add(buttonCounter++, getRemoveIndexButton());
+
+            initPage();
+        });
+
+    style.
+        label[for=botFilterOut]::after {
+            content: "\ec9f" !important;
+            font-size: 18px !important;
+        }
+
+        table.datatableInit tbody tr.is-pending td {
+            color: #FABD00;
+        }
+
+        table.datatableInit tbody tr.is-error td {
+            color: #FF4B58;
+        }
+
+    table.datatableInit.table

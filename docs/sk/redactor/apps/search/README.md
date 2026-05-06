@@ -18,9 +18,30 @@ V nastaveniach možno nastaviť:
 
 Ak chcete vyhľadávať aj v súboroch, je potrebné [nastaviť indexovanie súborov](../../files/fbrowser/folder-settings/README.md#indexovanie) v časti Prieskumník a na danom priečinku so súbormi a spustiť prvotné indexovanie.
 
-### Nastavenie používania Lucene
+### Nastavenie typu vyhľadávania
 
-Štandardne sa používa vyhľadávanie pomocou databázového servera. Je možné aktivovať vyhľadávanie pomocou knižnice [Lucene](https://lucene.apache.org/), ktorá sa používa aj v ```Elastic Search``` ako vyhľadávací systém. Nastavte konf. premennú `luceneAsDefaultSearch` na hodnotu `true` a spustite prvotné indexovanie cez `/components/search/lucene_console.jsp`.
+Systém podporuje nasledujúce typy vyhľadávania:
+
+- **Databázové vyhľadávanie** – štandardný typ vyhľadávania pomocou databázového servera.
+  - Používa sa predvolene, ak nie je nastavený iný typ. Možno ho explicitne nastaviť konfiguračnou premennou `searchType` na hodnotu `db`.
+- **Lucene** – vyhľadávanie pomocou knižnice [Lucene](https://lucene.apache.org/), ktorá tvorí základ aj systému Elastic Search.
+  - Nastavte konfiguračnú premennú `luceneAsDefaultSearch` na hodnotu `true`, alebo premennú `searchType` na hodnotu `lucene`.
+  - Spustite prvotné indexovanie cez `/components/search/lucene_console.jsp`.
+- **Sémantické vyhľadávanie** – vyhľadávanie pomocou pgvector.
+  - Nastavte premennú `searchType` na hodnotu `semantic`, povoľte sémantické vyhľadávanie nastavením premennej `ragSemanticSearchEnabled` na `true`.
+  - Viac sa dočítate v časti [Sémantické vyhľadávanie](../semantic-search/README.md).
+
+!>**Upozornenie:** Konfiguračná premenná `luceneAsDefaultSearch` má vyššiu prioritu ako premenná `searchType`. Ak je teda `luceneAsDefaultSearch=true`, bude sa používať Lucene bez ohľadu na nastavenú hodnotu premennej `searchType`.
+
+### Porovnanie typov vyhľadávania
+
+| | Databázové (`db`) | Lucene | Sémantické (`semantic`) |
+|---|---|---|---|
+| Technológia | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` |
+| Zhoda | Kľúčové slová | Kľúčové slová + skloňovanie | Sémantický význam |
+| Výsledky bez zhody slov | Nie | Čiastočne | Áno |
+| Požiadavky | Primárna DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` |
+| Cena | Zadarmo | Zadarmo | OpenAI API (platené) |
 
 ## Zobrazenie aplikácie
 

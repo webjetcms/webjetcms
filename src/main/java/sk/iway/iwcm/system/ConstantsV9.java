@@ -53,7 +53,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -269,6 +269,14 @@ public class ConstantsV9 {
 		Constants.setString("videoClasses", "components.video_player.ratio-16x9:embed-responsive-16by9 ratio ratio-16x9,components.video_player.ratio-4x3:embed-responsive-4by3 ratio ratio-4x3,components.video_player.ratio-1x1:embed-responsive-1by1 ratio ratio-1x1,components.video_player.ratio-21x9:embed-responsive-21by9 ratio ratio-21x9,components.video_player.ratio-9x16:ratio ratio-9x16", Constants.MOD_EDITOR, "Čiarkou oddelený zoznam CSS tried pre obalenie videa (pomer strán). Formát: prekladový_kľúč:css_trieda alebo len css_trieda. Prvá položka je predvolená hodnota.");
 		Constants.setString("videoWrapperClass", "embed-responsive", Constants.MOD_EDITOR, "CSS trieda pre obaľovací element videa (embed-responsive pre Bootstrap).");
 		Constants.setString("videoItemClass", "embed-responsive-item", Constants.MOD_EDITOR, "CSS trieda pre vnútorný iframe element videa (embed-responsive-item pre Bootstrap).");
+
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí semantické vyhľadávanie cez RAG nad vektorovou databázou pgvector.");
+		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
+		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Názov embedding modelu použitého na generovanie vektorov pre RAG indexovanie a semantické vyhľadávanie.");
+		Constants.setInt("ragChunkSize", 500, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
+		Constants.setInt("ragChunkOverlap", 100, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+
+		Constants.setString("searchType", "db", Constants.MOD_CONFIG, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (semanticke vyhladavanie cez pgvector)");
 	}
 
 	/**

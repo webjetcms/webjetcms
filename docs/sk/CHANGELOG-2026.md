@@ -93,6 +93,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
   - Dátové tabuľky, editor (#58389-4).
 
+### Sémantické vyhľadávanie (RAG)
+
+- Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii `RAG` (Retrieval-Augmented Generation) s využitím vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje vyhľadávanie na základe sémantického významu dotazu, nie len zhody kľúčových slov (#58461).
+
 ### Iné menšie zmeny
 
 - Galéria - pridaná podpora priesvitnosti v `png/webp/gif` obrázkoch pri zmene ich veľkosti, ak sa nepoužíva [ImageMagick](redactor/apps/gallery/README.md#možné-konfiguračné-premenné) (#osk396).

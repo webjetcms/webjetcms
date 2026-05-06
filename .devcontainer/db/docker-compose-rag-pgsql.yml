@@ -1,0 +1,16 @@
+services:
+  postgres-rag:
+    image: pgvector/pgvector:pg18-trixie
+    container_name: webjetcms-rag-pgsql
+    environment:
+      POSTGRES_DB: "webjetcms_rag"
+      POSTGRES_USER: "webjetcms_rag"
+      POSTGRES_PASSWORD: "${WEBJET_DB_PASS}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "15433:5432"
+    volumes:
+      - webjetcms-rag-pgsqldata:/var/lib/postgresql
+
+volumes:
+  webjetcms-rag-pgsqldata:

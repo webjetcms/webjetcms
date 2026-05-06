@@ -155,7 +155,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.apphtmlbox",
     "sk.iway.iwcm.components.appinquirysimple",
     "sk.iway.iwcm.components.appmap",
-    "sk.iway.iwcm.components.apptestimonials"
+    "sk.iway.iwcm.components.apptestimonials",
+    "sk.iway.iwcm.rag"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
