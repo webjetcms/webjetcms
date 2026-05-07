@@ -445,47 +445,51 @@ public class AdminLogonController {
      */
     private static String verify2FaKey(HttpServletRequest request) {
         HttpSession session = request.getSession();
+        Prop prop = Prop.getInstance(request.getServletContext(), request);
         if (session.getAttribute("token")!=null)
 		{
+			//nemoze zadavat 2FA kod lebo sa zle predtym prihlasil - pouzivame rovnaku ochranu ako pri prihlasovani
+			if(LogonTools.isLoginBlocked(request))
+			{
+				Logger.debug(AdminLogonController.class, "2FA attempt TIME BLOCKED");
+				request.setAttribute("errors", prop.getText("logon.error.blocked"));
+				return TWOFA_PASSWORD_FORM;
+			}
+
 			//ocakava sa token
 			String generatedToken = (String)session.getAttribute("token");
+            int insertedCode = Tools.getIntValue(request.getParameter("token"), -1);
 
-			try{
+            GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
-				String insertedCodeString = request.getParameter("token");
-				int insertedCode = Integer.parseInt(insertedCodeString);
+            int generatedCode = gAuth.getTotpPassword(generatedToken);
 
-				GoogleAuthenticator gAuth = new GoogleAuthenticator();
+            Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
 
-				int generatedCode = gAuth.getTotpPassword(generatedToken);
+            if (insertedCode > 0 && insertedCode == generatedCode)
+            {
+                String token = (String)session.getAttribute("token");
+                session.removeAttribute("token");
+                Identity sessionUserAfterToken = (Identity)session.getAttribute("adminUser_waitingForToken");
+                session.removeAttribute("adminUser_waitingForToken");
+                if (sessionUserAfterToken!=null) {
+                    LogonTools.setUserToSession(session, sessionUserAfterToken);
 
-				Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
-
-				if (insertedCode == generatedCode)
-				{
-                    String token = (String)session.getAttribute("token");
-					session.removeAttribute("token");
-					Identity sessionUserAfterToken = (Identity)session.getAttribute("adminUser_waitingForToken");
-					session.removeAttribute("adminUser_waitingForToken");
-					if (sessionUserAfterToken!=null) {
-                        LogonTools.setUserToSession(session, sessionUserAfterToken);
-
-                        //set user code
-                        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
-                        if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
-                            new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
-                            sessionUserAfterToken.setMobileDevice(currentCode);
-                        }
+                    //set user code
+                    String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
+                    if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
+                        new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
+                        sessionUserAfterToken.setMobileDevice(currentCode);
                     }
+                }
 
-					return "redirect:/admin/v9/";
-				}
+                return "redirect:/admin/v9/";
+            }
 
-			}catch (NumberFormatException e){
-                //asi nebolo zadane cislo, cize kod je zly
-			}
-			//ak nie znova vrat logon
-			request.setAttribute("errors", "wrongCode");
+            //kod je nespravny, zaloguj neuspesny pokus
+            LogonTools.setLoginBlocked(request);
+			//znova vrat logon
+			request.setAttribute("errors", prop.getText("admin.logon.2fa.wrongCode"));
 			//wrongCode
 			return TWOFA_PASSWORD_FORM;
 		}

@@ -92,7 +92,7 @@
                         <iwcm:text key="user.form.errors"/>
                     </span>
                     <ul>
-                        <li><iwcm:text key="admin.logon.2fa.wrongCode"/></li>
+                        <li>${errors}</li>
                     </ul>
                 </div>
             </iwcm:present>

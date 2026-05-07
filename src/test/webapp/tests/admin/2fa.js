@@ -146,9 +146,16 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
 
     //
     I.say('Prihlasujem sa s nesprávnym kódom');
-    I.fillField('token', 1);
+    I.fillField('token', "1");
     I.clickCss('#login-submit');
     I.seeElement(locate('li').withText('Zadaný kód nie je správny.'));
+
+    I.say('Prihlasujem sa s nesprávnym kódom');
+    I.fillField('token', "5");
+    I.clickCss('#login-submit');
+    I.seeElement(locate('li').withText('Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované'));
+
+    I.wait(10);
 
     //
     I.say('Prihlasujem so správnym kódom');
@@ -157,11 +164,15 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
 
     //
     I.say("Maybe OTP is timeouted, so we need to put it again");
-    const errorShown = await I.grabNumberOfVisibleElements("#login div.alert-danger");
-    if (errorShown > 0) {
-      I.say("Re-entering OTP");
+    let errorShown = await I.grabNumberOfVisibleElements("#login div.alert-danger");
+    let failsafeCounter = 0;
+    while (errorShown > 0 && failsafeCounter < 5) {
+      I.say("Re-entering OTP, attempt " + (failsafeCounter + 1));
+      I.wait(10);
       I.fillField('token', getOTP(secretValue));
       I.clickCss('#login-submit');
+      failsafeCounter++;
+      errorShown = await I.grabNumberOfVisibleElements("#login div.alert-danger");
     }
 
     I.dontSee("Zadaný kód nie je správny.");
@@ -169,6 +180,15 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
 
     I.logout();
 });
+
+function deleteCacheObjects(I) {
+  I.relogin("admin");
+  I.amOnPage("/admin/v9/settings/cache-objects/");
+  I.clickCss("button.btn-delete-all");
+  I.waitForElement("div.toast-message");
+  I.clickCss("div.toast-message button.btn-primary");
+  I.closeOtherTabs();
+}
 
 Scenario("Delete 2fa test user", ({ I, DT, DTE }) => {
     //
@@ -184,6 +204,9 @@ Scenario("Delete 2fa test user", ({ I, DT, DTE }) => {
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
     DTE.waitForModalClose('datatableInit_modal');
+
+    //delete cache keys
+    deleteCacheObjects(I);
 
     I.logout();
 });

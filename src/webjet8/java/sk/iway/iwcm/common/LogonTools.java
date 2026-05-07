@@ -1086,6 +1086,7 @@ public class LogonTools {
         {
             Calendar cal2=Calendar.getInstance();
             cal2.add(Calendar.SECOND, Constants.getInt("logonBlockedDelay"));
+            Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" do " + Tools.formatDateTimeSeconds(cal2.getTime()));
             cache.setObjectSeconds(LOGON_BLOCKED_IP_CACHE_KEY, cal2, Constants.getInt("logonBlockedDelay")+10, false);
         }
 
@@ -1101,7 +1102,7 @@ public class LogonTools {
             {
                 Calendar cal3 = Calendar.getInstance();
                 cal3.add(Calendar.SECOND, Constants.getInt("logonLoginBlockedDelay"));
-                Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" na " + Constants.getInt("logonLoginBlockedDelay")+" sekund");
+                Logger.debug(LogonTools.class, "Blokujem ip "+ipAddress+" na " + Constants.getInt("logonLoginBlockedDelay")+" sekund do " + Tools.formatDateTimeSeconds(cal3.getTime()));
                 cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY, cal3, Constants.getInt("logonLoginBlockedDelay"), false);
             }
         }
