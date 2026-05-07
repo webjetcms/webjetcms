@@ -32,6 +32,9 @@
             }
         }
     }
+    > .dropdown-toggle.bs-placeholder {
+        color: #666 !important;
+    }
 }
 
 .dropdown-item:hover, .dropdown-item:focus {

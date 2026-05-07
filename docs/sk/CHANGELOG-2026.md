@@ -92,6 +92,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - Úvod / menu položky / hlavička (#58389-3).
   - Zlepšené kontrasty farieb v chybových správach a hláseniach (#58389-4).
   - Dátové tabuľky, editor (#58389-4).
+- Rozšírené a11y testy o nové scenáre pre správcu súborov, monitorovanie, štatistiky, nahrávanie súborov, správu používateľov a webové stránky. Metóda `a11y.check()` podporuje parameter `context` pre obmedzenie kontroly na konkrétnu časť stránky vrátane vnorených `iframe` elementov (#58389-5).
 
 ### Iné menšie zmeny
 

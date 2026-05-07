@@ -44,10 +44,10 @@ export function typeElfinder() {
                 volumes = "videos";
             }
 
-            var htmlCode = $('<div class="input-group">'+prependHtmlCode+'<input type="text" class="form-control"><button class="btn btn-outline-secondary" type="button" data-toggle="tooltip" title="'+WJ.translate('button.select')+'"><i class="ti ti-focus-2"></i></button></div>');
+            var htmlCode = $('<div class="input-group">'+prependHtmlCode+'<input type="text" class="form-control" id="'+conf.id+'"><button class="btn btn-outline-secondary" type="button" data-toggle="tooltip" title="'+WJ.translate('button.select')+'"><i class="ti ti-focus-2"></i></button></div>');
 
             conf._input = htmlCode.find("input.form-control");
-            if (typeof conf.attr != undefined && conf.attr != null) {
+            if (typeof conf.attr != "undefined" && conf.attr != null) {
                 $.each(conf.attr, function( key, value ) {
                     //console.log("Setting attr: key=", key, " value=", value);
                     if (key.indexOf("data-dt-field-dt-")!=-1) return;

@@ -82,7 +82,7 @@ function adminUploadInit(options) {
         chunkSize: 2000000,
         forceChunking: true,
 
-        dictDefaultMessage: '<i class="ti ti-upload"></i>',
+        dictDefaultMessage: '<i class="ti ti-upload" aria-hidden="true"></i>',
         headers: {
             'X-CSRF-TOKEN': window.csrfToken,
         },
@@ -97,6 +97,13 @@ function adminUploadInit(options) {
         */
 
         init: function () {
+            // Set aria-label on the generated dz-button
+            var dzButton = this.element.querySelector('.dz-button');
+            if (dzButton) {
+                var label = WJ.translate("datatables.upload.uploadFile.js");
+                dzButton.setAttribute('aria-label', label);
+            }
+
             $(document).on('initAddedFileFromImageOutside', (e, file) => {
                 fromImageEditor = true;
                 this.emit('addedfile', file);

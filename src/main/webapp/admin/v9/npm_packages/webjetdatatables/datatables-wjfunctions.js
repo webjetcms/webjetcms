@@ -1305,3 +1305,18 @@ export function iframeHideParentFooterOnEditorOpen(TABLE) {
         });
     }
 }
+
+/**
+ * a11y: when no value is selected (filter-option-inner-inner shows only &nbsp;),
+ * set aria-label to the "select" translation so screen readers announce the purpose.
+ * When a value is selected, remove aria-label so the button title (selected text) is used.
+ */
+export function applySelectAriaLabel(sel) {
+    const $btn = $(sel).closest('.bootstrap-select').find('> button');
+    const innerText = $btn.find('.filter-option-inner-inner').text();
+    if (innerText === '\xa0' || innerText === '') {
+        $btn.attr('aria-label', WJ.translate('button.select'));
+    } else {
+        $btn.removeAttr('aria-label');
+    }
+}

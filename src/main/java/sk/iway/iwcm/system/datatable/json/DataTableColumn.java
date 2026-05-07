@@ -56,6 +56,7 @@ public class DataTableColumn {
     private String renderFormatLinkTemplate;
     private String renderFormatPrefix;
     private String renderFunction;
+    private String renderFormatAriaLabel;
 
     private DataTableColumnEditor editor;
     private Boolean visible;
@@ -217,6 +218,9 @@ public class DataTableColumn {
 
         if (Tools.isNotEmpty(annotation.renderFormatLinkTemplate())) {
             renderFormatLinkTemplate = annotation.renderFormatLinkTemplate();
+        }
+        if (Tools.isNotEmpty(annotation.renderFormatAriaLabel())) {
+            renderFormatAriaLabel = DataTableColumnsFactory.translate(annotation.renderFormatAriaLabel());
         }
 
         if (Tools.isNotEmpty(annotation.renderFormatPrefix())) {
