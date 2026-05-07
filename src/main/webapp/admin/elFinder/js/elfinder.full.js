@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-05-06)
+ * Version 2.1.65 (2026-05-07)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
