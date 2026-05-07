@@ -1006,7 +1006,7 @@ const WJ = (() => {
         //default is hidden, show it
         breadcrumb.show();
 
-        let ul = $(`<ul class="nav" id="pills-${config.id}" data-wj-breadcrumb="true"></ul>`);
+        let ul = $(`<ul class="nav" id="pills-${config.id}"></ul>`);
 
         if (typeof config.backlink != "undefined" && config.backlink != null) {
             let backlink = $(`<li class="nav-item"><a class="nav-link back-link" href="${config.backlink.url}"><i class="ti ti-chevron-left"></i>${config.backlink.title}</a></li>`);
