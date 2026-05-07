@@ -18,7 +18,7 @@ mixin jstreesettings(type="webpages")
                                 if block
                                     block
                                 .form-group.row.DTE_Field_Type_select.DTE_Field_treeWidth
-                                    label.col-sm-4.col-form-label [[\#{webpages.jstree.treeWidth}]]
+                                    label.col-sm-4.col-form-label(for="jstree-settings-treeWidth") [[\#{webpages.jstree.treeWidth}]]
                                     .col-sm-7
                                         .DTE_Field_InputControl
                                             select#jstree-settings-treeWidth.form-control.form-select.col-12
@@ -31,7 +31,7 @@ mixin jstreesettings(type="webpages")
                                     .col-sm-7.offset-sm-4
                                         hr
                                 .form-group.row.DTE_Field_Type_select.DTE_Field_treeSortType
-                                    label.col-sm-4.col-form-label [[\#{webpages.jstree.treeSortBy}]]
+                                    label.col-sm-4.col-form-label(for="jstree-settings-treeSortType") [[\#{webpages.jstree.treeSortBy}]]
                                     .col-sm-7
                                         .DTE_Field_InputControl
                                             select#jstree-settings-treeSortType.form-control.form-select.col-12

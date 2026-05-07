@@ -1,9 +1,9 @@
 <template>
     <section id="custom-modal-id" :class="['custom-modal', {'open-custom-modal': readyToOpen}]">
         <div class="custom-modal-wrapper">
-            <a class="close-custom-modal" href="javascript:;" @click.prevent="hideCustomModal">
-                <i class="ti ti-circle-x"></i>
-            </a>
+            <button class="btn btn-outline-secondary close-custom-modal" href="javascript:;" @click.prevent="hideCustomModal" :title="closeTitle" :aria-label="closeTitle" data-toggle="tooltip">
+                <i class="ti ti-x" aria-hidden="true"></i>
+            </button>
             <div class="jsTree-wrapper">
                 <div id="jsTree" data-rest-url="/admin/rest/groups/tree?click=aaa" data-rest-param-name="id" :data-group-id="groupId" data-rest-root="-1"></div>
             </div>
@@ -17,7 +17,8 @@
         props: ['groupId', 'readyToOpen', 'click', 'attr'],
         data() {
             return {
-                jsTree: null
+                jsTree: null,
+                closeTitle: window.WJ.translate("datatables.modal.close.js")
             }
         },
 
@@ -57,6 +58,7 @@
 
             //console.log("mounted 2", $("#jsTree").attr("data-rest-url"));
             this.jsTree = new WebjetJsTree('jsTree');
+            $(this.$el).find('[data-toggle="tooltip"]').tooltip();
         },
     }
 </script>
@@ -68,7 +70,7 @@
         height: 400px;
         margin: 0 auto;
         background-color: #fff;
-        border: 1px solid #1f2022;
+        border: 1px solid var(--wj-nice-black);
         position: relative;
         border-radius: 5px;
 
@@ -80,14 +82,23 @@
 
             .close-custom-modal {
                 position: absolute;
-                right: -10px;
-                top: 0px;
-                font-size: 19px;
-                color: #868EA5;
+                right: 0px;
+                top: 8px;
+                font-size: 6px;
+                line-height: 9px;
+                color: var(--wj-nice-gray-300);
+                padding: 5px 6px;
+
+                i {
+                    vertical-align: middle !important;
+                    font-size: 18px !important;
+                    line-height: 18px;
+                    color: var(--wj-secondary);
+                }
 
                 &:hover {
                     i {
-                        color:#1f2022;
+                        color:white;
                     }
                 }
             }
