@@ -1,7 +1,7 @@
 <template>
     <section id="custom-modal-id" :class="['custom-modal', {'open-custom-modal': readyToOpen}]">
         <div class="custom-modal-wrapper">
-            <button class="btn btn-outline-secondary close-custom-modal" href="javascript:;" @click.prevent="hideCustomModal" :title="closeTitle" :aria-label="closeTitle" data-toggle="tooltip">
+            <button class="btn btn-outline-secondary close-custom-modal" @click.prevent="hideCustomModal" :title="closeTitle" :aria-label="closeTitle" data-toggle="tooltip">
                 <i class="ti ti-x" aria-hidden="true"></i>
             </button>
             <div class="jsTree-wrapper">
