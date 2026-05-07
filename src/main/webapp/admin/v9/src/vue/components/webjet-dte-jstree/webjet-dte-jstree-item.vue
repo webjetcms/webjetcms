@@ -36,16 +36,18 @@
             }
         },
         mounted() {
-            const label = document.querySelector(`label[for="${this.idKey}"]`);
-            if (label) this.labelText = label.textContent.trim();
-            else {
-                //find label in parent DIV, use title
-                const parentDiv = document.getElementById(this.idKey)?.closest('div');
-                if (parentDiv) {
-                    const title = parentDiv.getAttribute('aria-label') || parentDiv.getAttribute('title');
-                    if (title) this.labelText = title.trim();
+            setTimeout(() => {
+                const label = document.querySelector(`label[for="${this.idKey}"]`);
+                if (label) this.labelText = label.textContent.trim();
+                else {
+                    //find label in parent DIV, use title
+                    const parentDiv = document.getElementById(this.idKey)?.closest('div');
+                    if (parentDiv) {
+                        const title = parentDiv.getAttribute('aria-label') || parentDiv.getAttribute('title');
+                        if (title) this.labelText = title.trim();
+                    }
                 }
-            }
+            }, 200);
         },
         watch: {
             readyToOpen(oldVal, newVal) {
