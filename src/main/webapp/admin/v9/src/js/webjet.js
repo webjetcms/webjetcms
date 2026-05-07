@@ -1006,7 +1006,7 @@ const WJ = (() => {
         //default is hidden, show it
         breadcrumb.show();
 
-        let ul = $(`<ul class="nav" id="pills-${config.id}"></ul>`);
+        let ul = $(`<ul class="nav" id="pills-${config.id}" data-wj-breadcrumb="true"></ul>`);
 
         if (typeof config.backlink != "undefined" && config.backlink != null) {
             let backlink = $(`<li class="nav-item"><a class="nav-link back-link" href="${config.backlink.url}"><i class="ti ti-chevron-left"></i>${config.backlink.title}</a></li>`);
@@ -1056,6 +1056,11 @@ const WJ = (() => {
             }
 
             ul.append(li);
+
+            if (li.html().indexOf("role=\"tab\"")>-1) {
+                ul.attr("role", "tablist");
+            }
+
             counter++;
         });
 
@@ -1086,7 +1091,7 @@ const WJ = (() => {
         //if it is URL remove chars as /,?,= and replace with dash for id
         idNoHash = idNoHash.replaceAll("/", "-").replaceAll("?", "-").replaceAll("=", "-");
 
-        let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
+        let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab" role="tab">${data.title}</a>`);
         if (urlPrefix) anchor.data("sub-url", data.url);
         if (data.url.indexOf("javascript:")==0) {
             anchor.attr("href", data.url);

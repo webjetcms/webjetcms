@@ -157,6 +157,7 @@ Voliteľné polia:
 - ```renderFormatLinkTemplate``` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - ```renderFormatPrefix``` - https://datatables.net/reference/option/columns.renderFormatPrefix
 - `renderFunction` - meno funkcie v JavaScript, ktorá sa použije pre vlastné vykreslenie hodnoty stĺpca. Viac na [stránke DataTables](https://datatables.net/reference/option/columns.render).
+- `renderFormatAriaLabel` - hodnota atribútu `aria-label` pre vygenerovaný odkaz cez `renderFormat`, potrebné použiť ak sa zobrazuje len ikona a nie text.
 - `sortAfter` - meno poľa za ktoré sa pridá toto pole v poradí
 - ```editor``` - objekt ```DataTableColumnEditor```
 - ```hidden``` - pole sa nezobrazí v datatabuľke a používateľ si ho na rozdiel od ```visible``` nemôže zobraziť, pole môže byť použité v editore

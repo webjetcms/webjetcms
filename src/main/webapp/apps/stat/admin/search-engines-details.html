@@ -82,9 +82,9 @@
         <div class="col-auto dt-extfilter-title-url"></div>
         <div style="width: 450px;" class="col-auto">
             <div class="input-group">
-                <input type="text" id="searchQuery" class="form-control form-control-sm filter-input dt-search-query"/>
-                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-query" type="submit">
-                    <i class="ti ti-search"></i>
+                <input type="text" id="searchQuery" class="form-control form-control-sm filter-input dt-search-query" data-th-aria-label="#{searchall.text}"/>
+                <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-query" type="submit" data-th-aria-label="#{datatables.defaults.search.js}" data-th-title="#{datatables.defaults.search.js}" data-toggle="tooltip">
+                    <i class="ti ti-search" aria-hidden="true"></i>
                 </button>
             </div>
         </div>

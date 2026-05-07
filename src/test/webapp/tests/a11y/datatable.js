@@ -64,6 +64,12 @@ Scenario("p27: input with buttons", async ({ I, DTE, a11y }) => {
 Scenario("p27: input with buttons-top-filter", async ({ I, a11y }) => {
     I.amOnPage("/apps/contact/admin/");
     await a11y.check();
+
+    I.amOnPage("/admin/v9/search/index/");
+    await a11y.check();
+
+    I.amOnPage("/apps/form/admin/detail/?formName=Form-with-redirection-to-Spring-App");
+    await a11y.check();
 });
 
 Scenario("p28: select", async ({ I, DTE, a11y }) => {
