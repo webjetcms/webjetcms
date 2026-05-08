@@ -6,6 +6,7 @@ import static sk.iway.iwcm.Tools.isInteger;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,6 +37,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.metadata.MetadataCleanerPdf;
 
 public class PdfTools {
 
@@ -373,6 +375,11 @@ public class PdfTools {
 
          //nasledujuca funkcia je deprecated, a este k tomu zbytocna, pretoze je defaultne true
          //pd4ml.useAdobeFontMetrics(true);
+
+         //clean metadata set by PD4ML in generated PDF files
+         boolean cleanPdfMetadata = Constants.getString("metadataCleanFiles", "").contains("pdf-gen");
+         OutputStream pdfOutput = cleanPdfMetadata ? new ByteArrayOutputStream() : output;
+
          if (request!=null)
          {
              //zisti, ci nemame renderovat na obrazky
@@ -387,20 +394,21 @@ public class PdfTools {
              {
                  if (base == null)
                  {
-                    pd4ml.render(new StringReader(data),  output);
+                    pd4ml.render(new StringReader(data),  pdfOutput);
                  }
                  else if ("true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM)) && "true".equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM+"No"))==false)
                  {
-                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());
+                     pd4ml.render(new StringReader(data),  pdfOutput, base, SetCharacterEncodingFilter.getEncoding());
                  }
                  else
                  {
                      //pd4ml.render(new StringReader(data),  output, new URL(Tools.getBaseHrefLoopback(request)), SetCharacterEncodingFilter.encoding);
-                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());
+                     pd4ml.render(new StringReader(data),  pdfOutput, base, SetCharacterEncodingFilter.getEncoding());
                  }
              }
              else
              {
+                cleanPdfMetadata = false;
                  if(request.getAttribute("SetCharacterEncodingFilter") != null && (Boolean)request.getAttribute("SetCharacterEncodingFilter"))
                      pd4ml.overrideDocumentEncoding(SetCharacterEncodingFilter.getEncoding());
 
@@ -426,7 +434,12 @@ public class PdfTools {
          }
          else
          {
-             pd4ml.render(new StringReader(data), output);
+             pd4ml.render(new StringReader(data), pdfOutput);
+         }
+
+         if (cleanPdfMetadata) {
+            //clean metadata and write to output
+            MetadataCleanerPdf.removeMetadata((ByteArrayOutputStream) pdfOutput, output);
          }
 
         revertOriginalJavaVersion();
