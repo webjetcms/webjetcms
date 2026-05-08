@@ -54,7 +54,7 @@ public class ContextFilter implements Filter
 		boolean debug = Constants.getBoolean("contextPathDebug");
 
 		String path = null;
-		try
+		//try
 		{
 			HttpServletRequest req = (HttpServletRequest) servletRequest;
 			//req.getSession().setAttribute("websphere", "1");
@@ -116,11 +116,12 @@ public class ContextFilter implements Filter
 				chain.doFilter(servletRequest, servletResponse);
 			}
 		}
-		catch (Exception e)
+		/*catch (Exception e)
 		{
+			//DO NOT CATCH EXCEPTIONS BECAUSE IT WILL NOT POPULATE TO /500.jsp PAGE
 			Logger.println(ContextFilter.class, "CHYBA URL:"+path);
 			sk.iway.iwcm.Logger.error(e);
-		}
+		}*/
 	}
 
 	/**
