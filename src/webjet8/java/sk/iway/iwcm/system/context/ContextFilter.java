@@ -54,74 +54,66 @@ public class ContextFilter implements Filter
 		boolean debug = Constants.getBoolean("contextPathDebug");
 
 		String path = null;
-		//try
-		{
-			HttpServletRequest req = (HttpServletRequest) servletRequest;
-			//req.getSession().setAttribute("websphere", "1");
+		HttpServletRequest req = (HttpServletRequest) servletRequest;
+		//req.getSession().setAttribute("websphere", "1");
 
-			String contextPathAdmin = Constants.getString("contextPathAdmin");
-			if (isRunning(req)==false && Tools.isEmpty(contextPathAdmin))
+		String contextPathAdmin = Constants.getString("contextPathAdmin");
+		if (isRunning(req)==false && Tools.isEmpty(contextPathAdmin))
+		{
+			chain.doFilter(servletRequest, servletResponse);
+			return;
+		}
+
+		HttpServletResponse res = (HttpServletResponse) servletResponse;
+		path = req.getRequestURI();
+
+		//pred bypass NESMIE byt citany ziaden parameter!!!
+		if ("true".equals(servletRequest.getAttribute("PathFilter.bypass")) || path.indexOf("/mp4streaminghttp/")!=-1 || path.indexOf("/flvstreaminghttp/")!=-1)
+		{
+			//request ziadno nemodifikujeme
+			try
 			{
 				chain.doFilter(servletRequest, servletResponse);
-				return;
 			}
-
-			HttpServletResponse res = (HttpServletResponse) servletResponse;
-			path = req.getRequestURI();
-
-			//pred bypass NESMIE byt citany ziaden parameter!!!
-			if ("true".equals(servletRequest.getAttribute("PathFilter.bypass")) || path.indexOf("/mp4streaminghttp/")!=-1 || path.indexOf("/flvstreaminghttp/")!=-1)
+			catch (SocketException se)
 			{
-				//request ziadno nemodifikujeme
-				try
-				{
-					chain.doFilter(servletRequest, servletResponse);
-				}
-				catch (SocketException se)
-				{
-					//toto neriesime
-				}
-				return;
+				//toto neriesime
 			}
+			return;
+		}
 
-			if (path.endsWith("/") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".jsp") || path.endsWith(".do") || path.endsWith(".html") || path.endsWith(".action") || path.endsWith(".aspx") || path.endsWith(".asp") || path.endsWith(".php"))
+		if (path.endsWith("/") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".jsp") || path.endsWith(".do") || path.endsWith(".html") || path.endsWith(".action") || path.endsWith(".aspx") || path.endsWith(".asp") || path.endsWith(".php"))
+		{
+			ContextResponseWrapper wrapper = new ContextResponseWrapper(res,req);
+			if (debug) Logger.debug(ContextFilter.class, "Changing URL's in path:"+path+" ORIG SESSION ID="+req.getSession().getId());
+
+			if (isRunning(req))
 			{
-				ContextResponseWrapper wrapper = new ContextResponseWrapper(res,req);
-				if (debug) Logger.debug(ContextFilter.class, "Changing URL's in path:"+path+" ORIG SESSION ID="+req.getSession().getId());
+				//if (debug) Logger.debug(ContextFilter.class, "Creating request wrapper, session="+req.getSession().getId()+" path="+path);
 
-				if (isRunning(req))
-				{
-					//if (debug) Logger.debug(ContextFilter.class, "Creating request wrapper, session="+req.getSession().getId()+" path="+path);
+				//bezime na nejakom kontexte, musime ho pridat
+				ContextRequestWrapper contextRequest = new ContextRequestWrapper(req);
 
-					//bezime na nejakom kontexte, musime ho pridat
-					ContextRequestWrapper contextRequest = new ContextRequestWrapper(req);
+				//if (debug) Logger.debug(ContextFilter.class, "docid="+contextRequest.getParameter("docid")+" req1="+ ((HttpServletRequest)contextRequest).getParameter("docid")+" req2="+((ServletRequest)contextRequest).getParameter("docid"));
 
-					//if (debug) Logger.debug(ContextFilter.class, "docid="+contextRequest.getParameter("docid")+" req1="+ ((HttpServletRequest)contextRequest).getParameter("docid")+" req2="+((ServletRequest)contextRequest).getParameter("docid"));
+				chain.doFilter(contextRequest, wrapper);
 
-					chain.doFilter(contextRequest, wrapper);
-
-					doFilterAddContextPathImpl(contextRequest, res, path, wrapper, debug);
-				}
-				else
-				{
-					//sme ROOT kontext, ale admin cast bezi na nejakom kontexte, musime ho odstranit z URL adries
-					chain.doFilter(req, wrapper);
-
-					doFilterRemoveContextPathImpl(req, res, path, contextPathAdmin, wrapper, debug);
-				}
-
+				doFilterAddContextPathImpl(contextRequest, res, path, wrapper, debug);
 			}
 			else
 			{
-				chain.doFilter(servletRequest, servletResponse);
+				//sme ROOT kontext, ale admin cast bezi na nejakom kontexte, musime ho odstranit z URL adries
+				chain.doFilter(req, wrapper);
+
+				doFilterRemoveContextPathImpl(req, res, path, contextPathAdmin, wrapper, debug);
 			}
+
 		}
-		/*catch (Exception e)
+		else
 		{
-			//DO NOT CATCH EXCEPTIONS BECAUSE IT WILL NOT POPULATE TO /500.jsp PAGE
-			Logger.println(ContextFilter.class, "CHYBA URL:"+path);
-			sk.iway.iwcm.Logger.error(e);
-		}*/
+			chain.doFilter(servletRequest, servletResponse);
+		}
+		//DO NOT CATCH EXCEPTIONS here BECAUSE IT WILL NOT POPULATE TO /500.jsp PAGE (e.g. NPE in NULL password)
 	}
 
 	/**

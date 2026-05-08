@@ -264,7 +264,7 @@ public class AdminLogonController {
 
         if (Tools.isEmpty(userForm.getUsername()) || Tools.isEmpty(userForm.getPassword())) {
             Logger.error(this,"nebol zadany login nebo heslo");
-            model.addAttribute("errors", prop.getText("approveAction.err.badPass"));
+            model.addAttribute("errors", prop.getText("logon.err.wrongPass"));
             return LOGON_FORM;
         }
 

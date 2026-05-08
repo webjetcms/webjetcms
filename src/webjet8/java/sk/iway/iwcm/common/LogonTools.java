@@ -317,7 +317,7 @@ public class LogonTools {
 
         if (err.toString().trim().length()>1)
         {
-            errors.put("ERROR_KEY", prop.getText("approveAction.err.badPass"));
+            errors.put("ERROR_KEY", prop.getText("logon.err.wrongPass"));
             //aby sa vzdy zobrazil dialog poslat heslo
             request.setAttribute("logon.err.wrongPass", "true");
 
