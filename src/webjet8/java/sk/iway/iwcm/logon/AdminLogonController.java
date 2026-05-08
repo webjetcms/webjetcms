@@ -476,7 +476,7 @@ public class AdminLogonController {
 
         Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
 
-        if (insertedCode > 0 && insertedCode == generatedCode)
+        if (insertedCode != -1 && insertedCode == generatedCode)
         {
             String token = (String)session.getAttribute("token");
             session.removeAttribute("token");

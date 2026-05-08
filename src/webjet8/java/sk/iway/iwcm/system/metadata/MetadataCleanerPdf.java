@@ -38,8 +38,8 @@ public class MetadataCleanerPdf {
             info.setCreator(authorName);
             info.setProducer(authorName);
             document.save(output);
-        } catch (Exception e) {
-            Logger.error(MetadataCleanerPdf.class, e);
+        } catch (IOException e) {
+            Logger.error(MetadataCleanerPdf.class, "Failed to clean PDF metadata: " + e.getMessage(), e);
             // Fall back to writing the unmodified PDF
             pdfOut.writeTo(output);
         }
