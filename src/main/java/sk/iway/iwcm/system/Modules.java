@@ -218,6 +218,10 @@ public class Modules
 		modVersions.put("menu.fbrowser", "BPECDIM;c02"); //standardny modul Subory
 		modVersions.put("menu.templates", "BPECDIOM;c03"); //standardny modul Sablony
 
+		modVersions.put("make_zip_archive", "BPECI;194"); //funkcia na zipovanie suborov, pouziva sa v niektorych moduloch, napr. v exporte dat, ale moze byt pouzita aj v komponentoch, napr. v sitemap generatori
+		modVersions.put("replaceAll", "PEDI;195"); //funkcia na hromadne nahradzovanie textu v strankach, pouziva sa v niektorych moduloch, napr. v blogu, ale moze byt pouzita aj v komponentoch
+		modVersions.put("modRestart", "BPECDIM;196"); //funkcia na restart servera, pouziva sa v niektorych moduloch, napr. v konfiguracii, ale moze byt pouzita aj v komponentoch
+		modVersions.put("editor_unlimited_upload", "BPECDIMO;197"); //funkcia na neobmedzene nahravanie suborov v editore
 
 		//WebJET Active Directory Access - 24.900
 
@@ -257,6 +261,17 @@ public class Modules
 		catch (Exception ex1)
 		{
 			Logger.error(Modules.class, ex1);
+		}
+
+		String[] moduleDisableList = Constants.getArray("moduleDisableList");
+		if (moduleDisableList != null && moduleDisableList.length > 0) {
+			for (String modName : moduleDisableList) {
+				modName = modName.trim();
+				if (Tools.isNotEmpty(modName)) {
+					modVersions.put(modName, "X;");
+					Logger.info(Modules.class, "Module disabled by config: " + modName);
+				}
+			}
 		}
 
 		modules = new ArrayList<>();
@@ -596,7 +611,7 @@ public class Modules
 		sub = new ModuleInfo();
 		sub.setNameKey("components.user.perms.unlimitedUpload");
 		sub.setPath("javascript:void()");
-		sub.setWjVersions("BPECDIMO");
+		sub.setWjVersions(modVersions.get("editor_unlimited_upload"));
 		sub.setUserItem(true);
 		sub.setItemKey("editor_unlimited_upload");
 		sub.setDefaultDisabled(true);
@@ -813,7 +828,7 @@ public class Modules
 		sub.setLeftMenuNameKey("admin.conf_editor.restart");
 		sub.setNameKey("menu.config.rights.modRestart");
 		sub.setPath("javascript:confirmRestart()");
-		sub.setWjVersions("BPECDIM");
+		sub.setWjVersions(modVersions.get("modRestart"));
 		sub.setUserItem(true);
 		sub.setItemKey("modRestart");
 		sub.setDefaultDisabled(false);
@@ -826,7 +841,7 @@ public class Modules
 		sub.setLeftMenuNameKey("components.user.perms.replaceAll");
 		sub.setNameKey("components.user.perms.replaceAll");
 		sub.setPath("/admin/replaceall.jsp");
-		sub.setWjVersions("PEDI");
+		sub.setWjVersions(modVersions.get("replaceAll"));
 		sub.setUserItem(true);
 		sub.setItemKey("replaceAll");
 		sub.setDefaultDisabled(true);
@@ -839,7 +854,7 @@ public class Modules
 		sub.setLeftMenuNameKey("admin.make_zip_archive");
 		sub.setNameKey("menu.config.rights.make_zip_archive");
 		sub.setPath("javascript:openPopupDialogFromLeftMenu('/admin/archive.jsp');");
-		sub.setWjVersions("BPECI");
+		sub.setWjVersions(modVersions.get("make_zip_archive"));
 		sub.setUserItem(true);
 		sub.setItemKey("make_zip_archive");
 		sub.setDefaultDisabled(false);

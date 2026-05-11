@@ -168,7 +168,7 @@ public class CloudToolsForCore {
             if (rb != null)
             {
                 //pre niektore URL musime vratit default domain (napr. nastenku na welcome obrazovke), ak je to len multidomain
-                if(InitServlet.isTypeCloud()==false && Tools.isNotEmpty(Constants.getString("domainIdFixedUrls")) && rb.isUserAdmin())
+                if(InitServlet.isTypeCloud()==false && Tools.isNotEmpty(Constants.getString("domainIdFixedUrls")))
                 {
                     if(DocTools.isXssStrictUrlException(rb.getUrl(), "domainIdFixedUrls") ||
                             ("/admin/importxls.do".equalsIgnoreCase(rb.getUrl()) && "type=sk.iway.iwcm.users.ImportUsersXLS".equals(rb.getQueryString())))
@@ -282,7 +282,7 @@ public class CloudToolsForCore {
                         if (checkGroup != null && checkGroup.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName()))
                         {
                             if (filteredGroups == null) filteredGroups = new StringBuilder(String.valueOf(groupId));
-                            else filteredGroups.append(","+groupId);
+                            else filteredGroups.append(",").append(String.valueOf(groupId));
                         }
                     }
 
@@ -317,7 +317,12 @@ public class CloudToolsForCore {
 
                     for (String folder : folders)
                     {
-                        if (FileBrowserTools.hasForbiddenSymbol(folder)) continue;
+                        if (Tools.isEmpty(folder)) continue;
+
+                        // * is forbidden, we must remove it before check
+                        String folderNoAsterisk = folder;
+                        if (folderNoAsterisk.endsWith("/*")) folderNoAsterisk = folderNoAsterisk.substring(0, folderNoAsterisk.length() - 1);
+                        if (FileBrowserTools.hasForbiddenSymbol(folderNoAsterisk)) continue;
 
                         boolean addFolder = false;
                         if (folder.startsWith("/images/") || folder.startsWith("/files/")) addFolder = true;

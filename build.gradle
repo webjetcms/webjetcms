@@ -203,7 +203,7 @@ dependencies {
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
     //implementation("org.mcavallo:opencloud:0.3")
     implementation("com.pd4ml:pd4ml:4.0.21")
-    implementation("org.apache.pdfbox:pdfbox:3.0.1")
+    implementation("org.apache.pdfbox:pdfbox:3.0.7")
     implementation("org.apache.poi:poi-ooxml:5.4.1")
     implementation("org.apache.poi:poi-scratchpad:5.4.1")
     implementation("org.apache.poi:poi:5.4.1")
@@ -247,7 +247,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.16")
     implementation("org.slf4j:jcl-over-slf4j:2.0.16")
     implementation("org.slf4j:log4j-over-slf4j:2.0.16")
-    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.24.3")
+    implementation("org.apache.logging.log4j:log4j-to-slf4j:2.25.4")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
     implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
@@ -462,7 +462,6 @@ gretty {
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
-        '-Dwebjet.cloudStaticFilesDir=-',
         '-Dwebjet.passwordAdminExpiryDays=0',
         '-Dwebjet.loggerUseAnsiColors=true'
     ]

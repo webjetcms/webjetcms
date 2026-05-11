@@ -23,16 +23,22 @@ public class MetadataCleaner {
 	public static boolean removeMetadata(IwcmFile file)
 	{
 		String metadataRemoverCommand = Constants.getString("metadataRemoverCommand");
-		String metadataRemoverParams = Constants.getString("metadataRemoverParams");
-		String metadataRemoverExtensions = Constants.getString("metadataRemoverExtensions");
-
 		boolean result = false;
-
 
 		try
 		{
 			if (Tools.isNotEmpty(metadataRemoverCommand))
 			{
+				String metadataRemoverParams = Constants.getString("metadataRemoverParams");
+				String metadataRemoverExtensions = Constants.getString("metadataRemoverExtensions");
+				long metadataRemoveMinFileSize = Constants.getLong("metadataRemoveMinFileSize");
+
+				if (metadataRemoveMinFileSize > 0L && file.length() < metadataRemoveMinFileSize)
+				{
+					Logger.debug(MetadataCleaner.class, "File " + file.getPath() + " is smaller than " + metadataRemoveMinFileSize + " bytes, skipping metadata remover.");
+					return true;
+				}
+
 				File f = new File(metadataRemoverCommand);
 				if (f.exists() && f.canRead())
 				{
@@ -42,7 +48,7 @@ public class MetadataCleaner {
 					{
 						waitForGfs();
 
-						Logger.println(MetadataCleaner.class, "executing metadata remover: " + metadataRemoverCommand);
+						Logger.debug(MetadataCleaner.class, "executing metadata remover: " + metadataRemoverCommand);
 						Runtime rt = Runtime.getRuntime();
 						String[] params = Tools.getTokens(metadataRemoverParams, " ");
 						String[] args = new String[params.length+1];
@@ -80,14 +86,14 @@ public class MetadataCleaner {
 									cmdString += " " + args[i];
 							}
 						}
-						Logger.println(MetadataCleaner.class, "CMD:\n" + cmdString);
+						Logger.debug(MetadataCleaner.class, "CMD:\n" + cmdString);
 						Process proc = rt.exec(args);
 						InputStream stderr = proc.getErrorStream();
 						BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));
 						String line = null;
 						while ((line = br.readLine()) != null)
 						{
-							Logger.println(MetadataCleaner.class, line);
+							Logger.debug(MetadataCleaner.class, line);
 						}
 						br.close();
 						int exitValue = proc.waitFor();
@@ -101,7 +107,7 @@ public class MetadataCleaner {
 
 						if (exitValue==0)
 							result = true;
-						Logger.println(MetadataCleaner.class, "ExitValue: " + exitValue);
+						Logger.debug(MetadataCleaner.class, "ExitValue: " + exitValue);
 					}
 					else
 						result = true;

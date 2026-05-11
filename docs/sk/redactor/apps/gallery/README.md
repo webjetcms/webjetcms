@@ -156,5 +156,6 @@ Ak vám originál obrázok zaberá na disku veľa miesta, je možné nastaviť j
 - `metadataRemoverCommand` - ak je nastavené aktivuje sa odstraňovanie metadát z nahratých súborov, alebo sa použije `imageMagick` na zmenšenie veľkosti - nastavte na `/usr/bin/convert`.
 - `metadataRemoverParams` - parametre, pre zmenšenie obrázka cez `imageMagick` nastavte na `{filePath} -resize 1920x1080 {filePath}`. Rozmer nastavte podľa potreby.
 - `metadataRemoverExtensions` - prípony, pre ktoré sa použije, pre obrázky nastavte na `jpg,jpeg,png,gif`.
+- `metadataRemoveMinFileSize` - minimálna veľkosť súboru v bajtoch, pod ktorú sa odstraňovanie metadát preskočí. Ak je hodnota `0` alebo nie je nastavená, kontrola sa nevykoná a metadáta sa odstraňujú vždy.
 
 Vyžadovaný je nástroj `ImageMagick` na serveri.

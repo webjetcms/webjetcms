@@ -28,7 +28,10 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
@@ -70,7 +73,7 @@ public class AdminLogonController {
 
     private static final String LOGON_FORM = "/admin/skins/webjet8/logon-spring";
     private static final String CHANGE_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-change-password";
-    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
+    private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa"; //NOSONAR
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
     private final UserDetailsRepository userDetailsRepository;
@@ -156,7 +159,7 @@ public class AdminLogonController {
             this.determineLanguage(session, request, response);
             this.determineDefaultWebPagesDirectory(user, session);
             this.checkForNewHelp(session, user);
-            this.determineRootWebPageDirectory(session, user);
+            determineRootWebPageDirectory(session, user);
 
             if (Tools.isNotEmpty(changePasswordAuth)) {
                 // Delete admin log - so change password action will no longer be available
@@ -259,6 +262,12 @@ public class AdminLogonController {
         String twoFaRedirect = verify2FaKey(request);
         if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
 
+        if (Tools.isEmpty(userForm.getUsername()) || Tools.isEmpty(userForm.getPassword())) {
+            Logger.error(this,"nebol zadany login nebo heslo");
+            model.addAttribute("errors", prop.getText("logon.err.wrongPass"));
+            return LOGON_FORM;
+        }
+
         Identity user = new Identity();
         Map<String, String> errors = new Hashtable<>();
         LogonTools.logon(userForm.getUsername(), userForm.getPassword(), user, errors, request, prop);
@@ -293,12 +302,14 @@ public class AdminLogonController {
         this.determineLanguage(session, request, response);
         this.determineDefaultWebPagesDirectory(user, session);
         this.checkForNewHelp(session, user);
-        this.determineRootWebPageDirectory(session, user);
+        determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
         String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
         if (Tools.isNotEmpty(adminAfterLogonRedirect)) {
-            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") || (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/"))) {
+            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") ||
+                (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/")) ||
+                (adminAfterLogonRedirect.startsWith("/components/") && adminAfterLogonRedirect.contains("/admin"))) {
                 return "redirect:" + adminAfterLogonRedirect;
             }
         }
@@ -324,7 +335,7 @@ public class AdminLogonController {
     }
 
 
-    private void determineRootWebPageDirectory(HttpSession session, Identity user) {
+    public static void determineRootWebPageDirectory(HttpSession session, Identity user) {
         if (Tools.isNotEmpty(user.getEditableGroups())) {
             //prestav v session default host na prvy z editable groups
             int groupId = getUserFirstEditableGroup(user);
@@ -404,12 +415,31 @@ public class AdminLogonController {
      */
     private static void setSessionGroup(int groupId, HttpSession session)
     {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        GroupDetails root = groupsDB.getGroup(groupId);
+        if (InitServlet.isTypeCloud()) {
+            //for multiweb verify domain match
+            GroupDetails domainGroup = groupsDB.getGroup(CloudToolsForCore.getDomainId());
+            if (domainGroup == null) {
+                Logger.error(AdminLogonController.class, "Domain group not found for domain id: " + CloudToolsForCore.getDomainId());
+                return;
+            }
+            if (root == null || root.getDomainName().equals(domainGroup.getDomainName()) == false) {
+                root = domainGroup;
+                groupId = domainGroup.getGroupId();
+            }
+        }
+
         session.setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
-        GroupDetails root = GroupsDB.getInstance().getGroup(groupId);
         if (root != null && Tools.isNotEmpty(root.getDomainName()))
         {
             session.setAttribute("preview.editorDomainName", root.getDomainName());
+
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            if (rb != null) {
+                rb.setDomain(root.getDomainName());
+            }
         }
     }
 
@@ -421,51 +451,58 @@ public class AdminLogonController {
      */
     private static String verify2FaKey(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        if (session.getAttribute("token")!=null)
+        //ocakava sa token
+        String generatedToken = (String)session.getAttribute("token");
+        if (generatedToken == null)
 		{
-			//ocakava sa token
-			String generatedToken = (String)session.getAttribute("token");
+            //return null to continue with normal logon process (token is not present)
+            return null;
+        }
 
-			try{
+        Prop prop = Prop.getInstance(request.getServletContext(), request);
 
-				String insertedCodeString = request.getParameter("token");
-				int insertedCode = Integer.parseInt(insertedCodeString);
+        //nemoze zadavat 2FA kod lebo sa zle predtym prihlasil - pouzivame rovnaku ochranu ako pri prihlasovani
+        if(LogonTools.isLoginBlocked(request))
+        {
+            Logger.debug(AdminLogonController.class, "2FA attempt TIME BLOCKED");
+            request.setAttribute("errors", prop.getText("logon.error.blocked"));
+            return TWOFA_PASSWORD_FORM;
+        }
 
-				GoogleAuthenticator gAuth = new GoogleAuthenticator();
+        int insertedCode = Tools.getIntValue(request.getParameter("token"), -1);
 
-				int generatedCode = gAuth.getTotpPassword(generatedToken);
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
-				Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
+        int generatedCode = gAuth.getTotpPassword(generatedToken);
 
-				if (insertedCode == generatedCode)
-				{
-                    String token = (String)session.getAttribute("token");
-					session.removeAttribute("token");
-					Identity sessionUserAfterToken = (Identity)session.getAttribute("adminUser_waitingForToken");
-					session.removeAttribute("adminUser_waitingForToken");
-					if (sessionUserAfterToken!=null) {
-                        LogonTools.setUserToSession(session, sessionUserAfterToken);
+        Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
 
-                        //set user code
-                        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
-                        if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
-                            new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
-                            sessionUserAfterToken.setMobileDevice(currentCode);
-                        }
-                    }
+        if (insertedCode != -1 && insertedCode == generatedCode)
+        {
+            String token = (String)session.getAttribute("token");
+            session.removeAttribute("token");
+            Identity sessionUserAfterToken = (Identity)session.getAttribute("adminUser_waitingForToken");
+            session.removeAttribute("adminUser_waitingForToken");
+            if (sessionUserAfterToken!=null) {
+                LogonTools.setUserToSession(session, sessionUserAfterToken);
 
-					return "redirect:/admin/v9/";
-				}
+                //set user code
+                String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
+                if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
+                    new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
+                    sessionUserAfterToken.setMobileDevice(currentCode);
+                }
+            }
 
-			}catch (NumberFormatException e){
-                //asi nebolo zadane cislo, cize kod je zly
-			}
-			//ak nie znova vrat logon
-			request.setAttribute("errors", "wrongCode");
-			//wrongCode
-			return TWOFA_PASSWORD_FORM;
-		}
-        return null;
+            return "redirect:/admin/v9/";
+        }
+
+        //kod je nespravny, zaloguj neuspesny pokus
+        LogonTools.setLoginBlocked(request);
+        //znova vrat logon
+        request.setAttribute("errors", prop.getText("admin.logon.2fa.wrongCode"));
+        //wrongCode
+        return TWOFA_PASSWORD_FORM;
     }
 
     /**

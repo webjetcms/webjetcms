@@ -556,7 +556,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="all")
     {
-        var url = '/admin/elFinder/dialog.jsp';
+        var url = '/admin/v9/files/dialog/';
 
         if (form != null && elementName != null) {
             url = url + "?form=" + form;
@@ -616,9 +616,14 @@ if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
 </div>
 <div id="inlineEditorToolbarTopPlaceHolder"></div>
 <div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjapptemp="<%=doc.getTempId()%>" data-wjappfield="doc_data">
-    <% if ("true".equals(request.getParameter("inlineEditingNewPage"))) { %>
-        <p><iwcm:text key='editor.newDocumentName'/></p>
     <%
+    if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
+        String newPageDocData = (String)request.getAttribute("doc_data_newpage");
+        if (Tools.isNotEmpty(newPageDocData)) {
+            out.println(newPageDocData);
+        } else {
+            %><p><iwcm:text key='editor.newDocumentName'/></p><%
+        }
     } else {
         out.println(doc.getData());
     }

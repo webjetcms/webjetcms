@@ -85,6 +85,9 @@
     div.DTE_Action_Edit h5.modal-title, div.DTE_Action_Create h5.modal-title {
         display: none;
     }
+    &.DTE_nested_modal.show .close {
+        top: 14px;
+    }
     .cke_top {
         overflow: scroll;
     }

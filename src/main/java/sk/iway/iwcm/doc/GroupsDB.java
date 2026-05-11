@@ -4207,8 +4207,9 @@ public class GroupsDB extends DB
 		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
 		String trashDirName = propSystem.getText("config.trash_dir");
 
+		//contains because in multiweb it is in /domain.com/System/Trash folder
 		boolean isInTrash =
-			DB.internationalToEnglish(path).toLowerCase().startsWith(DB.internationalToEnglish(trashDirName).toLowerCase());
+			DB.internationalToEnglish(path).toLowerCase().contains(DB.internationalToEnglish(trashDirName).toLowerCase());
 
 		return isInTrash;
 	}

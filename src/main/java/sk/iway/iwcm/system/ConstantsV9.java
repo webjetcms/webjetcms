@@ -201,6 +201,7 @@ public class ConstantsV9 {
 		Constants.setString("ckeditor_button_attrs", "data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label", Constants.MOD_EDITOR, "Zoznam nastaviteľných atribútov tlačidla oddelených čiarkou.");
 
 		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
+		Constants.setString("moduleDisableList", "", Constants.MOD_CONFIG, "Čiarkov oddelený zoznam modulov, ktoré sa majú zakázať. Napríklad cmp_blog,cmp_forum,make_zip_archive,modRestart,editor_unlimited_upload");
 
 		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");

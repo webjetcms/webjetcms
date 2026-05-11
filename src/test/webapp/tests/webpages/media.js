@@ -205,17 +205,7 @@ Scenario('kontrola menu poloziek', ({I}) => {
     I.see("Média", "div.menu-wrapper");
 });
 
-Scenario('Test media - all permissions media', ({ I, DT, DTE}) => {
-    I.say('Logging in as tester2');
-    I.relogin('tester2');
-
-    I.say('Verifying access to media section');
-    I.amOnPage('/admin/v9/webpages/media/');
-    I.waitForText('Na túto aplikáciu/funkciu nemáte prístupové práva', 10);
-
-    I.say('Opening editor for document 120034');
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + 120034);
-
+function addMediaAndCheck(I, DT, DTE) {
     I.say('Add media and check');
     I.waitForElement("#pills-dt-datatableInit-media-tab", 10);
     I.clickCss("#pills-dt-datatableInit-media-tab");
@@ -238,6 +228,20 @@ Scenario('Test media - all permissions media', ({ I, DT, DTE}) => {
     DTE.fillField("mediaTitleSk", `autotest-${randomText}-chan.ge`);
     I.click(locate('#datatableFieldDTE_Field_editorFields-media_modal div.DTE_Form_Buttons button').withText('Uložiť'));
     DT.checkTableRow("datatableInit_modal", 1, ["", "", `autotest-${randomText}-chan.ge`, "", "/images/gallery/watermark/subfolder1/nature-5411408.jpg"]);
+}
+
+Scenario('Test media - all permissions media', ({ I, DT, DTE}) => {
+    I.say('Logging in as tester2');
+    I.relogin('tester2');
+
+    I.say('Verifying access to media section');
+    I.amOnPage('/admin/v9/webpages/media/');
+    I.waitForText('Na túto aplikáciu/funkciu nemáte prístupové práva', 10);
+
+    I.say('Opening editor for document 120034');
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + 120034);
+
+    addMediaAndCheck(I, DT, DTE);
 });
 
 Scenario('Delete media files', ({ I, DT, DTE }) => {
@@ -721,4 +725,25 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
     I.dontSeeElement(locate('a').withText('hydrangeas'));
     I.dontSeeElement(locate('a').withText('koala-media-all'));
     I.seeElement(locate('a').withText('about'));
+});
+
+Scenario('BUG: withou allmedia perms is not possible to add media to unsaved page', ({ I, DT, DTE}) => {
+    I.say('Logging in as tester2');
+    I.relogin('tester2');
+
+    I.say('Verifying access to media section');
+    I.amOnPage('/admin/v9/webpages/media/');
+    I.waitForText('Na túto aplikáciu/funkciu nemáte prístupové práva', 10);
+
+    I.say('Opening editor for document 120034');
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=20856");
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+
+    addMediaAndCheck(I, DT, DTE);
+});
+
+Scenario('logoff 2', ({I}) => {
+    I.logout();
 });

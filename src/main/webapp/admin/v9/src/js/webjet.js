@@ -1092,7 +1092,7 @@ const WJ = (() => {
             //img and href prefix
             if(null !== options.imgSrcPrefix) {
                 htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='" + options.imgSrcPrefix + "$2' class='img-fluid' loading='lazy'/>")
-                                   .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "#/$3' target='_blank'>$2</a>")
+                                   .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "$3' target='_blank'>$2</a>")
             }
 
             if (true === options.removeLastBr) {

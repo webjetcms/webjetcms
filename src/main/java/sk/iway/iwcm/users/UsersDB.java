@@ -2234,6 +2234,9 @@ public class UsersDB
 	 */
 	public static void loadDisabledItemsFromDB(Identity user, boolean alsoGroups)
 	{
+		//initialize disabledItemsTable so there will not be NPE when there is nothing disabled
+		user.addDisabledItem("");
+
 		//najskor nacitame zoznam prav podla skupin (tie nasledne implicitne povolime)
 		Set<String> enabledItemsFromGroups = new HashSet<>();
 		if (alsoGroups) {

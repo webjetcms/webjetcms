@@ -15,11 +15,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.gallery.ImageInfo;
@@ -84,6 +86,9 @@ public class UploadFileAction {
 
 			//Check file name
 			if (!Tools.isEmpty(fileName)) {
+
+				fileName = DB.internationalToEnglish(fileName);
+				fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();
 
 				String extension = FileTools.getFileExtension(fileName);
 				ImageInfo ii = new ImageInfo(multipartFile.getInputStream());

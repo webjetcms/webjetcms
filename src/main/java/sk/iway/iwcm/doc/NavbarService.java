@@ -12,7 +12,15 @@ import sk.iway.iwcm.Tools;
  */
 public class NavbarService {
 
-    public String getNavbar(DocDetails doc, HttpServletRequest request) {
+    /**
+     * @deprecated NavbarService is now a stateless service with static methods, this constructor is only for backward compatibility and should not be used in new code
+     */
+    @Deprecated(forRemoval = true)
+    public NavbarService() { //NOSONAR
+        //constructor for backward compatibility
+    }
+
+    public static String getNavbar(DocDetails doc, HttpServletRequest request) {
 
         String navbar2;
         String navbarDefaultType = Constants.getString("navbarDefaultType");
@@ -63,7 +71,7 @@ public class NavbarService {
 	 * @param navbarDefaultType - value from Constants.getString("navbarDefaultType")
 	 * @return NavbarInterface implementation or null if not found
 	 */
-	private NavbarInterface getNavbarImplementation(String navbarDefaultType) {
+	private static NavbarInterface getNavbarImplementation(String navbarDefaultType) {
 		if (Tools.isEmpty(navbarDefaultType) || "normal".equalsIgnoreCase(navbarDefaultType)) {
 			return new NavbarStandard();
 		}

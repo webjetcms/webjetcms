@@ -157,6 +157,24 @@ block content
                         }
                     });
 
+                    //fix links
+                    var links = versionsTabContent.find("a");
+                    links.each(function() {
+                        var href = $(this).attr("href");
+                        if(href != undefined && href != null && href.indexOf("docs.webjetcms") != -1) {
+                            //remove .md extension
+                            href = href.replace(".md", "");
+                            //change # to ?id=
+                            href = href.replace("#", "?id=");
+
+                            //old versions have links with hash
+                            href = href.replace("/v2023/", "/v2023/#/");
+                            href = href.replace("/v2022/", "/v2022/#/");
+
+                            $(this).attr("href", href);
+                        }
+                    });
+
                     //Add new defau option, UPLOAD VIA FILE
                     var uploadVersion = versionSelectorOptionTemplate.replace("REPLACE_A", "[[\#{update.update_from_file}]]" + uploadBadgeTemplate);
                     uploadVersion = uploadVersion.replace("REPLACE_ID", "UPLOAD_selector").replace("REPLACE_FN_PARAM", "UPLOAD").replace("REPLACE_CLASS", "");
