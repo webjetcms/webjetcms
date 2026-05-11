@@ -99,7 +99,11 @@ public class GdprDataDeleting {
         {
             sq.execute("DELETE FROM forms where create_date < convert (datetime,'"+date+"')");
         }
-        else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
+        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
+        {
+            sq.execute("DELETE FROM forms where create_date < to_date('"+date+"','YYYY-MM-DD')");
+        }
+        else
         {
             sq.execute("DELETE FROM forms where create_date < '"+date+"'");
         }
@@ -112,7 +116,11 @@ public class GdprDataDeleting {
         {
             return sq.forInt("SELECT count(*) FROM forms where create_date < convert (datetime,'"+date+"')");
         }
-        else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
+        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
+        {
+            return sq.forInt("SELECT count(*) FROM forms where create_date < to_date('"+date+"','YYYY-MM-DD')");
+        }
+        else
         {
             return sq.forInt("SELECT count(*) FROM forms where create_date < '"+date+"'");
         }
