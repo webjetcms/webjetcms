@@ -155,6 +155,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.clickCss('#login-submit');
     I.seeElement(locate('li').withText('Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované'));
 
+    //wait for block to expire, because we need to test correct code login
     I.wait(10);
 
     //

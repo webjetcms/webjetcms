@@ -409,6 +409,7 @@ public class PdfTools {
              else
              {
                 cleanPdfMetadata = false;
+                pdfOutput = output; //nebudeme cistit metadata, pretoze sa nevygeneruje PDF, ale obrazky, a tie metadata nemaju
                  if(request.getAttribute("SetCharacterEncodingFilter") != null && (Boolean)request.getAttribute("SetCharacterEncodingFilter"))
                      pd4ml.overrideDocumentEncoding(SetCharacterEncodingFilter.getEncoding());
 

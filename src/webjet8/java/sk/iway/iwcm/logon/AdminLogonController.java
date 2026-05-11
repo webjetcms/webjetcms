@@ -451,12 +451,15 @@ public class AdminLogonController {
      */
     private static String verify2FaKey(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Prop prop = Prop.getInstance(request.getServletContext(), request);
-        if (session.getAttribute("token")==null)
+        //ocakava sa token
+        String generatedToken = (String)session.getAttribute("token");
+        if (generatedToken == null)
 		{
             //return null to continue with normal logon process (token is not present)
             return null;
         }
+
+        Prop prop = Prop.getInstance(request.getServletContext(), request);
 
         //nemoze zadavat 2FA kod lebo sa zle predtym prihlasil - pouzivame rovnaku ochranu ako pri prihlasovani
         if(LogonTools.isLoginBlocked(request))
@@ -466,8 +469,6 @@ public class AdminLogonController {
             return TWOFA_PASSWORD_FORM;
         }
 
-        //ocakava sa token
-        String generatedToken = (String)session.getAttribute("token");
         int insertedCode = Tools.getIntValue(request.getParameter("token"), -1);
 
         GoogleAuthenticator gAuth = new GoogleAuthenticator();
