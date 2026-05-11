@@ -257,6 +257,8 @@ public class Password
 	 */
 	public static boolean checkPassword(boolean isLogonForm, String password, boolean isAdmin, int userId, HttpSession session, List<String> errors)
 	{
+		if (Tools.isEmpty(password)) return false;
+
 		String constStr = "";
 		if(isAdmin)
 		{
