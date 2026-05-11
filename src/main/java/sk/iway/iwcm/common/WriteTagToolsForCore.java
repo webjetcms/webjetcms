@@ -36,8 +36,10 @@ public class WriteTagToolsForCore {
     {
         StringBuilder replacedText = text;
         //nahrad target="_blank"
-        replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"return openTargetBlank(this, event)\"");
-        replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"return openTargetBlank(this, event)\"");
+        if (Constants.getBoolean("replaceTargetBlankWithOnclickOpenTargetBlank")) {
+            replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"return openTargetBlank(this, event)\"");
+            replacedText = Tools.replace(replacedText, "target=\"_blank\"", "onclick=\"return openTargetBlank(this, event)\"");
+        }
         replacedText = Tools.replace(replacedText, "target=\"__blank\"", "target=\"_blank\"");
         replacedText = Tools.replace(replacedText, "target='__blank'", "target='_blank'");
 

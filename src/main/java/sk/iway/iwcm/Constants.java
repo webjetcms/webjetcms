@@ -2075,6 +2075,8 @@ public class Constants {
 		setString("logonTokenHeaderName", "x-auth-token", MOD_SECURITY, "Meno HTTP hlavicky v ktorej sa nachadza prihlasovaci token pre API pristup");
 
 		setInt("GroupsDB.parentGroupsCacheMinutes", 60, MOD_PERFORMANCE, "Pocet minut cachovania zoznamu parent priecinkov.");
+
+		setBoolean("replaceTargetBlankWithOnclickOpenTargetBlank", true, MOD_CONFIG, "Zamienanie target=\"_blank\" a target='_blank' za onclick=\"return openTargetBlank(this, event)\"");
 	}
 
 	/**
