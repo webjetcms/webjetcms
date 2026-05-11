@@ -465,16 +465,15 @@ export class WebPagesDatatable {
                     'role': 'group',
                 },
                 action: function (e, node, el) {
-                    let recursive = false;
-
                     if ($(el).hasClass("enabled")) {
+                        window.recursive = false;
                         $(el).removeClass("enabled");
                     } else {
-                        recursive = true;
+                        window.recursive = true;
                         $(el).addClass("enabled");
                     }
 
-                    self.webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                    self.webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", window.recursive));
                     self.webpagesDatatable.ajax.reload();
                 }
             });

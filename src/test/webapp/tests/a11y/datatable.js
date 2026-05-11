@@ -66,6 +66,7 @@ Scenario("p27: input with buttons-top-filter", async ({ I, a11y }) => {
     await a11y.check();
 
     I.amOnPage("/admin/v9/search/index/");
+    I.wait(1); //wait for datatable to initialize
     await a11y.check();
 
     I.amOnPage("/apps/form/admin/detail/?formName=Form-with-redirection-to-Spring-App");

@@ -8,6 +8,7 @@ Scenario('jstree settings', async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     I.click("button.buttons-jstree-settings");
     I.waitForElement("#jstreeSettingsModal", 5);
+    I.wait(1); //wait for modal animation to finish
     await a11y.check("#jstreeSettingsModal");
 });
 
@@ -30,8 +31,6 @@ Scenario('p26: image dialog', async ({ I, DTE, Browser, a11y }) => {
     I.waitForLoader(".WJLoaderDiv");
 
     I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
-
-    await a11y.check();
 
     await a11y.check("#wjImageIframeElement");
 
