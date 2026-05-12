@@ -11,7 +11,7 @@
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Bezpečnosť - aktualizovaný `Swagger UI` a výnimky pre `dependencyCheckAnalyze` (#58317-6).
-- Bezpečnosť - aktualizované knižnice `log4j,pdfbox` (#58317-6).
+- Bezpečnosť - aktualizované knižnice `log4j,pdfbox,thymeleaf,postgresql` (#58317-6,#226).
 - Bezpečnosť - pridaná ochrana pred brute force útokmi na 2FA tokeny. Pri neúspešných pokusoch sa IP adresa dočasne zablokuje - rovnako ako pri prihlasovaní heslom (#222).
 - Bezpečnosť - generované PDF súbory viac neobsahujú v meta údajoch `Creator/Producer` informácie o generátore `PD4ML`. Hodnota sa preberá z konfiguračnej premennej `pdfAuthorName`. Čistenie metadát je riadené premennou `metadataCleanFiles` (predvolená hodnota `pdf-gen`) (#222).
 - Bezpečnosť - opravené spracovanie chyby prázdneho hesla (#222).
