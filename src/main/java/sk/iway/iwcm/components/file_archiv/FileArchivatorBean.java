@@ -424,6 +424,8 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 					//remove index file if exist
 					FileIndexerTools.deleteIndexedFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath());
 				}
+			} else {
+				FileIndexerTools.deleteIndexedFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath());
 			}
 		}
 		return save;
