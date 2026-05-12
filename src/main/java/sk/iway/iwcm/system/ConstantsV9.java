@@ -203,6 +203,8 @@ public class ConstantsV9 {
 		Constants.setString("xForwardedForHeader", "x-forwarded-for", Constants.MOD_SECURITY, "Názov HTTP hlavičky, ktorá obsahuje pôvodnú IP adresu klienta pri použití reverzného proxy servera. Použije sa prvá IP adresa v zozname, ak končí na ::last použije sa posledná.");
 		Constants.setString("moduleDisableList", "", Constants.MOD_CONFIG, "Čiarkov oddelený zoznam modulov, ktoré sa majú zakázať. Napríklad cmp_blog,cmp_forum,make_zip_archive,modRestart,editor_unlimited_upload");
 
+		Constants.setString("editorTargetBlankFunction", "return openTargetBlank(this, event)", Constants.MOD_EDITOR, "Meno JavaScript funkcie, ktorá sa použije namiesto target=\"_blank\" a target='_blank' ako onclick, napríklad return openTargetBlank(this, event)");
+
 		Constants.setString("multistepform_nameFields", "firstname,lastname,meno,priezvisko,jmeno,prijmeni", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
