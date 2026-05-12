@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -32,10 +34,15 @@ import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.RegExpEntity;
 import sk.iway.iwcm.components.forms.RegExpRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity;
+import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.JoinOperatorType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
 import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
@@ -43,6 +50,7 @@ import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
@@ -79,19 +87,24 @@ public class MultistepFormsService {
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
     private static final String ITEM_KEY_INPUT_PREFIX = "components.formsimple.input.";
 
+    public static final String VISIBILITY_TAB = "visibilityConditions";
+    public static final String REQUIREEMNT_TAB = "requirmentConditions";
+
     private final SaveFormService saveFormService;
     private final FormsRepository formsRepository;
     private final FormItemsRepository formItemsRepository;
     private final FormStepsRepository formStepsRepository;
     private final FormSettingsRepository formSettingsRepository;
+    private final FormItemsConditionsRepository formItemsFiltersRepository;
 
     @Autowired
-    public MultistepFormsService(SaveFormService saveFormService, FormsRepository formsRepository, FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository) {
+    public MultistepFormsService(SaveFormService saveFormService, FormsRepository formsRepository, FormItemsRepository formItemsRepository, FormStepsRepository formStepsRepository, FormSettingsRepository formSettingsRepository, FormItemsConditionsRepository formItemsFiltersRepository) {
         this.saveFormService = saveFormService;
         this.formsRepository = formsRepository;
         this.formItemsRepository = formItemsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formSettingsRepository = formSettingsRepository;
+        this.formItemsFiltersRepository = formItemsFiltersRepository;
     }
 
     /* ********** PUBLIC STATIC - small support methods ********** */
@@ -211,6 +224,31 @@ public class MultistepFormsService {
         return options;
     }
 
+
+    public static final List<LabelValue> getFieldTabVisibility(HttpServletRequest request) {
+        Prop prop = Prop.getInstance(request);
+
+        List<LabelValue> options = new ArrayList<>();
+        Map<String, String> formsimpleFields = prop.getTextStartingWith(ITEM_KEY_LABEL_PREFIX);
+
+        List<LabelValue> fieldVisibility = getFiledTypeVisibility(request);
+        Map<String, List<String>> fieldVisibilityMap = fieldVisibility.stream().collect(Collectors.toMap(LabelValue::getValue, fv -> List.of( Tools.getTokens(fv.getLabel(), ",") )));
+
+        for(Entry<String, String> entry : formsimpleFields.entrySet()) {
+            String type = entry.getKey().substring(ITEM_KEY_LABEL_PREFIX.length());
+
+            if(getRowViewItemTypes().contains(type)) {
+                options.add(new LabelValue(VISIBILITY_TAB + "," + REQUIREEMNT_TAB, type));
+            } else if(fieldVisibilityMap.getOrDefault(type, List.of()).contains("required")) {
+                options.add(new LabelValue(REQUIREEMNT_TAB, type));
+            } else {
+                options.add(new LabelValue("", type));
+            }
+        }
+
+        return options;
+    }
+
     /**
      * Get the next step following the provided step within a form sequence.
      *
@@ -264,6 +302,51 @@ public class MultistepFormsService {
 
     public final boolean validateFormInfo(String formName, Long currentStepId, HttpServletRequest request) {
         return getValidStepEntity(formName, currentStepId, request) != null;
+    }
+
+    /**
+
+     */
+    public final List<LabelValue> getAvailableConditionFields(String formName, Integer stepId, Prop prop) {
+        int currentPosition = new SimpleQuery().forInt("SELECT current_position FROM form_steps WHERE id = ?", stepId);
+
+        Map<Long, String> stepNames = new HashMap<>();
+        Map<Long, Integer> stepPositions = new HashMap<>();
+        List<Integer> stepsIds = new ArrayList<>();
+        for(FormStepEntity fse : formStepsRepository.getStepsUpToPosition(formName, currentPosition, CloudToolsForCore.getDomainId())) {
+            stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + fse.getCurrentPosition());
+            stepPositions.put(fse.getId(), fse.getCurrentPosition());
+            stepsIds.add(fse.getId().intValue());
+        }
+
+        return sortFields(formItemsRepository.findAllByFormNameAndStepIdInAndDomainId(formName, stepsIds, CloudToolsForCore.getDomainId()), stepPositions, stepNames, prop);
+    }
+
+    public final List<LabelValue> prepareConditionFieldOptions(List<FormItemEntity> fields, String formName, Prop prop) {
+        Map<Long, String> stepNames = new HashMap<>();
+        Map<Long, Integer> stepPositions = new HashMap<>();
+
+        for(FormStepEntity fse : formStepsRepository.findAllByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId())) {
+            stepNames.put(fse.getId(), prop.getText("components.form_items.step_title") + " " + fse.getCurrentPosition());
+            stepPositions.put(fse.getId(), fse.getCurrentPosition());
+        }
+
+        return sortFields(fields, stepPositions, stepNames, prop);
+    }
+
+    private final List<LabelValue> sortFields(List<FormItemEntity> fields, Map<Long, Integer> stepPositions, Map<Long, String> stepNames, Prop prop) {
+        return fields
+            .stream()
+            .sorted(Comparator
+                .comparingInt((FormItemEntity fie) -> stepPositions.getOrDefault(fie.getStepId().longValue(), 0))
+                .thenComparingInt(fie -> fie.getSortPriority() != null ? fie.getSortPriority() : 0))
+            .map(fie -> {
+                StringBuilder itemName = new StringBuilder("");
+                itemName.append("(").append(stepNames.get(fie.getStepId().longValue())).append(") ");
+                itemName.append( MultistepFormsService.getFieldName(fie, prop) );
+                return new LabelValue(itemName.toString(), fie.getItemFormId());
+            })
+            .collect(Collectors.toList());
     }
 
     /**
@@ -554,6 +637,9 @@ public class MultistepFormsService {
             // multiupload fields are validated in method validateFileFields()
             if(stepItem.getFieldType().startsWith(MULTIUPLOAD_PREFIX)) continue;
 
+            // Skip validation for fields hidden by visibility conditions
+            if (Tools.isTrue(isFieldHiddenByCondition(stepItem, received, request, formName))) continue;
+
             String itemFormId = stepItem.getItemFormId();
             String fieldName = getFieldName(stepItem, prop);
 
@@ -578,12 +664,20 @@ public class MultistepFormsService {
                 if(DocTools.testXss(value))
                     throw new SaveFormException(prop.getText("send_mail_error.probablySpamBot"), false, null);
 
-            // Check if field is required
-            if(Tools.isTrue(stepItem.getRequired())) {
+            // Check if field is required (static flag or dynamic requirement conditions) - IF requiredByFields is set (is not null) use it as higher priority indicator
+            Boolean requiredByFields = isFieldRequiredByCondition(stepItem, received, request, formName);
+            boolean isRequired = requiredByFields == null ? Tools.isTrue(stepItem.getRequired()) : Tools.isTrue(requiredByFields);
+            if(isRequired) {
                 String[] values = asArray(itemFormId, received);
+
                 if(values == null || values.length < 1) {
                     errors.put(itemFormId, fieldName + " - " + prop.getText("checkform.title.required"));
                     // continue; // no need to check regex if field is empty
+                } else if("wysiwyg".equalsIgnoreCase(stepItem.getFieldType())) {
+                    if(values.length == 1) {
+                        String value = values[0].trim();
+                        if (Tools.isEmpty(value) || "<br>".equals(value)) errors.put(itemFormId, fieldName + " - " + prop.getText("checkform.title.required"));
+                    }
                 }
             }
 
@@ -756,7 +850,7 @@ public class MultistepFormsService {
     }
 
     private List<FormItemEntity> getStepItemsForValidation(Long stepId) {
-        String sql = "SELECT DISTINCT(item_form_id), label, field_type, regex_validation, required FROM form_items WHERE step_id = ? AND domain_id = ?";
+        String sql = "SELECT id, item_form_id, label, field_type, regex_validation, required FROM form_items WHERE step_id = ? AND domain_id = ?";
 
         List<FormItemEntity> values = new ArrayList<>();
         new ComplexQuery().setSql(sql).setParams(stepId, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
@@ -777,7 +871,7 @@ public class MultistepFormsService {
      * @return list of simplified {@code FormItemEntity} containing id, label, type, regex, required
      */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
-        String sql = "SELECT item_form_id, label, field_type, regex_validation, required FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
+        String sql = "SELECT f.id, item_form_id, label, field_type, regex_validation, required FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
 
         List<FormItemEntity> values = new ArrayList<>();
         new ComplexQuery().setSql(sql).setParams(formName, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
@@ -800,6 +894,7 @@ public class MultistepFormsService {
 
     private static FormItemEntity resultSetToEntity(ResultSet rs) throws SQLException{
         FormItemEntity fe = new FormItemEntity();
+        fe.setId( rs.getLong("id") );
         fe.setItemFormId( rs.getString("item_form_id") );
         fe.setLabel( rs.getString("label") );
         fe.setFieldType( rs.getString("field_type") );
@@ -845,6 +940,137 @@ public class MultistepFormsService {
 		//return if is correct
 		return CSRF.verifyTokenAjax(request.getSession(), request.getHeader("X-CSRF-Token"));
 	}
+
+    /**
+     * Check if a field should be hidden based on its visibility conditions.
+     * Evaluates conditions against both session data (previous steps) and received data (current step).
+     * All conditions must be met (AND logic) for the field to be visible.
+     *
+     * @param stepItem the form item with potential visibility conditions
+     * @param received the current step's submitted JSON data
+     * @param request HTTP request for session access
+     * @param formName the form name
+     * @return true if the field should be hidden (conditions NOT met), false if visible
+     */
+    private Boolean isFieldHiddenByCondition(FormItemEntity stepItem, JSONObject received, HttpServletRequest request, String formName) {
+        return evaluateFieldConditions(stepItem, received, request, formName, ConditionType.VISIBILITY, true, false, "visibility");
+    }
+
+    /**
+     * Check if a field should be required based on its REQUIRMENT conditions.
+     * Evaluates conditions against both session data (previous steps) and received data (current step).
+     * All conditions must be met (AND logic) for the field to become required.
+     *
+     * @param stepItem the form item with potential requirement conditions
+     * @param received the current step's submitted JSON data
+     * @param request HTTP request for session access
+     * @param formName the form name
+     * @return true if the field should be required (all conditions met), false otherwise
+     */
+    private Boolean isFieldRequiredByCondition(FormItemEntity stepItem, JSONObject received, HttpServletRequest request, String formName) {
+        return evaluateFieldConditions(stepItem, received, request, formName, ConditionType.REQUIRMENT, false, true, "requirement");
+    }
+
+    private Boolean evaluateFieldConditions(FormItemEntity stepItem, JSONObject received, HttpServletRequest request, String formName,
+                                            ConditionType conditionType, boolean returnWhenNotMet, boolean returnWhenAllMet, String conditionLabel) {
+        List<FormItemsConditionEntity> conditions = formItemsFiltersRepository.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(stepItem.getId(), conditionType, CloudToolsForCore.getDomainId());
+        if (conditions == null || conditions.isEmpty()) return null; // no conditions found
+
+        String sessionPrefix = getSessionKey(formName, request) + "_";
+
+        try {
+            Boolean combinedResult = null;
+            JoinOperatorType prevJoinOperator = JoinOperatorType.AND;
+
+            for (FormItemsConditionEntity condition : conditions) {
+                String fieldId = condition.getItemFormId();
+                if (Tools.isEmpty(fieldId)) continue;
+
+                OperatorType operatorType = condition.getOperator();
+                String requiredValue = condition.getValue();
+                boolean caseInsensitive = Boolean.TRUE.equals(condition.getCaseInsensitive());
+
+                // First check current step data (received JSON), then previous steps from session.
+                String actualValue = received.optString(fieldId, null);
+                if (actualValue == null) {
+                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
+                    actualValue = sessionValue != null ? sessionValue.toString() : "";
+                }
+
+                boolean met = evaluateOperator(operatorType, actualValue, requiredValue, caseInsensitive);
+                if (combinedResult == null) {
+                    combinedResult = met;
+                } else {
+                    if (prevJoinOperator == JoinOperatorType.OR) {
+                        combinedResult = combinedResult || met;
+                    } else {
+                        combinedResult = combinedResult && met;
+                    }
+                }
+
+                JoinOperatorType joinOperator = condition.getJoinOperatorType();
+                prevJoinOperator = joinOperator != null ? joinOperator : JoinOperatorType.AND;
+            }
+
+            boolean allMet = combinedResult != null ? combinedResult : true;
+            return allMet ? returnWhenAllMet : returnWhenNotMet;
+        } catch (Exception e) {
+            Logger.debug(MultistepFormsService.class, "Failed to evaluate " + conditionLabel + " condition for " + stepItem.getItemFormId() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Evaluate a single condition operator.
+     * @param operator the operator (equals, not_equals, contains, not_contains, empty, not_empty)
+     * @param actualValue the actual field value
+     * @param requiredValue the expected/required value
+     * @return true if the condition is met
+     */
+    static boolean evaluateOperator(OperatorType operator, String actualValue, String requiredValue) {
+        return evaluateOperator(operator, actualValue, requiredValue, false);
+    }
+
+    /**
+     * Evaluate a single condition operator with optional case-insensitive comparison.
+     * @param operator the operator (equals, not_equals, contains, not_contains, empty, not_empty)
+     * @param actualValue the actual field value
+     * @param requiredValue the expected/required value
+     * @param caseInsensitive true if textual comparison should ignore case
+     * @return true if the condition is met
+     */
+    static boolean evaluateOperator(OperatorType operator, String actualValue, String requiredValue, boolean caseInsensitive) {
+        if (actualValue == null) actualValue = "";
+        if (requiredValue == null) requiredValue = "";
+        if (operator == null) operator = OperatorType.EQUALS;
+
+        if (caseInsensitive) {
+            actualValue = actualValue.toLowerCase(Locale.ROOT);
+            requiredValue = requiredValue.toLowerCase(Locale.ROOT);
+        }
+
+        boolean hasActualValue = Tools.isNotEmpty(actualValue);
+
+        switch (operator) {
+            case NOT_EQUALS:
+                return actualValue.equals(requiredValue) == false;
+            case CONTAINS:
+                return hasActualValue && actualValue.contains(requiredValue);
+            case NOT_CONTAINS:
+                return hasActualValue == false || actualValue.contains(requiredValue) == false;
+            case STARTS_WITH:
+                return hasActualValue && actualValue.startsWith(requiredValue);
+            case ENDS_WITH:
+                return hasActualValue && actualValue.endsWith(requiredValue);
+            case EMPTY:
+                return hasActualValue == false;
+            case NOT_EMPTY:
+                return hasActualValue;
+            case EQUALS:
+            default:
+                return actualValue.equals(requiredValue);
+        }
+    }
 
     public void updateStepsPositions(RowReorderDto rowReorderDto) {
         if(rowReorderDto == null) return;
