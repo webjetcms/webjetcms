@@ -13,7 +13,7 @@
 
 ### Webové stránky
 
-- Schvaľovanie - pridané [schvaľovanie zmien adresárov](redactor/webpages/approve/README.md) vrátane schvaľovania vytvorenia, editácie a zmazania adresárov. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
+- Schvaľovanie - pridané [schvaľovanie zmien priečinkov](redactor/webpages/approve/README.md) vrátane schvaľovania vytvorenia, editácie a zmazania priečinka. Schvaľovateľ dostane email s prehľadom zmien a možnosťou schváliť alebo zamietnuť zmenu. Podporované je aj viacúrovňové schvaľovanie (#58405).
 
 ![](redactor/webpages/approve/approve-group-page.png)
 

@@ -756,7 +756,7 @@ block content
                     webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", id));
 
                     //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                    webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                    webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", window.recursive));
 
                     webpagesDatatable.ajax.reload();
 
@@ -875,7 +875,7 @@ block content
                             //reloadni tabulku na prazdnu
                             webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
                             //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", window.recursive));
 
                             webpagesDatatable.ajax.reload();
                             groupsDatatable.setAjaxUrl(groupsInitialUrl);
