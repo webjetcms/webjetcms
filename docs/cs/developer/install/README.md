@@ -1,12 +1,12 @@
 # Instalace a spuštění
 
-Pokud ještě nemáte, nainstalujte si [VS Code s doporučenými závislostmi a rozšířeními](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - postupujte pouze po část instalace rozšíření, následné kapitoly `Pull` projektu z SVN a nastavení Tomcat-u se vás už netýká.
+Pokud ještě nemáte, nainstalujte si [VS Code s doporučenými závislostmi a rozšířeními](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - postupujte pouze po část instalace rozšíření, následné kapitoly ```Pull``` projektu z SVN a nastavení Tomcat-u se vás už netýká.
 
-V projektu používáme [lombok](https://projectlombok.org), nainstalujte si rozšíření do vašeho vývojového prostředí - na web stránce klikněte na menu položku `Install` av sekci IDEs postupuje podle návodu.
+V projektu používáme [lombok](https://projectlombok.org), nainstalujte si rozšíření do vašeho vývojového prostředí - na web stránce klikněte na menu položku ```Install``` av sekci IDEs postupuje podle návodu.
 
-## Webpack build JS, CSS a PUG souborů
+## rspack build JS, CSS a PUG souborů
 
-Soubory pro administraci jsou sestavovány přes webpack ze zdrojových `js/scss/pug` souborů. Pro prvotní instalaci spusťte v novém terminálu:
+Soubory pro administraci jsou sestavovány přes rspack ze zdrojových ```js/scss/pug``` souborů. Pro prvotní instalaci spusťte v novém terminálu:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -14,7 +14,7 @@ npm install
 npm run prod
 ```
 
-kompletní reinstalaci provedete příkazem (pro node `v17+` je zapotřebí i parametr `--legacy-peer-deps`):
+kompletní reinstalaci provedete příkazem (pro node ```v17+``` je nutný i parametr ```--legacy-peer-deps```):
 
 ```shell
 rm -rf node_modules
@@ -23,7 +23,7 @@ npm install
 
 ten nainstaluje potřebné knihovny, licenci na `Datatables Editor` a sestaví produkční verzi.
 
-Následně můžete spustit **dev režim**, při kterém automaticky **webpack sleduje změny** v `js/scss/pug` souborech a builduje `dist` adresář:
+Následně můžete spustit **dev režim**, při kterém automaticky **rspack sleduje změny** v ```js/scss/pug``` souborech a builduje ```dist``` adresář:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -46,7 +46,7 @@ cd src/main/webapp/admin/v9
 npm run prod
 ```
 
-## Build Java tříd a spuštění Tomcatu
+## Build Java tříd a spuštění Tomcat
 
 Kompilace projektu:
 
@@ -54,15 +54,15 @@ Kompilace projektu:
 gradlew compileJava - kompilacia projektu
 ```
 
-včetně refreshu dependencies (WebJET z artifactory):
+včetně obnovení dependencies (WebJETu z artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
 ```
 
-Spuštění / zastavení Tomcatu, vytvoření WAR archivu:
+Spuštění / zastavení Tomcat, vytvoření WAR archivu:
 
-!>**Upozornění:** před spuštěním gradle appRun buildněte jednorázově dist adresář HTML/CSS souborů přes příkaz gradle npmbuild, nebo mějte v samostatném terminálu puštěný z adresáře src/main/webapp/admin/v9 příkaz npm run watch.
+!>**Upozornění:** před spuštěním gradle appRun buildněte jednorázově dist adresář HTML/CSS souborů přes příkaz gradle `npmbuild`, nebo mějte v samostatném terminálu puštěný z adresáře src/main/webapp/admin/v9 příkaz npm run watch.
 
 ```shell
 gradlew appRun
@@ -83,14 +83,14 @@ Aktualizace gradle wrapper
 ```
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Nastavení hosts souboru
 
 WebJET je licencován podle domén. Pro lokální práci je třeba do hosts souboru (na windows je to c:\windows\system32\drivers\etc\hosts) přidat řádek:
 
-```
+```txt
 127.0.0.1   iwcm.interway.sk
 ```
 

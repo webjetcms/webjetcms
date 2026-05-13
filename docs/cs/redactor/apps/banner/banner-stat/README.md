@@ -1,6 +1,6 @@
 # Statistika bannerů
 
-Aplikace Statistika bannerů zobrazuje přehled Top 10 bannerů za zvolené období. Výchozí období je poslední měsíc. Toto období lze změnit pomocí datového filtru v hlavičce stránky.
+Aplikace Statistika bannerů zobrazuje přehled Top 10 bannerů za zvolené období. Výchozí období je poslední měsíc. Toto období lze změnit pomocí datového filtru v hlavičce stránky. 
 
 ![](header.png)
 
@@ -12,7 +12,7 @@ Hodnota ve sloupci "Název" zobrazené tabulky je klikatelný link, který Vás 
 
 ## Detail banneru
 
-Detail banneru je podsekce aplikace "Statistika bannerů" a také zobrazuje datatabulku a 2 čárové grafy. Rozdíl je v tom, že datatabulka zobrazuje pouze právě prohlížený banner a čárové grafy statistiku kliknutí a vidění také pouze pro tento banner.
+Detail banneru je podsekce aplikace "Statistika bannerů" a také zobrazuje datatabulku a 2 čárové grafy. Rozdíl je v tom, že datatabulka zobrazuje pouze právě prohlížený banner a čárové grafy statistiku kliknutí a vidění také pouze pro tento banner. 
 
 I tato podsekce obsahuje datový filtr v hlavičce stránky, který se chová stejně jako u statistiky bannerů, s tím rozdílem, že základní rozsah není poslední měsíc, ale převezme se nastavený rozsah ze statitiky bannerů.
 

@@ -9,6 +9,7 @@ Karty nastavení **Styl a nastavení** a **Položky**.
 ### Styl a nastavení
 
 V této části lze nastavit:
+
 - Výška
 - Šířka obrázku
 - Výška obrázku
@@ -22,6 +23,7 @@ V této části lze vidět a spravovat položky aplikace, takže klasické akce 
 ![](editor-items.png)
 
 Pro jednotlivé položky můžete nastavit tyto parametry:
+
 - **Obrázek**, podporován je výběr obrázku pomocí průzkumníka, jakož i přímé zadání cesty obrázku
 - **Nadpis**, nadpis obrázku (možné je i stylování textu)
 - **Podnadpis**, podnadpis obrázku (možné je i stylování textu)

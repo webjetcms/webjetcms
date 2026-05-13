@@ -8,7 +8,7 @@ V hlavičce HTML kódu se nastavuje `meta tag Content-type` na `text/html`, při
 
 Do stránky se napevno načítá CSS styl `/css/page.css` a testuje se, zda je v šabloně nastaven dodatečný CSS styl, pokud ano, vloží se i ten.
 
-Použité objekty jsou prakticky stejné jako pro [Thymeleaf](../thymeleaf/webjet-objects.md), ale používá se formát `<iwcm:write name="..."/>`. Značka `iwcm:write` vypíše zadaný atribut uložený v `HttpServletRequest` a zároveň provede značku `!INCLUDE(...)!`, tedy provede aplikaci. Značka `iway:request` jen vloží atribut bez provedení aplikace. Značka `iwcm:combine` se používá ke kombinování (spojování) více souborů do jednoho HTTP požadavku.
+Použité objekty jsou prakticky stejné jako pro [Thymeleaf](../thymeleaf/webjet-objects.md), ale používá se formát `<iwcm:write name="..."/>`. Značka `iwcm:write` vypíše zadaný atribut uložený v `HttpServletRequest` a zároveň provede značku `!INCLUDE(...)!`, čili provede aplikaci. Značka `iway:request` pouze vloží atribut bez provedení aplikace. Značka `iwcm:combine` se používá ke kombinování (spojování) více souborů do jednoho HTTP požadavku.
 
 ```jsp
 <%

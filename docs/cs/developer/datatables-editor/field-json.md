@@ -5,13 +5,14 @@ Web stránky nebo aplikace Skripty používá mapování 1:N na další objekty.
 Pole typu JSON pro DT Editor implementuje **UI pro zobrazení výběru adresáře nebo web stránky** z JS tree komponenty s možností nastavení JSON objektu pro **jedno pole nebo seznam (List) polí**.
 
 V JSON datech ze serveru je toto mapování vráceno jako:
-- [private GroupDetails groupDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pro adresář ve kterém je web stránka
-- [private List\<GroupDetails> groupCopyDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pro kopii stránky v adresářích
-- [List\<InsertScriptGroupBean> groupIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pro aplikaci Skripty mapování na adresáře
-- [List\<InsertScriptDocBean> docIds](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pro aplikaci Skripty mapování na web stránky
-- [List\<DirTreeItem> writableFolders](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsEditorFields.java) pro výběr seznamu adresářů v souborovém systému
 
-Uvedené atributy používají anotaci `@DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-group"`, neboli typ pole JSON. Atribut className určuje chování vráceného objektu.
+- [private GroupDetails groupDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pro adresář ve kterém je web stránka
+- [private List<GroupDetails> groupCopyDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) pro kopii stránky v adresářích
+- [List<InsertScriptGroupBean> groupIds](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pro aplikaci Skripty mapování na adresáře
+- [List<InsertScriptDocBean> docIds](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) pro aplikaci Skripty mapování na web stránky
+- [List<DirTreeItem> writableFolders](../../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsEditorFields.java) pro výběr seznamu adresářů v souborovém systému
+
+Uvedené atributy používají anotaci ```@DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-group"```, tedy typ pole JSON. Atribut className určuje chování vráceného objektu.
 
 ```java
 //jednoduche pole pre vyber adresara, ak je mozne vybrat aj root pouzite dt-tree-group-root
@@ -60,45 +61,51 @@ private List<DirTreeItem> writableFolders;
 private List<GroupDetails> editableGroups;
 ```
 
-všimněte si použití atributu `data-dt-json-addbutton` pro nastavení textu tlačítka v seznamu adresářů. Připraveny jsou klíče `editor.json.addPage` pro přidání web stránky a `editor.json.addGroup` pro přidání adresáře.
+všimněte si použití atributu ```data-dt-json-addbutton``` pro nastavení textu tlačítka v seznamu adresářů. Připraveny jsou klíče ```editor.json.addPage``` pro přidání webové stránky a ```editor.json.addGroup``` pro přidání adresáře.
 
-> **Upozornění:** pokud používáte klientské stránkování (atribut `serverSide: false`) tak je třeba prázdné `List<>` objekty vrátit jako `null` místo prázdného pole (jinak se v datatabulce neaktualizuje hodnota po smazání všech adresářů/stránek ze seznamu).
+> **Upozornění:** pokud používáte klientské stránkování (atribut ```serverSide: false```) tak je třeba prázdné ```List<>``` objekty vrátit jako ```null``` místo prázdného pole (jinak se v datatabulce neaktualizuje hodnota po smazání všech adresářů/stránek ze seznamu).
 
 ## Možnosti className
 
-`dt-tree-group` - vrácený JSON objekt typu `GroupDetails` a nahradí aktuální hodnotu. Pokud má být možnost vybrat i kořenovou složku zadejte `dt-tree-group-root`. Lze zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")` kde `23` je ID složky ve webových stránkách, který chcete použít jako kořenový. Je možné zadat i cestu ke složce `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")`. ![](field-json-group.png)
+```dt-tree-group``` - vrátený JSON objekt typu ```GroupDetails``` a nahradí aktuálnu hodnotu. Ak má byť možnosť vybrať aj koreňový priečinok zadajte ```dt-tree-group-root```. Možné je zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")``` kde `23` je ID priečinka vo webových stránkach, ktorý chcete použiť ako koreňový. Možné je zadať aj cestu k priečinku ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")```.
+![](field-json-group.png)
 
-`dt-tree-group-null` - vrácený JSON objekt typu `GroupDetails` nebo `NULL` - umožňuje nastavit žádnou/prázdnou hodnotu poli (např. pro volitelné pole), v GUI se zobrazí i ikona koše pro smazání hodnoty.
+```dt-tree-group-null``` - vrátený JSON objekt typu ```GroupDetails``` alebo ```NULL``` - umožňuje nastaviť žiadnu/prázdnu hodnotu poľu (napr. pre voliteľné pole), v GUI sa zobrazí aj ikona koša pre zmazanie hodnoty.
 
-`dt-tree-group-array` - vrácený JSON objekt typu `GroupDetails` a vytváří pole hodnot s možností přidat objekt, nahradit některý existující a smazat objekt. ![](field-json-group-array.png)
+```dt-tree-group-array``` - vrátený JSON objekt typu ```GroupDetails``` a vytvára pole hodnôt s možnosťou pridať objekt, nahradiť niektorý existujúci a zmazať objekt.
+![](field-json-group-array.png)
 
-`dt-tree-groupid/dt-tree-groupid-root` - nastavuje do pole pouze ID složky, do `data-text` nastaví cestu ke složce (`fullPath`). Používá se mimo editor v aplikaci statistika pro výběr složky.
+```dt-tree-groupid/dt-tree-groupid-root``` - nastavuje do poľa len ID priečinku, do ```data-text``` nastaví cestu k priečinku (```fullPath```). Používa sa mimo editora v aplikácii štatistika pre výber priečinka.
 
-`dt-tree-page` - vrácený JSON objekt typu `DocDetails` a nahradí aktuální hodnotu. Lze zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")` kde `23` je ID složky ve webových stránkách, který chcete použít jako kořenový. Je možné zadat i cestu ke složce `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")`. ![](field-json-page.png)
+```dt-tree-page``` - vrátený JSON objekt typu ```DocDetails``` a nahradí aktuálnu hodnotu. Možné je zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")``` kde `23` je ID priečinka vo webových stránkach, ktorý chcete použiť ako koreňový. Možné je zadať aj cestu k priečinku ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")```.
+![](field-json-page.png)
 
-`dt-tree-page-null` - vrácený JSON objekt typu `DocDetails` nebo `NULL` - umožňuje nastavit žádnou/prázdnou hodnotu poli (např. pro volitelné pole), v GUI se zobrazí i ikona koše pro smazání hodnoty. ![](field-json-page-null.png)
+```dt-tree-page-null``` - vrátený JSON objekt typu ```DocDetails``` alebo ```NULL``` - umožňuje nastaviť žiadnu/prázdnu hodnotu poľu (napr. pre voliteľné pole), v GUI sa zobrazí aj ikona koša pre zmazanie hodnoty.
 
-`dt-tree-page-array` - vrácený JSON objekt typu `DocDetails` a vytváří pole hodnot s možností přidat objekt, nahradit některý existující a smazat objekt. ![](field-json-page-array.png)
+![](field-json-page-null.png)
 
-`dt-tree-dir` - vrácený JSON objekt typu `DirTreeItem` pro **výběr adresáře v souborovém systému**
+```dt-tree-page-array``` - vrátený JSON objekt typu ```DocDetails``` a vytvára pole hodnôt s možnosťou pridať objekt, nahradiť niektorý existujúci a zmazať objekt.
+![](field-json-page-array.png)
 
-`dt-tree-dir-simple` - vrácen **řetězec** s hodnotou pro **výběr adresáře v souborovém systému**, lze zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Do `data-dt-field-skipFolders` je možné zadat jméno konfigurační proměnné s čárkou odděleným seznamem složek, které se nezobrazí ve stromové struktuře (skryté složky). Také lze skrýt rodiče zvolené kořenové složky pomocí `@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")`, přednastavené se rodiče kořenové složky zobrazují, i když nelze zvolit (pro lepší přehled struktury).
+```dt-tree-dir``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber adresára v súborovom systéme**
+
+```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```. Do ```data-dt-field-skipFolders``` je možné zadať meno konfiguračnej premennej s čiarkou oddeleným zoznamom priečinkov, ktoré sa nezobrazia v stromovej štruktúre (skryté priečinky). Taktiež je možné skryť rodičov zvoleného koreňového priečinka pomocou ```@DataTableColumnEditorAttr(key = "data-dt-field-hideRootParents", value = "true")```, prednastavené sa rodičia koreňového priečinka zobrazujú, aj keď sa nedajú zvoliť (pre lepší prehľad štruktúry).
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
-`dt-tree-dir-array` - vrácený JSON objekt typu `DirTreeItem` pro **výběr seznamu adresářů v souborovém systému**
+```dt-tree-dir-array``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber zoznamu adresárov v súborovom systéme**
 
-`dt-tree-dir-array-root` - vrácený JSON objekt typu `DirTreeItem` pro **výběr seznamu adresářů v souborovém systému** včetně možnosti Kořenová složka.
+```dt-tree-dir-array-root``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber zoznamu adresárov v súborovom systéme** vrátane možnosti Koreňový priečinok.
 
-`dt-tree-universal-array` - vrácený univerzální JSON objekt zděděný z typu `JsTreeItem` pro zakázkové zobrazení `jsTree` struktury
+```dt-tree-universal-array``` - vrátený univerzálny JSON objekt zdedený z typu ```JsTreeItem``` pre zákazkové zobrazenie ```jsTree``` štruktúry
 
-Přidáním přípony `-alldomains` je možné pro výběr `GroupDetails` nebo `DocDetails` vypnout filtrování podle aktuálně zvolené domény. Jako kořenové složky se zobrazí všechny povolené domény a vybrat lze složku/stránku ze všech dostupných domén. Používá se například. v uživatelích, kde se nastavují práva napříč všemi doménami.
+Pridaním prípony ```-alldomains``` je možné pre výber ```GroupDetails``` alebo ```DocDetails``` vypnúť filtrovanie podľa aktuálne zvolenej domény. Ako koreňové priečinky sa zobrazia všetky povolené domény a vybrať je možné priečinok/stránku zo všetkých dostupných domén. Používa sa napr. v používateľoch, kde sa nastavujú práva naprieč všetkými doménami.
 
-## Použití specifických JSON objektů
+## Použitie špecifických JSON objektov
 
-Pokud mapovaný objekt není přímo `GroupDetails` nebo `DocDetails` je třeba nastavit mapování vráceného objektu na požadovaný JSON formát.
+Ak mapovaný objekt nie je priamo ```GroupDetails``` alebo ```DocDetails``` je potrebné nastaviť mapovanie vráteného objektu na požadovaný JSON formát.
 
-Například je třeba, aby výstupní JSON objekt vypadal následovně:
+Napríklad je potrebné, aby výstupný JSON objekt vyzeral nasledovne:
 
 ```javascript
 {
@@ -109,7 +116,7 @@ Například je třeba, aby výstupní JSON objekt vypadal následovně:
 }
 ```
 
-Ukázková Java implementace je v [InsertScriptBean](../../../../src/webjet8/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) kde jsou použity následující anotace:
+Ukázková Java implementace je v [InsertScriptBean](../../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) kde jsou použity následující anotace:
 
 ```java
 @JsonManagedReference(value="insertScriptBeanGr")
@@ -123,13 +130,13 @@ List<InsertScriptGroupBean> groupIds;
 List<InsertScriptDocBean> docIds;
 ```
 
-důležité je označení `inputType=DataTableColumnType.JSON` a nastavení správného `className`.
+důležité je označení ```inputType=DataTableColumnType.JSON``` a nastavení správného ```className```.
 
-**TIP**: `className` může obsahovat doplňkový `suffix` (například `dt-tree-group-array-insert-script`) pro další rozlišení ve vašem kódu. Například pokud byste měli více JSON objektů stejného typu `GroupDetails` a potřebovali generovat rozdílné výsledné JSON objekty.
+**TIP**: ```className``` může obsahovat doplňkový ```suffix``` (například ```dt-tree-group-array-insert-script```) pro další rozlišení ve vašem kódu. Například pokud byste měli více JSON objektů stejného typu ```GroupDetails``` a potřebovali generovat rozdílné výsledné JSON objekty.
 
-Na frontendu je v konstruktoru Datatable možné definovat objekt `jsonField` ve kterém funkce `getItem` konvertuje vrácený uzel z jstree (GroupDetails nebo DocDetails) na cílový formát. Funkce `getKey` se používá při ověřování existence objektu v poli, vrací jednoznačný identifikátor objektu.
+Na frontendu je v konstruktoru Datatable možné definovat objekt ```jsonField``` ve kterém funkce ```getItem``` konvertuje vrácený uzel z jstree (GroupDetails nebo DocDetails) na cílový formát. Funkce ```getKey``` se používá při ověřování existence objektu v poli, vrací jednoznačný identifikátor objektu.
 
-Příklad je v souboru [insert-script.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/insert-script.pug), který zajišťuje konverzi standardních `DocDetails` a `GroupDetails` objektů na formát typu:
+Příklad je v souboru [insert-script.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/insert-script.pug), který zajišťuje konverzi standardních ```DocDetails``` a ```GroupDetails``` objektů na formát typu:
 
 ```javascript
 insertScriptTable = WJ.DataTable({
@@ -180,7 +187,7 @@ insertScriptTable = WJ.DataTable({
 
 ## Vlastní konfigurace zobrazené stromové struktury
 
-Pokud potřebujete implementovat vlastní zobrazení stromové struktury můžete se inspirovat ve třídě `DirTreeRestController` a entite `DirTreeItem`. Používá základní objekt pro zobrazení `jsTree - JsTreeItem`, se kterým umí následně pracovat VUE komponenta. Důležité je korektní nastavení atributů v `JsTreeItem` entite.
+Pokud potřebujete implementovat vlastní zobrazení stromové struktury, můžete se inspirovat ve třídě ```DirTreeRestController``` a entite ```DirTreeItem```. Používá základní objekt pro zobrazení ```jsTree - JsTreeItem```, se kterým umí následně pracovat VUE komponenta. Důležité je korektní nastavení atributů v ```JsTreeItem``` entitě.
 
 Příklad REST služby:
 
@@ -192,7 +199,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -259,7 +266,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 }
 ```
 
-a entity `DirTreeItem`:
+a entity ```DirTreeItem```:
 
 ```java
 package sk.iway.iwcm.system.elfinder;
@@ -316,11 +323,11 @@ Příklad anotace se zadanou URL adresou REST služby:
     private List<DirTreeItem> writableFolders;
 ```
 
-Hodnotu `className` doporučujeme ponechat na hodnotě `dt-tree-universal-array` aby se korektně zobrazilo tlačítko pro přidání záznamu, smazání a náhradu (korektně fungovalo srovnání podle ID).
+Hodnotu ```className``` doporučujeme ponechat na hodnotě ```dt-tree-universal-array``` aby se korektně zobrazilo tlačítko pro přidání záznamu, smazání a náhradu (korektně fungovalo srovnání podle ID).
 
 ## Zobrazení hodnoty JSON sloupce v Datatable
 
-Použitý Java bean musí obsahovat metodu `getFullPath()` nebo `getVirtualPath()`, jejíž hodnota se použije při výpisu hodnoty daného objektu v datatabulce a editoru:
+Použitý Java bean musí obsahovat metodu ```getFullPath()``` nebo ```getVirtualPath()```, jejíž hodnota se použije při výpisu hodnoty daného objektu v datatabulce a editoru:
 
 ```java
 /**
@@ -338,13 +345,13 @@ public String getFullPath() {
 }
 ```
 
-!>**Upozornění**: zobrazení json sloupců se `renderuje` až v prohlížeči, vyhledávání v hodnotě (zatím) nelze použít při serverovém vyhledávání.
+!>**Upozornění**: zobrazení json sloupců se ```renderuje``` až v prohlížeči, vyhledávání v hodnotě (zatím) nelze použít při serverovém vyhledávání.
 
-Pokud metodu `getFullPath()` nemůžete implementovat doporučujeme použít atribut `hidden=true` pro vypnutí zobrazení json sloupce v tabulce. Můžete implementovat doplňkový atribut pro zobrazení hodnoty v datatabulce, kterému nastavíte atribut `hiddenEditor=true` pro vypnutí atributu v editoru. Tak získáte samostatný atribut pro editor a datatabulku.
+Pokud metodu ```getFullPath()``` nemůžete implementovat doporučujeme použít atribut ```hidden=true``` pro vypnutí zobrazení json sloupce v tabulce. Můžete implementovat doplňkový atribut pro zobrazení hodnoty v datatabulce, kterému nastavíte atribut ```hiddenEditor=true``` pro vypnutí atributu v editoru. Tak získáte samostatný atribut pro editor a datatabulku.
 
 ## Poslech na změnu hodnoty
 
-Pokud potřebujete poslouchat na změnu hodnoty pole mimo VUE komponenty lze poslouchat událost změny na vnořeném `textarea` elemente, které obsahuje aktuální JSON objekt:
+Pokud potřebujete poslouchat na změnu hodnoty pole mimo VUE komponenty je možné poslouchat událost změny na vnořeném ```textarea``` elementu, které obsahuje aktuální JSON objekt:
 
 ```javascript
 $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
@@ -359,18 +366,18 @@ $("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
 
 ## Implementační detaily
 
-[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) je definován nový datový typ `$.fn.dataTable.Editor.fieldTypes.json`. Ten je implementován pomocí VUE komponenty [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). Obsahuje také skryté pole typu `textarea`, do kterého se kopíruje aktuální JSON objekt. Toto pole ale slouží pouze k "inspekci" aktuálních dat. Ve funkci get se vždy vrátí aktuální data z VUE komponenty.
+[field-type-json.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) je definován nový datový typ ```$.fn.dataTable.Editor.fieldTypes.json```. Ten je implementován pomocí VUE komponenty [webjet-dte-jstree](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). Obsahuje také skryté pole typu ```textarea```, do kterého se kopíruje aktuální JSON objekt. Toto pole ale slouží pouze k "inspekci" aktuálních dat. Ve funkci get se vždy vrátí aktuální data z VUE komponenty.
 
-[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkci `renderJson(td, type, rowData, row)` pro zobrazení dat v tabulce. Ta prochází záznamy ze kterých použije atribut `fullPath`.
+[datatables-config.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implementuje funkci ```renderJson(td, type, rowData, row)``` pro zobrazení dat v tabulce. Ta prochází záznamy ze kterých použije atribut ```fullPath```.
 
-[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) je kořenová komponenta, která podle dat prochází `child` komponentu řádku záznamu. Pro objekty typu **array** zobrazí také tlačítko pro přidání nového záznamu do pole.
+[webjet-dte-jstree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue) je kořenová komponenta, která podle dat prochází ```child``` komponenty Pro objekty typu **array** zobrazí i tlačítko pro přidání nového záznamu do pole.
 
-Komponenta používá [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) ve kterém poslouchá na událost `change-jstree`. Tato událost nastane po kliknutí na adresář nebo web stránku v JS Tree.
+Komponenta používá [EventBus](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/event-bus.js) ve kterém poslouchá na událost ```change-jstree```. Tato událost nastane po kliknutí na adresář nebo web stránku v JS Tree.
 
-Funkce `processTreeItem(that, data)` zpracuje kliknutí na objekt (DocDetails nebo GroupDetails) v JS tree komponentě. Provede validaci a případnou konverzi JSON objektu.
+Funkce ```processTreeItem(that, data)``` zpracuje kliknutí na objekt (DocDetails nebo GroupDetails) v JS tree komponentě. Provede validaci a případnou konverzi JSON objektu.
 
-[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) je řádek seznamu existujících objektů. V každém řádku zobrazuje tlačítko pro editaci a smazání záznamu. Klepnutí je zpracováno kořenovou komponentou přes volání `this.$parent.processTreeItem(this, data);`.
+[webjet-dte-jstree-item.js](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree-item.vue) je řádek seznamu existujících objektů. V každém řádku zobrazuje tlačítko pro editaci a smazání záznamu. Klepnutí je zpracováno kořenovou komponentou přes volání ```this.$parent.processTreeItem(this, data);```.
 
-[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) zapouzdřuje knihovnu JS Tree do VUE komponenty.
+[vue-folder-tree.vue](../../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) zapouzdřuje knihovnu JS Tree do VUE komponenty
 
-Pokud je `Doc/GroupDetails` objekt `null` nezobrazilo by se žádné pole. Proto v `field-type-json.js` je funkce `fixNullData`, která pro tento případ uměle vytvoří základní objekt. Pokud se jedná o web stránku obsahuje atribut `docId=-1`, pro adresář `groupId=-1` a pro ostatní objekty `id=-1`. Atribut `fullPath` je nastaven na prázdnou hodnotu.
+Pokud je ```Doc/GroupDetails``` objekt ```null``` nezobrazilo by se žádné pole. Proto v ```field-type-json.js``` je funkce ```fixNullData```, která pro tento případ uměle vytvoří základní objekt. Pokud se jedná o web stránku obsahuje atribut ```docId=-1```, pro adresář ```groupId=-1``` a pro ostatní objekty ```id=-1```. Atribut ```fullPath``` je nastaven na prázdnou hodnotu.

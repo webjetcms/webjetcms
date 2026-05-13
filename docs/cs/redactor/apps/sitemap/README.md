@@ -3,6 +3,7 @@
 Aplikace Mapa stránky dokáže automaticky generovat stromovou strukturu web sídla.
 
 Zobrazení položky v mapě stránek je závislé na nastavení pole Navigační lišta v kartě Navigace adresáře web stránek. Má následující možnosti:
+
 - Stejně jako menu - zobrazení v mapě stránek se chová stejně jako je nastaveno pole pro zobrazení v menu.
 - Zobrazit - položka se v mapě stránek zobrazí.
 - Nezobrazit - položka se v mapě stránek nezobrazí (a to včetně podsložek).
@@ -10,6 +11,7 @@ Zobrazení položky v mapě stránek je závislé na nastavení pole Navigační
 - Zobrazit včetně web stránek - v mapě stránek se zobrazí složka a zobrazí se také všechny web stránky ze složky jako samostatné položky. Standardně u možnosti Zobrazit se nezobrazují webové stránky z adresáře jako samostatné položky v mapě stránek.
 
 Při zobrazení včetně webových stránek můžete ještě samostatně každé webové stránce nastavit možnost zobrazení v mapě stránek. Možnost je rovněž v kartě Navigace a obsahuje možnosti:
+
 - Stejně jako menu - zobrazení v mapě stránek se chová stejně jako je nastaveno pole pro zobrazení v menu.
 - Zobrazit - web stránka se v mapě stránek zobrazí.
 - Nezobrazit - web stránka se v mapě stránek nezobrazí.
@@ -19,12 +21,16 @@ Při zobrazení včetně webových stránek můžete ještě samostatně každé
 ## Nastavení aplikace
 
 Ve vlastnostech aplikace lze nastavit:
-- Kořenový adresář - výběr kořenového adresáře
-- Typ zobrazení - způsob zobrazení mapy stránek, viz. možnosti níže
+
+
+  - Kořenový adresář - výběr kořenového adresáře
+  - Typ zobrazení - způsob zobrazení mapy stránek, viz. možnosti níže
 
 pro některé typy zobrazení je ještě možné nastavit:
-- Hloubka prohledávání adresářů - maximální vnoření zobrazených položek
-- Počet sloupců ve výpisu - zobrazení lze rozdělit do zadaného počtu sloupců (pro krásnější zobrazení na web stránce)
+
+
+  - Hloubka prohledávání adresářů - maximální vnoření zobrazených položek
+  - Počet sloupců ve výpisu - zobrazení lze rozdělit do zadaného počtu sloupců (pro krásnější zobrazení na web stránce)
 
 ![](editor-dialog.png)
 
@@ -54,6 +60,6 @@ Klepnutím na znak + nebo - se zobrazí / zavřou web stránky / adresář.
 
 ## XML soubor pro vyhledávače
 
-Vyhledávače stránek (např. Google) automaticky hledají soubor `/sitemap.xml` s mapou stránek web sídla. WebJET tento soubor automaticky poskytuje pomocí souboru `/components/sitemap/google-sitemap.jsp`.
+Vyhledávače stránek (např. Google) automaticky hledají soubor ```/sitemap.xml``` s mapou stránek web sídla. WebJET tento soubor automaticky poskytuje pomocí souboru ```/components/sitemap/google-sitemap.jsp```.
 
 Generované položky se chovají podobně jako zobrazení Rozvinutý strom (HTML).

@@ -4,17 +4,17 @@ Technologies used:
 
 - [Spring REST + Spring DATA] (spring.md)
 - [thymeleaf.org](thymeleaf.md) - templating system connected to a Java backend
-- ```webpack+node``` for compiling html/PUG/JS files
-- datatables.net + [editor](https://editor.datatables.net) - basic work and editing of tabular data, connected to Spring via DatatablesRestControllerV2 - example in [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) and [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- ```rspack+node``` for compiling html/PUG/JS files
+- datatables.net + [editor](https://editor.datatables.net) - basic work and editing of tabular data, connected to Spring via DatatablesRestControllerV2 - example in [GalleryRestController.java](../../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) and [gallery.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 - [pugjs.org](pugjs.md) - ```preprocessor``` for generating HTML code for pages
-- [Vue.js](vue.md) - available as ```window.Vue```, short demo in [photo gallery](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [Vue.js](vue.md) - available as ```window.Vue```, short demo in [photo gallery](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 
 The entire process of generating a web page in ```/admin/v9/``` is as follows:
 
 ```mermaid
 graph TD;
-    src/views/pages/app/gallery.pug-->webpack
-    webpack-->dist/views/apps/gallery.html
+    src/views/pages/app/gallery.pug-->rspack
+    rspack-->dist/views/apps/gallery.html
     dist/views/apps/gallery.html-->Thymeleaf
     Thymeleaf-->ThymeleafAdminController.java/LayoutService.java
     ThymeleafAdminController.java/LayoutService.java-->prehliadac
@@ -63,11 +63,21 @@ window.domReady.add(function () {
 }, 10);
 ```
 
-## Webpack
+## Rspack
 
-The assembly and compilation of ```pug/js/css``` is done using [webpack](https://webpack.js.org/).
+The assembly and compilation of ```pug/js/css``` is done using [Rspack](https://rspack.dev/) (via `npm` scripts in `admin/v9/package.json`).
 
-JS and CSS files are saved after compilation in the ```dist``` folder. From there they are inserted into PUG using the list from ```htmlWebpackPlugin.files```. At the same time, by default only scripts that do not start with the prefix ```pages_``` are inserted. A file with this prefix is ​​inserted only if its name matches the name of the pug file.
+Most commonly used commands:
+
+- ```npm run dev``` - ​​development build via `rspack.config.dev.js`
+- ```npm run watch``` - ​​development build in `watch` mode + automatic page refresh after file changes
+- ```npm run watch:plain``` - ​​pure `rspack --watch` without live reload server
+- ```npm run prod``` - ​​production build via `rspack.config.prod.js`
+- ```npm run analyze``` - ​​generates a report of the size of packages to `dist/bundle-report.html`
+
+JS and CSS files are compiled and saved in the ```dist``` folder. PUG templates are rendered via a custom renderer in the ```pug.render.js``` file, which translates pages from ```views/pages/*.pug``` to ```dist/views/*.html```.
+
+Assets from the list ```files.js``` and ```files.css``` (compatible via the object `htmlWebpackPlugin.files`) are inserted into the PUG. At the same time, only scripts that do not start with the prefix ```pages_``` are inserted by default. A file with this prefix is ​​inserted only if its name matches the name of the pug file.
 
 ```javascript
 // Outpul all script files
@@ -81,6 +91,8 @@ each js in WPF.js
     - if (js.indexOf("pages_")==-1 || js.indexOf("pages_"+filename+".")!=-1)
         script(type='text/javascript', src=js)
 ```
+
+In ```watch``` mode, all ```*.pug``` files are also monitored. When a specific page is changed, only that page is recompiled, when shared parts (layout/mixins/partials) are changed, all pages are recompiled.
 
 So, if you need to insert a special JavaScript file for a page in the administration, create it in the ```src/main/webapp/admin/v9/src/js/pages/``` folder, if you expect to use several separate JS files combined into one whole, create a subfolder as well. An example is ```src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js``` which is in the ```web-pages-list``` subfolder, and in the ```web-pages-list.js``` script, the class from ```preview.js``` is imported.
 

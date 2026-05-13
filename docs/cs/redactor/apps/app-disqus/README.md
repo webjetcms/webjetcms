@@ -5,7 +5,9 @@ Vložte službu Disqus komentáře do vaší webstránky. Před vložením do st
 ## Nastavení aplikace
 
 Po vytvoření účtu si na https://disqus.com/admin/create/ zaregistrujte stránku a zvolte si Unique Disqus URL (např. webjet.disqus.com) a ten vložte do následujícího pole:
+
 - Unique Disqus URL (website shortname)
+
 
 ![](editor.png)
 

@@ -5,6 +5,7 @@ Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický o
 ## Nastavení aplikace
 
 ### Karta Nastavení:
+
 - **Adresář**: Zadejte cestu k adresáři.
 - **Uspořádat podle**: Vyberte kritérium uspořádání, například „Priority“.
   - **Vzestupně**: Definujte, zda se má uspořádat vzestupně.
@@ -20,12 +21,14 @@ Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický o
 - **Tajný klíč pro službu "ověřeno zákazníky" (heureka.sk)**: Zadejte tajný klíč pro službu.
 
 #### Způsob doručení:
+
 - **Zadejte způsob doručení**: Vyplňte dostupné způsoby doručení.
   - Při stisku **Přidat** lze vyplnit: **Cena bez DPH**, **Měna**, **Daň**, **Cena s DPH**, **Stará cena s DPH**
 
 ![](editor.png)
 
 ### Karta Vizuální styl:
+
 - Možnost vybrat ze dvou stylů pro zobrazení.
 
 ![](editor-style.png)
@@ -34,7 +37,7 @@ Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický o
 
 Při zobrazení lze vyfiltrovat podle:
 - **Stav**
-- **Vydáno / odesláno**
+- **Vydána / odeslána**
 - **Jméno**
 - **E-mail**
 - **Číslo**
@@ -42,15 +45,18 @@ Při zobrazení lze vyfiltrovat podle:
 ![](editor-list.png)
 
 ### Karta položky:
+
 - **Název web stránky**: Zadejte název web stránky.
 - **Popis produktu**: Zadejte popis produktu.
 - **Zobrazit štítek**: Zapnout zobrazení štítku produktu.
 
 #### Přidat variantu:
+
 - **Název varianty**: Zadejte název varianty produktu.
 - **Hodnoty varianty**: Zadejte dostupné hodnoty varianty.
 
 #### Informace o produktu:
+
 - **Cena bez DPH**
 - **Měna**
 - **Daň**

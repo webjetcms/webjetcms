@@ -5,6 +5,7 @@ Oživte svou stránku s interaktivním obrázkovým kolotočem. Klepnutím na ma
 ## Nastavení aplikace
 
 Dostupné karty:
+
 - **Generované CSS styly**
 - **Rozšířené**
 - **Položky**
@@ -18,6 +19,7 @@ V této části si můžete vybrat styl aplikace Carousel Slider.
 ### Rozšířené
 
 V této části lze nastavit rozšířená nastavení:
+
 - **Rozměry**
   - Šířka
   - Výška
@@ -48,6 +50,7 @@ V této části lze vidět a spravovat položky aplikace, takže klasické akce 
 ![](editor-items.png)
 
 Pro jednotlivé položky můžete nastavit tyto parametry:
+
 - **Obrázek**, podporován je výběr obrázku pomocí průzkumníka, jakož i přímé zadání cesty obrázku
 - **Nadpis**, nadpis obrázku
 - **Podnadpis**, podnadpis obrázku

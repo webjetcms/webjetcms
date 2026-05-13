@@ -6,7 +6,7 @@ Pole umožňuje nahrání souboru.
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.UPLOAD`.
+Anotace se používá jako ```DataTableColumnType.UPLOAD```.
 
 Kompletní příklad anotace:
 
@@ -21,11 +21,11 @@ private String file = "";
 
 ## Frontend
 
-Pro nahrání nového souboru můžete soubor vložit přímo pomocí `Drag&Drop`, nebo klepnutím na pole, čímž vyvoláte systémový výběr souborů.
+Pro nahrání nového souboru můžete soubor vložit přímo pomocí `Drag&Drop`, nebo kliknutím na pole, čímž vyvoláte systémový výběr souborů.
 
 !>**Upozornění:** najednou můžete vložit pouze jeden soubor.
 
-Po vložení souboru se spustí animace nahrávání souboru a vyvolá se událost`WJ.AdminUpload.addedfile`, na kterou můžete poslouchat.
+Po vložení souboru se spustí animace nahrávání souboru a vyvolá se událost `WJ.AdminUpload.addedfile`, na kterou můžete poslouchat.
 
 ![](field-uploadFile-loading.png)
 

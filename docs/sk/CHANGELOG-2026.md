@@ -4,6 +4,14 @@
 
 > Vývojová verzia aktualizovaná z main repozitára.
 
+## 2026.18
+
+> WebJET CMS 2026.18 prináša **schvaľovanie zmien priečinkov** s podporou viacúrovňového schvaľovania a **testovanie prístupnosti** integrované priamo do automatizovaných testov.
+>
+> V editore stránok môžete teraz **maximalizovať dialógové okná** pri nastavovaní aplikácií, vkladaní obrázkov či odkazov. Nastavenie aplikácie zároveň získalo nové možnosti pre atribúty prístupnosti (aria) a **vlastné CSS štýly** zobrazenia.
+>
+> V oblasti bezpečnosti pribudla **podpora prihlasovania cez OAuth2/Keycloak/Google/Facebook** a **Prístupové kľúče** (PassKey/WebAuthn), spolu s vylepšeniami pre stabilnejšiu prevádzku v klastrovom prostredí.
+
 !>**Upozornenie:** Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 11, používa Spring verzie 7. Pred aktualizáciou [skontrolujte požiadavky](install/versions.md#zmeny-pri-prechode-na-jakarta-verziu).
 
 ### Prelomové zmeny
@@ -186,6 +194,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - doplnená možnosť volať [vlastnú funkciu pre čistenie HTML kódu](frontend/page-builder/blocks.md#podporný-javascript-kód) po vložení z `Microsoft Office` alebo pri získaní HTML kódu (#OSK49).
 - `WebjetEvent` – pridaná možnosť nastaviť používateľa typu `Identity` priamo do udalosti. Vhodné pri spracovaní udalostí, kde je potrebný používateľ, ale nie je dostupný `context` alebo `request` (#OSK423).
 - `WJ.openIframeModal` - pridaná možnosť presúvať dialógové okno uchopením za hlavičku (drag & drop), maximalizovať/minimalizovať okno a definovať vlastné tlačidlá v pätičke cez parameter `buttons` (#58405).
+
+![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
 

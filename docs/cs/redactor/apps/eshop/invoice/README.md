@@ -6,7 +6,7 @@ Aplikace neumožňuje přidávání nových objednávek pomocí vytvoření/dupl
 
 ![](datatable.png)
 
-Můžete si všimnout, že sloupce **Jméno** a **Příjmení** mají některé hodnoty kombinovány. První hodnota **vždy** zobrazuje jméno jako kontakt (fakturační jméno). Druhé jméno v závorce se zobrazí, pouze pokud byla zadána adresa doručení, která je jiná než fakturační. Protože fakturační jméno a jméno pro doručení se mohou lišit. Při filtrování se hledá shoda pro obě tyto hodnoty. Totéž platí iu sloupce příjmení.
+Můžete si všimnout, že sloupce **Jméno** a **Příjmení** mají některé hodnoty kombinované. První hodnota **vždy** zobrazuje jméno jako kontakt (fakturační jméno). Druhé jméno v závorce se zobrazí, pouze pokud byla zadána adresa doručení, která je jiná než fakturační. Protože fakturační jméno a jméno pro doručení se mohou lišit. Při filtrování se hledá shoda pro obě tyto hodnoty. Totéž platí iu sloupce příjmení.
 
 ## Úprava objednávky
 
@@ -44,6 +44,7 @@ Poskytuje přehled osobních údajů jako **kontakt**, **fakturační adresa**, 
 ### Karta Notifikace
 
 Poskytuje náhled emailové notifikace na zákazníka, s možností změny textu. Notifikace se odešle pouze v případě zvolení možnosti **Odeslat notifikaci klientovi** v [Karta Základní](#karta-základní).
+
 - **Odesílatel** - automatický vyplněná hodnota s emailem aktuálně přihlášeného uživatele. Slouží jako email odesílatele notifikace a lze tuto adresu změnit.
 - **Předmět** - automatický vyplněná hodnota s textem **Změna stavu objednávky (id objednávky)**. Slouží jako předmět odeslaného emailu (notifikace) a lze ji změnit.
 - **Text notifikace** - tělo/text odeslaného emailu.
@@ -68,7 +69,7 @@ Poskytuje přehled [všech položek objednávky](items.md) a možnost správy po
 
 Poskytuje celkový přehled objednávky, včetně plateb a položek. Tento přehled **není možné upravovat**, slouží pouze pro informační účely. Také se tento přehled vloží do odeslané [notifikace](#karta-notifikace) uživateli, jako náhrada hodnoty `{ORDER_DETAILS}`.
 
-Při změně hodnot [plateb](#karta-platby) nebo hodnot [položek](#karta-položky) se se tento přehled objednávky obnoví a poskytuje tak vždy aktuální informace.
+Při změně hodnot [plateb](#karta-platby) nebo hodnot [položek](#karta-položky) se tento přehled objednávky obnoví a poskytuje tak vždy aktuální informace.
 
 ![](editor_order_status.png)
 
@@ -80,13 +81,13 @@ V kartě Volitelná pole můžete nastavovat hodnoty polí podle potřeb vaší 
 
 ## Změna stavu objednávky
 
-Pokud v objednávce byla přidána/změněna/vymazána platba nebo přidána/změněna/vymazána položka objednávky, na pozadí se automatický přepočítá poměr **zaplacené částky** a **částky k úhradě**.
+Pokud v objednávce byla přidána/změněna/vymazána platba nebo přidána/změněna/vymazána položka objednávky, na pozadí se automatický přepočítá poměr **zaplacené částky** a **sumy k úhradě**.
 
 Podle poměru těchto částek se změní i samotný stav objednávky:
 - pokud zaplacená částka je 0, tak stav objednávky bude **Nová (nezaplacená)**
-- pokud zaplacená částka **nepokrývá** celkovou částku objednávky, stav objednávky bude **Částečně zaplacená**
-- pokud zaplacená částka **pokrývá** celkovou částku objednávky, stav objednávky bude **Zaplacená**
+- pokud zaplacená částka **nepokrývá** celkovou částku objednávky, stav objednávky bude **Částečně zaplacena**
+- pokud zaplacená částka **pokrývá** celkovou částku objednávky, stav objednávky bude **Zaplacena**
 
 ## Vymazání objednávky
 
-Chcete-li vymazat objednávku, je třeba nejprve změnit stav na **Stornována**. Po vymazání se automaticky vymažou i související platby a položky objednávky.
+Chcete-li vymazat objednávku, je třeba nejprve změnit stav na **Stornovaná**. Po vymazání se automaticky vymažou i související platby a položky objednávky.

@@ -1,14 +1,14 @@
 # Integrace Google Tag Manager
 
-Pokud se na webu používá `Google Tag Manager` ke vkládání skriptů a sledovacích nástrojů, potřebujeme zajistit následující body.
+Pokud se na webu používá ```Google Tag Manager``` ke vkládání skriptů a sledovacích nástrojů, potřebujeme zajistit následující body.
 
-- Inicializace `DataLayer`
+- Inicializace ```DataLayer```
 - Výchozí nastavení souhlasů
-- Aktualizace souhlasů při změně preferencí návštěvníka a potvrzení `cookies` lišty
+- Aktualizace souhlasů při změně preferencí návštěvníka a potvrzení ```cookies``` lišty
 
 ## Inicializace DataLayer
 
-`DataLayer` musí být vytvořen ještě před vloženým `GTM`.
+```DataLayer``` musí byť vytvorený ešte pred vloženým ```GTM```.
 
 ```javascript
     window.dataLayer = window.dataLayer || [];
@@ -17,7 +17,7 @@ Pokud se na webu používá `Google Tag Manager` ke vkládání skriptů a sledo
 
 ## Výchozí nastavení souhlasů
 
-`ad_storage` a `analytics_storage` jsou výchozí souhlasy, které umí číst Google nástroje bez potřeby dalších podmínek v `GTM`. Nabýt mohou hodnoty `denied` a `granted`.
+```ad_storage``` a ```analytics_storage``` sú predvolené súhlasy, ktoré vedia čítať Google nástroje bez potreby ďalších podmienok v ```GTM```. Nadobudnúť môžu hodnoty ```denied``` a ```granted```.
 
 ```javascript
     gtag('consent', 'default', {
@@ -28,22 +28,22 @@ Pokud se na webu používá `Google Tag Manager` ke vkládání skriptů a sledo
     });
 ```
 
-Jedná se o výchozí nastavení. Při načítání stránky se nastaví na `denied/granted` podle naší cookie `enableCookieCategory`. Přijde-li návštěvník na web poprvé, hodnoty jsou `denied`.
+Jedná se o výchozí nastavení. Při načítání stránky se nastaví na ```denied/granted``` podle naší cookie ```enableCookieCategory```. Pokud návštěvník přijde na web poprvé, hodnoty jsou ```denied```.
 
 **V principu platí, že**
 
-- `ad_storage` = WebJET marketingová kategorie `cookies`
-- `ad_user_data` = WebJET marketingová kategorie `cookies`
-- `ad_personalization` = WebJET marketingová kategorie `cookies`
-- `analytics_storage` = WebJET statistická kategorie `cookies`
+- ```ad_storage``` = WebJET marketingová kategorie ```cookies```
+- ```ad_user_data``` = WebJET marketingová kategorie ```cookies```
+- ```ad_personalization``` = WebJET marketingová kategorie ```cookies```
+- ```analytics_storage``` = WebJET statistická kategorie ```cookies```
 
-!>**Upozornění:** výchozí nastavení souhlasů musí být v kódu ještě před vloženým `GTM`.
+!>**Upozornění:** výchozí nastavení souhlasů musí být v kódu ještě před vloženým ```GTM```.
 
-*Zajímavostí je, že pokud jsou souhlasy výše zakázány, Google Analytics se stejně spustí. Nevytváří však `cookies` a neposílá si informace o uživateli, jeho prohlížeči, nesleduje se návštěva a podobně. Spouští se z důvodu, že slibuje do-modelování analytiky na základě chybějících dat uživatelů, kteří nedali souhlas.*
+*Zajímavostí je, že pokud jsou souhlasy výše zakázány, Google Analytics se stejně spustí. Nevytváří však ```cookies``` a neposílá si informace o uživateli, jeho prohlížeči, nesleduje se návštěva a podobně. Spouští se z důvodu, že slibuje do-modelování analytiky na základě chybějících dat uživatelů, kteří nedali souhlas.*
 
 ### Další kategorie souhlasů
 
-Kód výše by měl být samozřejmě doplněn io WebJET kategorie `cookies`, které se používají v rámci webu, například. preferenční.
+Kód výše by měl být samozřejmě doplněn io WebJET kategorie ```cookies```, které se používají v rámci webu. preferenční.
 
 ```javascript
     gtag('consent', 'default', {
@@ -58,7 +58,7 @@ Kód výše by měl být samozřejmě doplněn io WebJET kategorie `cookies`, kt
 
 ## Aktualizace souhlasů při změně preferencí
 
-Jakmile dojde ke změnám v souhlasech (návštěvník interaguje s cookies lištou), je třeba udělat **aktualizaci souhlasu** + **odeslat do GTM event**.
+Jakmile dojde ke změnám v souhlasech (návštěvník interaguje s cookies lištou), je třeba provést **aktualizaci souhlasu** + **odeslat do GTM event**.
 
 ```javascript
     gtag('consent', 'update', {
@@ -69,17 +69,17 @@ Jakmile dojde ke změnám v souhlasech (návštěvník interaguje s cookies liš
     dataLayer.push({'event': 'consent-update'});
 ```
 
-V rámci `gtag update` stačí vložit jen ty kategorie, které se změnily.
+V rámci ```gtag update``` stačí vložit jen ty kategorie, které se změnily.
 
-`DataLayer` push je event kvůli `GTM`, aby se uměli spustit nástroje přímo při udělení souhlasu a nemuselo se čekat na obnovení stránky.
+```DataLayer``` push je event kvôli ```GTM```, aby sa vedeli spustiť nástroje priamo pri udelení súhlasu a nemuselo sa čakať na obnovenie stránky.
 
-Aktualizaci dat automaticky provádí aplikace `GDPR Cookies` i aplikace `Cookiebar`.
+Aktualizáciu údajov automaticky vykonáva aplikácia ```GDPR Cookies``` aj aplikácia ```Cookiebar```.
 
-## Definování souhlasů, pokud návštěvník potvrdil své volby
+## Definovanie súhlasov, ak návštevník potvrdil svoje voľby
 
-`Consent default` - kategorie (kromě `nutne`) jsou vždy nastaveny na `denied`, i přesto, že jde o opakovanou návštěvu a návštěvník dříve povolil jednotlivé kategorie. No v takovém případě hned za definováním `consent default` následuje v kódu `consent update` (bez DataLayer push eventu - ten se posílá jen při interagování s cookies lištou).
+`Consent default` - kategórie (okrem `nutne`) sú vždy nastavené na `denied`, aj napriek tomu, že ide o opakovanú návštevu a návštevník predtým povolil jednotlivé kategórie. No v takomto prípade hneď za definovaním `consent default` nasleduje v kóde `consent update` (bez DataLayer push eventu - ten sa posiela len pri interagovaní s cookies lištou).
 
-## Modelový příklad
+## Modelový príklad
 
 ```html
     <html>
@@ -106,7 +106,7 @@ Aktualizaci dat automaticky provádí aplikace `GDPR Cookies` i aplikace `Cookie
 
 ## Událost při odeslání formuláře
 
-Po odeslání formuláře přes AJAX je publikována událost `WJ.formSubmit`, na kterou lze poslouchat při napojení na `DataLayer` Např. jako:
+Po odeslání formuláře přes AJAX je publikována událost `WJ.formSubmit`, na kterou je možné poslouchat při napojení na `DataLayer`. jako:
 
 ```javascript
     window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });

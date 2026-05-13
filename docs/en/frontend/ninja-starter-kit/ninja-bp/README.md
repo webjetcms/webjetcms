@@ -112,7 +112,7 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 <meta property="og:image" content="${ninja.page.urlDomain}${ninja.page.seoImage}" />
 <meta property="og:site_name" content="${ninja.temp.group.siteName}" />
 <meta property="og:type" content="website" />
-<meta property="og:locale" content="${ninja.temp.lngIso}" />
+<meta property="og:locale" content="${ninja.temp.lngIsoUnderscore}" />
 
 <%--<link rel="alternate" hreflang="" href="" />--%>
 <link rel="canonical" href="${ninja.page.canonical}" />
@@ -253,7 +253,6 @@ ${ninja.webjet.insertJqueryFake}
     </div>
 </c:if>
 ```
-
 
 <!-- tabs:end -->
 

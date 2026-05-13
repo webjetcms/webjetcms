@@ -2,7 +2,7 @@
 
 Aktuální verze WebJET CMS vyžaduje `Java 17` a `Tomcat 11`.
 
-Základní projekt ve formátu gradle naleznete na [githube webjetcms/basecms](https://github.com/webjetcms/basecms).
+Základní projekt ve formátu gradle naleznete na [githubu webjetcms/basecms](https://github.com/webjetcms/basecms).
 
 V gradle projektech stačí zadat verzi v build.gradle:
 
@@ -13,54 +13,57 @@ ext {
 ```
 
 Přičemž aktuálně existují následující verze WebJET:
-- `2026.0-jakarta-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře s využitím `Jakarta namespace`. Vyžaduje Tomcat 11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
-- `2026.0-jakarta` - stabilizovaná verze 2026.0 pro aplikační server Tomcat 11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
-- `2026.0` - stabilizovaná verze 2026.0, nepřibývají do ní denní změny.
-- `2025.0-jakarta-SNAPSHOT` - stabilizovaná verze 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
-- `2025.0-SNAPSHOT` - stabilizovaná verze 2025.52, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
-- `2025.0.52` - stabilizovaná verze 2025.0.52 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2025.0.50` - stabilizovaná verze 2025.0.50 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2025.40-jakarta` - stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
-- `2025.40` - stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
-- `2025.0.40` - stabilizovaná verze 2025.0.40 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
-- `2025.0.23` - stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
-- `2024.52` - stabilizovaná verze 2024.52, nepřibývají do ní denní změny.
-- `2024.0.52` - stabilizovaná verze 2024.0.52 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.0.47` - stabilizovaná verze 2024.0.47 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.40` - stabilizovaná verze 2024.40, nepřibývají do ní denní změny.
-- `2024.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2024.0 zkompilovaná s Java verze 17.
-- `2024.18` - stabilizovaná verze 2024.18, nepřibývají do ní denní změny.
-- `2024.0.34` - stabilizovaná verze 2024.0.34 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.0.21` - stabilizovaná verze 2024.0.21 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.0.17` - stabilizovaná verze 2024.0.17 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.0.9` - stabilizovaná verze 2024.0.9 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.0` - stabilizovaná verze 2024.0 (technicky shodná s 2023.52-java17), nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
-- `2023.52-java17` - stabilizovaná verze 2023.52, nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
-- `2023.52` - stabilizovaná verze 2023.52, nepřibývají do ní denní změny.
-- `2023.40-SNAPSHOT-java17` - pravidelně aktualizovaná verze z master repozitáře verze 2023.40 zkompilovaná s Java verze 17.
-- `2023.40-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.40.
-- `2023.40` - stabilizovaná verze 2023.40, nepřibývají do ní denní změny.
-- `2023.18-SNAPSHOT-java17` - pravidelně aktualizovaná verze z master repozitáře verze 2023.18 zkompilovaná s Java verze 17.
-- `2023.18-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.18.
-- `2023.18` - stabilizovaná verze 2023.18, nepřibývají do ní denní změny.
-- `2023.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.0, z důvodu API změn tato verze končí před vydáním verze 2023.18 aby nedošlo k neočekávané změně API v projektech.
-- `2023.0` - stabilizovaná verze 2023.0, nepřibývají do ní denní změny.
-- `2022.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře.
-- `2022.52` - stabilizovaná verze 2022.52, nepřibývají do ní denní změny.
-- `2022.40` - stabilizovaná verze 2022.40, nepřibývají do ní denní změny.
-- `2022.18` - stabilizovaná verze 2022.18, nepřibývají do ní denní změny.
-- `2022.0` - stabilizovaná verze 2022.0, nepřibývají do ní denní změny.
-- `2021.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře.
-- `2021.52` - stabilizovaná verze 2021.52, nepřibývají do ní denní změny.
-- `2021.40` - stabilizovaná verze 2021.40, nepřibývají do ní denní změny.
-- `2021.13` - stabilizovaná verze 2021.13, nepřibývají do ní denní změny.
+
+- `2026.0-jakarta-SNAPSHOT` - ​​pravidelně aktualizovaná verze z main repozitáře s využitím `Jakarta namespace`. Vyžaduje Tomcat 11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2026.0-jakarta-SNAPSHOT)
+- `2026.0-SNAPSHOT` - ​​aktualizovaná verze z `hotfix/2026.0` s opravami verze `2026.0` pro Tomcat9/Java 17.
+- `2026.0-jakarta` - ​​stabilizovaná verze 2026.0 pro aplikační server Tomcat 11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2026.0` - ​​stabilizovaná verze 2026.0, nepřibývají do ní denní změny.
+- `2025.0-jakarta-SNAPSHOT` - ​​stabilizovaná verze 2025.52 s využitím `Jakarta namespace`. Vyžaduje Tomcat 10/11, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-jakarta-SNAPSHOT)
+- `2025.0-SNAPSHOT` - ​​stabilizovaná verze 2025.52, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.0.52` - ​​stabilizovaná verze 2025.0.52 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.0.50` - ​​stabilizovaná verze 2025.0.50 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.40-jakarta` - ​​stabilizovaná verze 2025.40 pro aplikační server Tomcat 10/11 s využitím `Jakarta namespace`, nepřibývají do ní denní změny.
+- `2025.40` - ​​stabilizovaná verze 2025.40, nepřibývají do ní denní změny.
+- `2025.0.40` - ​​stabilizovaná verze 2025.0.40 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.18` - ​​stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
+- `2025.0.23` - ​​stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.0` - ​​stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
+- `2024.52` - ​​stabilizovaná verze 2024.52, nepřibývají do ní denní změny.
+- `2024.0.52` - ​​stabilizovaná verze 2024.0.52 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.0.47` - ​​stabilizovaná verze 2024.0.47 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.40` - ​​stabilizovaná verze 2024.40, nepřibývají do ní denní změny.
+- `2024.0-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2024.0 zkompilovaná s Java verze 17.
+- `2024.18` - ​​stabilizovaná verze 2024.18, nepřibývají do ní denní změny.
+- `2024.0.34` - ​​stabilizovaná verze 2024.0.34 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.0.21` - ​​stabilizovaná verze 2024.0.21 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.0.17` - ​​stabilizovaná verze 2024.0.17 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.0.9` - ​​stabilizovaná verze 2024.0.9 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2024.0` - ​​stabilizovaná verze 2024.0 (technicky shodná s 2023.52-java17), nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
+- `2023.52-java17` - ​​stabilizovaná verze 2023.52, nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
+- `2023.52` - ​​stabilizovaná verze 2023.52, nepřibývají do ní denní změny.
+- `2023.40-SNAPSHOT-java17` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2023.40 zkompilovaná s Java verze 17.
+- `2023.40-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2023.40.
+- `2023.40` - ​​stabilizovaná verze 2023.40, nepřibývají do ní denní změny.
+- `2023.18-SNAPSHOT-java17` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2023.18 zkompilovaná s Java verze 17.
+- `2023.18-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2023.18.
+- `2023.18` - ​​stabilizovaná verze 2023.18, nepřibývají do ní denní změny.
+- `2023.0-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře verze 2023.0, z důvodu API změn tato verze končí před vydáním verze 2023.18 aby nedošlo k neočekávané změně API v projektech.
+- `2023.0` - ​​stabilizovaná verze 2023.0, nepřibývají do ní denní změny.
+- `2022.0-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře.
+- `2022.52` - ​​stabilizovaná verze 2022.52, nepřibývají do ní denní změny.
+- `2022.40` - ​​stabilizovaná verze 2022.40, nepřibývají do ní denní změny.
+- `2022.18` - ​​stabilizovaná verze 2022.18, nepřibývají do ní denní změny.
+- `2022.0` - ​​stabilizovaná verze 2022.0, nepřibývají do ní denní změny.
+- `2021.0-SNAPSHOT` - ​​pravidelně aktualizovaná verze z master repozitáře.
+- `2021.52` - ​​stabilizovaná verze 2021.52, nepřibývají do ní denní změny.
+- `2021.40` - ​​stabilizovaná verze 2021.40, nepřibývají do ní denní změny.
+- `2021.13` - ​​stabilizovaná verze 2021.13, nepřibývají do ní denní změny.
 
 Pro čísla verzí platí:
-- `YEAR.0.x` - opravná verze, **nepřibývají do ní nové vlastnosti**, během roku jsou v ní opravovány nalezené chyby ve WebJET CMS. Použité knihovny jsou v případě potřeby aktualizovány pouze v rámci `minor` verze. Pokud oprava knihovny vyžaduje změnu v `major` verzi nemůže být do této verze zapracována, protože to může nést riziko změn v `API`.
-- `YEAR.0-SNAPSHOT` - vývojová verze která **obsahuje nové vlastnosti** a opravy chyb z verze `YEAR.0.x`.
-- `YEAR.WEEK` - **stabilizovaná verze** z daného týdne která vznikne ze `SNAPSHOT` verze po úspěšném vícenásobném testování. Opravy dalších chyb budou zapracovány do další verze, nevznikne opravná `YEAR.WEEK.x` ale nová `YEAR.WEEK` s novým číslem. V případě chyby v takové verzi je tedy třeba počítat s přechodem na další stabilní verzi `YEAR.WEEK` nebo na `YEAR.0-SNAPSHOT` verzi.
+
+- `YEAR.0.x` - ​​opravná verze, **nepřibývají do ní nové vlastnosti**, během roku jsou v ní opravovány nalezené chyby ve WebJET CMS. Použité knihovny jsou v případě potřeby aktualizovány pouze v rámci `minor` verze. Pokud oprava knihovny vyžaduje změnu v `major` verzi nemůže být do této verze zapracována, protože to může nést riziko změn v `API`.
+- `YEAR.0-SNAPSHOT` - ​​vývojová verze která **obsahuje nové vlastnosti** a opravy chyb z verze `YEAR.0.x`.
+- `YEAR.WEEK` - ​​**stabilizovaná verze** z daného týdne která vznikne ze `SNAPSHOT` verze po úspěšném vícenásobném testování. Opravy dalších chyb budou zapracovány do další verze, nevznikne opravná `YEAR.WEEK.x` ale nová `YEAR.WEEK` s novým číslem. V případě chyby v takové verzi je tedy třeba počítat s přechodem na další stabilní verzi `YEAR.WEEK` nebo na `YEAR.0-SNAPSHOT` verzi.
 
 Verze `YEAR.0.x` se tedy zásadně nemění, obsahuje opravy chyb (pokud oprava nevyžaduje zásadní změnu). Je vhodná pro použití u zákazníka, který chce mít stabilní verzi WebJETu bez přidávání nových vlastností během roku.
 
@@ -70,7 +73,7 @@ Platí tedy, že `YEAR.0.x` je **nejstabilnější** z pohledu změn a `YEAR.0-S
 
 ## Změny při přechodu na Tomcat 9.0.104+
 
-V [Tomcat od verze 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) je změněna kontrola počtu parametrů při `multipart` HTTP požadavku. Je proto třeba nastavit/zvýšit parametr `maxPartCount` na `<Connector` elemente s souboru `tomcat/conf/server.xml` na hodnotu minimálně 100, příklad:
+V [Tomcat od verze 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) je změněna kontrola počtu parametrů při `multipart` HTTP požadavku. Je proto třeba nastavit/zvýšit parametr `maxPartCount` na `<Connector` elementu s souboru `tomcat/conf/server.xml` na hodnotu minimálně 100, příklad:
 
 ```xml
     <Connector port="8080" protocol="HTTP/1.1"
@@ -85,6 +88,7 @@ V [Tomcat od verze 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http
 ## Změny při přechodu na Jakarta verzi
 
 Verze určená pro `jakarta namespace`, vyžaduje aplikační server Tomcat 11, používá Spring verze 7. Průlomové změny:
+
 - URL adresy - pro URL adresy Spring zavedl přesné shody, pokud REST služba definuje URL adresu s lomítkem na konci, musí být takto použita. Je rozdíl v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
 - Ve Spring DATA repozitářích pro `IN/NOTIN query` je třeba přidat `@Query`, jinak nebude korektně SQL vytvořeno, příklad:
 
@@ -101,7 +105,7 @@ Verze určená pro `jakarta namespace`, vyžaduje aplikační server Tomcat 11, 
   List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
 ```
 
-Pro vyhledání v kódu můžete použít hledání v souborech `*Repository.java` a hledat regulární výraz `\(.*List[^)]*\)`, `\(.*Long[\][^)]*\)`, `\(.*Integer[\][^)]*\)`. Doporučujeme provést kód, v logu se zobrazí chyba a použít vygenerované SQL do `Query` hodnoty. Problémem je jen kontrola typu, kde `EclipseLink` neumí identifikovat, že má kontrolovat pole/seznam a ne přímo datový typ.
+Pro vyhledání v kódu můžete použít hledání v souborech `*Repository.java` a hledat regulární výraz `\(.*List[^)]*\)`, `\(.*Long\[\][^)]*\)`, `\(.*Integer\[\][^)]*\)`. Doporučujeme provést kód, v logu se zobrazí chyba a použít vygenerované SQL do `Query` hodnoty. Problémem je pouze kontrola typu, kde `EclipseLink` neumí identifikovat, že má kontrolovat pole/seznam a ne přímo datový typ.
 
 V `build.gradle` je třeba aktualizovat `gretty` konfiguraci a přidat nastavení kompilace `options.compilerArgs += ['-parameters']`:
 
@@ -125,6 +129,17 @@ tasks.withType(JavaCompile) {
     //needed for Spring
     options.compilerArgs += ['-parameters']
 }
+```
+
+do `configurations` elementu si přidejte výjimku pro `log4j-core`:
+
+```gradle
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
 ```
 
 ## Změny při přechodu na 2025.0-SNAPSHOT
@@ -152,13 +167,14 @@ repositories {
 }
 ```
 
-Bohužel GitHub Packages nejsou veřejně dostupné, je proto třeba nastavit přihlašovací údaje `gpr.user` a `gpr.api-key` v souboru `gradle.properties` nebo přes `ENV` proměnné. Přihlašovací údaje vám poskytneme na vyžádání.
+Bohužel GitHub Packages nejsou veřejně dostupné, je proto nutné nastavit přihlašovací údaje `gpr.user` a `gpr.api-key` v souboru `gradle.properties` nebo přes `ENV` proměnné. Přihlašovací údaje vám poskytneme na vyžádání.
 
 !> **Upozornění:** upravená inicializace Spring a JPA:
-- JPA entity se v `package sk.iway.INSTALL-NAME` neinicializují automaticky, předpokládá se postupný přechod na Spring DATA. Pokud potřebujete `@Entity` inicializovat nastavte konfigurační proměnnou `jpaAddPackages` na potřebnou hodnotu - například `sk.iway.INSTALL-NAME`. Inicializují se pouze třídy obsahující anotaci `@Entity` nebo `@Converter`.
+
+- JPA entity se v `package sk.iway.INSTALL-NAME` neinicializují automaticky, předpokládá se postupný přechod na Spring DATA. Pokud potřebujete inicializovat `@Entity`, nastavte konfigurační proměnnou `jpaAddPackages` na potřebnou hodnotu - například `sk.iway.INSTALL-NAME`. Inicializují se pouze třídy obsahující anotaci `@Entity` nebo `@Converter`.
 - Ve `web.xml` již není nutná inicializace `Apache Struts`, smažte celou `<servlet>` sekci obsahující `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` obsahující `<servlet-name>action</servlet-name>`.
 - Upravené pořadí inicializace Spring - inicializace WebJET tříd se provede před zákaznickými třídami `SpringConfig`.
-- Upravená inicializace `Swagger` - není-li nastavena konfigurační proměnná `swaggerEnabled` na hodnotu `true` ani se při startu neprovede prohledání Java tříd.
+- Upravená inicializace `Swagger` - ​​pokud není nastavena konfigurační proměnná `swaggerEnabled` na hodnotu `true` ani se při startu neprovede prohledání Java tříd.
 
 ## Změny při přechodu na 2024.0-SNAPSHOT
 
@@ -239,11 +255,12 @@ dependencies {
 ```
 
 ## Změny při přechodu na 2023.18-SNAPSHOT/2023.40
+
 - Ve vašem projektu smažte soubor `src/main/webapp/WEB-INF/struts-config.xml` aby se použil aktuální soubor z WebJETu (z jaře souboru).
 
 ## Změny při přechodu na Java 17
 
-Při přechodu na Java verze 17 je třeba ve vašem projektu provést několik změn. Projekt [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) má připravenou `branch`, `release/webjet-2023-18-java17` s ukázkovou úpravou. V [tomto commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535) je vidět kompletní seznam změn.
+Při přechodu na Java verze 17 je třeba ve vašem projektu provést několik změn. Projekt [basecms](https://github.com/webjetcms/basecms/tree/release/webjet-2023-18-java17) má připravenou `branch`, ```release/webjet-2023-18-java17``` s ukázkovou úpravou. V [tomto commit](https://github.com/webjetcms/basecms/commit/e4b9cf6f0a88fd6f0b0cc6c57b28e7a3ec924535) je vidět kompletní seznam změn.
 
 Zjednodušený postup je následující:
 
@@ -254,7 +271,7 @@ gradlew.bat wrapper --gradle-version 7.4.2
 gradlew.bat wrapper --gradle-version 8.1.1
 ```
 
-Po aktualizaci gradle se vám projekt nepodaří zkompilovat, je třeba upravit i soubor `build.gradle`, ve kterém je aktualizováno i více `plugins`. Důležitá změna je přechod WebJET CMS ve verzi `java17` na standardní verzi `eclipselink` s nastavením WebJET generátoru primárních klíčů.
+Po aktualizaci gradle se vám projekt nepodaří zkompilovat, je třeba upravit i soubor ```build.gradle```, ve kterém je aktualizováno i více ```plugins```. Důležitá změna je přechod WebJET CMS ve verzi ```java17``` na standardní verzi ```eclipselink``` s nastavením WebJET generátoru primárních klíčů.
 
 ```groovy
 plugins {
@@ -305,7 +322,7 @@ gretty {
 }
 ```
 
-Následně doporučujeme restartovat vaše vývojářské prostředí, v případě VS Code provést akci `Java: Clean Java Language Server Workspace` pro kompletní smazání dočasných souborů.
+Následně doporučujeme restartovat vaše vývojářské prostředí, v případě VS Code provést akci ```Java: Clean Java Language Server Workspace``` pro kompletní smazání dočasných souborů.
 
 Pokud na jednom Tomcat serveru provozujete více instalací WebJETu je možné, že starší verze nebudou plně kompatibilní s Java 17. Pro chyby typu:
 
@@ -316,7 +333,7 @@ egalStateException: Cannot load configuration class: sk.iway.iwcm.system.spring.
 Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protected final java.lang.Class java.lang.ClassLoader.defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain) throws java.lang.ClassFormatError accessible: module java.base does not "opens java.lang" to unnamed module @4c6e3350
 ```
 
-nastavte pro Tomcat následující `JAVA_OPTS`:
+nastavte pro Tomcat následující ```JAVA_OPTS```:
 
 ```txt
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
@@ -324,7 +341,7 @@ JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --
 
 ### Aktualizace z Java verze 8
 
-Pokud jste provozovali Tomcat ještě s Java verze 8 mohou vzniknout problémy s chybějícími knihovnami (ty jsou potřebné i pro Java 11). Pokud se vám v logu objeví chyba `java.lang.NoClassDefFoundError: javax/activation/DataSource`:
+Pokud jste provozovali Tomcat ještě s Java verze 8 mohou vzniknout problémy s chybějícími knihovnami (ty jsou potřebné i pro Java 11). Pokud se vám v logu objeví chyba ```java.lang.NoClassDefFoundError: javax/activation/DataSource```:
 
 ```txt
 java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException: Failed to start component [StandardEngine[Catalina].StandardHost[...].StandardContext[]]
@@ -332,14 +349,14 @@ java.util.concurrent.ExecutionException: org.apache.catalina.LifecycleException:
     Caused by: java.lang.NoClassDefFoundError: javax/activation/DataSource
 ```
 
-je třeba do každé instalace WebJET CMS do složky `WEB-INF/lib` zkopírovat knihovny z [tohoto ZIP archivu](lib-java11.zip) a smazat soubory (pokud existují):
+je třeba do každé instalace WebJET CMS do složky ```WEB-INF/lib``` zkopírovat knihovny z [tohoto ZIP archivu](lib-java11.zip) a smazat soubory (pokud existují):
 
 ```txt
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
 
-Pokud jste používali WebJET verze `8.0-8.6` - starší než `08/2019`, nebo se vám zobrazí při startu následující chyba:
+Pokud jste používali WebJET verze `8.0-8.6` - ​​starší než `08/2019`, nebo se vám zobrazí při startu následující chyba:
 
 ```txt
 [10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
@@ -360,13 +377,13 @@ je třeba aktualizovat knihovnu `eclipselink` a inicializační Java třídu, st
 
 ## Změny při aktualizaci na 2023.18
 
-Verze `2023.18` mění API a způsob generování distribučních archivů. Hlavní změny API jsou v použití generických objektů typu `List/Map` namísto specifických implementací `ArrayList/Hashtable`. Z toho důvodu je třeba nově zkompilovat vaše třídy a upravit JSP soubory.
+Verze ```2023.18``` mění API a způsob generování distribučních archivů. Hlavní změny API jsou v použití generických objektů typu ```List/Map``` namísto specifických implementací ```ArrayList/Hashtable```. Z toho důvodu je třeba nově zkompilovat vaše třídy a upravit JSP soubory.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/sfu5b_S7Q8Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/sfu5b_S7Q8Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-V `build.gradle` je třeba smazat část:
+V ```build.gradle``` je třeba smazat část:
 
 ```
     implementation("sk.iway:webjet:${webjetVersion}:struts")
@@ -374,13 +391,13 @@ V `build.gradle` je třeba smazat část:
     implementation("sk.iway:webjet:${webjetVersion}:jtidy")
 ```
 
-Zkontrolujte také soubor `src/main/resources/logback.xml` ve kterém je třeba upravit formát data a času v `ConsoleAppender` (smazáno `,SSS`, pokud potřebujete logovat i setiny sekundy použijte `.SSS`):
+Zkontrolujte také soubor `src/main/resources/logback.xml` ve kterém je třeba upravit formát data a času v `ConsoleAppender` (smazané `,SSS`, pokud potřebujete logovat i setiny sekundy použijte `.SSS`):
 
 ```xml
     <pattern>[%X{installName}][%c{1}][%p][%X{userId}] %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
 ```
 
-Pro zjednodušení aktualizace můžete použít skript `/admin/update/update-2023-18.jsp` pro kontrolu a opravu JSP souborů. Zákaznické Java třídy je třeba nově zkompilovat a opravit chyby z důvodu změny API.
+Pro zjednodušení aktualizace můžete použít skript ```/admin/update/update-2023-18.jsp``` pro kontrolu a opravu JSP souborů. Zákaznické Java třídy je třeba nově zkompilovat a opravit chyby z důvodu změny API.
 
 Přečištěno/smazáno je více Java třídy a balíky a příslušné JSP souboru. Pro podporu smazaných částí v projektech je třeba použít buď příslušný produkt typu WebJET NET nebo do projektu je přenést ze zdrojového kódu verze 8.
 
@@ -388,7 +405,7 @@ Více informací je v [seznamu změn](../CHANGELOG-2023.md#odstranění-závislo
 
 ## Změny oproti verzi 8.8
 
-V `build.gradle` je oproti verzi 8.8 třeba smazat výrazy:
+V ```build.gradle``` je oproti verzi 8.8 třeba smazat výrazy:
 
 ```gradle
     compile("sk.iway:webjet:${webjetVersion}:swagger-ui")
@@ -401,7 +418,7 @@ V `build.gradle` je oproti verzi 8.8 třeba smazat výrazy:
     exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 ```
 
-a v sekci `configurations` upravit výjimky následovně:
+av sekci ```configurations``` upravit výjimky následovně:
 
 ```gradle
 configurations {
@@ -409,6 +426,7 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
     all*.exclude group: 'javax.xml.stream', module: 'stax-api'
@@ -424,7 +442,7 @@ configurations {
 }
 ```
 
-Z důvodu přechodu z `log4j` na `logback` smažte soubor `src/main/resources/log4j.properties` a přidejte soubor `src/main/resources/logback.xml`:
+Z důvodu přechodu z ```log4j``` na ```logback``` smažte soubor ```src/main/resources/log4j.properties``` a přidejte soubor ```src/main/resources/logback.xml```:
 
 ```xml
 <configuration>
@@ -467,11 +485,11 @@ Z důvodu přechodu z `log4j` na `logback` smažte soubor `src/main/resources/lo
 
 ## Úprava generovaného archivu
 
-Pokud potřebujete pro nasazení upravit `WAR` archiv, můžete použít následující tipy:
+Pokud potřebujete pro nasazení upravit ```WAR``` archiv, můžete použít následující tipy:
 
 **Jiný web.xml soubor**
 
-Pokud potřebujete pro deployment nasadit jiný `web.xml` soubor jak používáte během vývoje můžete využít možností, které nabízí [gradle war](https://docs.gradle.org/current/userguide/war_plugin.html) role v `build.gradle`:
+Pokud potřebujete pro deployment nasadit jiný ```web.xml``` soubor než používáte během vývoje můžete využít možnosti, které nabízí [gradle war](https://docs.gradle.org/current/userguide/war_plugin.html) úloha v ```build.gradle```:
 
 ```
 war {
@@ -482,7 +500,7 @@ war {
 
 **Upravené logování**
 
-WebJET zapisuje log soubory pomocí [slf4j/logback](https://logback.qos.ch/manual/configuration.html). Ten umožňuje vyhledat i dodatečný konfigurační soubor. `logback-test.xml`, který se použije primárně (pokud existuje). V něm můžete mít nastaveno logování pro vývoj. V souboru `logback.xml` budete mít nastavení pro nasazení. Při vytváření `WAR` archivu dodatečný `logback-test.xml` v `build.gradle` vynecháte:
+WebJET zapisuje log soubory pomocí [slf4j/logback](https://logback.qos.ch/manual/configuration.html). Ten umožňuje vyhledat i dodatečný konfigurační soubor. ```logback-test.xml```, který se použije primárně (pokud existuje). V něm můžete mít nastaveno logování pro vývoj. V souboru ```logback.xml``` budete mít nastavení pro nasazení. Při vytváření ```WAR``` archivu dodatečný ```logback-test.xml``` v ```build.gradle``` vynecháte:
 
 ```
 war {
@@ -495,7 +513,7 @@ war {
 
 ### Nastavení přihlašování přes sociální sítě
 
-Pokud v projektu používáte přihlašování přes sociální sítě (např. Facebook) je třeba do gradle projektu přidat knihovnu `socialauth`. Ta standardně není součástí distribuce, protože se používá zřídka a zároveň obsahuje potencionální zranitelnost. Knihovnu přidáte v souboru `build.gradle`:
+Pokud v projektu používáte přihlašování přes sociální sítě (např. Facebook) je třeba do gradle projektu přidat knihovnu ```socialauth```. Ta standardně není součástí distribuce, protože se používá zřídka a zároveň obsahuje potencionální zranitelnost. Knihovnu přidáte v souboru ```build.gradle```:
 
 ```gradle
 // https://mvnrepository.com/artifact/org.brickred/socialauth
@@ -504,7 +522,7 @@ implementation group: 'org.brickred', name: 'socialauth', version: '4.15'
 
 ### Samostatný web.xml soubor pro deployment
 
-Pokud potřebujete pro deployment verze na prostředí jiný web.xml soubor než pro standardní vývoj můžete využít možnosti nastavení [úkoly war](https://docs.gradle.org/current/userguide/war_plugin.html) v `build.gradle` kde lze přiložit rozdílný `web.xml` soubor:
+Pokud potřebujete pro deployment verze na prostředí jiný web.xml soubor než pro standardní vývoj můžete využít možnosti nastavení [úkoly war](https://docs.gradle.org/current/userguide/war_plugin.html) v ```build.gradle``` kde je možné přiložit rozdílný ```web.xml``` soubor:
 
 ```
 war {
@@ -516,13 +534,14 @@ war {
 ## Změny v databázovém schématu
 
 Při zapnutí verze 2021 jsou přidány nové sloupce do více tabulek:
-- `_properties_` - přidaný sloupec `update_date`, sloupec `id` nastaven jako `autoincrement`
-- `crontab` - přidán sloupec task\_name
-- `_conf_prepared_` - nastavený sloupec `date_prepared` pro možnost vkládat `NULL` hodnotu.
+
+- ```_properties_``` - ​​přidán sloupec ```update_date```, sloupec ```id``` nastaven jako ```autoincrement```
+- ```crontab``` - ​​přidán sloupec task_name
+- ```_conf_prepared_``` - ​​nastavený sloupec ```date_prepared``` pro možnost vkládat ```NULL``` hodnotu.
 
 ### MariaDB - utf8mb4 a InnoDB podpora
 
-WebJET používá ve výchozím nastavení `storage engine InnoDB`, to je nastaveno v konfigurační proměnné `mariaDbDefaultEngine`, která ve WebJET 8 má hodnotu `MyISAM` a v novém WebJETu hodnotu `InnoDB`. Při použití `InnoDB` lze využít charset `utf8mb4` s celou podporou `uft8` kódování (emotikony). Ve výchozím nastavení `MyISAM` tabulkách je používáno kódování `utf8`, které je ale v MySQL/MariaDB jen 3 bytové a nepodporuje tedy všechny znaky (různé emotikony).
+WebJET používá ve výchozím nastavení ```storage engine InnoDB```, to je nastaveno v konfigurační proměnné ```mariaDbDefaultEngine```, která ve WebJET 8 má hodnotu ```MyISAM``` av novém WebJETu hodnotu ```InnoDB```. Při použití ```InnoDB``` lze využít charset ```utf8mb4``` s celou podporou ```uft8``` kódování (emotikony). Ve výchozím nastavení u ```MyISAM``` tabulek je používáno kódování ```utf8```, které je ale v MySQL/MariaDB pouze 3 bytové a nepodporuje tedy všechny znaky (různé emotikony).
 
 Pro vytvoření nového databázového schématu a uživatele můžete použít následující SQL příkazy:
 

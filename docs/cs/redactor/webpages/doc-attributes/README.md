@@ -5,7 +5,7 @@
 Výhoda oproti volitelným polím je v teoreticky nekonečném počtu polí a zároveň v možnosti organizovat pole do skupin. V databázi jsou hodnoty ukládány v korektních datových typech, což umožňuje provádět uspořádání pomocí databázových dotazů (volitelná pole i typ číslo datově ukládají jako řetězec).
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/e-K-6Z_m-hg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/e-K-6Z_m-hg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Definice atributů
@@ -15,23 +15,25 @@ V menu položce Atributy stránky můžete přidávat/editovat/mazat definici at
 ![](doc-attributes-editor.png)
 
 Atribut má následující pole:
-- Název - název atributu. Pro vícejazyčné zobrazení je podporován formát `JAZYK:hodnota|JAZYK:hodnota` Např. `SK:hmotnosť|CZ:hmotnost|EN:weight`.
+
+- Název - název atributu. Pro vícejazyčné zobrazení je podporován formát ```JAZYK:hodnota|JAZYK:hodnota```. ```SK:hmotnosť|CZ:hmotnost|EN:weight```.
 - Priorita - pořadí atributu v seznamu atributů.
-- Popis - rozšířený popis atributu, je na designérovi, kde se tento popis bude na web stránce zobrazovat.
+- Popis - rozšířený popis atributu, je na designérovi kde se tento popis bude na web stránce zobrazovat.
 - Výchozí hodnota - výchozí hodnota atributu v editoru stránek (nastaví se pro novou hodnotu).
 - Typ - datový typ atributu
-  - `STRING` - textové pole
-  - `INT` - celočíselná hodnota
-  - `BOOL` - binární hodnota ano/ne
-  - `DOUBLE` - číselná hodnota s desetinném místem
+  - ```STRING``` - ​​textové pole
+  - ```INT``` - ​​celočíselná hodnota
+  - ```BOOL``` - ​​binární hodnota ano/ne
+  - ```DOUBLE``` - ​​číselná hodnota s desetinném místem
 - Skupina - zařazení atributu do skupiny. Např. pro různé skupiny produktů jako TV, chladničky, počítače máte různé atributy.
-- `True hodnota` - zobrazený text pro typ `BOOL` pro zvolenou možnost (např. ano, nebo obsahuje).
-- `False hodnota` - zobrazený text pro typ `BOOL` pro nezvolenou možnost (např. ne, nebo neobsahuje).
+- ```True hodnota``` - ​​zobrazený text pro typ ```BOOL``` pro zvolenou možnost (např. ano, nebo obsahuje).
+- ```False hodnota``` - ​​zobrazený text pro typ ```BOOL``` pro nezvolenou možnost (např. ne, nebo neobsahuje).
 
 Pro textové pole je do Výchozí hodnota možné zadat speciální hodnoty:
-- `autoSelect` - při zadávání atributu ve stránce se automaticky načítají stávající hodnoty v jiných stránkách a nabídnou se na výběr. Redaktor ale může zadat do pole i novou hodnotu.
-- `hodnota1|hodnota2|hodnota3` - pole se zobrazí jako výběrové pole, uživatel může volit pouze ze zadaných hodnot (nemůže zadat novou hodnotu). Jako rozdělovač lze zadat znak `|` nebo znak `,`. Příklad `Apple,Samsung,Xiaomi`.
-- `multiline-w-h` - zadávání více řádkového textu (pole typu textová oblast), hodnota `w` reprezentuje počet znaků na řádek a hodnota `h` počet řádků, příklad `multiline-80-10`. Technicky ale z důvodu responzivního zobrazení se pole vždy zobrazí na plnou šířku a tedy hodnota `w` se neaplikuje.
+
+- ```autoSelect``` - ​​při zadávání atributu ve stránce se automaticky načítají stávající hodnoty v jiných stránkách a nabídnou se na výběr. Redaktor ale může zadat do pole i novou hodnotu.
+- ```hodnota1|hodnota2|hodnota3``` - ​​pole se zobrazí jako výběrové pole, uživatel může volit pouze ze zadaných hodnot (nemůže zadat novou hodnotu). Jako rozdělovač lze zadat znak ```|``` nebo znak ```,```. Příklad ```Apple,Samsung,Xiaomi```.
+- ```multiline-w-h``` - ​​zadávání více řádkového textu (pole typu textová oblast), hodnota ```w``` reprezentuje počet znaků na řádek a hodnota ```h``` počet řádků, příklad ```multiline-80-10```. Technicky ale z důvodu responzivního zobrazení se pole vždy zobrazí na plnou šířku a tedy hodnota ```w``` se neaplikuje.
 
 ## Nastavení atributů web stránky
 
@@ -53,45 +55,49 @@ Srovnávací tabulka zobrazuje všechny stránky ze zadané složky (volitelně 
 
 Do HTML kódu stránky zadejte aplikaci jako:
 
-`!INCLUDE(/components/attributes/atr_table.jsp, group="Monitor")!`
+```!INCLUDE(/components/attributes/atr_table.jsp, group="Monitor")!```
 
-aplikace má následující parametry:
-- `group` - skupina atributů, ve výchozím nastavení `default`.
-- `dirId` - ID složky web stránek, pokud není zadáno, použije se aktuální složka.
-- `includeSub` - určuje, zda se mají načítat i stránky z pod složek (výchozí `true`).
-- `includeCurrentPage` - vyloučení aktuální stránky z tabulky (aby se v tabulce nezobrazovala aktuální stránka), ve výchozím nastavení `false`.
-- `sortBy` - způsob uspořádání stránek, ve výchozím nastavení podle názvu stránky (`title`), možnosti korespondují vůči atributům `DocDetails` s prefixem `doc.` nebo atributem `AtrDocBean`.
+aplikácia má nasledovné parametre:
 
-### Vyhledávání/filtrování zobrazených stránek
+- ```group``` - skupina atribútov, predvolene ```default```.
+- ```dirId``` - ID priečinka web stránok, ak nie je zadané, použije sa aktuálny priečinok.
+- ```includeSub``` - určuje, či sa majú načítať aj stránky z pod priečinkov (predvolene ```true```).
+- ```includeCurrentPage``` - vylúčenie aktuálnej stránky z tabuľky (aby sa v tabuľke nezobrazovala aktuálna stránka), predvolene ```false```.
+- ```sortBy``` - spôsob usporiadania stránok, predvolene podľa názvu stránky (```title```), možnosti korešpondujú voči atribútom ```DocDetails``` s prefixom ```doc.``` alebo atribútom ```AtrDocBean```.
 
-Zobrazenou tabulku lze filtrovat (vyhledávat) pomocí URL parametrů. Např. při zadání URL adresy `/apps/atributy-stranky/monitory/?atrs_GT_Power+Delivery+(W)=90` se v tabulce zobrazí pouze monitory, jejichž hodnota v atributu `Power Delivery (W)` je větší než 90. Formát URL parametru je `atrs_TYP_MENO` kde typ může mít hodnoty:
-- `SS` (substring) - pod řetězec, tedy vyhledávání textové hodnoty, která obsahuje zadaný výraz.
-- `EQ` (equal) - hledání přesné shody zadaného výrazu.
-- `LT` (less than) - hledání hodnoty která je méně než zadaná hodnota.
-- `GT` (greater than) - hledání hodnoty která je více než zadaná hodnota.
-- `GTLT` - hledání hodnoty v zadaném intervalu `od:do`. Hodnota je včetně, tedy např. `?atrs_GTLT_Power+Delivery+(W)=60:120` zobrazí také stránky, které mají zadanou hodnotu 60 nebo 120.
+### Vyhľadávanie/filtrovanie zobrazených stránok
 
-Pokud název obsahuje mezeru, můžete použít znak `+` k jejímu nahrazení. Při názvu nemusíte použít diakritiku, název se porovnává s odstraněním diakritiky.
+Zobrazenú tabuľku je možné filtrovať (vyhľadávať) pomocou URL parametrov. Napr. pri zadaní URL adresy ```/apps/atributy-stranky/monitory/?atrs_GT_Power+Delivery+(W)=90``` sa v tabuľke zobrazia len monitory, ktorých hodnota v atribúte ```Power Delivery (W)``` je väčšia ako 90. Formát URL parametra je ```atrs_TYP_MENO``` kde typ môže mať hodnoty:
 
-### Atributy aktuálně zobrazené stránky
+- ```SS``` (substring) - pod reťazec, čiže vyhľadávanie textovej hodnoty, ktorá obsahuje zadaný výraz.
+- ```EQ``` (equal) - hľadanie presnej zhody zadaného výrazu.
+- ```LT``` (less than) - hľadanie hodnoty ktorá je menej ako zadaná hodnota.
+- ```GT``` (greater than) - hľadanie hodnoty ktorá je viac ako zadaná hodnota.
+- ```GTLT``` - hľadanie hodnoty v zadanom intervale ```od:do```. Hodnota je vrátane, teda napr. ```?atrs_GTLT_Power+Delivery+(W)=60:120``` zobrazí aj stránky, ktoré majú zadanú hodnotu 60 alebo 120.
 
-Atributy aktuálně zobrazené webové stránky. jako seznam vlastností produktu:
+Ak názov obsahuje medzeru, môžete použiť znak ```+``` na jej nahradenie. Pri názve nemusíte použiť diakritiku, názov sa porovnáva s odstránením diakritiky.
+
+### Atribúty aktuálne zobrazenej stránky
+
+Atribúty aktuálne zobrazenej web stránky, napr. ako zoznam vlastností produktu:
 
 ![](page-attrs.png)
 
-Do HTML kódu stránky (nebo ideálně některého pole šablony, aby se aplikace použila na každé stránce produktu) zadejte aplikaci jako:
+Do HTML kódu stránky (alebo ideálne niektorého poľa šablóny, aby sa aplikácia použila na každej stránke produktu) zadajte aplikáciu ako:
 
-`!INCLUDE(/components/attributes/attributes.jsp, group="Monitor")!`
+```!INCLUDE(/components/attributes/attributes.jsp, group="Monitor")!```
 
-aplikace má následující parametry:
-- `group` - skupina atributů, ve výchozím nastavení `default`.
+aplikácia má nasledovné parametre:
 
-### Zobrazení hodnoty konkrétního atributu
+- ```group``` - skupina atribútov, predvolene ```default```.
 
-Pokud někde ve stránce potřebujete zobrazit hodnotu konkrétního atributu můžete použít aplikaci:
+### Zobrazenie hodnoty konkrétneho atribútu
 
-`!INCLUDE(/components/attributes/attribute.jsp, group="Monitor", name="Cena")!`
+Ak niekde v stránke potrebujete zobraziť hodnotu konkrétneho atribútu môžete použiť aplikáciu:
 
-aplikace má následující parametry:
-- `group` - skupina atributů, ve výchozím nastavení `default`.
-- `name` - jméno atributu.
+```!INCLUDE(/components/attributes/attribute.jsp, group="Monitor", name="Cena")!```
+
+aplikácia má nasledovné parametre:
+
+- ```group``` - skupina atribútov, predvolene ```default```.
+- ```name``` - meno atribútu.

@@ -5,6 +5,7 @@ Vloží do stránky aplikaci, která umožňuje poslat odkaz na aktuální strá
 ## Nastavení aplikace
 
 V nastaveních lze vybrat z možností:
+
 - Poslat e-mailem celou stránku
 - Poslat e-mailem název stránky, perex a linku na stránku
 
@@ -13,6 +14,7 @@ V nastaveních lze vybrat z možností:
 ## Zobrazení aplikace
 
 Pro uživatele jsou pole:
+
 - Vaše jméno
 - Váš e-mail
 - E-mail příjemce

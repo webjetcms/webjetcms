@@ -9,12 +9,13 @@ Instalace obsahuje řídící doménu (první zřízenou), pomocí které jsou d
 ## Omezení
 
 MultiWeb instalace obsahují následující omezení:
+
 - Web stránky
   - Média skupiny - zobrazena a upravitelná jsou pouze média skupiny s nastavenými právy na složky v aktuální doméně, nově přidané média skupině se automaticky přidají práva na kořenové složky v doméně. V řídicí doméně lze spravovat globální média skupiny bez zadaného omezení Zobrazit pro.
 - Aplikace
   - Doménová přesměrování - spravovat lze pouze doménová přesměrování směřující na aktuální doménu.
 - Šablony
-  - V seznamu se zobrazují šablony, které mají nastaven přístup ke složkám aktuálně zobrazené domény, při vytvoření nové šablony, která by neměla nastaven žádný přístup se automaticky nastaví přístup na kořenové složky aktuální domény.
+  - V seznamu se zobrazují šablony, které mají nastaven přístup ke složkám aktuálně zobrazené domény, při vytvoření nové šablony, která by neměla nastaven žádný přístup se automatický nastaví přístup na kořenové složky aktuální domény.
   - Skupiny šablon - zobrazují se skupiny šablon použité v šablonách.
 - Uživatelé
   - Každá doména má vlastní seznam uživatelů.
@@ -23,6 +24,7 @@ MultiWeb instalace obsahují následující omezení:
 ## Aplikace dostupné pouze v řídicí doméně
 
 Následující aplikace jsou dostupné pouze v řídicí doméně:
+
 - Úvod
   - Audit
   - Monitorování serveru
@@ -42,4 +44,4 @@ Následující aplikace jsou dostupné pouze v řídicí doméně:
   - Aktualizace WebJET CMS
   - Restartovat
 
-Při potřebě doplnění některého práva na uživatele v doméně je možné přidat konf. `multiwebSpecialPerms-USERID` s čárkou odděleným seznamem práv, která má uživatel navíc získat.
+Při potřebě doplnění některého práva na uživatele v doméně je možné přidat konf. proměnnou `multiwebSpecialPerms-USERID` s čárkou odděleným seznamem práv, která má uživatel navíc získat.

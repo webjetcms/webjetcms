@@ -11,12 +11,13 @@ V horní části se nachází hlavička:
 ![](header.png)
 
 obsahuje následující možnosti:
+
 - Odkaz na otevření nápovědy.
 - ![](icon-search.png ":no-zoom") Ikonu pro otevření stránky [Vyhledávání](search/README.md)
 - Jméno aktuálně přihlášeného uživatele, kliknutím na jméno zobrazíte následující možnosti:
   - Profil - upravit vlastní profil (jméno, email... - po změně profilu je třeba se odhlásit a znovu přihlásit).
-  - Dvoustupňové ověřování - možnost aktivovat dvoustupňové ověřování pomocí aplikace `Google Authenticate` při přihlašování do administrace. Zvyšuje se tak bezpečnost vašeho účtu, protože kromě hesla je pro přihlášení třeba zadat také kód z vašeho mobilního zařízení. Doporučujeme nastavit na všechny účty, přes které lze spravovat uživatelské účty a práva. Pokud používáte ověřování vůči `ActiveDirectory/SSO` serveru můžete menu položku vypnout nastavením konf. proměnné `2factorAuthEnabled` na hodnotu `false`.
-  - Správa šifrovacích klíčů – umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat existující klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
+  - Dvoustupňové ověřování - možnost aktivovat dvoustupňové ověřování pomocí aplikace ```Google Authenticate``` při přihlašování do administrace. Zvyšuje se tak bezpečnost vašeho účtu, protože kromě hesla je pro přihlášení třeba zadat také kód z vašeho mobilního zařízení. Doporučujeme nastavit na všechny účty, přes které lze spravovat uživatelské účty a práva. Pokud používáte ověřování vůči `ActiveDirectory/SSO` serveru můžete menu položku vypnout nastavením konf. proměnné `2factorAuthEnabled` na hodnotu `false`.
+  - Správa šifrovacích klíčů - umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat stávající klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
   - Odhlášení - odhlášení z administrace.
 - ![](icon-logoff.png ":no-zoom") Ikonu pro odhlášení z administrace.
 

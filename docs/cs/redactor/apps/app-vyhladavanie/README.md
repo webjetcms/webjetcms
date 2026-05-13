@@ -7,10 +7,11 @@ Před vložením do stránky si musíte (zdarma) vytvořit vyhledávač na adres
 ## Nastavení aplikace
 
 V této části lze nastavit:
+
 - ID vyhledávače - hodnota získaná na stránce [cse.google.com](https://cse.google.com/cse/create/new)
 
 ![](editor.png)
 
 ## Zobrazení aplikace
 
-![](app-vyhladavanie.png)
+![](app-vyhledávání.png)

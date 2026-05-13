@@ -1,6 +1,7 @@
 # Nastavení souboru
 
 Nastavení souboru zobrazíte kliknutím pravým tlačítkem na soubor a volbou Nastavení souboru. Okno obsahuje následující karty:
+
 - Základní
 - Indexování (**Upozornění:** zobrazena pouze za speciálních okolnosti)
 - Použití
@@ -15,7 +16,7 @@ Parametrem "Změnit název ve všech souborech" se přepíše název souboru za 
 
 ## Indexování
 
-Karta **Indexování** se zobrazí POUZE pokud umístění daného souboru začíná hodnotou `/files`. Slouží k akci indexování souboru.
+Karta **Indexování** se zobrazí POUZE ak umístění daného souboru začíná hodnotou `/files`. Slouží k akci indexování souboru.
 
 ![](file_settings_index.png)
 

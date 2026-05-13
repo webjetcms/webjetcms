@@ -3,13 +3,13 @@
 Při psaní textu je třeba dodržet stejnou terminologii. Používejte pouze první výraz v seznamu, namísto uvedených synonym/nespisovných/anglických výrazů.
 
 - karta = záložka, tab, dopis - výraz karta je převzat z Google Chrome
-- složka = adresář, folder - výraz složka je převzata z Windows, používaná je iv Mac OS
-- zaškrtávací pole = `checkbox` - Google Translate
-- ukazatel postupu = `progress bar` - Google Translate
-- nástrojová lišta = `toolbar` - Google Translate
-- vícenásobné výběrové pole `multi selection field` - Google Translate
-- rozbalovací nabídka = `dropdown` - Google Translate
-- koncový bod = `endpoint` - Google Translate
+- složka = adresář, folder - výraz složka je převzat z Windows, používán je iv Mac OS
+- zaškrtávací pole = `checkbox` - ​​Google Translate
+- ukazatel postupu = `progress bar` - ​​Google Translate
+- nástrojová lišta = `toolbar` - ​​Google Translate
+- vícenásobné výběrové pole `multi selection field` - ​​Google Translate
+- rozbalovací nabídka = `dropdown` - ​​Google Translate
+- koncový bod = `endpoint` - ​​Google Translate
 
 ## Názvosloví pro kód
 

@@ -83,6 +83,8 @@ The easiest way is to run in auto mode, set the config variable `clusterNames` t
 
 The value is truncated to the first 16 characters. If the `clusterHostnameTrimFromEnd` variable is set to `true`, the last 16 characters are used (e.g. Kubernetes creates `hostname` with a random value at the end).
 
+The configuration variable `clusterAutoRandomDelay` sets the maximum random delay time in milliseconds added in `clusterNames=auto` mode when starting `ClusterRefresher`, `Sender` and before starting `CRON` tasks. It helps to distribute the start of tasks across cluster nodes and reduce the risk of database `deadlock`. The value `0` disables the delay completely.
+
 ### Exact list of nodes
 
 If you have a stable configuration of running nodes/`nodes` set the conf. variable:
@@ -107,7 +109,9 @@ For some parts, a primary key generator has historically been used, the followin
 - `pkeyGenOffset` - ​​offset value for the cluster.
 - `pkeyGenBlockSize` - ​​block selection size for the primary key generator. Default value is 10, for a server with high load we recommend setting it to a higher value (100 - 1000).
 
-To avoid conflicts in the cluster configuration, the value `pkeyGenOffset` is used for the offset by nodes. For example, the value `pkeyGenIncrement` is set to 5 and `offset` to 0-5 for individual nodes. In `auto` cluster mode, the value `pkeyGenBlockSize=1` is automatically set to always read the last value from the database. This has a slight impact on server performance.
+To avoid conflicts in the cluster configuration, the value `pkeyGenOffset` is used for the offset by nodes. For example, the value `pkeyGenIncrement` is set to 5 and `offset` to 0-5 for individual nodes.
+
+In `auto` cluster mode, it is not possible to use `pkeyGenOffset`, therefore the specified block is allocated in the transaction and if `deadlock` occurs, the attempt is repeated a maximum of 5 times with an exponentially increasing delay from 50 ms (`50 * 2^attempt`) and with a random component (jitter).
 
 ## Licenses
 
