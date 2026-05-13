@@ -199,6 +199,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ## 2026.0.x
 
+> Opravná verzia pôvodnej verzie 2026.0.
+
+- Bezpečnosť - opravená možnosť nastaviť [meno HTTP hlavičky pre získanie IP adresy](sysadmin/pentests/README.md#konfigurácia) cez premennú `xForwardedForHeader`.
+
 ## 2026.0.18
 
 > Opravná verzia pôvodnej verzie 2026.0.
