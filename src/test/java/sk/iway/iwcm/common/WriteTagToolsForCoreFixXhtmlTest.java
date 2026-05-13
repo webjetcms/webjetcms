@@ -2,7 +2,7 @@ package sk.iway.iwcm.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
