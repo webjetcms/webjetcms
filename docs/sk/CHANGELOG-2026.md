@@ -198,7 +198,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Bannerový Systém - opravené načítanie zoznamu skupín v Microsoft SQL.
 - Bezpečnosť - pridaná možnosť [deaktivovať aplikáciu](sysadmin/pentests/README.md#deaktivácia-aplikácie), aby nebola dostupná. Viete tak vypnúť aplikácie ako Zálohovanie systému, Reštartovať a podobne, ak nasadzujete cez `CI-CD` službu a dané aplikácie nemajú využitie, alebo nie sú žiadúce z bezpečnostných dôvodov.
 - Bezpečnosť - aktualizovaný `Swagger UI` a výnimky pre `dependencyCheckAnalyze` (#58317-6).
-- Bezpečnosť - aktualizované knižnice `log4j,pdfbox` (#58317-6).
+- Bezpečnosť - aktualizované knižnice `log4j,pdfbox,thymeleaf,postgresql` (#58317-6,#226).
 - Bezpečnosť - pridaná ochrana pred brute force útokmi na 2FA tokeny. Pri neúspešných pokusoch sa IP adresa dočasne zablokuje - rovnako ako pri prihlasovaní heslom (#222).
 - Bezpečnosť - generované PDF súbory viac neobsahujú v meta údajoch `Creator/Producer` informácie o generátore `PD4ML`. Hodnota sa preberá z konfiguračnej premennej `pdfAuthorName`. Čistenie metadát je riadené premennou `metadataCleanFiles` (predvolená hodnota `pdf-gen`) (#222).
 - Bezpečnosť - opravené spracovanie chyby prázdneho hesla (#222).
@@ -206,9 +206,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Dotazníky - opravené ukladanie dotazníka pri použití databázy Oracle alebo Microsoft SQL (#217).
 - Galéria - opravené uloženie nastavenia galérie pre priečinok na disku (bez záznamu v databáze) v Oracle DB.
 - Galéria - pridaná konfiguračná premenná `metadataRemoveMinFileSize` pre nastavenie minimálnej veľkosti súboru v bajtoch, pod ktorú sa preskočí odstraňovanie metadát (#osk378).
+- GDPR - mazanie dát - opravené mazanie formulárov v Oracle/PostgreSQL databáze (#224).
 - Hromadný email - opravený prenos príjemcov pri duplikovaní kampane v Oracle DB (#54273-82).
 - Hromadný email - opravené nahradenie externých odkazov, ktoré obsahujú viaceré URL parametre v emaile (#54273-83).
 - Média - opravená kontrola oprávnení pri pridávaní médií do neuloženej web stránky používateľom bez práva na všetky médiá (#58317-6).
+- Manažér dokumentov - opravené zmazanie indexu súboru pri uložení, ak súbor už nie je platný. Opravené iniciálne SQL pre nastavenie indexovania súborov ak sa súbor nemá zobrazovať (#227).
 - Multiweb - opravené nastavenie domény po prihlásení (#58317-03).
 - Multiweb - opravené používanie doménových aliasov pri použití externých priečinkov - nastavená konfiguračná premenná `cloudStaticFilesDir` (#58317-4).
 - Prekladové kľúče - opravené nastavenie prázdnych hodnôt pri vytvorení nového záznamu a odsadenie polí s pôvodnou hodnotou (#56845).
@@ -225,6 +227,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Webové stránky - Ninja - doplnený atribút `${ninja.temp.lngIsoUnderscore}` s kódom jazykovej mutácie vo formáte `sk_SK` namiesto `sk-SK` (#217).
 - Webové stránky - opravená uzatváracia značka `</link>`, správne nahradená za `/>`, keďže `link` je prázdny element (#osk498).
 - Webové stránky - opravená chyba odstránenia časovej zložky pri nastavení dátumu konania (#54273-89).
+- Webové stránky - pridaná možnosť [nastaviť JavaScript funkciu](frontend/setup/config.md) pre `target="_blank"` odkazy, predvolene nastavené na `return openTargetBlank(this, event)`. Hodnota sa nastavuje v konfiguračnej premennej `editorTargetBlankFunction`, ak je nastavené na prázdnu hodnotu `onclick` funkcia sa nenastaví (#225).
+
+Jakarta verzia:
+
+- Aktualizovaná knižnica `Spring Security` z verzie 6 na verziu 7 (#43144).
 
 ## 2026.0
 
