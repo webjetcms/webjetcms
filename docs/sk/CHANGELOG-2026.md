@@ -32,6 +32,7 @@
 - Aplikácie - doplnená možnosť **maximalizovať a minimalizovať** okno pre **vkladanie aplikácií, obrázku, odkazov** atď. do stránky (#57409).
 - Pridaná podpora pre automatické obnovenie všetkých previazaných (zrkadlených) stránok a priečinkov z koša, keď jedna z nich bola obnovená (#osk423).
 - Priečinok - pridaná možnosť nastaviť HTML kód novej stránky z lokálneho Systém/Šablóny priečinka, pôvodne sa zoznam stránok čítal podľa konfiguračnej premennej `tempGroupId` (#57409).
+- Upravené názvoslovie [voliteľných polí](frontend/ninja-starter-kit/ninja-jv/page/README.md) pre SEO hodnoty (#228).
 - Pridaná ikona na presun [kurzoru na ťažko dostupné miesto](redactor/webpages/working-in-editor/README.md#vkladanie-textu-na-ťažko-dostupné-miesta), ako napríklad za poslednú SVG ikonu v riadku a podobne (#osk105).
 
 ![](redactor/webpages/working-in-editor/wjmagicline-append.png)
@@ -177,7 +178,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Galéria - upravené volanie knižnice ImageMagick, zmenené API pre jeho volanie na `ImageTools.executeImageMagick(...)` (#osk396).
 - Grafy - nástroj/knižnica [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na prácu s `amcharts` grafmi bol aktualizovaný, priali sa nové funkcionality, nové grafy a vylepšila sa logika (#58333).
 - Grafy - pridaná nová trieda/knižnica [stats-by-charts.js](../../src/main/webapp/apps/_common/charts/stats-by-charts.js) na rýchle vytváranie celých sekcií štatistík s využitím [chart-tool.js](../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js) na vytváranie grafov (#58333).
-- Hlavičkové záložky - pridaná podpora pod-kariet cez funkciu `WJ.headerSubTabs()` pre vnorené karty v zozname Neschválene vo webových stránkach (#58405).
+- Hlavičkové záložky - pridaná podpora pod-kariet cez funkciu `WJ.headerSubTabs()` pre vnorené karty v zozname Neschválené vo webových stránkach (#58405).
 - Odstránená anotácia `@Temporal` na dátumových stĺpcoch v databázových entitách, odporúčané riešenie je pre nové entity používať `java.time.*` typy. Zdá sa, že Eclipselink/JPA správne deteguje typ `Date` ako dátum a čas a anotácia nie je potrebná. Odporúčame po aktualizácii skontrolovať správanie dátumových polí (#57793).
 - Trieda `PageListHolder/MutableSortDefinition` je v Spring 7 `Deprecated`, ako priamu náhradu môžete použiť našu implementáciu `PagedListHolder/SortDefinition` z package `sk.iway.iwcm.system.datatable` (#57793).
 - Webové stránky - obnovenie z koša - doplnené [publikovanie udalostí](developer/backend/events.md) `ON_RECOVER` a `AFTER_RECOVER` pre obnovu stránok a priečinkov z koša (#161).
