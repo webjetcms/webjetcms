@@ -126,8 +126,39 @@ By calling ```WJ.openIframeModal(options)``` it is possible to open a dialog box
   - adding ```nopadding```, i.e. ```closeButtonPosition: "close-button-over nopadding"``` will also remove the top indent in the header
 - ```okclick``` = callback after clicking the confirm button, does not contain any parameters, the value from the iframe needs to be pulled in the callback implementation
 - ```onload``` = callback after loading the window, receives ```event.detail``` as a parameter containing the object ```window``` with a reference to the window in the iframe
+- ```buttons``` = array of custom buttons in the footer of the dialog, each button is an object with properties:
+  - ```title``` (String) - button text
+  - ```cssClass``` (String) - CSS class of the button (e.g. `btn-primary`, `btn-outline-secondary`)
+  - ```onClick``` (function) - callback called after clicking the button
+
+  If the `buttons` parameter is not specified, the default Confirm button is displayed (the behavior is unchanged). Example:
+
+  ```javascript
+  WJ.openIframeModal({
+      url: '/admin/v9/...',
+      width: 800,
+      height: 500,
+      title: 'Dialóg',
+      buttons: [
+          {
+              title: 'Uložiť',
+              cssClass: 'btn-primary',
+              onClick: function() { console.log('Uložiť kliknuté'); }
+          },
+          {
+              title: 'Zrušiť',
+              cssClass: 'btn-outline-secondary',
+              onClick: function() { WJ.closeIframeModal(); }
+          }
+      ]
+  });
+  ```
 
 The dialog box has its own close button, if necessary, you can use the API call ```WJ.closeIframeModal()``` to close the window.
+
+The dialog supports **moving the window** by grabbing the header (drag & drop) — the cursor changes to `grab`. On devices with a small screen height (below 760px) or in `iframe` mode, the window appears maximized and moving is not available.
+
+In the window header, there are buttons for **maximize and minimize** (switch to full screen mode). On devices with a small screen height (below 760px), these buttons are hidden and the window will appear automatically maximized.
 
 For windows containing a data table, there is a function `openIframeModalDatatable(options)` which sets the functions `okclick` and `onload` to call save and correctly close the window after saving the record in the data table. The set height is automatically reduced according to the size of the window.
 

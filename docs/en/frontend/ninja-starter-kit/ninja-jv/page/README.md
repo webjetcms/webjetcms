@@ -14,7 +14,7 @@
 | ${ninja.page.title} | *String* | Page title with space replaced by ``` ``` entity after the conjunction (```Peter and Miro and Fero -> Peter and Miro and Fero```) |
 | ${ninja.page.perex} | *String* | Perex pages with space replaced by ``` ``` entity after the connector |
 | ${ninja.page.perexPlace} | *String* | Perex page location with space replaced for ``` ``` entity after the connector |
-| ${ninja.page.canonical} | *String* | Canonical URL of the page (value is taken from the optional Q field or, if empty, from the URL) |
+| ${ninja.page.canonical} | *String* | Canonical URL of the page (value is taken from optional field Q or if empty, from URL). Appends `page` parameter to URL, if present, to display correct page in news list. Always uses domain set in page folder as domain name regardless of display via admin/CMS server. |
 | ${ninja.abVariant} | *String* | An identifier representing the page version in the form of a/b characters |
 
 !>**Note**: the replacement of the space after the hyphen for the ```&nbsp;``` entity can be set in the configuration variable ```ninjaNbspReplaceRegex```. The first line is the regex expression, the second is the replacement text.
@@ -25,14 +25,13 @@ To set the optional fields R, S, T and Q, you need to set the values ​​as fo
 editor.field_q=Kanonická URL adresa
 editor.field_q.tooltip=Ak je zadaný, použije sa tento odkaz ako kanonická URL adresa stránky, ak je prázdny, použije sa URL adresa stránky.
 editor.field_q.type=link
-editor.field_r=SEO titulok
+editor.field_r=SEO titulok (og:title)
 editor.field_r.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **titulku stránky**.\nMôžete tak optimalizovať zobrazený názov stránky na sociálnych sietiach.
-editor.field_s=SEO opis (kľúčové slová)
+editor.field_s=SEO popis (og:description)
 editor.field_s.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný text namiesto **perex anotácie** stránky.\nMôžete tak optimalizovať zobrazený opis stránky na sociálnych sietiach.
-editor.field_t=SEO obrázok
+editor.field_t=SEO obrázok (og:image)
 editor.field_t.type=image
 editor.field_t.tooltip=Ak je zadaný, použije sa pre SEO/Sociálne siete/Facebook zadaný obrázok namiesto štandardného obrázka (zadaného ako **perex obrázok**).\nMôžete tak optimalizovať zobrazený obrázok na sociálnych sietiach.
-
 ```
 
 ## Name *String*
@@ -86,6 +85,21 @@ The URL of a website without parameters consists of `${ninja.page.urlDomain}` + 
 
 ```java
 ${ninja.page.url}
+```
+
+Used in :ghost:<code>head.jsp</code>
+
+```html
+<meta property="og:url" content="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.canonical}" />
+```
+
+## Canonical URL *String*
+
+Canonical URL of the website, including the domain. You can use the optional Q field to set your own canonical URL. If the parameter `page` exists in the URL, e.g. in a news list, it is added to the URL.
+
+```java
+${ninja.page.canonical}
 ```
 
 Used in :ghost:<code>head.jsp</code>

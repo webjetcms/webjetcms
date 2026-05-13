@@ -157,6 +157,7 @@ Optional fields:
 - ```renderFormatLinkTemplate``` - ​​https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - ```renderFormatPrefix``` - ​​https://datatables.net/reference/option/columns.renderFormatPrefix
 - `renderFunction` - ​​name of the JavaScript function that will be used for custom rendering of the column value. More on the [DataTables page](https://datatables.net/reference/option/columns.render).
+- `renderFormatAriaLabel` - ​​value of attribute `aria-label` for the link generated via `renderFormat`, needed if only an icon is displayed and not text.
 - `sortAfter` - ​​field name after which this field will be added in the sequence
 - ```editor``` - ​​object ```DataTableColumnEditor```
 - ```hidden``` - ​​the field will not be displayed in the data table and the user cannot view it, unlike ```visible```, the field can be used in the editor
