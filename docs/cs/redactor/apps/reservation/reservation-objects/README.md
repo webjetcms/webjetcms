@@ -29,7 +29,7 @@ Další důležitý parametr je přepínač pro rezervování pokoje na celý de
 
 Karta **Pokročilé** obsahuje pouze 2 možnosti.
 
-Pokud zapnete možnost **Je třeba schválení**, můžete zadat email schvalovatele rezervačního objektu. Takže vytvořená rezervace nad tímto rezervačním objektem bude muset být nejprve schválena a na zadaný email bude odeslána zpráva (více o tomto se dozvíte v sekci [seznam rezervací](../reservations/readme.md#seznam-rezervací)).
+Pokud zapnete možnost **Je potřebné schválení**, můžete zadat email schvalovatele rezervačního objektu. Takže vytvořená rezervace nad tímto rezervačním objektem bude muset být nejprve schválena a na zadaný email bude odeslána zpráva (více o tomto se dozvíte v sekci [seznam rezervací](../reservations/readme.md#seznam-rezervací)).
 
 Pokud zapnete možnost **Zadat nebo změnit heslo** a zadáte 2x shodující se heslo, při pokusu o vymazání rezervace nad rezervačním objektem bude uživatel vyzván k zadání tohoto hesla. Pokud je heslo již zadáno, tak se vymění za nové, více se dozvíte v části [Mazání rezervací](../reservations/readme.md#mazání-rezervací).
 
@@ -37,7 +37,7 @@ Pokud zapnete možnost **Zadat nebo změnit heslo** a zadáte 2x shodující se 
 
 ## Časy podle dnů
 
-Karta **Časy podle dnů** rozšiřuje možnost zadání rezervačního intervalu pro objekt. Umožňuje zadat jedinečný (nebo i stejný) interval pro jednotlivé dny v týdnu. V praxi víkendové dny jako sobota a neděle mohou mít jiný rezervační interval než pracovní dny, nebo každý den můžete mít jiný interval. Pokud pro nějaký den v týdnu nezadáte specifický rezervační interval, použije se ten základní, který je nastaven v kartě [Základní](#základní). Pole pro časový výběr intervalu se pro jednotlivé dny zobrazí až po zapnutí možnosti s názvem daného dne v týdnu.
+Karta **Časy podle dní** rozšiřuje možnost zadání rezervačního intervalu pro objekt. Umožňuje zadat jedinečný (nebo i stejný) interval pro jednotlivé dny v týdnu. V praxi víkendové dny jako sobota a neděle mohou mít jiný rezervační interval než pracovní dny, nebo každý den můžete mít jiný interval. Pokud pro nějaký den v týdnu nezadáte specifický rezervační interval, použije se ten základní, který je nastaven v kartě [Základní](#základní). Pole pro časový výběr intervalu se pro jednotlivé dny zobrazí až po zapnutí možnosti s názvem daného dne v týdnu.
 
 Karta není dostupná pokud je zapnuta možnost rezervování na celý den (z karty Základní).
 
@@ -49,6 +49,6 @@ Karta **Speciální cena** se zobrazí pouze při editaci rezervačního objektu
 
 ![](reservation_object-editor_prices_tab.png)
 
-Záznamy v této vnořené tabulce umíte vytvářet/upravovat/mazat nebo importovat a exportovat. Při vytváření nové speciální ceny pro zadané období se `id` rezervačního objektu nastaví automaticky (bez možnosti změny) a zbývající pole jsou povinná k vyplnění. Zadáte cenu a interval ve dnech od a do kdy má tato cena platit.
+Záznamy v této vnořené tabulce umíte vytvářet/upravovat/mazat nebo importovat a exportovat. Při vytváření nové speciální ceny pro zadané období se ```id``` rezervačního objektu nastaví automaticky (bez možnosti změny) a zbývající pole jsou povinná k vyplnění. Zadáte cenu a interval ve dnech od a do kdy má tato cena platit.
 
 ![](reservation_object-editor_prices_add.png)

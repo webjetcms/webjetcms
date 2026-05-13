@@ -2,9 +2,9 @@
 
 Při požadavku na mapování objektů lze využít knihovnu [mapstruct](https://mapstruct.org).
 
-Příkladem je mapování objektu [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
+Příkladem je mapování objektu [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm
 
-Je třeba připravit DTO objekt a `interface` třídu pro `mapper`. Vytvořený interface je implementován automaticky během kompilace, v `build.gradle` je zapnut nastavením:
+Je třeba připravit DTO objekt a ```interface``` třídu pro ```mapper```. Vytvořený interface je implementován automaticky během kompilace, v ```build.gradle``` je zapnutý nastavením:
 
 ```javascript
 ext {
@@ -18,7 +18,6 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 }
 ```
-
 ## DTO objekt
 
 Při implementaci nejprve připravte DTO objekt, například. [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
@@ -58,7 +57,7 @@ public class DocHistoryDto {
 
 ## Mapování
 
-!>**Upozornění:** mapovací třída musí obsahovat v názvu výraz `Mapper` z důvodu kompilace na `Jenkins` serveru, například. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Upozornění:** mapovací třída musí obsahovat v názvu výraz ```Mapper``` z důvodu kompilace na ```Jenkins``` serveru. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;
@@ -94,25 +93,25 @@ public interface DocHistoryDtoMapper {
 }
 ```
 
-Mapování zapisujete jako metody pro jeden objekt (`docToHistoryDto`) nebo jako seznam objektů (`toHistoryDtos`). Název metody je nepodstatný, zvolte výstižný název.
+Mapování zapisujete jako metody pro jeden objekt (```docToHistoryDto```) nebo jako seznam objektů (```toHistoryDtos```). Název metody je nepodstatný, zvolte výstižný název.
 
-Atribut `INSTANCE` je používán k získání instance `mapper` objektu, vždy jej implementujte.
+Atribut ```INSTANCE``` je používán k získání instance ```mapper``` objektu, vždy jej implementujte.
 
-Atributy mezi objekty jsou konvertovány automaticky, pokud se shodují nepotřebujete nastavit anotaci `@Mapping`. Pokud se neshodují jména atributů, použijte anotaci:
+Atributy mezi objekty jsou konvertovány automaticky, pokud se shodují nepotřebujete nastavit anotaci ```@Mapping```. Pokud se neshodují jména atributů, použijte anotaci:
 
 ```java
 @Mapping(source = "historyId", target = "id")
 ```
 
-Pokud potřebujete provést specifickou konverzi mezi atributy můžete implementovat metodu pro konverzi a nastavit její použití pomocí atributu `qualifiedByName`. V ukázce je implementace metody `stringDateToLong` která konvertuje datum v `String` objektu na `timestamp`.
+Pokud potřebujete provést specifickou konverzi mezi atributy můžete implementovat metodu pro konverzi a nastavit její použití pomocí atributu ```qualifiedByName```. V ukázce je implementace metody ```stringDateToLong``` která konvertuje datum v ```String``` objektu na ```timestamp```.
 
 Kompletní dokumentaci k možnostem mapování naleznete na stránce [mapstruct.org](https://mapstruct.org/documentation/stable/reference/html/#defining-mapper).
 
-Anotace `@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)` informuje `mapstruct` aby neexistující atributy ignoroval.
+Anotace ```@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)``` informuje ```mapstruct```, aby neexistující atributy ignoroval.
 
 ## Použití mapování
 
-Ve třídě, kde potřebujete mapovat původní objekt na objekt DTO, použijte atribut `INSTANCE` a následné volání příslušné metody:
+Ve třídě, kde potřebujete mapovat původní objekt na objekt DTO, použijte atribut ```INSTANCE``` a následné volání příslušné metody:
 
 ```java
 //povodny list DocDetails objektov
@@ -120,3 +119,4 @@ List<DocDetails> list = historyDB.getHistory(docId, false, false);
 //premapovanie na DTO objekty
 List<DocDetailsDto> dtolist = DocHistoryDtoMapper.INSTANCE.toHistoryDtos(list);
 ```
+

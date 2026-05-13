@@ -5,7 +5,7 @@ V dnešním světě je umělá inteligence všude kolem nás a samozřejmě WebJ
 Tyto funkce vám usnadní tvorbu a úpravu obsahu – od opravy gramatiky, přes překlady textů, návrhy titulků, generování ilustračních obrázků až po kompletní návrh stránky z PageBuilder bloků.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/LhXo7zx7bEc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 K vyzkoušení můžete použít [AI v prohlížeči](settings/README.md#prohlížeč) nebo získat zdarma API klíče pro [Gemini](settings/README.md#gemini) nebo [OpenRouter](settings/README.md#openrouter).

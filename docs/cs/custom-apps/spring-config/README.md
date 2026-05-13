@@ -1,10 +1,10 @@
 # Konfigurace Spring
 
-Před programováním je třeba nakonfigurovat načítání `Spring` tříd a repozitářů. Je třeba vytvořit souboru `SpringConfig.java` pro konfiguraci `Spring` a `JpaDBConfig.java` pro konfiguraci repozitářů. Vytvoříte je v package `sk.iway.INSTALL_NAME`, aby je WebJET při startu načítal a inicializoval. Hodnotu `INSTALL_NAME` nahradíte hodnotou konf. proměnné `installName`.
+Před programováním je třeba nakonfigurovat načtení ```Spring``` tříd a repozitářů. Je nutné vytvořit soubor ```SpringConfig.java``` pro konfiguraci ```Spring``` a ```JpaDBConfig.java``` pro konfiguraci repozitářů. Vytvoříte je v package ```sk.iway.INSTALL_NAME```, aby je WebJET při startu načítal a inicializoval. Hodnotu ```INSTALL_NAME``` nahradíte hodnotou konf. proměnné ```installName```.
 
 ## Nastavení Spring
 
-Ve třídě `SpringConfig` je třeba nastavit v anotaci `@ComponentScan` packages, které obsahují `Spring` třídy.
+Ve třídě ```SpringConfig``` je třeba nastavit v anotaci ```@ComponentScan``` packages, které obsahují ```Spring``` třídy.
 
 ```java
 package sk.iway.basecms;
@@ -24,7 +24,7 @@ public class SpringConfig {
 
 ## Nastavení JPA
 
-Ve třídě `JpaDBConfig` (technicky je jedno jak se jmenuje, musí být ale v package, který je nastaven v `SpringConfig` v sekci `@ComponentScan`) je podobně nutné v anotaci `@EnableJpaRepositories.basePackages` nastavit packages obsahující `Spring DATA` repozitáře. Do `emf.setPackagesToScan` je třeba přidat `packages` obsahující `JPA` entity (obvykle jsou to stejné `packages`).
+Ve třídě ```JpaDBConfig``` (technicky je jedno jak se jmenuje, musí být ale v package, který je nastaven v ```SpringConfig``` v sekci ```@ComponentScan```) je podobně třeba v anotaci ```@EnableJpaRepositories.basePackages``` nastavit packages obsahující ```Spring DATA``` repozitáře. Do ```emf.setPackagesToScan``` je třeba přidat `packages` obsahující `JPA` entity (obvykle jsou to stejné `packages`).
 
 ```java
 package sk.iway.basecms;
@@ -112,7 +112,7 @@ public class JpaDBConfig {
 
 ## Nastavení SpringSecurity
 
-Pokud potřebujete upravit nastavení pro `SpringSecurity` můžete ve vaší třídě `SpringConfig` implementovat `sk.iway.iwcm.system.spring.ConfigurableSecurity`. V metodě `configureSecurity(HttpSecurity http)` máte dostupný objekt `HttpSecurity` ve kterém můžete doplnit potřebná nastavení:
+Pokud potřebujete upravit nastavení pro ```SpringSecurity``` můžete ve vaší třídě ```SpringConfig``` implementovat ```sk.iway.iwcm.system.spring.ConfigurableSecurity```. V metodě ```configureSecurity(HttpSecurity http)``` máte dostupný objekt ```HttpSecurity```, ve kterém můžete doplnit potřebná nastavení:
 
 ```java
 import sk.iway.iwcm.system.spring.ConfigurableSecurity;

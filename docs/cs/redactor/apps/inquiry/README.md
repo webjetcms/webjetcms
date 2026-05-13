@@ -13,6 +13,7 @@ Editor ankety obsahuje 4 karty, které si nyní popíšeme.
 ## Základní
 
 V kartě **Základní** se nacházejí pole:
+
 - Otázka - reprezentuje otázku ankety.
 - Aktivní - zapne/vypne zobrazování ankety na web stránce.
 - Povolit hlasování za více možností - pokud je zapnuto návštěvník na stránce může hlasovat najednou za více možností (možnosti označí výběrovým polem a následně odešle hlas).
@@ -23,7 +24,8 @@ V kartě **Základní** se nacházejí pole:
 ## Nastavení
 
 V kartě **Nastavení** jsou pole:
-- Skupina - ankety můžete řadit do skupin (např. hlavní stránka, produkty atd.) a následně na stránce zobrazovat anketu z vybrané skupiny. Zadejte znak `*` pro zobrazení již existujících skupin.
+
+- Skupina - ankety můžete řadit do skupin (např. hlavní stránka, produkty atd.) a následně na stránce zobrazovat anketu z vybrané skupiny. Zadejte znak ```*``` pro zobrazení již existujících skupin.
 - Text po hlasování - text, který se zobrazí návštěvníkovi po úspěšném hlasování v anketě.
 - Text pokud již hlasoval - text, který se zobrazí návštěvníkovi při chybě hlasování (např. pokud již návštěvník v anketě hlasoval).
 - Počet hodin, po kterých lze zahlasovat znovu - zadaný počet hodin nebude návštěvník moci opakovaně hlasovat. Pro nepřihlášeného návštěvníka je informace o hlasování držena v cookies. Technicky to znamená, že může opakovaně hlasovat při použití inkognito režimu prohlížeče, nebo s využitím více prohlížečů.
@@ -38,6 +40,7 @@ V kartě **Možné odpovědi** je vnořená data tabulku, ve které můžeme př
 ![](inquiry-editor_answers.png)
 
 Definování odpovědi obsahuje následující pole:
+
 - Odpověď na otázku - možná odpověď na otázku, ze které si návštěvník vybírá při hlasování.
 - Obrázek - pokud nastavíte odkaz na obrázek zobrazí se v anketě na web stránce vedle textu s možností odpovědi.
 - Odkaz - pokud nastavíte možnost odpovědi se zobrazí jako odkaz, kliknutím na text odpovědi se návštěvníkovi zobrazí zadaná web stránka.

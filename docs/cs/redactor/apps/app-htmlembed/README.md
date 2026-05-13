@@ -5,6 +5,7 @@ Přidejte na svou stránku externí HTML kód pro aplikace, které nejsou přím
 ## Nastavení aplikace
 
 V nastaveních lze:
+
 - Vložit HTML kód do stránky
 
 ![](editor.png)

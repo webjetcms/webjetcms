@@ -1,16 +1,16 @@
 # Zobrazení v seznamu aplikací
 
-Máte-li vytvořenou aplikaci můžete ji jednoduše zobrazit v seznamu aplikací v editoru. Na fotce obrazovky vidno aplikace Kontakty a Demo komponenta, což jsou aplikace pro WebJET napsané v [Spring](../spring-mvc/README.md).
+Máte-li vytvořenou aplikaci můžete ji jednoduše zobrazit v seznamu aplikací v editoru. Na fotce obrazovky je vidět aplikace Kontakty a Demo komponenta, což jsou aplikace pro WebJET napsané v [Spring](../spring-mvc/README.md).
 
 ![](appstore.png)
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/2r6-0zk5ZNQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/2r6-0zk5ZNQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Použití anotace
 
-Aby se aplikace zobrazila v seznamu je třeba aby její třída měla anotaci `@WebjetAppStore`, příklady:
+Aby se aplikace zobrazila v seznamu je třeba aby její třída měla anotaci ```@WebjetAppStore```, příklady:
 
 ```java
 @WebjetComponent("sk.iway.demo8.DemoComponent")
@@ -27,30 +27,33 @@ public class ContactApp extends WebjetComponentAbstract {
 ```
 
 Anotace má následující parametry:
-- `nameKey` - překladový klíč **jména aplikace** (v příkladech je přímo text, doporučujeme ale použít překladový klíč). `components.DemoComponent.title`.
-- `descKey` - překladový klíč **popisu aplikace**, není-li zadán hledá se překladový klíč zadaný jako `nameKey.desc` (pokud `nameKey` končí na `.title` nahradí se `.title` za `.desc`).
-- `itemKey` - unikátní identifikátor aplikace pro přístupová práva, typicky `cmp_app_name`.
-- `variant` - v seznamu aplikací se standardně zobrazuje jen jedna aplikace se stejným `itemKey`. Pokud je třeba mít v seznamu více aplikací se stejným `itemKey`, můžete nastavit rozdílnou variantu aplikace, například `variant = "unsubscribe",` pro variantu aplikace k odhlášení.
-- `imagePath` - cesta k obrázku **ikony** aplikace. Může se jednat o soubor, nebo může být zadána CSS třída pro ikonu [TablerIcons](https://tabler.io/icons) jak `ti ti-meno-ikony`.
-- `galleryImages` - čárkou oddělený seznam obrázků, které se zobrazí v popisu aplikace, například. `/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png`.
-- `componentPath` - čárkou oddělený seznam JSP souborů pro které se má aplikace zobrazit (nejedná-li se o Spring aplikaci), například `/components/search/search.jsp,/components/search/lucene_search.jsp`. Při vložení nové aplikace se použije první JSP soubor.
-- `domainName` - pokud máte multi doménovou instalaci můžete omezit zobrazení aplikace pouze na zadanou doménu. Můžete zadat více domén oddělených čárkou.
-- `commonSettings` - parametr určující, zda se v editoru aplikace zobrazí karta Zobrazení pro společná nastavení. Přednastavená hodnota je `true`, čili karta se bude zobrazovat.
-- `custom` - nastavte na `true` pro vaše zákaznické aplikace. Automaticky se nastaví podle toho, zda se nachází v package `sk.iway.iwcm`. Zákaznické aplikace jsou v seznamu aplikací na začátku seznamu.
-- `componentPath` - pokud přepisujete starší aplikaci v JSP kódu nastavte na cestu k tomuto JSP souboru, například `componentPath = "/components/calendar/calendar.jsp"`.
-- `customHtml` - pokud potřebujete provést [doplňkový kód](#doplňkový-html-kód), upravit CSS styly a podobně nastavte na cestu k HTML souboru, který se doplní k editaci aplikace v editoru web stránek. Například `customHtml = "/apps/calendar/admin/editor-component.html"`.
+
+- ```nameKey``` - ​​překladový klíč **měna aplikace** (v příkladech je přímo text, doporučujeme ale použít překladový klíč). ```components.DemoComponent.title```.
+- ```descKey``` - ​​překladový klíč **popisu aplikace**, pokud není zadaný hledá se překladový klíč zadaný jako ```nameKey.desc``` (pokud ```nameKey``` končí na ```.title``` nahradí se ```.title``` za ```.desc```).
+- ```itemKey``` - ​​unikátní identifikátor aplikace pro přístupová práva, typicky ```cmp_app_name```.
+- ```variant``` - ​​v seznamu aplikací se standardně zobrazuje jen jedna aplikace se stejným ```itemKey```. Pokud je potřeba mít v seznamu více aplikací se stejným ```itemKey```, můžete nastavit rozdílnou variantu aplikace, například ```variant = "unsubscribe",``` pro variantu aplikace pro odhlášení.
+- ```imagePath``` - ​​cesta k obrázku **ikony** aplikace. Může se jednat o soubor, nebo může být zadána CSS třída pro ikonu [TablerIcons](https://tabler.io/icons) jako ```ti ti-meno-ikony```.
+- ```galleryImages``` - ​​čárkou oddělený seznam obrázků, které se zobrazí v popisu aplikace, například. ```/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png```.
+- ```componentPath``` - ​​čárkou oddělený seznam JSP souborů pro které se má aplikace zobrazit (pokud se nejedná o Spring aplikaci), například ```/components/search/search.jsp,/components/search/lucene_search.jsp```. Při vložení nové aplikace se použije první JSP soubor.
+- ```domainName``` - ​​pokud máte multi doménovou instalaci můžete omezit zobrazení aplikace pouze na zadanou doménu. Můžete zadat více domén oddělených čárkou.
+- ```commonSettings``` - ​​parametr určující, zda se v editoru aplikace zobrazí karta Zobrazení pro společná nastavení. Přednastavená hodnota je `true`, čili karta se bude zobrazovat.
+- ```custom``` - ​​nastavte na `true` pro vaše zákaznické aplikace. Automaticky se nastaví podle toho, zda se nachází v package `sk.iway.iwcm`. Zákaznické aplikace jsou v seznamu aplikací na začátku seznamu.
+- ```componentPath``` - ​​pokud přepisujete starší aplikaci v JSP kódu nastavte na cestu k tomuto JSP souboru, například ```componentPath = "/components/calendar/calendar.jsp"```.
+- ```customHtml``` - ​​pokud potřebujete provést [doplňkový kód](#doplňkový-html-kód), upravit CSS styly a podobně nastavte na cestu k HTML souboru, který se doplní k editaci aplikace v editoru web stránek. Například ```customHtml = "/apps/calendar/admin/editor-component.html"```.
+- `hideInAppstore` - ​​pokud nastavíte na `true` aplikace se nezobrazí v seznamu aplikací (App Store), ale pokud je jinak vložena do stránky (např. přes Page Builder blok) je možné nastavit její parametry.
 
 ![](democomponent-desc.png)
 
 Anotace je prohledávána v následujících packages (včetně pod packages):
-- `sk.iway.iwcm` - standardní aplikace WebJET CMS.
-- `sk.iway.INSTALL_NAME` - aplikace podle jména instalace (konf. proměnná `installName`), tady byste měli mít standardní zákaznické aplikace.
-- `sk.iway.LOG_INSTALL_NAME` - aplikace podle jména logování instalace (konf. proměnná `logInstallName`), používá se pokud máte zákaznickou aplikaci ale nasazenou ve více variantách, nebo prostředích.
-- packages definované v konf. proměnné `springAddPackages` - dodatečné packages pro Spring aplikace, používá se pokud je aplikace naprogramována mimo WebJET CMS, nebo používá jiný prefix než `sk.iway`.
 
-Aplikace s package začínajícím na `sk.iway.iwcm` jsou umístěny na konec seznamu aplikací, ostatní jsou umístěny na její začátek. Předpokládá se, že zákaznické aplikace chcete mít zobrazeny na začátku seznamu aplikací.
+- ```sk.iway.iwcm``` - ​​standardní aplikace WebJET CMS.
+- ```sk.iway.INSTALL_NAME``` - ​​aplikace podle jména instalace (konf. proměnná ```installName```), zde byste měli mít standardní zákaznické aplikace.
+- ```sk.iway.LOG_INSTALL_NAME``` - ​​aplikace podle jména logování instalace (konf. proměnná ```logInstallName```), používá se pokud máte zákaznickou aplikaci ale nasazenou ve více variantách, nebo prostředích.
+- packages definované v konf. proměnné ```springAddPackages``` - ​​dodatečné packages pro Spring aplikace, používá se pokud je aplikace naprogramována mimo WebJET CMS, nebo používá jiný prefix než ```sk.iway```.
 
-Chcete-li umístit aplikaci i do promo seznamu (v horní části) upravte konf. proměnnou `appstorePromo`, která obsahuje seznam klíčů promo aplikací.
+Aplikace s package začínajícím na ```sk.iway.iwcm``` jsou umístěny na konec seznamu aplikací, ostatní jsou umístěny na její začátek. Předpokládá se, že zákaznické aplikace chcete mít zobrazeny na začátku seznamu aplikací.
+
+Chcete-li umístit aplikaci i do promo seznamu (v horní části) upravte konf. proměnnou ```appstorePromo```, která obsahuje seznam klíčů promo aplikací.
 
 !>**Upozornění:** aplikace je do stránky vložena jako `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)`, pokud se ve stránce nachází vícekrát, je třída znovu použita a její atributy a proměnné jsou zachovány během provedení HTTP požadavku.
 
@@ -72,11 +75,11 @@ public class DemoComponent extends WebjetComponentAbstract {
 }
 ```
 
-tyto atributy jsou napojeny na značku `!INCLUDE(... stringField=hodnota, booleanField=false)!` a používají se na [parametrizování zobrazení aplikace](../spring-mvc/README.md#používání-parametrů-aplikace).
+tyto atributy jsou napojeny na značku ```!INCLUDE(... stringField=hodnota, booleanField=false)!``` a používají se k [parametrizování zobrazení aplikace](../spring-mvc/README.md#používání-parametrů-aplikace).
 
-WebJET podporuje zobrazení nastavení parametrů v dialogovém okně pomocí `@DataTableColumn` anotací stejně jako pro [editor standardní datatabulek](../../developer/datatables-editor/datatable-columns.md). Podporovány jsou i karty nastavené atributem `tab` anotace. Hledaný je překladový klíč s názvem `editor.tab.MENO`.
+WebJET podporuje zobrazení nastavení parametrů v dialogovém okně pomocí ```@DataTableColumn``` anotací stejně jako pro [editor standardní datatabulek](../../developer/datatables-editor/datatable-columns.md). Podporovány jsou i karty nastavené atributem ```tab``` anotace. Hledaný je překladový klíč s názvem ```editor.tab.MENO```.
 
-Kromě primitivních/základních datových typů a `java.util.Date` je podporována konverze objektů typu `DocDetails/GroupDetails` včetně `List` pomocí typu pole `DataTableColumnType.JSON`.
+Kromě primitivních/základních datových typů a ```java.util.Date``` je podporována konverze objektů typu ```DocDetails/GroupDetails``` včetně ```List``` pomocí typu pole ```DataTableColumnType.JSON```.
 
 Příklad použití:
 
@@ -214,7 +217,7 @@ public class DemoComponent extends WebjetComponentAbstract {
 }
 ```
 
-Ukázkový HTML kód `/components/aceintegration/demo-component/view.html`:
+Ukázkový HTML kód ```/components/aceintegration/demo-component/view.html```:
 
 ```html
 <p>
@@ -252,16 +255,16 @@ Ukázkový HTML kód `/components/aceintegration/demo-component/view.html`:
 </ul>
 ```
 
-Příklad nastavení [výběrového pole](../../developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) v aplikaci Kontakty. Všimněte si také možnosti `@JsonIgnore` nastavené nad repozitářem. Jinak by se do JSON objektu pro editaci parametrů aplikace serializoval i samotný repozitář, což způsobuje JSON chybu.
+Příklad nastavení [výběrového pole](../../developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) v aplikaci Kontakty. Všimněte si také možnosti ```@JsonIgnore``` nastavené nad repozitářem. Jinak by se do JSON objektu pro editaci parametrů aplikace serializoval i samotný repozitář, což způsobuje JSON chybu.
 
 ![](contacts-prop.png)
 
 ```java
 package sk.iway.basecms.contact;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -413,7 +416,7 @@ public class ContactApp extends WebjetComponentAbstract {
 
 ## Inicializace dat
 
-Pokud potřebujete při otevření aplikace provést kód pro inicializaci hodnot můžete implementovat metodu `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)`, ve které můžete nastavit iniciální hodnoty nebo provést jiný kód. V objektu `ComponentRequest` se nacházejí informace o aktuální web stránce.
+Pokud potřebujete při otevření aplikace provést kód pro inicializaci hodnot můžete implementovat metodu `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)`, ve které můžete nastavit iniciální hodnoty nebo provést jiný kód. V objektu `ComponentRequest` se nacházejí informace o aktuální webové stránce.
 
 ```java
     @Override
@@ -562,7 +565,7 @@ public class MediaApp extends WebjetComponentAbstract {
 
 ## Karty
 
-Pokud potřebujete pole rozdělit do více karet je možné je definovat anotací `@DataTableTabs`, můžete také využít typ pole `IFRAME` pro snadné vložení jiné stránky, například. seznamu fotografií v galerii:
+Pokud potřebujete pole rozdělit do více karet je možné je definovat anotací `@DataTableTabs`, můžete také využít typ pole `IFRAME` pro snadné vložení jiné stránky. seznamu fotografií v galerii:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
@@ -597,11 +600,12 @@ public class GalleryApp extends WebjetComponentAbstract {
 
 ## Karta Zobrazení
 
-Karta Zobrazení pro společná nastavení, se ve výchozím nastavení zobrazí každé aplikace, pokud to u dané aplikace není nastaveno jinak ( [více informací zde](#parametry-aplikace) ).
+Karta Zobrazení pro společná nastavení, se ve výchozím nastavení zobrazí každé aplikaci, pokud to u dané aplikace není nastaveno jinak ( [více informací zde](#parametry-aplikace) ).
 
 ![](common-settings-tab.png)
 
 Karta obsahuje parametry:
+
 - Zobrazení na zařízeních, sloužící k nastavení [podmíněného zobrazení aplikace](#podmíněné-zobrazení-aplikace).
 - Přihlášený uživatel - umožňuje nastavit zobrazení aplikace podle stavu přihlášení návštěvníka web sídla - zobrazení vždy, jen pokud je uživatel přihlášen, nebo není-li přihlášen.
 - Čas vyrovnávací paměti (minuty), slouží k nastavení doby v minutách, po jakou má být inicializovaná aplikace uložena ve vyrovnávací paměti.
@@ -610,22 +614,23 @@ Pokud ve Spring aplikaci kartu nechcete zobrazit nastavte atribut `commonSetting
 
 ### Podmíněné zobrazení aplikace
 
-Pokud `PageParams` objekt obsahuje parametr `device=XXX` bude aplikace zobrazena pouze pro zadané zařízení. To se detekuje na serveru podle HTTP hlavičky `User-Agent`. Telefon se detekuje při nalezení výrazu `iphone`, nebo `mobile` a současně výrazu `android`. Tablet jako `ipad||tablet||kindle` nebo pokud obsahuje `android` a neobsahuje `mobile`. Podporované možnosti pro hodnotu `device` jsou `phone,tablet,pc`. Podporovány jsou-li kombinace typu `phone+pc`. Pokud je zadána prázdná hodnota, nebo všechny kombinace zobrazí se aplikace pro všechna zařízení.
+Pokud `PageParams` objekt obsahuje parametr `device=XXX`, bude aplikace zobrazena pouze pro zadané zařízení. To se detekuje na serveru podle HTTP hlavičky `User-Agent`. Telefon se detekuje při nalezení výrazu `iphone`, nebo `mobile` a současně výrazu `android`. Tablet jako `ipad||tablet||kindle` nebo pokud obsahuje `android` a neobsahuje `mobile`. Podporované možnosti pro hodnotu `device` jsou `phone,tablet,pc`. Podporovány jsou pokud kombinace typu `phone+pc`. Pokud je zadána prázdná hodnota, nebo všechny kombinace zobrazí se aplikace pro všechna zařízení.
 
 Při náhledu aplikace v editoru, která má podmíněné zobrazení, se v náhledu zobrazuje text typu `Zobrazenie na zariadeniach: XXX`:
 
 ![](../../redactor/apps/banner/multiple-devieces-banner-edit.png)
 
-Pro otestování při zobrazení web stránky můžete využít URL parametr `?forceBrowserDetector=`, kterým umíme WebJET přesvědčit, že přistupujeme se zařízením specifického typu. Podporované typy tohoto parametru jsou `phone`, `tablet` a `pc`.
+Pro otestování při zobrazení web stránky můžete využít URL parametr ```?forceBrowserDetector=```, kterým umíme WebJET přesvědčit, že přistupujeme se zařízením specifického typu. Podporované typy tohoto parametru jsou ```phone```, ```tablet``` a ```pc```.
 
 Při použití starých `editor_component.jsp` můžete přidat kartu s nastavením zobrazení pro zařízení voláním `$(document).ready(function() { addAdvancedSettingsTab(); });` a získat nastavenou hodnotu jako `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. Implementace funkce je v `/components/bottom.jsp` a je takto připravena pro vaše snadné použití.
 
 ### Přihlášený uživatel
 
 Aplikace se zobrazí podle stavu přihlášeného uživatele. V `PageParams` nastaveno parametrem `showForLoggedUser`:
+
 - Prázdná hodnota/parametr není zadán - aplikace se zobrazí vždy.
-- `onlyLogged` - aplikace se zobrazí pouze přihlášenému uživateli.
-- `onlyNotLogged` - aplikace se zobrazí pouze pokud uživatel není přihlášen.
+- `onlyLogged` - ​​aplikace se zobrazí pouze přihlášenému uživateli.
+- `onlyNotLogged` - ​​aplikace se zobrazí pouze pokud uživatel není přihlášen.
 
 V editoru stránek se aplikace zobrazí vždy, ale v náhledu nebo zobrazení stránky se zobrazí podle nastavené hodnoty.
 
@@ -634,10 +639,50 @@ V editoru stránek se aplikace zobrazí vždy, ale v náhledu nebo zobrazení st
 Počet minut během kterých se má uchovávat v paměti HTML kód již jednou provedené aplikace. Zrychluje zobrazení web stránky.
 
 Cache se nepoužije pokud:
+
 - je přihlášen administrátor (při zobrazení stránky se ale aktualizuje hodnota v cache, umíte tak snadno aktualizovat cache pro nepřihlášené uživatele). Zapnout vyrovnávací paměť i pro administrátory lze nastavením konf. proměnné `cacheStaticContentForAdmin` na hodnotu `true`.
-- zadaná hodnota parametru `cacheMinutes` \< 1
+- zadaná hodnota parametru `cacheMinutes` < 1
 - v URL adrese se nachází parametr `page` (neaplikuje se pokud je hodnota 1, tedy pro první stranu např. seznamu novinek)
 - v URL adrese se nachází parametr `_disableCache=true`
+
+### Skrývání polí/karet
+
+Chcete-li aplikaci využívat na různých místech a současně omezit, která pole a karty může uživatel vidět, můžete využít parametr `appHideFields`. Výhodné je takto připravit aplikaci v blocích pro Page Builder.
+
+Parametr `appHideFields` je definován ve třídě `WebjetComponentAbstract` a je dostupný pro všechny aplikace. Jedná se o textovou hodnotu, kde můžete hodnotou `+` oddělit názvy polí a karet, které se mají v editoru aplikace skrýt.
+
+**Formát hodnoty:**
+
+```text
+appHideFields=pole1+pole2+tab_idKarty1+tab_idKarty2
+```
+
+- **Polia** - zadáte přímo název pole (název atributu v Java třídě). `dir`, `style`.
+- **Karty** - název karty musí mít **povinně** prefix `tab_`, za nímž následuje ID karty definované v anotaci `@DataTableTab`. `tab_componentIframe`.
+
+**Příklad:** hodnota `appHideFields=dir+tab_componentIframe` skryje pole `dir` a kartu s ID `componentIframe`.
+
+#### Nastavení parametru
+
+Parametr `appHideFields` není viditelný v editoru aplikace, je třeba jej nastavit jedním z následujících způsobů:
+
+**1. Programově v metodě `initAppEditor`:**
+
+```java
+@Override
+public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+    //hide the dir field and the componentIframe tab
+    this.appHideFields = "dir+tab_componentIframe";
+}
+```
+
+**2. Přímo v `PageParams` (v `!INCLUDE` značce):**
+
+```html
+!INCLUDE(sk.iway.iwcm.components.gallery.GalleryApp, appHideFields=dir+tab_componentIframe)!
+```
+
+!>**Upozornění:** parametr `appHideFields` není viditelný v editoru aplikace. Nelze jej nastavit přes uživatelské rozhraní, je třeba jej nastavit programově nebo přímo v `PageParams`.
 
 ## Doplňkový HTML kód
 
@@ -662,12 +707,14 @@ public class CalendarApp extends WebjetComponentAbstract {
 ```
 
 Zadaný HTML kód je vložen do stránky s editorem aplikace. Je možné využít následující funkce pro provedení JavaScript kódu:
-- `appBeforeXhr(data)` - voláno před získáním informací o editoru, `data` obsahuje objekt posílaný do REST služby.
-- `appAfterXhr(response)` - volané po získání dat z REST služby, lze modifikovat data (např. doplnit vstupní pole) v `response` objektu.
-- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - voláno po inicializaci datatabulky, v `componentDatatable` je instance datatabulky/editoru a v `isInsert` informuje, zda se jedná o nově vloženou aplikaci nebo úpravu.
-- `appGetComponentPath(componentPath, componentDatatable)` - volané při vložení aplikace do stránky, můžete změnit cestu pro vložený `INCLUDE` Např. na základě vybraných možností.
-- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané při vložení aplikace do stránky, může vrátit kompletní kód pro vložení do stránky (nemusí to být přímo `!INCLUDE` kód).
-- `async appCodeExecute(params)` - volání po kliknutí na tlačítko OK, může volat serverovou REST službu.
+
+- `appBeforeXhr(data)` - ​​volané před získáním informací o editoru, `data` obsahuje objekt posílaný do REST služby.
+- `appAfterXhr(response)` - ​​volané po získání dat z REST služby, je možné modifikovat data (např. doplnit vstupní pole) v `response` objektu.
+- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - ​​voláno po inicializaci datatabulky, v `componentDatatable` je instance datatabulky/editoru av `isInsert` informuje, zda se jedná o nově vloženou aplikaci nebo úpravu.
+- `appGetComponentPath(componentPath, componentDatatable)` - ​​volané při vložení aplikace do stránky, můžete změnit cestu pro vložený `INCLUDE` např. na základě vybraných možností.
+- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - ​​volané při vložení aplikace do stránky, může vrátit kompletní kód pro vložení do stránky (nemusí to být přímo `!INCLUDE` kód).
+- `async appCodeExecute(params)` - ​​volání po kliknutí na tlačítko OK, může volat serverovou REST službu.
+- `prepareJsonEditorDataCustom` - ​​volané při konvertování JSON dat lokální tabulky (po dekódování), může upravit data pro zobrazení v editoru.
 
 Ukázkový kód různých možností:
 
@@ -849,10 +896,10 @@ public class ReservationApp extends WebjetComponentAbstract {
 
 ## Implementační detaily
 
-- Datatabulka je vložena přes `/admin/v9/views/pages/webpages/component.pug`
-- Logika pro zobrazení administrace je v `/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp`, zobrazuje buď klasický `editor_component.jsp`, tento automatický editor přes anotace, nebo seznam aplikací.
-- Přidána metoda pro získání seznamu karet z anotace vlastností `sk.iway.iwcm.system.datatable.DataTableColumnsFactory`
-- Vytvořený nový datový objekt pro karty `sk.iway.iwcm.system.datatable.json.DataTableTab`
-- Servisní třída pro data aplikace `sk.iway.iwcm.editor.rest.ComponentsService`
-- Nový datový `request` objekt pro získání dat aplikace `sk.iway.iwcm.editor.rest.ComponentRequest`
-- Seznam aplikací se z anotací hledá v `sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations`.
+- Datatabulka je vložena přes ```/admin/v9/views/pages/webpages/component.pug```
+- Logika pro zobrazení administrace je v ```/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp```, zobrazuje buď klasický ```editor_component.jsp```, tento automatický editor přes anotace, nebo seznam aplikací.
+- Přidána metoda pro získání seznamu karet z anotace vlastností ```sk.iway.iwcm.system.datatable.DataTableColumnsFactory```
+- Vytvořen nový datový objekt pro karty ```sk.iway.iwcm.system.datatable.json.DataTableTab```
+- Servisní třída pro data aplikace ```sk.iway.iwcm.editor.rest.ComponentsService```
+- Nový datový ```request``` objekt pro získání dat aplikace ```sk.iway.iwcm.editor.rest.ComponentRequest```
+- Seznam aplikací se z anotací hledá v ```sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations```.

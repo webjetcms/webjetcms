@@ -3,6 +3,7 @@
 Sekce **Statistika** poskytuje přehled o využívání AI asistentů v systému. Najdete zde vizuální přehledy, které zobrazují nejčastěji používané asistenty, asistenty s nejvyšší spotřebou tokenů (tedy s největšími náklady), jakož i detailní informace o využití jednotlivých AI asistentů a jejich spotřebě tokenů v konkrétních dnech.
 
 Údaje se zobrazují za období, které si zvolíte (výchozí rozsah je posledních 30 dní). Filtr v hlavičce umožňuje omezit zobrazení podle:
+
 - **Typ požadavku** (např. Vygenerovat text, Vygenerovat obrázek, Chat)
 - **Poskytovatel** (např. Prohlížeč, OpenAI, Gemini)
 - **Skupina** (např. Generování, Analýza, Úprava)
@@ -15,7 +16,7 @@ Více o parametrech naleznete v části [nastavení](../settings/README.md).
 
 ## Koláčové grafy
 
-Koláčové grafy znázorňují rozdělení TOP 5 (včetně zbývajících jako kombinace) **Ostatní**) nejčastěji používaných AI asistentů a těch s nejvyšší spotřebou tokenů v rámci zvoleného období. Tyto vizualizace vám umožní rychle identifikovat nejpoužívanější asistenty a oblasti s největším čerpáním zdrojů.
+Koláčové grafy znázorňují rozdělení TOP 5 (včetně zbývajících jako kombinace **Ostatní**) nejčastěji používaných AI asistentů a těch s nejvyšší spotřebou tokenů v rámci zvoleného období. Tyto vizualizace vám umožní rychle identifikovat nejpoužívanější asistenty a oblasti s největším čerpáním zdrojů.
 
 ![](graph-1.png)
 

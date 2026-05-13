@@ -5,26 +5,28 @@ Při editaci webových stránek je použit [CKEditor s našimi vlastními úprav
 ## Konfigurační proměnné
 
 Podporovány jsou následující konfigurační proměnné:
-- `editorAutomaticWordClean` - pokud je nastaveno na `true`, tak je při vkládání textu automaticky provedeno čištění HTML kódu. Uživatel má možnost text vložit jako čistý text.
-- `editorFontAwesomeCssPath` - nastavení cesty k [FontAwesome](../webpages/fontawesome/README.md).
-- `ckeditor_toolbar` - nastavení položek nástrojové lišty pro sekci webové stránky, hodnoty jsou v JSON formátu.
-- `ckeditor_toolbar-standalone` - nastavení položek nástrojové lišty pro vložení editoru do různých datových tabulek, hodnoty jsou v JSON formátu.
-- `ckeditor_removeButtons` - seznam tlačítek, která chcete v editoru schovat (nezobrazit), není třeba upravit nastavení `toolbar`, stačí sem nastavit čárkou oddělený seznam.
+
+- `editorAutomaticWordClean` - ​​pokud je nastaveno na `true`, tak je při vkládání textu automaticky provedeno čištění HTML kódu. Uživatel má možnost text vložit jako čistý text.
+- `editorFontAwesomeCssPath` - ​​nastavení cesty k [FontAwesome](../webpages/fontawesome/README.md).
+- `ckeditor_toolbar` - ​​nastavení položek nástrojové lišty pro sekci webové stránky, hodnoty jsou v JSON formátu.
+- `ckeditor_toolbar-standalone` - ​​nastavení položek nástrojové lišty pro vložení editoru do různých datových tabulek, hodnoty jsou v JSON formátu.
+- `ckeditor_removeButtons` - ​​seznam tlačítek, která chcete v editoru schovat (nezobrazit), není třeba upravit nastavení `toolbar`, stačí sem nastavit čárkou oddělený seznam.
 
 Nastavení pro tabulky:
-- `ckeditor_table_class` - Výchozí CSS třída pro tabulky v CKEditoru, standardně `table table-sm tabulkaStandard`.
-- `ckeditor_table_cols` - Výchozí počet sloupců tabulky v CKEditoru, standardně 5.
-- `ckeditor_table_rows` - Výchozí počet řádků tabulky v CKEditoru, standardně 2.
-- `ckeditor_table_width` - Výchozí šířka tabulky v CKEditoru, standardně 100%.
-- `ckeditor_table_height` - Výchozí výška tabulky v CKEditoru.
-- `ckeditor_table_border` - Výchozí hodnota okraje tabulky v CKEditoru, standardně 1.
-- `ckeditor_table_cellpadding` - Výchozí hodnota `cellpadding` tabulky v CKEditoru, standardně 1.
-- `ckeditor_table_cellspacing` - Výchozí hodnota `cellspacing` tabulky v CKEditoru, standardně 1.
-- `ckeditor_table_wrapper_class` - CSS třída obalovače pro tabulku v CKEditoru, standardně `table-responsive`. Pokud je prázdné, tabulka se nebude obalovat do responzivního kontejneru.
+
+- `ckeditor_table_class` - ​​Výchozí CSS třída pro tabulky v CKEditoru, standardně `table table-sm tabulkaStandard`.
+- `ckeditor_table_cols` - ​​Výchozí počet sloupců tabulky v CKEditoru, standardně 5.
+- `ckeditor_table_rows` - ​​Výchozí počet řádků tabulky v CKEditoru, standardně 2.
+- `ckeditor_table_width` - ​​Výchozí šířka tabulky v CKEditoru, standardně 100%.
+- `ckeditor_table_height` - ​​Výchozí výška tabulky v CKEditoru.
+- `ckeditor_table_border` - ​​Výchozí hodnota okraje tabulky v CKEditoru, standardně 1.
+- `ckeditor_table_cellpadding` - ​​Výchozí hodnota `cellpadding` tabulky v CKEditoru, standardně 1.
+- `ckeditor_table_cellspacing` - ​​Výchozí hodnota `cellspacing` tabulky v CKEditoru, standardně 1.
+- `ckeditor_table_wrapper_class` - ​​CSS třída obalovače pro tabulku v CKEditoru, standardně `table-responsive`. Pokud je prázdné, tabulka se nebude obalovat do responzivního kontejneru.
 
 ## PICTURE element
 
-Pokud potřebujete ve vašem projektu podporu pro `PICTURE` element, stačí, když do konfigurace `ckeditor_toolbar` přidáte na vhodné místo hodnotu `WebjetPicture`. Ikona se automaticky přidá i pokud máte nastavenou vlastní hodnotu v konfigurační proměnné `ckeditor_pictureDialogBreakpoints`.
+Potřebujete-li ve vašem projektu podporu pro `PICTURE` element, stačí, když do konfigurace `ckeditor_toolbar` přidáte na vhodné místo hodnotu `WebjetPicture`. Ikona se automaticky přidá i pokud máte nastavenou vlastní hodnotu v konfigurační proměnné `ckeditor_pictureDialogBreakpoints`.
 
 ![](picture-element.png)
 
@@ -65,11 +67,12 @@ CKEditor podporuje použití SVG ikon namísto klasických ikon ve formátu PNG.
 ![](svgicon.png)
 
 Volitelně můžete nastavit i další konfigurační proměnné pro přizpůsobení ikon:
-- `ckeditor_svgIcon_icons` - JSON objekt definující ikony pro CKEditor, viz příklad níže. Pokud je prázdné získá se ze SVG souboru podle hodnoty ID elementů, skupiny v takovém případě nejsou dostupné.
-- `ckeditor_svgIcon_width` - Šířka SVG ikony v bodech.
-- `ckeditor_svgIcon_height` - Výška SVG ikony v bodech.
-- `ckeditor_svgIcon_sizes` - Dostupné velikosti ikon oddělené čárkou, například. `small,medium,large,xlarge,xxlarge,huge`.
-- `ckeditor_svgIcon_colors` - Dostupné barvy ikon oddělené čárkou, například. `info,success,warning,danger,orange`.
+
+- `ckeditor_svgIcon_icons` - ​​JSON objekt definující ikony pro CKEditor, viz příklad níže. Pokud je prázdné získá se ze SVG souboru podle hodnoty ID elementů, skupiny v takovém případě nejsou dostupné.
+- `ckeditor_svgIcon_width` - ​​Šířka SVG ikony v bodech.
+- `ckeditor_svgIcon_height` - ​​Výška SVG ikony v bodech.
+- `ckeditor_svgIcon_sizes` - ​​Dostupné velikosti ikon oddělené čárkou, například. `small,medium,large,xlarge,xxlarge,huge`.
+- `ckeditor_svgIcon_colors` - ​​Dostupné barvy ikon oddělené čárkou, například. `info,success,warning,danger,orange`.
 
 Příklad nastavení `ckeditor_svgIcon_icons` včetně skupin:
 
@@ -101,26 +104,27 @@ SVG soubor musí obsahovat definice ikon s nastaveným ID atributem, příklad:
 </svg>
 ```
 
-Ukázkový `sprite.svg` soubor můžete získat v [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) balíčku v cestě `build/sprite.svg`.
+Ukázkový `sprite.svg` soubor můžete získat v [@orangesk/orange-design-system](https://www.npmjs.com/package/@orangesk/orange-design-system?activeTab=code) balíku v cestě `build/sprite.svg`.
 
 Klepnutím na existující ikonu v nástrojové liště se otevře dialog pro její nastavení, kde lze zvolit velikost, barvu a konkrétní ikonu z dostupných ikon definovaných v SVG souboru. Klepnutím pravým tlačítkem myši se zobrazí možnost jejího smazání s potvrzením.
 
 ## Tlačítko
 
 Tlačítko se často používá jako `call to action` prvek na webových stránkách. WebJET podporuje vkládání elementu `button` nebo `a` s třídou `btn` přes vlastní tlačítko v CKEditoru. Pro `button` lze nastavit následující konfigurační proměnné:
-- `ckeditor_button_baseClass` - Základní CSS třída pro tlačítka v CKEditoru, standardně `btn`.
-- `ckeditor_button_sizes` - Dostupné velikosti tlačítka oddělené čárkou, standardně `btn-lg,btn-sm`.
-- `ckeditor_button_types` - Dostupné barvy/typy tlačítka oddělené čárkou, standardně `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
-- `ckeditor_button_textHiddenClass` - CSS třída pro schování textu tlačítka - zobrazení pouze ikony, standardně `visually-hidden`.
-- `ckeditor_button_allowedClasses` - Seznam povolených CSS tříd oddělených čárkou pro otevření dialogu nastavení tlačítka. Prázdná hodnota povolí všechny CSS třídy. Příklad `btn-primary,btn-secondary,btn-lg`.
-- `ckeditor_button_deniedClasses` - Seznam zakázaných CSS tříd oddělených čárkou pro otevření dialogu nastavení tlačítka. Prázdná hodnota nezakáže žádné CSS třídy. Příklad `no-button,no-btn`.
-- `ckeditor_button_attrs` - Seznam nastavitelných atributů tlačítka oddělených čárkou, ve výchozím nastavení `data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label`.
+
+- `ckeditor_button_baseClass` - ​​Základní CSS třída pro tlačítka v CKEditoru, standardně `btn`.
+- `ckeditor_button_sizes` - ​​Dostupné velikosti tlačítka oddělené čárkou, standardně `btn-lg,btn-sm`.
+- `ckeditor_button_types` - ​​Dostupné barvy/typy tlačítka oddělené čárkou, standardně `btn-primary,btn-secondary,btn-success,btn-danger,btn-warning,btn-info,btn-light,btn-dark,btn-link,btn-outline-primary,btn-outline-secondary,btn-outline-success,btn-outline-danger,btn-outline-warning,btn-outline-info,btn-outline-light,btn-outline-dark`.
+- `ckeditor_button_textHiddenClass` - ​​CSS třída pro schování textu tlačítka - zobrazení pouze ikony, standardně `visually-hidden`.
+- `ckeditor_button_allowedClasses` - ​​Seznam povolených CSS tříd oddělených čárkou pro otevření dialogu nastavení tlačítka. Prázdná hodnota povolí všechny CSS třídy. Příklad `btn-primary,btn-secondary,btn-lg`.
+- `ckeditor_button_deniedClasses` - ​​Seznam zakázaných CSS tříd oddělených čárkou pro otevření dialogu nastavení tlačítka. Prázdná hodnota nezakáže žádné CSS třídy. Příklad `no-button,no-btn`.
+- `ckeditor_button_attrs` - ​​Seznam nastavitelných atributů tlačítka oddělených čárkou, ve výchozím nastavení `data-bs-toggle,data-bs-target,aria-controls,aria-expanded,aria-label`.
 
 Podporovány jsou i SVG ikony, které lze vložit do tlačítka, viz sekce výše.
 
-Pokud tlačítko nastavíte jako zakázané - `disabled`, tak na něj nelze v editoru kliknout pro otevření dialogu pro úpravu vlastností tlačítka. Můžete ale kliknout prvním tlačítkem a v kontextové nabídce zvolit možnost Vlastnosti tlačítka.
+Možnost vložit tlačítko se zobrazuje ve výběrovém menu pro vložení formuláře. Do lišty nástrojů jej přidáte přidáním hodnoty `WebjetFormButton` do konfigurační proměnné `ckeditor_toolbar`. Zobrazí se automaticky pokud máte nakonfigurované vkládání SVG ikon.
 
-Možnost vložit tlačítko se zobrazuje ve výběrovém menu pro vložení formuláře. Do nástrojové lišty jej přidáte přidáním hodnoty `WebjetFormButton` do konfigurační proměnné `ckeditor_toolbar`. Zobrazí se automaticky pokud máte nakonfigurované vkládání SVG ikon.
+![](../../redactor/webpages/working-in-editor/wjformbutton.png)
 
 ## Vlastní doplňky (plugins)
 

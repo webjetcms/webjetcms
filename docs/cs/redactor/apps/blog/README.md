@@ -7,11 +7,13 @@ Výsledkem aplikace je zobrazení článků na web stránce, přičemž články
 ![](blog-news-list.png)
 
 !>**Upozornění:** tato aplikace se zobrazí právě přihlášenému uživateli, pouze pokud splňuje jednu z následujících podmínek:
+
 - Právě přihlášený uživatel je takzvaný **bloger**. Jinak řečeno, uživatel musí mít právo Blog a také musí patřit do skupiny uživatelů Blog. Takový uživatel může vytvářet nové blog příspěvky a nové sekce v rámci jeho blogu.
 - Právě přihlášený uživatel je takzvaný **administrátor blogerů**, který je admin, musí mít právo Blog i Správa blogerů a neměl by patřit do skupiny uživatelů Blog. Takový uživatel vytváří nové blogery (uživatele), umí smazat stávajícího blogera a případně provést úpravu v textu libovolného blogera.
 
 Známe tedy dva typy uživatelů:
-- **bloger** může pracovat pouze se složkami, na které má právo, a články, které spadají pod jeho složky. Bližší informace k uživatelům typu **bloger** naleznete v sekci [Správa blogerů](bloggers.md).
+
+- **bloger** může pracovat pouze se složkami, na které má právo a články, které spadají pod jeho složky. Bližší informace k uživatelům typu **bloger** naleznete v sekci [Správa blogerů](bloggers.md).
 - **administrátor blogerů** může pracovat se složkami všech blogerů, jakož is články spadajícími pod tyto složky.
 
 ![](blogger-blog.png)
@@ -20,7 +22,7 @@ Známe tedy dva typy uživatelů:
 
 Stránka obsahuje v levém horním rohu externí filtr na sekce (pod-složky), který umožňuje filtrování zobrazených článků pouze pro zvolenou sekci blogu (složku). Přednastavená hodnota **Všechny sekce**, zobrazí všechny články ze všech sekcí (pod-složek).
 
-Samotný výběr sekcí je seřazen jako stromová struktura, kde hlouběji vnořené sekce jsou nižší. Uživatel vidí celou cestu k sekci, a hlavní složka má stejný název jako její **přihlašovací jméno (login)**, co v příkladu na obrázku je `bloggerPerm`.
+Samotný výběr sekcí je seřazen jako stromová struktura, kde hlouběji vnořené sekce jsou nižší. Uživatel vidí celou cestu k sekci, a hlavní složka má stejný název jako jeho **přihlašovací jméno (login)**, což v příkladu na obrázku je `bloggerPerm`.
 
 ![](groupFilter_allValues.png)
 

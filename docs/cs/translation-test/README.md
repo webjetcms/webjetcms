@@ -151,7 +151,7 @@ Seznam s delším textem:
 - Hlavní bod B
 - Hlavní bod C
 
-## Seznam úloh (Task list)
+## Seznam úkolů (Task list)
 
 - [x] Dokončený úkol
 - [x] Další dokončený úkol
@@ -217,7 +217,7 @@ Toto je druhý řádek po soft-break.
 
 ## Únikové znaky (Escaped characters)
 
-Tyto znaky musí zůstat neporušené po překladu: \*hvězdička\*, \_podtržítko\_, \`spätný apostrof\`, [hranatá závorka\], \#mřížka, zpětný apostrof \`, \&ampersand\.
+Tyto znaky musí zůstat neporušené po překladu: \*hvězdička\*, \_podtržítko\_, \`spätný apostrof\`, \[hranatá závorka\], \#mřížka, zpětný apostrof \`, \&ersand\.
 
 ## Obrázky
 
@@ -258,11 +258,11 @@ Tabulka se zarovnáním sloupců:
 
 ## Inline HTML
 
-Text s inline HTML: toto je <strong>tlustý HTML text</strong> a toto je <em>HTML kurzíva</em>.
+Text s inline HTML: toto je <strong>tlustý HTML text</strong> a toto je <em>HTML kurzíva</em> .
 
-Inline <code>HTML kód</code> a <a href="https://www.google.com">HTML odkaz</a>.
+Inline <code>HTML kód</code> a <a href="https://www.google.com">HTML odkaz</a> .
 
-<p>Odstavec v HTML značce s <strong>tučným</strong> textem a <a href="https://www.google.com" title="Google">odkazem</a>.</p>
+<p>Odstavec v HTML značce s <strong>tučným</strong> textem a <a href="https://www.google.com" title="Google">odkazem</a> .</p>
 
 ## Víceřádkové seznamy s odstavci
 

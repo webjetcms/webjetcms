@@ -1,13 +1,14 @@
 # Přidání poskytovatele
 
 Abyste přidali podporu pro nového poskytovatele (`provider`), musíte splnit následující podmínky:
+
 - vytvořit 2 třídy s anotací `@Service`, ideální v balíku `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME`, kde již existují implementace pro `openai`, `gemini`, `openrouter` a `browser`
 - jedna třída musí implementovat rozhraní [AiInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) a implementovat všechny povinné metody
 - druhá třída musí implementovat rozhraní [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) a implementovat všechny povinné metody
 
 O ostatní se postarají třídy [AiService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiService.java) a [AiAssistantsService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiAssistantsService.java), které dynamicky podle identifikátoru poskytovatele zpracují požadavek.
 
-## Implementace `AiAssitantsInterface`
+## Provádění `AiAssitantsInterface`
 
 Tato implementace je jednoduchá – jde jen o několik metod sloužících k rozšiřitelnosti.
 
@@ -63,17 +64,17 @@ public class OpenAiAssistantsService implements AiAssitantsInterface {
 }
 ```
 
-## Implementace `AiInterface`
+## Provádění `AiInterface`
 
 Tato implementace je složitější, protože zajišťuje veškerou komunikaci s poskytovatelem. Máte 2 možnosti.
 
 ### Možnost první
 
-Vaše třída implementuje rozhraní `AiInterface` a zároveň rozšiřuje abstraktní třídu [SupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogic.java). Tato třída již obsahuje implementace povinných metod `AiInterface` a většinu potřebné logiky. Jelikož `SupportLogic` implementuje [SupportLogicInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogicInterface.java), vy implementujete pouze metody z tohoto rozhraní.
+Vaše třída implementuje rozhraní `AiInterface` a zároveň rozšiřuje abstraktní třídu [SupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogic.java). Tato třída již obsahuje implementace povinných metod `AiInterface` a většinu potřebné logiky. Protože `SupportLogic` implementuje [SupportLogicInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/SupportLogicInterface.java), vy implementujete pouze metody z tohoto rozhraní.
 
 Výhoda: vyhnete se množství redundantní logiky společné pro všechny poskytovatele. Mnohé implementační problémy a chyby jsou již vyřešeny. Takto fungují poskytovatelé `openai`, `gemini` a `openrouter`. Pokud se nějaká část liší, můžete potřebnou metodu přetížit.
 
-V následujícím příkladu nevidíte přímo rozšíření o `SupportLogic`, protože třída `OpenAiSupportService` ji už rozšiřuje.
+V následujícím příkladu nevidíte přímo rozšíření o `SupportLogic`, protože třída `OpenAiSupportService` ji již rozšiřuje.
 
 Příklad implementace:
 
@@ -369,9 +370,10 @@ public class BrowserService implements AiInterface {
 
 ## `AiAssistantsService`
 
-`AiAssistantsService` pečuje o požadavky související s datovou tabulkou [Assistenti](../../../../redactor/ai/settings/README.md). Poskytuje podpůrné metody pro výběrová pole a používá automatický `dependency injection`, aby získala všechny implementace rozhraní `AiAssitantsInterface`. Při požadavku na poskytovatele iteruje seznam a provede akci nad správnou implementací podle identifikátoru.
+`AiAssistantsService` se stará o požadavky související s datovou tabulkou [Assistenti](../../../../redactor/ai/settings/README.md). Poskytuje podpůrné metody pro výběrová pole a používá automatický `dependency injection`, aby získala všechny implementace rozhraní `AiAssitantsInterface`. Při požadavku na poskytovatele iteruje seznam a provede akci nad správnou implementací podle identifikátoru.
 
 Důležité metody:
+
 - `getAssistantAndFieldFrom` – vrátí asistenty, kteří splňují podmínky zobrazení na zvoleném poli
 - `getClassOptions` – vrátí seznam tříd, na které může být asistent navázán (filtrování podle řetězce v plném názvu)
 - `getFieldOptions` – vrátí seznam polí zvolené třídy (filtrování názvu podle hledaného řetězce)
@@ -382,9 +384,10 @@ Důležité metody:
 
 ## `AiService`
 
-`AiService` zpracovává AI požadavky asistentů. Poskytuje metody pro získání odpovědí od poskytovatelů vybraných asistentem. Používá `dependency injection` pro získání všech implementací `AiInterface`.
+`AiService` zpracovává AI požadavky asistentů. Poskytuje metody pro získání odpovědí od poskytovatelů vybraných asistentem. Používá `dependency injection` k získání všech implementací `AiInterface`.
 
 Důležité metody:
+
 - `getProviders` – vrátí seznam nakonfigurovaných poskytovatelů
 - `getModelOptions` – vrátí seznam modelů daného poskytovatele; existuje verze s filtrováním podle řetězce
 - `getAiResponse` – vrátí textovou odpověď jako celek

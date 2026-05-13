@@ -11,10 +11,11 @@ Seznam novinek v administraci je podobný seznamu web stránek, ale neobsahuje s
 ![](admin-dt.png)
 
 Hodnoty ve výběrovém poli sekce v hlavičce se generují:
-- automaticky - je-li konf. proměnná `newsAdminGroupIds` nastavena na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `!INCLUDE(/components/news/` v tělech stránek a dohledáním nastaveného ID složky `groupIds`.
-- podle konf. proměnné `newsAdminGroupIds`, kde je možné zadat čárkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načítají se při výběru i novinky (web stránky) z pod složek.
 
-Klepnutím na název novinky se otevře editor shodný s [editorem stránek](../../webpages/editor.md).
+- automaticky - je-li konf. proměnná `newsAdminGroupIds` nastavená na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `!INCLUDE(/components/news/` v tělech stránek a dohledáním nastavené ID složky `groupIds`.
+- podle konf. proměnné `newsAdminGroupIds`, kde je možné zadat čárkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načtou se při výběru i novinky (web stránky) z pod složek.
+
+Klepnutím na název novinky se otevře editor shodný s [editorem stránek](../../webpages/editor/README.md).
 
 ![](admin-edit.png)
 
@@ -32,16 +33,16 @@ V záložce parametry aplikace nastavujete základní chování aplikace a její
 - **Zahrnout podadresáře** - zvolením této možnosti se načtou novinky iz podadresářů zvolených adresářů z pole Adresář.
 - **Hloubka podsložek** - při zobrazení novinek z pod složek lze nastavit maximální hloubku hledání pod složek. Hodnota méně než 1 nastaví hledání bez omezení.
 - **Typy stránek** - výběr stránek podle datové platnosti
-  - Aktuálně - je platné datum začátku a konce - zobrazí se jen novinky, jejichž datum platnosti (začátek a konec pulikování) je v rozmezí aktuálního data.
+  - Aktuálně - je platné datum začátku a konce - zobrazí se pouze novinky, jejichž datum platnosti (začátek a konec pulikování) je v rozmezí aktuálního data.
   - Staré – zobrazí se novinky, které mají datum konce v minulosti (archiv).
   - Všechny – zobrazí se novinky bez ohledu na datum začátku a konce jejich publikování.
-  - Následující – zobrazí se jen novinky, které mají datum začátku publikování v budoucnosti.
+  - Následující – zobrazí se pouze novinky, které mají datum začátku publikování v budoucnosti.
   - Aktuálně platné - zobrazí se pouze novinky s vyplněným datem začátku (konec nemusí být vyplněn) a konce jejichž rozsah je platný v aktuální datum a čas.
 - **Režim zobrazení hlavních stránek** - nastavuje zobrazení hlavních stránek pod složek. Často máte strukturu Novinky a v něm roky 2025, 2026 a podobně. V seznamu novinek nechcete zobrazovat hlavní stránky těchto složek, jelikož je to typicky stránka se seznamem. Nebo naopak, potřebujete zobrazit pouze hlavní stránky pod složek.
 - **Uspořádat podle** - určuje způsob uspořádání seznamu novinek
   - Priority
   - Data začátku publikování
-  - Data konání
+  - data konání
   - Data poslední změny
   - Názvu stránky
   - Místa
@@ -49,7 +50,7 @@ V záložce parametry aplikace nastavujete základní chování aplikace a její
   - Ratingu - hodnocení stránky (např. při použití eshopu) - hodnocení se nastavuje pomocí aplikace hodnocení stránky.
 - **Vzestupně** - standardně se uspořádá seznam sestupně (např. od nejnovější novinky po nejstarší), zaškrtnutím tohoto pole bude uspořádání naopak - od nejstarší po nejnovější
 - **Stránkování** - pokud zaškrtnete zobrazí se i stránkování seznamu novinek (je-li počet novinek větší než hodnota v poli Počet položek na stránce)
-- **Počet položek na stránce** - počet zobrazených novinek na jedné stránce, je-li stránkování nezaškrtnuto podle této hodnoty se načte z databáze počet novinek, vhodné například. na úvodní stránku kde chcete mít zobrazeno např. 3 novinky a odkaz na seznam všech novinek, ale stránkování nechcete zobrazit.
+- **Počet položek na stránce** - počet zobrazených novinek na jedné stránce, pokud je stránkování nezaškrtnuté podle této hodnoty se načte z databáze počet novinek, vhodné např. na úvodní stránku kde chcete mít zobrazeno např. 3 novinky a odkaz na seznam všech novinek, ale stránkování nechcete zobrazit.
 - **Přeskočit prvních** - počet záznamů, které chcete přeskočit při načítání seznamu (např. pokud máte ve stránce dvě aplikace pod sebou s jiným designem a ve druhé chcete přeskočit počet záznamů z první aplikace)
 - **Nemusí být vyplněn perex (anotace)** - standardně se zobrazí jen novinky, které mají vyplněnou anotaci (perex), pokud zaškrtnete toto pole, načtou se i ty, které anotaci (perex) vyplněnou nemají
 - **Načtení s textem stránky (méně optimální)** - standardně se z databáze nenačítá text stránky, pokud jej pro zobrazení potřebujete, zaškrtněte toto pole. Načtení ale bude pomalejší a náročnější na výkon databáze a serveru.
@@ -67,7 +68,7 @@ Máte-li právo [Novinky - úprava šablon](../../../frontend/templates/news/REA
 
 ### Perex skupiny
 
-V kartě Perex skupiny můžete vytvářet podmínky pro zobrazení novinek jen ze zvolených perex skupin. Používají se k označení například. Top zprávy na úvodní stránce a podobně.
+V kartě Perex skupiny můžete vytvářet podmínky pro zobrazení novinek jen ze zvolených perex skupin. Používají se k označení kupř. Top zprávy na úvodní stránce a podobně.
 
 Zároveň pokud potřebujete ze seznamu vyloučit perex skupinu nastavte ji do pole Nezobrazit zvolené perex skupiny.
 
@@ -96,18 +97,19 @@ search[fieldName_searchType]=value
 search[title_co]=test
 ```
 
-přičemž hodnota searchType může mít následující možnosti:
-- `eq` - přesná shoda
-- `gt` - více než
-- `ge` - více než včetně
-- `le` - méně než včetně
-- `lt` - méně než
-- `sw` - začíná na
-- `ew` - končí na
-- `co` - obsahuje
-- `swciai` - začíná na bez ohledu na velikost písmen a diakritiku
-- `ewciai` - končí na bez ohledu na velikost písmen a diakritiku
-- `cociai` - obsahuje bez ohledu na velikost písmen a diakritiku
+přičemž hodnota `searchType` může mít následující možnosti:
+
+- `eq` - ​​přesná shoda
+- `gt` - ​​více než
+- `ge` - ​​více než včetně
+- `le` - ​​méně než včetně
+- `lt` - ​​méně než
+- `sw` - ​​začíná na
+- `ew` - ​​končí na
+- `co` - ​​obsahuje
+- `swciai` - ​​začíná na bez ohledu na velikost písmen a diakritiku
+- `ewciai` - ​​končí na bez ohledu na velikost písmen a diakritiku
+- `cociai` - ​​obsahuje bez ohledu na velikost písmen a diakritiku
 
 Při zadávání URL parametrů může nastat problém s odmítnutím hodnoty `[]` a zobrazením chyby `400 - Bad Request`, v takovém případě použijte náhradu `[=%5B, ]=%5D`, příklad volání:
 
@@ -115,8 +117,8 @@ Při zadávání URL parametrů může nastat problém s odmítnutím hodnoty `[
 /zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
 ```
 
-URL parametr search se může vyskytovat vícekrát, pro více parametrů se použije spojení `AND`.
+URL parametr `search` se může vyskytovat vícekrát, pro více parametrů se použije spojení `AND`.
 
 ## Možné konfigurační proměnné
 
-- `newsAdminGroupIds` - Seznam ID složek s novinkami. ID jsou odděleny čárkami.
+- ```newsAdminGroupIds``` - ​​Seznam ID složek s novinkami. ID jsou odděleny čárkami.
