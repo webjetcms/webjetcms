@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verze 2026.18",
+            "perex": "WebJET CMS **2026.18** přináší **schvalování změn složek** s podporou víceúrovňového schvalování a **testování přístupnosti** integrované přímo do automatizovaných testů.\\n\\nV editoru stránek můžete nyní **maximalizovat dialogová okna** při nastavování aplikací, vkládání obrázků či odkazů. Nastavení aplikace zároveň získalo nové možnosti pro atributy přístupnosti (aria) a **vlastní CSS styly** zobrazení.\\n\\nV oblasti bezpečnosti přibyla **podpora přihlašování přes OAuth2/Keycloak/Google/Facebook** a **Přístupové klíče** (PassKey/WebAuthn), spolu s vylepšeními pro stabilnější provoz.",
+            "link": "https://docs.webjetcms.sk/latest/cs/CHANGELOG-2026?id=_202618"
+        },
+        {
             "title": "Verze 2026.0",
             "perex": "**WebJET CMS 2026.0** přináší vylepšenou verzi nástroje **Page Builder** pro tvorbu **komplexních web stránek**. V blocích lze **vyhledávat a filtrovat** na základě značek, snadno tak najdete vhodný blok pro vložení do stránky. Přidány byly nové funkce jako **rozdělení sloupce**, **vkládání více sekcí najednou** a **stále zobrazené tlačítko pro přidání nové sekce** pro rychlé rozšíření obsahu stránky.\\n\\nPodpora **PICTURE elementu** umožňuje zobrazovat **různé obrázky podle rozlišení obrazovky** návštěvníka, čímž se zlepšuje vizuální. Navíc lze vkládat **vlastní ikony** definované ve společném SVG souboru, což přináší větší flexibilitu v designu.\\n\\nNový nástroj pro **tvorbu formulářů** umožňuje snadno vytvářet **vícekrokové formuláře** s možností programové validace jednotlivých kroků a možností **potvrzení platnosti emailové adresy** pomocí zaslaného kódu. Vyhnete se tak vyplnění formulářů různými roboty.",
             "link": "https://docs.webjetcms.sk/latest/cs/CHANGELOG-2026?id=_202600"
@@ -19,16 +24,6 @@
             "title": "Verze 2025.0",
             "perex": "Ve verzi **2025.0** jsme přinesli **nový design administrace** pro ještě lepší přehlednost a uživatelský komfort.\n\nJednou z hlavních změn je přesunutí **druhé úrovně menu** do **karet v hlavičce stránky**, čímž se zjednodušila navigace. Ve webových stránkách jsme také **sloučili karty složek a webových stránek**, abyste měli vše přehledně na jednom místě. Pokud hlavička neobsahuje karty, tabulky se automaticky přizpůsobí a zobrazí **řádek navíc**.",
             "link": "http://docs.webjetcms.sk/latest/cs/CHANGELOG-2025?id=_20250"
-        },
-        {
-            "title": "Verze 2024.52",
-            "perex": "Ve verzi 2024.52 Web stránky přidávají možnost nastavit **způsob uspořádání** a **vyhledávat ve stromové struktuře**, import ZIP umožňuje nastavit způsob porovnání stávající verze stránky. **Elektronický obchod** dostal nový design seznamu objednávek a produktů. Přidána **statistika anket**, lepší editor obrázků v průzkumníku a vylepšené vyhledávání v administraci. V **hromadných e-mailech** přibyla možnost **nastavit potvrzení odhlášení**. Galerie obsahuje nové pole pro **URL adresu zdroje obrázku**, které je vyplněno automaticky při použití fotobanky, **Značky** přidávají **jazykové mutace** a volitelná pole.",
-            "link": "http://docs.webjetcms.sk/v2024/cs/CHANGELOG-2024?id=_202452"
-        },
-        {
-            "title": "Verze 2024.40",
-            "perex": "Ve verzi 2024.40 Průzkumník přináší **potvrzení při přesunu souborů drag&drop**, čímž se snižuje riziko chyb. Editor obrázků umožňuje nastavení **velikosti a oříznutí podle šablon**, což usnadňuje úpravy. Nastavení více **aplikací** byla přepracována do **nového designu**. Autor stránky dostává **notifikace při časovém publikování a přidání příspěvku** do fóra. Nová aplikace pro rezervace umožňuje **jednoduché rezervování objektů** a nabízí statistiky pro lepší správu. Vylepšili jsme PageBuilder a opravili chyby v Archivu souborů pro lepší stabilitu.",
-            "link": "http://docs.webjetcms.sk/v2024/cs/CHANGELOG-2024?id=_202440"
         }
     ]
 }
