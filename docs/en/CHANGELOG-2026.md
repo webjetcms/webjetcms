@@ -199,6 +199,10 @@ Redesigned application properties settings in the editor from the old code in `J
 
 ## 2026.0.x
 
+> A patch version of the original version 2026.0.
+
+- Security - fixed the ability to set [HTTP header name for obtaining IP address](sysadmin/pentests/README.md#configuration) via the `xForwardedForHeader` variable.
+
 ## 2026.0.18
 
 > A patch version of the original version 2026.0.
