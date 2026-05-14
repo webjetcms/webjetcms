@@ -2,6 +2,12 @@
     String path = (String)request.getAttribute("javax.servlet.error.request_uri");
     //System.out.println(path);
     if (path!=null) {
+		// /latest/sk/https://img.youtube.com/vi/q8xs3qDq-G4/hqdefault.jpg
+		if (path.contains("https://img.youtube.com/vi/")) {
+			response.sendRedirect(path.substring(path.indexOf("https://img.youtube.com/vi/")));
+			return;
+		}
+
     	String currentYearPrefix = "/v"+java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
 
     	String[] unknownLanguages = {"cz, de"};

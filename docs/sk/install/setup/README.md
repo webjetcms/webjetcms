@@ -7,6 +7,8 @@ Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo We
 - lokálne funkčný WebJET (nakonfigurovaný Tomcat, web aplikácia)
 - prístup na DB server s právami pre zriadenie novej DB schémy (alebo už zriadená DB schéma)
 
+!>**Upozornenie:** ak zriaďujete novú inštaláciu použite ako základ repozitár [basecms](https://github.com/webjetcms/basecms) nie repozitár [webjetcms](https://github.com/webjetcms/webjetcms). Rozdiel je v tom, že `basemcs` je základný projekt použitia WebJET CMS s možnosťou vlastného [dizajnu web stránok](../../frontend/README.md) a programovania [zákazníckych aplikácií](../../custom-apps/README.md). Repozitár `webjetcms` je určený pre programátora jadra WebJET CMS a vyžaduje [zložitejšie nastavenie](../../developer/install/README.md).
+
 ## Základné požiadavky na server
 
 - Server s minimálne 8 GB pamäte (pre aplikácie s väčšou záťažou minimálne 12GB), procesor aspoň `Dual Core 2 GHz` (pre servery s väčšou záťažou Quad core), miesto na disku aspoň 40GB.

@@ -19,6 +19,22 @@
    <cve>CVE-2026-23907</cve>
  </suppress>
 
+ <!-- we do not use such path traversal example -->
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+   <cve>CVE-2026-33929</cve>
+ </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: pdfbox-io-3.0.7.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
+   <cve>CVE-2026-33929</cve>
+ </suppress>
+
  <!-- we do not use toSvg() export -->
  <suppress>
    <notes><![CDATA[

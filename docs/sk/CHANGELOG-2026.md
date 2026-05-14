@@ -49,10 +49,6 @@
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
 
-- [Predpripravené bloky (HTMLBox)](redactor/apps/htmlbox/README.md)
-
-![](redactor/apps/htmlbox/editor-block.png)
-
 - [Anketa ľahko](redactor/apps/inquiry/inquiry-simple.md)
 
 ![](redactor/apps/inquiry/inquiry-simple-tab-basic.png)
@@ -65,7 +61,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/app-testimonials/editor-style.png)
 
-- [Predpripravené bloky](redactor/apps/htmlbox/README.md)
+- [Predpripravené bloky (HTMLBox)](redactor/apps/htmlbox/README.md)
 
 ![](redactor/apps/htmlbox/editor-block.png)
 

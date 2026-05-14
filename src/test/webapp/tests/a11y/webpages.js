@@ -37,8 +37,10 @@ Scenario('p26: image dialog', async ({ I, DTE, Browser, a11y }) => {
     I.switchTo();
 });
 
-Scenario('p36: tabs navigation', async ({ I, DTE, Browser, a11y }) => {
+Scenario('p36: tabs navigation', async ({ I, DT, Browser, a11y }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
     //TODO: pills-pages as Obsahová navigácia
     await a11y.check();
 });
