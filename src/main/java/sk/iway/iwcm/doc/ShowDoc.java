@@ -2,8 +2,12 @@ package sk.iway.iwcm.doc;
 
 import static sk.iway.iwcm.common.DocTools.testXss;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,11 +17,14 @@ import java.util.StringTokenizer;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import jakarta.servlet.http.HttpSession;
 
 import net.sourceforge.stripes.controller.StripesConstants;
@@ -37,6 +44,7 @@ import sk.iway.iwcm.common.BlogTools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.common.StyleToHeadHelper;
 import sk.iway.iwcm.components.response_header.rest.ResponseHeaderService;
 import sk.iway.iwcm.doc.ninja.Amp;
 import sk.iway.iwcm.doc.ninja.Ninja;
@@ -1424,7 +1432,7 @@ private static String combineCss(String cssStyle)
                 forward = "/thymeleaf/showdoc";
             }
 
-            request.getRequestDispatcher(forward).forward(request, response);
+            forwardWithStyleToHead(forward, request, response);
         }
     }
 
@@ -1693,5 +1701,285 @@ private static String combineCss(String cssStyle)
          return true;
         }
         return false;
+    }
+
+    /**
+     * Forward request to JSP/Thymeleaf template with style-to-head processing.
+     * If moveStyleToHead is enabled, captures the response, extracts collected styles
+     * from components, and inserts them into the head section.
+     *
+     * @param forward The forward path (JSP or Thymeleaf template)
+     * @param request The HTTP request
+     * @param response The HTTP response
+     * @throws ServletException if forwarding fails
+     * @throws IOException if I/O error occurs
+     */
+    private void forwardWithStyleToHead(String forward, HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        if (Constants.getBoolean("moveStyleToHead") == false) {
+            // Feature disabled, use standard forward
+            request.getRequestDispatcher(forward).forward(request, response);
+            return;
+        }
+
+        // Create response wrapper to capture output
+        StyleCapturingResponseWrapper responseWrapper = new StyleCapturingResponseWrapper(response);
+
+        // Forward to the template - this populates responseWrapper with content
+        request.getRequestDispatcher(forward).include(request, responseWrapper);
+
+        // Flush any buffered content
+        responseWrapper.flushBuffer();
+
+        //set content type from wrapper to original response
+        response.setContentType(responseWrapper.getContentType());
+
+        // Handle redirects captured by wrapper
+        if (Tools.isNotEmpty(responseWrapper.getRedirectLocation())) {
+            response.sendRedirect(responseWrapper.getRedirectLocation());
+            StyleToHeadHelper.clearCollectedStyles(request);
+            return;
+        }
+
+        // Handle errors captured by wrapper
+        if (responseWrapper.hasError()) {
+            if (Tools.isNotEmpty(responseWrapper.getErrorMessage())) {
+                response.sendError(responseWrapper.getErrorCode(), responseWrapper.getErrorMessage());
+            } else {
+                response.sendError(responseWrapper.getErrorCode());
+            }
+            StyleToHeadHelper.clearCollectedStyles(request);
+            return;
+        }
+
+        // Get the captured content
+        String capturedContent = responseWrapper.getCapturedContent();
+
+        byte[] bytes = null;
+
+        // Check if we have collected styles to insert
+        if (StyleToHeadHelper.hasCollectedStyles(request) && Tools.isNotEmpty(capturedContent)) {
+            // Insert styles into head section
+            String styles = StyleToHeadHelper.getCollectedStyles(request);
+            String processedHtml = insertStylesIntoHead(capturedContent, styles);
+
+            // Write processed content to original response
+            bytes = processedHtml.getBytes(SetCharacterEncodingFilter.getEncoding());
+        } else {
+            // Write original content without modification
+            if (Tools.isNotEmpty(capturedContent)) {
+                bytes = capturedContent.getBytes(SetCharacterEncodingFilter.getEncoding());
+            }
+        }
+
+        if (bytes != null) {
+            response.setContentLength(bytes.length);
+            response.getOutputStream().write(bytes);
+        }
+
+        // Clear collected styles
+        StyleToHeadHelper.clearCollectedStyles(request);
+    }
+
+    /**
+     * Insert style tags into the head section of HTML.
+     *
+     * @param html The HTML content
+     * @param styles The style tags to insert
+     * @return HTML with styles inserted before &lt;/head&gt;
+     */
+    private String insertStylesIntoHead(String html, String styles) {
+        if (Tools.isEmpty(styles)) {
+            return html;
+        }
+
+        // Find </head> tag (case insensitive)
+        int headEndIndex = html.indexOf("</head>");
+        if (headEndIndex == -1) {
+            headEndIndex = html.indexOf("</HEAD>");
+        }
+
+        if (headEndIndex == -1) {
+            // No head section found, return unchanged
+            Logger.debug(ShowDoc.class, "No </head> tag found, styles will remain in original position");
+            return html;
+        }
+
+        // Insert styles before </head>
+        StringBuilder result = new StringBuilder(html.length() + styles.length());
+        result.append(html, 0, headEndIndex);
+        result.append("\n<!-- Styles moved from components -->\n");
+        result.append(styles);
+        result.append(html, headEndIndex, html.length());
+
+        return result.toString();
+    }
+
+    /**
+     * Response wrapper that captures output for style-to-head processing.
+     * Only captures body content - all headers, cookies, content-type etc. pass through to original response.
+     */
+    private static class StyleCapturingResponseWrapper extends HttpServletResponseWrapper {
+        private final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        private ServletOutputStream servletOutputStream;
+        private PrintWriter printWriter;
+        private boolean usingOutputStream = false;
+        private boolean usingWriter = false;
+
+        // Only redirect and error need special handling
+        private String redirectLocation;
+        private String errorMessage;
+        private int errorCode;
+        private boolean hasError = false;
+        private String contentType;
+
+        public StyleCapturingResponseWrapper(HttpServletResponse response) {
+            super(response);
+        }
+
+        // ---- Capture output only ----
+
+        @Override
+        public ServletOutputStream getOutputStream() throws IOException {
+            if (usingWriter) {
+                throw new IllegalStateException("getWriter() has already been called");
+            }
+            usingOutputStream = true;
+
+            if (servletOutputStream == null) {
+                servletOutputStream = new ServletOutputStream() {
+                    @Override
+                    public void write(int b) throws IOException {
+                        byteArrayOutputStream.write(b);
+                    }
+
+                    @Override
+                    public void write(byte[] b, int off, int len) throws IOException {
+                        byteArrayOutputStream.write(b, off, len);
+                    }
+
+                    @Override
+                    public boolean isReady() {
+                        return true;
+                    }
+
+                    @Override
+                    public void setWriteListener(WriteListener listener) {
+                        // Not implemented for capturing
+                    }
+                };
+            }
+            return servletOutputStream;
+        }
+
+        @Override
+        public PrintWriter getWriter() throws IOException {
+            if (usingOutputStream) {
+                throw new IllegalStateException("getOutputStream() has already been called");
+            }
+            usingWriter = true;
+
+            if (printWriter == null) {
+                String encoding = getCharacterEncoding();
+                if (encoding == null) {
+                    encoding = StandardCharsets.UTF_8.name();
+                }
+                printWriter = new PrintWriter(new OutputStreamWriter(byteArrayOutputStream, encoding));
+            }
+            return printWriter;
+        }
+
+        @Override
+        public void flushBuffer() throws IOException {
+            if (printWriter != null) {
+                printWriter.flush();
+            }
+            // Don't call super - we don't want to flush to original response yet
+        }
+
+        @Override
+        public void resetBuffer() {
+            byteArrayOutputStream.reset();
+        }
+
+        // ---- Content-length is ignored - we set our own after processing ----
+
+        @Override
+        public void setContentLength(int len) {
+            // Ignore - we will set the correct length after processing
+        }
+
+        @Override
+        public void setContentLengthLong(long len) {
+            // Ignore - we will set the correct length after processing
+        }
+
+        @Override
+        public void setContentType(String type) {
+            this.contentType = type;
+            // Pass through content type to original response
+            super.setContentType(type);
+        }
+
+        @Override
+        public String getContentType() {
+            return this.contentType;
+        }
+
+        // ---- Capture redirect and error for special handling ----
+
+        @Override
+        public void sendError(int sc) throws IOException {
+            this.errorCode = sc;
+            this.hasError = true;
+            // Don't call super - we handle it after processing
+        }
+
+        @Override
+        public void sendError(int sc, String msg) throws IOException {
+            this.errorCode = sc;
+            this.errorMessage = msg;
+            this.hasError = true;
+            // Don't call super - we handle it after processing
+        }
+
+        @Override
+        public void sendRedirect(String location) throws IOException {
+            this.redirectLocation = location;
+            // Don't call super - we handle it after processing
+        }
+
+        // ---- Getters for captured state ----
+
+        public boolean hasError() {
+            return hasError;
+        }
+
+        public int getErrorCode() {
+            return errorCode;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        public String getRedirectLocation() {
+            return redirectLocation;
+        }
+
+        public String getCapturedContent() {
+            try {
+                flushBuffer();
+                String encoding = getCharacterEncoding();
+                if (encoding == null) {
+                    encoding = StandardCharsets.UTF_8.name();
+                }
+                return byteArrayOutputStream.toString(encoding);
+            } catch (IOException e) {
+                Logger.error(StyleCapturingResponseWrapper.class, e);
+                return byteArrayOutputStream.toString();
+            }
+        }
     }
 }

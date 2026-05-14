@@ -31,6 +31,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.StyleToHeadHelper;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
@@ -792,6 +793,9 @@ public class WriteTag extends BodyTagSupport
 											htmlCode.append(wrapperDiv[1]);
 										}
 									}
+
+									// Extract style tags and collect them for head section insertion
+									htmlCode = StyleToHeadHelper.extractAndCollectStyles(htmlCode, request);
 
 									content.append(htmlCode);
 
