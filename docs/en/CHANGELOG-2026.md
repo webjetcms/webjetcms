@@ -49,10 +49,6 @@
 
 Redesigned application properties settings in the editor from the old code in `JSP` to `Spring` applications. Applications automatically also get the ability to set [display on devices](custom-apps/appstore/README.md#conditional-display-applications). The design is consistent with the rest of the WebJET CMS and data tables (#57409).
 
-- [Pre-made blocks (HTMLBox)](redactor/apps/htmlbox/README.md)
-
-![](redactor/apps/htmlbox/editor-block.png)
-
 - [Inquiry made easy](redactor/apps/inquiry/inquiry-simple.md)
 
 ![](redactor/apps/inquiry/inquiry-simple-tab-basic.png)
@@ -65,7 +61,7 @@ Redesigned application properties settings in the editor from the old code in `J
 
 ![](redactor/apps/app-testimonials/editor-style.png)
 
-- [Pre-built blocks](redactor/apps/htmlbox/README.md)
+- [Pre-made blocks (HTMLBox)](redactor/apps/htmlbox/README.md)
 
 ![](redactor/apps/htmlbox/editor-block.png)
 
