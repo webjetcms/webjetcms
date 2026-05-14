@@ -84,6 +84,8 @@ Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc up
 Scenario('Gallery - Feature - allow relocated folder in editor AND handle doc update / url redirect', ({ I, DT, DTE }) => {
     I.say("Go change dir parent");
     I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirFrom + "/" + testDirName);
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("galleryDimensionDatatable");
     DTE.seeInField("path", "/images/gallery/test/move-from/moving-dir");
