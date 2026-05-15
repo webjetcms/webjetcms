@@ -2,6 +2,7 @@ package sk.iway.demo8;
 
 import org.springframework.ui.Model;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
@@ -146,12 +147,17 @@ public class DemoComponent extends WebjetComponentAbstract {
 	private String colorAlpha = "#FF0000";
 
 	@DefaultHandler
-	public String render(Model model)
+	public String render(Model model, HttpServletRequest request)
 	{
 		Logger.debug(this.getClass(), "groupDetails="+groupDetails+" docDetails="+docDetails+" groupDetailsList="+groupDetailsList+" docDetailsList="+docDetailsList+" dirSimple="+dirSimple+" date="+date);
 
         model.addAttribute("test", "Toto je test");
 		model.addAttribute("demoComponent", this);
+
+		//autotest: redirect from app
+		if ("redir".equals(request.getParameter("act"))) {
+			return "redirect:/";
+		}
 
 		return "/components/aceintegration/demo-component/view";
 	}

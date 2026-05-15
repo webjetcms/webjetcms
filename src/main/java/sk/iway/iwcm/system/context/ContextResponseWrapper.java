@@ -136,7 +136,7 @@ public class ContextResponseWrapper extends HttpServletResponseWrapper
     *
     * @param response The servlet response we are wrapping
     */
-   public ContextResponseWrapper(HttpServletResponse response,HttpServletRequest request)
+   public ContextResponseWrapper(HttpServletResponse response, HttpServletRequest request)
    {
        super(response);
        debug = Constants.getBoolean("contextPathDebug");
