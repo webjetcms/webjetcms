@@ -1,4 +1,4 @@
-package sk.iway.iwcm.common;
+package sk.iway.iwcm.doc.showdoc;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -56,7 +56,7 @@ public class StyleToHeadHelper {
      * @return StringBuilder with style tags removed (or original if disabled)
      */
     public static StringBuilder extractAndCollectStyles(StringBuilder htmlCode, HttpServletRequest request) {
-        if (htmlCode == null || htmlCode.length() == 0) {
+        if (Tools.isEmpty(htmlCode)) {
             return htmlCode;
         }
 

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.system;
+package sk.iway.iwcm.doc.showdoc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
