@@ -775,6 +775,17 @@ public class FileTools
 
 		return false;
 	}
+	public static boolean isAudioFile(String name)
+	{
+		if (name == null)
+			return false;
+		//.jpg is not equal to .JPG
+		name = name.toLowerCase();
+
+		return name.endsWith(".mp3") || name.endsWith(".wav") || name.endsWith(".ogg");
+	}
+
+
 	/**
 	 * Usortuje subory podla mena
 	 * @param arrayfile

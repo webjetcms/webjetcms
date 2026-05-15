@@ -23,8 +23,9 @@
                 vimeo.prop("checked", true);
             } else if (url && url.includes("facebook.com")) {
                 facebook.prop("checked", true);
-            } else if (url && (url.endsWith(".mp4") || url.endsWith(".webm") || url.endsWith(".ogg") || url.endsWith(".mkv") || url.endsWith(".flv") || url.endsWith(".ts") || url.endsWith(".m4v"))) {
+            } else if (url && (url.includes(".mp4") || url.includes(".webm") || url.includes(".ogg") || url.includes(".mkv") || url.includes(".flv") || url.includes(".ts") || url.includes(".m4v") || url.includes(".mp3") || url.includes(".wav") || url.includes(".ogg"))) {
                 video.prop("checked", true);
+                $(".DTE_Field_Name_videoFile input").val(url);
             }
 
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
@@ -101,11 +102,6 @@
                     updateFields();
                 }
             });
-
-            //If type is video , set value from file to videoFile elfinder picker
-            if("logo_video_color" == response.data.field) {
-                $(".DTE_Field_Name_videoFile input").val(response.data.file);
-            }
 
             youtube.trigger('change');
             vimeo.trigger('change');
