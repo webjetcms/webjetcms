@@ -131,7 +131,7 @@ public class StyleToHeadHelper {
         }
 
         StringBuilder styles = new StringBuilder();
-        styles.append("\n<!-- WJ: Styles moved from body to head for HTML validation -->\n");
+        //styles.append("\n<!-- WJ: Styles moved from body to head for HTML validation -->\n");
         for (String style : collectedStyles) {
             styles.append(style).append("\n");
         }
@@ -176,7 +176,7 @@ public class StyleToHeadHelper {
         // Insert styles before </head>
         StringBuilder result = new StringBuilder(html.length() + styles.length());
         result.append(html, 0, headEndIndex);
-        result.append("\n<!-- Styles moved from components -->\n");
+        //result.append("\n<!-- Styles moved from components -->\n");
         result.append(styles);
         result.append(html, headEndIndex, html.length());
 

@@ -715,6 +715,9 @@ public class WriteTag extends BodyTagSupport
 									htmlCode = WriteTagToolsForCore.preventSpam(htmlCode, request);
 									htmlCode = WriteTagToolsForCore.secureFormmail(htmlCode, request);
 									htmlCode = WriteTagToolsForCore.replaceWriteText(htmlCode, request);
+									// Extract style tags and collect them for head section insertion
+        							htmlCode = StyleToHeadHelper.extractAndCollectStyles(htmlCode, request);
+
 									executionTimeStopWatch.stop();
 									ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());
 
@@ -793,9 +796,6 @@ public class WriteTag extends BodyTagSupport
 											htmlCode.append(wrapperDiv[1]);
 										}
 									}
-
-									// Extract style tags and collect them for head section insertion
-									htmlCode = StyleToHeadHelper.extractAndCollectStyles(htmlCode, request);
 
 									content.append(htmlCode);
 
