@@ -238,14 +238,202 @@ class StyleToHeadHelperTest extends BaseWebjetTest {
     }
 
     @Test
-    @DisplayName("Collected styles include HTML comment header")
-    void testCollectedStylesHaveComment() {
-        StringBuilder input = new StringBuilder("<style>.test { }</style>");
-        StyleToHeadHelper.extractAndCollectStyles(input, request);
+    @DisplayName("Extract single link stylesheet from HTML")
+    void testExtractSingleLinkStylesheet() {
+        StringBuilder input = new StringBuilder(
+            "<div class=\"video\"><link href=\"/components/video/videojs/video-js.css\" rel=\"stylesheet\"><p>Content</p></div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        // Link tag should be removed from output
+        assertEquals("<div class=\"video\"><p>Content</p></div>", result.toString());
+
+        // Link should be collected
+        assertTrue(StyleToHeadHelper.hasCollectedStyles(request));
+
+        // Verify collected styles
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        assertTrue(collected.contains("<link href=\"/components/video/videojs/video-js.css\" rel=\"stylesheet\">"));
+    }
+
+    @Test
+    @DisplayName("Extract self-closing link stylesheet")
+    void testExtractSelfClosingLinkStylesheet() {
+        StringBuilder input = new StringBuilder(
+            "<div><link href=\"/css/style.css\" rel=\"stylesheet\" /><p>Content</p></div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("<div><p>Content</p></div>", result.toString());
 
         String collected = StyleToHeadHelper.getCollectedStyles(request);
-        assertTrue(collected.contains("<!-- WJ:"), "Collected styles should include identifying comment");
+        assertTrue(collected.contains("<link href=\"/css/style.css\" rel=\"stylesheet\" />"));
     }
+
+    @Test
+    @DisplayName("Extract link with single quotes around stylesheet")
+    void testExtractLinkWithSingleQuotes() {
+        StringBuilder input = new StringBuilder(
+            "<div><link href=\"/css/style.css' rel='stylesheet'><p>Content</p></div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("<div><p>Content</p></div>", result.toString());
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        assertTrue(collected.contains("rel='stylesheet'"));
+    }
+
+    @Test
+    @DisplayName("Do NOT extract link without rel=stylesheet (e.g. favicon)")
+    void testDoNotExtractNonStylesheetLink() {
+        StringBuilder input = new StringBuilder(
+            "<div><link rel=\"icon\" href=\"/favicon.ico\" /><p>Content</p></div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        // Link should remain in output (not a stylesheet)
+        assertEquals("<div><link rel=\"icon\" href=\"/favicon.ico\" /><p>Content</p></div>", result.toString());
+        assertFalse(StyleToHeadHelper.hasCollectedStyles(request));
+    }
+
+    @Test
+    @DisplayName("Extract mixed style and link elements preserving order")
+    void testMixedStyleAndLinkPreservesOrder() {
+        StringBuilder input = new StringBuilder(
+            "<link href=\"/css/base.css\" rel=\"stylesheet\">" +
+            "<style>.inline1 { color: red; }</style>" +
+            "<div>Content</div>" +
+            "<link href=\"/css/component.css\" rel=\"stylesheet\">" +
+            "<style>.inline2 { color: blue; }</style>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        // All style and link tags should be removed
+        assertEquals("<div>Content</div>", result.toString());
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+
+        // Verify order: base.css -> inline1 -> component.css -> inline2
+        int baseIndex = collected.indexOf("/css/base.css");
+        int inline1Index = collected.indexOf(".inline1");
+        int componentIndex = collected.indexOf("/css/component.css");
+        int inline2Index = collected.indexOf(".inline2");
+
+        assertTrue(baseIndex < inline1Index, "base.css should appear before inline1");
+        assertTrue(inline1Index < componentIndex, "inline1 should appear before component.css");
+        assertTrue(componentIndex < inline2Index, "component.css should appear before inline2");
+    }
+
+    @Test
+    @DisplayName("Extract link and style within same component output")
+    void testLinkAndStyleInSameComponent() {
+        StringBuilder input = new StringBuilder(
+            "<div class=\"video\">" +
+            "<link href=\"/components/video/videojs/video-js.css\" rel=\"stylesheet\">" +
+            "<style>.video { width: 100%; }</style>" +
+            "<video class=\"video-js\"></video>" +
+            "</div>"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("<div class=\"video\"><video class=\"video-js\"></video></div>", result.toString());
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+
+        // Link should come before inline style (preserving document order)
+        int linkIndex = collected.indexOf("video-js.css");
+        int styleIndex = collected.indexOf(".video { width: 100%; }");
+
+        assertTrue(linkIndex < styleIndex, "Link stylesheet should appear before inline style");
+    }
+
+    @Test
+    @DisplayName("Deduplicate identical link stylesheets")
+    void testDeduplicateIdenticalLinkStylesheets() {
+        // First call
+        StringBuilder input1 = new StringBuilder(
+            "<link href=\"/css/shared.css\" rel=\"stylesheet\"><div>Component 1</div>"
+        );
+        StyleToHeadHelper.extractAndCollectStyles(input1, request);
+
+        // Second call with same link
+        StringBuilder input2 = new StringBuilder(
+            "<link href=\"/css/shared.css\" rel=\"stylesheet\"><div>Component 2</div>"
+        );
+        StyleToHeadHelper.extractAndCollectStyles(input2, request);
+
+        // Link should appear only once
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        int count = countOccurrences(collected, "<link href=\"/css/shared.css\" rel=\"stylesheet\">");
+        assertEquals(1, count, "Duplicate link stylesheet should be deduplicated");
+    }
+
+    @Test
+    @DisplayName("Complex real-world scenario with video component")
+    void testRealWorldVideoComponentScenario() {
+        // Simulates multiple video components each with their own link and style
+        StringBuilder input1 = new StringBuilder(
+            "<div class=\"video-wrapper\">" +
+            "<link href=\"/components/video/videojs/video-js.css\" rel=\"stylesheet\">" +
+            "<style>.video-1 { aspect-ratio: 16/9; }</style>" +
+            "<video id=\"video-1\" class=\"video-js\"></video>" +
+            "</div>"
+        );
+        StringBuilder result1 = StyleToHeadHelper.extractAndCollectStyles(input1, request);
+
+        StringBuilder input2 = new StringBuilder(
+             "<div class=\"video-wrapper\">" +
+             "<link href=\"/components/video/videojs/video-js.css\" rel=\"stylesheet\">" +
+             "<style>.video-2 { aspect-ratio: 4/3; }</style>" +
+             "<video id=\"video-2\" class=\"video-js\"></video>" +
+             "</div>"
+         );
+        StringBuilder result2 = StyleToHeadHelper.extractAndCollectStyles(input2, request);
+
+         // Both video wrappers should have link and style removed
+        assertEquals("<div class=\"video-wrapper\"><video id=\"video-1\" class=\"video-js\"></video></div>", result1.toString());
+        assertEquals("<div class=\"video-wrapper\"><video id=\"video-2\" class=\"video-js\"></video></div>", result2.toString());
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+
+          // Link stylesheet should appear only once (deduplicated)
+        assertEquals(1, countOccurrences(collected, "video-js.css"), "video-js.css link should be deduplicated");
+
+          // Both inline styles should be present
+        assertTrue(collected.contains(".video-1 { aspect-ratio: 16/9; }"));
+        assertTrue(collected.contains(".video-2 { aspect-ratio: 4/3; }"));
+
+          // Link should come before both inline styles
+        int linkIndex = collected.indexOf("video-js.css");
+        int video1Index = collected.indexOf(".video-1");
+        int video2Index = collected.indexOf(".video-2");
+        assertTrue(linkIndex < video1Index, "Link should appear before video-1 style");
+        assertTrue(video1Index < video2Index, "video-1 style should appear before video-2 style");
+     }
+    @Test
+    @DisplayName("Handle case insensitive link rel=stylesheet")
+    void testCaseInsensitiveLinkStylesheet() {
+        StringBuilder input = new StringBuilder(
+            "<LINK HREF=\"/css/upper.css\" REL=\"stylesheet\">" +
+            "<Link Href=\"/css/mixed.css\" Rel=\"Stylesheet\" />"
+        );
+
+        StringBuilder result = StyleToHeadHelper.extractAndCollectStyles(input, request);
+
+        assertEquals("", result.toString());
+
+        String collected = StyleToHeadHelper.getCollectedStyles(request);
+        assertTrue(collected.contains("upper.css"));
+        assertTrue(collected.contains("mixed.css"));
+    }
+
 
     /**
      * Helper method to count occurrences of a substring
