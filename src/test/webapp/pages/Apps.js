@@ -109,6 +109,7 @@ module.exports = {
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
         }
         DTE.waitForEditor();
+        DTE.waitForCkeditor();
         //I.wait(5);
 
         this.openCurrentAppEditor(modalId, editIcon);

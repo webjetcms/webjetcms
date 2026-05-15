@@ -354,6 +354,8 @@ public class FileArchiveApp extends WebjetComponentAbstract {
         for(FileArchivatorBean file : datas) {
             //Skip pattern files
             if(Tools.isNotEmpty(file.getReferenceToMain())) continue;
+            //Skip files that should not be displayed
+            if (Tools.isFalse(file.getShowFile()) || !file.isValidDates()) continue;
             mainFiles.add( new FileArchivatorDTO( file, prop ) );
         }
 

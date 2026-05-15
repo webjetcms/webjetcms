@@ -247,7 +247,7 @@ public class FsItemEx
 			//Accept ONLY video AND the directory
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
-				if("directory".equals(mimeType) || mimeType.startsWith("video/") || FileTools.isVideoFile(_v.getName(child))) {
+				if("directory".equals(mimeType) || mimeType.startsWith("video/") || mimeType.startsWith("audio/") || FileTools.isVideoFile(_v.getName(child)) || FileTools.isAudioFile(_v.getName())) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}
@@ -256,7 +256,7 @@ public class FsItemEx
 			for (FsItem child : childrens) {
 				String mimeType = _v.getMimeType(child);
 				//in ckeditor user is able to insert image OR video directly into page, so for images type we will show also video files
-				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || FileTools.isImage(_v.getName(child)) || FileTools.isVideoFile(_v.getName(child))) {
+				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || mimeType.startsWith("audio/") || FileTools.isImage(_v.getName(child)) || FileTools.isVideoFile(_v.getName(child)) || FileTools.isAudioFile(_v.getName())) {
 					list.add(new FsItemEx(child, _s));
 				}
 			}
