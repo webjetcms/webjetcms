@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 
 /**
  * Helper class for extracting &lt;style&gt; tags from HTML component output
@@ -145,5 +147,39 @@ public class StyleToHeadHelper {
      */
     public static void clearCollectedStyles(HttpServletRequest request) {
         request.removeAttribute(COLLECTED_STYLES_KEY);
+    }
+
+    /**
+     * Insert style tags into the head section of HTML.
+     *
+     * @param html The HTML content
+     * @param styles The style tags to insert
+     * @return HTML with styles inserted before &lt;/head&gt;
+     */
+    public static String insertStylesIntoHead(String html, String styles) {
+        if (Tools.isEmpty(styles)) {
+            return html;
+        }
+
+        // Find </head> tag (case insensitive)
+        int headEndIndex = html.indexOf("</head>");
+        if (headEndIndex == -1) {
+            headEndIndex = html.indexOf("</HEAD>");
+        }
+
+        if (headEndIndex == -1) {
+            // No head section found, return unchanged
+            Logger.debug(StyleToHeadHelper.class, "No </head> tag found, styles will remain in original position");
+            return html;
+        }
+
+        // Insert styles before </head>
+        StringBuilder result = new StringBuilder(html.length() + styles.length());
+        result.append(html, 0, headEndIndex);
+        result.append("\n<!-- Styles moved from components -->\n");
+        result.append(styles);
+        result.append(html, headEndIndex, html.length());
+
+        return result.toString();
     }
 }
