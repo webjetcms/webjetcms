@@ -50,7 +50,7 @@ Vysvetlenie použitých piktogramov:
 - [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [x] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je posielaný stav `authorized` nastaviť na `true` (#58253).
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
-- [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
+- [x] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača. (#58477)
 - [x] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants` (#57849).
 - [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
 - [x] Hromadný email - auditovať zmeny v skupinách používateľov (#58249).
