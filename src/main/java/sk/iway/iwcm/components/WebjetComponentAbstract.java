@@ -281,6 +281,16 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
         return fieldOptions;
     }
 
+    /**
+     * Check if component is in editor preview mode (e.g. in page editor)
+     * @param request
+     * @return - true if in editor preview mode, false otherwise
+     */
+    public boolean isEditorPreview(HttpServletRequest request) {
+        if (request.getAttribute("inPreviewMode") != null) return true;
+        return false;
+    }
+
     @Override
     public String getViewFolder() {
         return viewFolder;

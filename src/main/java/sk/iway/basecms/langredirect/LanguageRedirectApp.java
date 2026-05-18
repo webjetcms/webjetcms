@@ -299,6 +299,11 @@ public class LanguageRedirectApp extends WebjetComponentAbstract {
      */
     @DefaultHandler
     public String view(HttpServletRequest request) {
+        //in component previw in editor do nothing
+        if (isEditorPreview(request)) {
+            return EMPTY_PAGE;
+        }
+
         // If rootOnly=true, redirect only on the root URL
         String path = PathFilter.getOrigPath(request);
 
